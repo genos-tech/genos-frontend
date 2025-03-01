@@ -2,27 +2,17 @@ import loadDMHistory from '../components/loadFromBackend/loadDMHistory';
 import { UserProps, ChatProps, MessageProps } from "../types";
 import { STORES } from "../components/indexedDBUtils/conf";
 import {
+    clearStore,
     addData,
     miniBatchInsertMessages
 } from "../components/indexedDBUtils/crud";
-import { initDB } from "../components/indexedDBUtils/schema";
 
-
-const BATCH_SIZE = 2;
+const BATCH_SIZE = 100;
 
 self.onmessage = async (event) => {
-    // deleteIndexedDB()
-
-    // // Example usage
-    // getAllStores('myDatabase').then(stores => {
-    //     console.log('Stores:', stores);
-    // }).catch(error => {
-    //     console.error('Error fetching stores:', error);
-    // });
-
-    const db = await initDB();
-
     const myself: UserProps = event.data;
+
+    await clearStore(STORES.DM_CHATS)
 
     // Load data from backend
     const dmHistory: ChatProps[] = await loadDMHistory({

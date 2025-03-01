@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Sheet from '@mui/joy/Sheet';
 import { io, Socket } from "socket.io-client";
 import SplitMessagesPane from './chatCommon/splitMessagesPane';
@@ -15,6 +15,8 @@ import {
     ThreadMessageProps
 } from "../types";
 import FetchAllChatsWorker from "../workers/fetchAllChatsWorker.ts?worker";
+import InsertDMChatWorker from "../workers/insertDMChatWorker.ts?worker";
+import InsertGMChatWorker from "../workers/insertGMChatWorker.ts?worker";
 import InsertDMMessageWorker from "../workers/insertDMMessageWorker.ts?worker";
 import InsertDMThreadMessageWorker from "../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMMessageWorker from "../workers/insertGMMessageWorker.ts?worker";
@@ -97,6 +99,88 @@ const insertGMThreadMessage = async (gmThreadMessage: ThreadMessageProps): Promi
     });
 };
 
+
+const insertDMChat = async (
+    chatName: string,
+    newDMMessage: MessageProps,
+    setAllChats: (chat: AllChatProps[]
+    ) => void): Promise<string> => {
+
+    return new Promise((resolve, reject) => {
+        const insertDMChatWorker = new InsertDMChatWorker();
+        const dmChat: AllChatProps = {
+            chatName: chatName,
+            chatEmail: newDMMessage.chatEmail,
+            isDm: true,
+            unread: true,
+            latestMessage: newDMMessage,
+            TSLastMessage: newDMMessage.tsSent,
+        }
+        insertDMChatWorker.postMessage({ dmChat: dmChat });
+        insertDMChatWorker.onmessage = (event) => {
+            resolve(event.data);
+            insertDMChatWorker.terminate();
+
+            const fetchAllChatsWorker = new FetchAllChatsWorker();
+            fetchAllChatsWorker.postMessage({});
+            fetchAllChatsWorker.onmessage = (event) => {
+                const allChats: AllChatProps[] = event.data
+                if (allChats !== undefined) {
+                    setAllChats(allChats)
+                }
+            };
+            return () => {
+                fetchAllChatsWorker.terminate();
+            };
+        };
+        insertDMChatWorker.onerror = (error) => {
+            reject(error);
+            insertDMChatWorker.terminate();
+        };
+    });
+};
+
+const insertGMChat = async (
+    chatName: string,
+    newGMMessage: MessageProps,
+    setAllChats: (chat: AllChatProps[]
+    ) => void): Promise<string> => {
+
+    return new Promise((resolve, reject) => {
+        const insertGMChatWorker = new InsertGMChatWorker();
+        const gmChat: AllChatProps = {
+            chatName: chatName,
+            chatEmail: newGMMessage.chatEmail,
+            isDm: false,
+            unread: true,
+            latestMessage: newGMMessage,
+            TSLastMessage: newGMMessage.tsSent,
+        }
+        insertGMChatWorker.postMessage({ gmChat: gmChat });
+        insertGMChatWorker.onmessage = (event) => {
+            resolve(event.data);
+            insertGMChatWorker.terminate();
+
+            const fetchAllChatsWorker = new FetchAllChatsWorker();
+            fetchAllChatsWorker.postMessage({});
+            fetchAllChatsWorker.onmessage = (event) => {
+                const allChats: AllChatProps[] = event.data
+                if (allChats !== undefined) {
+                    setAllChats(allChats)
+                }
+            };
+            return () => {
+                fetchAllChatsWorker.terminate();
+            };
+        };
+        insertGMChatWorker.onerror = (error) => {
+            reject(error);
+            insertGMChatWorker.terminate();
+        };
+    });
+};
+
+
 type HomeProps = {
     myself: UserProps;
     currentMainChat: ChatProps,
@@ -122,45 +206,9 @@ export default function Home(props: HomeProps) {
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
     const [isRightSideVisible, setIsRightSideVisible] = useState(false);
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // // IMPROVED VERSION
-    // const worker = new CurrentMessageUpdateWorker();
-    // const workerRef = useRef<Worker | null>(null);
-    // useEffect(() => {
-    //     workerRef.current = worker;
-    //     workerRef.current.onmessage = (event) => {
-    //         setCurrentMainChat((prev) => ({
-    //             ...prev,
-    //             messages: event.data, // Update messages from worker
-    //         }));
-    //     };
-    //     return () => workerRef.current?.terminate();
-    // }, []);
-
-    // useEffect(() => {
-    //     if (wsMessage !== undefined) {
-    //         if (wsMessage.isDm === true) {
-    //             if (wsMessage.isThread === true) {
-    //                 // DM Thread
-    //             } else {
-    //                 // DM
-    //                 workerRef.current?.postMessage({
-    //                     messages: currentMainChat.messages, // Why not Sub, why Main??
-    //                     newMessage: {
-    //                         messageId: wsMessage.messageId,
-    //                         content: wsMessage.content,
-    //                         sender: wsMessage.sender,
-    //                         tsSent: wsMessage.tsSent,
-    //                     },
-    //                 });
-    //             }
-    //         }
-    //     }
-    // }, [wsMessage]);
-    //////////////////////////////////////////////////////////////////////////////////
-
     // Load initial Chats with latest one message
     useEffect(() => {
+        console.log("Fetch my all chats")
         const fetchAllChatsWorker = new FetchAllChatsWorker();
         fetchAllChatsWorker.postMessage({});
         fetchAllChatsWorker.onmessage = (event) => {
@@ -228,6 +276,20 @@ export default function Home(props: HomeProps) {
                             tsSent: newMessage.tsSent,
                         }
                         insertDMThreadMessage(newDMThreadMessage)
+
+                        if (currentThreadChat !== undefined && incomingChatEmail === currentThreadChat.chatEmail) {
+                            const updatedThreadChat: ThreadProps = {
+                                chatName: currentThreadChat.chatName,
+                                chatEmail: currentThreadChat.chatEmail,
+                                threadId: newDMThreadMessage.threadId,
+                                isDm: newMessage.isDm,
+                                unread: false,
+                                messages: [...currentThreadChat.messages, newDMThreadMessage],
+                                TSLastMessage: newDMThreadMessage.tsSent,
+                            };
+                            setCurrentThreadChat(updatedThreadChat);
+                        }
+
                     }
                 } else {
                     const newMessage: NewMessageProps = message;
@@ -263,6 +325,34 @@ export default function Home(props: HomeProps) {
                             tsSent: newMessage.tsSent,
                         }
                         insertDMMessage(newDMMessage)
+
+                        if (allChats.length > 0) {
+                            insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
+                        }
+
+                        if (incomingChatEmail === currentMainChat.chatEmail) {
+                            const updatedChat: ChatProps = {
+                                chatName: newMessage.sender.userName,
+                                chatEmail: newMessage.sender.userEmail,
+                                isDm: newMessage.isDm,
+                                unread: false,
+                                messages: [...currentMainChat.messages, newMessage],
+                                latestMessage: newMessage,
+                                TSLastMessage: newMessage.tsSent,
+                            };
+                            setCurrentMainChat(updatedChat);
+                        } else if (incomingChatEmail === currentSubChat.chatEmail) {
+                            const updatedChat: ChatProps = {
+                                chatName: newMessage.sender.userName,
+                                chatEmail: newMessage.sender.userEmail,
+                                isDm: newMessage.isDm,
+                                unread: false,
+                                messages: [...currentMainChat.messages, newMessage],
+                                latestMessage: newMessage,
+                                TSLastMessage: newMessage.tsSent,
+                            };
+                            setCurrentSubChat(updatedChat);
+                        }
                     }
                 }
             } else {
@@ -290,7 +380,21 @@ export default function Home(props: HomeProps) {
                             tsSent: newMessage.tsSent,
                         }
                         insertGMThreadMessage(newGMThreadMessage);
+
+                        if (currentThreadChat !== undefined && incomingChatEmail === currentThreadChat.chatEmail) {
+                            const updatedThreadChat: ThreadProps = {
+                                chatName: currentThreadChat.chatName,
+                                chatEmail: currentThreadChat.chatEmail,
+                                threadId: newGMThreadMessage.threadId,
+                                isDm: newMessage.isDm,
+                                unread: false,
+                                messages: [...currentThreadChat.messages, newGMThreadMessage],
+                                TSLastMessage: newGMThreadMessage.tsSent,
+                            };
+                            setCurrentThreadChat(updatedThreadChat);
+                        }
                     }
+
                 } else {
                     const newMessage: NewMessageProps = message;
                     var fromMyself: boolean = false
@@ -314,6 +418,35 @@ export default function Home(props: HomeProps) {
                             tsSent: newMessage.tsSent,
                         }
                         insertGMMessage(newGMMessage)
+
+                        if (allChats.length > 0) {
+                            insertGMChat(newMessage.chatName, newGMMessage, setAllChats)
+                        }
+
+                        if (incomingChatEmail === currentMainChat.chatEmail) {
+                            const updatedChat: ChatProps = {
+                                chatName: newMessage.chatName,
+                                chatEmail: newMessage.chatEmail,
+                                isDm: newMessage.isDm,
+                                unread: false,
+                                messages: [...currentMainChat.messages, newMessage],
+                                latestMessage: newMessage,
+                                TSLastMessage: newMessage.tsSent,
+                            };
+                            setCurrentMainChat(updatedChat);
+                        } else if (incomingChatEmail === currentSubChat.chatEmail) {
+                            const updatedChat: ChatProps = {
+                                chatName: newMessage.chatName,
+                                chatEmail: newMessage.chatEmail,
+                                isDm: newMessage.isDm,
+                                unread: false,
+                                messages: [...currentMainChat.messages, newMessage],
+                                latestMessage: newMessage,
+                                TSLastMessage: newMessage.tsSent,
+                            };
+                            setCurrentSubChat(updatedChat);
+                        }
+
                     }
                 }
             }
@@ -322,7 +455,7 @@ export default function Home(props: HomeProps) {
             socket.off("message");
             socket.off("connect");
         };
-    }, []);
+    }, [allChats, currentMainChat, currentSubChat, currentThreadChat]);
 
 
     ////////////////////////////////////////////////////////////////////

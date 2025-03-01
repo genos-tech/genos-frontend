@@ -19,13 +19,13 @@ import { ThreadProps, UserProps } from '../../types';
 type MessagesPaneHeaderProps = {
   myself: UserProps;
   thread: ThreadProps;
+  setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsRightSideVisible: (value: boolean) => void;
 };
 
 
 export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
-  const { thread, myself } = props;
-  const { setIsRightSideVisible } = props;
+  const { myself, thread, setCurrentThreadChat, setIsRightSideVisible } = props;
   const isYou = myself.userEmail === thread?.chatEmail;
 
   // Modal configs
@@ -39,6 +39,15 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
     }
   };
 
+  const dummyThreadChat: ThreadProps = {
+    chatName: thread.chatName,
+    chatEmail: thread.chatEmail,
+    threadId: thread.threadId,
+    isDm: thread.isDm,
+    unread: false,
+    messages: [],
+    TSLastMessage: thread.TSLastMessage,
+  }
 
   return (
     <Stack
@@ -104,7 +113,11 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
             size="sm"
             variant="plain"
             color="neutral"
-            onClick={() => setIsRightSideVisible(false)}
+            onClick={() => {
+              setIsRightSideVisible(false);
+              setCurrentThreadChat(dummyThreadChat);
+            }
+            }
           >
             <CancelIcon />
           </IconButton>

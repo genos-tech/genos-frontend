@@ -84,7 +84,6 @@ const moveToGMChat = async (
         });
         fetchSpecificGMMessagesWorker.onmessage = (event) => {
             const fetchedMessages: MessageProps[] = event.data;
-            console.log("fetchedMessages:", fetchedMessages)
             if (fetchedMessages !== undefined && fetchedMessages.length !== 0) {
                 const newChat: ChatProps = {
                     chatName: chatName,

@@ -72,7 +72,6 @@ const insertDMThreadMessage = async (
       });
       fetchSpecificDMThreadMessagesWorker.onmessage = (event) => {
         const fetchedMessages: ThreadMessageProps[] = event.data;
-        console.log("fetchedMessages:", fetchedMessages)
         if (fetchedMessages !== undefined) {
           // set up states for thread
           const newThread: ThreadProps = {

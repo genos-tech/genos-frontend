@@ -85,7 +85,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         backgroundColor: 'background.level3',
       }}
     >
-      <ThreadPaneHeader myself={myself} thread={thread} setIsRightSideVisible={setIsRightSideVisible} />
+      <ThreadPaneHeader myself={myself} thread={thread} setCurrentThreadChat={setCurrentThreadChat} setIsRightSideVisible={setIsRightSideVisible} />
 
       <Box
         sx={{
