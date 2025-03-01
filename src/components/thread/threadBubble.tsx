@@ -5,13 +5,15 @@ import IconButton from '@mui/joy/IconButton';
 import Stack from '@mui/joy/Stack';
 import Sheet from '@mui/joy/Sheet';
 import Typography from '@mui/joy/Typography';
+import Tooltip from '@mui/joy/Tooltip';
 import CelebrationOutlinedIcon from '@mui/icons-material/CelebrationOutlined';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
-import { MessageProps } from '../../types';
+import { ThreadMessageProps } from '../../types';
 
-type ChatBubbleProps = MessageProps & {
+type ChatBubbleProps = ThreadMessageProps & {
   variant: 'sent' | 'received';
 };
 
@@ -129,6 +131,30 @@ export default function ThreadBubble(props: ChatBubbleProps) {
                     </Typography>
                   </Box>
 
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Tooltip title="Like" size='sm'>
+                      <IconButton
+                        size="sm"
+                        onClick={() => setIsLiked((prevState) => !prevState)}
+                        sx={{
+                          backgroundColor: "transparent", // No background
+                          outline: "none", // No focus outline
+                          padding: 0, // Remove extra space
+                          "&:hover": { backgroundColor: "transparent" }, // No hover effect
+                          "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
+                          "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
+                          transition: "none", // No color fade animation
+                        }}
+                      >
+                        {isLiked ? (
+                          <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
+                        ) : (
+                          <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
+                        )}
+                      </IconButton>
+                    </Tooltip>
+              </Box>
+
                 </Stack>
 
                 <Typography
@@ -150,36 +176,6 @@ export default function ThreadBubble(props: ChatBubbleProps) {
                 </Typography>
               </Box>
             </Stack>
-
-            <Stack
-              direction="row"
-              sx={{
-                justifyContent: isSent ? 'flex-end' : 'flex-start',
-                position: 'absolute',
-                p: 1.3,
-              }}
-            >
-              <Box>
-                <IconButton
-                  variant={isLiked ? 'soft' : 'plain'}
-                  color={isLiked ? 'danger' : 'neutral'}
-                  size="sm"
-                  onClick={() => setIsLiked((prevState) => !prevState)}
-                >
-                  {isLiked ? '❤️' : <FavoriteBorderIcon />}
-                </IconButton>
-                <IconButton
-                  variant={isCelebrated ? 'soft' : 'plain'}
-                  color={isCelebrated ? 'warning' : 'neutral'}
-                  size="sm"
-                  onClick={() => setIsCelebrated((prevState) => !prevState)}
-                >
-                  {isCelebrated ? '🎉' : <CelebrationOutlinedIcon />}
-                </IconButton>
-              </Box>
-
-            </Stack>
-
           </Sheet>
         </Box>
       )}

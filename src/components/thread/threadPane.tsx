@@ -9,7 +9,8 @@ import ThreadPaneHeader from './threadPaneHeader';
 import {
   UserProps,
   ThreadMessageProps,
-  ThreadProps
+  ThreadProps,
+  ChatProps
 } from '../../types';
 import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
@@ -30,6 +31,10 @@ type MessagesPaneProps = {
   thread: ThreadProps;
   myself: UserProps;
   socket: Socket;
+  currentMainChat: ChatProps;
+  currentSubChat: ChatProps;
+  setCurrentMainChat: (chat: ChatProps) => void;
+  setCurrentSubChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsRightSideVisible: (value: boolean) => void;
 };
@@ -68,6 +73,10 @@ export default function ThreadPane(props: MessagesPaneProps) {
   const { thread,
     myself,
     socket,
+    currentMainChat,
+    currentSubChat,
+    setCurrentMainChat,
+    setCurrentSubChat,
     setCurrentThreadChat,
     setIsRightSideVisible } = props;
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
@@ -129,7 +138,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         </Stack>
       </Box>
 
-      <Box sx={{ px: 1, pb: 1 }}>
+      <Box sx={{ px: 0.3, pb: 0.5 }}>
         <ThreadMessageInput
           onSubmit={(messageContent: string) => {
             if (messageContent.trim()) {
@@ -179,6 +188,12 @@ export default function ThreadPane(props: MessagesPaneProps) {
                 } else {
                   insertGMThreadMessage(newThreadMessage);
                 }
+
+                // TODO: Dynamically update the num of replies in the message pane.
+                // if (currentMainChat.chatEmail === thread.chatEmail) {
+                // } else if (currentSubChat.chatEmail === thread.chatEmail) {
+                // }
+
               });
             }
           }}

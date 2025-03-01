@@ -307,6 +307,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
               content: `${myself.userName} joined`,
               sender: myself,
               tsSent: getCurrentTimestamp(),
+              numReplies: 0
             }
             const dmChat: AllChatProps = {
               chatName: chatName,
@@ -327,6 +328,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
               content: `${myself.userName} joined`,
               sender: myself,
               tsSent: getCurrentTimestamp(),
+              numReplies: 0
             }
             const gmChat: AllChatProps = {
               chatName: chatName,

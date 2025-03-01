@@ -163,7 +163,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
   // Calculate the height for each message based on its content
   const calculateMessageHeights = () => {
     return chatMessages.map(message => {
-      const baseHeight = 100; // Base height for the message
+      const baseHeight = 105; // Base height for the message
       const extraHeightPerLine = 20; // Extra height per line of text
       const messageLength = message.content.length;
 
@@ -285,6 +285,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
+                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
                   }],
                   latestMessage: {
                     messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
@@ -293,6 +294,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
+                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
                   },
                   TSLastMessage: getCurrentTimestamp(),
                 };
@@ -310,6 +312,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
+                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
                   },
                   TSLastMessage: getCurrentTimestamp(),
                 };
