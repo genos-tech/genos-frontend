@@ -1,0 +1,69 @@
+import { useState } from "react";
+import { CssVarsProvider } from '@mui/joy/styles';
+import CssBaseline from '@mui/joy/CssBaseline';
+import {
+  Box,
+  Stack,
+} from '@mui/joy';
+import Sidebar from './components/utils/sidebar';
+import Home from './components/home';
+import './App.css';
+import Loading from './components/utils/loading'
+import {
+  UserProps,
+  ChatProps,
+} from "./types";
+
+const myself: UserProps = {
+  userName: localStorage.getItem("userName") || "",
+  userEmail: localStorage.getItem("userEmail") || "",
+  avatarImgPath: "/path/to/user/Weikiy.jpg",
+  online: true,
+};
+
+function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentMainChat, setCurrentMainChat] = useState<ChatProps>();
+
+  return (
+    (isLoading || currentMainChat === undefined
+    ) ?
+      <Loading
+        myself={myself}
+        setIsLoading={setIsLoading}
+        setCurrentMainChat={setCurrentMainChat}
+      />
+      : <CssVarsProvider disableTransitionOnChange>
+        <CssBaseline />
+
+        <Stack direction='column' sx={{ height: '100vh' }}>
+
+          <Box sx={{
+            display: 'flex',
+            width: '100%',
+            flex: 1
+          }} >
+            <Box>
+              <Sidebar />
+            </Box>
+
+            <Box
+              component="main"
+              className="MainContent"
+              sx={{ width: '100vw' }}
+            >
+              <Home
+                myself={myself}
+                currentMainChat={currentMainChat}
+                setCurrentMainChat={setCurrentMainChat}
+              />
+            </Box>
+          </Box>
+
+        </Stack>
+
+      </CssVarsProvider>
+  )
+}
+
+export default App
