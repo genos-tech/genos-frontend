@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState, useEffect, useRef } from "react";
 import Box from '@mui/joy/Box';
 import Sheet from '@mui/joy/Sheet';
 import Stack from '@mui/joy/Stack';
@@ -9,9 +10,9 @@ import ThreadPaneHeader from './threadPaneHeader';
 import {
   UserProps,
   ThreadMessageProps,
-  ThreadProps,
-  ChatProps
+  ThreadProps
 } from '../../types';
+import { VariableSizeList as List } from "react-window";
 import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 
@@ -31,10 +32,6 @@ type MessagesPaneProps = {
   thread: ThreadProps;
   myself: UserProps;
   socket: Socket;
-  currentMainChat: ChatProps;
-  currentSubChat: ChatProps;
-  setCurrentMainChat: (chat: ChatProps) => void;
-  setCurrentSubChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsRightSideVisible: (value: boolean) => void;
 };
@@ -73,10 +70,6 @@ export default function ThreadPane(props: MessagesPaneProps) {
   const { thread,
     myself,
     socket,
-    currentMainChat,
-    currentSubChat,
-    setCurrentMainChat,
-    setCurrentSubChat,
     setCurrentThreadChat,
     setIsRightSideVisible } = props;
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
@@ -84,6 +77,89 @@ export default function ThreadPane(props: MessagesPaneProps) {
   React.useEffect(() => {
     setThreadMessages(thread.messages || []);
   }, [thread.messages]);
+
+
+  ////////////////////////////////////////////////////////////////////
+  const listRef = useRef<List | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [listHeight, setListHeight] = useState(window.innerHeight - 200);
+  const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry.contentRect) {
+          if (containerWidth === 0) {
+            setContainerWidth(entry.contentRect.width);
+          }
+          else if (entry.contentRect.width > 400
+            && Math.abs(containerWidth - entry.contentRect.width) > 100) {
+            setContainerWidth(entry.contentRect.width);
+          }
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+    }
+  }, [containerWidth]); // Add containerWidth as a dependency
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        setListHeight(window.innerHeight - 210); // ✅ Get wrapper div height
+      }
+    };
+    updateHeight(); // Initial height
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, [thread]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollToItem(threadMessages.length - 1, "end"); // ✅ Scroll to latest message
+    }
+  }, [threadMessages.length]);
+
+  // Calculate the height for each message based on its content
+  const calculateMessageHeights = () => {
+    return threadMessages.map(message => {
+      const baseHeight = 90; // Base height for the message
+      const extraHeightPerLine = 20; // Extra height per line of text
+      const messageLength = message.content.length;
+
+      const charactersPerLine = Math.max(Math.floor(containerWidth / 13), 1);
+      // const lines = Math.ceil(messageLength / charactersPerLine);
+      const lines = Math.ceil(messageLength / (Math.max((containerWidth / 16), 1)));
+      return baseHeight + lines * extraHeightPerLine;
+    });
+  };
+
+  // Pre-calculate heights for all messages
+  const initMessageHeights = calculateMessageHeights()
+  const [messageHeights, setMessageHeights] = useState<number[]>(calculateMessageHeights());
+
+  useEffect(() => {
+    const newHeights = calculateMessageHeights()
+    setMessageHeights(newHeights);
+  }, [containerWidth])
+
+  const getItemSize = (index: number) => {
+    var itemSizes: number[] = []
+    if (initMessageHeights.length === messageHeights.length) {
+      itemSizes = messageHeights;
+    } else {
+      itemSizes = initMessageHeights;
+    }
+    const size = itemSizes.at(index)
+    if (typeof size === 'undefined') {
+      return 120
+    } else {
+      return size
+    }
+  }
+  ////////////////////////////////////////////////////////////////////
 
   return (
     <Sheet
@@ -101,41 +177,39 @@ export default function ThreadPane(props: MessagesPaneProps) {
           display: 'flex',
           minHeight: 0,
           px: 1,
-          py: 5,
-          overflowY: 'scroll',
-          flexDirection: 'column-reverse',
-          '&::-webkit-scrollbar': {
-            width: '8px',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(165, 165, 165, 0.5)',
-            transition: 'opacity 0.3s ease-in-out',
-          },
+          py: 1,
         }}
       >
-        <Stack spacing={5} sx={{ justifyContent: 'flex-end' }}>
+        <div ref={containerRef} style={{ overflow: 'hidden', width: '100%' }}>
+          <List
+            ref={listRef}
+            height={listHeight} // Dynamically updated height
+            itemCount={threadMessages.length}
+            itemSize={getItemSize} // Use the pre-calculated height array
+            width="100%"
+            className="thread-custom-scrollbar"
+          >
+            {({ index, style }) => {
+              const message = threadMessages[index];
+              const isYou = message.sender.userName === myself.userName;
 
-          {threadMessages.map((message: ThreadMessageProps, index: number) => {
+              return (
+                <div style={style}>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ flexDirection: isYou ? "row-reverse" : "row" }}
+                  >
+                    <ThreadBubble
+                      variant={isYou ? 'sent' : 'received'}
+                      {...message} />
+                  </Stack>
+                </div>
+              );
+            }}
+          </List>
+        </div>
 
-            const isYou = message.sender.userName === myself.userName;
-
-            return (
-              <Stack
-                key={index}
-                direction="row"
-                spacing={2}
-                sx={{ flexDirection: isYou ? 'row-reverse' : 'row' }}
-              >
-
-                <ThreadBubble
-                  variant={isYou ? 'sent' : 'received'}
-                  {...message} />
-
-              </Stack>
-            );
-          })}
-
-        </Stack>
       </Box>
 
       <Box sx={{ px: 0.3, pb: 0.5 }}>

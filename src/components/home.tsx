@@ -573,10 +573,6 @@ export default function Home(props: HomeProps) {
                         thread={currentThreadChat}
                         myself={myself}
                         socket={socket}
-                        currentMainChat={currentMainChat}
-                        currentSubChat={currentSubChat}
-                        setCurrentMainChat={setCurrentMainChat}
-                        setCurrentSubChat={setCurrentSubChat}
                         setCurrentThreadChat={setCurrentThreadChat}
                         setIsRightSideVisible={setIsRightSideVisible}
                     />

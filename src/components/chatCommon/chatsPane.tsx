@@ -508,15 +508,9 @@ export default function ChatsPane(props: ChatsPaneProps) {
             '--ListItem-paddingX': '1rem',
             maxHeight: '40vh',
             overflowY: 'auto',
-            backgroundColor: 'background.surface',
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(165, 165, 165, 0.5)',
-              transition: 'opacity 0.3s ease-in-out',
-            },
+            overflowX: "hidden",
           }}
+          className="custom-scrollbar"
         >
           {allChats
             .slice() // Avoid mutating the original array
@@ -572,17 +566,11 @@ export default function ChatsPane(props: ChatsPaneProps) {
             py: 0,
             '--ListItem-paddingY': '0.3rem',
             '--ListItem-paddingX': '1rem',
-            maxHeight: '40vh',
+            maxHeight: '45vh',
             overflowY: 'auto',
-            backgroundColor: 'background.surface',
-            '&::-webkit-scrollbar': {
-              width: '8px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(165, 165, 165, 0.5)',
-              transition: 'opacity 0.3s ease-in-out',
-            },
+            overflowX: "hidden",
           }}
+          className="custom-scrollbar"
         >
           {allChats
             .slice() // Avoid mutating the original array

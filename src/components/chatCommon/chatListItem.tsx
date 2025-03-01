@@ -210,7 +210,7 @@ export default function ChatListItem(props: ChatListItemProps) {
                 {chat.unread && (
                   <CircleIcon sx={{ fontSize: 12 }} color="primary" />
                 )}
-                <Tooltip title="Split Open " size='sm'>
+                <Tooltip title="Split View " size='sm'>
                   <IconButton onClick={(event) => {
                     event.stopPropagation(); // Stop the click from reaching ListItemButton
                     splitOpenHandler(); // Call the intended function

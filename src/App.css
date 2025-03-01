@@ -67,3 +67,28 @@
   border-radius: 10px;
   /* Keep it rounded on hover */
 }
+
+
+.thread-custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.thread-custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  /* or match your background color */
+}
+
+.thread-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #313131;
+  /* Adjust the thumb color */
+  border-radius: 10px;
+  /* Make the thumb rounded */
+}
+
+.thread-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9c9c9c;
+  /* Slightly darker on hover */
+  border-radius: 10px;
+  /* Keep it rounded on hover */
+}
