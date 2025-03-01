@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Sheet from '@mui/joy/Sheet';
 import { io, Socket } from "socket.io-client";
 import SplitMessagesPane from './chatCommon/splitMessagesPane';
@@ -322,6 +322,7 @@ export default function Home(props: HomeProps) {
                             chatEmail: incomingChatEmail,
                             content: newMessage.content,
                             sender: newMessage.sender,
+                            numReplies: newMessage.numReplies,
                             tsSent: newMessage.tsSent,
                         }
                         insertDMMessage(newDMMessage)
@@ -415,6 +416,7 @@ export default function Home(props: HomeProps) {
                             chatEmail: newMessage.chatEmail,
                             content: newMessage.content,
                             sender: newMessage.sender,
+                            numReplies: newMessage.numReplies,
                             tsSent: newMessage.tsSent,
                         }
                         insertGMMessage(newGMMessage)
@@ -469,6 +471,7 @@ export default function Home(props: HomeProps) {
 
     // useEffect(() => {
     //     console.log("currentMainChat Updated:", currentMainChat);
+    //     console.log("currentMainChat:",currentMainChat.messages[0])
     // }, [currentMainChat]);
 
     // useEffect(() => {
@@ -570,6 +573,10 @@ export default function Home(props: HomeProps) {
                         thread={currentThreadChat}
                         myself={myself}
                         socket={socket}
+                        currentMainChat={currentMainChat}
+                        currentSubChat={currentSubChat}
+                        setCurrentMainChat={setCurrentMainChat}
+                        setCurrentSubChat={setCurrentSubChat}
                         setCurrentThreadChat={setCurrentThreadChat}
                         setIsRightSideVisible={setIsRightSideVisible}
                     />

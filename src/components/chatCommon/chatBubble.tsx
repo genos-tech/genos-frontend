@@ -3,11 +3,13 @@ import Avatar from '@mui/joy/Avatar';
 import Tooltip from '@mui/joy/Tooltip';
 import Box from '@mui/joy/Box';
 import IconButton from '@mui/joy/IconButton';
+import Button from '@mui/joy/Button';
 import Stack from '@mui/joy/Stack';
 import Sheet from '@mui/joy/Sheet';
 import { Socket } from "socket.io-client";
 import Typography from '@mui/joy/Typography';
-import CelebrationOutlinedIcon from '@mui/icons-material/CelebrationOutlined';
+import CircleIcon from '@mui/icons-material/Circle';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
@@ -166,12 +168,11 @@ export default function ChatBubble(props: ChatBubbleProps) {
     tsSent,
     attachment = undefined,
     sender,
+    numReplies,
     setIsRightSideVisible,
     setCurrentThreadChat } = props;
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
-  const [isCelebrated, setIsCelebrated] = React.useState<boolean>(false);
-
   const _tsSent = extractHHMM(tsSent)
 
   return (
@@ -272,7 +273,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                   </Box>
 
                   <Box sx={{ textAlign: 'right' }}>
-                    <Tooltip title="Reply in thread" size='sm'>
+                    <Tooltip title="Reply" size='sm'>
                       <IconButton
                         sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                         onClick={() => {
@@ -313,6 +314,29 @@ export default function ChatBubble(props: ChatBubbleProps) {
                         <ReplyIcon sx={{ fontSize: 20, color: isSent ? '#fff' : 'primary' }} />
                       </IconButton>
                     </Tooltip>
+
+                    <Tooltip title="Like" size='sm'>
+                      <IconButton
+                        size="sm"
+                        onClick={() => setIsLiked((prevState) => !prevState)}
+                        sx={{
+                          backgroundColor: "transparent", // No background
+                          outline: "none", // No focus outline
+                          padding: 0, // Remove extra space
+                          "&:hover": { backgroundColor: "transparent" }, // No hover effect
+                          "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
+                          "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
+                          transition: "none", // No color fade animation
+                        }}
+                      >
+                        {isLiked ? (
+                          <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
+                        ) : (
+                          <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
+                        )}
+                      </IconButton>
+                    </Tooltip>
+
                   </Box>
 
                 </Stack>
@@ -337,35 +361,74 @@ export default function ChatBubble(props: ChatBubbleProps) {
               </Box>
             </Stack>
 
-            <Stack
-              direction="row"
-              sx={{
-                justifyContent: isSent ? 'flex-end' : 'flex-start',
-                position: 'absolute',
-                p: 1.3,
-              }}
-            >
-              <Box>
-                <IconButton
-                  variant={isLiked ? 'soft' : 'plain'}
-                  color={isLiked ? 'danger' : 'neutral'}
+            {(numReplies > 0)
+              ? <Stack
+                direction="row"
+                sx={{
+                  justifyContent: isSent ? "flex-end" : "flex-start",
+                  position: "absolute",
+                  p: 1.2,
+                  width: '100%',
+                  overflow: "hidden", // Prevents unwanted scrollbar
+                  left: 0, // Ensures full-width alignment
+                }}
+              >
+                <Button
                   size="sm"
-                  onClick={() => setIsLiked((prevState) => !prevState)}
-                >
-                  {isLiked ? '❤️' : <FavoriteBorderIcon />}
-                </IconButton>
-                <IconButton
-                  variant={isCelebrated ? 'soft' : 'plain'}
-                  color={isCelebrated ? 'warning' : 'neutral'}
-                  size="sm"
-                  onClick={() => setIsCelebrated((prevState) => !prevState)}
-                >
-                  {isCelebrated ? '🎉' : <CelebrationOutlinedIcon />}
-                </IconButton>
-              </Box>
+                  variant="plain" // Removes background & border
+                  onClick={() => {
+                    // Show thread pane on the right side.
+                    setIsRightSideVisible(true);
 
-            </Stack>
+                    socket.emit("thread_message", {
+                      isInit: true,
+                      rootMessageTSSent: tsSent,
+                      threadId: messageId,
+                      threadMessage: content,
+                      isDm: chat.isDm,
+                      senderEmail: myself.userEmail,
+                      senderName: myself.userName,
+                      destCGName: chat.chatName,
+                      destCGEmail: chat.chatEmail
+                    }, (ack: any) => {
 
+                      const newThreadMessage: ThreadMessageProps = {
+                        messageIdWithChatEmailAndThreadId: `${chat.chatEmail}-${messageId}-1`,
+                        threadId: messageId,
+                        messageId: '1',
+                        chatEmail: chat.chatEmail,
+                        content: content,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                      };
+
+                      if (chat.isDm) {
+                        insertDMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+                      } else {
+                        insertGMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+                      }
+                    });
+                  }}
+                  sx={{
+                    marginLeft: "auto", // Push to right
+                    padding: "2px 6px", // Reduce padding for a compact look
+                    minWidth: "auto", // Removes default button width
+                    fontSize: "12px", // Makes text smaller
+                    textTransform: "none", // Prevents uppercase text
+                  }}
+                >
+                  {/* TODO: read/unread for thread replies */}
+                  {(numReplies == 1)
+                    ? <div>
+                      <CircleIcon sx={{ fontSize: 10 }} color="success" />
+                      &nbsp;
+                      {numReplies} reply
+                    </div>
+                    : <div>{numReplies} replies</div>}
+                </Button>
+              </Stack>
+              : ""
+            }
           </Sheet >
         </Box >
       )
