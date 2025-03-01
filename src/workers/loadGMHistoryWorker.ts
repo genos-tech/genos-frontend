@@ -2,15 +2,18 @@ import loadGMHistory from '../components/loadFromBackend/loadGMHistory';
 import { UserProps, ChatProps, MessageProps } from "../types";
 import { STORES } from "../components/indexedDBUtils/conf";
 import {
+    clearStore,
     addData,
     miniBatchInsertMessages,
 } from "../components/indexedDBUtils/crud";
 
 
-const BATCH_SIZE = 2;
+const BATCH_SIZE = 100;
 
 self.onmessage = async (event) => {
     const myself: UserProps = event.data;
+
+    await clearStore(STORES.GM_CHATS)
 
     // Load data from backend
     const gmHistory: ChatProps[] = await loadGMHistory({

@@ -223,3 +223,11 @@ export const deleteIndexedDB = async () => {
     indexedDB.deleteDatabase(DB_NAME);
     console.log(`IndexedDB "${DB_NAME}" deleted. Recreating...`);
 };
+
+export const clearStore = async (storeName: string) => {
+    const db = await initDB();
+    const tx = db.transaction(storeName, "readwrite");
+    const objectStore = tx.objectStore(storeName);
+    await objectStore.clear();
+    await tx.done;
+};

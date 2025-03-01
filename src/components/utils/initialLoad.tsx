@@ -54,7 +54,6 @@ export function InitialLoad(
     // Fetch initial DM chat messages info after the DM history is loaded
     useEffect(() => {
         if (isDMHistoryLoaded) {
-            console.log("Fetch initial chat messages")
             const fetchSpecificDMMessagesWorker = new FetchSpecificDMMessagesWorker();
             fetchSpecificDMMessagesWorker.postMessage({ chatEmail: myself.userEmail });
             fetchSpecificDMMessagesWorker.onmessage = (event) => {
@@ -72,7 +71,6 @@ export function InitialLoad(
     // Fetch initial DM chat info after the initial DM chat messages are loaded
     useEffect(() => {
         if (InitialChatMessages !== undefined) {
-            console.log("Fetch initial chat messages")
             const fetchSpecificDMChatWorker = new FetchSpecificDMChatWorker();
             fetchSpecificDMChatWorker.postMessage({ chatEmail: myself.userEmail });
             fetchSpecificDMChatWorker.onmessage = (event) => {
