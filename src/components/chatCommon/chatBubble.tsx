@@ -14,6 +14,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
+import MarkdownPreview from '@uiw/react-markdown-preview';
 import {
   UserProps,
   ChatProps,
@@ -156,7 +157,6 @@ const insertGMThreadMessage = async (
   });
 };
 
-
 export default function ChatBubble(props: ChatBubbleProps) {
   const {
     myself,
@@ -176,12 +176,13 @@ export default function ChatBubble(props: ChatBubbleProps) {
   const _tsSent = extractHHMM(tsSent)
 
   return (
-    <Box sx={{
-      maxWidth: '90%',
-      minWidth: 'auto',
-      whiteSpace: 'normal',
-      wordBreak: 'break-word'
-    }}>
+    <Box
+      sx={{
+        maxWidth: '90%',
+        minWidth: 'auto',
+        whiteSpace: 'normal',
+        wordBreak: 'break-word'
+      }}>
 
       {attachment ? (
         <Sheet
@@ -215,7 +216,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
             variant={isSent ? 'solid' : 'soft'}
             sx={[
               {
-                p: 1.25,
+                p: 1,
                 borderRadius: 'lg',
               },
               isSent
@@ -242,124 +243,117 @@ export default function ChatBubble(props: ChatBubbleProps) {
             ]}
           >
 
-            <Stack direction="row" spacing={1.5}>
-              <Box sx={{ flex: 1 }}>
-                <AvatarWithStatus
-                  online={sender.online}
-                  src={sender.avatarImgPath}
-                />
-              </Box>
-              <Box sx={{ flex: 20 }}>
-
-                <Stack direction="row" spacing={2}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      level="body-xs"
-                      sx={[
-                        {
-                          lineHeight: 2
-                        },
-                        isSent
-                          ? {
-                            color: 'var(--joy-palette-common-white)',
-                          }
-                          : {
-                            color: 'var(--joy-palette-text-primary)',
+            <Stack direction="column" spacing={1.5}>
+              <Stack direction="row" spacing={1.5}>
+                <Box sx={{ flex: 1 }}>
+                  <AvatarWithStatus
+                    online={sender.online}
+                    src={sender.avatarImgPath}
+                  />
+                </Box>
+                <Box sx={{ flex: 20 }}>
+                  <Stack direction="row" spacing={2}>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        level="body-xs"
+                        sx={[
+                          {
+                            lineHeight: 2
                           },
-                      ]}
-                    >
-                      {sender.userName} &nbsp;  {_tsSent}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ textAlign: 'right' }}>
-                    <Tooltip title="Reply" size='sm'>
-                      <IconButton
-                        sx={{ '&:hover': { backgroundColor: 'transparent' } }}
-                        onClick={() => {
-                          // Show thread pane on the right side.
-                          setIsRightSideVisible(true);
-
-                          socket.emit("thread_message", {
-                            isInit: true,
-                            rootMessageTSSent: tsSent,
-                            threadId: messageId,
-                            threadMessage: content,
-                            isDm: chat.isDm,
-                            senderEmail: myself.userEmail,
-                            senderName: myself.userName,
-                            destCGName: chat.chatName,
-                            destCGEmail: chat.chatEmail
-                          }, (ack: any) => {
-
-                            const newThreadMessage: ThreadMessageProps = {
-                              messageIdWithChatEmailAndThreadId: `${chat.chatEmail}-${messageId}-1`,
-                              threadId: messageId,
-                              messageId: '1',
-                              chatEmail: chat.chatEmail,
-                              content: content,
-                              sender: myself,
-                              tsSent: getCurrentTimestamp(),
-                            };
-
-                            if (chat.isDm) {
-                              insertDMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
-                            } else {
-                              insertGMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+                          isSent
+                            ? {
+                              color: 'var(--joy-palette-common-white)',
                             }
-                          });
-
-                        }
-                        }>
-                        <ReplyIcon sx={{ fontSize: 20, color: isSent ? '#fff' : 'primary' }} />
-                      </IconButton>
-                    </Tooltip>
-
-                    <Tooltip title="Like" size='sm'>
-                      <IconButton
-                        size="sm"
-                        onClick={() => setIsLiked((prevState) => !prevState)}
-                        sx={{
-                          backgroundColor: "transparent", // No background
-                          outline: "none", // No focus outline
-                          padding: 0, // Remove extra space
-                          "&:hover": { backgroundColor: "transparent" }, // No hover effect
-                          "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
-                          "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
-                          transition: "none", // No color fade animation
-                        }}
+                            : {
+                              color: 'var(--joy-palette-text-primary)',
+                            },
+                        ]}
                       >
-                        {isLiked ? (
-                          <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
-                        ) : (
-                          <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
-                        )}
-                      </IconButton>
-                    </Tooltip>
+                        {sender.userName} &nbsp;  {_tsSent}
+                      </Typography>
+                    </Box>
 
-                  </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Tooltip title="Reply" size='sm'>
+                        <IconButton
+                          component='a'
+                          sx={{ '&:hover': { backgroundColor: 'transparent' } }}
+                          onClick={() => {
+                            // Show thread pane on the right side.
+                            setIsRightSideVisible(true);
 
-                </Stack>
+                            socket.emit("thread_message", {
+                              isInit: true,
+                              rootMessageTSSent: tsSent,
+                              threadId: messageId,
+                              threadMessage: content,
+                              isDm: chat.isDm,
+                              senderEmail: myself.userEmail,
+                              senderName: myself.userName,
+                              destCGName: chat.chatName,
+                              destCGEmail: chat.chatEmail
+                            }, (ack: any) => {
 
-                <Typography
-                  level="body-sm"
-                  sx={[
-                    {
-                      lineHeight: 2
-                    },
-                    isSent
-                      ? {
-                        color: 'var(--joy-palette-common-white)',
-                      }
-                      : {
-                        color: 'var(--joy-palette-text-primary)',
-                      },
-                  ]}
-                >
-                  {content}
-                </Typography>
-              </Box>
+                              const newThreadMessage: ThreadMessageProps = {
+                                messageIdWithChatEmailAndThreadId: `${chat.chatEmail}-${messageId}-1`,
+                                threadId: messageId,
+                                messageId: '1',
+                                chatEmail: chat.chatEmail,
+                                content: content,
+                                sender: myself,
+                                tsSent: getCurrentTimestamp(),
+                              };
+
+                              if (chat.isDm) {
+                                insertDMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+                              } else {
+                                insertGMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+                              }
+                            });
+
+                          }
+                          }>
+                          <ReplyIcon sx={{ fontSize: 20, color: isSent ? '#fff' : 'primary' }} />
+                        </IconButton>
+                      </Tooltip>
+
+                      <Tooltip title="Like" size='sm'>
+                        <IconButton
+                          component='a'
+                          size="sm"
+                          onClick={() => setIsLiked((prevState) => !prevState)}
+                          sx={{
+                            backgroundColor: "transparent", // No background
+                            outline: "none", // No focus outline
+                            padding: 0, // Remove extra space
+                            "&:hover": { backgroundColor: "transparent" }, // No hover effect
+                            "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
+                            "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
+                            transition: "none", // No color fade animation
+                          }}
+                        >
+                          {isLiked ? (
+                            <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
+                          ) : (
+                            <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Stack>
+
+              <MarkdownPreview
+                className="markdown-preview"
+                source={content}
+                style={{ backgroundColor: 'transparent', padding: 1 }}
+                wrapperElement={{
+                  "data-color-mode": "dark"
+                }}
+              />
             </Stack>
+
 
             {(numReplies > 0)
               ? <Stack
@@ -367,13 +361,14 @@ export default function ChatBubble(props: ChatBubbleProps) {
                 sx={{
                   justifyContent: isSent ? "flex-end" : "flex-start",
                   position: "absolute",
-                  p: 1.2,
+                  p: 0.5,
                   width: '100%',
                   overflow: "hidden", // Prevents unwanted scrollbar
                   left: 0, // Ensures full-width alignment
                 }}
               >
                 <Button
+                  component='a'
                   size="sm"
                   variant="plain" // Removes background & border
                   onClick={() => {

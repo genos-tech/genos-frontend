@@ -1,14 +1,10 @@
-import { useState } from "react";
 import "./Md.css";
-import { MarkdownEditor } from "../components/markdownEditor/MarkdownEditor";
-import pullRequestMarkdown from "../components/markdownEditor/data";
+import { ReactVirtuoso } from "../components/infinityScroll/mainVirtuoso"
 
 function MDEditor() {
-    const [content, setContent] = useState(pullRequestMarkdown);
-
     return (
-        <div className="md-content">
-            <MarkdownEditor content={content} setContent={setContent} />
+        <div>
+            <ReactVirtuoso />
         </div>
     );
 }

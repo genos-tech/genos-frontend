@@ -136,7 +136,7 @@ export default function SignUp() {
                         sx={{ py: 3, display: 'flex', justifyContent: 'space-between' }}
                     >
                         <Box sx={{ gap: 2, display: 'flex', alignItems: 'center' }}>
-                            <IconButton variant="soft" color="primary" size="sm">
+                            <IconButton component='a' variant="soft" color="primary" size="sm">
                                 <BadgeRoundedIcon />
                             </IconButton>
                             <Typography level="title-lg">Weikiy</Typography>
@@ -211,7 +211,7 @@ export default function SignUp() {
                                     <Input type="password" name="confirm_password" />
                                 </FormControl>
                                 <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Button type="submit" fullWidth>
+                                    <Button component='a' type="submit" fullWidth>
                                         Sign up
                                     </Button>
                                 </Stack>

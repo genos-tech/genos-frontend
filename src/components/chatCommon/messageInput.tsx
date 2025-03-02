@@ -111,6 +111,7 @@ export default function MessageInput(props: MessageInputProps) {
               </Tooltip>
             </div>
             <Button
+              component='a'
               size="sm"
               color="primary"
               sx={{ alignSelf: 'center', borderRadius: 'sm' }}

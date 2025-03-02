@@ -206,6 +206,9 @@ export default function Home(props: HomeProps) {
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
     const [isRightSideVisible, setIsRightSideVisible] = useState(false);
 
+    const [currentMainChatEmail, setCurrentMainChatEmail] = useState<string>("");
+    const [currentSubChatEmail, setCurrentSubChatEmail] = useState<string>("");
+
     // Load initial Chats with latest one message
     useEffect(() => {
         console.log("Fetch my all chats")
@@ -469,10 +472,13 @@ export default function Home(props: HomeProps) {
     //     console.log("initLoad Updated:", initLoad);
     // }, [initLoad]);
 
-    // useEffect(() => {
-    //     console.log("currentMainChat Updated:", currentMainChat);
-    //     console.log("currentMainChat:",currentMainChat.messages[0])
-    // }, [currentMainChat]);
+    useEffect(() => {
+        // console.log("currentMainChat Updated:", currentMainChat);
+        // console.log("currentMainChat:",currentMainChat.messages[0])
+        if (currentMainChatEmail !== currentMainChat.chatEmail) {
+            setCurrentMainChatEmail(currentMainChat.chatEmail)
+        }
+    }, [currentMainChat]);
 
     // useEffect(() => {
     //     console.log("isSubChatVisible Updated:", isSubChatVisible);
@@ -546,6 +552,7 @@ export default function Home(props: HomeProps) {
                     setCurrentSubChat={setCurrentSubChat}
                     setCurrentThreadChat={setCurrentThreadChat}
                     setIsRightSideVisible={setIsRightSideVisible}
+                    currentMainChatEmail={currentMainChatEmail}
                 />
             </Sheet>
 
