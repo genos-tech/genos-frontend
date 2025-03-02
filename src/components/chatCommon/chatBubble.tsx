@@ -426,8 +426,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
             }
           </Sheet >
         </Box >
-      )
-      }
+      )}
     </Box >
   );
 }

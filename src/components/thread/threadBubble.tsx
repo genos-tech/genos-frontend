@@ -6,14 +6,14 @@ import Stack from '@mui/joy/Stack';
 import Sheet from '@mui/joy/Sheet';
 import Typography from '@mui/joy/Typography';
 import Tooltip from '@mui/joy/Tooltip';
-import CelebrationOutlinedIcon from '@mui/icons-material/CelebrationOutlined';
+import MarkdownPreview from '@uiw/react-markdown-preview';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
 import { ThreadMessageProps } from '../../types';
 
-type ChatBubbleProps = ThreadMessageProps & {
+type ThreadBubbleProps = ThreadMessageProps & {
   variant: 'sent' | 'received';
 };
 
@@ -21,8 +21,7 @@ function extractHHMM(ts: string) {
   return ts.split(' ')[1].slice(0, 5);
 }
 
-
-export default function ThreadBubble(props: ChatBubbleProps) {
+export default function ThreadBubble(props: ThreadBubbleProps) {
   const { variant,
     content,
     tsSent,
@@ -74,7 +73,7 @@ export default function ThreadBubble(props: ChatBubbleProps) {
             variant={isSent ? 'solid' : 'soft'}
             sx={[
               {
-                p: 1.25,
+                p: 1,
                 borderRadius: 'lg',
               },
               isSent
@@ -101,80 +100,72 @@ export default function ThreadBubble(props: ChatBubbleProps) {
             ]}
           >
 
-            <Stack direction="row" spacing={1.5}>
-              <Box sx={{ flex: 1 }}>
-                <AvatarWithStatus
-                  online={sender.online}
-                  src={sender.avatarImgPath}
-                />
-              </Box>
-              <Box sx={{ flex: 20 }}>
-
-                <Stack direction="row" spacing={2}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      level="body-xs"
-                      sx={[
-                        {
-                          lineHeight: 2
-                        },
-                        isSent
-                          ? {
-                            color: 'var(--joy-palette-common-white)',
-                          }
-                          : {
-                            color: 'var(--joy-palette-text-primary)',
+            <Stack direction="column" spacing={1.5}>
+              <Stack direction="row" spacing={1.5}>
+                <Box sx={{ flex: 1 }}>
+                  <AvatarWithStatus
+                    online={sender.online}
+                    src={sender.avatarImgPath}
+                  />
+                </Box>
+                <Box sx={{ flex: 20 }}>
+                  <Stack direction="row" spacing={2}>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        level="body-xs"
+                        sx={[
+                          {
+                            lineHeight: 2
                           },
-                      ]}
-                    >
-                      {sender.userName} &nbsp;  {_tsSent}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ textAlign: 'right' }}>
-                    <Tooltip title="Like" size='sm'>
-                      <IconButton
-                        size="sm"
-                        onClick={() => setIsLiked((prevState) => !prevState)}
-                        sx={{
-                          backgroundColor: "transparent", // No background
-                          outline: "none", // No focus outline
-                          padding: 0, // Remove extra space
-                          "&:hover": { backgroundColor: "transparent" }, // No hover effect
-                          "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
-                          "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
-                          transition: "none", // No color fade animation
-                        }}
+                          isSent
+                            ? {
+                              color: 'var(--joy-palette-common-white)',
+                            }
+                            : {
+                              color: 'var(--joy-palette-text-primary)',
+                            },
+                        ]}
                       >
-                        {isLiked ? (
-                          <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
-                        ) : (
-                          <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
-                        )}
-                      </IconButton>
-                    </Tooltip>
-              </Box>
+                        {sender.userName} &nbsp;  {_tsSent}
+                      </Typography>
+                    </Box>
 
-                </Stack>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Tooltip title="Like" size='sm'>
+                        <IconButton
+                          component='a'
+                          size="sm"
+                          onClick={() => setIsLiked((prevState) => !prevState)}
+                          sx={{
+                            backgroundColor: "transparent", // No background
+                            outline: "none", // No focus outline
+                            padding: 0, // Remove extra space
+                            "&:hover": { backgroundColor: "transparent" }, // No hover effect
+                            "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
+                            "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
+                            transition: "none", // No color fade animation
+                          }}
+                        >
+                          {isLiked ? (
+                            <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
+                          ) : (
+                            <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Stack>
 
-                <Typography
-                  level="body-sm"
-                  sx={[
-                    {
-                      lineHeight: 2
-                    },
-                    isSent
-                      ? {
-                        color: 'var(--joy-palette-common-white)',
-                      }
-                      : {
-                        color: 'var(--joy-palette-text-primary)',
-                      },
-                  ]}
-                >
-                  {content}
-                </Typography>
-              </Box>
+              <MarkdownPreview
+                className="markdown-preview"
+                source={content}
+                style={{ backgroundColor: 'transparent', padding: 1 }}
+                wrapperElement={{
+                  "data-color-mode": "dark"
+                }}
+              />
             </Stack>
           </Sheet>
         </Box>

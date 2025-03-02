@@ -11,7 +11,7 @@ import {
   ThreadProps
 } from '../../types';
 import "../../tests/Md.css";
-import { MarkdownEditor } from "../markdownEditor/MarkdownEditor";
+import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 
 type MessagesPaneProps = {
@@ -98,8 +98,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
         setListHeight(currentHeight - 310)
       }
     };
-
-    updateHeight(); // Initial height
+    updateHeight();
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
   }, [chat, isSubChatVisible]);
@@ -108,12 +107,10 @@ export default function MessagesPane(props: MessagesPaneProps) {
     <Sheet
       ref={containerRef}
       sx={{
-        height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
+        height: { xs: 'calc(100dvh - var(--Header-height))', md: isSubChatVisible ? '50dvh' : '100dvh' },
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'background.level1',
-        flex: 1,
-        overflow: 'hidden'
       }}
     >
       <MessagesPaneHeader myself={myself} chat={chat} />

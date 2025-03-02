@@ -11,7 +11,7 @@ import {
   ThreadProps
 } from '../../types';
 import "../../tests/Md.css";
-import { MarkdownEditor } from "../markdownEditor/MarkdownEditor";
+import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 
 type MessagesPaneProps = {
@@ -77,18 +77,6 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
     }
   }, [currentSubChatEmail])
 
-  // TODO: limit initial num of messages, and load more after
-  const handleAtTop = (atTop: boolean) => {
-    if (atTop) {
-      // loadMore()
-    }
-  }
-
-  // Detecting if scroll bar is near the bottom
-  const handleAtBottom = (atBottom: boolean) => {
-    ref.current.nearBottom = atBottom
-  }
-
   // Calculate chat pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
   const [listHeight, setListHeight] = useState(window.innerHeight - 310);
@@ -100,30 +88,20 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         setListHeight(currentHeight - 310)
       }
     };
-
     updateHeight(); // Initial height
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
   }, [chat]);
 
 
-
-
   return (
     <Sheet
       ref={containerRef}
       sx={{
-        height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
+        height: { xs: 'calc(100dvh - var(--Header-height))', md: '50dvh' },
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'background.level2',
-        maxWidth: '100%',
-        borderRight: '1px solid',
-        borderColor: 'divider',
-        overflowY: 'auto',
-        position: 'relative',
-        flex: 1,
-        overflow: 'auto',
         borderBottom: 2,
         borderBottomColor: 'LightGray'
       }}
@@ -138,9 +116,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
           totalCount={chatMessages.length}
           initialTopMostItemIndex={chatMessages.length - 1}
           atTopThreshold={64}
-          atTopStateChange={handleAtTop}
           atBottomThreshold={128}
-          atBottomStateChange={handleAtBottom}
           itemContent={(index) => {
             const message = chatMessages[index];
             const isYou = message.sender.userName === myself.userName;

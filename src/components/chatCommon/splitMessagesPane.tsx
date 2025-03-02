@@ -21,6 +21,7 @@ type MessagesSplitPaneProps = {
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setIsRightSideVisible: (value: boolean) => void;
     currentMainChatEmail: string;
+    currentSubChatEmail: string;
 };
 
 export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
@@ -34,7 +35,8 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
         setCurrentSubChat,
         setCurrentThreadChat,
         setIsRightSideVisible,
-        currentMainChatEmail } = props;
+        currentMainChatEmail,
+        currentSubChatEmail } = props;
 
     return (
         <Sheet
@@ -74,7 +76,8 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                         setCurrentSubChat={setCurrentSubChat}
                         setCurrentThreadChat={setCurrentThreadChat}
                         setIsSubChatVisible={setIsSubChatVisible}
-                        setIsRightSideVisible={setIsRightSideVisible} />
+                        setIsRightSideVisible={setIsRightSideVisible}
+                        currentSubChatEmail={currentSubChatEmail} />
                 )}
 
                 {/* Bottom Messages Pane (Expands when Top Pane is Hidden) */}
