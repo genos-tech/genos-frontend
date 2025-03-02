@@ -27,7 +27,7 @@ const Error: React.FC = () => {
             <Typography level="h4" style={{ color: 'white' }}>
                 The page you’re looking for doesn’t exist.
             </Typography>
-            <Button onClick={handleBackHome}>Back Home</Button>
+            <Button component='a' onClick={handleBackHome}>Back Home</Button>
         </Box>
     );
 };

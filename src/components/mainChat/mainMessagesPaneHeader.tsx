@@ -87,6 +87,7 @@ export default function MessagesPaneHeader(props: MessagesPaneHeaderProps) {
       </Stack>
       <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
         <Button
+          component='a'
           startDecorator={<PhoneInTalkRoundedIcon />}
           color="neutral"
           variant="outlined"
@@ -95,7 +96,7 @@ export default function MessagesPaneHeader(props: MessagesPaneHeaderProps) {
         >
           Call
         </Button>
-        <IconButton size="sm" variant="plain" color="neutral">
+        <IconButton component='a' size="sm" variant="plain" color="neutral">
           <MoreVertRoundedIcon />
         </IconButton>
       </Stack>

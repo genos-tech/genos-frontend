@@ -1,6 +1,6 @@
 import Stack from '@mui/joy/Stack';
 import Sheet from '@mui/joy/Sheet';
-import MessagesPane from '../mainChat/messagesPane';
+import MessagesPane from '../mainChat/mainMessagesPane';
 import MessagesSubPane from '../subChat/subMessagesPane';
 import { Socket } from "socket.io-client";
 import {
@@ -20,6 +20,8 @@ type MessagesSplitPaneProps = {
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setIsRightSideVisible: (value: boolean) => void;
+    currentMainChatEmail: string;
+    currentSubChatEmail: string;
 };
 
 export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
@@ -32,7 +34,9 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
         setCurrentMainChat,
         setCurrentSubChat,
         setCurrentThreadChat,
-        setIsRightSideVisible } = props;
+        setIsRightSideVisible,
+        currentMainChatEmail,
+        currentSubChatEmail } = props;
 
     return (
         <Sheet
@@ -72,7 +76,8 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                         setCurrentSubChat={setCurrentSubChat}
                         setCurrentThreadChat={setCurrentThreadChat}
                         setIsSubChatVisible={setIsSubChatVisible}
-                        setIsRightSideVisible={setIsRightSideVisible} />
+                        setIsRightSideVisible={setIsRightSideVisible}
+                        currentSubChatEmail={currentSubChatEmail} />
                 )}
 
                 {/* Bottom Messages Pane (Expands when Top Pane is Hidden) */}
@@ -84,6 +89,7 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                     setCurrentThreadChat={setCurrentThreadChat}
                     setIsRightSideVisible={setIsRightSideVisible}
                     isSubChatVisible={isSubChatVisible}
+                    currentMainChatEmail={currentMainChatEmail}
                 />
             </Stack>
         </Sheet>

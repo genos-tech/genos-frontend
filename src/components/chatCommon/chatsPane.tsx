@@ -465,7 +465,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             GMs
           </Typography>
 
-          <IconButton size="sm" variant="plain" color="neutral" onClick={() => setOpen(true)}>
+          <IconButton component='a' size="sm" variant="plain" color="neutral" onClick={() => setOpen(true)}>
             <AddIcon />
           </IconButton>
 
@@ -490,10 +490,10 @@ export default function ChatsPane(props: ChatsPaneProps) {
               <Alert color="danger">{CreateCGErrorMessage}</Alert>
             )}
             <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-              <Button variant="outlined" onClick={() => setOpen(false)}>
+              <Button component='a' variant="outlined" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateGroup} disabled={!chatName.trim()}>
+              <Button component='a' onClick={handleCreateGroup} disabled={!chatName.trim()}>
                 Create
               </Button>
             </Stack>

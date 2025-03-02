@@ -145,7 +145,7 @@ export default function SignIn() {
                         sx={{ py: 3, display: 'flex', justifyContent: 'space-between' }}
                     >
                         <Box sx={{ gap: 2, display: 'flex', alignItems: 'center' }}>
-                            <IconButton variant="soft" color="primary" size="sm">
+                            <IconButton component='a' variant="soft" color="primary" size="sm">
                                 <BadgeRoundedIcon />
                             </IconButton>
                             <Typography level="title-lg">Company logo</Typography>
@@ -251,6 +251,7 @@ export default function SignIn() {
 
                         <Stack sx={{ gap: 4, mb: 2 }}>
                             <Button
+                                component='a'
                                 variant="soft"
                                 color="neutral"
                                 fullWidth

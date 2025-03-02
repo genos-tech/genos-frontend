@@ -89,6 +89,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
       </Stack>
       <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
         <Button
+          component='a'
           startDecorator={<PhoneInTalkRoundedIcon />}
           color="neutral"
           variant="outlined"
@@ -99,7 +100,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
         </Button>
 
         <Tooltip title="Close Chat" size='sm'>
-          <IconButton size="sm" variant="plain" color="neutral" onClick={() => setIsSubChatVisible(false)}>
+          <IconButton component='a' size="sm" variant="plain" color="neutral" onClick={() => setIsSubChatVisible(false)}>
             <CancelIcon />
           </IconButton>
         </Tooltip>

@@ -1,48 +1,49 @@
-import * as React from 'react';
 import { useState, useEffect, useRef } from "react";
 import Box from '@mui/joy/Box';
 import Sheet from '@mui/joy/Sheet';
 import Stack from '@mui/joy/Stack';
-import ThreadBubble from './threadBubble';
+import ChatBubble from '../chatCommon/chatBubble';
 import { Socket } from "socket.io-client";
-import ThreadPaneHeader from './threadPaneHeader';
+import MessagesPaneHeader from './mainMessagesPaneHeader';
 import {
+  ChatProps,
   UserProps,
   ThreadProps
 } from '../../types';
+import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
-import { MarkdownEditor } from "../markdownEditor/threadMdEditor";
 
 type MessagesPaneProps = {
-  thread: ThreadProps;
+  chat: ChatProps;
   myself: UserProps;
   socket: Socket;
+  setCurrentMainChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsRightSideVisible: (value: boolean) => void;
-  currentThreadChatEmail: string;
+  isSubChatVisible: boolean;
+  currentMainChatEmail: string;
 };
 
-
-
-export default function ThreadPane(props: MessagesPaneProps) {
-  const { thread,
+export default function MessagesPane(props: MessagesPaneProps) {
+  const { chat,
     myself,
     socket,
+    setCurrentMainChat,
     setCurrentThreadChat,
     setIsRightSideVisible,
-    currentThreadChatEmail } = props;
-  const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
+    isSubChatVisible,
+    currentMainChatEmail } = props;
+  const [chatMessages, setChatMessages] = useState(chat.messages);
   const [content, setContent] = useState("");
 
-  React.useEffect(() => {
-    setThreadMessages(thread.messages || []);
-  }, [thread.messages]);
+  useEffect(() => {
+    setChatMessages(chat.messages);
+  }, [chat.messages]);
 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
   const ref = useRef({
     nearBottom: false,
   })
-
 
   // Scroll to the bottom when a new message comes.
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         })
       }, 200)
     }
-  }, [thread])
+  }, [chat])
 
   // Scroll to the bottom at first.
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         })
       }, 300)
     }
-  }, [currentThreadChatEmail])
+  }, [currentMainChatEmail])
 
   // TODO: limit initial num of messages, and load more after
   const handleAtTop = (atTop: boolean) => {
@@ -85,7 +86,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
     ref.current.nearBottom = atBottom
   }
 
-  // Calculate thread pane height dynamically
+  // Calculate chat pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
   const [listHeight, setListHeight] = useState(window.innerHeight - 310);
   useEffect(() => {
@@ -96,41 +97,36 @@ export default function ThreadPane(props: MessagesPaneProps) {
         setListHeight(currentHeight - 310)
       }
     };
-
-    updateHeight(); // Initial height
+    updateHeight();
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
-  }, [thread]);
+  }, [chat, isSubChatVisible]);
 
   return (
     <Sheet
       ref={containerRef}
       sx={{
-        height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
+        height: { xs: 'calc(100dvh - var(--Header-height))', md: isSubChatVisible ? '50dvh' : '100dvh' },
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'background.level3',
+        backgroundColor: 'background.level1',
       }}
     >
-      <ThreadPaneHeader
-        myself={myself}
-        thread={thread}
-        setCurrentThreadChat={setCurrentThreadChat}
-        setIsRightSideVisible={setIsRightSideVisible} />
+      <MessagesPaneHeader myself={myself} chat={chat} />
 
       <Box sx={{ px: 0.3, py: 0.5 }}>
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
           style={{ height: listHeight }}
-          totalCount={threadMessages.length}
-          initialTopMostItemIndex={threadMessages.length - 1}
+          totalCount={chatMessages.length}
+          initialTopMostItemIndex={chatMessages.length - 1}
           atTopThreshold={64}
           atTopStateChange={handleAtTop}
           atBottomThreshold={128}
           atBottomStateChange={handleAtBottom}
           itemContent={(index) => {
-            const message = threadMessages[index];
+            const message = chatMessages[index];
             const isYou = message.sender.userName === myself.userName;
             return (
               <div>
@@ -139,13 +135,21 @@ export default function ThreadPane(props: MessagesPaneProps) {
                   spacing={2}
                   sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
                 >
-                  <ThreadBubble
-                    variant={isYou ? 'sent' : 'received'}
-                    {...message} />
+                  <ChatBubble
+                    myself={myself}
+                    variant={isYou ? "sent" : "received"}
+                    chat={chat}
+                    socket={socket}
+                    {...message}
+                    setIsRightSideVisible={setIsRightSideVisible}
+                    setCurrentThreadChat={setCurrentThreadChat}
+                  />
                 </Stack>
               </div>
+
             );
-          }}
+          }
+          }
         />
       </Box>
 
@@ -153,13 +157,12 @@ export default function ThreadPane(props: MessagesPaneProps) {
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}
-            thread={thread}
+            chat={chat}
             messageContent={content}
             setContent={setContent}
-            setCurrentThreadChat={setCurrentThreadChat} />
+            setCurrentChat={setCurrentMainChat} />
         </div>
       </Box>
-
-    </Sheet>
+    </Sheet >
   );
 }

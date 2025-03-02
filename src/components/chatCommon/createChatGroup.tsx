@@ -174,6 +174,7 @@ async function createChatGroup(
                     content: `${userName} created`,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
+                    numReplies: 0
                 },
                 TSLastMessage: getCurrentTimestamp(),
             }

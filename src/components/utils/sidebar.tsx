@@ -85,7 +85,7 @@ export default function Sidebar() {
         onClick={() => closeSidebar()}
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-        <IconButton variant="soft" color="primary" size="sm">
+        <IconButton component='a' variant="soft" color="primary" size="sm">
           <BrightnessAutoRoundedIcon />
         </IconButton>
         <ColorSchemeToggle />
@@ -146,7 +146,7 @@ export default function Sidebar() {
           </ListItem>
         </List>
       </Box>
-      <IconButton onClick={handleLogout} size="sm" variant="plain" color="neutral">
+      <IconButton component='a' onClick={handleLogout} size="sm" variant="plain" color="neutral">
         <LogoutRoundedIcon />
       </IconButton>
       <Divider />

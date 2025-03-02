@@ -92,3 +92,46 @@
   border-radius: 10px;
   /* Keep it rounded on hover */
 }
+
+
+
+
+
+.md-content {
+  background-color: #0B0D0E;
+}
+
+/* Change background for inline <code> */
+.markdown-preview {
+  color: white;
+}
+
+/* Change background for inline <code> */
+.markdown-preview p {
+  padding-left: 5px;
+}
+
+/* Change background for inline <code> */
+.markdown-preview code {
+  background-color: #656565 !important;
+  padding: 4px;
+  border-radius: 4px;
+  color: white; /* Optional: Change text color */
+}
+
+/* Change background for code blocks */
+.markdown-preview pre code {
+  background-color: #292929 !important;
+  display: block;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+/* Change background for code blocks */
+.markdown-preview blockquote {
+  background-color: #6f6f6f !important;
+  color: white;
+  display: block;
+  padding: 8px;
+  border-radius: 4px;
+}

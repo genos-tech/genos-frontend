@@ -143,10 +143,10 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
             <Alert color="danger">{CreateTaskErrorMessage}</Alert>
           )}
           <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-            <Button variant="outlined" onClick={() => setOpen(false)}>
+            <Button component='a' variant="outlined" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateGroup} disabled={!taskTitle.trim()}>
+            <Button component='a' onClick={handleCreateGroup} disabled={!taskTitle.trim()}>
               Create
             </Button>
           </Stack>

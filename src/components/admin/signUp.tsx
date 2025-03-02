@@ -136,7 +136,7 @@ export default function SignUp() {
                         sx={{ py: 3, display: 'flex', justifyContent: 'space-between' }}
                     >
                         <Box sx={{ gap: 2, display: 'flex', alignItems: 'center' }}>
-                            <IconButton variant="soft" color="primary" size="sm">
+                            <IconButton component='a' variant="soft" color="primary" size="sm">
                                 <BadgeRoundedIcon />
                             </IconButton>
                             <Typography level="title-lg">Weikiy</Typography>

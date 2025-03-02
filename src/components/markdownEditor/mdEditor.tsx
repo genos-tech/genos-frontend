@@ -1,0 +1,331 @@
+import MDEditor, { EditorContext, commands } from "@uiw/react-md-editor";
+import rehypeSanitize from "rehype-sanitize";
+import "./markdown_editor.css";
+import { useContext } from "react";
+import { BoldIcon } from "../../assets/BoldIcon";
+import { ItalicIcon } from "../../assets/ItalicIcon";
+import { QuoteIcon } from "../../assets/QuoteIcon";
+import { CodeIcon } from "../../assets/CodeIcon";
+import { LinkIcon } from "../../assets/LinkIcon";
+import { OrderedListIcon } from "../../assets/OrderedListIcon";
+import { UnorderedListIcon } from "../../assets/UnorderedListIcon";
+import { CodeBlockIcon } from "../../assets/CodeBlockIcon";
+import { StrikethroughIcon } from "../../assets/StrikethroughIcon";
+import Stack from '@mui/joy/Stack';
+import MDFooter from './mdFooter'
+import { UserProps, ChatProps, AllChatProps } from '../../types'
+import { Socket } from "socket.io-client";
+import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
+import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
+import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
+import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
+
+
+function getCurrentTimestamp() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+
+
+const insertDMChatAndMessage = async (newDMChat: AllChatProps): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const insertDMMessageWorker = new InsertDMMessageWorker();
+    insertDMMessageWorker.postMessage({ dmMessage: newDMChat.latestMessage });
+    insertDMMessageWorker.onmessage = (event) => {
+      resolve(event.data);
+      insertDMMessageWorker.terminate();
+    };
+    insertDMMessageWorker.onerror = (error) => {
+      reject(error);
+      insertDMMessageWorker.terminate();
+    };
+
+    const insertDMChatWorker = new InsertDMChatWorker();
+    insertDMChatWorker.postMessage({ dmChat: newDMChat });
+    insertDMChatWorker.onmessage = (event) => {
+      resolve(event.data);
+      insertDMChatWorker.terminate();
+    };
+    insertDMChatWorker.onerror = (error) => {
+      reject(error);
+      insertDMChatWorker.terminate();
+    };
+  });
+};
+
+const insertGMChatAndMessage = async (newGMChat: AllChatProps): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const insertGMMessageWorker = new InsertGMMessageWorker();
+    insertGMMessageWorker.postMessage({ gmMessage: newGMChat.latestMessage });
+    insertGMMessageWorker.onmessage = (event) => {
+      resolve(event.data);
+      insertGMMessageWorker.terminate();
+    };
+    insertGMMessageWorker.onerror = (error) => {
+      reject(error);
+      insertGMMessageWorker.terminate();
+    };
+
+    const insertGMChatWorker = new InsertGMChatWorker();
+    insertGMChatWorker.postMessage({ gmChat: newGMChat });
+    insertGMChatWorker.onmessage = (event) => {
+      resolve(event.data);
+      insertGMChatWorker.terminate();
+    };
+    insertGMChatWorker.onerror = (error) => {
+      reject(error);
+      insertGMChatWorker.terminate();
+    };
+  });
+};
+
+const EditButton = () => {
+  const { preview, dispatch } = useContext(EditorContext);
+
+  const click = () => {
+    if (dispatch) {
+      dispatch({
+        preview: "edit",
+      });
+    }
+  };
+  return (
+    <span
+      style={{
+        color: '#c1c1c1',
+        backgroundColor: preview === "edit" ? "#393939" : "#393939",
+        borderTopLeftRadius: "8px",
+        borderTopRightRadius: preview === "edit" ? "8px" : "0px",
+        borderRight: preview === "edit" ? "1px solid #393939" : "none",
+        padding: "11px 16px 12px 16px",
+        fontSize: "14px",
+      }}
+      onClick={click}
+    >
+      Edit
+    </span>
+  );
+};
+
+const PreviewButton = () => {
+  const { preview, dispatch } = useContext(EditorContext);
+  const click = () => {
+    if (dispatch) {
+      dispatch({
+        preview: "preview",
+      });
+    }
+  };
+  return (
+    <span
+      style={{
+        color: '#c1c1c1',
+        backgroundColor: preview === "preview" ? "#393939" : "#393939",
+        borderTopLeftRadius: preview === "preview" ? "8px" : "0px",
+        borderTopRightRadius: preview === "preview" ? "8px" : "0px",
+        borderRight: preview === "preview" ? "1px solid #393939" : "none",
+        borderLeft: preview === "preview" ? "1px solid #393939" : "none",
+        padding: "11px 16px 12px 16px",
+        fontSize: "14px",
+      }}
+      onClick={click}
+    >
+      Preview
+    </span>
+  );
+};
+
+const editPreviewCommand = {
+  name: "edit-preview",
+  keyCommand: "edit-preview",
+  buttonProps: { "aria-label": "Generate Edit" },
+  icon: <EditButton />,
+};
+
+const customPreviewCommand = {
+  name: "custom-preview",
+  keyCommand: "custom-preview",
+  buttonProps: { "aria-label": "Generate Preview" },
+  icon: <PreviewButton />,
+};
+
+const customBoldCommand = {
+  ...commands.bold,
+  icon: <BoldIcon color="#c1c1c1" />,
+};
+
+const customItalicCommand = {
+  ...commands.italic,
+  icon: <ItalicIcon color="#c1c1c1" />,
+};
+
+const customStrikethroughCommand = {
+  ...commands.strikethrough,
+  icon: <StrikethroughIcon color="#c1c1c1" />,
+};
+
+const customQuoteCommand = {
+  ...commands.quote,
+  icon: <QuoteIcon color="#c1c1c1" />,
+};
+
+const customCodeCommand = {
+  ...commands.code,
+  icon: <CodeIcon color="#c1c1c1" />,
+};
+
+const customCodeBlockCommand = {
+  ...commands.codeBlock,
+  icon: <CodeBlockIcon color="#c1c1c1" />,
+};
+
+const customLinkCommand = {
+  ...commands.link,
+  icon: <LinkIcon color="#c1c1c1" />,
+};
+
+const customOrderedListCommand = {
+  ...commands.orderedListCommand,
+  icon: <OrderedListIcon color="#c1c1c1" />,
+};
+
+const customUnorderedListCommand = {
+  ...commands.unorderedListCommand,
+  icon: <UnorderedListIcon color="#c1c1c1" />,
+};
+
+type MarkdownEditorProps = {
+  setContent: (text: string) => void;
+  myself: UserProps;
+  socket: Socket;
+  chat: ChatProps;
+  messageContent: string;
+  setCurrentChat: (chat: ChatProps) => void;
+};
+
+export const MarkdownEditor = ({
+  messageContent,
+  myself,
+  socket,
+  chat,
+  setCurrentChat,
+  setContent,
+}: MarkdownEditorProps) => {
+  return (
+    <div>
+      <Stack direction="column" >
+        <MDEditor
+          height={200}
+          visibleDragbar={false}
+          commands={[
+            editPreviewCommand,
+            customPreviewCommand,
+            customBoldCommand,
+            customItalicCommand,
+            customStrikethroughCommand,
+            customLinkCommand,
+            customQuoteCommand,
+            commands.divider,
+            customOrderedListCommand,
+            customUnorderedListCommand,
+            commands.divider,
+            customCodeCommand,
+            customCodeBlockCommand,
+          ]}
+          extraCommands={[]}
+          preview="edit"
+          previewOptions={{
+            rehypePlugins: [[rehypeSanitize]],
+          }}
+          value={messageContent}
+          onChange={(val) => setContent(val ?? "")}
+          textareaProps={{
+            placeholder: "Type something here...",
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+
+                if (messageContent.trim()) {
+                  socket.emit("message", {
+                    message: messageContent,
+                    destCGName: chat.chatName,
+                    destCGEmail: chat.chatEmail,
+                    isDm: chat.isDm,
+                  }, (ack: any) => {
+
+                    const updatedChat: ChatProps = {
+                      chatName: chat.chatName,
+                      chatEmail: chat.chatEmail,
+                      isDm: chat.isDm,
+                      unread: false,
+                      messages: [...chat.messages, {
+                        messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                        messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                        chatEmail: chat.chatEmail,
+                        content: messageContent,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                        numReplies: 0,
+                      }],
+                      latestMessage: {
+                        messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                        messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                        chatEmail: chat.chatEmail,
+                        content: messageContent,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                        numReplies: 0,
+                      },
+                      TSLastMessage: getCurrentTimestamp(),
+                    };
+                    setCurrentChat(updatedChat);
+
+                    const newChat: AllChatProps = {
+                      chatName: chat.chatName,
+                      chatEmail: chat.chatEmail,
+                      isDm: chat.isDm,
+                      unread: false,
+                      latestMessage: {
+                        messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                        messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                        chatEmail: chat.chatEmail,
+                        content: messageContent,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                        numReplies: 0,
+                      },
+                      TSLastMessage: getCurrentTimestamp(),
+                    };
+
+                    if (chat.isDm) {
+                      insertDMChatAndMessage(newChat);
+                    } else {
+                      insertGMChatAndMessage(newChat);
+                    }
+
+                    setContent("")
+                  });
+                }
+
+              }
+            }
+          }
+          }
+        />
+        <MDFooter messageContent={messageContent}
+          myself={myself}
+          socket={socket}
+          chat={chat}
+          setCurrentChat={setCurrentChat}
+          setContent={setContent} />
+      </Stack>
+    </div>
+  );
+};

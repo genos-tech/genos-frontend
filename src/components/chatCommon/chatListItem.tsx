@@ -184,42 +184,48 @@ export default function ChatListItem(props: ChatListItemProps) {
           sx={{ flexDirection: 'column', alignItems: 'initial', gap: 1 }}
         >
           <Stack direction="column">
-            <Stack direction="row" spacing={1.5}>
-              <div>
-                {chat.isDm ? (
-                  <AvatarWithStatus size='sm' online={always_online} src="" />
-                ) : (
-                  <Avatar size="md">
-                    <GroupsIcon sx={{ fontSize: 20 }} />
-                  </Avatar>
-                )}
-              </div>
-              <Box>
-                <Typography noWrap level="title-sm">{isYou ? `${chat.chatName} (me)` : chat.chatName}</Typography>
-              </Box>
-              <Box sx={{ flex: 1 }}>
+            <Stack direction="row" spacing={1.5} justifyContent="space-between" alignItems="center">
+              <Stack direction="row" spacing={1}>
+                <div>
+                  {chat.isDm ? (
+                    <AvatarWithStatus size="sm" online={always_online} src="" />
+                  ) : (
+                    <Avatar size="md">
+                      <GroupsIcon sx={{ fontSize: 20 }} />
+                    </Avatar>
+                  )}
+                </div>
+                <Box>
+                  <Typography noWrap level="title-sm">
+                    {isYou ? `${chat.chatName} (me)` : chat.chatName}
+                  </Typography>
+                </Box>
+              </Stack>
+
+              {/* Right-aligned content */}
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <Typography
                   level="body-xs"
                   noWrap
-                  sx={{ display: { xs: 'none', md: 'block' } }}
+                  sx={{ display: { xs: "none", md: "block" } }}
                 >
                   {tsSent}
                 </Typography>
-              </Box>
-              <Box sx={{ flex: 1, textAlign: 'right' }}>
-                {chat.unread && (
-                  <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-                )}
-                <Tooltip title="Split View " size='sm'>
-                  <IconButton onClick={(event) => {
-                    event.stopPropagation(); // Stop the click from reaching ListItemButton
-                    splitOpenHandler(); // Call the intended function
-                  }}>
+                {chat.unread && <CircleIcon sx={{ fontSize: 12 }} color="primary" />}
+                <Tooltip title="Split View " size="sm">
+                  <IconButton
+                    component="a"
+                    onClick={(event) => {
+                      event.stopPropagation(); // Stop the click from reaching ListItemButton
+                      splitOpenHandler(); // Call the intended function
+                    }}
+                  >
                     <OpenInNewIcon sx={{ fontSize: 12 }} />
                   </IconButton>
                 </Tooltip>
-              </Box>
+              </Stack>
             </Stack>
+
             <Box sx={{ lineHeight: 0, textAlign: 'right' }}>
               <Typography
                 level="body-sm"
