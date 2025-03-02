@@ -10,7 +10,6 @@ import {
   UserProps,
   ThreadProps
 } from '../../types';
-import "../../tests/Md.css";
 import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 

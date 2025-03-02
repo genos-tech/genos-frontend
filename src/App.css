@@ -96,6 +96,11 @@
 
 
 
+
+.md-content {
+  background-color: #0B0D0E;
+}
+
 /* Change background for inline <code> */
 .markdown-preview {
   color: white;
