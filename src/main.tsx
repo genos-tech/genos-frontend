@@ -2,12 +2,13 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 import './index.css'
 import App from './App.tsx'
-import SignIn from './components/admin/SignIn.tsx'
-import SignUp from './components/admin/SignUp.tsx'
-import PageNotFound from './components/utils/PageNotFound.tsx'
-import AuthGuard from './AuthGuard'
+import SignIn from './components/admin/signIn.tsx'
+import SignUp from './components/admin/signUp.tsx'
+import PageNotFound from './components/utils/pageNotFound.tsx'
+import AuthGuard from './authGuard'
 import ChatWindow from './tests/react_window_test.tsx'
 import LoadTest from './tests/load_test.tsx'
+import CustomEditor from './tests/test.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <Router>
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')!).render(
       {/* testing pages */}
       <Route path="/testWindow" element={<ChatWindow />} />
       <Route path="/loadTest" element={<LoadTest />} />
+      <Route path="/mdTest" element={<CustomEditor />} />
 
     </Routes>
   </Router>

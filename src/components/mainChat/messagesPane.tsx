@@ -18,6 +18,8 @@ import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
 import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
+import "../../tests/Md.css";
+import { MarkdownEditor } from "../markdownEditor/MarkdownEditor";
 
 function getCurrentTimestamp() {
   const now = new Date();
@@ -104,6 +106,8 @@ export default function MessagesPane(props: MessagesPaneProps) {
     isSubChatVisible } = props;
   const [chatMessages, setChatMessages] = React.useState(chat.messages);
 
+  const [content, setContent] = useState("");
+
 
   React.useEffect(() => {
     setChatMessages(chat.messages);
@@ -112,8 +116,17 @@ export default function MessagesPane(props: MessagesPaneProps) {
 
   const listRef = useRef<List | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 200);
+  const [listHeight, setListHeight] = useState(window.innerHeight - 310);
   const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
+
+  // useEffect(() => {
+  //   if (isSubChatVisible) {
+  //     setListHeight(window.innerHeight - 955)
+  //   } else {
+  //     setListHeight(window.innerHeight - 310)
+  //   }
+
+  // },[isSubChatVisible])
 
   useEffect(() => {
     if (containerRef.current) {
@@ -140,11 +153,9 @@ export default function MessagesPane(props: MessagesPaneProps) {
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {
-        if (isSubChatVisible) {
-          setListHeight(containerRef.current.clientHeight);
-        } else {
-          setListHeight(window.innerHeight - 220); // ✅ Get wrapper div height
-        }
+        // This is very very important to set the height of the message bubble !!!!!!!
+        const currentHeight: number = containerRef.current.clientHeight
+        setListHeight(currentHeight - 310) 
       }
     };
 
@@ -203,130 +214,66 @@ export default function MessagesPane(props: MessagesPaneProps) {
 
   return (
     <Sheet
+      ref={containerRef}
       sx={{
         height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'background.level1',
         flex: 1,
-        overflow: 'auto'
+        overflow: 'hidden'
       }}
     >
       <MessagesPaneHeader myself={myself} chat={chat} />
 
       <Box
-        sx={{
-          display: 'flex',
-          flex: 1,
-          minHeight: 0,
-          px: 1.0,
-          py: 1.0,
-        }}
+        sx={{ px: 0.5, py: 0.5 }}
       >
-        <div ref={containerRef} style={{ overflow: 'hidden', width: '100%' }}>
-          <List
-            ref={listRef}
-            height={listHeight} // Dynamically updated height
-            itemCount={chatMessages.length}
-            itemSize={getItemSize} // Use the pre-calculated height array
-            width="100%"
-            className="custom-scrollbar"
-          >
-            {({ index, style }) => {
-              const message = chatMessages[index];
-              const isYou = message.sender.userName === myself.userName;
+        <List
+          ref={listRef}
+          height={listHeight} // Dynamically updated height of chat bubble
+          itemCount={chatMessages.length}
+          itemSize={getItemSize} // Use the pre-calculated height array
+          width="100%"
+          className="custom-scrollbar"
+        >
+          {({ index, style }) => {
+            const message = chatMessages[index];
+            const isYou = message.sender.userName === myself.userName;
 
-              return (
-                <div
-                  style={style}
-                > {/* Apply virtualization styles */}
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    sx={{ flexDirection: isYou ? "row-reverse" : "row" }}
-                  >
-                    <ChatBubble
-                      myself={myself}
-                      variant={isYou ? "sent" : "received"}
-                      chat={chat}
-                      socket={socket}
-                      {...message}
-                      setIsRightSideVisible={setIsRightSideVisible}
-                      setCurrentThreadChat={setCurrentThreadChat}
-                    />
-                  </Stack>
-                </div>
-              );
-            }}
-          </List>
+            return (
+              <div style={style} >
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  sx={{ flexDirection: isYou ? "row-reverse" : "row" }}
+                >
+                  <ChatBubble
+                    myself={myself}
+                    variant={isYou ? "sent" : "received"}
+                    chat={chat}
+                    socket={socket}
+                    {...message}
+                    setIsRightSideVisible={setIsRightSideVisible}
+                    setCurrentThreadChat={setCurrentThreadChat}
+                  />
+                </Stack>
+              </div>
+            );
+          }}
+        </List>
+
+      </Box>
+      <Box sx={{ px: 0.5, py: 0 }}>
+        <div className="md-content">
+          <MarkdownEditor myself={myself}
+            socket={socket}
+            chat={chat}
+            messageContent={content}
+            setContent={setContent}
+            setCurrentMainChat={setCurrentMainChat} />
         </div>
       </Box>
-
-      <Box sx={{ px: 0.3, pb: 0.5 }}>
-        <MessageInput
-          onSubmit={(messageContent: string) => {
-            if (messageContent.trim()) {
-              socket.emit("message", {
-                message: messageContent,
-                destCGName: chat.chatName,
-                destCGEmail: chat.chatEmail,
-                isDm: chat.isDm,
-              }, (ack: any) => {
-
-                const updatedChat: ChatProps = {
-                  chatName: chat.chatName,
-                  chatEmail: chat.chatEmail,
-                  isDm: chat.isDm,
-                  unread: false,
-                  messages: [...chat.messages, {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
-                    chatEmail: chat.chatEmail,
-                    content: messageContent,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
-                  }],
-                  latestMessage: {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
-                    chatEmail: chat.chatEmail,
-                    content: messageContent,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
-                  },
-                  TSLastMessage: getCurrentTimestamp(),
-                };
-                setCurrentMainChat(updatedChat);
-
-                const newChat: AllChatProps = {
-                  chatName: chat.chatName,
-                  chatEmail: chat.chatEmail,
-                  isDm: chat.isDm,
-                  unread: false,
-                  latestMessage: {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
-                    chatEmail: chat.chatEmail,
-                    content: messageContent,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
-                  },
-                  TSLastMessage: getCurrentTimestamp(),
-                };
-
-                if (chat.isDm) {
-                  insertDMChatAndMessage(newChat);
-                } else {
-                  insertGMChatAndMessage(newChat);
-                }
-              });
-            }
-          }}
-        />
-      </Box>
-    </Sheet>
+    </Sheet >
   );
 }

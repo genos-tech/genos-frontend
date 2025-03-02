@@ -1,0 +1,61 @@
+.w-md-editor {
+  border-radius: 8px;
+  --md-editor-box-shadow-color: #0B0D0E;
+  --md-editor-background-color: transparent;
+}
+
+body .w-md-editor-text-pre>code,
+body .w-md-editor-text-input {
+  font-size: 15px !important;
+  line-height: 24px !important;
+  color: #ffffff !important;
+}
+
+.w-md-editor-editor {
+  background-color: transparent;
+}
+
+.w-md-editor-preview {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  background-color: #0B0D0E;
+  color: #dadada;
+}
+
+.wmde-markdown {
+  background-color: #0B0D0E;
+  color: #dadada;
+}
+
+.w-md-editor-toolbar {
+  background-color: #393939;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  padding: 0;
+}
+
+.w-md-editor-toolbar ul {
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+}
+
+.w-md-editor-toolbar ul>*:not(:first-child):not(:nth-child(2)) {
+  margin-left: 12px;
+}
+
+.w-md-editor-toolbar li>button {
+  margin: 0;
+  padding: 0;
+  color: #0B0D0E !important;
+}
+
+.w-md-editor-toolbar li>button>span:hover {
+  color: #dadada !important;
+}
+
+/* When in preview mode */
+.w-md-editor-show-preview svg,
+.w-md-editor-toolbar-divider {
+  opacity: 0;
+}

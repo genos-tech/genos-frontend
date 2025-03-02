@@ -286,7 +286,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
-                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
+                    numReplies: 0,
                   }],
                   latestMessage: {
                     messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
@@ -295,7 +295,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
-                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
+                    numReplies: 0,
                   },
                   TSLastMessage: getCurrentTimestamp(),
                 };
@@ -313,7 +313,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
-                    numReplies: Number(chat.latestMessage?.numReplies) + 1,
+                    numReplies: 0,
                   },
                   TSLastMessage: getCurrentTimestamp(),
                 }
