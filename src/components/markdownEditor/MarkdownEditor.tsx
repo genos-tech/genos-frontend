@@ -208,7 +208,7 @@ type MarkdownEditorProps = {
   socket: Socket;
   chat: ChatProps;
   messageContent: string;
-  setCurrentMainChat: (chat: ChatProps) => void;
+  setCurrentChat: (chat: ChatProps) => void;
 };
 
 export const MarkdownEditor = ({
@@ -216,7 +216,7 @@ export const MarkdownEditor = ({
   myself,
   socket,
   chat,
-  setCurrentMainChat,
+  setCurrentChat,
   setContent,
 }: MarkdownEditorProps) => {
   return (
@@ -285,7 +285,7 @@ export const MarkdownEditor = ({
                       },
                       TSLastMessage: getCurrentTimestamp(),
                     };
-                    setCurrentMainChat(updatedChat);
+                    setCurrentChat(updatedChat);
 
                     const newChat: AllChatProps = {
                       chatName: chat.chatName,
@@ -323,7 +323,7 @@ export const MarkdownEditor = ({
           myself={myself}
           socket={socket}
           chat={chat}
-          setCurrentMainChat={setCurrentMainChat}
+          setCurrentChat={setCurrentChat}
           setContent={setContent} />
       </Stack>
     </div>

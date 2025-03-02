@@ -1,6 +1,6 @@
 import Stack from '@mui/joy/Stack';
 import Sheet from '@mui/joy/Sheet';
-import MessagesPane from '../mainChat/messagesPane';
+import MessagesPane from '../mainChat/mainMessagesPane';
 import MessagesSubPane from '../subChat/subMessagesPane';
 import { Socket } from "socket.io-client";
 import {

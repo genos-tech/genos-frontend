@@ -82,12 +82,12 @@ type MDFooterProps = {
     socket: Socket;
     chat: ChatProps;
     messageContent: string;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    setCurrentChat: (chat: ChatProps) => void;
     setContent: (text: string) => void;
 };
 
 export default function MDFooter(props: MDFooterProps) {
-    const { myself, socket, chat, messageContent, setCurrentMainChat, setContent } = props
+    const { myself, socket, chat, messageContent, setCurrentChat, setContent } = props
     return (
         <Box
             sx={{
@@ -149,7 +149,7 @@ export default function MDFooter(props: MDFooterProps) {
                                         },
                                         TSLastMessage: getCurrentTimestamp(),
                                     };
-                                    setCurrentMainChat(updatedChat);
+                                    setCurrentChat(updatedChat);
 
                                     const newChat: AllChatProps = {
                                         chatName: chat.chatName,

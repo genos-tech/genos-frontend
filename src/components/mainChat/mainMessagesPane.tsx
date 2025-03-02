@@ -1,11 +1,10 @@
-import * as React from 'react';
 import { useState, useEffect, useRef } from "react";
 import Box from '@mui/joy/Box';
 import Sheet from '@mui/joy/Sheet';
 import Stack from '@mui/joy/Stack';
 import ChatBubble from '../chatCommon/chatBubble';
 import { Socket } from "socket.io-client";
-import MessagesPaneHeader from './messagesPaneHeader';
+import MessagesPaneHeader from './mainMessagesPaneHeader';
 import {
   ChatProps,
   UserProps,
@@ -35,17 +34,14 @@ export default function MessagesPane(props: MessagesPaneProps) {
     setIsRightSideVisible,
     isSubChatVisible,
     currentMainChatEmail } = props;
-  const [chatMessages, setChatMessages] = React.useState(chat.messages);
-
+  const [chatMessages, setChatMessages] = useState(chat.messages);
   const [content, setContent] = useState("");
 
-
-  React.useEffect(() => {
+  useEffect(() => {
     setChatMessages(chat.messages);
   }, [chat.messages]);
 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
-
   const ref = useRef({
     nearBottom: false,
   })
@@ -168,7 +164,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
             chat={chat}
             messageContent={content}
             setContent={setContent}
-            setCurrentMainChat={setCurrentMainChat} />
+            setCurrentChat={setCurrentMainChat} />
         </div>
       </Box>
     </Sheet >

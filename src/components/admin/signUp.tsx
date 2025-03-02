@@ -211,7 +211,7 @@ export default function SignUp() {
                                     <Input type="password" name="confirm_password" />
                                 </FormControl>
                                 <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Button component='a' type="submit" fullWidth>
+                                    <Button type="submit" fullWidth>
                                         Sign up
                                     </Button>
                                 </Stack>

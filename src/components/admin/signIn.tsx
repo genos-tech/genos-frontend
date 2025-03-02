@@ -232,7 +232,7 @@ export default function SignIn() {
                                             Forgot your password?
                                         </Link>
                                     </Box>
-                                    <Button component='a' type="submit" fullWidth>
+                                    <Button type="submit" fullWidth>
                                         Sign in
                                     </Button>
                                 </Stack>
