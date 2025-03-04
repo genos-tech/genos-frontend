@@ -12,6 +12,8 @@ import {
 } from '../../types';
 import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
+import { useColorScheme } from '@mui/joy/styles';
+
 
 type MessagesPaneProps = {
   chat: ChatProps;
@@ -40,7 +42,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
     setChatMessages(chat.messages);
   }, [chat.messages]);
 
-
+  const { mode } = useColorScheme();
 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
   const ref = useRef({
@@ -78,13 +80,13 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
 
   // Calculate chat pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 310);
+  const [listHeight, setListHeight] = useState(window.innerHeight - 295);
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {
         // This is very very important to set the height of the message bubble !!!!!!!
         const currentHeight: number = containerRef.current.clientHeight
-        setListHeight(currentHeight - 310)
+        setListHeight(currentHeight - 295)
       }
     };
     updateHeight(); // Initial height
@@ -101,13 +103,13 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'background.level2',
-        borderBottom: 2,
-        borderBottomColor: 'LightGray'
+        borderBottom: 3,
+        borderBottomColor: mode === 'dark' ? 'LightGray': 'grey'
       }}
     >
       <SubMessagesPaneHeader myself={myself} chat={chat} setIsSubChatVisible={setIsSubChatVisible} />
 
-      <Box sx={{ px: 0.3, py: 0.5 }}>
+      <Box sx={{ px: 0.3, my: 2 }}>
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
@@ -143,7 +145,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
           }
         />
       </Box>
-      <Box sx={{ px: 0.5, py: 0 }}>
+      <Box sx={{ px: 0.3 }}>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}

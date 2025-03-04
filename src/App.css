@@ -74,11 +74,6 @@
   height: 8px;
 }
 
-.thread-custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-  /* or match your background color */
-}
-
 .thread-custom-scrollbar::-webkit-scrollbar-thumb {
   background: #313131;
   /* Adjust the thumb color */
@@ -95,15 +90,9 @@
 
 
 
-
-
-.md-content {
-  background-color: #0B0D0E;
-}
-
 /* Change background for inline <code> */
 .markdown-preview {
-  color: white;
+  /* color: white; */
 }
 
 /* Change background for inline <code> */
@@ -111,12 +100,17 @@
   padding-left: 5px;
 }
 
+.markdown-preview p a {
+  padding-left: 5px;
+  color: #3a58ff;
+}
+
 /* Change background for inline <code> */
 .markdown-preview code {
   background-color: #656565 !important;
   padding: 4px;
   border-radius: 4px;
-  color: white; /* Optional: Change text color */
+  color: white;
 }
 
 /* Change background for code blocks */
@@ -134,4 +128,30 @@
   display: block;
   padding: 8px;
   border-radius: 4px;
+}
+
+
+.markdown-editor-dark span {
+  color: white;
+}
+.markdown-editor-dark .w-md-editor-content .w-md-editor-preview {
+  background-color: grey;
+}
+.markdown-editor-dark .w-md-editor-content .w-md-editor-preview div * {
+  color: white;
+}
+
+.markdown-editor-light span {
+  color: black;
+}
+.markdown-editor-light .w-md-editor-content .w-md-editor-preview {
+  background-color: #ededed;
+}
+.markdown-editor-light .w-md-editor-content .w-md-editor-preview div * {
+  color: white;
+}
+
+textarea::placeholder {
+  color: #393939; /* Change to your desired color */
+  opacity: 1; /* Ensure full visibility */
 }

@@ -14,7 +14,7 @@ export default function ColorSchemeToggle(props: IconButtonProps) {
   }, []);
   if (!mounted) {
     return (
-      <IconButton
+      <IconButton 
         size="sm"
         variant="outlined"
         color="neutral"

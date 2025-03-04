@@ -5,13 +5,13 @@ import IconButton from '@mui/joy/IconButton';
 import Stack from '@mui/joy/Stack';
 import Sheet from '@mui/joy/Sheet';
 import Typography from '@mui/joy/Typography';
-import Tooltip from '@mui/joy/Tooltip';
 import MarkdownPreview from '@uiw/react-markdown-preview';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
 import { ThreadMessageProps } from '../../types';
+import { useColorScheme } from '@mui/joy/styles';
 
 type ThreadBubbleProps = ThreadMessageProps & {
   variant: 'sent' | 'received';
@@ -30,8 +30,8 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
   const [isCelebrated, setIsCelebrated] = React.useState<boolean>(false);
-
   const _tsSent = extractHHMM(tsSent)
+  const { mode } = useColorScheme();
 
   return (
     <Box sx={{
@@ -92,10 +92,10 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
                 },
               isSent
                 ? {
-                  backgroundColor: 'var(--joy-palette-primary-solidBg)',
+                  backgroundColor: 'neutral.plainColor',
                 }
                 : {
-                  backgroundColor: 'background.body',
+                  backgroundColor: 'neutral.outlinedBorder',
                 },
             ]}
           >
@@ -119,7 +119,7 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
                           },
                           isSent
                             ? {
-                              color: 'var(--joy-palette-common-white)',
+                              color: 'background.body',
                             }
                             : {
                               color: 'var(--joy-palette-text-primary)',
@@ -131,28 +131,26 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
                     </Box>
 
                     <Box sx={{ textAlign: 'right' }}>
-                      <Tooltip title="Like" size='sm'>
-                        <IconButton
-                          component='a'
-                          size="sm"
-                          onClick={() => setIsLiked((prevState) => !prevState)}
-                          sx={{
-                            backgroundColor: "transparent", // No background
-                            outline: "none", // No focus outline
-                            padding: 0, // Remove extra space
-                            "&:hover": { backgroundColor: "transparent" }, // No hover effect
-                            "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
-                            "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
-                            transition: "none", // No color fade animation
-                          }}
-                        >
-                          {isLiked ? (
-                            <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
-                          ) : (
-                            <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
-                          )}
-                        </IconButton>
-                      </Tooltip>
+                      <IconButton
+                        component='a'
+                        size="sm"
+                        onClick={() => setIsLiked((prevState) => !prevState)}
+                        sx={{
+                          backgroundColor: "transparent", // No background
+                          outline: "none", // No focus outline
+                          padding: 0, // Remove extra space
+                          "&:hover": { backgroundColor: "transparent" }, // No hover effect
+                          "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
+                          "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
+                          transition: "none", // No color fade animation
+                        }}
+                      >
+                        {isLiked ? (
+                          <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
+                        ) : (
+                          <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
+                        )}
+                      </IconButton>
                     </Box>
                   </Stack>
                 </Box>
@@ -161,9 +159,12 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
               <MarkdownPreview
                 className="markdown-preview"
                 source={content}
-                style={{ backgroundColor: 'transparent', padding: 1 }}
-                wrapperElement={{
-                  "data-color-mode": "dark"
+                style={{
+                  backgroundColor: 'transparent',
+                  padding: 1,
+                  color: mode === 'dark'
+                    ? (isSent ? 'black' : 'white')
+                    : (isSent ? 'white' : 'black')
                 }}
               />
             </Stack>
