@@ -406,7 +406,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
           width: `${width}px`,
           borderRight: '1px solid',
           borderColor: 'divider',
-          overflowY: 'auto',
+          overflowY: 'hidden',
           position: 'relative',
           transition: isResizing ? 'none' : 'width 0.2s ease-in-out',
         }}

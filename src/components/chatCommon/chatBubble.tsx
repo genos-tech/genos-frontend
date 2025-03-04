@@ -15,6 +15,7 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
 import MarkdownPreview from '@uiw/react-markdown-preview';
+import { useColorScheme } from '@mui/joy/styles';
 import {
   UserProps,
   ChatProps,
@@ -174,6 +175,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
   const _tsSent = extractHHMM(tsSent)
+  const { mode } = useColorScheme();
 
   return (
     <Box
@@ -212,7 +214,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
           sx={{ position: 'relative' }}
         >
           <Sheet
-            color={isSent ? 'primary' : 'neutral'}
+            color={isSent ? 'neutral' : 'neutral'}
             variant={isSent ? 'solid' : 'soft'}
             sx={[
               {
@@ -235,10 +237,10 @@ export default function ChatBubble(props: ChatBubbleProps) {
                 },
               isSent
                 ? {
-                  backgroundColor: 'var(--joy-palette-primary-solidBg)',
+                  backgroundColor: 'neutral.plainColor',
                 }
                 : {
-                  backgroundColor: 'background.body',
+                  backgroundColor: 'neutral.outlinedBorder',
                 },
             ]}
           >
@@ -262,7 +264,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                           },
                           isSent
                             ? {
-                              color: 'var(--joy-palette-common-white)',
+                              color: 'background.body',
                             }
                             : {
                               color: 'var(--joy-palette-text-primary)',
@@ -313,32 +315,29 @@ export default function ChatBubble(props: ChatBubbleProps) {
 
                           }
                           }>
-                          <ReplyIcon sx={{ fontSize: 20, color: isSent ? '#fff' : 'primary' }} />
+                          <ReplyIcon sx={{ fontSize: 20, color: isSent ? 'background.body' : 'neutral.plainColor' }} />
                         </IconButton>
                       </Tooltip>
-
-                      <Tooltip title="Like" size='sm'>
-                        <IconButton
-                          component='a'
-                          size="sm"
-                          onClick={() => setIsLiked((prevState) => !prevState)}
-                          sx={{
-                            backgroundColor: "transparent", // No background
-                            outline: "none", // No focus outline
-                            padding: 0, // Remove extra space
-                            "&:hover": { backgroundColor: "transparent" }, // No hover effect
-                            "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
-                            "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
-                            transition: "none", // No color fade animation
-                          }}
-                        >
-                          {isLiked ? (
-                            <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
-                          ) : (
-                            <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
-                          )}
-                        </IconButton>
-                      </Tooltip>
+                      <IconButton
+                        component='a'
+                        size="sm"
+                        onClick={() => setIsLiked((prevState) => !prevState)}
+                        sx={{
+                          backgroundColor: "transparent", // No background
+                          outline: "none", // No focus outline
+                          padding: 0, // Remove extra space
+                          "&:hover": { backgroundColor: "transparent" }, // No hover effect
+                          "&:focus, &:focusVisible": { outline: "none", boxShadow: "none" }, // No focus effect
+                          "&:active": { transform: "none" }, // Prevents click animation (scaling effect)
+                          transition: "none", // No color fade animation
+                        }}
+                      >
+                        {isLiked ? (
+                          <FavoriteIcon sx={{ color: "#FF0000", transition: "none" }} /> // Red when liked
+                        ) : (
+                          <FavoriteBorderIcon sx={{ color: "#888888", transition: "none" }} /> // Gray when not liked
+                        )}
+                      </IconButton>
                     </Box>
                   </Stack>
                 </Box>
@@ -347,9 +346,12 @@ export default function ChatBubble(props: ChatBubbleProps) {
               <MarkdownPreview
                 className="markdown-preview"
                 source={content}
-                style={{ backgroundColor: 'transparent', padding: 1 }}
-                wrapperElement={{
-                  "data-color-mode": "dark"
+                style={{
+                  backgroundColor: 'transparent',
+                  padding: 1,
+                  color: mode === 'dark'
+                    ? (isSent ? 'black' : 'white')
+                    : (isSent ? 'white' : 'black')
                 }}
               />
             </Stack>
@@ -405,21 +407,30 @@ export default function ChatBubble(props: ChatBubbleProps) {
                     });
                   }}
                   sx={{
+                    backgroundColor: "transparent",
                     marginLeft: "auto", // Push to right
                     padding: "2px 6px", // Reduce padding for a compact look
                     minWidth: "auto", // Removes default button width
                     fontSize: "12px", // Makes text smaller
                     textTransform: "none", // Prevents uppercase text
+                    "&:hover": {
+                      backgroundColor: "transparent",
+                      color: "transparent",
+                      fontWeight: "bold"
+                    },
                   }}
                 >
                   {/* TODO: read/unread for thread replies */}
                   {(numReplies == 1)
-                    ? <div>
+                    ? <Box sx={{ color: 'neutral.plainColor' }}>
                       <CircleIcon sx={{ fontSize: 10 }} color="success" />
                       &nbsp;
                       {numReplies} reply
-                    </div>
-                    : <div>{numReplies} replies</div>}
+                    </Box>
+                    : <Box sx={{ color: 'neutral.plainColor' }}>
+                      {numReplies} replies
+                    </Box>
+                  }
                 </Button>
               </Stack>
               : ""

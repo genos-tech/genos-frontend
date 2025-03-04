@@ -12,6 +12,7 @@ import {
 } from '../../types';
 import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
+import { useColorScheme } from '@mui/joy/styles';
 
 type MessagesPaneProps = {
   chat: ChatProps;
@@ -36,6 +37,8 @@ export default function MessagesPane(props: MessagesPaneProps) {
   const [chatMessages, setChatMessages] = useState(chat.messages);
   const [content, setContent] = useState("");
 
+  const { mode } = useColorScheme();
+
   useEffect(() => {
     setChatMessages(chat.messages);
   }, [chat.messages]);
@@ -56,7 +59,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
           index: 'LAST',
           behavior: 'smooth',
         })
-      }, 200)
+      }, 200) // wait 200ms
     }
   }, [chat])
 
@@ -70,7 +73,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
         virtuoso.scrollToIndex({
           index: 'LAST',
         })
-      }, 300)
+      }, 300) // wait 300ms
     }
   }, [currentMainChatEmail])
 
@@ -88,13 +91,13 @@ export default function MessagesPane(props: MessagesPaneProps) {
 
   // Calculate chat pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 310);
+  const [listHeight, setListHeight] = useState(window.innerHeight - 295);
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {
         // This is very very important to set the height of the message bubble !!!!!!!
         const currentHeight: number = containerRef.current.clientHeight
-        setListHeight(currentHeight - 310)
+        setListHeight(currentHeight - 295)
       }
     };
     updateHeight();
@@ -114,7 +117,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
     >
       <MessagesPaneHeader myself={myself} chat={chat} />
 
-      <Box sx={{ px: 0.3, py: 0.5 }}>
+      <Box sx={{ px: 0.3, my: 2 }}>
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
@@ -146,14 +149,13 @@ export default function MessagesPane(props: MessagesPaneProps) {
                   />
                 </Stack>
               </div>
-
             );
           }
           }
         />
       </Box>
 
-      <Box sx={{ px: 0.5, py: 0 }}>
+      <Box sx={{ px: 0.3 }}>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}
