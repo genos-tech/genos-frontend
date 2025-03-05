@@ -1,5 +1,4 @@
 .w-md-editor {
-  border-radius: 8px;
   --md-editor-box-shadow-color: #0B0D0E;
   --md-editor-background-color: transparent;
 }
@@ -16,8 +15,6 @@ body .w-md-editor-text-input {
 }
 
 .w-md-editor-preview {
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
   background-color: #0B0D0E;
   color: #dadada;
 }
@@ -29,8 +26,6 @@ body .w-md-editor-text-input {
 
 .w-md-editor-toolbar {
   background-color: #393939;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
   padding: 0;
 }
 
