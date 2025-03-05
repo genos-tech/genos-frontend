@@ -316,8 +316,6 @@ export const MarkdownEditor = ({
       style={{
         color: mode === 'dark' ? 'grey' : '#ededed',
         backgroundColor: mode === 'dark' ? 'grey' : '#ededed',
-        borderBottomRightRadius: '0.5%',
-        borderBottomLeftRadius: '0.5%',
         caretColor: mode === 'dark' ? 'white' : 'black',
         fontWeight: 'bold'
       }}

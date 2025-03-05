@@ -91,13 +91,13 @@ export default function MessagesPane(props: MessagesPaneProps) {
 
   // Calculate chat pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 295);
+  const [listHeight, setListHeight] = useState(window.innerHeight - 263);
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {
         // This is very very important to set the height of the message bubble !!!!!!!
         const currentHeight: number = containerRef.current.clientHeight
-        setListHeight(currentHeight - 295)
+        setListHeight(currentHeight - 263)
       }
     };
     updateHeight();
@@ -117,7 +117,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
     >
       <MessagesPaneHeader myself={myself} chat={chat} />
 
-      <Box sx={{ px: 0.3, my: 2 }}>
+      <Box sx={{ px: 0.3, my: 0.2 }}>
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
@@ -155,7 +155,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
         />
       </Box>
 
-      <Box sx={{ px: 0.3 }}>
+      <Box>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}
