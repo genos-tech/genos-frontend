@@ -106,7 +106,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         height: { xs: 'calc(100dvh - var(--Header-height))', md: '50dvh' },
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'background.level2',
+        backgroundColor: 'background.level1',
         borderBottom: 5,
         borderBottomColor: mode === 'dark' ? 'LightGray' : 'grey'
       }}

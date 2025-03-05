@@ -109,7 +109,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'background.level3',
+        backgroundColor: 'background.body',
       }}
     >
       <ThreadPaneHeader

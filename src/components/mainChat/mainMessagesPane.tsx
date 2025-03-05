@@ -118,7 +118,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
         height: { xs: 'calc(100dvh - var(--Header-height))', md: isSubChatVisible ? '50dvh' : '100dvh' },
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'background.level1',
+        backgroundColor: 'background.surface',
       }}
     >
       <MessagesPaneHeader
