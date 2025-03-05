@@ -604,7 +604,9 @@ export default function ChatsPane(props: ChatsPaneProps) {
             height: '100%',
             cursor: 'ew-resize',
             position: 'absolute',
-            background: 'rgba(0, 0, 0, 0.1)',
+            right: 0,
+            top: 0,
+            bottom: 0,
             zIndex: 9999, // Ensure it's above all other components
           }}
         />

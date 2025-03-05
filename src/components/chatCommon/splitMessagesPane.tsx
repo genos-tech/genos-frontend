@@ -62,7 +62,7 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                 direction="column"
                 sx={{
                     maxHeight: "100vh",
-                    overflow: "auto",
+                    overflow: "hidden",
                     flexGrow: 1,
                     position: "relative",
                 }}
@@ -70,9 +70,11 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                 {/* Top Messages Pane with Close Button */}
                 {isSubChatVisible && (
                     <MessagesSubPane
-                        chat={subChat}
                         myself={myself}
+                        chat={chat}
+                        subChat={subChat}
                         socket={socket}
+                        setCurrentMainChat={setCurrentMainChat}
                         setCurrentSubChat={setCurrentSubChat}
                         setCurrentThreadChat={setCurrentThreadChat}
                         setIsSubChatVisible={setIsSubChatVisible}
@@ -83,12 +85,15 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                 {/* Bottom Messages Pane (Expands when Top Pane is Hidden) */}
                 <MessagesPane
                     chat={chat}
+                    subChat={subChat}
                     myself={myself}
                     socket={socket}
                     setCurrentMainChat={setCurrentMainChat}
+                    setCurrentSubChat={setCurrentSubChat}
                     setCurrentThreadChat={setCurrentThreadChat}
                     setIsRightSideVisible={setIsRightSideVisible}
                     isSubChatVisible={isSubChatVisible}
+                    setIsSubChatVisible={setIsSubChatVisible}
                     currentMainChatEmail={currentMainChatEmail}
                 />
             </Stack>

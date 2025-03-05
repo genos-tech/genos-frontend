@@ -16,9 +16,11 @@ import { useColorScheme } from '@mui/joy/styles';
 
 
 type MessagesPaneProps = {
-  chat: ChatProps;
   myself: UserProps;
+  chat: ChatProps;
+  subChat: ChatProps;
   socket: Socket;
+  setCurrentMainChat: (chat: ChatProps) => void;
   setCurrentSubChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsSubChatVisible: (value: boolean) => void;
@@ -27,20 +29,22 @@ type MessagesPaneProps = {
 };
 
 export default function MessagesSubPane(props: MessagesPaneProps) {
-  const { chat,
-    myself,
+  const {myself,
+    chat,
+    subChat,
     socket,
+    setCurrentMainChat,
     setCurrentSubChat,
     setCurrentThreadChat,
     setIsSubChatVisible,
     setIsRightSideVisible,
     currentSubChatEmail } = props;
-  const [chatMessages, setChatMessages] = useState(chat.messages);
+  const [chatMessages, setChatMessages] = useState(subChat.messages);
   const [content, setContent] = useState("");
 
   useEffect(() => {
-    setChatMessages(chat.messages);
-  }, [chat.messages]);
+    setChatMessages(subChat.messages);
+  }, [subChat.messages]);
 
   const { mode } = useColorScheme();
 
@@ -62,7 +66,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         })
       }, 200)
     }
-  }, [chat])
+  }, [subChat])
 
   // Scroll to the bottom at first.
   useEffect(() => {
@@ -92,7 +96,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
     updateHeight(); // Initial height
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
-  }, [chat]);
+  }, [subChat]);
 
 
   return (
@@ -104,10 +108,16 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         flexDirection: 'column',
         backgroundColor: 'background.level2',
         borderBottom: 5,
-        borderBottomColor: mode === 'dark' ? 'LightGray': 'grey'
+        borderBottomColor: mode === 'dark' ? 'LightGray' : 'grey'
       }}
     >
-      <SubMessagesPaneHeader myself={myself} chat={chat} setIsSubChatVisible={setIsSubChatVisible} />
+      <SubMessagesPaneHeader
+        myself={myself}
+        chat={chat}
+        subChat={subChat}
+        setCurrentMainChat={setCurrentMainChat}
+        setCurrentSubChat={setCurrentSubChat}
+        setIsSubChatVisible={setIsSubChatVisible} />
 
       <Box sx={{ px: 0.3, my: 0.2 }}>
         <Virtuoso
@@ -131,7 +141,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
                   <ChatBubble
                     myself={myself}
                     variant={isYou ? "sent" : "received"}
-                    chat={chat}
+                    chat={subChat}
                     socket={socket}
                     {...message}
                     setIsRightSideVisible={setIsRightSideVisible}
@@ -145,11 +155,11 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
           }
         />
       </Box>
-      <Box sx={{ px: 0.3 }}>
+      <Box>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}
-            chat={chat}
+            chat={subChat}
             messageContent={content}
             setContent={setContent}
             setCurrentChat={setCurrentSubChat} />

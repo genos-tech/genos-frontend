@@ -16,23 +16,29 @@ import { useColorScheme } from '@mui/joy/styles';
 
 type MessagesPaneProps = {
   chat: ChatProps;
+  subChat: ChatProps;
   myself: UserProps;
   socket: Socket;
   setCurrentMainChat: (chat: ChatProps) => void;
+  setCurrentSubChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsRightSideVisible: (value: boolean) => void;
   isSubChatVisible: boolean;
+  setIsSubChatVisible: (value: boolean) => void;
   currentMainChatEmail: string;
 };
 
 export default function MessagesPane(props: MessagesPaneProps) {
   const { chat,
+    subChat,
     myself,
     socket,
     setCurrentMainChat,
+    setCurrentSubChat,
     setCurrentThreadChat,
     setIsRightSideVisible,
     isSubChatVisible,
+    setIsSubChatVisible,
     currentMainChatEmail } = props;
   const [chatMessages, setChatMessages] = useState(chat.messages);
   const [content, setContent] = useState("");
@@ -115,7 +121,15 @@ export default function MessagesPane(props: MessagesPaneProps) {
         backgroundColor: 'background.level1',
       }}
     >
-      <MessagesPaneHeader myself={myself} chat={chat} />
+      <MessagesPaneHeader
+        myself={myself}
+        chat={chat}
+        subChat={subChat}
+        setCurrentMainChat={setCurrentMainChat}
+        setCurrentSubChat={setCurrentSubChat}
+        isSubChatVisible={isSubChatVisible}
+        setIsSubChatVisible={setIsSubChatVisible}
+      />
 
       <Box sx={{ px: 0.3, my: 0.2 }}>
         <Virtuoso

@@ -5,19 +5,42 @@ import IconButton from '@mui/joy/IconButton';
 import Stack from '@mui/joy/Stack';
 import Typography from '@mui/joy/Typography';
 import CircleIcon from '@mui/icons-material/Circle';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import PhoneInTalkRoundedIcon from '@mui/icons-material/PhoneInTalkRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import GroupsIcon from '@mui/icons-material/Groups';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { ChatProps, UserProps } from '../../types';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;
   chat: ChatProps;
+  subChat: ChatProps;
+  setCurrentMainChat: (chat: ChatProps) => void;
+  setCurrentSubChat: (chat: ChatProps) => void;
+  isSubChatVisible: boolean;
+  setIsSubChatVisible: (value: boolean) => void;
 };
 
 export default function MessagesPaneHeader(props: MessagesPaneHeaderProps) {
-  const { chat, myself } = props;
+  const { myself,
+    chat,
+    subChat,
+    setCurrentMainChat,
+    setCurrentSubChat,
+    isSubChatVisible,
+    setIsSubChatVisible } = props;
   const isYou = myself.userEmail === chat.chatEmail;
+
+  const switchSubToMain = () => {
+    setCurrentMainChat(subChat)
+    setIsSubChatVisible(false)
+  }
+
+  const swapChat = () => {
+    setCurrentMainChat(subChat)
+    setCurrentSubChat(chat)
+  }
 
   return (
     <Stack
@@ -96,7 +119,32 @@ export default function MessagesPaneHeader(props: MessagesPaneHeaderProps) {
         >
           Call
         </Button>
-        <IconButton component='a' size="sm" variant="plain" color="neutral">
+        {isSubChatVisible
+          ? <div>
+            <IconButton
+              component='a'
+              size="sm"
+              variant="plain"
+              color="neutral"
+              onClick={() => swapChat()}>
+              <SwapVertIcon />
+            </IconButton>
+            <IconButton
+              component='a'
+              size="sm"
+              variant="plain"
+              color="neutral"
+              onClick={() => switchSubToMain()}>
+              <CancelIcon />
+            </IconButton>
+          </div>
+          : ""
+        }
+        <IconButton
+          component='a'
+          size="sm"
+          variant="plain"
+          color="neutral">
           <MoreVertRoundedIcon />
         </IconButton>
       </Stack>

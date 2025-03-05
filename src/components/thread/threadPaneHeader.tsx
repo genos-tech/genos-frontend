@@ -108,20 +108,18 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
           </IconButton>
         </Tooltip>
 
-        <Tooltip title="Close Thread" size='sm'>
-          <IconButton
-            size="sm"
-            variant="plain"
-            color="neutral"
-            onClick={() => {
-              setIsRightSideVisible(false);
-              setCurrentThreadChat(dummyThreadChat);
-            }
-            }
-          >
-            <CancelIcon />
-          </IconButton>
-        </Tooltip>
+        <IconButton
+          size="sm"
+          variant="plain"
+          color="neutral"
+          onClick={() => {
+            setIsRightSideVisible(false);
+            setCurrentThreadChat(dummyThreadChat);
+          }
+          }
+        >
+          <CancelIcon />
+        </IconButton>
       </Stack>
 
       {/* Modal for creating a new chat group */}
