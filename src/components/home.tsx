@@ -281,7 +281,10 @@ export default function Home(props: HomeProps) {
                         }
                         insertDMThreadMessage(newDMThreadMessage)
 
-                        if (currentThreadChat !== undefined && incomingChatEmail === currentThreadChat.chatEmail) {
+                        // Update current visible thread pane
+                        if (currentThreadChat !== undefined
+                            && incomingChatEmail === currentThreadChat.chatEmail
+                            && newDMThreadMessage.threadId === currentThreadChat.threadId) {
                             const updatedThreadChat: ThreadProps = {
                                 chatName: currentThreadChat.chatName,
                                 chatEmail: currentThreadChat.chatEmail,
@@ -386,7 +389,10 @@ export default function Home(props: HomeProps) {
                         }
                         insertGMThreadMessage(newGMThreadMessage);
 
-                        if (currentThreadChat !== undefined && incomingChatEmail === currentThreadChat.chatEmail) {
+                        // Update current visible thread pane
+                        if (currentThreadChat !== undefined
+                            && incomingChatEmail === currentThreadChat.chatEmail
+                            && newGMThreadMessage.threadId === currentThreadChat.threadId) {
                             const updatedThreadChat: ThreadProps = {
                                 chatName: currentThreadChat.chatName,
                                 chatEmail: currentThreadChat.chatEmail,

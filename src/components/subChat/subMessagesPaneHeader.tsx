@@ -1,4 +1,4 @@
-import Tooltip from '@mui/joy/Tooltip';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 import Avatar from '@mui/joy/Avatar';
 import Button from '@mui/joy/Button';
 import Chip from '@mui/joy/Chip';
@@ -9,18 +9,31 @@ import CircleIcon from '@mui/icons-material/Circle';
 import PhoneInTalkRoundedIcon from '@mui/icons-material/PhoneInTalkRounded';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CancelIcon from '@mui/icons-material/Cancel';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { ChatProps, UserProps } from '../../types';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;
   chat: ChatProps;
+  subChat: ChatProps;
+  setCurrentMainChat: (chat: ChatProps) => void;
+  setCurrentSubChat: (chat: ChatProps) => void;
   setIsSubChatVisible: (value: boolean) => void;
 };
 
 export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
-  const { chat, myself } = props;
-  const { setIsSubChatVisible } = props;
-  const isYou = myself.userEmail === chat.chatEmail;
+  const { myself,
+    chat,
+    subChat,
+    setCurrentMainChat,
+    setCurrentSubChat,
+    setIsSubChatVisible } = props;
+  const isYou = myself.userEmail === subChat.chatEmail;
+
+  const swapChat = () => {
+    setCurrentMainChat(subChat)
+    setCurrentSubChat(chat)
+  }
 
   return (
     <Stack
@@ -42,8 +55,8 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
       >
 
         <div>
-          {chat.isDm ? (
-            <Avatar src={chat.CGAvatarImgPath} />
+          {subChat.isDm ? (
+            <Avatar src={subChat.CGAvatarImgPath} />
           ) : (
             <Avatar >
               <GroupsIcon sx={{ fontSize: 32 }} />
@@ -55,7 +68,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
             component="h2"
             noWrap
             endDecorator={
-              chat.isDm ? (
+              subChat.isDm ? (
                 <Chip
                   variant="outlined"
                   size="sm"
@@ -72,7 +85,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
             }
             sx={{ fontWeight: 'lg', fontSize: 'lg' }}
           >
-            {isYou ? `${chat.chatName} (me)` : chat.chatName}
+            {isYou ? `${subChat.chatName} (me)` : subChat.chatName}
           </Typography>
           <Typography
             level="body-sm"
@@ -83,7 +96,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
               maxWidth: '300px'
             }}
           >
-            {chat.chatEmail}
+            {subChat.chatEmail}
           </Typography>
         </div>
       </Stack>
@@ -99,12 +112,33 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
           Call
         </Button>
 
-        <Tooltip title="Close Chat" size='sm'>
-          <IconButton component='a' size="sm" variant="plain" color="neutral" onClick={() => setIsSubChatVisible(false)}>
+        <div>
+          <IconButton
+            component='a'
+            size="sm"
+            variant="plain"
+            color="neutral"
+            onClick={() => swapChat()}>
+            <SwapVertIcon />
+          </IconButton>
+
+          <IconButton
+            component='a'
+            size="sm"
+            variant="plain"
+            color="neutral"
+            onClick={() => setIsSubChatVisible(false)}>
             <CancelIcon />
           </IconButton>
-        </Tooltip>
+        </div>
 
+        <IconButton
+          component='a'
+          size="sm"
+          variant="plain"
+          color="neutral">
+          <MoreVertRoundedIcon />
+        </IconButton>
       </Stack>
     </Stack>
   );

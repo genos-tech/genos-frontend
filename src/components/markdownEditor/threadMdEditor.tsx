@@ -155,13 +155,14 @@ export const MarkdownEditor = ({
     return (
       <span
         style={{
-          color: '#c1c1c1',
+          color: '#fff',
           backgroundColor: preview === "edit" ? "#393939" : "#393939",
           borderTopLeftRadius: "8px",
           borderTopRightRadius: preview === "edit" ? "8px" : "0px",
           borderRight: preview === "edit" ? "1px solid #393939" : "none",
           padding: "11px 16px 12px 16px",
           fontSize: "14px",
+          fontWeight: 'bold',
         }}
         onClick={click}
       >
@@ -182,7 +183,7 @@ export const MarkdownEditor = ({
     return (
       <span
         style={{
-          color: '#c1c1c1',
+          color: '#fff',
           backgroundColor: preview === "preview" ? "#393939" : "#393939",
           borderTopLeftRadius: preview === "preview" ? "8px" : "0px",
           borderTopRightRadius: preview === "preview" ? "8px" : "0px",
@@ -190,6 +191,7 @@ export const MarkdownEditor = ({
           borderLeft: preview === "preview" ? "1px solid #393939" : "none",
           padding: "11px 16px 12px 16px",
           fontSize: "14px",
+          fontWeight: 'bold',
         }}
         onClick={click}
       >
@@ -295,47 +297,47 @@ export const MarkdownEditor = ({
 
   const customBoldCommand = {
     ...commands.bold,
-    icon: <BoldIcon color="#c1c1c1" />,
+    icon: <BoldIcon color="#fff" />,
   };
 
   const customItalicCommand = {
     ...commands.italic,
-    icon: <ItalicIcon color="#c1c1c1" />,
+    icon: <ItalicIcon color="#fff" />,
   };
 
   const customStrikethroughCommand = {
     ...commands.strikethrough,
-    icon: <StrikethroughIcon color="#c1c1c1" />,
+    icon: <StrikethroughIcon color="#fff" />,
   };
 
   const customQuoteCommand = {
     ...commands.quote,
-    icon: <QuoteIcon color="#c1c1c1" />,
+    icon: <QuoteIcon color="#fff" />,
   };
 
   const customCodeCommand = {
     ...commands.code,
-    icon: <CodeIcon color="#c1c1c1" />,
+    icon: <CodeIcon color="#fff" />,
   };
 
   const customCodeBlockCommand = {
     ...commands.codeBlock,
-    icon: <CodeBlockIcon color="#c1c1c1" />,
+    icon: <CodeBlockIcon color="#fff" />,
   };
 
   const customLinkCommand = {
     ...commands.link,
-    icon: <LinkIcon color="#c1c1c1" />,
+    icon: <LinkIcon color="#fff" />,
   };
 
   const customOrderedListCommand = {
     ...commands.orderedListCommand,
-    icon: <OrderedListIcon color="#c1c1c1" />,
+    icon: <OrderedListIcon color="#fff" />,
   };
 
   const customUnorderedListCommand = {
     ...commands.unorderedListCommand,
-    icon: <UnorderedListIcon color="#c1c1c1" />,
+    icon: <UnorderedListIcon color="#fff" />,
   };
 
   const customSendCommand = {

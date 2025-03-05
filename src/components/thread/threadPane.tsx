@@ -87,13 +87,13 @@ export default function ThreadPane(props: MessagesPaneProps) {
 
   // Calculate thread pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 295);
+  const [listHeight, setListHeight] = useState(window.innerHeight - 263);
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {
         // This is very very important to set the height of the message bubble !!!!!!!
         const currentHeight: number = containerRef.current.clientHeight
-        setListHeight(currentHeight - 295)
+        setListHeight(currentHeight - 263)
       }
     };
 
@@ -109,7 +109,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'background.level3',
+        backgroundColor: 'background.body',
       }}
     >
       <ThreadPaneHeader
@@ -118,7 +118,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         setCurrentThreadChat={setCurrentThreadChat}
         setIsRightSideVisible={setIsRightSideVisible} />
 
-      <Box sx={{ px: 0.3, my: 2 }}>
+      <Box sx={{ px: 0.3, my: 0.2 }}>
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
@@ -149,7 +149,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         />
       </Box>
 
-      <Box sx={{ px: 0.3, minWidth: '600px' }}>
+      <Box sx={{ minWidth: '600px' }}>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}
