@@ -134,24 +134,45 @@
 .markdown-editor-dark span {
   color: white;
 }
+
 .markdown-editor-dark .w-md-editor-content .w-md-editor-preview {
-  background-color: grey;
+  background-color: #363636;
 }
+
+.markdown-editor-dark .w-md-editor-content .w-md-editor-preview .wmde-markdown {
+  background-color: #363636;
+  color: white;
+}
+
 .markdown-editor-dark .w-md-editor-content .w-md-editor-preview div * {
   color: white;
 }
 
+.markdown-editor-dark .w-md-editor-content .w-md-editor-area {
+  background-color: #363636;
+}
+
 .markdown-editor-light span {
-  color: black;
-}
-.markdown-editor-light .w-md-editor-content .w-md-editor-preview {
-  background-color: #ededed;
-}
-.markdown-editor-light .w-md-editor-content .w-md-editor-preview div * {
   color: white;
 }
 
+.markdown-editor-light .w-md-editor-content .w-md-editor-preview {
+  background-color: #ffffff;
+}
+
+.markdown-editor-light .w-md-editor-content .w-md-editor-preview .wmde-markdown {
+  background-color: #ffffff;
+}
+
+.markdown-editor-light .w-md-editor-content .w-md-editor-preview div * {
+  color: black;
+}
+
+.markdown-editor-light .w-md-editor-content .w-md-editor-area {
+  background-color: #838383;
+}
+
 textarea::placeholder {
-  color: #393939; /* Change to your desired color */
-  opacity: 1; /* Ensure full visibility */
+  color: #363636;
+  opacity: 1;
 }
