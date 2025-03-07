@@ -6,8 +6,7 @@
 body .w-md-editor-text-pre>code,
 body .w-md-editor-text-input {
   font-size: 15px !important;
-  line-height: 24px !important;
-  color: #ffffff !important;
+  line-height: 18px !important;
 }
 
 .w-md-editor-editor {
@@ -15,11 +14,6 @@ body .w-md-editor-text-input {
 }
 
 .w-md-editor-preview {
-  background-color: #0B0D0E;
-  color: #dadada;
-}
-
-.wmde-markdown {
   background-color: #0B0D0E;
   color: #dadada;
 }

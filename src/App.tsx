@@ -6,7 +6,7 @@ import {
   Stack,
 } from '@mui/joy';
 import Sidebar from './components/utils/sidebar';
-import Home from './components/home';
+import ChatHome from './components/chatHome';
 import './App.css';
 import Loading from './components/utils/loading'
 import {
@@ -52,7 +52,7 @@ function App() {
               className="MainContent"
               sx={{ width: '100vw' }}
             >
-              <Home
+              <ChatHome
                 myself={myself}
                 currentMainChat={currentMainChat}
                 setCurrentMainChat={setCurrentMainChat}
