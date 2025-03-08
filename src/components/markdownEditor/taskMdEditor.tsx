@@ -44,7 +44,7 @@ export const MarkdownEditor = ({
     return (
       <span
         style={{
-          color: 'white',
+          color: 'rgb(217, 217, 217)',
           padding: "11px 16px 12px 16px",
           fontSize: "14px",
           fontWeight: 'bold',
@@ -68,7 +68,7 @@ export const MarkdownEditor = ({
     return (
       <span
         style={{
-          color: 'white',
+          color: 'rgb(217, 217, 217)',
           padding: "11px 16px 12px 16px",
           fontSize: "14px",
           fontWeight: 'bold',
@@ -96,54 +96,54 @@ export const MarkdownEditor = ({
 
   const customBoldCommand = {
     ...commands.bold,
-    icon: <BoldIcon color="#fff" />,
+    icon: <BoldIcon color="rgb(217, 217, 217)" />,
   };
 
   const customItalicCommand = {
     ...commands.italic,
-    icon: <ItalicIcon color="#fff" />,
+    icon: <ItalicIcon color="rgb(217, 217, 217)" />,
   };
 
   const customStrikethroughCommand = {
     ...commands.strikethrough,
-    icon: <StrikethroughIcon color="#fff" />,
+    icon: <StrikethroughIcon color="rgb(217, 217, 217)" />,
   };
 
   const customQuoteCommand = {
     ...commands.quote,
-    icon: <QuoteIcon color="#fff" />,
+    icon: <QuoteIcon color="rgb(217, 217, 217)" />,
   };
 
   const customCodeCommand = {
     ...commands.code,
-    icon: <CodeIcon color="#fff" />,
+    icon: <CodeIcon color="rgb(217, 217, 217)" />,
   };
 
   const customCodeBlockCommand = {
     ...commands.codeBlock,
-    icon: <CodeBlockIcon color="#fff" />,
+    icon: <CodeBlockIcon color="rgb(217, 217, 217)" />,
   };
 
   const customLinkCommand = {
     ...commands.link,
-    icon: <LinkIcon color="#fff" />,
+    icon: <LinkIcon color="rgb(217, 217, 217)" />,
   };
 
   const customOrderedListCommand = {
     ...commands.orderedListCommand,
-    icon: <OrderedListIcon color="#fff" />,
+    icon: <OrderedListIcon color="rgb(217, 217, 217)" />,
   };
 
   const customUnorderedListCommand = {
     ...commands.unorderedListCommand,
-    icon: <UnorderedListIcon color="#fff" />,
+    icon: <UnorderedListIcon color="rgb(217, 217, 217)" />,
   };
 
   return (
     <MDEditor
       className={_className}
       style={{
-        caretColor: mode === 'dark' ? 'white' : 'black',
+        caretColor: mode === 'dark' ? 'rgb(217, 217, 217)' : 'black',
         fontWeight: 'bold',
         colorScheme: 'revert',
       }}

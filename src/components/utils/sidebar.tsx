@@ -14,6 +14,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded';
+import Tooltip from '@mui/joy/Tooltip';
 
 import ColorSchemeToggle from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';
@@ -31,6 +32,11 @@ export default function Sidebar() {
   const handleMoveToChat = (): void => {
     navigate("/App");
   };
+
+  const handleMoveToTask = (): void => {
+    navigate("/TaskHome");
+  };
+
 
   return (
     <Sheet
@@ -121,7 +127,7 @@ export default function Sidebar() {
             </ListItemButton>
           </ListItem>
           <ListItem>
-            <ListItemButton>
+            <ListItemButton onClick={handleMoveToTask} >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <AssignmentRoundedIcon sx={{ fontSize: 20 }} />
                 <CircleIcon sx={{ fontSize: 7 }} color="primary" />

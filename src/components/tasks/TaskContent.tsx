@@ -1,15 +1,19 @@
 import { useState } from "react";
+import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Chip from '@mui/joy/Chip';
 import Card from '@mui/joy/Card';
 import CardOverflow from '@mui/joy/CardOverflow';
 import Sheet from '@mui/joy/Sheet';
 import Typography from '@mui/joy/Typography';
+import List from '@mui/joy/List';
+import ListItem from '@mui/joy/ListItem';
 import AspectRatio from '@mui/joy/AspectRatio';
 import Divider from '@mui/joy/Divider';
+import { Input } from "@mui/joy";
+
 import IconButton from '@mui/joy/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-
 import FolderIcon from '@mui/icons-material/Folder';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AddIcon from '@mui/icons-material/Add';
@@ -20,7 +24,7 @@ import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 // Temp data
 import { taskContents } from './sampleTaskContents';
 
-export default function EmailContent() {
+export default function taskContent() {
   const taskId: string = "task-001"
   const taskSummary: string = "This is a Task for XXX"
   const dueDate: string = "21 Oct 2022"
@@ -34,6 +38,11 @@ export default function EmailContent() {
     const height: number = Math.min(Math.max(text.split('\n').length * 20, 200), 800)
     return height;
   }
+
+  const createdDate = '2025-03-08';
+  const [selectedDate, setSelectedDate] = useState(createdDate);
+  const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
 
   return (
     <Sheet
@@ -55,12 +64,12 @@ export default function EmailContent() {
               level="h3"
               textColor="text.primary"
               endDecorator={
-                <Chip component="span" size="md" variant="solid" color="primary">
+                <Chip component="span" size="md" variant="soft" color="primary">
                   {taskState}
                 </Chip>
               }
             >
-              {taskSummary}
+              [ {taskId} ] {taskSummary}
             </Typography>
           </Box>
         </Box>
@@ -116,24 +125,33 @@ export default function EmailContent() {
       >
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
           <Box>
-            <Typography
-              level="body-md"
-              textColor="text.primary"
-            >
-              Task Id: {taskId}
-            </Typography>
-            <Typography
-              level="body-md"
-              textColor="text.primary"
-            >
-              Assignee: {assignee}
-            </Typography>
-            <Typography
-              level="body-md"
-              textColor="text.primary"
-            >
-              Due date: {dueDate}
-            </Typography>
+            <List aria-labelledby="decorated-list-demo">
+              <ListItem>
+                Assignee: <Avatar size="sm">K</Avatar> {assignee}
+              </ListItem>
+              <ListItem>
+                Due date: <Input
+                  type="date"
+                  color="primary"
+                  variant="soft"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  slotProps={{
+                    input: {
+                      min: today, // Set minimum date to today
+                    },
+                  }}
+                />
+              </ListItem>
+              <ListItem>
+                Tags:<Chip component="span" size="md" variant="soft" color="warning">
+                  Frontend
+                </Chip>
+              </ListItem>
+              <ListItem>
+                Reporter: <Avatar size="sm">K</Avatar> {assignee}
+              </ListItem>
+            </List>
           </Box>
         </Box>
         <Box

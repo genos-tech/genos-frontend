@@ -13,7 +13,8 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-
+import ViewTimelineIcon from '@mui/icons-material/ViewTimeline';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 
 function Toggler({
   defaultExpanded = false,
@@ -174,6 +175,51 @@ export default function TaskSidebar() {
                 </ListItem>
               </List>
             </Toggler>
+          </ListItem>
+
+          <ListItem nested>
+            <Toggler
+              renderToggle={({ open, setOpen }) => (
+                <ListItemButton onClick={() => setOpen(!open)}>
+                  <BookmarkIcon />
+                  <ListItemContent>
+                    <Typography level="title-sm">Tags </Typography>
+                  </ListItemContent>
+                  <KeyboardArrowDownIcon
+                    sx={[
+                      open
+                        ? {
+                          transform: 'rotate(180deg)',
+                        }
+                        : {
+                          transform: 'none',
+                        },
+                    ]}
+                  />
+                </ListItemButton>
+              )}
+            >
+              <List sx={{ gap: 0.5 }}>
+                <ListItem sx={{ mt: 0.5 }}>
+                  <ListItemButton>tag-001</ListItemButton>
+                </ListItem>
+                <ListItem>
+                  <ListItemButton>tag-002</ListItemButton>
+                </ListItem>
+                <ListItem>
+                  <ListItemButton>tag-003</ListItemButton>
+                </ListItem>
+              </List>
+            </Toggler>
+          </ListItem>
+
+          <ListItem>
+            <ListItemButton>
+              <ViewTimelineIcon />
+              <ListItemContent>
+                <Typography level="title-sm">Gantt Chart</Typography>
+              </ListItemContent>
+            </ListItemButton>
           </ListItem>
 
         </List>
