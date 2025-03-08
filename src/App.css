@@ -154,12 +154,8 @@
   border-top-left-radius: 0px;
 }
 
-.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text textarea::placeholder {
-  color: rgb(217, 217, 217);
-}
-
 .markdown-editor-light span {
-  color: rgb(217, 217, 217);
+  color: rgb(13, 13, 13);
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-preview {
@@ -175,11 +171,53 @@
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-area {
-  background-color: rgb(217, 217, 217);
+  background-color: rgb(157, 157, 157);
   border-top-right-radius: 0px;
   border-top-left-radius: 0px;
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text textarea::placeholder {
   color: #6d6d6d;
+  opacity: 0.8;
+}
+
+.task-datagrid-light .MuiDataGrid-columnHeader {
+  background-color: #d9d9d9;
+  color: rgb(55, 55, 55);
+  opacity: 0.8;
+}
+
+.task-datagrid-dark .MuiDataGrid-columnHeader {
+  background-color: #a4a4a4;
+  color: rgb(0, 0, 0);
+  opacity: 0.8;
+}
+
+.task-datagrid-dark .MuiDataGrid-toolbarContainer {
+  background-color: #cbcbcb;
+  opacity: 0.8;
+}
+
+.task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-virtualScroller {
+  background-color: #363636;
+  opacity: 0.9;
+}
+
+.task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-scrollbar {
+  background-color: #363636;
+
+}
+
+.task-datagrid-dark .MuiDataGrid-footerContainer {
+  background-color: #cbcbcb;
+  color: black;
+}
+
+.task-datagrid-dark .MuiDataGrid-footerContainer .MuiTablePagination-root {
+  background-color: #cbcbcb;
+  color: black;
+}
+
+.css-ww58ll-MuiButtonBase-root-MuiButton-root {
+  color: black !important;
 }

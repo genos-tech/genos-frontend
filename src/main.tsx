@@ -19,10 +19,8 @@ createRoot(document.getElementById('root')!).render(
       {/* Protected Routes */}
       <Route element={<AuthGuard />}>
         <Route path="/App" element={<App />} />
+        <Route path="/TaskHome" element={<TaskHome />} />
       </Route>
-
-      {/* testing pages */}
-      <Route path="/TaskHome" element={<TaskHome />} />
 
     </Routes>
   </Router>

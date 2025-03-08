@@ -18,7 +18,7 @@ export default function TaskHome() {
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
-            <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
+            <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
                 <Sidebar />
 
                 <PanelGroup direction="horizontal">
@@ -39,7 +39,7 @@ export default function TaskHome() {
                     />
 
                     {/* left pane */}
-                    <Panel defaultSize={50} minSize={30} maxSize={100}>
+                    <Panel defaultSize={50} minSize={30} maxSize={500}>
                         <Box
                             component="main"
                             className="MainContent"
@@ -56,6 +56,7 @@ export default function TaskHome() {
                                 flexDirection: 'column',
                                 minWidth: 0,
                                 height: '100dvh',
+                                overflow: 'hidden',
                                 gap: 1,
                             }}
                         >
@@ -74,7 +75,7 @@ export default function TaskHome() {
                                     All/Project/Sub Tasks (TBD)
                                 </Typography>
                                 <ButtonGroup variant="outlined">
-                                    {(['Overview', 'Task List', 'Gantt Chart'] as const).map((anchor) => (
+                                    {(['List', 'Gannt'] as const).map((anchor) => (
                                         <Button component='p' key={anchor} onClick={() => { console.log("") }}>
                                             {anchor}
                                         </Button>
@@ -108,7 +109,7 @@ export default function TaskHome() {
                     />
 
                     {/* right pane */}
-                    <Panel defaultSize={50} minSize={30} maxSize={100}>
+                    <Panel defaultSize={50} minSize={30} maxSize={500}>
                         <Box
                             sx={{
                                 px: { xs: 1, md: 2 },
