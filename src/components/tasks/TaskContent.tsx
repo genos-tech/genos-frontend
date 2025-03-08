@@ -32,7 +32,6 @@ export default function EmailContent() {
 
   function getMdHeight(text: string): number {
     const height: number = Math.min(Math.max(text.split('\n').length * 20, 200), 800)
-    console.log(height)
     return height;
   }
 

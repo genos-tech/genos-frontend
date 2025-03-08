@@ -45,10 +45,6 @@ export const MarkdownEditor = ({
       <span
         style={{
           color: 'white',
-          backgroundColor: preview === "edit" ? "#393939" : "#393939",
-          borderTopLeftRadius: "8px",
-          borderTopRightRadius: preview === "edit" ? "8px" : "0px",
-          borderRight: preview === "edit" ? "1px solid #393939" : "none",
           padding: "11px 16px 12px 16px",
           fontSize: "14px",
           fontWeight: 'bold',
@@ -73,11 +69,6 @@ export const MarkdownEditor = ({
       <span
         style={{
           color: 'white',
-          backgroundColor: "#393939",
-          borderTopLeftRadius: preview === "preview" ? "8px" : "0px",
-          borderTopRightRadius: preview === "preview" ? "8px" : "0px",
-          borderRight: preview === "preview" ? "1px solid #393939" : "none",
-          borderLeft: preview === "preview" ? "1px solid #393939" : "none",
           padding: "11px 16px 12px 16px",
           fontSize: "14px",
           fontWeight: 'bold',

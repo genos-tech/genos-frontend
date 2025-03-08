@@ -92,7 +92,7 @@
 
 /* Change background for inline <code> */
 .markdown-preview {
-  /* color: white; */
+  /* color: rgb(217, 217, 217); */
 }
 
 /* Change background for inline <code> */
@@ -110,7 +110,7 @@
   background-color: #656565 !important;
   padding: 4px;
   border-radius: 4px;
-  color: white;
+  color: rgb(217, 217, 217);
 }
 
 /* Change background for code blocks */
@@ -124,7 +124,7 @@
 /* Change background for code blocks */
 .markdown-preview blockquote {
   background-color: #6f6f6f !important;
-  color: white;
+  color: rgb(217, 217, 217);
   display: block;
   padding: 8px;
   border-radius: 4px;
@@ -132,7 +132,7 @@
 
 
 .markdown-editor-dark span {
-  color: white;
+  color: rgb(217, 217, 217);
 }
 
 .markdown-editor-dark .w-md-editor-content .w-md-editor-preview {
@@ -141,38 +141,45 @@
 
 .markdown-editor-dark .w-md-editor-content .w-md-editor-preview .wmde-markdown {
   background-color: #363636;
-  color: white;
+  color: rgb(217, 217, 217);
 }
 
 .markdown-editor-dark .w-md-editor-content .w-md-editor-preview div * {
-  color: white;
+  color: rgb(217, 217, 217);
 }
 
 .markdown-editor-dark .w-md-editor-content .w-md-editor-area {
   background-color: #363636;
+  border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
+}
+
+.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text textarea::placeholder {
+  color: rgb(217, 217, 217);
 }
 
 .markdown-editor-light span {
-  color: white;
+  color: rgb(217, 217, 217);
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-preview {
-  background-color: #ffffff;
+  background-color: rgb(217, 217, 217);
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-preview .wmde-markdown {
-  background-color: #ffffff;
+  background-color: rgb(217, 217, 217);
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-preview div * {
-  color: black;
+  color: rgb(55, 55, 55);
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-area {
-  background-color: #838383;
+  background-color: rgb(217, 217, 217);
+  border-top-right-radius: 0px;
+  border-top-left-radius: 0px;
 }
 
-textarea::placeholder {
-  color: #363636;
-  opacity: 1;
+.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text textarea::placeholder {
+  color: #6d6d6d;
 }
