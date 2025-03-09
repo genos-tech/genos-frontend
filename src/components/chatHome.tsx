@@ -1,7 +1,7 @@
+import Box from '@mui/joy/Box';
 import { useState, useEffect } from "react";
 import Sheet from '@mui/joy/Sheet';
 import { io, Socket } from "socket.io-client";
-import SplitMessagesPane from './chatCommon/splitMessagesPane';
 import ThreadPane from './thread/threadPane';
 import ChatsPane from './chatCommon/chatsPane';
 import {
@@ -21,6 +21,12 @@ import InsertDMMessageWorker from "../workers/insertDMMessageWorker.ts?worker";
 import InsertDMThreadMessageWorker from "../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMMessageWorker from "../workers/insertGMMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../workers/insertGMThreadMessageWorker.ts?worker";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
+import Sidebar from '../components/utils/sidebar';
+import { useColorScheme } from '@mui/joy/styles';
+
+import MessagesPane from './mainChat/mainMessagesPane';
+import MessagesSubPane from './subChat/subMessagesPane';
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 const socket: Socket = io(ws_url, {
@@ -188,6 +194,7 @@ type HomeProps = {
 };
 
 export default function Home(props: HomeProps) {
+    const { mode } = useColorScheme();
     const { myself,
         currentMainChat,
         setCurrentMainChat,
@@ -512,100 +519,178 @@ export default function Home(props: HomeProps) {
     ////////////////////////////////////////////////////////////////////
 
 
+    /////////////////// NEED FOR MAIN/SUB Chat Pane height ////////////////////
+    const [mainChatPanelSize, setMainChatPanelSize] = useState(50);
+    const [subChatPanelSize, setSubChatPanelSize] = useState(50);
+    const useWindowSize = () => {
+        const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+        useEffect(() => {
+            const handleResize = () => {
+                setSize({ width: window.innerWidth, height: window.innerHeight });
+            };
+
+            window.addEventListener("resize", handleResize);
+
+            // Cleanup event listener on unmount
+            return () => window.removeEventListener("resize", handleResize);
+        }, []);
+
+        return size;
+    };
+    const { width, height } = useWindowSize();
+    ////////////////////////////////////////////////////////////////////////////
+
     return (
-        <Sheet
-            sx={{
-                height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
-                display: 'flex',
-            }}
-        >
-            {/* Left Side Pane */}
-            <Sheet
-                sx={{
-                    position: { xs: 'fixed', sm: 'sticky' },
-                    transform: {
-                        xs: 'translateX(calc(100% * (var(--MessagesPane-slideIn, 0) - 1)))',
-                        sm: 'none',
-                    },
-                    transition: 'transform 0.4s, width 0.4s',
-                    zIndex: 100,
-                    top: 10,
-                }}
-            >
-                <ChatsPane
-                    myself={myself}
-                    allChats={allChats}
-                    setAllChats={setAllChats}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setCurrentSubChat={setCurrentSubChat}
-                    currentMainChat={currentMainChat}
-                    currentSubChat={currentSubChat}
-                    socket={socket}
-                    isSubChatVisible={isSubChatVisible}
-                    setIsSubChatVisible={setIsSubChatVisible}
-                />
-            </Sheet>
+        <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
 
-            {/* Main Pane */}
-            <Sheet
-                sx={{
-                    position: { xs: 'fixed', sm: 'sticky' },
-                    zIndex: 100,
-                    top: 10,
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column-reverse',
-                    height: '100vh', // Ensure Sheet takes full viewport height
-                    minHeight: 0, // Prevents height issues in flex container
-                }}
-            >
-                <SplitMessagesPane
-                    chat={currentMainChat}
-                    subChat={currentSubChat}
-                    myself={myself}
-                    socket={socket}
-                    setIsSubChatVisible={setIsSubChatVisible}
-                    isSubChatVisible={isSubChatVisible}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setCurrentSubChat={setCurrentSubChat}
-                    setCurrentThreadChat={setCurrentThreadChat}
-                    setIsRightSideVisible={setIsRightSideVisible}
-                    currentMainChatEmail={currentMainChatEmail}
-                    currentSubChatEmail={currentSubChatEmail}
-                />
-            </Sheet>
+            <Sidebar />
 
-            {/* Right Side Pane */}
-            {isRightSideVisible && currentThreadChat !== undefined && (
-                <Sheet
-                    sx={{
-                        display: { xs: 'none', md: 'flex' },
-                        position: { md: 'fixed', lg: 'sticky' },
-                        transform: {
-                            md: 'translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))',
-                            lg: 'none',
-                        },
-                        transition: 'width 0.4s',
-                        zIndex: 100,
-                        top: 10,
-                        flex: 1,
-                        minHeight: 0,
-                        flexDirection: 'column-reverse',
-                        borderLeft: 2,
-                        borderLeftColor: 'LightGray'
+            <PanelGroup autoSaveId="conditional" direction="horizontal">
+                <Panel id={'1'} order={1} defaultSize={10} minSize={20} maxSize={30}>
+                    <Box
+                        sx={{
+                            height: '100%',
+                            backgroundColor: 'grey',
+                            borderRight: mode === 'dark'
+                                ? '2px black groove'
+                                : '2px white groove',
+                        }}
+                    >
+                        <Sheet
+                            sx={{
+                                position: { xs: 'fixed', sm: 'sticky' },
+                                transform: {
+                                    xs: 'translateX(calc(100% * (var(--MessagesPane-slideIn, 0) - 1)))',
+                                    sm: 'none',
+                                },
+                                transition: 'transform 0.4s, width 0.4s',
+                                zIndex: 100,
+                                top: 10,
+                            }}
+                        >
+                            <ChatsPane
+                                myself={myself}
+                                allChats={allChats}
+                                setAllChats={setAllChats}
+                                setCurrentMainChat={setCurrentMainChat}
+                                setCurrentSubChat={setCurrentSubChat}
+                                currentMainChat={currentMainChat}
+                                currentSubChat={currentSubChat}
+                                socket={socket}
+                                isSubChatVisible={isSubChatVisible}
+                                setIsSubChatVisible={setIsSubChatVisible}
+                            />
+                        </Sheet>
+                    </Box>
+                </Panel>
+
+                {/* Resizable Handle with MUI sx Styling */}
+                <PanelResizeHandle
+                    style={{
+                        backgroundColor: "grey",
+                        transition: "all 0.3s ease-in-out",
+                        cursor: "col-resize",
                     }}
-                >
-                    <ThreadPane
-                        thread={currentThreadChat}
-                        myself={myself}
-                        socket={socket}
-                        setCurrentThreadChat={setCurrentThreadChat}
-                        setIsRightSideVisible={setIsRightSideVisible}
-                        currentThreadChatEmail={currentThreadChatEmail}
-                    />
-                </Sheet>)}
+                    className="resize-handle"
+                />
 
-        </Sheet>
+                <Panel id={'2'} order={2} defaultSize={40} minSize={35} maxSize={100}>
+                    <PanelGroup autoSaveId="conditional" direction="vertical">
+                        {isSubChatVisible && (
+                            <>
+                                <Panel
+                                    id={'3'}
+                                    order={3}
+                                    defaultSize={50}
+                                    minSize={30}
+                                    maxSize={100}
+                                    onResize={setSubChatPanelSize}
+                                >
+                                    <MessagesSubPane
+                                        currentWindowHeight={height}
+                                        paneSizePCT={subChatPanelSize}
+                                        myself={myself}
+                                        chat={currentMainChat}
+                                        subChat={currentSubChat}
+                                        socket={socket}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentSubChat={setCurrentSubChat}
+                                        setCurrentThreadChat={setCurrentThreadChat}
+                                        setIsSubChatVisible={setIsSubChatVisible}
+                                        setIsRightSideVisible={setIsRightSideVisible}
+                                        currentSubChatEmail={currentSubChatEmail} />
+                                </Panel>
 
+                                <PanelResizeHandle
+                                    style={{
+                                        backgroundColor: "grey",
+                                        transition: "all 0.3s ease-in-out",
+                                        cursor: "col-resize",
+                                    }}
+                                    className="resize-handle-ver" />
+                            </>
+                        )}
+                        <Panel
+                            id={'4'}
+                            order={4}
+                            defaultSize={80}
+                            minSize={30}
+                            maxSize={100}
+                            onResize={setMainChatPanelSize}
+                        >
+                            <MessagesPane
+                                currentWindowHeight={height}
+                                paneSizePCT={mainChatPanelSize}
+                                chat={currentMainChat}
+                                subChat={currentSubChat}
+                                myself={myself}
+                                socket={socket}
+                                setCurrentMainChat={setCurrentMainChat}
+                                setCurrentSubChat={setCurrentSubChat}
+                                setCurrentThreadChat={setCurrentThreadChat}
+                                setIsRightSideVisible={setIsRightSideVisible}
+                                isSubChatVisible={isSubChatVisible}
+                                setIsSubChatVisible={setIsSubChatVisible}
+                                currentMainChatEmail={currentMainChatEmail}
+                            />
+                        </Panel>
+                    </PanelGroup>
+                </Panel>
+
+                {isRightSideVisible && currentThreadChat !== undefined && (
+                    <>
+                        <PanelResizeHandle
+                            style={{
+                                backgroundColor: "grey",
+                                transition: "all 0.3s ease-in-out",
+                                cursor: "col-resize",
+                            }}
+                            className="resize-handle"
+                        />
+                        <Panel id={'5'} order={5} defaultSize={40} minSize={35} maxSize={100}>
+                            <Box
+                                sx={{
+                                    height: '100%',
+                                    backgroundColor: 'black',
+                                    borderLeft: mode === 'dark'
+                                        ? '2px black groove'
+                                        : '2px white groove',
+                                }}
+                            >
+                                <ThreadPane
+                                    thread={currentThreadChat}
+                                    myself={myself}
+                                    socket={socket}
+                                    setCurrentThreadChat={setCurrentThreadChat}
+                                    setIsRightSideVisible={setIsRightSideVisible}
+                                    currentThreadChatEmail={currentThreadChatEmail}
+                                />
+                            </Box>
+                        </Panel>
+                    </>
+                )}
+            </PanelGroup>
+        </Box>
     );
 }

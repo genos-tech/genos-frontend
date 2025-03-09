@@ -15,6 +15,8 @@ import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { useColorScheme } from '@mui/joy/styles';
 
 type MessagesPaneProps = {
+  currentWindowHeight: number;
+  paneSizePCT: number;
   chat: ChatProps;
   subChat: ChatProps;
   myself: UserProps;
@@ -29,7 +31,10 @@ type MessagesPaneProps = {
 };
 
 export default function MessagesPane(props: MessagesPaneProps) {
-  const { chat,
+  const {
+    currentWindowHeight,
+    paneSizePCT,
+    chat,
     subChat,
     myself,
     socket,
@@ -95,32 +100,8 @@ export default function MessagesPane(props: MessagesPaneProps) {
     ref.current.nearBottom = atBottom
   }
 
-  // Calculate chat pane height dynamically
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 263);
-  useEffect(() => {
-    const updateHeight = () => {
-      if (containerRef.current) {
-        // This is very very important to set the height of the message bubble !!!!!!!
-        const currentHeight: number = containerRef.current.clientHeight
-        setListHeight(currentHeight - 263)
-      }
-    };
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
-  }, [chat, isSubChatVisible]);
-
   return (
-    <Sheet
-      ref={containerRef}
-      sx={{
-        height: { xs: 'calc(100dvh - var(--Header-height))', md: isSubChatVisible ? '50dvh' : '100dvh' },
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'background.surface',
-      }}
-    >
+    <Sheet sx={{ backgroundColor: 'background.surface' }}>
       <MessagesPaneHeader
         myself={myself}
         chat={chat}
@@ -135,7 +116,11 @@ export default function MessagesPane(props: MessagesPaneProps) {
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
-          style={{ height: listHeight }}
+          style={{
+            height: isSubChatVisible
+              ? currentWindowHeight * paneSizePCT * 0.01 - 263
+              : currentWindowHeight - 263
+          }}
           totalCount={chatMessages.length}
           initialTopMostItemIndex={chatMessages.length - 1}
           atTopThreshold={64}
@@ -164,8 +149,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
                 </Stack>
               </div>
             );
-          }
-          }
+          }}
         />
       </Box>
 

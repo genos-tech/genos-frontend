@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Sheet from '@mui/joy/Sheet';
 import {
   Box,
@@ -162,42 +162,6 @@ export default function ChatsPane(props: ChatsPaneProps) {
       setOptions([]);
     }
   }, [openUsers]);
-
-
-  ///////////////////////////////////////////////////////////////////////
-  const [width, setWidth] = useState(300);
-  const isResizing = useRef(false);
-  const widthRef = useRef(width);
-
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isResizing.current) return;
-
-    const newWidth = Math.min(Math.max(250, e.clientX), 500);
-    if (newWidth !== widthRef.current) {
-      widthRef.current = newWidth;
-      requestAnimationFrame(() => setWidth(newWidth));
-    }
-  };
-
-  const stopResizing = () => {
-    isResizing.current = false;
-  };
-
-  useEffect(() => {
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", stopResizing);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", stopResizing);
-    };
-  }, []);
-  ///////////////////////////////////////////////////////////////////////
 
   const moveToDMChat = async (
     chatEmail: string,
@@ -403,12 +367,11 @@ export default function ChatsPane(props: ChatsPaneProps) {
 
       <Sheet
         sx={{
-          width: `${width}px`,
           borderRight: '1px solid',
           borderColor: 'divider',
           overflowY: 'hidden',
           position: 'relative',
-          transition: isResizing ? 'none' : 'width 0.2s ease-in-out',
+          transition: 'width 0.2s ease-in-out',
         }}
       >
         {/* ============================================================================ */}
@@ -595,21 +558,6 @@ export default function ChatsPane(props: ChatsPaneProps) {
             )}
         </List>
 
-        {/* ============================================================================ */}
-
-        <div
-          onMouseDown={startResizing}
-          style={{
-            width: '6px',
-            height: '100%',
-            cursor: 'ew-resize',
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            zIndex: 9999, // Ensure it's above all other components
-          }}
-        />
       </Sheet>
     </div>
   );
