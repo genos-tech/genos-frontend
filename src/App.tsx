@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
-import {
-  Box,
-  Stack,
-} from '@mui/joy';
-import Sidebar from './components/utils/sidebar';
 import ChatHome from './components/chatHome';
 import './App.css';
 import Loading from './components/utils/loading'
@@ -36,31 +31,11 @@ function App() {
       : <CssVarsProvider disableTransitionOnChange>
         <CssBaseline />
 
-        <Stack direction='column' sx={{ height: '100vh' }}>
-
-          <Box sx={{
-            display: 'flex',
-            width: '100%',
-            flex: 1
-          }} >
-            <Box>
-              <Sidebar />
-            </Box>
-
-            <Box
-              component="main"
-              className="MainContent"
-              sx={{ width: '100vw' }}
-            >
-              <ChatHome
-                myself={myself}
-                currentMainChat={currentMainChat}
-                setCurrentMainChat={setCurrentMainChat}
-              />
-            </Box>
-          </Box>
-
-        </Stack>
+        <ChatHome
+          myself={myself}
+          currentMainChat={currentMainChat}
+          setCurrentMainChat={setCurrentMainChat}
+        />
 
       </CssVarsProvider>
   )

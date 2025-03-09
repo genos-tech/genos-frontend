@@ -16,6 +16,8 @@ import { useColorScheme } from '@mui/joy/styles';
 
 
 type MessagesPaneProps = {
+  currentWindowHeight: number;
+  paneSizePCT: number;
   myself: UserProps;
   chat: ChatProps;
   subChat: ChatProps;
@@ -29,7 +31,10 @@ type MessagesPaneProps = {
 };
 
 export default function MessagesSubPane(props: MessagesPaneProps) {
-  const {myself,
+  const {
+    currentWindowHeight,
+    paneSizePCT,
+    myself,
     chat,
     subChat,
     socket,
@@ -49,9 +54,6 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
   const { mode } = useColorScheme();
 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
-  const ref = useRef({
-    nearBottom: false,
-  })
 
   // Scroll to the bottom when a new message comes.
   useEffect(() => {
@@ -82,35 +84,8 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
     }
   }, [currentSubChatEmail])
 
-  // Calculate chat pane height dynamically
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 263);
-  useEffect(() => {
-    const updateHeight = () => {
-      if (containerRef.current) {
-        // This is very very important to set the height of the message bubble !!!!!!!
-        const currentHeight: number = containerRef.current.clientHeight
-        setListHeight(currentHeight - 263)
-      }
-    };
-    updateHeight(); // Initial height
-    window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
-  }, [subChat]);
-
-
   return (
-    <Sheet
-      ref={containerRef}
-      sx={{
-        height: { xs: 'calc(100dvh - var(--Header-height))', md: '50dvh' },
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'background.level1',
-        borderBottom: 5,
-        borderBottomColor: mode === 'dark' ? 'LightGray' : 'grey'
-      }}
-    >
+    <Sheet sx={{ backgroundColor: 'background.level1' }}>
       <SubMessagesPaneHeader
         myself={myself}
         chat={chat}
@@ -123,7 +98,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
-          style={{ height: listHeight }}
+          style={{ height: currentWindowHeight * paneSizePCT * 0.01 - 263 }}
           totalCount={chatMessages.length}
           initialTopMostItemIndex={chatMessages.length - 1}
           atTopThreshold={64}
@@ -149,10 +124,8 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
                   />
                 </Stack>
               </div>
-
             );
-          }
-          }
+          }}
         />
       </Box>
       <Box>
