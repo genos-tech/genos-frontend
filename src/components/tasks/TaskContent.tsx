@@ -10,14 +10,17 @@ import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
 import AspectRatio from '@mui/joy/AspectRatio';
 import Divider from '@mui/joy/Divider';
-import { Input } from "@mui/joy";
+import { Input, Grid, Menu, MenuItem, Button } from "@mui/joy";
+import Textarea from '@mui/joy/Textarea';
+import { ChevronDown } from "lucide-react";
 
 import IconButton from '@mui/joy/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
+
+import GithubIcon from '../../assets/GithubIcon';
 
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 
@@ -31,6 +34,7 @@ export default function taskContent() {
   const taskState: string = "WIP"
   const nextStatus: string = "Close"
   const assignee: string = "Ken"
+  const reporter: string = "Ryan"
   const [taskContent, setTaskContent] = useState(taskContents.content);
   const [comment, setComment] = useState("");
 
@@ -42,6 +46,41 @@ export default function taskContent() {
   const createdDate = '2025-03-08';
   const [selectedDate, setSelectedDate] = useState(createdDate);
   const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+
+
+  // Editable Chip for Tag
+  const predefinedLabels = ["Q1", "Q2", "Q3"];
+  const [isEditing, setIsEditing] = useState(false);
+  const [chipLabel, setChipLabel] = useState("Q4");
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const handleBlur = () => {
+    setIsEditing(false);
+  };
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setChipLabel(event.target.value);
+  };
+  const handleSelectLabel = (label: string) => {
+    setChipLabel(label);
+    setAnchorEl(null);
+  };
+
+
+  // Github URL link manager
+  const [prUrl, setPrUrl] = useState("");
+  const [alias, setAlias] = useState("");
+  const [savedAlias, setSavedAlias] = useState("");
+  const [savedUrl, setSavedUrl] = useState("");
+  const isValidGitHubPR = (url: string) => {
+    return /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+$/.test(url);
+  };
+  const handleSave = () => {
+    if (isValidGitHubPR(prUrl) && alias.trim()) {
+      setSavedUrl(prUrl);
+      setSavedAlias(alias);
+    } else {
+      alert("Please enter a valid GitHub PR URL and an alias.");
+    }
+  };
 
 
   return (
@@ -126,9 +165,34 @@ export default function taskContent() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
           <Box>
             <List aria-labelledby="decorated-list-demo">
-              <ListItem>
-                Assignee: <Avatar size="sm">K</Avatar> {assignee}
-              </ListItem>
+              <Grid container spacing={2}>
+                <Grid key={1} xs={6}>
+                  <ListItem>
+                    Assignee: <Avatar size="sm">K</Avatar>
+                    <Textarea
+                      name="Neutral"
+                      variant="plain"
+                      color="neutral"
+                      size="md"
+                      defaultValue={assignee}
+                      sx={{ width: '150px' }}
+                    />
+                  </ListItem>
+                </Grid>
+                <Grid key={2} xs={6}>
+                  <ListItem>
+                    Reporter: <Avatar size="sm">R</Avatar>
+                    <Textarea
+                      name="Neutral"
+                      variant="plain"
+                      color="neutral"
+                      size="md"
+                      defaultValue={reporter}
+                      sx={{ width: '150px' }}
+                    />
+                  </ListItem>
+                </Grid>
+              </Grid>
               <ListItem>
                 Due date: <Input
                   type="date"
@@ -144,29 +208,88 @@ export default function taskContent() {
                 />
               </ListItem>
               <ListItem>
-                Tags:<Chip component="span" size="md" variant="soft" color="warning">
-                  Frontend
-                </Chip>
+                Tags:
+                {isEditing ? (
+                  <Input
+                    autoFocus
+                    value={chipLabel}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    onKeyDown={(e) => e.key === "Enter" && handleBlur()}
+                    size="sm"
+                    placeholder="Enter Tag"
+                  />
+                ) : (
+                  <div>
+                    {predefinedLabels.map((label) => (
+                      <Chip
+                        variant="soft"
+                        color="warning"
+                        onClick={() => setIsEditing(true)}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        {label}
+                      </Chip>
+                    ))}
+                    <Chip
+                      variant="soft"
+                      color="warning"
+                      onClick={() => setIsEditing(true)}
+                      sx={{ cursor: "pointer" }}
+                    >
+                      {chipLabel}
+                    </Chip>
+                  </div>
+                )}
+
+                <IconButton
+                  component="a"
+                  size="sm"
+                  variant="outlined"
+                  onClick={(e) => setAnchorEl(e.currentTarget)}
+                >
+                  <ChevronDown size={16} />
+                </IconButton>
+
+                <Menu
+                  anchorEl={anchorEl}
+                  open={!!anchorEl}
+                  onClose={() => setAnchorEl(null)}
+                >
+                  {predefinedLabels.map((label) => (
+                    <MenuItem key={label} onClick={() => handleSelectLabel(label)}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </Menu>
               </ListItem>
+
               <ListItem>
-                Reporter: <Avatar size="sm">K</Avatar> {assignee}
+                <GithubIcon />
+                <Input
+                  placeholder="Enter GitHub PR URL"
+                  value={prUrl}
+                  onChange={(e) => setPrUrl(e.target.value)}
+                  type="url"
+                />
+                <Input
+                  placeholder="Enter alias name"
+                  value={alias}
+                  onChange={(e) => setAlias(e.target.value)}
+                />
+                <Button onClick={handleSave}>Save</Button>
+
+                {savedUrl && (
+                  <Typography>
+                    ✅ Saved PR:{" "}
+                    <a href={savedUrl} target="_blank" rel="noopener noreferrer">
+                      {savedAlias}
+                    </a>
+                  </Typography>
+                )}
               </ListItem>
             </List>
           </Box>
-        </Box>
-        <Box
-          sx={{ display: 'flex', flexDirection: 'row' }}
-        >
-          <IconButton
-            component='p'
-            variant="outlined"
-            sx={{
-              fontSize: '14px',
-              paddingX: '7px'
-            }}>
-            <EditIcon sx={{ fontSize: '15px' }} />
-            Edit
-          </IconButton>
         </Box>
       </Box>
 

@@ -37,6 +37,7 @@
     "@uiw/react-md-editor": "^4.0.5",
     "autosuggest-highlight": "^3.3.4",
     "idb": "^8.0.2",
+    "lucide-react": "^0.479.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-resizable": "^3.0.5",
