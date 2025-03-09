@@ -18,7 +18,7 @@ const getHMLOption = (value: string) => hmlOptions.find((option) => option.value
 
 const statusOptions = [
     { label: "Open", value: "open", color: "#2bc8ff", icon: <CheckCircleOutlineIcon style={{ color: "#2bc8ff" }} /> },
-    { label: "WIP", value: "wip", color: "#ffd800", icon: <AutorenewIcon style={{ color: "#ffd800" }} /> },
+    { label: "WIP", value: "wip", color: "#e58700", icon: <AutorenewIcon style={{ color: "#e58700" }} /> },
     { label: "Closed", value: "closed", color: "#0adc00", icon: <CheckCircleOutlineIcon style={{ color: "#0adc00" }} /> },
     { label: "Deleted", value: "deleted", color: "#ff2e2e", icon: <HighlightOffIcon style={{ color: "#ff2e2e" }} /> },
 ];
@@ -27,7 +27,7 @@ const getStatusOption = (value: string) => statusOptions.find((option) => option
 const customTagOptions = [
     { label: "grey", color: "#aaaaaa" },
     { label: "red", color: "#ff2e2e" },
-    { label: "yellow", color: "#ffd800" },
+    { label: "yellow", color: "#e58700" },
     { label: "green", color: "#0adc00" },
 ];
 const getCustomTagOption = (label: string) => customTagOptions.find((option) => option.label === label);
@@ -78,8 +78,8 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
             const color = option?.color;
             return option ? <Chip
                 label={option.label}
-                variant="filled"
-                sx={{ color: color, backgroundColor: 'transparent', opacity: 0.95 }} /> : null;
+                variant="outlined"
+                sx={{ color: color, opacity: 0.95 }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -93,7 +93,7 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
                     <MenuItem key={option.value} value={option.value}>
                         <Chip
                             label={option.label}
-                            variant="filled"
+                            variant="outlined"
                             sx={{
                                 color: option.color,
                                 fontWeight: 'bold',
@@ -117,8 +117,8 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
             const color = option?.color;
             return option ? <Chip
                 label={option.label}
-                variant="filled"
-                sx={{ color: color, backgroundColor: 'transparent', opacity: 0.95 }} /> : null;
+                variant="outlined"
+                sx={{ color: color, opacity: 0.95 }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -132,7 +132,7 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
                     <MenuItem key={option.value} value={option.value}>
                         <Chip
                             label={option.label}
-                            variant="filled"
+                            variant="outlined"
                             sx={{
                                 color: option.color,
                                 fontWeight: 'bold',
@@ -157,8 +157,8 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
             return option ? <Chip
                 icon={option.icon}
                 label={option.label}
-                variant="filled"
-                sx={{ color: color, backgroundColor: 'transparent', opacity: 0.95 }} /> : null;
+                variant="outlined"
+                sx={{ color: color, opacity: 0.95 }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -173,7 +173,7 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
                         <Chip
                             icon={option.icon}
                             label={option.label}
-                            variant="filled"
+                            variant="outlined"
                             sx={{
                                 color: option.color,
                                 fontWeight: 'bold',
@@ -235,8 +235,8 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
             const color = option?.color;
             return option ? <Chip
                 label={option.label}
-                variant="filled"
-                sx={{ color: color, backgroundColor: 'transparent', opacity: 0.95 }} /> : null;
+                variant="outlined"
+                sx={{ color: color, opacity: 0.95 }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -250,7 +250,7 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
                     <MenuItem key={option.label} value={option.label}>
                         <Chip
                             label={option.label}
-                            variant="filled"
+                            variant="outlined"
                             sx={{
                                 color: option.color,
                                 fontWeight: 'bold',

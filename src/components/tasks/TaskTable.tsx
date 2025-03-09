@@ -67,7 +67,7 @@ export default function TaskTable() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div style={{ overflow: 'hidden' }}>
+      <div style={{ overflow: 'hidden', borderRadius: '5px' }}>
         <Stack direction="row" gap={1} mb={1} flexWrap="wrap">
           {predefinedFilters.map(({ label, filterModel }, index) => {
             const count = predefinedFiltersRowCount[index];
@@ -112,8 +112,8 @@ export default function TaskTable() {
                   onClick={() => apiRef.current.setFilterModel(filterModel)}
                   variant="outlined"
                   sx={{
-                    color: mode === 'dark' ? '#ffd800' : '#c6c800',
-                    borderColor: mode === 'dark' ? '#ffd800' : '#c6c800',
+                    color: '#e58700',
+                    borderColor: '#e58700',
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
@@ -161,7 +161,7 @@ export default function TaskTable() {
         </Stack>
         <Box
           sx={{
-            height: "94%",
+            height: "97%",
             width: '100%',
           }}
         >

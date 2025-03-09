@@ -183,7 +183,7 @@ export default function TaskSidebar() {
                 <ListItemButton onClick={() => setOpen(!open)}>
                   <BookmarkIcon />
                   <ListItemContent>
-                    <Typography level="title-sm">Tags </Typography>
+                    <Typography level="title-sm">Tagged Tasks </Typography>
                   </ListItemContent>
                   <KeyboardArrowDownIcon
                     sx={[

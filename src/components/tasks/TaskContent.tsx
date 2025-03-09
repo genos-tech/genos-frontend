@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState } from "react";
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
@@ -10,14 +11,19 @@ import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
 import AspectRatio from '@mui/joy/AspectRatio';
 import Divider from '@mui/joy/Divider';
-import { Input } from "@mui/joy";
+import { Input, Grid, Menu, MenuItem, Button, Stack } from "@mui/joy";
+import Textarea from '@mui/joy/Textarea';
+import { ChevronDown } from "lucide-react";
+import Snackbar, { SnackbarProps } from '@mui/joy/Snackbar';
 
 import IconButton from '@mui/joy/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
+
+import GithubIcon from '../../assets/GithubIcon';
+import CustomLinkIcon from '../../assets/CustomLinkIcon';
 
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 
@@ -31,6 +37,7 @@ export default function taskContent() {
   const taskState: string = "WIP"
   const nextStatus: string = "Close"
   const assignee: string = "Ken"
+  const reporter: string = "Ryan"
   const [taskContent, setTaskContent] = useState(taskContents.content);
   const [comment, setComment] = useState("");
 
@@ -44,6 +51,79 @@ export default function taskContent() {
   const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
 
+  // Editable Chip for Tag
+  const predefinedLabels = ["Q1", "Q2", "Q3"];
+  const [isEditing, setIsEditing] = useState(false);
+  const [chipLabel, setChipLabel] = useState("Q4");
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const handleBlur = () => {
+    setIsEditing(false);
+  };
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setChipLabel(event.target.value);
+  };
+  const handleSelectLabel = (label: string) => {
+    setChipLabel(label);
+    setAnchorEl(null);
+  };
+
+  // Github URL link manager
+  const [prUrl, setPRUrl] = useState("");
+  const [prTitle, setPRTitle] = useState("");
+  const [savedPRUrl, setSavedPRUrl] = useState("");
+  const [prError, setPRError] = useState("");
+  const isValidGitHubPR = (url: string) => {
+    return /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+$/.test(url);
+  };
+  const handlePRSave = () => {
+    if (!prTitle.trim()) {
+      setPRErrorOpen(true);
+      setPRError("PR title cannot be empty!");
+      return;
+    }
+    if (isValidGitHubPR(prUrl)) {
+      setSavedPRUrl(prUrl);
+      setPRTitle(prTitle);
+      setPRError("");
+    } else {
+      setPRErrorOpen(true);
+      setPRError("Please enter a valid GitHub PR URL.");
+    }
+  };
+  const [prErrorOpen, setPRErrorOpen] = React.useState(false);
+
+
+  // Any URL link manager
+  const [url, setUrl] = useState("");
+  const [alias, setAlias] = useState("");
+  const [savedAlias, setSavedAlias] = useState("");
+  const [savedUrl, setSavedUrl] = useState("");
+  const [error, setError] = useState("");
+  const isValidUrl = (inputUrl: string) => {
+    try {
+      new URL(inputUrl);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const handleSave = () => {
+    if (!alias.trim()) {
+      setErrorOpen(true);
+      setError("Title cannot be empty!");
+      return;
+    }
+    if (isValidUrl(url)) {
+      setSavedUrl(url);
+      setSavedAlias(alias);
+      setError("");
+    } else {
+      setErrorOpen(true);
+      setError("Please enter a valid URL.");
+    }
+  };
+  const [errorOpen, setErrorOpen] = React.useState(false);
+
   return (
     <Sheet
       variant="outlined"
@@ -55,65 +135,31 @@ export default function taskContent() {
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: 2,
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography
-              level="h3"
-              textColor="text.primary"
-              endDecorator={
-                <Chip component="span" size="md" variant="soft" color="primary">
-                  {taskState}
-                </Chip>
-              }
-            >
-              [ {taskId} ] {taskSummary}
-            </Typography>
+        <Stack direction="row" sx={{ width: '100%', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', flexGrow: 1 }}>
+            <Textarea
+              variant="plain"
+              size="lg"
+              defaultValue={`[ ${taskId} ] ${taskSummary}`}
+              sx={{ width: '500px', fontSize: '25px', fontWeight: 'bold' }}
+            />
           </Box>
-        </Box>
-        <Box
-          sx={{ display: 'flex', height: '32px', flexDirection: 'row', gap: 1.5 }}
-        >
-          <IconButton
-            component='p'
-            variant="soft"
-            color='success'
-            sx={{
-              fontSize: '14px',
-              paddingX: '7px',
-            }}>
-            <CheckCircleOutlineIcon sx={{ fontSize: '15px' }} />
-            {nextStatus}
-          </IconButton>
 
-          <IconButton
-            component='p'
+          <Chip
+            key={taskState}
+            size='lg'
             variant="soft"
-            color='danger'
-            sx={{
-              fontSize: '14px',
-              paddingX: '7px',
-            }}>
-            <DeleteIcon sx={{ fontSize: '15px' }} />
-            Delete
-          </IconButton>
-
-          <IconButton
-            component='p'
-            variant="outlined"
-            sx={{
-              fontSize: '14px',
-              paddingX: '7px'
-            }}>
-            <AddIcon />
-            Sub Task
-          </IconButton>
-        </Box>
+            color="primary"
+            sx={{ fontSize: '15px' }}
+          >
+            {taskState}
+          </Chip>
+        </Stack>
       </Box>
 
-      <Divider sx={{ mt: 2 }} />
+      <Divider />
 
       <Box
         sx={{
@@ -123,17 +169,42 @@ export default function taskContent() {
           flexWrap: 'wrap',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Box>
             <List aria-labelledby="decorated-list-demo">
-              <ListItem>
-                Assignee: <Avatar size="sm">K</Avatar> {assignee}
-              </ListItem>
+              <Grid container spacing={2}>
+                <Grid key={1} xs={6}>
+                  <ListItem>
+                    Assignee: <Avatar size="sm">K</Avatar>
+                    <Textarea
+                      name="Neutral"
+                      variant="plain"
+                      color="neutral"
+                      size="md"
+                      defaultValue={assignee}
+                      sx={{ width: '150px' }}
+                    />
+                  </ListItem>
+                </Grid>
+                <Grid key={2} xs={6}>
+                  <ListItem>
+                    Reporter: <Avatar size="sm">R</Avatar>
+                    <Textarea
+                      name="Neutral"
+                      variant="plain"
+                      color="neutral"
+                      size="md"
+                      defaultValue={reporter}
+                      sx={{ width: '150px' }}
+                    />
+                  </ListItem>
+                </Grid>
+              </Grid>
               <ListItem>
                 Due date: <Input
                   type="date"
-                  color="primary"
-                  variant="soft"
+                  color="neutral"
+                  variant="outlined"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   slotProps={{
@@ -144,47 +215,236 @@ export default function taskContent() {
                 />
               </ListItem>
               <ListItem>
-                Tags:<Chip component="span" size="md" variant="soft" color="warning">
-                  Frontend
-                </Chip>
+                Tags:
+                {isEditing ? (
+                  <Input
+                    autoFocus
+                    value={chipLabel}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    onKeyDown={(e) => e.key === "Enter" && handleBlur()}
+                    size="sm"
+                    placeholder="Enter Tag"
+                  />
+                ) : (
+                  <div>
+                    {predefinedLabels.map((label) => (
+                      <Chip
+                        key={label}
+                        variant="soft"
+                        color="warning"
+                        onClick={() => setIsEditing(true)}
+                        sx={{ cursor: "pointer" }}
+                      >
+                        {label}
+                      </Chip>
+                    ))}
+                    <Chip
+                      variant="soft"
+                      color="warning"
+                      onClick={() => setIsEditing(true)}
+                      sx={{ cursor: "pointer" }}
+                    >
+                      {chipLabel}
+                    </Chip>
+                  </div>
+                )}
+
+                <IconButton
+                  component="a"
+                  size="sm"
+                  variant="outlined"
+                  onClick={(e) => setAnchorEl(e.currentTarget)}
+                >
+                  <ChevronDown size={16} />
+                </IconButton>
+
+                <Menu
+                  anchorEl={anchorEl}
+                  open={!!anchorEl}
+                  onClose={() => setAnchorEl(null)}
+                >
+                  {predefinedLabels.map((label) => (
+                    <MenuItem key={label} onClick={() => handleSelectLabel(label)}>
+                      {label}
+                    </MenuItem>
+                  ))}
+                </Menu>
               </ListItem>
+
               <ListItem>
-                Reporter: <Avatar size="sm">K</Avatar> {assignee}
+                <GithubIcon />
+
+                {(!savedPRUrl || savedPRUrl === "") && (
+                  <Stack direction="row" spacing={1.5}>
+                    <Input
+                      key={'prTitle'}
+                      size='sm'
+                      placeholder="Enter PR Title"
+                      value={prTitle}
+                      onChange={(e) => setPRTitle(e.target.value)}
+                      sx={{ width: '150px', height: '30px' }}
+                    />
+                    <Input
+                      key={'prUrl'}
+                      size='sm'
+                      placeholder="Enter PR URL"
+                      value={prUrl}
+                      onChange={(e) => setPRUrl(e.target.value)}
+                      type="url"
+                      sx={{ width: '150px', height: '30px' }}
+                    />
+                    {prError && <Snackbar
+                      autoHideDuration={5000}
+                      open={prErrorOpen}
+                      variant='soft'
+                      color='danger'
+                      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                      onClose={(event, reason) => {
+                        if (reason === 'clickaway') {
+                          return;
+                        }
+                        setPRErrorOpen(false);
+                      }}
+                    >
+                      {prError}
+                    </Snackbar>}
+                    <Button
+                      component='a'
+                      variant="outlined"
+                      color="neutral"
+                      onClick={handlePRSave}>Save</Button>
+                  </Stack>
+                )}
+
+                {savedPRUrl && (
+                  <Typography>
+                    <a href={savedPRUrl} target="_blank" rel="noopener noreferrer">
+                      {prTitle}
+                    </a>
+                  </Typography>
+                )}
+              </ListItem>
+
+              <ListItem>
+                <CustomLinkIcon />
+
+                {(!savedUrl || savedUrl === "") && (
+                  <Stack direction="row" spacing={1.5}>
+                    <Input
+                      key={'title'}
+                      size='sm'
+                      placeholder="Enter Title"
+                      value={alias}
+                      onChange={(e) => setAlias(e.target.value)}
+                      sx={{ width: '150px', height: '30px' }}
+                    />
+                    <Input
+                      key={'url'}
+                      size='sm'
+                      placeholder="Enter URL"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      type="url"
+                      sx={{ width: '150px', height: '30px' }}
+                    />
+                    {error && <Snackbar
+                      autoHideDuration={5000}
+                      open={errorOpen}
+                      variant='soft'
+                      color='danger'
+                      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                      onClose={(event, reason) => {
+                        if (reason === 'clickaway') {
+                          return;
+                        }
+                        setErrorOpen(false);
+                      }}
+                    >
+                      {error}
+                    </Snackbar>}
+                    <Button
+                      component='a'
+                      variant="outlined"
+                      color="neutral"
+                      onClick={handleSave}>Save</Button>
+                  </Stack>
+                )}
+
+                {savedUrl && (
+                  <Typography>
+                    <a href={savedUrl} target="_blank" rel="noopener noreferrer">
+                      {savedAlias}
+                    </a>
+                  </Typography>
+                )}
               </ListItem>
             </List>
           </Box>
         </Box>
-        <Box
-          sx={{ display: 'flex', flexDirection: 'row' }}
-        >
+      </Box>
+
+      <Divider sx={{ mt: 1, mb: 1 }} />
+
+      <Stack direction={"column"} sx={{ width: '100%' }}>
+        <Stack direction="row" sx={{ width: '100%', alignItems: 'center', gap: 1 }}>
+          {/* Next Status IconButton */}
           <IconButton
-            component='p'
+            component="p"
+            variant="outlined"
+            color="success"
+            sx={{
+              fontSize: '14px',
+              paddingX: '7px',
+            }}
+          >
+            <CheckCircleOutlineIcon sx={{ fontSize: '15px' }} />
+            {nextStatus}
+          </IconButton>
+
+          {/* Sub Task IconButton aligned to the right */}
+          <IconButton
+            component="p"
             variant="outlined"
             sx={{
               fontSize: '14px',
-              paddingX: '7px'
-            }}>
-            <EditIcon sx={{ fontSize: '15px' }} />
-            Edit
+              paddingX: '7px',
+              marginLeft: 'auto',
+            }}
+          >
+            <AddIcon />
+            Sub Task
           </IconButton>
+
+          {/* Delete IconButton */}
+          <IconButton
+            component="p"
+            variant="outlined"
+            color="danger"
+            sx={{
+              fontSize: '14px',
+              paddingX: '7px',
+            }}
+          >
+            <DeleteIcon sx={{ fontSize: '15px' }} />
+            Delete
+          </IconButton>
+        </Stack>
+
+        <Box sx={{ mt: 2 }}>
+          <div className="md-content">
+            <MarkdownEditor
+              content={taskContent}
+              setContent={setTaskContent}
+              height={getMdHeight(taskContent)}
+              mdMode={"preview"} />
+          </div>
         </Box>
-      </Box>
+      </Stack>
 
       <Divider sx={{ mt: 2 }} />
 
-      <Box sx={{ mt: 2 }}>
-        <div className="md-content">
-          <MarkdownEditor
-            content={taskContent}
-            setContent={setTaskContent}
-            height={getMdHeight(taskContent)}
-            mdMode={"preview"} />
-        </div>
-      </Box>
-
-      <Divider sx={{ mt: 2 }} />
-
-      <Typography level="title-sm" sx={{ mt: 2, mb: 2 }}>
+      <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
         Attachments
       </Typography>
       <Box
@@ -237,7 +497,7 @@ export default function taskContent() {
       <Divider sx={{ mt: 2 }} />
 
       <Box sx={{ mt: 2 }}>
-        <Typography level="title-sm" sx={{ mt: 2, mb: 2 }}>
+        <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
           Comments
         </Typography>
         <div className="md-content">

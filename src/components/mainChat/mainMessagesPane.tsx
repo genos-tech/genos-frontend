@@ -118,8 +118,8 @@ export default function MessagesPane(props: MessagesPaneProps) {
           className="custom-scrollbar"
           style={{
             height: isSubChatVisible
-              ? currentWindowHeight * paneSizePCT * 0.01 - 263
-              : currentWindowHeight - 263
+              ? currentWindowHeight * paneSizePCT * 0.01 - 270
+              : currentWindowHeight - 270
           }}
           totalCount={chatMessages.length}
           initialTopMostItemIndex={chatMessages.length - 1}
@@ -153,7 +153,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
         />
       </Box>
 
-      <Box>
+      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}

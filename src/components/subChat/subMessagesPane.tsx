@@ -98,7 +98,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         <Virtuoso
           ref={virtuosoRef}
           className="custom-scrollbar"
-          style={{ height: currentWindowHeight * paneSizePCT * 0.01 - 263 }}
+          style={{ height: currentWindowHeight * paneSizePCT * 0.01 - 270 }}
           totalCount={chatMessages.length}
           initialTopMostItemIndex={chatMessages.length - 1}
           atTopThreshold={64}
@@ -128,7 +128,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
           }}
         />
       </Box>
-      <Box>
+      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}
