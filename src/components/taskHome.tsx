@@ -39,7 +39,7 @@ export default function TaskHome() {
                     />
 
                     {/* left pane */}
-                    <Panel defaultSize={50} minSize={30} maxSize={100}>
+                    <Panel defaultSize={40} minSize={30} maxSize={100}>
                         <Box
                             component="main"
                             className="MainContent"
@@ -109,14 +109,14 @@ export default function TaskHome() {
                     />
 
                     {/* right pane */}
-                    <Panel defaultSize={50} minSize={30} maxSize={100}>
+                    <Panel defaultSize={45} minSize={30} maxSize={100}>
                         <Box
                             sx={{
                                 px: { xs: 1, md: 2 },
                                 pt: {
                                     xs: 'calc(12px + var(--Header-height))',
                                     sm: 'calc(12px + var(--Header-height))',
-                                    md: 3,
+                                    md: 2,
                                 },
                                 pb: { xs: 2, sm: 2, md: 3 },
                                 flex: 1,

@@ -167,7 +167,7 @@
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-area {
-  background-color: rgb(157, 157, 157);
+  background-color: rgb(217, 217, 217);
   border-top-right-radius: 0px;
   border-top-left-radius: 0px;
 }
@@ -201,7 +201,6 @@
 
 .task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-scrollbar {
   background-color: #363636;
-
 }
 
 .task-datagrid-dark .MuiDataGrid-footerContainer {

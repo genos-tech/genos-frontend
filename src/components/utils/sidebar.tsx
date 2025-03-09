@@ -14,7 +14,6 @@ import CircleIcon from '@mui/icons-material/Circle';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded';
-import Tooltip from '@mui/joy/Tooltip';
 
 import ColorSchemeToggle from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';
@@ -91,7 +90,7 @@ export default function Sidebar() {
         onClick={() => closeSidebar()}
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-        <IconButton component='a' variant="soft" color="primary" size="sm">
+        <IconButton component='a' variant="soft" color="primary" size="sm" title='Dark Mode'>
           <BrightnessAutoRoundedIcon />
         </IconButton>
         <ColorSchemeToggle />
@@ -119,7 +118,7 @@ export default function Sidebar() {
           }}
         >
           <ListItem>
-            <ListItemButton onClick={handleMoveToChat}>
+            <ListItemButton onClick={handleMoveToChat} title='Chats'>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <QuestionAnswerRoundedIcon sx={{ fontSize: 20 }} />
                 <CircleIcon sx={{ fontSize: 7 }} color="primary" />
@@ -127,7 +126,7 @@ export default function Sidebar() {
             </ListItemButton>
           </ListItem>
           <ListItem>
-            <ListItemButton onClick={handleMoveToTask} >
+            <ListItemButton onClick={handleMoveToTask} title='Tasks'>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <AssignmentRoundedIcon sx={{ fontSize: 20 }} />
                 <CircleIcon sx={{ fontSize: 7 }} color="primary" />
@@ -146,16 +145,27 @@ export default function Sidebar() {
           }}
         >
           <ListItem>
-            <ListItemButton>
+            <ListItemButton title='Settings'>
               <SettingsRoundedIcon sx={{ fontSize: 20 }} />
             </ListItemButton>
           </ListItem>
         </List>
       </Box>
-      <IconButton component='a' onClick={handleLogout} size="sm" variant="plain" color="neutral">
+
+      <IconButton
+        component='a'
+        onClick={handleLogout}
+        size="sm"
+        variant="plain"
+        color="neutral"
+        title='Sign out'
+      >
         <LogoutRoundedIcon />
       </IconButton>
+
+
       <Divider />
+
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
         <Avatar
           variant="outlined"

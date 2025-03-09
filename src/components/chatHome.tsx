@@ -602,7 +602,7 @@ export default function Home(props: HomeProps) {
                                 <Panel
                                     id={'3'}
                                     order={3}
-                                    defaultSize={50}
+                                    defaultSize={30}
                                     minSize={30}
                                     maxSize={100}
                                     onResize={setSubChatPanelSize}

@@ -87,13 +87,13 @@ export default function ThreadPane(props: MessagesPaneProps) {
 
   // Calculate thread pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
-  const [listHeight, setListHeight] = useState(window.innerHeight - 263);
+  const [listHeight, setListHeight] = useState(window.innerHeight - 270);
   useEffect(() => {
     const updateHeight = () => {
       if (containerRef.current) {
         // This is very very important to set the height of the message bubble !!!!!!!
         const currentHeight: number = containerRef.current.clientHeight
-        setListHeight(currentHeight - 263)
+        setListHeight(currentHeight - 270)
       }
     };
 
@@ -149,7 +149,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         />
       </Box>
 
-      <Box sx={{ minWidth: '600px' }}>
+      <Box sx={{ minWidth: '600px', paddingLeft: 1, paddingRight: 1 }}>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}

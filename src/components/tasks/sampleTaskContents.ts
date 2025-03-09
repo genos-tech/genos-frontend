@@ -24,11 +24,6 @@ The User Profile component is a crucial part of the application's user managemen
 - Manually tested the component in various screen sizes to ensure responsiveness.
 - Verified that the component integrates well with the existing application structure.
 
-## Screenshots (if appropriate):
-
-![UserProfile Desktop](https://via.placeholder.com/800x400)
-![UserProfile Mobile](https://via.placeholder.com/400x800)
-
 ## Types of changes
 
 - [x] New feature (non-breaking change which adds functionality)
