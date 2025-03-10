@@ -147,7 +147,7 @@ export default function TaskSidebar() {
                 <ListItemButton onClick={() => setOpen(!open)}>
                   <AssignmentRoundedIcon />
                   <ListItemContent>
-                    <Typography level="title-sm">Recent Tasks</Typography>
+                    <Typography level="title-sm">Recents</Typography>
                   </ListItemContent>
                   <KeyboardArrowDownIcon
                     sx={[
@@ -183,7 +183,7 @@ export default function TaskSidebar() {
                 <ListItemButton onClick={() => setOpen(!open)}>
                   <BookmarkIcon />
                   <ListItemContent>
-                    <Typography level="title-sm">Tagged Tasks </Typography>
+                    <Typography level="title-sm">Tagged</Typography>
                   </ListItemContent>
                   <KeyboardArrowDownIcon
                     sx={[
@@ -217,7 +217,7 @@ export default function TaskSidebar() {
             <ListItemButton>
               <ViewTimelineIcon />
               <ListItemContent>
-                <Typography level="title-sm">Gantt Chart</Typography>
+                <Typography level="title-sm">Gantt</Typography>
               </ListItemContent>
             </ListItemButton>
           </ListItem>

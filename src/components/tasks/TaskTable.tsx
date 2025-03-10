@@ -33,8 +33,12 @@ const predefinedFilters: { label: string; filterModel: GridFilterModel }[] = [
   },
 ];
 
+type TaskTableProps = {
+  setIsTaskContentVisible: (value: boolean) => void;
+};
 
-export default function TaskTable() {
+export default function TaskTable(props: TaskTableProps) {
+  const { setIsTaskContentVisible } = props
   const { mode } = useColorScheme();
   const className = `task-datagrid-${mode}`
 
@@ -83,6 +87,7 @@ export default function TaskTable() {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
+                    height: '30px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -100,6 +105,7 @@ export default function TaskTable() {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
+                    height: '30px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -117,6 +123,7 @@ export default function TaskTable() {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
+                    height: '30px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -134,6 +141,7 @@ export default function TaskTable() {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
+                    height: '30px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -151,6 +159,7 @@ export default function TaskTable() {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
+                    height: '30px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -167,7 +176,10 @@ export default function TaskTable() {
         >
           <DataGrid
             onCellClick={(params) => (console.log("Cell clicked:", params))}
-            onRowClick={(params, event, detail) => (console.log("Row clicked:", params))}
+            onRowClick={(params, event, detail) => {
+              console.log("Row clicked:", params);
+              setIsTaskContentVisible(true);
+            }}
             className={className}
             apiRef={apiRef}
             sx={{

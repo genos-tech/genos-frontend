@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { IconButton } from "@mui/joy";
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
@@ -14,6 +15,7 @@ import TaskContent from './tasks/TaskContent';
 import TaskTable from './tasks/TaskTable';
 
 export default function TaskHome() {
+    const [isTaskContentVisible, setIsTaskContentVisible] = useState(true);
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -23,7 +25,7 @@ export default function TaskHome() {
 
                 <PanelGroup direction="horizontal">
 
-                    <Panel defaultSize={15} minSize={10} maxSize={30}>
+                    <Panel id={'1'} order={1} defaultSize={10} minSize={5} maxSize={30}>
                         <TaskSidebar />
                     </Panel>
 
@@ -39,7 +41,7 @@ export default function TaskHome() {
                     />
 
                     {/* left pane */}
-                    <Panel defaultSize={40} minSize={30} maxSize={100}>
+                    <Panel id={'2'} order={2} defaultSize={40} minSize={30} maxSize={100}>
                         <Box
                             component="main"
                             className="MainContent"
@@ -93,43 +95,48 @@ export default function TaskHome() {
                                     Task
                                 </IconButton>
                             </Box>
-                            <TaskTable />
+                            <TaskTable setIsTaskContentVisible={setIsTaskContentVisible}/>
                         </Box>
                     </Panel>
 
-                    {/* Resizable Handle with MUI sx Styling */}
-                    <PanelResizeHandle
-                        style={{
-                            width: "1px",
-                            backgroundColor: "grey",
-                            transition: "all 0.3s ease-in-out",
-                            cursor: "col-resize",
-                        }}
-                        className="resize-handle"
-                    />
+                    {isTaskContentVisible && (
+                        <>
+                            {/* Resizable Handle with MUI sx Styling */}
+                            <PanelResizeHandle
+                                style={{
+                                    width: "1px",
+                                    backgroundColor: "grey",
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
+                                }}
+                                className="resize-handle"
+                            />
 
-                    {/* right pane */}
-                    <Panel defaultSize={45} minSize={30} maxSize={100}>
-                        <Box
-                            sx={{
-                                px: { xs: 1, md: 2 },
-                                pt: {
-                                    xs: 'calc(12px + var(--Header-height))',
-                                    sm: 'calc(12px + var(--Header-height))',
-                                    md: 2,
-                                },
-                                pb: { xs: 2, sm: 2, md: 3 },
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                minWidth: 0,
-                                height: '100dvh',
-                                gap: 1,
-                            }}
-                        >
-                            <TaskContent />
-                        </Box>
-                    </Panel>
+                            {/* right pane */}
+                            <Panel id={'3'} order={3} defaultSize={45} minSize={30} maxSize={100}>
+                                <Box
+                                    sx={{
+                                        px: { xs: 1, md: 2 },
+                                        pt: {
+                                            xs: 'calc(12px + var(--Header-height))',
+                                            sm: 'calc(12px + var(--Header-height))',
+                                            md: 2,
+                                        },
+                                        pb: { xs: 2, sm: 2, md: 3 },
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        minWidth: 0,
+                                        height: '100dvh',
+                                        gap: 1,
+                                    }}
+                                >
+                                    <TaskContent setIsTaskContentVisible={setIsTaskContentVisible} />
+                                </Box>
+                            </Panel>
+                        </>
+                    )}
+
                 </PanelGroup>
 
                 {/* Hover Animation with CSS */}

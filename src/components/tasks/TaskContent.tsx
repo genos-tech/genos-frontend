@@ -21,6 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AddIcon from '@mui/icons-material/Add';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
@@ -30,7 +31,12 @@ import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 // Temp data
 import { taskContents } from './sampleTaskContents';
 
-export default function taskContent() {
+type TaskContentProps = {
+  setIsTaskContentVisible: (value: boolean) => void;
+};
+
+export default function taskContent(props: TaskContentProps) {
+  const { setIsTaskContentVisible } = props
   const taskId: string = "task-001"
   const taskSummary: string = "This is a Task for XXX"
   const dueDate: string = "21 Oct 2022"
@@ -147,15 +153,26 @@ export default function taskContent() {
             />
           </Box>
 
-          <Chip
-            key={taskState}
-            size='lg'
-            variant="soft"
-            color="primary"
-            sx={{ fontSize: '15px' }}
+          <Box sx={{ pr: '20px' }}>
+            <Chip
+              key={taskState}
+              size='lg'
+              variant="soft"
+              color="primary"
+              sx={{ fontSize: '15px' }}
+            >
+              {taskState}
+            </Chip>
+          </Box>
+
+          <IconButton
+            size="sm"
+            variant="plain"
+            color="neutral"
+            onClick={() => { setIsTaskContentVisible(false); }}
           >
-            {taskState}
-          </Chip>
+            <CancelIcon />
+          </IconButton>
         </Stack>
       </Box>
 
@@ -200,20 +217,37 @@ export default function taskContent() {
                   </ListItem>
                 </Grid>
               </Grid>
-              <ListItem>
-                Due date: <Input
-                  type="date"
-                  color="neutral"
-                  variant="outlined"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  slotProps={{
-                    input: {
-                      min: today, // Set minimum date to today
-                    },
-                  }}
-                />
-              </ListItem>
+
+              <Grid container spacing={2}>
+                <Grid key={1} xs={6} sx={{ display: "flex", alignItems: "center" }}>
+                  <ListItem>
+                    Project: <Chip
+                      variant="soft"
+                      color="primary"
+                      sx={{ cursor: "pointer" }}
+                    >
+                      origin-initial-project
+                    </Chip>
+                  </ListItem>
+                </Grid>
+                <Grid key={2} xs={6}>
+                  <ListItem>
+                    Due date: <Input
+                      type="date"
+                      color="neutral"
+                      variant="outlined"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      slotProps={{
+                        input: {
+                          min: today, // Set minimum date to today
+                        },
+                      }}
+                    />
+                  </ListItem>
+                </Grid>
+              </Grid>
+
               <ListItem>
                 Tags:
                 {isEditing ? (

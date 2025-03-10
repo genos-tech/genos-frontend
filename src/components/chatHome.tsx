@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Sheet from '@mui/joy/Sheet';
 import { io, Socket } from "socket.io-client";
 import ThreadPane from './thread/threadPane';
+import TaskContent from './tasks/TaskContent';
 import ChatsPane from './chatCommon/chatsPane';
 import {
     AllChatProps,
@@ -211,7 +212,8 @@ export default function Home(props: HomeProps) {
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>(initialSelectedChat);
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
-    const [isRightSideVisible, setIsRightSideVisible] = useState(false);
+    const [isThreadVisible, setIsThreadVisible] = useState(false);
+    const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
 
     const [currentMainChatEmail, setCurrentMainChatEmail] = useState<string>("");
     const [currentSubChatEmail, setCurrentSubChatEmail] = useState<string>("");
@@ -510,8 +512,8 @@ export default function Home(props: HomeProps) {
     // }, [isSubChatVisible]);
 
     // useEffect(() => {
-    //     console.log("isRightSideVisible Updated:", isRightSideVisible);
-    // }, [isRightSideVisible]);
+    //     console.log("isThreadVisible Updated:", isThreadVisible);
+    // }, [isThreadVisible]);
 
     // useEffect(() => {
     //     console.log("currentThreadChat is updated:", currentThreadChat)
@@ -547,7 +549,7 @@ export default function Home(props: HomeProps) {
             <Sidebar />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
-                <Panel id={'1'} order={1} defaultSize={10} minSize={20} maxSize={30}>
+                <Panel id={'1'} order={1} defaultSize={20} minSize={10} maxSize={30}>
                     <Box
                         sx={{
                             height: '100%',
@@ -592,105 +594,181 @@ export default function Home(props: HomeProps) {
                         transition: "all 0.3s ease-in-out",
                         cursor: "col-resize",
                     }}
-                    className="resize-handle"
+                    className="chat-resize-handle"
                 />
 
-                <Panel id={'2'} order={2} defaultSize={40} minSize={35} maxSize={100}>
-                    <PanelGroup autoSaveId="conditional" direction="vertical">
-                        {isSubChatVisible && (
-                            <>
-                                <Panel
-                                    id={'3'}
-                                    order={3}
-                                    defaultSize={30}
-                                    minSize={30}
-                                    maxSize={100}
-                                    onResize={setSubChatPanelSize}
-                                >
-                                    <MessagesSubPane
-                                        currentWindowHeight={height}
-                                        paneSizePCT={subChatPanelSize}
-                                        myself={myself}
-                                        chat={currentMainChat}
-                                        subChat={currentSubChat}
-                                        socket={socket}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
-                                        setIsSubChatVisible={setIsSubChatVisible}
-                                        setIsRightSideVisible={setIsRightSideVisible}
-                                        currentSubChatEmail={currentSubChatEmail} />
-                                </Panel>
+                {isTaskContentVisible && currentThreadChat !== undefined && (<>
 
-                                <PanelResizeHandle
-                                    style={{
-                                        backgroundColor: "grey",
-                                        transition: "all 0.3s ease-in-out",
-                                        cursor: "col-resize",
-                                    }}
-                                    className="resize-handle-ver" />
-                            </>
-                        )}
-                        <Panel
-                            id={'4'}
-                            order={4}
-                            defaultSize={80}
-                            minSize={30}
-                            maxSize={100}
-                            onResize={setMainChatPanelSize}
+                    <Panel id={'2'} order={2} minSize={25} maxSize={70}>
+                        <Box
+                            sx={{
+                                height: '100%',
+                                backgroundColor: 'black',
+                                borderLeft: mode === 'dark'
+                                    ? '2px black groove'
+                                    : '2px white groove',
+                            }}
                         >
-                            <MessagesPane
-                                currentWindowHeight={height}
-                                paneSizePCT={mainChatPanelSize}
-                                chat={currentMainChat}
-                                subChat={currentSubChat}
+                            <ThreadPane
+                                thread={currentThreadChat}
                                 myself={myself}
                                 socket={socket}
-                                setCurrentMainChat={setCurrentMainChat}
-                                setCurrentSubChat={setCurrentSubChat}
                                 setCurrentThreadChat={setCurrentThreadChat}
-                                setIsRightSideVisible={setIsRightSideVisible}
-                                isSubChatVisible={isSubChatVisible}
-                                setIsSubChatVisible={setIsSubChatVisible}
-                                currentMainChatEmail={currentMainChatEmail}
+                                setIsThreadVisible={setIsThreadVisible}
+                                currentThreadChatEmail={currentThreadChatEmail}
+                                setIsTaskContentVisible={setIsTaskContentVisible}
                             />
-                        </Panel>
-                    </PanelGroup>
-                </Panel>
+                        </Box>
+                    </Panel>
 
-                {isRightSideVisible && currentThreadChat !== undefined && (
-                    <>
-                        <PanelResizeHandle
-                            style={{
-                                backgroundColor: "grey",
-                                transition: "all 0.3s ease-in-out",
-                                cursor: "col-resize",
+                    <PanelResizeHandle
+                        style={{
+                            backgroundColor: "grey",
+                            transition: "all 0.3s ease-in-out",
+                            cursor: "col-resize",
+                        }}
+                        className="chat-resize-handle"
+                    />
+
+                    <Panel id={'3'} order={3} minSize={25} maxSize={70}>
+                        <Box
+                            sx={{
+                                px: { xs: 1, md: 2 },
+                                pt: {
+                                    xs: 'calc(12px + var(--Header-height))',
+                                    sm: 'calc(12px + var(--Header-height))',
+                                    md: 2,
+                                },
+                                pb: { xs: 2, sm: 2, md: 3 },
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                minWidth: 0,
+                                height: '100dvh',
+                                gap: 1,
+                                ml: '1px',
+                                boxShadow: '0 0 0 1px grey'
                             }}
-                            className="resize-handle"
-                        />
-                        <Panel id={'5'} order={5} defaultSize={40} minSize={35} maxSize={100}>
-                            <Box
-                                sx={{
-                                    height: '100%',
-                                    backgroundColor: 'black',
-                                    borderLeft: mode === 'dark'
-                                        ? '2px black groove'
-                                        : '2px white groove',
-                                }}
+                        >
+                            <TaskContent />
+                        </Box>
+                    </Panel>
+                </>)}
+
+
+                {(!isTaskContentVisible || currentThreadChat === undefined) && (<>
+                    <Panel id={'4'} order={4} defaultSize={80} minSize={25} maxSize={90}>
+                        <PanelGroup autoSaveId="conditional" direction="vertical">
+                            {isSubChatVisible && (
+                                <>
+                                    <Panel
+                                        id={'5'}
+                                        order={5}
+                                        minSize={30}
+                                        maxSize={80}
+                                        onResize={setSubChatPanelSize}
+                                    >
+                                        <MessagesSubPane
+                                            currentWindowHeight={height}
+                                            paneSizePCT={subChatPanelSize}
+                                            myself={myself}
+                                            chat={currentMainChat}
+                                            subChat={currentSubChat}
+                                            socket={socket}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setCurrentSubChat={setCurrentSubChat}
+                                            setCurrentThreadChat={setCurrentThreadChat}
+                                            setIsSubChatVisible={setIsSubChatVisible}
+                                            setIsThreadVisible={setIsThreadVisible}
+                                            currentSubChatEmail={currentSubChatEmail} />
+                                    </Panel>
+
+                                    <PanelResizeHandle
+                                        style={{
+                                            backgroundColor: "grey",
+                                            transition: "all 0.3s ease-in-out",
+                                            cursor: "col-resize",
+                                        }}
+                                        className="chat-resize-handle-ver" />
+                                </>
+                            )}
+                            <Panel
+                                id={'6'}
+                                order={6}
+                                minSize={30}
+                                maxSize={80}
+                                onResize={setMainChatPanelSize}
                             >
-                                <ThreadPane
-                                    thread={currentThreadChat}
+                                <MessagesPane
+                                    currentWindowHeight={height}
+                                    paneSizePCT={mainChatPanelSize}
+                                    chat={currentMainChat}
+                                    subChat={currentSubChat}
                                     myself={myself}
                                     socket={socket}
+                                    setCurrentMainChat={setCurrentMainChat}
+                                    setCurrentSubChat={setCurrentSubChat}
                                     setCurrentThreadChat={setCurrentThreadChat}
-                                    setIsRightSideVisible={setIsRightSideVisible}
-                                    currentThreadChatEmail={currentThreadChatEmail}
+                                    setIsThreadVisible={setIsThreadVisible}
+                                    isSubChatVisible={isSubChatVisible}
+                                    setIsSubChatVisible={setIsSubChatVisible}
+                                    currentMainChatEmail={currentMainChatEmail}
                                 />
-                            </Box>
-                        </Panel>
-                    </>
-                )}
+                            </Panel>
+                        </PanelGroup>
+                    </Panel>
+
+                    {isThreadVisible && currentThreadChat !== undefined && (
+                        <>
+                            <PanelResizeHandle
+                                style={{
+                                    backgroundColor: "grey",
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
+                                }}
+                                className="chat-resize-handle"
+                            />
+
+                            <Panel id={'7'} order={7} defaultSize={40} minSize={25} maxSize={70}>
+                                <Box
+                                    sx={{
+                                        height: '100%',
+                                        backgroundColor: 'black',
+                                        borderLeft: mode === 'dark'
+                                            ? '2px black groove'
+                                            : '2px white groove',
+                                    }}
+                                >
+                                    <ThreadPane
+                                        thread={currentThreadChat}
+                                        myself={myself}
+                                        socket={socket}
+                                        setCurrentThreadChat={setCurrentThreadChat}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        currentThreadChatEmail={currentThreadChatEmail}
+                                        setIsTaskContentVisible={setIsTaskContentVisible}
+                                    />
+                                </Box>
+                            </Panel>
+                        </>
+                    )}
+                </>)}
+
             </PanelGroup>
+
+
+            {/* Hover Animation with CSS */}
+            <style>
+                {`
+                .chat-resize-handle {
+                    transition: all 0.3s ease-in-out;
+                }
+                .chat-resize-handle:hover {
+                    background-color: lightgray !important;
+                    width: 8px !important;
+                }
+                `}
+            </style>
         </Box>
     );
 }
