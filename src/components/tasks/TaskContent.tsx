@@ -15,6 +15,7 @@ import { Input, Grid, Menu, MenuItem, Button, Stack } from "@mui/joy";
 import Textarea from '@mui/joy/Textarea';
 import { ChevronDown } from "lucide-react";
 import Snackbar, { SnackbarProps } from '@mui/joy/Snackbar';
+import TaskCommentBubble from './TaskCommentBubble'
 
 import IconButton from '@mui/joy/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -27,6 +28,8 @@ import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
 
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
+
+import { TaskCommentProps } from "../../types"
 
 // Temp data
 import { taskContents } from './sampleTaskContents';
@@ -46,6 +49,34 @@ export default function taskContent(props: TaskContentProps) {
   const reporter: string = "Ryan"
   const [taskContent, setTaskContent] = useState(taskContents.content);
   const [comment, setComment] = useState("");
+
+  const testComments: TaskCommentProps[] = [
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good1",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good2",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good3",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good2",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good3",
+    }
+  ]
 
   function getMdHeight(text: string): number {
     const height: number = Math.min(Math.max(text.split('\n').length * 20, 200), 800)
@@ -144,25 +175,23 @@ export default function taskContent(props: TaskContentProps) {
         }}
       >
         <Stack direction="row" sx={{ width: '100%', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', flexGrow: 1 }}>
-            <Textarea
-              variant="plain"
-              size="lg"
-              defaultValue={`[ ${taskId} ] ${taskSummary}`}
-              sx={{ width: '500px', fontSize: '25px', fontWeight: 'bold' }}
-            />
-          </Box>
-
-          <Box sx={{ pr: '20px' }}>
+          {/* Wrap the title and task state in the same Box */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
             <Chip
               key={taskState}
-              size='lg'
+              size="lg"
               variant="soft"
               color="primary"
               sx={{ fontSize: '15px' }}
             >
               {taskState}
             </Chip>
+            <Textarea
+              variant="plain"
+              size="lg"
+              defaultValue={`[ ${taskId} ] ${taskSummary}`}
+              sx={{ width: '500px', fontSize: '25px', fontWeight: 'bold' }}
+            />
           </Box>
 
           <IconButton
@@ -534,6 +563,9 @@ export default function taskContent(props: TaskContentProps) {
         <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
           Comments
         </Typography>
+
+        <TaskCommentBubble />
+
         <div className="md-content">
           <MarkdownEditor content={comment} setContent={setComment} height={200} mdMode={"edit"} />
         </div>

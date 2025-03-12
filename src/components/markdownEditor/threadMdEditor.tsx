@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef } from "react";
 import MDEditor, { EditorContext, commands } from "@uiw/react-md-editor";
 import { IconButton } from "@mui/joy";
 import rehypeSanitize from "rehype-sanitize";
@@ -12,17 +13,14 @@ import { OrderedListIcon } from "../../assets/OrderedListIcon";
 import { UnorderedListIcon } from "../../assets/UnorderedListIcon";
 import { CodeBlockIcon } from "../../assets/CodeBlockIcon";
 import { StrikethroughIcon } from "../../assets/StrikethroughIcon";
-import Stack from '@mui/joy/Stack';
-import { UserProps, ThreadMessageProps, ThreadProps, ChatProps, AllChatProps } from '../../types'
+import { UserProps, ThreadMessageProps, ThreadProps } from '../../types'
 import { Socket } from "socket.io-client";
 import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
-import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
-import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
-import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
-import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import { useColorScheme } from '@mui/joy/styles';
 import SendIcon from '@mui/icons-material/Send';
+import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
+import EmojiPicker from '../emojiInput/EmojiPicker'
 
 function getCurrentTimestamp() {
   const now = new Date();
@@ -35,60 +33,6 @@ function getCurrentTimestamp() {
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
-
-
-const insertDMChatAndMessage = async (newDMChat: AllChatProps): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const insertDMMessageWorker = new InsertDMMessageWorker();
-    insertDMMessageWorker.postMessage({ dmMessage: newDMChat.latestMessage });
-    insertDMMessageWorker.onmessage = (event) => {
-      resolve(event.data);
-      insertDMMessageWorker.terminate();
-    };
-    insertDMMessageWorker.onerror = (error) => {
-      reject(error);
-      insertDMMessageWorker.terminate();
-    };
-
-    const insertDMChatWorker = new InsertDMChatWorker();
-    insertDMChatWorker.postMessage({ dmChat: newDMChat });
-    insertDMChatWorker.onmessage = (event) => {
-      resolve(event.data);
-      insertDMChatWorker.terminate();
-    };
-    insertDMChatWorker.onerror = (error) => {
-      reject(error);
-      insertDMChatWorker.terminate();
-    };
-  });
-};
-
-const insertGMChatAndMessage = async (newGMChat: AllChatProps): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const insertGMMessageWorker = new InsertGMMessageWorker();
-    insertGMMessageWorker.postMessage({ gmMessage: newGMChat.latestMessage });
-    insertGMMessageWorker.onmessage = (event) => {
-      resolve(event.data);
-      insertGMMessageWorker.terminate();
-    };
-    insertGMMessageWorker.onerror = (error) => {
-      reject(error);
-      insertGMMessageWorker.terminate();
-    };
-
-    const insertGMChatWorker = new InsertGMChatWorker();
-    insertGMChatWorker.postMessage({ gmChat: newGMChat });
-    insertGMChatWorker.onmessage = (event) => {
-      resolve(event.data);
-      insertGMChatWorker.terminate();
-    };
-    insertGMChatWorker.onerror = (error) => {
-      reject(error);
-      insertGMChatWorker.terminate();
-    };
-  });
-};
-
 
 const insertDMThreadMessage = async (newDMThreadMessage: ThreadMessageProps): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -138,9 +82,12 @@ export const MarkdownEditor = ({
   setCurrentThreadChat,
   setContent,
 }: MarkdownEditorProps) => {
-
   const { mode } = useColorScheme();
   const _className: string = `markdown-editor-${mode}`
+  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+  const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
 
   const EditButton = () => {
     const { preview, dispatch } = useContext(EditorContext);
@@ -207,7 +154,7 @@ export const MarkdownEditor = ({
         component='a'
         variant="plain"
         sx={{
-          color: 'white',
+          color: 'rgb(217, 217, 217)',
           paddingRight: '10px',
           "&:hover": {
             backgroundColor: "transparent",
@@ -275,8 +222,27 @@ export const MarkdownEditor = ({
             }
           }
         }>
-        <SendIcon sx={{ color: 'white' }} />
+        <SendIcon sx={{ color: 'rgb(217, 217, 217)' }} />
         &nbsp; Send
+      </IconButton>
+    );
+  };
+
+  const EmojiInputButton = () => {
+    return (
+      <IconButton
+        component='p'
+        variant="plain"
+        sx={{
+          backgroundColor: 'transparent',
+          '&:hover': { backgroundColor: 'transparent' }
+        }}
+        onClick={() => setShowEmojiPicker((prev) => !prev)}
+      >
+        <SentimentSatisfiedAltIcon sx={{
+          fontSize: 22,
+          color: "rgb(217, 217, 217)"
+        }} />
       </IconButton>
     );
   };
@@ -295,49 +261,55 @@ export const MarkdownEditor = ({
     icon: <PreviewButton />,
   };
 
+  const customEmojiCommand = {
+    name: "emoji-input",
+    keyCommand: "emoji-input",
+    icon: <EmojiInputButton />,
+  };
+
   const customBoldCommand = {
     ...commands.bold,
-    icon: <BoldIcon color="#fff" />,
+    icon: <BoldIcon color='rgb(217, 217, 217)' />,
   };
 
   const customItalicCommand = {
     ...commands.italic,
-    icon: <ItalicIcon color="#fff" />,
+    icon: <ItalicIcon color='rgb(217, 217, 217)' />,
   };
 
   const customStrikethroughCommand = {
     ...commands.strikethrough,
-    icon: <StrikethroughIcon color="#fff" />,
+    icon: <StrikethroughIcon color='rgb(217, 217, 217)' />,
   };
 
   const customQuoteCommand = {
     ...commands.quote,
-    icon: <QuoteIcon color="#fff" />,
+    icon: <QuoteIcon color='rgb(217, 217, 217)' />,
   };
 
   const customCodeCommand = {
     ...commands.code,
-    icon: <CodeIcon color="#fff" />,
+    icon: <CodeIcon color='rgb(217, 217, 217)' />,
   };
 
   const customCodeBlockCommand = {
     ...commands.codeBlock,
-    icon: <CodeBlockIcon color="#fff" />,
+    icon: <CodeBlockIcon color='rgb(217, 217, 217)' />,
   };
 
   const customLinkCommand = {
     ...commands.link,
-    icon: <LinkIcon color="#fff" />,
+    icon: <LinkIcon color='rgb(217, 217, 217)' />,
   };
 
   const customOrderedListCommand = {
     ...commands.orderedListCommand,
-    icon: <OrderedListIcon color="#fff" />,
+    icon: <OrderedListIcon color='rgb(217, 217, 217)' />,
   };
 
   const customUnorderedListCommand = {
     ...commands.unorderedListCommand,
-    icon: <UnorderedListIcon color="#fff" />,
+    icon: <UnorderedListIcon color='rgb(217, 217, 217)' />,
   };
 
   const customSendCommand = {
@@ -346,81 +318,98 @@ export const MarkdownEditor = ({
     icon: <SendButton />,
   };
 
+  useEffect(() => {
+    if (selectedEmoji !== null) {
+      setContent(messageContent + selectedEmoji)
+    }
+  }, [selectedEmoji])
+
+  const updatePosition = () => {
+    if (boxRef.current) {
+      const rect = boxRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.top - 440,
+        left: rect.right,
+      });
+    }
+  };
+
+  useEffect(() => {
+    updatePosition(); // Initial position
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, []);
+
   return (
-    <div>
-      <Stack direction="column" >
-        <MDEditor
-          className={_className}
-          style={{
-            color: mode === 'dark' ? 'grey' : '#ededed',
-            backgroundColor: mode === 'dark' ? 'grey' : '#ededed',
-            caretColor: mode === 'dark' ? 'white' : 'black',
-            fontWeight: 'bold',
-          }}
-          height={200}
-          visibleDragbar={false}
-          commands={[
-            editPreviewCommand,
-            customPreviewCommand,
-            customBoldCommand,
-            customItalicCommand,
-            customStrikethroughCommand,
-            customLinkCommand,
-            customQuoteCommand,
-            commands.divider,
-            customOrderedListCommand,
-            customUnorderedListCommand,
-            commands.divider,
-            customCodeCommand,
-            customCodeBlockCommand,
-          ]}
-          extraCommands={[
-            customSendCommand
-          ]}
-          preview="edit"
-          previewOptions={{
-            rehypePlugins: [[rehypeSanitize]],
-          }}
-          value={messageContent}
-          onChange={(val) => setContent(val ?? "")}
-          textareaProps={{
-            placeholder: "Type something here...",
-            onKeyDown: (event) => {
-              if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+    <div ref={boxRef}>
+      <EmojiPicker
+        editorPos={position}
+        showEmojiPicker={showEmojiPicker}
+        setShowEmojiPicker={setShowEmojiPicker}
+        setSelectedEmoji={setSelectedEmoji} />
+      <MDEditor
+        className={_className}
+        style={{
+          color: mode === 'dark' ? 'grey' : '#ededed',
+          backgroundColor: mode === 'dark' ? 'grey' : '#ededed',
+          caretColor: mode === 'dark' ? 'rgb(217, 217, 217)' : 'black',
+          fontWeight: 'bold',
+        }}
+        height={200}
+        visibleDragbar={false}
+        commands={[
+          editPreviewCommand,
+          customPreviewCommand,
+          customBoldCommand,
+          customItalicCommand,
+          customStrikethroughCommand,
+          customLinkCommand,
+          customQuoteCommand,
+          commands.divider,
+          customOrderedListCommand,
+          customUnorderedListCommand,
+          commands.divider,
+          customCodeCommand,
+          customCodeBlockCommand,
+          customEmojiCommand,
+        ]}
+        extraCommands={[
+          customSendCommand
+        ]}
+        preview="edit"
+        previewOptions={{
+          rehypePlugins: [[rehypeSanitize]],
+        }}
+        value={messageContent}
+        onChange={(val) => setContent(val ?? "")}
+        textareaProps={{
+          placeholder: "Type something here...",
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
 
-                if (messageContent.trim()) {
-                  socket.emit("thread_message", {
-                    isInit: false,
-                    rootMessageTSSent: "",
+              if (messageContent.trim()) {
+                socket.emit("thread_message", {
+                  isInit: false,
+                  rootMessageTSSent: "",
+                  threadId: thread.threadId,
+                  threadMessage: messageContent,
+                  isDm: thread.isDm,
+                  senderEmail: myself.userEmail,
+                  senderName: myself.userName,
+                  destCGName: thread.chatName,
+                  destCGEmail: thread.chatEmail
+                }, (ack: any) => {
+
+                  const updatedChat: ThreadProps = {
+                    chatName: thread.chatName,
+                    chatEmail: thread.chatEmail,
                     threadId: thread.threadId,
-                    threadMessage: messageContent,
                     isDm: thread.isDm,
-                    senderEmail: myself.userEmail,
-                    senderName: myself.userName,
-                    destCGName: thread.chatName,
-                    destCGEmail: thread.chatEmail
-                  }, (ack: any) => {
-
-                    const updatedChat: ThreadProps = {
-                      chatName: thread.chatName,
-                      chatEmail: thread.chatEmail,
-                      threadId: thread.threadId,
-                      isDm: thread.isDm,
-                      unread: false,
-                      messages: [...thread.messages, {
-                        messageIdWithChatEmailAndThreadId: `${thread.chatEmail}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
-                        threadId: thread.threadId,
-                        messageId: String(Number(thread.messages.length) + 1),
-                        chatEmail: thread.chatEmail,
-                        content: messageContent,
-                        sender: myself,
-                        tsSent: getCurrentTimestamp(),
-                      }],
-                      TSLastMessage: getCurrentTimestamp(),
-                    };
-                    setCurrentThreadChat(updatedChat);
-
-                    const newThreadMessage: ThreadMessageProps = {
+                    unread: false,
+                    messages: [...thread.messages, {
                       messageIdWithChatEmailAndThreadId: `${thread.chatEmail}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
                       threadId: thread.threadId,
                       messageId: String(Number(thread.messages.length) + 1),
@@ -428,29 +417,41 @@ export const MarkdownEditor = ({
                       content: messageContent,
                       sender: myself,
                       tsSent: getCurrentTimestamp(),
-                    };
+                    }],
+                    TSLastMessage: getCurrentTimestamp(),
+                  };
+                  setCurrentThreadChat(updatedChat);
 
-                    if (thread.isDm) {
-                      insertDMThreadMessage(newThreadMessage);
-                    } else {
-                      insertGMThreadMessage(newThreadMessage);
-                    }
+                  const newThreadMessage: ThreadMessageProps = {
+                    messageIdWithChatEmailAndThreadId: `${thread.chatEmail}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                    threadId: thread.threadId,
+                    messageId: String(Number(thread.messages.length) + 1),
+                    chatEmail: thread.chatEmail,
+                    content: messageContent,
+                    sender: myself,
+                    tsSent: getCurrentTimestamp(),
+                  };
 
-                    // TODO: Dynamically update the num of replies in the message pane.
-                    // if (currentMainChat.chatEmail === thread.chatEmail) {
-                    // } else if (currentSubChat.chatEmail === thread.chatEmail) {
-                    // }
+                  if (thread.isDm) {
+                    insertDMThreadMessage(newThreadMessage);
+                  } else {
+                    insertGMThreadMessage(newThreadMessage);
+                  }
 
-                    setContent("")
-                  });
-                }
+                  // TODO: Dynamically update the num of replies in the message pane.
+                  // if (currentMainChat.chatEmail === thread.chatEmail) {
+                  // } else if (currentSubChat.chatEmail === thread.chatEmail) {
+                  // }
 
+                  setContent("")
+                });
               }
+
             }
           }
-          }
-        />
-      </Stack>
+        }
+        }
+      />
     </div>
   );
 };

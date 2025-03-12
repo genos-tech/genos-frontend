@@ -105,41 +105,6 @@ export default function TaskSidebar() {
             '--ListItem-radius': (theme) => theme.vars.radius.sm,
           }}
         >
-          <ListItem nested>
-            <Toggler
-              renderToggle={({ open, setOpen }) => (
-                <ListItemButton onClick={() => setOpen(!open)}>
-                  <WorkIcon />
-                  <ListItemContent>
-                    <Typography level="title-sm">Projects</Typography>
-                  </ListItemContent>
-                  <KeyboardArrowDownIcon
-                    sx={[
-                      open
-                        ? {
-                          transform: 'rotate(180deg)',
-                        }
-                        : {
-                          transform: 'none',
-                        },
-                    ]}
-                  />
-                </ListItemButton>
-              )}
-            >
-              <List sx={{ gap: 0.5 }}>
-                <ListItem sx={{ mt: 0.5 }}>
-                  <ListItemButton>Project-X</ListItemButton>
-                </ListItem>
-                <ListItem>
-                  <ListItemButton>Project-Y</ListItemButton>
-                </ListItem>
-                <ListItem>
-                  <ListItemButton>Project-Z</ListItemButton>
-                </ListItem>
-              </List>
-            </Toggler>
-          </ListItem>
 
           <ListItem nested>
             <Toggler
@@ -172,6 +137,42 @@ export default function TaskSidebar() {
                 </ListItem>
                 <ListItem>
                   <ListItemButton>task-003</ListItemButton>
+                </ListItem>
+              </List>
+            </Toggler>
+          </ListItem>
+
+          <ListItem nested>
+            <Toggler
+              renderToggle={({ open, setOpen }) => (
+                <ListItemButton onClick={() => setOpen(!open)}>
+                  <WorkIcon />
+                  <ListItemContent>
+                    <Typography level="title-sm">Projects</Typography>
+                  </ListItemContent>
+                  <KeyboardArrowDownIcon
+                    sx={[
+                      open
+                        ? {
+                          transform: 'rotate(180deg)',
+                        }
+                        : {
+                          transform: 'none',
+                        },
+                    ]}
+                  />
+                </ListItemButton>
+              )}
+            >
+              <List sx={{ gap: 0.5 }}>
+                <ListItem sx={{ mt: 0.5 }}>
+                  <ListItemButton>Project-X</ListItemButton>
+                </ListItem>
+                <ListItem>
+                  <ListItemButton>Project-Y</ListItemButton>
+                </ListItem>
+                <ListItem>
+                  <ListItemButton>Project-Z</ListItemButton>
                 </ListItem>
               </List>
             </Toggler>

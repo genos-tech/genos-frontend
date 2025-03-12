@@ -87,7 +87,7 @@ export default function TaskTable(props: TaskTableProps) {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
-                    height: '30px'
+                    height: '25px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -105,7 +105,7 @@ export default function TaskTable(props: TaskTableProps) {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
-                    height: '30px'
+                    height: '25px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -123,7 +123,7 @@ export default function TaskTable(props: TaskTableProps) {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
-                    height: '30px'
+                    height: '25px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -141,7 +141,7 @@ export default function TaskTable(props: TaskTableProps) {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
-                    height: '30px'
+                    height: '25px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}
@@ -159,7 +159,7 @@ export default function TaskTable(props: TaskTableProps) {
                     fontSize: '13px',
                     fontWeight: 'bold',
                     opacity: 0.85,
-                    height: '30px'
+                    height: '25px'
                   }}
                 >
                   {label} {count !== undefined ? `(${count})` : ''}

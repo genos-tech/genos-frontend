@@ -20,6 +20,7 @@ export default function TaskHome() {
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
+            
             <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
                 <Sidebar />
 

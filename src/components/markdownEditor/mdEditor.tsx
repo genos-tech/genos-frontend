@@ -1,3 +1,4 @@
+import { useEffect, useState, useRef } from "react";
 import MDEditor, { EditorContext, commands } from "@uiw/react-md-editor";
 import { IconButton } from "@mui/joy";
 import rehypeSanitize from "rehype-sanitize";
@@ -20,6 +21,8 @@ import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import { useColorScheme } from '@mui/joy/styles';
+import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
+import EmojiPicker from '../emojiInput/EmojiPicker'
 
 function getCurrentTimestamp() {
   const now = new Date();
@@ -104,6 +107,11 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { mode } = useColorScheme();
   const _className: string = `markdown-editor-${mode}`
+  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+  const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
 
   const EditButton = () => {
     const { preview, dispatch } = useContext(EditorContext);
@@ -118,7 +126,7 @@ export const MarkdownEditor = ({
     return (
       <span
         style={{
-          color: 'white',
+          color: 'rgb(217, 217, 217)',
           backgroundColor: preview === "edit" ? "#393939" : "#393939",
           borderTopLeftRadius: "8px",
           borderTopRightRadius: preview === "edit" ? "8px" : "0px",
@@ -146,7 +154,7 @@ export const MarkdownEditor = ({
     return (
       <span
         style={{
-          color: 'white',
+          color: 'rgb(217, 217, 217)',
           backgroundColor: "#393939",
           borderTopLeftRadius: preview === "preview" ? "8px" : "0px",
           borderTopRightRadius: preview === "preview" ? "8px" : "0px",
@@ -169,7 +177,7 @@ export const MarkdownEditor = ({
         component='a'
         variant="plain"
         sx={{
-          color: 'white',
+          color: 'rgb(217, 217, 217)',
           paddingRight: '10px',
           "&:hover": {
             backgroundColor: "transparent",
@@ -241,11 +249,31 @@ export const MarkdownEditor = ({
             }
           }
         }>
-        <SendIcon sx={{ color: 'white' }} />
+        <SendIcon sx={{ color: 'rgb(217, 217, 217)' }} />
         &nbsp; Send
       </IconButton>
     );
   };
+
+  const EmojiInputButton = () => {
+    return (
+      <IconButton
+        component='p'
+        variant="plain"
+        sx={{
+          backgroundColor: 'transparent',
+          '&:hover': { backgroundColor: 'transparent' }
+        }}
+        onClick={() => setShowEmojiPicker((prev) => !prev)}
+      >
+        <SentimentSatisfiedAltIcon sx={{
+          fontSize: 22,
+          color: "rgb(217, 217, 217)"
+        }} />
+      </IconButton>
+    );
+  };
+
 
   const editPreviewCommand = {
     name: "edit-preview",
@@ -261,49 +289,56 @@ export const MarkdownEditor = ({
     icon: <PreviewButton />,
   };
 
+  const customEmojiCommand = {
+    name: "emoji-input",
+    keyCommand: "emoji-input",
+    icon: <EmojiInputButton />,
+  };
+
+
   const customBoldCommand = {
     ...commands.bold,
-    icon: <BoldIcon color="#fff" />,
+    icon: <BoldIcon color='rgb(217, 217, 217)' />,
   };
 
   const customItalicCommand = {
     ...commands.italic,
-    icon: <ItalicIcon color="#fff" />,
+    icon: <ItalicIcon color='rgb(217, 217, 217)' />,
   };
 
   const customStrikethroughCommand = {
     ...commands.strikethrough,
-    icon: <StrikethroughIcon color="#fff" />,
+    icon: <StrikethroughIcon color='rgb(217, 217, 217)' />,
   };
 
   const customQuoteCommand = {
     ...commands.quote,
-    icon: <QuoteIcon color="#fff" />,
+    icon: <QuoteIcon color='rgb(217, 217, 217)' />,
   };
 
   const customCodeCommand = {
     ...commands.code,
-    icon: <CodeIcon color="#fff" />,
+    icon: <CodeIcon color='rgb(217, 217, 217)' />,
   };
 
   const customCodeBlockCommand = {
     ...commands.codeBlock,
-    icon: <CodeBlockIcon color="#fff" />,
+    icon: <CodeBlockIcon color='rgb(217, 217, 217)' />,
   };
 
   const customLinkCommand = {
     ...commands.link,
-    icon: <LinkIcon color="#fff" />,
+    icon: <LinkIcon color='rgb(217, 217, 217)' />,
   };
 
   const customOrderedListCommand = {
     ...commands.orderedListCommand,
-    icon: <OrderedListIcon color="#fff" />,
+    icon: <OrderedListIcon color='rgb(217, 217, 217)' />,
   };
 
   const customUnorderedListCommand = {
     ...commands.unorderedListCommand,
-    icon: <UnorderedListIcon color="#fff" />,
+    icon: <UnorderedListIcon color='rgb(217, 217, 217)' />,
   };
 
   const customSendCommand = {
@@ -312,111 +347,144 @@ export const MarkdownEditor = ({
     icon: <SendButton />,
   };
 
+  useEffect(() => {
+    if (selectedEmoji !== null) {
+      setContent(messageContent + selectedEmoji)
+    }
+  }, [selectedEmoji])
+
+  const updatePosition = () => {
+    if (boxRef.current) {
+      const rect = boxRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.top - 440,
+        left: rect.left,
+      });
+    }
+  };
+
+  useEffect(() => {
+    updatePosition(); // Initial position
+    window.addEventListener("resize", updatePosition);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, []);
+
   return (
-    <MDEditor
-      className={_className}
-      style={{
-        color: mode === 'dark' ? 'grey' : '#ededed',
-        backgroundColor: mode === 'dark' ? 'grey' : '#ededed',
-        caretColor: mode === 'dark' ? 'white' : 'black',
-        fontWeight: 'bold'
-      }}
-      height={200}
-      visibleDragbar={false}
-      commands={[
-        editPreviewCommand,
-        customPreviewCommand,
-        customBoldCommand,
-        customItalicCommand,
-        customStrikethroughCommand,
-        customLinkCommand,
-        customQuoteCommand,
-        commands.divider,
-        customOrderedListCommand,
-        customUnorderedListCommand,
-        commands.divider,
-        customCodeCommand,
-        customCodeBlockCommand,
-      ]}
-      extraCommands={[
-        customSendCommand
-      ]}
-      preview="edit"
-      previewOptions={{
-        rehypePlugins: [[rehypeSanitize]],
-      }}
-      value={messageContent}
-      onChange={(val) => setContent(val ?? "")}
-      textareaProps={{
-        placeholder: "Type something here...",
-        onKeyDown: (event) => {
-          if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-
-            if (messageContent.trim()) {
-              socket.emit("message", {
-                message: messageContent,
-                destCGName: chat.chatName,
-                destCGEmail: chat.chatEmail,
-                isDm: chat.isDm,
-              }, (ack: any) => {
-
-                const updatedChat: ChatProps = {
-                  chatName: chat.chatName,
-                  chatEmail: chat.chatEmail,
+    <div ref={boxRef}>
+      <EmojiPicker
+        editorPos={position}
+        showEmojiPicker={showEmojiPicker}
+        setShowEmojiPicker={setShowEmojiPicker}
+        setSelectedEmoji={setSelectedEmoji} />
+      <MDEditor
+        className={_className}
+        style={{
+          color: mode === 'dark' ? 'grey' : '#ededed',
+          backgroundColor: mode === 'dark' ? 'grey' : '#ededed',
+          caretColor: mode === 'dark' ? 'rgb(217, 217, 217)' : 'black',
+          fontWeight: 'bold'
+        }}
+        height={200}
+        visibleDragbar={false}
+        commands={[
+          editPreviewCommand,
+          customPreviewCommand,
+          customBoldCommand,
+          customItalicCommand,
+          customStrikethroughCommand,
+          customLinkCommand,
+          customQuoteCommand,
+          commands.divider,
+          customOrderedListCommand,
+          customUnorderedListCommand,
+          commands.divider,
+          customCodeCommand,
+          customCodeBlockCommand,
+          customEmojiCommand,
+        ]}
+        extraCommands={[
+          customSendCommand
+        ]}
+        preview="edit"
+        previewOptions={{
+          rehypePlugins: [[rehypeSanitize]],
+        }}
+        value={messageContent}
+        onChange={(val) => setContent(val ?? "")}
+        textareaProps={{
+          placeholder: "Type something here...",
+          onKeyDown: (event) => {
+            if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+              if (messageContent.trim()) {
+                socket.emit("message", {
+                  message: messageContent,
+                  destCGName: chat.chatName,
+                  destCGEmail: chat.chatEmail,
                   isDm: chat.isDm,
-                  unread: false,
-                  messages: [...chat.messages, {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
-                    chatEmail: chat.chatEmail,
-                    content: messageContent,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    numReplies: 0,
-                  }],
-                  latestMessage: {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
-                    chatEmail: chat.chatEmail,
-                    content: messageContent,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    numReplies: 0,
-                  },
-                  TSLastMessage: getCurrentTimestamp(),
-                };
-                setCurrentChat(updatedChat);
+                }, (ack: any) => {
 
-                const newChat: AllChatProps = {
-                  chatName: chat.chatName,
-                  chatEmail: chat.chatEmail,
-                  isDm: chat.isDm,
-                  unread: false,
-                  latestMessage: {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                  const updatedChat: ChatProps = {
+                    chatName: chat.chatName,
                     chatEmail: chat.chatEmail,
-                    content: messageContent,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    numReplies: 0,
-                  },
-                  TSLastMessage: getCurrentTimestamp(),
-                };
+                    isDm: chat.isDm,
+                    unread: false,
+                    messages: [...chat.messages, {
+                      messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                      messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                      chatEmail: chat.chatEmail,
+                      content: messageContent,
+                      sender: myself,
+                      tsSent: getCurrentTimestamp(),
+                      numReplies: 0,
+                    }],
+                    latestMessage: {
+                      messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                      messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                      chatEmail: chat.chatEmail,
+                      content: messageContent,
+                      sender: myself,
+                      tsSent: getCurrentTimestamp(),
+                      numReplies: 0,
+                    },
+                    TSLastMessage: getCurrentTimestamp(),
+                  };
+                  setCurrentChat(updatedChat);
 
-                if (chat.isDm) {
-                  insertDMChatAndMessage(newChat);
-                } else {
-                  insertGMChatAndMessage(newChat);
-                }
-                setContent("")
-              });
+                  const newChat: AllChatProps = {
+                    chatName: chat.chatName,
+                    chatEmail: chat.chatEmail,
+                    isDm: chat.isDm,
+                    unread: false,
+                    latestMessage: {
+                      messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                      messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                      chatEmail: chat.chatEmail,
+                      content: messageContent,
+                      sender: myself,
+                      tsSent: getCurrentTimestamp(),
+                      numReplies: 0,
+                    },
+                    TSLastMessage: getCurrentTimestamp(),
+                  };
+
+                  if (chat.isDm) {
+                    insertDMChatAndMessage(newChat);
+                  } else {
+                    insertGMChatAndMessage(newChat);
+                  }
+                  setContent("")
+                });
+              }
+
             }
-
           }
         }
-      }
-      }
-    />
+        }
+      />
+    </div>
+
   );
 };
