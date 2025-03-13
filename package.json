@@ -39,6 +39,7 @@
     "@types/react-window": "^1.8.8",
     "@uiw/react-md-editor": "^4.0.5",
     "autosuggest-highlight": "^3.3.4",
+    "axios": "^1.8.3",
     "emoji-mart": "^5.6.0",
     "emoji-mart-vue": "^2.6.6",
     "emoji-picker-react": "^4.12.0",

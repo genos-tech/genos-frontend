@@ -100,69 +100,105 @@ export default function MessagesPane(props: MessagesPaneProps) {
     ref.current.nearBottom = atBottom
   }
 
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const droppedFiles = Array.from(event.dataTransfer.files);
+    handleFiles(droppedFiles);
+  };
+
+  const handleFiles = (selectedFiles: File[]) => {
+    selectedFiles.forEach((file) => {
+      const fileType = file.type;
+      console.log("Got file:", fileType)
+      if (fileType === "image/jpeg" || fileType === "image/png") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            const img = new Image();
+            img.src = e.target.result as string;
+            img.onload = () => {
+              console.log("uploaded image:", img.src)
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const fileURL = URL.createObjectURL(file);
+        console.log("uploaded file:", fileURL)
+      }
+    });
+  };
+
   return (
-    <Sheet sx={{ backgroundColor: 'background.surface' }}>
-      <MessagesPaneHeader
-        myself={myself}
-        chat={chat}
-        subChat={subChat}
-        setCurrentMainChat={setCurrentMainChat}
-        setCurrentSubChat={setCurrentSubChat}
-        isSubChatVisible={isSubChatVisible}
-        setIsSubChatVisible={setIsSubChatVisible}
-      />
-
-      <Box sx={{ px: 0.3, my: 0.2 }}>
-        <Virtuoso
-          ref={virtuosoRef}
-          className="custom-scrollbar"
-          style={{
-            height: isSubChatVisible
-              ? currentWindowHeight * paneSizePCT * 0.01 - 270
-              : currentWindowHeight - 270
-          }}
-          totalCount={chatMessages.length}
-          initialTopMostItemIndex={chatMessages.length - 1}
-          atTopThreshold={64}
-          atTopStateChange={handleAtTop}
-          atBottomThreshold={128}
-          atBottomStateChange={handleAtBottom}
-          itemContent={(index) => {
-            const message = chatMessages[index];
-            const isYou = message.sender.userName === myself.userName;
-            return (
-              <div>
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
-                >
-                  <ChatBubble
-                    myself={myself}
-                    variant={isYou ? "sent" : "received"}
-                    chat={chat}
-                    socket={socket}
-                    {...message}
-                    setIsThreadVisible={setIsThreadVisible}
-                    setCurrentThreadChat={setCurrentThreadChat}
-                  />
-                </Stack>
-              </div>
-            );
-          }}
+    <div
+      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    >
+      <Sheet sx={{ backgroundColor: 'background.surface' }}>
+        <MessagesPaneHeader
+          myself={myself}
+          chat={chat}
+          subChat={subChat}
+          setCurrentMainChat={setCurrentMainChat}
+          setCurrentSubChat={setCurrentSubChat}
+          isSubChatVisible={isSubChatVisible}
+          setIsSubChatVisible={setIsSubChatVisible}
         />
-      </Box>
-
-      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-        <div className="md-content">
-          <MarkdownEditor myself={myself}
-            socket={socket}
-            chat={chat}
-            messageContent={content}
-            setContent={setContent}
-            setCurrentChat={setCurrentMainChat} />
-        </div>
-      </Box>
-    </Sheet >
+        <Box sx={{ px: 0.3, my: 0.2 }}>
+          <Virtuoso
+            ref={virtuosoRef}
+            className="custom-scrollbar"
+            style={{
+              height: isSubChatVisible
+                ? currentWindowHeight * paneSizePCT * 0.01 - 270
+                : currentWindowHeight - 270
+            }}
+            totalCount={chatMessages.length}
+            initialTopMostItemIndex={chatMessages.length - 1}
+            atTopThreshold={64}
+            atTopStateChange={handleAtTop}
+            atBottomThreshold={128}
+            atBottomStateChange={handleAtBottom}
+            itemContent={(index) => {
+              const message = chatMessages[index];
+              const isYou = message.sender.userName === myself.userName;
+              return (
+                <div>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
+                  >
+                    <ChatBubble
+                      myself={myself}
+                      variant={isYou ? "sent" : "received"}
+                      chat={chat}
+                      socket={socket}
+                      {...message}
+                      setIsThreadVisible={setIsThreadVisible}
+                      setCurrentThreadChat={setCurrentThreadChat}
+                    />
+                  </Stack>
+                </div>
+              );
+            }}
+          />
+        </Box>
+        <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+          <div className="md-content">
+            <MarkdownEditor myself={myself}
+              socket={socket}
+              chat={chat}
+              messageContent={content}
+              setContent={setContent}
+              setCurrentChat={setCurrentMainChat} />
+          </div>
+        </Box>
+      </Sheet >
+    </div>
   );
 }

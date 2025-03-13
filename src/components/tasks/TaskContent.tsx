@@ -3,13 +3,10 @@ import { useState } from "react";
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Chip from '@mui/joy/Chip';
-import Card from '@mui/joy/Card';
-import CardOverflow from '@mui/joy/CardOverflow';
 import Sheet from '@mui/joy/Sheet';
 import Typography from '@mui/joy/Typography';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
-import AspectRatio from '@mui/joy/AspectRatio';
 import Divider from '@mui/joy/Divider';
 import { Input, Grid, Menu, MenuItem, Button, Stack } from "@mui/joy";
 import Textarea from '@mui/joy/Textarea';
@@ -17,9 +14,10 @@ import { ChevronDown } from "lucide-react";
 import Snackbar, { SnackbarProps } from '@mui/joy/Snackbar';
 import TaskCommentBubble from './TaskCommentBubble'
 
+import FileUpload from '../fileUpload/upload'
+
 import IconButton from '@mui/joy/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FolderIcon from '@mui/icons-material/Folder';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AddIcon from '@mui/icons-material/Add';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -517,52 +515,9 @@ export default function taskContent(props: TaskContentProps) {
       <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
         Attachments
       </Typography>
-      <Box
-        sx={(theme) => ({
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 2,
-          '& > div': {
-            boxShadow: 'none',
-            '--Card-padding': '0px',
-            '--Card-radius': theme.vars.radius.sm,
-          },
-        })}
-      >
-        <Card variant="outlined">
-          <AspectRatio ratio="1" sx={{ minWidth: 80 }}>
-            <img
-              src="https://images.unsplash.com/photo-1527549993586-dff825b37782?auto=format&h=80"
-              srcSet="https://images.unsplash.com/photo-1527549993586-dff825b37782?auto=format&h=160 2x"
-              alt="Yosemite National Park"
-            />
-          </AspectRatio>
-        </Card>
-        <Card variant="outlined">
-          <AspectRatio ratio="1" sx={{ minWidth: 80 }}>
-            <img
-              src="https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&h=80"
-              srcSet="https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&h=160 2x"
-              alt="Yosemite National Park"
-            />
-          </AspectRatio>
-        </Card>
-        <Card variant="outlined" orientation="horizontal">
-          <CardOverflow>
-            <AspectRatio ratio="1" sx={{ minWidth: 80 }}>
-              <div>
-                <FolderIcon />
-              </div>
-            </AspectRatio>
-          </CardOverflow>
-          <Box sx={{ py: { xs: 1, sm: 2 }, pr: 2 }}>
-            <Typography level="title-sm" color="primary">
-              videos-hike.zip
-            </Typography>
-            <Typography level="body-xs">100 MB</Typography>
-          </Box>
-        </Card>
-      </Box>
+
+      <FileUpload />
+
 
       <Divider sx={{ mt: 2 }} />
 
@@ -571,7 +526,9 @@ export default function taskContent(props: TaskContentProps) {
           Comments
         </Typography>
 
-        <TaskCommentBubble />
+        <Box sx={{ mb: 1 }}>
+          <TaskCommentBubble />
+        </Box>
 
         <div className="md-content">
           <MarkdownEditor content={comment} setContent={setComment} height={200} mdMode={"edit"} />
