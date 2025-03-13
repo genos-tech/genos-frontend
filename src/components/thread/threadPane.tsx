@@ -18,8 +18,9 @@ type MessagesPaneProps = {
   myself: UserProps;
   socket: Socket;
   setCurrentThreadChat: (chat: ThreadProps) => void;
-  setIsRightSideVisible: (value: boolean) => void;
+  setIsThreadVisible: (value: boolean) => void;
   currentThreadChatEmail: string;
+  setIsTaskContentVisible: (value: boolean) => void;
 };
 
 
@@ -29,8 +30,9 @@ export default function ThreadPane(props: MessagesPaneProps) {
     myself,
     socket,
     setCurrentThreadChat,
-    setIsRightSideVisible,
-    currentThreadChatEmail } = props;
+    setIsThreadVisible,
+    currentThreadChatEmail,
+    setIsTaskContentVisible } = props;
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
   const [content, setContent] = useState("");
 
@@ -116,7 +118,8 @@ export default function ThreadPane(props: MessagesPaneProps) {
         myself={myself}
         thread={thread}
         setCurrentThreadChat={setCurrentThreadChat}
-        setIsRightSideVisible={setIsRightSideVisible} />
+        setIsThreadVisible={setIsThreadVisible}
+        setIsTaskContentVisible={setIsTaskContentVisible} />
 
       <Box sx={{ px: 0.3, my: 0.2 }}>
         <Virtuoso
@@ -149,7 +152,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         />
       </Box>
 
-      <Box sx={{ minWidth: '600px', paddingLeft: 1, paddingRight: 1 }}>
+      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
         <div className="md-content">
           <MarkdownEditor myself={myself}
             socket={socket}

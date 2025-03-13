@@ -105,6 +105,43 @@ export default function TaskSidebar() {
             '--ListItem-radius': (theme) => theme.vars.radius.sm,
           }}
         >
+
+          <ListItem nested>
+            <Toggler
+              renderToggle={({ open, setOpen }) => (
+                <ListItemButton onClick={() => setOpen(!open)}>
+                  <AssignmentRoundedIcon />
+                  <ListItemContent>
+                    <Typography level="title-sm">Recents</Typography>
+                  </ListItemContent>
+                  <KeyboardArrowDownIcon
+                    sx={[
+                      open
+                        ? {
+                          transform: 'rotate(180deg)',
+                        }
+                        : {
+                          transform: 'none',
+                        },
+                    ]}
+                  />
+                </ListItemButton>
+              )}
+            >
+              <List sx={{ gap: 0.5 }}>
+                <ListItem sx={{ mt: 0.5 }}>
+                  <ListItemButton>task-001</ListItemButton>
+                </ListItem>
+                <ListItem>
+                  <ListItemButton>task-002</ListItemButton>
+                </ListItem>
+                <ListItem>
+                  <ListItemButton>task-003</ListItemButton>
+                </ListItem>
+              </List>
+            </Toggler>
+          </ListItem>
+
           <ListItem nested>
             <Toggler
               renderToggle={({ open, setOpen }) => (
@@ -145,45 +182,9 @@ export default function TaskSidebar() {
             <Toggler
               renderToggle={({ open, setOpen }) => (
                 <ListItemButton onClick={() => setOpen(!open)}>
-                  <AssignmentRoundedIcon />
-                  <ListItemContent>
-                    <Typography level="title-sm">Recent Tasks</Typography>
-                  </ListItemContent>
-                  <KeyboardArrowDownIcon
-                    sx={[
-                      open
-                        ? {
-                          transform: 'rotate(180deg)',
-                        }
-                        : {
-                          transform: 'none',
-                        },
-                    ]}
-                  />
-                </ListItemButton>
-              )}
-            >
-              <List sx={{ gap: 0.5 }}>
-                <ListItem sx={{ mt: 0.5 }}>
-                  <ListItemButton>task-001</ListItemButton>
-                </ListItem>
-                <ListItem>
-                  <ListItemButton>task-002</ListItemButton>
-                </ListItem>
-                <ListItem>
-                  <ListItemButton>task-003</ListItemButton>
-                </ListItem>
-              </List>
-            </Toggler>
-          </ListItem>
-
-          <ListItem nested>
-            <Toggler
-              renderToggle={({ open, setOpen }) => (
-                <ListItemButton onClick={() => setOpen(!open)}>
                   <BookmarkIcon />
                   <ListItemContent>
-                    <Typography level="title-sm">Tagged Tasks </Typography>
+                    <Typography level="title-sm">Tagged</Typography>
                   </ListItemContent>
                   <KeyboardArrowDownIcon
                     sx={[
@@ -217,7 +218,7 @@ export default function TaskSidebar() {
             <ListItemButton>
               <ViewTimelineIcon />
               <ListItemContent>
-                <Typography level="title-sm">Gantt Chart</Typography>
+                <Typography level="title-sm">Gantt</Typography>
               </ListItemContent>
             </ListItemButton>
           </ListItem>

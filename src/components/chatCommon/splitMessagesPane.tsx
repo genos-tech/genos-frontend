@@ -19,7 +19,7 @@ type MessagesSplitPaneProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
-    setIsRightSideVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
     currentMainChatEmail: string;
     currentSubChatEmail: string;
 };
@@ -34,7 +34,7 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
         setCurrentMainChat,
         setCurrentSubChat,
         setCurrentThreadChat,
-        setIsRightSideVisible,
+        setIsThreadVisible,
         currentMainChatEmail,
         currentSubChatEmail } = props;
 
@@ -78,7 +78,7 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                         setCurrentSubChat={setCurrentSubChat}
                         setCurrentThreadChat={setCurrentThreadChat}
                         setIsSubChatVisible={setIsSubChatVisible}
-                        setIsRightSideVisible={setIsRightSideVisible}
+                        setIsThreadVisible={setIsThreadVisible}
                         currentSubChatEmail={currentSubChatEmail} />
                 )}
 
@@ -91,7 +91,7 @@ export default function MessagesSplitPane(props: MessagesSplitPaneProps) {
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
                     setCurrentThreadChat={setCurrentThreadChat}
-                    setIsRightSideVisible={setIsRightSideVisible}
+                    setIsThreadVisible={setIsThreadVisible}
                     isSubChatVisible={isSubChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
                     currentMainChatEmail={currentMainChatEmail}

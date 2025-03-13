@@ -63,24 +63,23 @@
   border-radius: 10px;
 }
 
-
-.thread-custom-scrollbar::-webkit-scrollbar {
+.MuiDataGrid-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.thread-custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #313131;
-  /* Adjust the thumb color */
-  border-radius: 10px;
-  /* Make the thumb rounded */
+.MuiDataGrid-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.thread-custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #9c9c9c;
-  /* Slightly darker on hover */
+.MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
+  background: #626262;
   border-radius: 10px;
-  /* Keep it rounded on hover */
+}
+
+.MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9c9c9c;
+  border-radius: 10px;
 }
 
 
@@ -167,7 +166,7 @@
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-area {
-  background-color: rgb(217, 217, 217);
+  background-color: rgb(163, 163, 163);
   border-top-right-radius: 0px;
   border-top-left-radius: 0px;
 }

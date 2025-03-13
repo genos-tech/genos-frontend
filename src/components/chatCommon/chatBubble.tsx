@@ -45,7 +45,7 @@ type ChatBubbleProps = MessageProps & {
   variant: 'sent' | 'received';
   chat: ChatProps;
   socket: Socket;
-  setIsRightSideVisible: (value: boolean) => void;
+  setIsThreadVisible: (value: boolean) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
 };
 
@@ -170,7 +170,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
     attachment = undefined,
     sender,
     numReplies,
-    setIsRightSideVisible,
+    setIsThreadVisible,
     setCurrentThreadChat } = props;
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
@@ -282,7 +282,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                           sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                           onClick={() => {
                             // Show thread pane on the right side.
-                            setIsRightSideVisible(true);
+                            setIsThreadVisible(true);
 
                             socket.emit("thread_message", {
                               isInit: true,
@@ -375,7 +375,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                   variant="plain" // Removes background & border
                   onClick={() => {
                     // Show thread pane on the right side.
-                    setIsRightSideVisible(true);
+                    setIsThreadVisible(true);
 
                     socket.emit("thread_message", {
                       isInit: true,

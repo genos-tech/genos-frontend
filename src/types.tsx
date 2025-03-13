@@ -110,6 +110,13 @@ export type NewThreadMessageProps = {
     };
 };
 
+// Task Comment Props
+export type TaskCommentProps = {
+    email: string,
+    name: string,
+    content: string,
+}
+
 // Other Props
 export type SearchListProps = {
     type: string,

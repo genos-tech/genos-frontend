@@ -15,22 +15,31 @@ import { Input, Grid, Menu, MenuItem, Button, Stack } from "@mui/joy";
 import Textarea from '@mui/joy/Textarea';
 import { ChevronDown } from "lucide-react";
 import Snackbar, { SnackbarProps } from '@mui/joy/Snackbar';
+import TaskCommentBubble from './TaskCommentBubble'
 
 import IconButton from '@mui/joy/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AddIcon from '@mui/icons-material/Add';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
 
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 
+import { TaskCommentProps } from "../../types"
+
 // Temp data
 import { taskContents } from './sampleTaskContents';
 
-export default function taskContent() {
+type TaskContentProps = {
+  setIsTaskContentVisible: (value: boolean) => void;
+};
+
+export default function taskContent(props: TaskContentProps) {
+  const { setIsTaskContentVisible } = props
   const taskId: string = "task-001"
   const taskSummary: string = "This is a Task for XXX"
   const dueDate: string = "21 Oct 2022"
@@ -40,6 +49,34 @@ export default function taskContent() {
   const reporter: string = "Ryan"
   const [taskContent, setTaskContent] = useState(taskContents.content);
   const [comment, setComment] = useState("");
+
+  const testComments: TaskCommentProps[] = [
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good1",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good2",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good3",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good2",
+    },
+    {
+      email: "ken@ken",
+      name: "ken",
+      content: "good3",
+    }
+  ]
 
   function getMdHeight(text: string): number {
     const height: number = Math.min(Math.max(text.split('\n').length * 20, 200), 800)
@@ -126,8 +163,15 @@ export default function taskContent() {
 
   return (
     <Sheet
+      className="custom-scrollbar"
       variant="outlined"
-      sx={{ minHeight: 500, borderRadius: 'sm', p: 2, overflowY: 'scroll', overflowX: 'hidden' }}
+      sx={{
+        minHeight: 500,
+        borderRadius: 'sm',
+        p: 2,
+        overflowY: 'scroll',
+        overflowX: 'hidden'
+      }}
     >
       <Box
         sx={{
@@ -138,7 +182,17 @@ export default function taskContent() {
         }}
       >
         <Stack direction="row" sx={{ width: '100%', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', flexGrow: 1 }}>
+          {/* Wrap the title and task state in the same Box */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+            <Chip
+              key={taskState}
+              size="lg"
+              variant="soft"
+              color="primary"
+              sx={{ fontSize: '15px' }}
+            >
+              {taskState}
+            </Chip>
             <Textarea
               variant="plain"
               size="lg"
@@ -147,15 +201,14 @@ export default function taskContent() {
             />
           </Box>
 
-          <Chip
-            key={taskState}
-            size='lg'
-            variant="soft"
-            color="primary"
-            sx={{ fontSize: '15px' }}
+          <IconButton
+            size="sm"
+            variant="plain"
+            color="neutral"
+            onClick={() => { setIsTaskContentVisible(false); }}
           >
-            {taskState}
-          </Chip>
+            <CancelIcon />
+          </IconButton>
         </Stack>
       </Box>
 
@@ -200,20 +253,37 @@ export default function taskContent() {
                   </ListItem>
                 </Grid>
               </Grid>
-              <ListItem>
-                Due date: <Input
-                  type="date"
-                  color="neutral"
-                  variant="outlined"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  slotProps={{
-                    input: {
-                      min: today, // Set minimum date to today
-                    },
-                  }}
-                />
-              </ListItem>
+
+              <Grid container spacing={2}>
+                <Grid key={1} xs={6} sx={{ display: "flex", alignItems: "center" }}>
+                  <ListItem>
+                    Project: <Chip
+                      variant="soft"
+                      color="primary"
+                      sx={{ cursor: "pointer" }}
+                    >
+                      origin-initial-project
+                    </Chip>
+                  </ListItem>
+                </Grid>
+                <Grid key={2} xs={6}>
+                  <ListItem>
+                    Due date: <Input
+                      type="date"
+                      color="neutral"
+                      variant="outlined"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      slotProps={{
+                        input: {
+                          min: today, // Set minimum date to today
+                        },
+                      }}
+                    />
+                  </ListItem>
+                </Grid>
+              </Grid>
+
               <ListItem>
                 Tags:
                 {isEditing ? (
@@ -500,6 +570,9 @@ export default function taskContent() {
         <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
           Comments
         </Typography>
+
+        <TaskCommentBubble />
+
         <div className="md-content">
           <MarkdownEditor content={comment} setContent={setComment} height={200} mdMode={"edit"} />
         </div>

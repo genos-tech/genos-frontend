@@ -24,7 +24,7 @@ type MessagesPaneProps = {
   setCurrentMainChat: (chat: ChatProps) => void;
   setCurrentSubChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
-  setIsRightSideVisible: (value: boolean) => void;
+  setIsThreadVisible: (value: boolean) => void;
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
   currentMainChatEmail: string;
@@ -41,7 +41,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
     setCurrentMainChat,
     setCurrentSubChat,
     setCurrentThreadChat,
-    setIsRightSideVisible,
+    setIsThreadVisible,
     isSubChatVisible,
     setIsSubChatVisible,
     currentMainChatEmail } = props;
@@ -143,7 +143,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
                     chat={chat}
                     socket={socket}
                     {...message}
-                    setIsRightSideVisible={setIsRightSideVisible}
+                    setIsThreadVisible={setIsThreadVisible}
                     setCurrentThreadChat={setCurrentThreadChat}
                   />
                 </Stack>
