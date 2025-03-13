@@ -104,65 +104,104 @@ export default function ThreadPane(props: MessagesPaneProps) {
     return () => window.removeEventListener("resize", updateHeight);
   }, [thread]);
 
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const droppedFiles = Array.from(event.dataTransfer.files);
+    handleFiles(droppedFiles);
+  };
+
+  const handleFiles = (selectedFiles: File[]) => {
+    selectedFiles.forEach((file) => {
+      const fileType = file.type;
+      console.log("Got file:", fileType)
+      if (fileType === "image/jpeg" || fileType === "image/png") {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            const img = new Image();
+            img.src = e.target.result as string;
+            img.onload = () => {
+              console.log("uploaded image:", img.src)
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const fileURL = URL.createObjectURL(file);
+        console.log("uploaded file:", fileURL)
+      }
+    });
+  };
+
+
   return (
-    <Sheet
-      ref={containerRef}
-      sx={{
-        height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: 'background.body',
+    <div
+      onDrop={handleDrop}
+      onDragOver={(e) => e.preventDefault()}
+      style={{
+        width: "100%",
+        height: "100%",
       }}
     >
-      <ThreadPaneHeader
-        myself={myself}
-        thread={thread}
-        setCurrentThreadChat={setCurrentThreadChat}
-        setIsThreadVisible={setIsThreadVisible}
-        setIsTaskContentVisible={setIsTaskContentVisible} />
+      <Sheet
+        ref={containerRef}
+        sx={{
+          height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
+          display: 'flex',
+          flexDirection: 'column',
+          backgroundColor: 'background.body',
+        }}
+      >
+        <ThreadPaneHeader
+          myself={myself}
+          thread={thread}
+          setCurrentThreadChat={setCurrentThreadChat}
+          setIsThreadVisible={setIsThreadVisible}
+          setIsTaskContentVisible={setIsTaskContentVisible} />
 
-      <Box sx={{ px: 0.3, my: 0.2 }}>
-        <Virtuoso
-          ref={virtuosoRef}
-          className="custom-scrollbar"
-          style={{ height: listHeight }}
-          totalCount={threadMessages.length}
-          initialTopMostItemIndex={threadMessages.length - 1}
-          atTopThreshold={64}
-          atTopStateChange={handleAtTop}
-          atBottomThreshold={128}
-          atBottomStateChange={handleAtBottom}
-          itemContent={(index) => {
-            const message = threadMessages[index];
-            const isYou = message.sender.userName === myself.userName;
-            return (
-              <div>
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
-                >
-                  <ThreadBubble
-                    variant={isYou ? 'sent' : 'received'}
-                    {...message} />
-                </Stack>
-              </div>
-            );
-          }}
-        />
-      </Box>
+        <Box sx={{ px: 0.3, my: 0.2 }}>
+          <Virtuoso
+            ref={virtuosoRef}
+            className="custom-scrollbar"
+            style={{ height: listHeight }}
+            totalCount={threadMessages.length}
+            initialTopMostItemIndex={threadMessages.length - 1}
+            atTopThreshold={64}
+            atTopStateChange={handleAtTop}
+            atBottomThreshold={128}
+            atBottomStateChange={handleAtBottom}
+            itemContent={(index) => {
+              const message = threadMessages[index];
+              const isYou = message.sender.userName === myself.userName;
+              return (
+                <div>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
+                  >
+                    <ThreadBubble
+                      variant={isYou ? 'sent' : 'received'}
+                      {...message} />
+                  </Stack>
+                </div>
+              );
+            }}
+          />
+        </Box>
 
-      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-        <div className="md-content">
-          <MarkdownEditor myself={myself}
-            socket={socket}
-            thread={thread}
-            messageContent={content}
-            setContent={setContent}
-            setCurrentThreadChat={setCurrentThreadChat} />
-        </div>
-      </Box>
+        <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+          <div className="md-content">
+            <MarkdownEditor myself={myself}
+              socket={socket}
+              thread={thread}
+              messageContent={content}
+              setContent={setContent}
+              setCurrentThreadChat={setCurrentThreadChat} />
+          </div>
+        </Box>
 
-    </Sheet>
+      </Sheet>
+    </div>
   );
 }
