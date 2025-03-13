@@ -163,8 +163,15 @@ export default function taskContent(props: TaskContentProps) {
 
   return (
     <Sheet
+      className="custom-scrollbar"
       variant="outlined"
-      sx={{ minHeight: 500, borderRadius: 'sm', p: 2, overflowY: 'scroll', overflowX: 'hidden' }}
+      sx={{
+        minHeight: 500,
+        borderRadius: 'sm',
+        p: 2,
+        overflowY: 'scroll',
+        overflowX: 'hidden'
+      }}
     >
       <Box
         sx={{

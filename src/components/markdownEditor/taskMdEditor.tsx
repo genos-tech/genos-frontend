@@ -16,7 +16,7 @@ import { StrikethroughIcon } from "../../assets/StrikethroughIcon";
 import { useColorScheme } from '@mui/joy/styles';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import EmojiPicker from '../emojiInput/EmojiPicker'
-
+import SendIcon from '@mui/icons-material/Send';
 
 type MarkdownEditorProps = {
   content: string;
@@ -85,6 +85,30 @@ export const MarkdownEditor = ({
       >
         Preview
       </span>
+    );
+  };
+
+
+  const SendButton = () => {
+    return (
+      <IconButton
+        component='a'
+        variant="plain"
+        sx={{
+          color: 'rgb(217, 217, 217)',
+          paddingRight: '10px',
+          "&:hover": {
+            backgroundColor: "transparent",
+            color: "white",
+            fontWeight: "bold"
+          },
+        }}
+        onClick={
+          () => {console.log("send comment")}
+        }>
+        <SendIcon sx={{ color: 'rgb(217, 217, 217)' }} />
+        &nbsp; Send
+      </IconButton>
     );
   };
 
@@ -172,6 +196,12 @@ export const MarkdownEditor = ({
     icon: <UnorderedListIcon color="rgb(217, 217, 217)" />,
   };
 
+  const customSendCommand = {
+    name: "custom-preview",
+    keyCommand: "custom-preview",
+    icon: <SendButton />,
+  };
+
   useEffect(() => {
     if (selectedEmoji !== null) {
       setContent(content + selectedEmoji)
@@ -229,7 +259,9 @@ export const MarkdownEditor = ({
           customCodeBlockCommand,
           customEmojiCommand,
         ]}
-        extraCommands={[]}
+        extraCommands={[
+          customSendCommand
+        ]}
         preview={(mdMode === "preview" ? "preview" : "edit")}
         previewOptions={{
           rehypePlugins: [[rehypeSanitize]],

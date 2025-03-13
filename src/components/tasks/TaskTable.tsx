@@ -173,6 +173,7 @@ export default function TaskTable(props: TaskTableProps) {
             height: "97%",
             width: '100%',
           }}
+          
         >
           <DataGrid
             onCellClick={(params) => (console.log("Cell clicked:", params))}

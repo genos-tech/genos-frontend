@@ -4,6 +4,7 @@ import Typography from '@mui/joy/Typography';
 import Card from '@mui/joy/Card';
 import Avatar from '@mui/joy/Avatar';
 import MarkdownPreview from '@uiw/react-markdown-preview';
+import { useColorScheme } from '@mui/joy/styles';
 
 function getCurrentTimestamp() {
   const now = new Date();
@@ -18,11 +19,19 @@ function getCurrentTimestamp() {
 }
 
 export default function TaskCommentBubble() {
+  const { mode } = useColorScheme();
 
   return (
-    <Box sx={{ height: 200, overflow: 'scroll' }}>
+    <Box
+      className="custom-scrollbar"
+      sx={{
+        height: 300,
+        pb: '10px',
+        overflowY: 'scroll',
+        overflowX: 'hidden'
+      }}>
       <Stack spacing={1}>
-        <Card>
+        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'lightgrey' }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar size="sm">K</Avatar>
             <Typography level="title-md">Ken</Typography>
@@ -43,7 +52,7 @@ export default function TaskCommentBubble() {
             }}
           />
         </Card>
-        <Card>
+        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'lightgrey' }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar size="sm">K</Avatar>
             <Typography level="title-md">Ken</Typography>
@@ -65,7 +74,7 @@ export default function TaskCommentBubble() {
           />
         </Card>
 
-        <Card>
+        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'lightgrey' }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar size="sm">K</Avatar>
             <Typography level="title-md">Ken</Typography>

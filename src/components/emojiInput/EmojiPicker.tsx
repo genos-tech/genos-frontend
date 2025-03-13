@@ -36,6 +36,7 @@ export const EmojiInput = ({
                 emojiPickerRef.current &&
                 !emojiPickerRef.current.contains(event.target as Node)
             ) {
+                setSelectedEmoji(null);
                 setShowEmojiPicker(false);
             }
         };
