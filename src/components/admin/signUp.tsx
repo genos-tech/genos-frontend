@@ -66,12 +66,12 @@ export default function SignUp() {
     async function fetchData(name: string, email: string, password: string): Promise<SignUpResponse> {
 
         try {
-            const response = await fetch(`${base_url}/user/signup`, {
+            const response = await fetch(`${base_url}/user/signup/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ username: name, email: email, password: password }),
             });
 
             const data: SignUpResponse = await response.json();
