@@ -149,6 +149,17 @@
   border-top-left-radius: 0px;
 }
 
+.markdown-editor-dark .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .punctuation {
+  color: rgb(217, 217, 217) !important;
+  font-weight: bold;
+}
+
+.markdown-editor-dark .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .token.code.keyword {
+  color: rgb(217, 217, 217) !important;
+  font-weight: bold;
+}
+
+
 .markdown-editor-light span {
   color: rgb(13, 13, 13);
 }
@@ -162,19 +173,29 @@
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-preview div * {
-  color: rgb(55, 55, 55);
+  color: rgb(13, 13, 13);
 }
 
 .markdown-editor-light .w-md-editor-content .w-md-editor-area {
-  background-color: rgb(163, 163, 163);
+  background-color: rgb(217, 217, 217);
   border-top-right-radius: 0px;
   border-top-left-radius: 0px;
 }
 
-.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text textarea::placeholder {
-  color: #6d6d6d;
-  opacity: 0.8;
+.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text span * {
+  color: black;
 }
+
+.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .punctuation {
+  color: black !important;
+  font-weight: bold;
+}
+
+.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .token.code.keyword {
+  color: black !important;
+  font-weight: bold;
+}
+
 
 .task-datagrid-light .MuiDataGrid-columnHeader {
   background-color: #d9d9d9;
