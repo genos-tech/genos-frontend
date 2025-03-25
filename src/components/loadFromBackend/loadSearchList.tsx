@@ -1,8 +1,15 @@
-import { LoadSearchListResponse, SearchListProps } from '../../types'
+import { LoadSearchListResponse, SearchListProps, UserProps } from '../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-async function loadSearchList(): Promise<SearchListProps[]> {
+type LoadSearchListProps = {
+    myself: UserProps;
+    teamName: string;
+    accessToken: string;
+};
+
+async function loadSearchList(props: LoadSearchListProps): Promise<SearchListProps[]> {
+    const { myself, teamName, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -10,11 +17,12 @@ async function loadSearchList(): Promise<SearchListProps[]> {
     }
 
     try {
-        const response = await fetch(`${base_url}/search/userAndGroup`, {
-            method: "POST",
+        const response = await fetch(`${base_url}/search/teamMembersAndGroups/?user_email=${myself.userEmail}&team_name=${teamName}`, {
+            method: "GET",
             headers: {
-                "Content-Type": "application/json",
-            }
+                'Content-Type': 'application/json',
+                "Authorization": `Bearer ${accessToken}`
+            },
         });
 
         const data: LoadSearchListResponse = await response.json();

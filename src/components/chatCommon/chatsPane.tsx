@@ -35,6 +35,8 @@ import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
 import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessagesWorker.ts?worker";
+import { useAuth } from "../../components/admin/AuthContext";
+
 
 type ChatsPaneProps = {
   myself: UserProps;
@@ -133,6 +135,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
     isSubChatVisible,
     setIsSubChatVisible } = props;
 
+  const { accessToken } = useAuth();
   const [openUsers, setOpenUsers] = useState(false);
   const [options, setOptions] = useState<SearchListProps[]>([]);
   const loading = openUsers && options.length === 0;
@@ -145,7 +148,9 @@ export default function ChatsPane(props: ChatsPaneProps) {
     }
 
     (async () => {
-      const loadedUsers: SearchListProps[] = await loadSearchList();
+      const loadedUsers: SearchListProps[] = await loadSearchList({
+        myself: myself, teamName: "origin-tech", accessToken: accessToken || ""
+      });
 
       if (active) {
         setOptions([...loadedUsers]);
@@ -358,7 +363,9 @@ export default function ChatsPane(props: ChatsPaneProps) {
         setOpen,
         setGroupName,
         setAllChats,
-        setCurrentMainChat)
+        setCurrentMainChat,
+        accessToken ? accessToken : ""
+      )
     }
   };
 
@@ -367,6 +374,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
 
       <Sheet
         sx={{
+          width: '100%',
           borderRight: '1px solid',
           borderColor: 'divider',
           overflowY: 'hidden',

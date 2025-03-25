@@ -4,6 +4,7 @@ import {
     UserProps,
     ChatProps,
 } from "../../types";
+import { useAuth } from "../../components/admin/AuthContext";
 
 type LoadingProps = {
     myself: UserProps;
@@ -17,9 +18,11 @@ export default function Loading(props: LoadingProps) {
         setIsLoading,
         setCurrentMainChat,
     } = props
+    const { accessToken } = useAuth();
 
     InitialLoad(
         myself,
+        accessToken,
         setIsLoading,
         setCurrentMainChat,
     );

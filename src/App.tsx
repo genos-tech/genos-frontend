@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import ChatHome from './components/chatHome';
@@ -8,11 +8,12 @@ import {
   UserProps,
   ChatProps,
 } from "./types";
+import { SocketProvider } from "./components/utils/socketContext";
 
 const myself: UserProps = {
   userName: localStorage.getItem("userName") || "",
   userEmail: localStorage.getItem("userEmail") || "",
-  avatarImgPath: "/path/to/user/Weikiy.jpg",
+  avatarImgPath: "/path/to/user/Origin.jpg",
   online: true,
 };
 
@@ -21,7 +22,8 @@ function App() {
   const [currentMainChat, setCurrentMainChat] = useState<ChatProps>();
 
   return (
-    (isLoading || currentMainChat === undefined
+    (isLoading
+      || currentMainChat === undefined
     ) ?
       <Loading
         myself={myself}

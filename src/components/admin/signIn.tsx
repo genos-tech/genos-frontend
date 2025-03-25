@@ -19,8 +19,11 @@ import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import BadgeRoundedIcon from '@mui/icons-material/BadgeRounded';
 import GoogleIcon from '../../assets/GoogleIcon';
+import { useAuth } from "../../components/admin/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;
@@ -32,9 +35,9 @@ interface SignInFormElement extends HTMLFormElement {
 }
 
 type SignInResponse = {
-    name?: string;
-    email?: string;
-    token?: string;
+    username: string;
+    email: string;
+    access: string | null;
     message: string;
 };
 
@@ -62,15 +65,19 @@ function ColorSchemeToggle(props: IconButtonProps) {
     );
 }
 
+
 export default function SignIn() {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [rememberEmail, setRememberEmail] = useState<boolean>(false);
+    const { setAccessToken } = useAuth();
 
     async function fetchData(email: string, password: string): Promise<SignInResponse> {
 
         try {
-            const response = await fetch(`${base_url}/user/signin`, {
+            const response = await fetch(`${base_url}/user/signin/`, {
                 method: 'POST',
+                credentials: "include",
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -85,21 +92,24 @@ export default function SignIn() {
                 throw new Error(err_msg);
             }
 
-            localStorage.setItem("token", data.token || "");
-            localStorage.setItem("userEmail", data.email || "");
-            localStorage.setItem("userName", data.name || "");
+            console.log("data:", data)
+            setAccessToken(data.access); // Store access token in memory
+            localStorage.setItem("isSigningIn", "yes");
+            localStorage.setItem("userEmail", data.email);
+            localStorage.setItem("userName", data.username);
+
+            await sleep(1000);
 
             navigate('/App')
-            navigate(0) //  Reload to load the latest local storage in App
 
             return data
 
         } catch (error) {
-            const err_msg = `Authentication Failed: ${error}`
+            const err_msg = `${error}`
             console.error(err_msg);
             setErrorMessage(err_msg);
             navigate('/');
-            return { message: err_msg }
+            return { message: err_msg, email: "", username: "", access: null }
         }
 
     }
@@ -209,11 +219,15 @@ export default function SignIn() {
 
                                     fetchData(email, password);
 
+                                    if (rememberEmail) {
+                                        localStorage.setItem("signInEmail", email)
+                                    }
+
                                 }}
                             >
                                 <FormControl required>
                                     <FormLabel>Email</FormLabel>
-                                    <Input type="email" name="email" />
+                                    <Input type="email" name="email" defaultValue={localStorage.getItem("signInEmail") || ""} />
                                 </FormControl>
                                 <FormControl required>
                                     <FormLabel>Password</FormLabel>
@@ -227,7 +241,14 @@ export default function SignIn() {
                                             alignItems: 'center',
                                         }}
                                     >
-                                        <Checkbox size="sm" label="Remember me" name="persistent" />
+                                        <Checkbox size="sm" label="Remember me" name="persistent" onChange={(event) => {
+                                            if (event.target.checked) {
+                                                setRememberEmail(true)
+                                            } else {
+                                                setRememberEmail(false)
+                                                localStorage.setItem("signInEmail", "")
+                                            }
+                                        }} />
                                         <Link level="title-sm" href="#replace-with-a-link">
                                             Forgot your password?
                                         </Link>
@@ -239,7 +260,7 @@ export default function SignIn() {
                             </form>
                         </Stack>
 
-                        <Divider
+                        {/* <Divider
                             sx={(theme) => ({
                                 [theme.getColorSchemeSelector('light')]: {
                                     color: { xs: '#FFF', md: 'text.tertiary' },
@@ -259,12 +280,12 @@ export default function SignIn() {
                             >
                                 Continue with Google
                             </Button>
-                        </Stack>
+                        </Stack> */}
 
                     </Box>
                     <Box component="footer" sx={{ py: 3 }}>
                         <Typography level="body-xs" sx={{ textAlign: 'center' }}>
-                            © Your company {new Date().getFullYear()}
+                            © Origin {new Date().getFullYear()}
                         </Typography>
                     </Box>
                 </Box>

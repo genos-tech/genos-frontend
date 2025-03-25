@@ -11,6 +11,7 @@ import {
 
 export function InitialLoad(
     myself: UserProps,
+    accessToken: string | null,
     setIsLoading: (state: boolean) => void,
     setCurrentMainChat: (value: ChatProps) => void,
 ) {
@@ -21,35 +22,46 @@ export function InitialLoad(
 
     // Load DM history
     useEffect(() => {
-        console.log("Initial DM history data loading...");
-        const loadDMHistoryWorker = new LoadDMHistoryWorker();
-        loadDMHistoryWorker.postMessage(myself);
-        loadDMHistoryWorker.onmessage = (event) => {
-            if (event.data === "done") {
-                console.log("Initial DM history data loading completed");
-                setIsDMHistoryLoaded(true);
-            }
-        };
-        return () => {
-            loadDMHistoryWorker.terminate();
-        };
-    }, [myself]);
+        if (accessToken) {
+            console.log("Initial DM history data loading...");
+            const loadDMHistoryWorker = new LoadDMHistoryWorker();
+            loadDMHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadDMHistoryWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    console.log("Initial DM history data loading completed");
+                    setIsDMHistoryLoaded(true);
+                } else {
+                    console.error("Filed initial DM history data loading");
+                    console.error("event.data:", event.data);
+                }
+
+            };
+            return () => {
+                loadDMHistoryWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
 
     // Load GM history
     useEffect(() => {
-        console.log("Initial GM history data loading...");
-        const loadGMHistoryWorker = new LoadGMHistoryWorker();
-        loadGMHistoryWorker.postMessage(myself);
-        loadGMHistoryWorker.onmessage = (event) => {
-            if (event.data === "done") {
-                console.log("Initial GM history data loading completed");
-                setIsGMHistoryLoaded(true);
-            }
-        };
-        return () => {
-            loadGMHistoryWorker.terminate();
-        };
-    }, [myself]);
+        if (accessToken) {
+            console.log("Initial GM history data loading...");
+            const loadGMHistoryWorker = new LoadGMHistoryWorker();
+            loadGMHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadGMHistoryWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    console.log("Initial GM history data loading completed");
+                    setIsGMHistoryLoaded(true);
+                } else {
+                    console.error("Filed initial GM history data loading");
+                    console.error("event.data:", event.data);
+                }
+            };
+            return () => {
+                loadGMHistoryWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
 
     // Fetch initial DM chat messages info after the DM history is loaded
     useEffect(() => {
@@ -58,8 +70,11 @@ export function InitialLoad(
             fetchSpecificDMMessagesWorker.postMessage({ chatEmail: myself.userEmail });
             fetchSpecificDMMessagesWorker.onmessage = (event) => {
                 const fetchedMessages: MessageProps[] = event.data;
+                console.log("fetchedMessages:", fetchedMessages)
                 if (fetchedMessages !== undefined) {
                     setInitialChatMessages(fetchedMessages)
+                } else {
+                    console.error("Failed due to fetchedMessages:", fetchedMessages)
                 }
             };
             return () => {
@@ -75,7 +90,7 @@ export function InitialLoad(
             fetchSpecificDMChatWorker.postMessage({ chatEmail: myself.userEmail });
             fetchSpecificDMChatWorker.onmessage = (event) => {
                 const fetchedChat: any = event.data;
-                if (fetchedChat !== undefined) {
+                if (fetchedChat !== undefined && fetchedChat !== null) {
                     const currentMainChat: ChatProps = {
                         chatName: fetchedChat.chatName,
                         chatEmail: fetchedChat.chatEmail,
@@ -87,6 +102,8 @@ export function InitialLoad(
                     }
                     setCurrentMainChat(currentMainChat)
                     setIsInitialChatLoaded(true)
+                } else {
+                    console.error("Failed due to fetchedChat is;", fetchedChat)
                 }
             };
             return () => {

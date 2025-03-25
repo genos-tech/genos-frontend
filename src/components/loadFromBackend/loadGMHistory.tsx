@@ -4,10 +4,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type LoadGMHistoryProps = {
     userEmail: string;
+    accessToken: string;
 };
 
 async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
-    const { userEmail } = props;
+    const { userEmail, accessToken } = props;
 
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -15,10 +16,11 @@ async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
         return Promise.resolve([]);
     }
 
-    return fetch(`${base_url}/message/GMHistory?userEmail=${userEmail}&gmEmail=all`, {
+    return fetch(`${base_url}/gm/getHistory/?user_email=${userEmail}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
         },
     })
         .then(response => response.json().then(data => ({ response, data })))
