@@ -190,6 +190,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
+          console.log("newChat:", newChat)
           setCurrentMainChat(newChat)
         } else {
           console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages)
@@ -226,6 +227,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
+          console.log("newChat:", newChat)
           setCurrentMainChat(newChat)
         } else {
           console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages)
@@ -289,6 +291,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             insertDMChat(dmChat)
             insertDMMessage(dmMessage)
             setCurrentMainChat({ ...dmChat, messages: [dmMessage] })
+            setAllChats([...allChats, dmChat]);
           } else {
             const gmMessage: MessageProps = {
               messageIdWithChatEmail: `${chatEmail}-1`,
@@ -310,6 +313,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             insertGMChat(gmChat)
             insertGMMessage(gmMessage)
             setCurrentMainChat({ ...gmChat, messages: [gmMessage] })
+            setAllChats([...allChats, gmChat]);
           }
         });
       } else {

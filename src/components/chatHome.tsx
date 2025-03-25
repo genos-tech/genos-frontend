@@ -244,8 +244,6 @@ export default function Home(props: HomeProps) {
     // Web Socket handler
     useEffect(() => {
         socket.on("connect", () => {
-            console.log("Connected to WebSocket");
-
             // Join to initial user room
             socket.emit("join", {
                 joiningCGEmail: myself.userEmail,
@@ -354,9 +352,7 @@ export default function Home(props: HomeProps) {
                         }
                         insertDMMessage(newDMMessage)
 
-                        if (allChats.length > 0) {
-                            insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
-                        }
+                        insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
 
                         if (incomingChatEmail === currentMainChat.chatEmail) {
                             const updatedChat: ChatProps = {
@@ -380,6 +376,10 @@ export default function Home(props: HomeProps) {
                                 TSLastMessage: newMessage.tsSent,
                             };
                             setCurrentSubChat(updatedChat);
+                        } else {
+                            console.log("Unexpected DM (incomingChatEmail):", incomingChatEmail)
+                            console.log("Unexpected DM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
+                            console.log("Unexpected DM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
                         }
                     }
                 }
@@ -477,6 +477,10 @@ export default function Home(props: HomeProps) {
                                 TSLastMessage: newMessage.tsSent,
                             };
                             setCurrentSubChat(updatedChat);
+                        } else {
+                            console.log("Unexpected GM (incomingChatEmail):", incomingChatEmail)
+                            console.log("Unexpected GM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
+                            console.log("Unexpected GM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
                         }
 
                     }
@@ -510,9 +514,9 @@ export default function Home(props: HomeProps) {
 
 
     ////////////////////////////////////////////////////////////////////
-    // useEffect(() => {
-    //     console.log("allChats Updated:", allChats);
-    // }, [allChats]);
+    useEffect(() => {
+        console.log("currentMainChat Updated:", currentMainChat);
+    }, [currentMainChat]);
 
     // useEffect(() => {
     //     console.log("initLoad Updated:", initLoad);
