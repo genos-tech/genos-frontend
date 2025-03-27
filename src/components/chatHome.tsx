@@ -381,6 +381,17 @@ export default function Home(props: HomeProps) {
                             console.log("Unexpected DM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
                             console.log("Unexpected DM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
                         }
+                    } else if (fromMyself) {
+                        const newDMMessage: MessageProps = {
+                            messageIdWithChatEmail: `${incomingChatEmail}-${newMessage.messageId}`,
+                            messageId: newMessage.messageId,
+                            chatEmail: incomingChatEmail,
+                            content: newMessage.content,
+                            sender: newMessage.sender,
+                            numReplies: newMessage.numReplies,
+                            tsSent: newMessage.tsSent,
+                        }
+                        insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
                     }
                 }
             } else {
@@ -482,7 +493,20 @@ export default function Home(props: HomeProps) {
                             console.log("Unexpected GM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
                             console.log("Unexpected GM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
                         }
+                    } else if (fromMyself) {
+                        const newGMMessage: MessageProps = {
+                            messageIdWithChatEmail: `${newMessage.chatEmail}-${newMessage.messageId}`,
+                            messageId: newMessage.messageId,
+                            chatEmail: newMessage.chatEmail,
+                            content: newMessage.content,
+                            sender: newMessage.sender,
+                            numReplies: newMessage.numReplies,
+                            tsSent: newMessage.tsSent,
+                        }
 
+                        if (allChats.length > 0) {
+                            insertGMChat(newMessage.chatName, newGMMessage, setAllChats)
+                        }
                     }
                 }
             }
