@@ -16,10 +16,11 @@ async function loadSpecificDMHistory(props: LoadDMHistoryProps): Promise<ChatPro
         return Promise.resolve([]);
     }
 
-    return fetch(`${base_url}/message/DMHistory?userEmail=${userEmail}&dmEmail=${dmEmail}`, {
+    return fetch(`${base_url}/message/DMHistory/?userEmail=${userEmail}&dmEmail=${dmEmail}`, {
         method: "GET",
+        credentials: "include",
         headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
         },
     })
         .then(response => response.json().then(data => ({ response, data })))

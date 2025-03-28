@@ -4,10 +4,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type LoadDMHistoryProps = {
     userEmail: string;
+    accessToken: string;
 };
 
 async function loadDMHistory(props: LoadDMHistoryProps): Promise<ChatProps[]> {
-    const { userEmail } = props;
+    const { userEmail, accessToken } = props;
 
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -15,10 +16,11 @@ async function loadDMHistory(props: LoadDMHistoryProps): Promise<ChatProps[]> {
         return Promise.resolve([]);
     }
 
-    return fetch(`${base_url}/message/DMHistory?userEmail=${userEmail}&dmEmail=all`, {
+    return fetch(`${base_url}/dm/getHistory/?user_email=${userEmail}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
         },
     })
         .then(response => response.json().then(data => ({ response, data })))

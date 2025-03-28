@@ -9,7 +9,7 @@ import { UserProps } from "../types";
 const myself: UserProps = {
     userName: localStorage.getItem("userName") || "",
     userEmail: localStorage.getItem("userEmail") || "",
-    avatarImgPath: "/path/to/user/Weikiy.jpg",
+    avatarImgPath: "/path/to/user/Origin.jpg",
     online: true,
 };
 

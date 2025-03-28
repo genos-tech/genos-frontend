@@ -35,6 +35,8 @@ import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
 import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessagesWorker.ts?worker";
+import { useAuth } from "../../components/admin/AuthContext";
+
 
 type ChatsPaneProps = {
   myself: UserProps;
@@ -133,6 +135,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
     isSubChatVisible,
     setIsSubChatVisible } = props;
 
+  const { accessToken } = useAuth();
   const [openUsers, setOpenUsers] = useState(false);
   const [options, setOptions] = useState<SearchListProps[]>([]);
   const loading = openUsers && options.length === 0;
@@ -145,7 +148,9 @@ export default function ChatsPane(props: ChatsPaneProps) {
     }
 
     (async () => {
-      const loadedUsers: SearchListProps[] = await loadSearchList();
+      const loadedUsers: SearchListProps[] = await loadSearchList({
+        myself: myself, teamName: "origin-tech", accessToken: accessToken || ""
+      });
 
       if (active) {
         setOptions([...loadedUsers]);
@@ -185,6 +190,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
+          console.log("newChat:", newChat)
           setCurrentMainChat(newChat)
         } else {
           console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages)
@@ -221,6 +227,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
+          console.log("newChat:", newChat)
           setCurrentMainChat(newChat)
         } else {
           console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages)
@@ -284,6 +291,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             insertDMChat(dmChat)
             insertDMMessage(dmMessage)
             setCurrentMainChat({ ...dmChat, messages: [dmMessage] })
+            setAllChats([...allChats, dmChat]);
           } else {
             const gmMessage: MessageProps = {
               messageIdWithChatEmail: `${chatEmail}-1`,
@@ -305,6 +313,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             insertGMChat(gmChat)
             insertGMMessage(gmMessage)
             setCurrentMainChat({ ...gmChat, messages: [gmMessage] })
+            setAllChats([...allChats, gmChat]);
           }
         });
       } else {
@@ -358,7 +367,9 @@ export default function ChatsPane(props: ChatsPaneProps) {
         setOpen,
         setGroupName,
         setAllChats,
-        setCurrentMainChat)
+        setCurrentMainChat,
+        accessToken ? accessToken : ""
+      )
     }
   };
 
@@ -367,6 +378,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
 
       <Sheet
         sx={{
+          width: '100%',
           borderRight: '1px solid',
           borderColor: 'divider',
           overflowY: 'hidden',

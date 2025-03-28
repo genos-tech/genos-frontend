@@ -14,18 +14,37 @@ import CircleIcon from '@mui/icons-material/Circle';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded';
+import { useAuth } from "../../components/admin/AuthContext";
 
 import ColorSchemeToggle from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';
 
+const base_url = import.meta.env.VITE_API_BASE_URL;
+
 export default function Sidebar() {
+  const { setAccessToken } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userEmail");
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(`${base_url}/user/signout/`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        // Redirect to home page after successful logout
+        localStorage.setItem("isSigningIn", "no");
+        localStorage.setItem("userEmail", "");
+        localStorage.setItem("userName", "");
+        setAccessToken(null);
+        navigate("/");
+      } else {
+        console.error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
 
   const handleMoveToChat = (): void => {

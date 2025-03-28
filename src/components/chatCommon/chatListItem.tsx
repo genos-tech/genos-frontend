@@ -107,6 +107,7 @@ export default function ChatListItem(props: ChatListItemProps) {
               latestMessage: messages[messages.length - 1],
               TSLastMessage: chat.TSLastMessage
             }
+            console.log("newMessages:",newMessages)
             setCurrentMainChat(newMessages);
           })
           .catch((error) => console.error(error));
@@ -122,6 +123,7 @@ export default function ChatListItem(props: ChatListItemProps) {
               latestMessage: messages[messages.length - 1],
               TSLastMessage: chat.TSLastMessage
             }
+            console.log("newMessages:",newMessages)
             setCurrentMainChat(newMessages);
           })
           .catch((error) => console.error(error));

@@ -29,22 +29,9 @@ import { useColorScheme } from '@mui/joy/styles';
 import MessagesPane from './mainChat/mainMessagesPane';
 import MessagesSubPane from './subChat/subMessagesPane';
 
+import { useAuth } from "../components/admin/AuthContext";
+
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
-const socket: Socket = io(ws_url, {
-    reconnection: true,          // Enable reconnection
-    reconnectionAttempts: 5,     // Try to reconnect 5 times
-    reconnectionDelay: 1000,     // Wait 1 second before reconnecting
-    reconnectionDelayMax: 5000,  // Max delay between reconnection attempts
-    timeout: 10000,               // Timeout for the connection attempt
-    withCredentials: true,
-    query: {
-        userEmail: localStorage.getItem("userEmail"),
-        userName: localStorage.getItem("userName"),
-    },
-    auth: {
-        token: localStorage.getItem("token")
-    }
-});
 
 const insertDMMessage = async (dmMessage: MessageProps): Promise<MessageProps[]> => {
     return new Promise((resolve, reject) => {
@@ -200,6 +187,25 @@ export default function Home(props: HomeProps) {
         currentMainChat,
         setCurrentMainChat,
     } = props;
+
+    const { accessToken } = useAuth();
+
+    const socket: Socket = io(ws_url, {
+        reconnection: true,          // Enable reconnection
+        reconnectionAttempts: 5,     // Try to reconnect 5 times
+        reconnectionDelay: 1000,     // Wait 1 second before reconnecting
+        reconnectionDelayMax: 5000,  // Max delay between reconnection attempts
+        timeout: 10000,               // Timeout for the connection attempt
+        withCredentials: true,
+        query: {
+            userEmail: localStorage.getItem("userEmail"),
+            userName: localStorage.getItem("userName"),
+        },
+        extraHeaders: {
+            Authorization: accessToken || ""
+        },
+    });
+
     const initialSelectedChat: ChatProps = {
         chatName: myself.userName,
         chatEmail: myself.userEmail,
@@ -238,8 +244,6 @@ export default function Home(props: HomeProps) {
     // Web Socket handler
     useEffect(() => {
         socket.on("connect", () => {
-            console.log("Connected to WebSocket");
-
             // Join to initial user room
             socket.emit("join", {
                 joiningCGEmail: myself.userEmail,
@@ -247,12 +251,17 @@ export default function Home(props: HomeProps) {
                 isDm: true,
                 userEmail: myself.userEmail
             });
+        });
 
+        socket.on("auth_error", (data) => {
+            console.error("Authentication Error:", data.message);
+            // alert(`Error: ${data.message}`);
         });
 
         var incomingChatEmail: string = ""
 
         socket.on("message", (message) => {
+            console.log("message:", message)
             if (message.isDm === true) {
                 if (message.isThread === true) {
                     const newMessage: NewThreadMessageProps = message;
@@ -343,9 +352,7 @@ export default function Home(props: HomeProps) {
                         }
                         insertDMMessage(newDMMessage)
 
-                        if (allChats.length > 0) {
-                            insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
-                        }
+                        insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
 
                         if (incomingChatEmail === currentMainChat.chatEmail) {
                             const updatedChat: ChatProps = {
@@ -369,7 +376,22 @@ export default function Home(props: HomeProps) {
                                 TSLastMessage: newMessage.tsSent,
                             };
                             setCurrentSubChat(updatedChat);
+                        } else {
+                            console.log("Unexpected DM (incomingChatEmail):", incomingChatEmail)
+                            console.log("Unexpected DM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
+                            console.log("Unexpected DM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
                         }
+                    } else if (fromMyself) {
+                        const newDMMessage: MessageProps = {
+                            messageIdWithChatEmail: `${incomingChatEmail}-${newMessage.messageId}`,
+                            messageId: newMessage.messageId,
+                            chatEmail: incomingChatEmail,
+                            content: newMessage.content,
+                            sender: newMessage.sender,
+                            numReplies: newMessage.numReplies,
+                            tsSent: newMessage.tsSent,
+                        }
+                        insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
                     }
                 }
             } else {
@@ -466,8 +488,25 @@ export default function Home(props: HomeProps) {
                                 TSLastMessage: newMessage.tsSent,
                             };
                             setCurrentSubChat(updatedChat);
+                        } else {
+                            console.log("Unexpected GM (incomingChatEmail):", incomingChatEmail)
+                            console.log("Unexpected GM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
+                            console.log("Unexpected GM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
+                        }
+                    } else if (fromMyself) {
+                        const newGMMessage: MessageProps = {
+                            messageIdWithChatEmail: `${newMessage.chatEmail}-${newMessage.messageId}`,
+                            messageId: newMessage.messageId,
+                            chatEmail: newMessage.chatEmail,
+                            content: newMessage.content,
+                            sender: newMessage.sender,
+                            numReplies: newMessage.numReplies,
+                            tsSent: newMessage.tsSent,
                         }
 
+                        if (allChats.length > 0) {
+                            insertGMChat(newMessage.chatName, newGMMessage, setAllChats)
+                        }
                     }
                 }
             }
@@ -476,7 +515,7 @@ export default function Home(props: HomeProps) {
             socket.off("message");
             socket.off("connect");
         };
-    }, [allChats, currentMainChat, currentSubChat, currentThreadChat]);
+    }, [accessToken, allChats, currentMainChat, currentSubChat, currentThreadChat]);
 
     useEffect(() => {
         if (currentMainChatEmail !== currentMainChat.chatEmail) {
@@ -499,9 +538,9 @@ export default function Home(props: HomeProps) {
 
 
     ////////////////////////////////////////////////////////////////////
-    // useEffect(() => {
-    //     console.log("allChats Updated:", allChats);
-    // }, [allChats]);
+    useEffect(() => {
+        console.log("currentMainChat Updated:", currentMainChat);
+    }, [currentMainChat]);
 
     // useEffect(() => {
     //     console.log("initLoad Updated:", initLoad);
@@ -553,6 +592,7 @@ export default function Home(props: HomeProps) {
                     <Box
                         sx={{
                             height: '100%',
+                            width: '100%',
                             backgroundColor: 'grey',
                             borderRight: mode === 'dark'
                                 ? '2px black groove'
@@ -650,7 +690,7 @@ export default function Home(props: HomeProps) {
                                 boxShadow: '0 0 0 1px grey'
                             }}
                         >
-                            <TaskContent />
+                            <TaskContent setIsTaskContentVisible={setIsTaskContentVisible} />
                         </Box>
                     </Panel>
                 </>)}

@@ -18,8 +18,9 @@ async function loadSpecificGMHistory(props: LoadGMHistoryProps): Promise<ChatPro
 
     return fetch(`${base_url}/message/GMHistory?userEmail=${userEmail}&gmEmail=${gmEmail}`, {
         method: "GET",
+        credentials: "include",
         headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
         },
     })
         .then(response => response.json().then(data => ({ response, data })))

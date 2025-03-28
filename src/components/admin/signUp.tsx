@@ -15,8 +15,11 @@ import Stack from '@mui/joy/Stack';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import BadgeRoundedIcon from '@mui/icons-material/BadgeRounded';
+import Link from '@mui/joy/Link';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface FormElements extends HTMLFormControlsCollection {
     userName: HTMLInputElement;
@@ -29,9 +32,18 @@ interface SignUpFormElement extends HTMLFormElement {
 }
 
 type SignUpResponse = {
-    name?: string;
-    email?: string;
+    access: string | null;
+    refresh: string | null;
+    user: any | null;
     message: string;
+};
+
+type CreateMyDMResponse = {
+    dm_id: string | null;
+    ts_created_at: string | null;
+    ts_updated_at: string | null;
+    user_1_email: string | null;
+    user_2_email: string | null;
 };
 
 function ColorSchemeToggle(props: IconButtonProps) {
@@ -66,31 +78,112 @@ export default function SignUp() {
     async function fetchData(name: string, email: string, password: string): Promise<SignUpResponse> {
 
         try {
-            const response = await fetch(`${base_url}/user/signup`, {
+            const signupResponse = await fetch(`${base_url}/user/signup/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({
+                    username: name,
+                    email: email,
+                    password: password
+                }),
             });
 
-            const data: SignUpResponse = await response.json();
+            const signupData: SignUpResponse = await signupResponse.json();
 
-            if (!response.ok) {
-                setErrorMessage(data.message || 'User Creation Failed');
-                throw new Error(data.message || 'User Creation Failed');
+            if (!signupResponse.ok) {
+                setErrorMessage(signupData.message || 'User Creation Failed');
+                throw new Error(signupData.message || 'User Creation Failed');
+            } else {
+                // Join team(organization, company)
+                const checkTeamExistResponse = await fetch(`${base_url}/team/exist/?team_name=origin-tech`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${signupData.access}`
+                    }
+                });
+                const checkTeamExistData = await checkTeamExistResponse.json();
+
+                console.log("checkTeamExistData:", checkTeamExistData)
+
+                if (!checkTeamExistData.team_exists) {
+                    const createTeamResponse = await fetch(`${base_url}/team/create/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Authorization": `Bearer ${signupData.access}`
+                        },
+                        body: JSON.stringify({
+                            team_name: "origin-tech",
+                            owner_email: email
+                        }),
+                    });
+                    const createTeamData = await createTeamResponse.json();
+                }
+
+                await sleep(500);
+
+                const joinTeamResponse = await fetch(`${base_url}/team/join/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${signupData.access}`
+                    },
+                    body: JSON.stringify({
+                        team_name: "origin-tech",
+                        attendee_email: email
+                    }),
+                });
+                const joinTeamData = await joinTeamResponse.json();
+                if (!joinTeamResponse.ok) {
+                    setErrorMessage(joinTeamData.message || 'User Creation Failed');
+                    throw new Error(joinTeamData.message || 'User Creation Failed');
+                } else {
+                    // Send initial DM message to myself
+                    // 1. Crete DM for myself
+                    const createMyDMResponse = await fetch(`${base_url}/dm/create/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Authorization": `Bearer ${signupData.access}`
+                        },
+                        body: JSON.stringify({ user_1_email: email, user_2_email: email }),
+                    });
+
+                    const createMyDMData: CreateMyDMResponse = await createMyDMResponse.json();
+                    console.log("createMyDMData:", createMyDMData)
+
+                    // 2. Send an initial message
+                    const initMessageResponse = await fetch(`${base_url}/dm/addMessage/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Authorization": `Bearer ${signupData.access}`
+                        },
+                        body: JSON.stringify({
+                            dm_id: createMyDMData.dm_id,
+                            sender_email: email,
+                            receiver_email: email,
+                            message_body: "I'm joined"
+                        }),
+                    });
+                    const initMessageData = await initMessageResponse.json();
+                    console.log("initMessageData:", initMessageData)
+                }
             }
 
             navigate('/');
 
-            return data
+            return signupData
 
         } catch (error) {
-            const err_msg = `Signup failed: ${error}`
+            const err_msg = `${error}`
             console.error(err_msg);
             setErrorMessage(err_msg);
             navigate('/SignUp');
-            return { message: err_msg }
+            return { message: err_msg, user: null, access: null, refresh: null }
         }
 
     }
@@ -139,7 +232,7 @@ export default function SignUp() {
                             <IconButton component='a' variant="soft" color="primary" size="sm">
                                 <BadgeRoundedIcon />
                             </IconButton>
-                            <Typography level="title-lg">Weikiy</Typography>
+                            <Typography level="title-lg">Origin</Typography>
                         </Box>
                         <ColorSchemeToggle />
                     </Box>
@@ -217,10 +310,15 @@ export default function SignUp() {
                                 </Stack>
                             </form>
                         </Stack>
+                        <Typography level="body-sm" textAlign={'right'}>
+                            <Link href="SignIn" level="title-sm">
+                                Back to Sign in
+                            </Link>
+                        </Typography>
                     </Box>
                     <Box component="footer" sx={{ py: 3 }}>
                         <Typography level="body-xs" sx={{ textAlign: 'center' }}>
-                            © Weikiy {new Date().getFullYear()}
+                            © Origin {new Date().getFullYear()}
                         </Typography>
                     </Box>
                 </Box>

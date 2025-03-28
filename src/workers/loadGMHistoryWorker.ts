@@ -11,13 +11,15 @@ import {
 const BATCH_SIZE = 100;
 
 self.onmessage = async (event) => {
-    const myself: UserProps = event.data;
+    const myself: UserProps = event.data.myself;
+    const accessToken: string = event.data.accessToken;
 
     await clearStore(STORES.GM_CHATS)
 
     // Load data from backend
     const gmHistory: ChatProps[] = await loadGMHistory({
-        userEmail: myself.userEmail
+        userEmail: myself.userEmail,
+        accessToken: accessToken
     });
 
     // console.log("Num of GM chats:", gmHistory.length)

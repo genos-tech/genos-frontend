@@ -10,18 +10,22 @@ import {
 const BATCH_SIZE = 100;
 
 self.onmessage = async (event) => {
-    const myself: UserProps = event.data;
+    const myself: UserProps = event.data.myself;
+    const accessToken: string = event.data.accessToken;
 
     await clearStore(STORES.DM_CHATS)
 
     // Load data from backend
     const dmHistory: ChatProps[] = await loadDMHistory({
-        userEmail: myself.userEmail
+        userEmail: myself.userEmail,
+        accessToken: accessToken
     });
 
     // console.log("Num of DM chats:", dmHistory.length)
     for (let i = 0; i < dmHistory.length; i += 1) {
         const dmChat: ChatProps = dmHistory[i]
+
+        console.log("dmChat:", dmChat)
 
         // Insert chat 
         const newChatData = {

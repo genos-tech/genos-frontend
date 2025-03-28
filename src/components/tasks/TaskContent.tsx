@@ -518,7 +518,6 @@ export default function taskContent(props: TaskContentProps) {
 
       <FileUpload />
 
-
       <Divider sx={{ mt: 2 }} />
 
       <Box sx={{ mt: 2 }}>

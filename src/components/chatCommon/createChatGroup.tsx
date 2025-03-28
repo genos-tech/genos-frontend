@@ -118,8 +118,8 @@ async function createChatGroup(
     setGroupName: (e: string) => void,
     setAllChats: (chat: AllChatProps[]) => void,
     setCurrentMainChat: (chat: ChatProps) => void,
+    accessToken: string,
 ): Promise<CreateCGResponse> {
-
     const userEmail = myself.userEmail;
     const userName = myself.userName;
 
@@ -132,18 +132,24 @@ async function createChatGroup(
     }
 
     try {
-        const response = await fetch(`${base_url}/chatGroup/create`, {
+        const response = await fetch(`${base_url}/gm/create/`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`
             },
-            body: JSON.stringify({ userEmail, chatName }),
+            body: JSON.stringify({
+                group_email: `${chatName}@origin.tech`,
+                group_name: chatName,
+                owner_email: userEmail,
+                owner_team: "origin-tech"
+            }),
         });
 
         const data: CreateCGResponse = await response.json();
 
         if (!response.ok) {
-            const errorMsg = data.message || "Chat group creation failed";
+            const errorMsg = data.message;
             setCreateCGErrorMessage(errorMsg);
             setGroupName("");
             throw new Error(errorMsg);

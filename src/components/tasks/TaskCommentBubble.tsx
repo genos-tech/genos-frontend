@@ -31,7 +31,7 @@ export default function TaskCommentBubble() {
         overflowX: 'hidden'
       }}>
       <Stack spacing={1}>
-        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'lightgrey' }}>
+        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'rgb(217, 217, 217)' }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar size="sm">K</Avatar>
             <Typography level="title-md">Ken</Typography>
@@ -52,7 +52,7 @@ export default function TaskCommentBubble() {
             }}
           />
         </Card>
-        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'lightgrey' }}>
+        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'rgb(217, 217, 217)' }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar size="sm">K</Avatar>
             <Typography level="title-md">Ken</Typography>
@@ -74,7 +74,7 @@ export default function TaskCommentBubble() {
           />
         </Card>
 
-        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'lightgrey' }}>
+        <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'rgb(217, 217, 217)' }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar size="sm">K</Avatar>
             <Typography level="title-md">Ken</Typography>
