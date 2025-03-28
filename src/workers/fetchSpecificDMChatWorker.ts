@@ -2,11 +2,10 @@ import { STORES } from "../components/indexedDBUtils/conf";
 import { getSpecificDataWithIndex } from "../components/indexedDBUtils/crud";
 
 self.onmessage = async (event) => {
-    const chatEmail: string = event.data.chatEmail;
-    console.log("chatEmail:", chatEmail)
+    const chatId: string = event.data.chatId;
     const dmChats = await getSpecificDataWithIndex({
         storeName: STORES.DM_CHATS,
-        chatEmail: chatEmail
+        chatId: chatId
     })
     if (dmChats) {
         self.postMessage(dmChats);

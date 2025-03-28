@@ -12,6 +12,7 @@ import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessages
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type CreateCGResponse = {
+    chatId: number,
     chatName: string,
     chatEmail: string,
     message: string,
@@ -44,6 +45,7 @@ const insertGMChatAndMessage = async (
 
             // Add the new GM to AllChat
             setAllChats([...allChats, {
+                chatId: newGMChat.chatId,
                 chatName: newGMChat.chatName,
                 chatEmail: newGMChat.chatEmail,
                 unread: false,
@@ -61,7 +63,7 @@ const insertGMChatAndMessage = async (
         const insertGMChatWorker = new InsertGMChatWorker();
         insertGMChatWorker.postMessage({ gmChat: newGMChat });
         insertGMChatWorker.onmessage = (event) => {
-            moveToGMChat(newGMChat.chatEmail, newGMChat.chatName, setCurrentMainChat)
+            moveToGMChat(newGMChat.chatId, newGMChat.chatEmail, newGMChat.chatName, setCurrentMainChat)
             resolve(event.data);
             insertGMChatWorker.terminate();
         };
@@ -73,6 +75,7 @@ const insertGMChatAndMessage = async (
 };
 
 const moveToGMChat = async (
+    chatId: number,
     chatEmail: string,
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
@@ -80,12 +83,13 @@ const moveToGMChat = async (
     return new Promise((resolve, reject) => {
         const fetchSpecificGMMessagesWorker = new FetchSpecificGMMessagesWorker();
         fetchSpecificGMMessagesWorker.postMessage({
-            chatEmail: chatEmail,
+            chatId: chatId,
         });
         fetchSpecificGMMessagesWorker.onmessage = (event) => {
             const fetchedMessages: MessageProps[] = event.data;
             if (fetchedMessages !== undefined && fetchedMessages.length !== 0) {
                 const newChat: ChatProps = {
+                    chatId: chatId,
                     chatName: chatName,
                     chatEmail: chatEmail,
                     isDm: false,
@@ -128,7 +132,7 @@ async function createChatGroup(
         console.error(errorMsg);
         setCreateCGErrorMessage(errorMsg);
         setGroupName("");
-        return { message: errorMsg, chatName: "", chatEmail: "" };
+        return { message: errorMsg, chatId: -1, chatName: "", chatEmail: "" };
     }
 
     try {
@@ -161,7 +165,7 @@ async function createChatGroup(
                 userEmail: userEmail
             }, (ack: any) => {
                 socket.emit("message", {
-                    message: `${userName} created`,
+                    message: 'I created this group',
                     destCGName: chatName,
                     destCGEmail: data.chatEmail,
                     isDm: false,
@@ -169,15 +173,17 @@ async function createChatGroup(
             });
 
             const newGMChat: AllChatProps = {
+                chatId: data.chatId,
                 chatName: chatName,
                 chatEmail: data.chatEmail,
                 isDm: false,
                 unread: false,
                 latestMessage: {
-                    messageIdWithChatEmail: `${data.chatEmail}-1`,
-                    messageId: '1',
+                    messageIdWithChatId: `${data.chatId}-1`,
+                    chatId: data.chatId,
+                    messageId: 1,
                     chatEmail: data.chatEmail,
-                    content: `${userName} created`,
+                    content: 'I created this group',
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
                     numReplies: 0
@@ -200,7 +206,7 @@ async function createChatGroup(
         console.error(errorMsg);
         setCreateCGErrorMessage(errorMsg);
         setGroupName("");
-        return { message: errorMsg, chatName: "", chatEmail: "" };
+        return { message: errorMsg, chatId: -1, chatName: "", chatEmail: "" };
     }
 
 }

@@ -196,13 +196,15 @@ export const MarkdownEditor = ({
               }, (ack: any) => {
 
                 const updatedChat: ChatProps = {
+                  chatId: chat.chatId,
                   chatName: chat.chatName,
                   chatEmail: chat.chatEmail,
                   isDm: chat.isDm,
                   unread: false,
                   messages: [...chat.messages, {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                    messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                    chatId: chat.chatId,
+                    messageId: Number(chat.latestMessage?.messageId) + 1,
                     chatEmail: chat.chatEmail,
                     content: messageContent,
                     sender: myself,
@@ -210,8 +212,9 @@ export const MarkdownEditor = ({
                     numReplies: 0,
                   }],
                   latestMessage: {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                    messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                    chatId: chat.chatId,
+                    messageId: Number(chat.latestMessage?.messageId) + 1,
                     chatEmail: chat.chatEmail,
                     content: messageContent,
                     sender: myself,
@@ -223,13 +226,15 @@ export const MarkdownEditor = ({
                 setCurrentChat(updatedChat);
 
                 const newChat: AllChatProps = {
+                  chatId: chat.chatId,
                   chatName: chat.chatName,
                   chatEmail: chat.chatEmail,
                   isDm: chat.isDm,
                   unread: false,
                   latestMessage: {
-                    messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                    messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                    chatId: chat.chatId,
+                    messageId: Number(chat.latestMessage?.messageId) + 1,
                     chatEmail: chat.chatEmail,
                     content: messageContent,
                     sender: myself,
@@ -418,6 +423,7 @@ export const MarkdownEditor = ({
           placeholder: "Type something here...",
           onKeyDown: (event) => {
             if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+
               if (messageContent.trim()) {
                 socket.emit("message", {
                   message: messageContent,
@@ -427,13 +433,15 @@ export const MarkdownEditor = ({
                 }, (ack: any) => {
 
                   const updatedChat: ChatProps = {
+                    chatId: chat.chatId,
                     chatName: chat.chatName,
                     chatEmail: chat.chatEmail,
                     isDm: chat.isDm,
                     unread: false,
                     messages: [...chat.messages, {
-                      messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                      messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                      messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                      chatId: chat.chatId,
+                      messageId: Number(chat.latestMessage?.messageId) + 1,
                       chatEmail: chat.chatEmail,
                       content: messageContent,
                       sender: myself,
@@ -441,8 +449,9 @@ export const MarkdownEditor = ({
                       numReplies: 0,
                     }],
                     latestMessage: {
-                      messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                      messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                      messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                      chatId: chat.chatId,
+                      messageId: Number(chat.latestMessage?.messageId) + 1,
                       chatEmail: chat.chatEmail,
                       content: messageContent,
                       sender: myself,
@@ -454,13 +463,15 @@ export const MarkdownEditor = ({
                   setCurrentChat(updatedChat);
 
                   const newChat: AllChatProps = {
+                    chatId: chat.chatId,
                     chatName: chat.chatName,
                     chatEmail: chat.chatEmail,
                     isDm: chat.isDm,
                     unread: false,
                     latestMessage: {
-                      messageIdWithChatEmail: `${chat.chatEmail}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                      messageId: String(Number(chat.latestMessage?.messageId) + 1),
+                      messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                      chatId: chat.chatId,
+                      messageId: Number(chat.latestMessage?.messageId) + 1,
                       chatEmail: chat.chatEmail,
                       content: messageContent,
                       sender: myself,

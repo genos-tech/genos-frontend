@@ -7,14 +7,9 @@ export const initDB = async (): Promise<IDBPDatabase> => {
         upgrade(db) {
             // User info
             if (!db.objectStoreNames.contains(STORES.USER_INFO)) {
-                const usersStore = db.createObjectStore(
+                db.createObjectStore(
                     STORES.USER_INFO,
                     { keyPath: KEY_PATH.USER_INFO }
-                );
-                usersStore.createIndex(
-                    INDEX.USER_INFO,
-                    INDEX_KEY.USER_INFO,
-                    { unique: true }
                 );
             }
 
@@ -25,11 +20,10 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                     STORES.DM_CHATS,
                     { keyPath: KEY_PATH.DM_CHATS }
                 );
-
                 dmChatsStore.createIndex(
                     INDEX.DM_CHATS,
                     INDEX_KEY.DM_CHATS,
-                    { unique: true }
+                    { unique: false }
                 );
             }
             // DM messages store (Corresponding "chat" can be found by "chatEmail")
@@ -79,7 +73,7 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 gmChatsStore.createIndex(
                     INDEX.GM_CHATS,
                     INDEX_KEY.GM_CHATS,
-                    { unique: true }
+                    { unique: false }
                 );
             }
             // GM messages store (Corresponding "chat" can be found by "chatEmail")

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import LoadDMHistoryWorker from "../../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../../workers/loadGMHistoryWorker.ts?worker";
+import GetLatestDMChatWorker from "../../workers/getLatestDMChatWorker.ts?worker";
 import FetchSpecificDMChatWorker from "../../workers/fetchSpecificDMChatWorker.ts?worker";
 import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
 import {
@@ -17,6 +18,8 @@ export function InitialLoad(
 ) {
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState(false);
+    const [isLatestDmChatLoaded, setIsLatestDmChatLoaded] = useState(false);
+    const [latestDmChatId, setLatestDmChatId] = useState(-1);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState(false);
     const [InitialChatMessages, setInitialChatMessages] = useState<MessageProps[]>();
 
@@ -63,14 +66,29 @@ export function InitialLoad(
         }
     }, [myself, accessToken]);
 
-    // Fetch initial DM chat messages info after the DM history is loaded
+    // Fetch the latest DM Chat Id
     useEffect(() => {
         if (isDMHistoryLoaded) {
+            const getLatestDMChatWorker = new GetLatestDMChatWorker();
+            getLatestDMChatWorker.postMessage({});
+            getLatestDMChatWorker.onmessage = (event) => {
+                const latestDmChat: any = event.data;
+                setLatestDmChatId(latestDmChat.chatId)
+                setIsLatestDmChatLoaded(true)
+            };
+            return () => {
+                getLatestDMChatWorker.terminate();
+            };
+        }
+    }, [isDMHistoryLoaded])
+
+    // Fetch initial DM chat messages info after the DM history is loaded
+    useEffect(() => {
+        if (latestDmChatId !== -1) {
             const fetchSpecificDMMessagesWorker = new FetchSpecificDMMessagesWorker();
-            fetchSpecificDMMessagesWorker.postMessage({ chatEmail: myself.userEmail });
+            fetchSpecificDMMessagesWorker.postMessage({ chatId: latestDmChatId });
             fetchSpecificDMMessagesWorker.onmessage = (event) => {
                 const fetchedMessages: MessageProps[] = event.data;
-                console.log("fetchedMessages:", fetchedMessages)
                 if (fetchedMessages !== undefined) {
                     setInitialChatMessages(fetchedMessages)
                 } else {
@@ -81,17 +99,18 @@ export function InitialLoad(
                 fetchSpecificDMMessagesWorker.terminate();
             };
         }
-    }, [isDMHistoryLoaded])
+    }, [latestDmChatId])
 
     // Fetch initial DM chat info after the initial DM chat messages are loaded
     useEffect(() => {
         if (InitialChatMessages !== undefined) {
             const fetchSpecificDMChatWorker = new FetchSpecificDMChatWorker();
-            fetchSpecificDMChatWorker.postMessage({ chatEmail: myself.userEmail });
+            fetchSpecificDMChatWorker.postMessage({ chatId: latestDmChatId });
             fetchSpecificDMChatWorker.onmessage = (event) => {
                 const fetchedChat: any = event.data;
                 if (fetchedChat !== undefined && fetchedChat !== null) {
                     const currentMainChat: ChatProps = {
+                        chatId: fetchedChat.chatId,
                         chatName: fetchedChat.chatName,
                         chatEmail: fetchedChat.chatEmail,
                         isDm: true,

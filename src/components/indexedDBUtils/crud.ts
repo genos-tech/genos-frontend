@@ -3,7 +3,7 @@ import { initDB } from './schema';
 import { DB_NAME, DB_VERSION, STORES, INDEX } from './conf';
 
 
-const _getAllDataWithIndex = {
+const _messageIdWithChatId = {
     dmChats: async () => {
         const db = await openDB(DB_NAME, DB_VERSION);
         const dmChatsStore = db.transaction(STORES.DM_CHATS).objectStore(STORES.DM_CHATS);
@@ -11,20 +11,20 @@ const _getAllDataWithIndex = {
 
         return dmChats;
     },
-    dmMessages: async (chatEmail: string) => {
+    dmMessages: async (chatId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
         const dmMessagesStore = db.transaction(STORES.DM_MESSAGES).objectStore(STORES.DM_MESSAGES);
-        const dmMessages = await dmMessagesStore.index(INDEX.DM_MESSAGES).getAll(chatEmail);
+        const dmMessages = await dmMessagesStore.index(INDEX.DM_MESSAGES).getAll(chatId);
 
         return dmMessages;
     },
-    dmThreadMessages: async (chatEmail: string, threadId: string) => {
+    dmThreadMessages: async (chatId: string, threadId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
         const dmThreadMessagesStore = db.transaction(STORES.DM_THREAD_MESSAGES).objectStore(
             STORES.DM_THREAD_MESSAGES
         );
         const dmThreadMessages = await dmThreadMessagesStore.index(INDEX.DM_THREAD_MESSAGES_COMPOUND).getAll(
-            [chatEmail, threadId]);
+            [chatId, threadId]);
 
         return dmThreadMessages;
     },
@@ -35,20 +35,20 @@ const _getAllDataWithIndex = {
 
         return gmChat;
     },
-    gmMessages: async (chatEmail: string) => {
+    gmMessages: async (chatId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
         const gmMessagesStore = db.transaction(STORES.GM_MESSAGES).objectStore(STORES.GM_MESSAGES);
-        const gmMessages = await gmMessagesStore.index(INDEX.GM_MESSAGES).getAll(chatEmail);
+        const gmMessages = await gmMessagesStore.index(INDEX.GM_MESSAGES).getAll(chatId);
 
         return gmMessages;
     },
-    gmThreadMessages: async (chatEmail: string, threadId: string) => {
+    gmThreadMessages: async (chatId: number, threadId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
         const gmThreadMessagesStore = db.transaction(STORES.GM_THREAD_MESSAGES).objectStore(
             STORES.GM_THREAD_MESSAGES
         );
         const gmThreadMessage = await gmThreadMessagesStore.index(INDEX.GM_THREAD_MESSAGES_COMPOUND).getAll(
-            [chatEmail, threadId]);
+            [chatId, threadId]);
 
         return gmThreadMessage;
     }
@@ -56,72 +56,13 @@ const _getAllDataWithIndex = {
 
 
 const _getDataWithIndex = {
-    dmChats: async (chatEmail: string) => {
+    dmChats: async (chatId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
-        const dmChatsStore = db.transaction(STORES.DM_CHATS).objectStore(STORES.DM_CHATS);
-        const dmChat = await dmChatsStore.index(INDEX.DM_CHATS).get(chatEmail);
-
-        return dmChat;
+        return db.get(STORES.DM_CHATS, chatId);
     },
-    dmMessages: async (chatEmail: string) => {
+    gmChats: async (chatId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
-        const dmMessagesStore = db.transaction(STORES.DM_MESSAGES).objectStore(STORES.DM_MESSAGES);
-        const dmMessages = await dmMessagesStore.index(INDEX.DM_MESSAGES).get(chatEmail);
-
-        console.log("dmMessages:", dmMessages)
-
-        return dmMessages;
-    },
-    dmSpecificMessage: async (chatEmail: string, messageIdWithChatEmail: string) => {
-        const db = await openDB(DB_NAME, DB_VERSION);
-        const dmMessagesStore = db.transaction(STORES.DM_MESSAGES).objectStore(STORES.DM_MESSAGES);
-        const dmMessage = await dmMessagesStore.index(INDEX.DM_MESSAGES).get(
-            [chatEmail, messageIdWithChatEmail]);
-
-        return dmMessage;
-    },
-    dmThreadMessages: async (chatEmail: string, threadId: string) => {
-        const db = await openDB(DB_NAME, DB_VERSION);
-        const dmThreadMessagesStore = db.transaction(STORES.DM_THREAD_MESSAGES).objectStore(
-            STORES.DM_THREAD_MESSAGES
-        );
-        const dmThreadMessages = await dmThreadMessagesStore.index(INDEX.DM_THREAD_MESSAGES_COMPOUND).get(
-            [chatEmail, threadId]);
-
-        return dmThreadMessages;
-    },
-    gmChats: async (chatEmail: string) => {
-        const db = await openDB(DB_NAME, DB_VERSION);
-        const gmChatsStore = db.transaction(STORES.GM_CHATS).objectStore(STORES.GM_CHATS);
-        const gmChat = await gmChatsStore.index(INDEX.GM_CHATS).get(chatEmail);
-
-        return gmChat;
-    },
-    gmMessages: async (chatEmail: string) => {
-        const db = await openDB(DB_NAME, DB_VERSION);
-        const gmMessagesStore = db.transaction(STORES.GM_MESSAGES).objectStore(STORES.GM_MESSAGES);
-        const gmMessages = await gmMessagesStore.index(INDEX.GM_MESSAGES_COMPOUND).get(
-            chatEmail);
-
-        return gmMessages;
-    },
-    gmSpecificMessage: async (chatEmail: string, messageIdWithChatEmail: string) => {
-        const db = await openDB(DB_NAME, DB_VERSION);
-        const gmMessagesStore = db.transaction(STORES.GM_MESSAGES).objectStore(STORES.GM_MESSAGES);
-        const gmMessage = await gmMessagesStore.index(INDEX.GM_MESSAGES_COMPOUND).get(
-            [chatEmail, messageIdWithChatEmail]);
-
-        return gmMessage;
-    },
-    gmThreadMessages: async (chatEmail: string, threadId: string) => {
-        const db = await openDB(DB_NAME, DB_VERSION);
-        const gmThreadMessagesStore = db.transaction(STORES.GM_THREAD_MESSAGES).objectStore(
-            STORES.GM_THREAD_MESSAGES
-        );
-        const gmThreadMessage = await gmThreadMessagesStore.index(INDEX.GM_THREAD_MESSAGES_COMPOUND).get(
-            [chatEmail, threadId]);
-
-        return gmThreadMessage;
+        return db.get(STORES.GM_CHATS, chatId);
     }
 }
 
@@ -166,38 +107,38 @@ export const getData = async (storeName: string, id: string) => {
 export const getSpecificDataWithIndex = async (props: any) => {
     if (props.storeName === STORES.DM_CHATS) {
         const data = await _getDataWithIndex.dmChats(
-            props.chatEmail)
+            props.chatId)
         return data
     }
     if (props.storeName === STORES.GM_CHATS) {
         const data = await _getDataWithIndex.gmChats(
-            props.chatEmail)
+            props.chatId)
         return data
     }
 }
 
-export const getAllDataWithIndex = async (props: any) => {
+export const messageIdWithChatId = async (props: any) => {
     if (props.storeName === STORES.DM_CHATS) {
-        const data = await _getAllDataWithIndex.dmChats()
+        const data = await _messageIdWithChatId.dmChats()
         return data
     } else if (props.storeName === STORES.DM_MESSAGES) {
-        const data = await _getAllDataWithIndex.dmMessages(
-            props.chatEmail)
+        const data = await _messageIdWithChatId.dmMessages(
+            props.chatId)
         return data
     } else if (props.storeName === STORES.DM_THREAD_MESSAGES) {
-        const data = await _getAllDataWithIndex.dmThreadMessages(
-            props.chatEmail, props.threadId)
+        const data = await _messageIdWithChatId.dmThreadMessages(
+            props.chatId, props.threadId)
         return data
     } else if (props.storeName === STORES.GM_CHATS) {
-        const data = await _getAllDataWithIndex.gmChats()
+        const data = await _messageIdWithChatId.gmChats()
         return data
     } else if (props.storeName === STORES.GM_MESSAGES) {
-        const data = await _getAllDataWithIndex.gmMessages(
-            props.chatEmail)
+        const data = await _messageIdWithChatId.gmMessages(
+            props.chatId)
         return data
     } else if (props.storeName === STORES.GM_THREAD_MESSAGES) {
-        const data = await _getAllDataWithIndex.gmThreadMessages(
-            props.chatEmail, props.threadId)
+        const data = await _messageIdWithChatId.gmThreadMessages(
+            props.chatId, props.threadId)
         return data
     } else {
         console.error("Unexpected storeName:", props.storeName)
@@ -231,3 +172,16 @@ export const clearStore = async (storeName: string) => {
     await objectStore.clear();
     await tx.done;
 };
+
+
+export const getLatestDMChat = async () => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const tx = db.transaction(STORES.DM_CHATS, "readonly");
+    const store = tx.objectStore(STORES.DM_CHATS);
+    const index = store.index(INDEX.DM_CHATS);
+
+    // Use `openCursor()` and await the first result
+    const cursor = await index.openCursor(null, "prev"); // Get latest first
+
+    return cursor ? cursor.value : null; // Return the latest record
+}

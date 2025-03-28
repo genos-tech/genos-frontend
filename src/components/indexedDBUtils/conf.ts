@@ -1,4 +1,4 @@
-export const DB_NAME = "myDatabase";
+export const DB_NAME = "originData";
 export const DB_VERSION = 1;
 
 export const STORES = {
@@ -13,38 +13,36 @@ export const STORES = {
 
 export const KEY_PATH = {
     USER_INFO: "userName",
-    DM_CHATS: "chatEmail",
-    DM_MESSAGES: "messageIdWithChatEmail",
-    DM_THREAD_MESSAGES: "messageIdWithChatEmailAndThreadId",
-    GM_CHATS: "chatEmail",
-    GM_MESSAGES: "messageIdWithChatEmail",
-    GM_THREAD_MESSAGES: "messageIdWithChatEmailAndThreadId"
+    DM_CHATS: "chatId",
+    DM_MESSAGES: "messageIdWithChatId",
+    DM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
+    GM_CHATS: "chatId",
+    GM_MESSAGES: "messageIdWithChatId",
+    GM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId"
 }
 
 export const INDEX = {
-    USER_INFO: "userNameIndex",
-    DM_CHATS: "chatEmailIndex",
-    DM_MESSAGES: "chatEmailIndex",
-    DM_MESSAGES_COMPOUND: "compoundDMMessageIdIndex",
-    DM_THREAD_MESSAGES: "chatEmailIndex",
-    DM_THREAD_MESSAGES_COMPOUND: "compoundDMThreadIdIndex",
-    GM_CHATS: "chatEmailIndex",
-    GM_MESSAGES: "chatEmailIndex",
-    GM_MESSAGES_COMPOUND: "compoundGMMessageIdIndex",
-    GM_THREAD_MESSAGES: "chatEmailIndex",
-    GM_THREAD_MESSAGES_COMPOUND: "compoundGMThreadIdIndex"
+    DM_CHATS: "DmTSLastMessageIndex",
+    DM_MESSAGES: "DmMessagesIndex",
+    DM_MESSAGES_COMPOUND: "DmMessagesCompoundIndex",
+    DM_THREAD_MESSAGES: "DmThreadMessagesIndex",
+    DM_THREAD_MESSAGES_COMPOUND: "DmThreadMessagesCompoundIndex",
+    GM_CHATS: "GmTSLastMessageIndex",
+    GM_MESSAGES: "GmMessagesIndex",
+    GM_MESSAGES_COMPOUND: "GmMessagesCompoundIndex",
+    GM_THREAD_MESSAGES: "GmThreadMessagesIndex",
+    GM_THREAD_MESSAGES_COMPOUND: "GmThreadMessagesCompoundIndex"
 }
 
 export const INDEX_KEY = {
-    USER_INFO: "userName",
-    DM_CHATS: "chatEmail",
-    DM_MESSAGES: "chatEmail",
-    DM_MESSAGES_COMPOUND: ["chatEmail", "messageIdWithChatEmail"],
-    DM_THREAD_MESSAGES: "chatEmail",
-    DM_THREAD_MESSAGES_COMPOUND: ["chatEmail", "threadId"],
-    GM_CHATS: "chatEmail",
-    GM_MESSAGES: "chatEmail",
-    GM_MESSAGES_COMPOUND: ["chatEmail", "messageIdWithChatEmail"],
-    GM_THREAD_MESSAGES: "chatEmail",
-    GM_THREAD_MESSAGES_COMPOUND: ["chatEmail", "threadId"]
+    DM_CHATS: "TSLastMessage",
+    DM_MESSAGES: "chatId",
+    DM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
+    DM_THREAD_MESSAGES: "chatId",
+    DM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
+    GM_CHATS: "TSLastMessage",
+    GM_MESSAGES: "chatId",
+    GM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
+    GM_THREAD_MESSAGES: "chatId",
+    GM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"]
 }

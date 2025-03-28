@@ -178,15 +178,17 @@ export const MarkdownEditor = ({
               }, (ack: any) => {
 
                 const updatedChat: ThreadProps = {
+                  chatId: thread.chatId,
                   chatName: thread.chatName,
                   chatEmail: thread.chatEmail,
                   threadId: thread.threadId,
                   isDm: thread.isDm,
                   unread: false,
                   messages: [...thread.messages, {
-                    messageIdWithChatEmailAndThreadId: `${thread.chatEmail}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                    messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                    chatId: thread.chatId,
                     threadId: thread.threadId,
-                    messageId: String(Number(thread.messages.length) + 1),
+                    messageId: Number(thread.messages.length) + 1,
                     chatEmail: thread.chatEmail,
                     content: messageContent,
                     sender: myself,
@@ -197,9 +199,10 @@ export const MarkdownEditor = ({
                 setCurrentThreadChat(updatedChat);
 
                 const newThreadMessage: ThreadMessageProps = {
-                  messageIdWithChatEmailAndThreadId: `${thread.chatEmail}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                  messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                  chatId: thread.chatId,
                   threadId: thread.threadId,
-                  messageId: String(Number(thread.messages.length) + 1),
+                  messageId: Number(thread.messages.length) + 1,
                   chatEmail: thread.chatEmail,
                   content: messageContent,
                   sender: myself,
@@ -404,15 +407,17 @@ export const MarkdownEditor = ({
                 }, (ack: any) => {
 
                   const updatedChat: ThreadProps = {
+                    chatId: thread.chatId,
                     chatName: thread.chatName,
                     chatEmail: thread.chatEmail,
                     threadId: thread.threadId,
                     isDm: thread.isDm,
                     unread: false,
                     messages: [...thread.messages, {
-                      messageIdWithChatEmailAndThreadId: `${thread.chatEmail}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                      messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                      chatId: thread.chatId,
                       threadId: thread.threadId,
-                      messageId: String(Number(thread.messages.length) + 1),
+                      messageId: Number(thread.messages.length) + 1,
                       chatEmail: thread.chatEmail,
                       content: messageContent,
                       sender: myself,
@@ -423,9 +428,10 @@ export const MarkdownEditor = ({
                   setCurrentThreadChat(updatedChat);
 
                   const newThreadMessage: ThreadMessageProps = {
-                    messageIdWithChatEmailAndThreadId: `${thread.chatEmail}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                    messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                    chatId: thread.chatId,
                     threadId: thread.threadId,
-                    messageId: String(Number(thread.messages.length) + 1),
+                    messageId: Number(thread.messages.length) + 1,
                     chatEmail: thread.chatEmail,
                     content: messageContent,
                     sender: myself,

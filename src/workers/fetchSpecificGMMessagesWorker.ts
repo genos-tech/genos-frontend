@@ -1,11 +1,11 @@
 import { STORES } from "../components/indexedDBUtils/conf";
-import { getAllDataWithIndex } from "../components/indexedDBUtils/crud";
+import { messageIdWithChatId } from "../components/indexedDBUtils/crud";
 
 self.onmessage = async (event) => {
-    const chatEmail: string = event.data.chatEmail;
-    const gmMessages = await getAllDataWithIndex({
+    const chatId: number = event.data.chatId;
+    const gmMessages = await messageIdWithChatId({
         storeName: STORES.GM_MESSAGES,
-        chatEmail: chatEmail
+        chatId: chatId
     })
 
     // Sort messages by tsSent in ascending order

@@ -1,14 +1,14 @@
 import { STORES } from "../components/indexedDBUtils/conf";
-import { getAllDataWithIndex } from "../components/indexedDBUtils/crud";
+import { messageIdWithChatId } from "../components/indexedDBUtils/crud";
 
 self.onmessage = async (event) => {
-    const chatEmail: string = event.data.chatEmail;
-    const threadId: string = event.data.threadId;
+    const chatId: number = event.data.chatId;
+    const threadId: number = event.data.threadId;
 
-    if (chatEmail !== undefined && threadId !== undefined) {
-        const dmThreadMessages = await getAllDataWithIndex({
+    if (chatId !== undefined && threadId !== undefined) {
+        const dmThreadMessages = await messageIdWithChatId({
             storeName: STORES.DM_THREAD_MESSAGES,
-            chatEmail: chatEmail,
+            chatId: chatId,
             threadId: threadId,
         })
 

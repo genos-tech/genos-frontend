@@ -1,13 +1,13 @@
 import { checkIsKnownDMChat, checkIsKnownGMChat } from "../components/indexedDBUtils/utils";
 
 self.onmessage = async (event) => {
-    const chatEmail: string = event.data.chatEmail;
+    const chatId: number = event.data.chatId;
     const isDm: boolean = event.data.isDm;
     var isKnown: boolean
     if (isDm) {
-        isKnown = await checkIsKnownDMChat(chatEmail);
+        isKnown = await checkIsKnownDMChat(chatId);
     } else {
-        isKnown = await checkIsKnownGMChat(chatEmail);
+        isKnown = await checkIsKnownGMChat(chatId);
     }
     self.postMessage(isKnown);
 };
