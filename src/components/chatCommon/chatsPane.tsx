@@ -169,6 +169,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
   }, [openUsers]);
 
   const moveToDMChat = async (
+    chatId: number,
     chatEmail: string,
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
@@ -176,12 +177,13 @@ export default function ChatsPane(props: ChatsPaneProps) {
     return new Promise((resolve, reject) => {
       const fetchSpecificDMMessagesWorker = new FetchSpecificDMMessagesWorker();
       fetchSpecificDMMessagesWorker.postMessage({
-        chatEmail: chatEmail,
+        chatId: chatId,
       });
       fetchSpecificDMMessagesWorker.onmessage = (event) => {
         const fetchedMessages: MessageProps[] = event.data;
         if (fetchedMessages !== undefined) {
           const newChat: ChatProps = {
+            chatId: chatId,
             chatName: chatName,
             chatEmail: chatEmail,
             isDm: false,
@@ -206,6 +208,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
   };
 
   const moveToGMChat = async (
+    chatId: number,
     chatEmail: string,
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
@@ -213,12 +216,13 @@ export default function ChatsPane(props: ChatsPaneProps) {
     return new Promise((resolve, reject) => {
       const fetchSpecificGMMessagesWorker = new FetchSpecificGMMessagesWorker();
       fetchSpecificGMMessagesWorker.postMessage({
-        chatEmail: chatEmail,
+        chatId: chatId,
       });
       fetchSpecificGMMessagesWorker.onmessage = (event) => {
         const fetchedMessages: MessageProps[] = event.data;
         if (fetchedMessages !== undefined) {
           const newChat: ChatProps = {
+            chatId: chatId,
             chatName: chatName,
             chatEmail: chatEmail,
             isDm: false,
@@ -242,10 +246,10 @@ export default function ChatsPane(props: ChatsPaneProps) {
     });
   };
 
-  const _checkKnownChat = async (chatEmail: string, isDm: boolean): Promise<boolean> => {
+  const _checkKnownChat = async (chatId: number, isDm: boolean): Promise<boolean> => {
     return new Promise((resolve, reject) => {
       const checkKnownChatWorker = new CheckKnownChatWorker();
-      checkKnownChatWorker.postMessage({ chatEmail: chatEmail, isDm: isDm });
+      checkKnownChatWorker.postMessage({ chatId: chatId, isDm: isDm });
       checkKnownChatWorker.onmessage = (event) => {
         resolve(event.data);
         checkKnownChatWorker.terminate();
@@ -257,30 +261,32 @@ export default function ChatsPane(props: ChatsPaneProps) {
     });
   };
 
-  const moveToSelectedChat = async (chatEmail: string, chatName: string, isDm: boolean) => {
+  const moveToSelectedChat = async (chatId: number, chatEmail: string, chatName: string, isDm: boolean) => {
     try {
-      const isKnownChat = await _checkKnownChat(chatEmail, isDm);
+      const isKnownChat = await _checkKnownChat(chatId, isDm);
       setOpenUsers(false);
 
       if (!isKnownChat) {
         console.log("New Chat")
         socket.emit("message", {
-          message: `${myself.userName} joined`,
+          message: 'Joined',
           destCGName: chatName,
           destCGEmail: chatEmail,
           isDm: isDm,
         }, (ack: any) => {
           if (isDm) {
             const dmMessage: MessageProps = {
-              messageIdWithChatEmail: `${chatEmail}-1`,
-              messageId: '1',
+              messageIdWithChatId: `${chatId}-1`,
+              chatId: chatId,
+              messageId: 1,
               chatEmail: chatEmail,
-              content: `${myself.userName} joined`,
+              content: 'Joined',
               sender: myself,
               tsSent: getCurrentTimestamp(),
               numReplies: 0
             }
             const dmChat: AllChatProps = {
+              chatId: chatId,
               chatName: chatName,
               chatEmail: chatEmail,
               isDm: true,
@@ -293,16 +299,20 @@ export default function ChatsPane(props: ChatsPaneProps) {
             setCurrentMainChat({ ...dmChat, messages: [dmMessage] })
             setAllChats([...allChats, dmChat]);
           } else {
+            // Load the existing GM messages
+
             const gmMessage: MessageProps = {
-              messageIdWithChatEmail: `${chatEmail}-1`,
-              messageId: '1',
+              messageIdWithChatId: `${chatId}-1`,
+              chatId: chatId,
+              messageId: 1,
               chatEmail: chatEmail,
-              content: `${myself.userName} joined`,
+              content: 'Joined',
               sender: myself,
               tsSent: getCurrentTimestamp(),
               numReplies: 0
             }
             const gmChat: AllChatProps = {
+              chatId: chatId,
               chatName: chatName,
               chatEmail: chatEmail,
               isDm: false,
@@ -319,9 +329,9 @@ export default function ChatsPane(props: ChatsPaneProps) {
       } else {
         console.log("Existing Chat")
         if (isDm) {
-          moveToDMChat(chatEmail, chatName, setCurrentMainChat)
+          moveToDMChat(chatId, chatEmail, chatName, setCurrentMainChat)
         } else {
-          moveToGMChat(chatEmail, chatName, setCurrentMainChat)
+          moveToGMChat(chatId, chatEmail, chatName, setCurrentMainChat)
         }
       }
 
@@ -337,12 +347,14 @@ export default function ChatsPane(props: ChatsPaneProps) {
     }
 
     socket.emit("join", {
+      joiningCGId: value.id,
       joiningCGEmail: value.email,
       joiningCGName: value.name,
       isDm: isDm,
       userEmail: myself.userEmail,
     }, (ack: any) => {
       moveToSelectedChat(
+        value.id,
         value.email,
         value.name,
         (value.type === "Group") ? Boolean(false) : Boolean(true)

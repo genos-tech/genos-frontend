@@ -95,6 +95,7 @@ const insertGMThreadMessage = async (gmThreadMessage: ThreadMessageProps): Promi
 
 
 const insertDMChat = async (
+    chatId: number,
     chatName: string,
     newDMMessage: MessageProps,
     setAllChats: (chat: AllChatProps[]
@@ -103,6 +104,7 @@ const insertDMChat = async (
     return new Promise((resolve, reject) => {
         const insertDMChatWorker = new InsertDMChatWorker();
         const dmChat: AllChatProps = {
+            chatId: chatId,
             chatName: chatName,
             chatEmail: newDMMessage.chatEmail,
             isDm: true,
@@ -135,6 +137,7 @@ const insertDMChat = async (
 };
 
 const insertGMChat = async (
+    chatId: number,
     chatName: string,
     newGMMessage: MessageProps,
     setAllChats: (chat: AllChatProps[]
@@ -143,6 +146,7 @@ const insertGMChat = async (
     return new Promise((resolve, reject) => {
         const insertGMChatWorker = new InsertGMChatWorker();
         const gmChat: AllChatProps = {
+            chatId: chatId,
             chatName: chatName,
             chatEmail: newGMMessage.chatEmail,
             isDm: false,
@@ -206,16 +210,8 @@ export default function Home(props: HomeProps) {
         },
     });
 
-    const initialSelectedChat: ChatProps = {
-        chatName: myself.userName,
-        chatEmail: myself.userEmail,
-        isDm: Boolean(true),
-        unread: true,
-        messages: [],
-        TSLastMessage: "2025-02-11 13:54:33",
-    };
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
-    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>(initialSelectedChat);
+    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
     const [isThreadVisible, setIsThreadVisible] = useState(false);
@@ -259,6 +255,7 @@ export default function Home(props: HomeProps) {
         });
 
         var incomingChatEmail: string = ""
+        var incomingChatId: number = -1
 
         socket.on("message", (message) => {
             console.log("message:", message)
@@ -287,9 +284,10 @@ export default function Home(props: HomeProps) {
                         }
                     }
 
-                    if (incomingChatEmail !== "" && newMessage.messageId !== "-1" && !fromMyself) {
+                    if (incomingChatEmail !== "" && newMessage.messageId !== -1 && !fromMyself) {
                         const newDMThreadMessage: ThreadMessageProps = {
-                            messageIdWithChatEmailAndThreadId: `${incomingChatEmail}-${newMessage.threadId}-${newMessage.messageId}`,
+                            messageIdWithChatIdAndThreadId: `${incomingChatId}-${newMessage.threadId}-${newMessage.messageId}`,
+                            chatId: newMessage.chatId,
                             threadId: newMessage.threadId,
                             messageId: newMessage.messageId,
                             chatEmail: incomingChatEmail,
@@ -304,6 +302,7 @@ export default function Home(props: HomeProps) {
                             && incomingChatEmail === currentThreadChat.chatEmail
                             && newDMThreadMessage.threadId === currentThreadChat.threadId) {
                             const updatedThreadChat: ThreadProps = {
+                                chatId: currentThreadChat.chatId,
                                 chatName: currentThreadChat.chatName,
                                 chatEmail: currentThreadChat.chatEmail,
                                 threadId: newDMThreadMessage.threadId,
@@ -342,7 +341,8 @@ export default function Home(props: HomeProps) {
 
                     if (incomingChatEmail !== "" && !fromMyself) {
                         const newDMMessage: MessageProps = {
-                            messageIdWithChatEmail: `${incomingChatEmail}-${newMessage.messageId}`,
+                            messageIdWithChatId: `${incomingChatId}-${newMessage.messageId}`,
+                            chatId: newMessage.chatId,
                             messageId: newMessage.messageId,
                             chatEmail: incomingChatEmail,
                             content: newMessage.content,
@@ -352,10 +352,11 @@ export default function Home(props: HomeProps) {
                         }
                         insertDMMessage(newDMMessage)
 
-                        insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
+                        insertDMChat(newMessage.chatId, newMessage.sender.userName, newDMMessage, setAllChats)
 
                         if (incomingChatEmail === currentMainChat.chatEmail) {
                             const updatedChat: ChatProps = {
+                                chatId: newMessage.chatId,
                                 chatName: newMessage.sender.userName,
                                 chatEmail: newMessage.sender.userEmail,
                                 isDm: newMessage.isDm,
@@ -365,8 +366,9 @@ export default function Home(props: HomeProps) {
                                 TSLastMessage: newMessage.tsSent,
                             };
                             setCurrentMainChat(updatedChat);
-                        } else if (incomingChatEmail === currentSubChat.chatEmail) {
+                        } else if (incomingChatEmail === currentSubChat?.chatEmail) {
                             const updatedChat: ChatProps = {
+                                chatId: newMessage.chatId,
                                 chatName: newMessage.sender.userName,
                                 chatEmail: newMessage.sender.userEmail,
                                 isDm: newMessage.isDm,
@@ -379,11 +381,12 @@ export default function Home(props: HomeProps) {
                         } else {
                             console.log("Unexpected DM (incomingChatEmail):", incomingChatEmail)
                             console.log("Unexpected DM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
-                            console.log("Unexpected DM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
+                            console.log("Unexpected DM (currentSubChat.chatEmail):", currentSubChat?.chatEmail)
                         }
                     } else if (fromMyself) {
                         const newDMMessage: MessageProps = {
-                            messageIdWithChatEmail: `${incomingChatEmail}-${newMessage.messageId}`,
+                            messageIdWithChatId: `${incomingChatId}-${newMessage.messageId}`,
+                            chatId: newMessage.chatId,
                             messageId: newMessage.messageId,
                             chatEmail: incomingChatEmail,
                             content: newMessage.content,
@@ -391,7 +394,7 @@ export default function Home(props: HomeProps) {
                             numReplies: newMessage.numReplies,
                             tsSent: newMessage.tsSent,
                         }
-                        insertDMChat(newMessage.sender.userName, newDMMessage, setAllChats)
+                        insertDMChat(newMessage.chatId, newMessage.sender.userName, newDMMessage, setAllChats)
                     }
                 }
             } else {
@@ -408,9 +411,10 @@ export default function Home(props: HomeProps) {
                         incomingChatEmail = newMessage.chatEmail;
                     }
 
-                    if (incomingChatEmail !== "" && newMessage.messageId !== "-1" && !fromMyself) {
+                    if (incomingChatEmail !== "" && newMessage.messageId !== -1 && !fromMyself) {
                         const newGMThreadMessage: ThreadMessageProps = {
-                            messageIdWithChatEmailAndThreadId: `${incomingChatEmail}-${newMessage.threadId}-${newMessage.messageId}`,
+                            messageIdWithChatIdAndThreadId: `${incomingChatId}-${newMessage.threadId}-${newMessage.messageId}`,
+                            chatId: newMessage.chatId,
                             threadId: newMessage.threadId,
                             messageId: newMessage.messageId,
                             chatEmail: incomingChatEmail,
@@ -425,6 +429,7 @@ export default function Home(props: HomeProps) {
                             && incomingChatEmail === currentThreadChat.chatEmail
                             && newGMThreadMessage.threadId === currentThreadChat.threadId) {
                             const updatedThreadChat: ThreadProps = {
+                                chatId: currentThreadChat.chatId,
                                 chatName: currentThreadChat.chatName,
                                 chatEmail: currentThreadChat.chatEmail,
                                 threadId: newGMThreadMessage.threadId,
@@ -452,7 +457,8 @@ export default function Home(props: HomeProps) {
 
                     if (incomingChatEmail !== "" && !fromMyself) {
                         const newGMMessage: MessageProps = {
-                            messageIdWithChatEmail: `${newMessage.chatEmail}-${newMessage.messageId}`,
+                            messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
+                            chatId: newMessage.chatId,
                             messageId: newMessage.messageId,
                             chatEmail: newMessage.chatEmail,
                             content: newMessage.content,
@@ -463,11 +469,12 @@ export default function Home(props: HomeProps) {
                         insertGMMessage(newGMMessage)
 
                         if (allChats.length > 0) {
-                            insertGMChat(newMessage.chatName, newGMMessage, setAllChats)
+                            insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, setAllChats)
                         }
 
                         if (incomingChatEmail === currentMainChat.chatEmail) {
                             const updatedChat: ChatProps = {
+                                chatId: newMessage.chatId,
                                 chatName: newMessage.chatName,
                                 chatEmail: newMessage.chatEmail,
                                 isDm: newMessage.isDm,
@@ -477,8 +484,9 @@ export default function Home(props: HomeProps) {
                                 TSLastMessage: newMessage.tsSent,
                             };
                             setCurrentMainChat(updatedChat);
-                        } else if (incomingChatEmail === currentSubChat.chatEmail) {
+                        } else if (incomingChatEmail === currentSubChat?.chatEmail) {
                             const updatedChat: ChatProps = {
+                                chatId: newMessage.chatId,
                                 chatName: newMessage.chatName,
                                 chatEmail: newMessage.chatEmail,
                                 isDm: newMessage.isDm,
@@ -491,11 +499,12 @@ export default function Home(props: HomeProps) {
                         } else {
                             console.log("Unexpected GM (incomingChatEmail):", incomingChatEmail)
                             console.log("Unexpected GM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
-                            console.log("Unexpected GM (currentSubChat.chatEmail):", currentSubChat.chatEmail)
+                            console.log("Unexpected GM (currentSubChat.chatEmail):", currentSubChat?.chatEmail)
                         }
                     } else if (fromMyself) {
                         const newGMMessage: MessageProps = {
-                            messageIdWithChatEmail: `${newMessage.chatEmail}-${newMessage.messageId}`,
+                            messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
+                            chatId: newMessage.chatId,
                             messageId: newMessage.messageId,
                             chatEmail: newMessage.chatEmail,
                             content: newMessage.content,
@@ -505,7 +514,7 @@ export default function Home(props: HomeProps) {
                         }
 
                         if (allChats.length > 0) {
-                            insertGMChat(newMessage.chatName, newGMMessage, setAllChats)
+                            insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, setAllChats)
                         }
                     }
                 }
@@ -524,7 +533,7 @@ export default function Home(props: HomeProps) {
     }, [currentMainChat]);
 
     useEffect(() => {
-        if (currentSubChatEmail !== currentSubChat.chatEmail) {
+        if (currentSubChat !== undefined && currentSubChatEmail !== currentSubChat.chatEmail) {
             setCurrentSubChatEmail(currentSubChat.chatEmail)
         }
     }, [currentSubChat]);
@@ -538,9 +547,9 @@ export default function Home(props: HomeProps) {
 
 
     ////////////////////////////////////////////////////////////////////
-    useEffect(() => {
-        console.log("currentMainChat Updated:", currentMainChat);
-    }, [currentMainChat]);
+    // useEffect(() => {
+    //     console.log("currentMainChat Updated:", currentMainChat);
+    // }, [currentMainChat]);
 
     // useEffect(() => {
     //     console.log("initLoad Updated:", initLoad);
@@ -618,7 +627,7 @@ export default function Home(props: HomeProps) {
                                 setCurrentMainChat={setCurrentMainChat}
                                 setCurrentSubChat={setCurrentSubChat}
                                 currentMainChat={currentMainChat}
-                                currentSubChat={currentSubChat}
+                                currentSubChat={currentSubChat ? currentSubChat : currentMainChat}
                                 socket={socket}
                                 isSubChatVisible={isSubChatVisible}
                                 setIsSubChatVisible={setIsSubChatVisible}
@@ -713,7 +722,7 @@ export default function Home(props: HomeProps) {
                                             paneSizePCT={subChatPanelSize}
                                             myself={myself}
                                             chat={currentMainChat}
-                                            subChat={currentSubChat}
+                                            subChat={currentSubChat ? currentSubChat : currentMainChat}
                                             socket={socket}
                                             setCurrentMainChat={setCurrentMainChat}
                                             setCurrentSubChat={setCurrentSubChat}
@@ -743,7 +752,7 @@ export default function Home(props: HomeProps) {
                                     currentWindowHeight={height}
                                     paneSizePCT={mainChatPanelSize}
                                     chat={currentMainChat}
-                                    subChat={currentSubChat}
+                                    subChat={currentSubChat ? currentSubChat : currentMainChat}
                                     myself={myself}
                                     socket={socket}
                                     setCurrentMainChat={setCurrentMainChat}

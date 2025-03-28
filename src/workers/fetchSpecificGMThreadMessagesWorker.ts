@@ -1,16 +1,16 @@
 import { STORES } from "../components/indexedDBUtils/conf";
-import { getAllDataWithIndex } from "../components/indexedDBUtils/crud";
+import { messageIdWithChatId } from "../components/indexedDBUtils/crud";
 
 self.onmessage = async (event) => {
-    const chatEmail: string = event.data.chatEmail;
-    const threadId: string = event.data.threadId;
-    // console.log("Fetch GM chatEmail:", chatEmail)
+    const chatId: number = event.data.chatId;
+    const threadId: number = event.data.threadId;
+    // console.log("Fetch GM chatId:", chatId)
     // console.log("Fetch GM threadId:", threadId)
 
-    if (chatEmail !== undefined && threadId !== undefined) {
-        const gmThreadMessages = await getAllDataWithIndex({
+    if (chatId !== undefined && threadId !== undefined) {
+        const gmThreadMessages = await messageIdWithChatId({
             storeName: STORES.GM_THREAD_MESSAGES,
-            chatEmail: chatEmail,
+            chatId: chatId,
             threadId: threadId
         })
 

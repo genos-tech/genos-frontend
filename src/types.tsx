@@ -8,6 +8,7 @@ export type UserProps = {
 
 // Chat Props
 export type AllChatProps = {
+    chatId: number;
     chatName: string;
     chatEmail: string;
     isDm: boolean;
@@ -18,6 +19,7 @@ export type AllChatProps = {
 };
 
 export type ChatProps = {
+    chatId: number;
     chatName: string;
     chatEmail: string;
     isDm: boolean;
@@ -30,9 +32,10 @@ export type ChatProps = {
 
 // Thread Props
 export type ThreadProps = {
+    chatId: number;
     chatName: string;
     chatEmail: string;
-    threadId: string;
+    threadId: number;
     isDm: boolean;
     unread: boolean | true;
     messages: ThreadMessageProps[];
@@ -42,8 +45,9 @@ export type ThreadProps = {
 
 // Message Props
 export type MessageProps = {
-    messageIdWithChatEmail?: string;
-    messageId: string;
+    messageIdWithChatId?: string;
+    chatId: number;
+    messageId: number;
     chatEmail: string;
     content: string;
     sender: UserProps;
@@ -59,9 +63,10 @@ export type MessageProps = {
 };
 
 export type ThreadMessageProps = {
-    messageIdWithChatEmailAndThreadId: string
-    threadId: string;
-    messageId: string;
+    messageIdWithChatIdAndThreadId: string
+    chatId: number;
+    threadId: number;
+    messageId: number;
     chatEmail: string;
     content: string;
     sender: UserProps;
@@ -75,7 +80,8 @@ export type ThreadMessageProps = {
 };
 
 export type NewMessageProps = {
-    messageId: string;
+    chatId: number;
+    messageId: number;
     chatEmail: string;
     chatName: string;
     isDm: boolean;
@@ -93,8 +99,9 @@ export type NewMessageProps = {
 };
 
 export type NewThreadMessageProps = {
-    threadId: string,
-    messageId: string;
+    chatId: number;
+    threadId: number;
+    messageId: number;
     chatEmail: string;
     chatName: string;
     isDm: boolean;
@@ -119,6 +126,7 @@ export type TaskCommentProps = {
 
 // Other Props
 export type SearchListProps = {
+    id: number,
     type: string,
     email: string,
     name: string

@@ -56,6 +56,7 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
   };
 
   const dummyThreadChat: ThreadProps = {
+    chatId: thread.chatId,
     chatName: thread.chatName,
     chatEmail: thread.chatEmail,
     threadId: thread.threadId,

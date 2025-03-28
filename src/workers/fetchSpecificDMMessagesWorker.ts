@@ -1,13 +1,13 @@
 import { STORES } from "../components/indexedDBUtils/conf";
-import { getAllDataWithIndex } from "../components/indexedDBUtils/crud";
+import { messageIdWithChatId } from "../components/indexedDBUtils/crud";
 
 self.onmessage = async (event) => {
-    const chatEmail: string = event.data.chatEmail;
-    const dmMessages = await getAllDataWithIndex({
+    const chatId: number = event.data.chatId;
+    const dmMessages = await messageIdWithChatId({
         storeName: STORES.DM_MESSAGES,
-        chatEmail: chatEmail
+        chatId: chatId
     })
-    
+
     // Sort messages by tsSent in ascending order
     const sortedMessages = [...dmMessages].sort((a, b) => {
         return Number(a.messageId) - Number(b.messageId);

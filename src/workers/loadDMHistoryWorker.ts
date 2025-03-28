@@ -21,17 +21,15 @@ self.onmessage = async (event) => {
         accessToken: accessToken
     });
 
-    // console.log("Num of DM chats:", dmHistory.length)
     for (let i = 0; i < dmHistory.length; i += 1) {
         const dmChat: ChatProps = dmHistory[i]
-
-        console.log("dmChat:", dmChat)
 
         // Insert chat 
         const newChatData = {
             storeName: STORES.DM_CHATS,
             chatEmail: dmChat.chatEmail,
             data: {
+                chatId: dmChat.chatId,
                 chatEmail: dmChat.chatEmail,
                 chatName: dmChat.chatName,
                 unread: dmChat.unread,

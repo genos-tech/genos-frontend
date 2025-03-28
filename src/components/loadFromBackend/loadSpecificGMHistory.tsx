@@ -16,7 +16,7 @@ async function loadSpecificGMHistory(props: LoadGMHistoryProps): Promise<ChatPro
         return Promise.resolve([]);
     }
 
-    return fetch(`${base_url}/message/GMHistory?userEmail=${userEmail}&gmEmail=${gmEmail}`, {
+    return fetch(`${base_url}/gm/getMessagesById/?userEmail=${userEmail}&gmEmail=${gmEmail}`, {
         method: "GET",
         credentials: "include",
         headers: {

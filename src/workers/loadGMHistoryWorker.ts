@@ -31,6 +31,7 @@ self.onmessage = async (event) => {
             storeName: STORES.GM_CHATS,
             chatEmail: gmChat.chatEmail,
             data: {
+                chatId: gmChat.chatId,
                 chatEmail: gmChat.chatEmail,
                 chatName: gmChat.chatName,
                 unread: gmChat.unread,

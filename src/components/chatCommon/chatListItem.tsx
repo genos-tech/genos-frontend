@@ -41,11 +41,11 @@ function extractHHMM(ts: string) {
   }
 }
 
-function _FetchSpecificDMMessagesWorker(chatEmail: string): Promise<MessageProps[]> {
+function _FetchSpecificDMMessagesWorker(chatId: number): Promise<MessageProps[]> {
   return new Promise((resolve, reject) => {
     const fetchSpecificDMMessagesWorker = new FetchSpecificDMMessagesWorker();
 
-    fetchSpecificDMMessagesWorker.postMessage({ chatEmail });
+    fetchSpecificDMMessagesWorker.postMessage({ chatId });
 
     fetchSpecificDMMessagesWorker.onmessage = (event) => {
       resolve(event.data);
@@ -59,11 +59,11 @@ function _FetchSpecificDMMessagesWorker(chatEmail: string): Promise<MessageProps
   });
 }
 
-function _FetchSpecificGMMessagesWorker(chatEmail: string): Promise<MessageProps[]> {
+function _FetchSpecificGMMessagesWorker(chatId: number): Promise<MessageProps[]> {
   return new Promise((resolve, reject) => {
     const fetchSpecificGMMessagesWorker = new FetchSpecificGMMessagesWorker();
 
-    fetchSpecificGMMessagesWorker.postMessage({ chatEmail });
+    fetchSpecificGMMessagesWorker.postMessage({ chatId });
 
     fetchSpecificGMMessagesWorker.onmessage = (event) => {
       resolve(event.data);
@@ -96,9 +96,10 @@ export default function ChatListItem(props: ChatListItemProps) {
       toggleMessagesPane();
       chat.unread = Boolean(false);
       if (chat.isDm) {
-        _FetchSpecificDMMessagesWorker(chat.chatEmail)
+        _FetchSpecificDMMessagesWorker(chat.chatId)
           .then((messages) => {
             const newMessages: ChatProps = {
+              chatId: chat.chatId,
               chatName: chat.chatName,
               chatEmail: chat.chatEmail,
               isDm: chat.isDm,
@@ -107,14 +108,14 @@ export default function ChatListItem(props: ChatListItemProps) {
               latestMessage: messages[messages.length - 1],
               TSLastMessage: chat.TSLastMessage
             }
-            console.log("newMessages:",newMessages)
             setCurrentMainChat(newMessages);
           })
           .catch((error) => console.error(error));
       } else {
-        _FetchSpecificGMMessagesWorker(chat.chatEmail)
+        _FetchSpecificGMMessagesWorker(chat.chatId)
           .then((messages) => {
             const newMessages: ChatProps = {
+              chatId: chat.chatId,
               chatName: chat.chatName,
               chatEmail: chat.chatEmail,
               isDm: chat.isDm,
@@ -123,7 +124,6 @@ export default function ChatListItem(props: ChatListItemProps) {
               latestMessage: messages[messages.length - 1],
               TSLastMessage: chat.TSLastMessage
             }
-            console.log("newMessages:",newMessages)
             setCurrentMainChat(newMessages);
           })
           .catch((error) => console.error(error));
@@ -135,9 +135,10 @@ export default function ChatListItem(props: ChatListItemProps) {
     if (currentMainChat.chatEmail !== chat.chatEmail) {
       toggleMessagesPane();
       if (chat.isDm) {
-        _FetchSpecificDMMessagesWorker(chat.chatEmail)
+        _FetchSpecificDMMessagesWorker(chat.chatId)
           .then((messages) => {
             const newMessages: ChatProps = {
+              chatId: chat.chatId,
               chatName: chat.chatName,
               chatEmail: chat.chatEmail,
               isDm: chat.isDm,
@@ -150,9 +151,10 @@ export default function ChatListItem(props: ChatListItemProps) {
           })
           .catch((error) => console.error(error));
       } else {
-        _FetchSpecificGMMessagesWorker(chat.chatEmail)
+        _FetchSpecificGMMessagesWorker(chat.chatId)
           .then((messages) => {
             const newMessages: ChatProps = {
+              chatId: chat.chatId,
               chatName: chat.chatName,
               chatEmail: chat.chatEmail,
               isDm: chat.isDm,

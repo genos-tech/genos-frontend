@@ -71,7 +71,7 @@ const insertDMThreadMessage = async (
       // Fetch DM thread messages (new message and previous messages if exist)
       const fetchSpecificDMThreadMessagesWorker = new FetchSpecificDMThreadMessagesWorker();
       fetchSpecificDMThreadMessagesWorker.postMessage({
-        chatEmail: newDMThreadMessage.chatEmail,
+        chatId: newDMThreadMessage.chatId,
         threadId: newDMThreadMessage.threadId,
       });
       fetchSpecificDMThreadMessagesWorker.onmessage = (event) => {
@@ -79,6 +79,7 @@ const insertDMThreadMessage = async (
         if (fetchedMessages !== undefined) {
           // set up states for thread
           const newThread: ThreadProps = {
+            chatId: newDMThreadMessage.chatId,
             chatName: threadName,
             chatEmail: newDMThreadMessage.chatEmail,
             threadId: newDMThreadMessage.threadId,
@@ -123,7 +124,7 @@ const insertGMThreadMessage = async (
       // Fetch GM thread messages (new message and previous messages if exist)
       const fetchSpecificGMThreadMessagesWorker = new FetchSpecificGMThreadMessagesWorker();
       fetchSpecificGMThreadMessagesWorker.postMessage({
-        chatEmail: newGMThreadMessage.chatEmail,
+        chatId: newGMThreadMessage.chatId,
         threadId: newGMThreadMessage.threadId,
       });
       fetchSpecificGMThreadMessagesWorker.onmessage = (event) => {
@@ -131,6 +132,7 @@ const insertGMThreadMessage = async (
         if (fetchedMessages !== undefined) {
           // set up states for thread
           const newThread: ThreadProps = {
+            chatId: newGMThreadMessage.chatId,
             chatName: threadName,
             chatEmail: newGMThreadMessage.chatEmail,
             threadId: newGMThreadMessage.threadId,
@@ -297,9 +299,10 @@ export default function ChatBubble(props: ChatBubbleProps) {
                             }, (ack: any) => {
 
                               const newThreadMessage: ThreadMessageProps = {
-                                messageIdWithChatEmailAndThreadId: `${chat.chatEmail}-${messageId}-1`,
+                                messageIdWithChatIdAndThreadId: `${chat.chatId}-${messageId}-1`,
+                                chatId: chat.chatId,
                                 threadId: messageId,
-                                messageId: '1',
+                                messageId: 1,
                                 chatEmail: chat.chatEmail,
                                 content: content,
                                 sender: myself,
@@ -390,9 +393,10 @@ export default function ChatBubble(props: ChatBubbleProps) {
                     }, (ack: any) => {
 
                       const newThreadMessage: ThreadMessageProps = {
-                        messageIdWithChatEmailAndThreadId: `${chat.chatEmail}-${messageId}-1`,
+                        messageIdWithChatIdAndThreadId: `${chat.chatId}-${messageId}-1`,
+                        chatId: chat.chatId,
                         threadId: messageId,
-                        messageId: '1',
+                        messageId: 1,
                         chatEmail: chat.chatEmail,
                         content: content,
                         sender: myself,
