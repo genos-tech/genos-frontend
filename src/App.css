@@ -83,6 +83,10 @@
 }
 
 
+.w-md-editor {
+  --md-editor-box-shadow-color: transparent;
+  --md-editor-background-color: transparent;
+}
 
 /* Change background for inline <code> */
 .markdown-preview {
