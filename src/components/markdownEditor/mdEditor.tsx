@@ -112,7 +112,6 @@ export const MarkdownEditor = ({
   const boxRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
-
   const EditButton = () => {
     const { preview, dispatch } = useContext(EditorContext);
 
@@ -191,21 +190,21 @@ export const MarkdownEditor = ({
               socket.emit("message", {
                 message: messageContent,
                 destCGName: chat.chatName,
-                destCGEmail: chat.chatEmail,
+                destCGId: chat.chatId,
                 isDm: chat.isDm,
+                dmPartnerUserId: chat.dmPartnerUserId,
               }, (ack: any) => {
 
                 const updatedChat: ChatProps = {
                   chatId: chat.chatId,
                   chatName: chat.chatName,
-                  chatEmail: chat.chatEmail,
                   isDm: chat.isDm,
+                  dmPartnerUserId: chat.dmPartnerUserId,
                   unread: false,
                   messages: [...chat.messages, {
                     messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
                     chatId: chat.chatId,
                     messageId: Number(chat.latestMessage?.messageId) + 1,
-                    chatEmail: chat.chatEmail,
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
@@ -215,7 +214,6 @@ export const MarkdownEditor = ({
                     messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
                     chatId: chat.chatId,
                     messageId: Number(chat.latestMessage?.messageId) + 1,
-                    chatEmail: chat.chatEmail,
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
@@ -228,14 +226,13 @@ export const MarkdownEditor = ({
                 const newChat: AllChatProps = {
                   chatId: chat.chatId,
                   chatName: chat.chatName,
-                  chatEmail: chat.chatEmail,
                   isDm: chat.isDm,
+                  dmPartnerUserId: chat.dmPartnerUserId,
                   unread: false,
                   latestMessage: {
                     messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
                     chatId: chat.chatId,
                     messageId: Number(chat.latestMessage?.messageId) + 1,
-                    chatEmail: chat.chatEmail,
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
@@ -428,21 +425,21 @@ export const MarkdownEditor = ({
                 socket.emit("message", {
                   message: messageContent,
                   destCGName: chat.chatName,
-                  destCGEmail: chat.chatEmail,
+                  destCGId: chat.chatId,
                   isDm: chat.isDm,
+                  dmPartnerUserId: chat.dmPartnerUserId,
                 }, (ack: any) => {
 
                   const updatedChat: ChatProps = {
                     chatId: chat.chatId,
                     chatName: chat.chatName,
-                    chatEmail: chat.chatEmail,
                     isDm: chat.isDm,
+                    dmPartnerUserId: chat.dmPartnerUserId,
                     unread: false,
                     messages: [...chat.messages, {
                       messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
                       chatId: chat.chatId,
                       messageId: Number(chat.latestMessage?.messageId) + 1,
-                      chatEmail: chat.chatEmail,
                       content: messageContent,
                       sender: myself,
                       tsSent: getCurrentTimestamp(),
@@ -452,7 +449,6 @@ export const MarkdownEditor = ({
                       messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
                       chatId: chat.chatId,
                       messageId: Number(chat.latestMessage?.messageId) + 1,
-                      chatEmail: chat.chatEmail,
                       content: messageContent,
                       sender: myself,
                       tsSent: getCurrentTimestamp(),
@@ -465,14 +461,13 @@ export const MarkdownEditor = ({
                   const newChat: AllChatProps = {
                     chatId: chat.chatId,
                     chatName: chat.chatName,
-                    chatEmail: chat.chatEmail,
                     isDm: chat.isDm,
+                    dmPartnerUserId: chat.dmPartnerUserId,
                     unread: false,
                     latestMessage: {
                       messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
                       chatId: chat.chatId,
                       messageId: Number(chat.latestMessage?.messageId) + 1,
-                      chatEmail: chat.chatEmail,
                       content: messageContent,
                       sender: myself,
                       tsSent: getCurrentTimestamp(),

@@ -24,11 +24,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const data = await response.json();
                 setAccessToken(data.access);
             } else {
-                console.log("Failed to refresh token")
                 setAccessToken(null); // Token refresh failed, user must log in
             }
         } catch (error) {
-            console.error("Failed to refresh token", error);
             setAccessToken(null);
         }
     };
@@ -38,10 +36,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             refreshAccessToken();
         }
     }, [accessToken]);
-
-    // useEffect(() => {
-    //     console.log("refresh:", accessToken)
-    // }, [accessToken]);
 
     return (
         <AuthContext.Provider value={{ accessToken, setAccessToken }}>

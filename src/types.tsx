@@ -1,5 +1,7 @@
 // User Props
 export type UserProps = {
+    teamId: string;
+    userId: string;
     userName: string;
     userEmail: string;
     avatarImgPath: string;
@@ -10,8 +12,8 @@ export type UserProps = {
 export type AllChatProps = {
     chatId: number;
     chatName: string;
-    chatEmail: string;
     isDm: boolean;
+    dmPartnerUserId: string | null;
     unread: boolean | true;
     latestMessage?: MessageProps;
     CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
@@ -21,22 +23,22 @@ export type AllChatProps = {
 export type ChatProps = {
     chatId: number;
     chatName: string;
-    chatEmail: string;
     isDm: boolean;
+    dmPartnerUserId: string | null;
     unread: boolean | true;
     messages: MessageProps[];
     latestMessage?: MessageProps;
     CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
-    TSLastMessage: string;
+    TSLastMessage?: string;
 };
 
 // Thread Props
 export type ThreadProps = {
     chatId: number;
     chatName: string;
-    chatEmail: string;
     threadId: number;
     isDm: boolean;
+    dmPartnerUserId: string | null;
     unread: boolean | true;
     messages: ThreadMessageProps[];
     CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
@@ -48,7 +50,6 @@ export type MessageProps = {
     messageIdWithChatId?: string;
     chatId: number;
     messageId: number;
-    chatEmail: string;
     content: string;
     sender: UserProps;
     tsSent: string;
@@ -67,7 +68,6 @@ export type ThreadMessageProps = {
     chatId: number;
     threadId: number;
     messageId: number;
-    chatEmail: string;
     content: string;
     sender: UserProps;
     tsSent: string;
@@ -82,9 +82,9 @@ export type ThreadMessageProps = {
 export type NewMessageProps = {
     chatId: number;
     messageId: number;
-    chatEmail: string;
     chatName: string;
     isDm: boolean;
+    dmPartnerUserId: string | null;
     isThread: boolean;
     content: string;
     sender: UserProps;
@@ -102,9 +102,9 @@ export type NewThreadMessageProps = {
     chatId: number;
     threadId: number;
     messageId: number;
-    chatEmail: string;
     chatName: string;
     isDm: boolean;
+    dmPartnerUserId: string | null;
     isThread: boolean;
     content: string;
     sender: UserProps;
@@ -117,19 +117,12 @@ export type NewThreadMessageProps = {
     };
 };
 
-// Task Comment Props
-export type TaskCommentProps = {
-    email: string,
-    name: string,
-    content: string,
-}
-
 // Other Props
 export type SearchListProps = {
     id: number,
     type: string,
-    email: string,
-    name: string
+    name: string,
+    dmPartnerUserId: string | null,
 }
 
 export type LoadSearchListResponse = {

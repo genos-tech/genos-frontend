@@ -17,7 +17,7 @@ self.onmessage = async (event) => {
 
     // Load data from backend
     const dmHistory: ChatProps[] = await loadDMHistory({
-        userEmail: myself.userEmail,
+        userId: myself.userId,
         accessToken: accessToken
     });
 
@@ -27,13 +27,12 @@ self.onmessage = async (event) => {
         // Insert chat 
         const newChatData = {
             storeName: STORES.DM_CHATS,
-            chatEmail: dmChat.chatEmail,
             data: {
                 chatId: dmChat.chatId,
-                chatEmail: dmChat.chatEmail,
                 chatName: dmChat.chatName,
                 unread: dmChat.unread,
                 isDm: true,
+                dmPartnerUserId: dmChat.dmPartnerUserId,
                 latestMessage: dmChat.latestMessage,
                 TSLastMessage: dmChat.TSLastMessage
             }
@@ -41,7 +40,6 @@ self.onmessage = async (event) => {
         await addData(newChatData)
 
         // Insert messages by mini-batch
-        // console.log("Num of DM inserting messages:", dmChat.messages.length)
         for (let i = 0; i < dmChat.messages.length; i += BATCH_SIZE) {
             const miniBatchMessages: MessageProps[] = dmChat.messages.slice(i, i + BATCH_SIZE);
             await miniBatchInsertMessages({

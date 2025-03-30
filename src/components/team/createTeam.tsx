@@ -6,43 +6,42 @@ import CssBaseline from '@mui/joy/CssBaseline';
 import { Alert } from "@mui/joy";
 import Box from '@mui/joy/Box';
 import Button from '@mui/joy/Button';
-import Checkbox from '@mui/joy/Checkbox';
 import FormControl from '@mui/joy/FormControl';
 import FormLabel from '@mui/joy/FormLabel';
 import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
-import Link from '@mui/joy/Link';
 import Input from '@mui/joy/Input';
 import Typography from '@mui/joy/Typography';
 import Stack from '@mui/joy/Stack';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import BusinessIcon from '@mui/icons-material/Business';
-import { useAuth } from "../../components/admin/AuthContext";
+import Link from '@mui/joy/Link';
+import { useAuth } from "../admin/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface FormElements extends HTMLFormControlsCollection {
-    email: HTMLInputElement;
-    password: HTMLInputElement;
-    persistent: HTMLInputElement;
+    teamName: HTMLInputElement;
 }
-interface SignInFormElement extends HTMLFormElement {
+interface CreateTeamFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
-type SignInResponse = {
-    username: string;
-    user_id: string;
-    email: string;
-    access: string | null;
-    message: string;
+type CreateTeamResponse = {
+    team_id: number;
+    detail: string | null;
+    hint: string | null;
 };
 
-type MyTeamResponse = {
-    team_ids: number[];
-}
+type CreateMyDMResponse = {
+    dm_id: string | null;
+    ts_created_at: string | null;
+    ts_updated_at: string | null;
+    user_1_id: string | null;
+    user_2_id: string | null;
+};
 
 function ColorSchemeToggle(props: IconButtonProps) {
     const { onClick, ...other } = props;
@@ -69,69 +68,100 @@ function ColorSchemeToggle(props: IconButtonProps) {
 }
 
 
-export default function SignIn() {
+export default function CreateTeam() {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [rememberEmail, setRememberEmail] = useState<boolean>(false);
-    const { setAccessToken } = useAuth();
+    const { accessToken } = useAuth();
 
-    async function signIn(email: string, password: string): Promise<SignInResponse> {
+    async function createTeam(teamName: string): Promise<CreateTeamResponse> {
 
         try {
-            // Sign In
-            const signInResponse = await fetch(`${base_url}/user/signin/`, {
+            const teamCreateResponse = await fetch(`${base_url}/team/create/`, {
                 method: 'POST',
-                credentials: "include",
                 headers: {
                     'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${accessToken}`
                 },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify({
+                    team_name: teamName,
+                    team_email: `${teamName}@origin.tech`,
+                    owner_id: localStorage.getItem("userId")
+                }),
             });
 
-            const data: SignInResponse = await signInResponse.json();
+            await sleep(100);
 
-            if (!signInResponse.ok) {
-                const err_msg = data.message || 'Authentication Failed'
-                setErrorMessage(err_msg);
-                throw new Error(err_msg);
-            }
+            const teamCreateData: CreateTeamResponse = await teamCreateResponse.json();
 
-            setAccessToken(data.access); // Store access token in memory
-            localStorage.setItem("isSigningIn", "yes");
-            localStorage.setItem("userName", data.username);
-            localStorage.setItem("userId", data.user_id);
-            localStorage.setItem("userEmail", data.email);
-
-            // Get joining teams
-            const myTeamResponse = await fetch(`${base_url}/team/getMyTeams/?user_id=${data.user_id}`, {
-                method: 'GET',
-                credentials: "include",
-                headers: {
-                    'Content-Type': 'application/json',
-                    "Authorization": `Bearer ${data.access}`
-                }
-            });
-            const myTeamData: MyTeamResponse = await myTeamResponse.json();
-            if (!myTeamResponse.ok) {
-                const err_msg = 'Failed to get my teams'
-                setErrorMessage(err_msg);
-                throw new Error(err_msg);
-            }
-
-            if (myTeamData.team_ids.length > 0) {
-                navigate('/SelectTeam')
+            if (!teamCreateResponse.ok) {
+                setErrorMessage(teamCreateData.hint || teamCreateData.detail || 'Team Creation Failed');
+                throw new Error(teamCreateData.hint || teamCreateData.detail || 'Team Creation Failed');
             } else {
-                navigate('/CreateTeam')
+
+                const joinTeamResponse = await fetch(`${base_url}/team/join/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        team_id: teamCreateData.team_id,
+                        attendee_id: localStorage.getItem("userId")
+                    }),
+                });
+
+                const joinTeamData = await joinTeamResponse.json();
+                localStorage.setItem("teamId", joinTeamData.team);
+
+                if (!joinTeamResponse.ok) {
+                    setErrorMessage('Failed to join team');
+                    throw new Error('Failed to join team');
+                } else {
+                    // Send initial DM message to myself
+                    const myUserId = localStorage.getItem("userId")
+                    // 1. Crete DM for myself
+                    const createMyDMResponse = await fetch(`${base_url}/dm/create/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Authorization": `Bearer ${accessToken}`
+                        },
+                        body: JSON.stringify({
+                            user_1_id: myUserId,
+                            user_2_id: myUserId
+                        }),
+                    });
+
+                    const createMyDMData: CreateMyDMResponse = await createMyDMResponse.json();
+
+                    // 2. Send an initial message
+                    const initMessageResponse = await fetch(`${base_url}/dm/addMessage/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            "Authorization": `Bearer ${accessToken}`
+                        },
+                        body: JSON.stringify({
+                            dm_id: createMyDMData.dm_id,
+                            sender_id: myUserId,
+                            receiver_id: myUserId,
+                            message_body: "Joined"
+                        }),
+                    });
+                    const initMessageData = await initMessageResponse.json();
+                }
             }
 
-            return data
+            navigate('/App')
+
+            return teamCreateData
 
         } catch (error) {
             const err_msg = `${error}`
             console.error(err_msg);
             setErrorMessage(err_msg);
-            navigate('/');
-            return { message: err_msg, user_id: "", username: "", email: "", access: null }
+            navigate('/CreateTeam');
+            return { team_id: -1, detail: null, hint: null }
         }
 
     }
@@ -210,78 +240,37 @@ export default function SignIn() {
                         <Stack sx={{ gap: 4, mb: 2 }}>
                             <Stack sx={{ gap: 1 }}>
                                 <Typography component="h1" level="h3">
-                                    Sign in
-                                </Typography>
-                                <Typography level="body-sm">
-                                    New to company?{' '}
-                                    <Link href="SignUp" level="title-sm">
-                                        Sign up!
-                                    </Link>
+                                    Create New Team
                                 </Typography>
                             </Stack>
-
                             {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
-
                         </Stack>
 
                         <Stack sx={{ gap: 4, mt: 2 }}>
                             <form
-                                onSubmit={(event: React.FormEvent<SignInFormElement>) => {
+                                onSubmit={(event: React.FormEvent<CreateTeamFormElement>) => {
                                     event.preventDefault(); // Needs for prevent reload page
                                     const formElements = event.currentTarget.elements;
-                                    const email = formElements.email.value
-                                    const password = formElements.password.value
-
-                                    if (!email || !password) {
-                                        return {
-                                            type: 'CredentialsSignin',
-                                            error: 'Email and password are required.',
-                                        };
-                                    }
-
-                                    signIn(email, password);
-
-                                    if (rememberEmail) {
-                                        localStorage.setItem("signInEmail", email)
-                                    }
-
+                                    const teamName = formElements.teamName.value
+                                    createTeam(teamName);
                                 }}
                             >
                                 <FormControl required>
-                                    <FormLabel>Email</FormLabel>
-                                    <Input type="email" name="email" defaultValue={localStorage.getItem("signInEmail") || ""} />
-                                </FormControl>
-                                <FormControl required>
-                                    <FormLabel>Password</FormLabel>
-                                    <Input type="password" name="password" />
+                                    <FormLabel>Team Name</FormLabel>
+                                    <Input type="name" name="teamName" />
                                 </FormControl>
                                 <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
-                                        }}
-                                    >
-                                        <Checkbox size="sm" label="Remember me" name="persistent" onChange={(event) => {
-                                            if (event.target.checked) {
-                                                setRememberEmail(true)
-                                            } else {
-                                                setRememberEmail(false)
-                                                localStorage.setItem("signInEmail", "")
-                                            }
-                                        }} />
-                                        <Link level="title-sm" href="#replace-with-a-link">
-                                            Forgot your password?
-                                        </Link>
-                                    </Box>
                                     <Button type="submit" fullWidth>
-                                        Sign in
+                                        Create
                                     </Button>
                                 </Stack>
                             </form>
                         </Stack>
-
+                        <Typography level="body-sm" textAlign={'right'}>
+                            <Link href="SignIn" level="title-sm">
+                                Back to Sign in
+                            </Link>
+                        </Typography>
                     </Box>
                     <Box component="footer" sx={{ py: 3 }}>
                         <Typography level="body-xs" sx={{ textAlign: 'center' }}>

@@ -27,8 +27,6 @@ import CustomLinkIcon from '../../assets/CustomLinkIcon';
 
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 
-import { TaskCommentProps } from "../../types"
-
 // Temp data
 import { taskContents } from './sampleTaskContents';
 
@@ -47,34 +45,6 @@ export default function taskContent(props: TaskContentProps) {
   const reporter: string = "Ryan"
   const [taskContent, setTaskContent] = useState(taskContents.content);
   const [comment, setComment] = useState("");
-
-  const testComments: TaskCommentProps[] = [
-    {
-      email: "ken@ken",
-      name: "ken",
-      content: "good1",
-    },
-    {
-      email: "ken@ken",
-      name: "ken",
-      content: "good2",
-    },
-    {
-      email: "ken@ken",
-      name: "ken",
-      content: "good3",
-    },
-    {
-      email: "ken@ken",
-      name: "ken",
-      content: "good2",
-    },
-    {
-      email: "ken@ken",
-      name: "ken",
-      content: "good3",
-    }
-  ]
 
   function getMdHeight(text: string): number {
     const height: number = Math.min(Math.max(text.split('\n').length * 20, 200), 800)

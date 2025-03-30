@@ -171,25 +171,25 @@ export const MarkdownEditor = ({
                 threadId: thread.threadId,
                 threadMessage: messageContent,
                 isDm: thread.isDm,
-                senderEmail: myself.userEmail,
+                dmPartnerUserId: thread.dmPartnerUserId,
+                senderId: myself.userId,
                 senderName: myself.userName,
                 destCGName: thread.chatName,
-                destCGEmail: thread.chatEmail
+                destCGId: thread.chatId
               }, (ack: any) => {
 
                 const updatedChat: ThreadProps = {
                   chatId: thread.chatId,
                   chatName: thread.chatName,
-                  chatEmail: thread.chatEmail,
                   threadId: thread.threadId,
                   isDm: thread.isDm,
+                  dmPartnerUserId: thread.dmPartnerUserId,
                   unread: false,
                   messages: [...thread.messages, {
                     messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
                     chatId: thread.chatId,
                     threadId: thread.threadId,
                     messageId: Number(thread.messages.length) + 1,
-                    chatEmail: thread.chatEmail,
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
@@ -203,7 +203,6 @@ export const MarkdownEditor = ({
                   chatId: thread.chatId,
                   threadId: thread.threadId,
                   messageId: Number(thread.messages.length) + 1,
-                  chatEmail: thread.chatEmail,
                   content: messageContent,
                   sender: myself,
                   tsSent: getCurrentTimestamp(),
@@ -214,11 +213,6 @@ export const MarkdownEditor = ({
                 } else {
                   insertGMThreadMessage(newThreadMessage);
                 }
-
-                // TODO: Dynamically update the num of replies in the message pane.
-                // if (currentMainChat.chatEmail === thread.chatEmail) {
-                // } else if (currentSubChat.chatEmail === thread.chatEmail) {
-                // }
 
                 setContent("")
               });
@@ -400,25 +394,25 @@ export const MarkdownEditor = ({
                   threadId: thread.threadId,
                   threadMessage: messageContent,
                   isDm: thread.isDm,
-                  senderEmail: myself.userEmail,
+                  dmPartnerUserId: thread.dmPartnerUserId,
+                  senderId: myself.userId,
                   senderName: myself.userName,
                   destCGName: thread.chatName,
-                  destCGEmail: thread.chatEmail
+                  destCGId: thread.chatId
                 }, (ack: any) => {
 
                   const updatedChat: ThreadProps = {
                     chatId: thread.chatId,
                     chatName: thread.chatName,
-                    chatEmail: thread.chatEmail,
                     threadId: thread.threadId,
                     isDm: thread.isDm,
+                    dmPartnerUserId: thread.dmPartnerUserId,
                     unread: false,
                     messages: [...thread.messages, {
                       messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
                       chatId: thread.chatId,
                       threadId: thread.threadId,
                       messageId: Number(thread.messages.length) + 1,
-                      chatEmail: thread.chatEmail,
                       content: messageContent,
                       sender: myself,
                       tsSent: getCurrentTimestamp(),
@@ -432,7 +426,6 @@ export const MarkdownEditor = ({
                     chatId: thread.chatId,
                     threadId: thread.threadId,
                     messageId: Number(thread.messages.length) + 1,
-                    chatEmail: thread.chatEmail,
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
@@ -443,11 +436,6 @@ export const MarkdownEditor = ({
                   } else {
                     insertGMThreadMessage(newThreadMessage);
                   }
-
-                  // TODO: Dynamically update the num of replies in the message pane.
-                  // if (currentMainChat.chatEmail === thread.chatEmail) {
-                  // } else if (currentSubChat.chatEmail === thread.chatEmail) {
-                  // }
 
                   setContent("")
                 });

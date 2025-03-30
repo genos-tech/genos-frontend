@@ -19,7 +19,7 @@ type MessagesPaneProps = {
   socket: Socket;
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsThreadVisible: (value: boolean) => void;
-  currentThreadChatEmail: string;
+  currentThreadChatId: number;
   setIsTaskContentVisible: (value: boolean) => void;
 };
 
@@ -31,7 +31,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
     socket,
     setCurrentThreadChat,
     setIsThreadVisible,
-    currentThreadChatEmail,
+    currentThreadChatId,
     setIsTaskContentVisible } = props;
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
   const [content, setContent] = useState("");
@@ -73,7 +73,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
         })
       }, 300)
     }
-  }, [currentThreadChatEmail])
+  }, [currentThreadChatId])
 
   // TODO: limit initial num of messages, and load more after
   const handleAtTop = (atTop: boolean) => {
@@ -113,7 +113,6 @@ export default function ThreadPane(props: MessagesPaneProps) {
   const handleFiles = (selectedFiles: File[]) => {
     selectedFiles.forEach((file) => {
       const fileType = file.type;
-      console.log("Got file:", fileType)
       if (fileType === "image/jpeg" || fileType === "image/png") {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -121,14 +120,12 @@ export default function ThreadPane(props: MessagesPaneProps) {
             const img = new Image();
             img.src = e.target.result as string;
             img.onload = () => {
-              console.log("uploaded image:", img.src)
             }
           }
         };
         reader.readAsDataURL(file);
       } else {
         const fileURL = URL.createObjectURL(file);
-        console.log("uploaded file:", fileURL)
       }
     });
   };
@@ -172,7 +169,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
             atBottomStateChange={handleAtBottom}
             itemContent={(index) => {
               const message = threadMessages[index];
-              const isYou = message.sender.userName === myself.userName;
+              const isYou = myself.userId === message.sender.userId;
               return (
                 <div>
                   <Stack

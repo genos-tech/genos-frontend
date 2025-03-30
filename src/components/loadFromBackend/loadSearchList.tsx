@@ -4,12 +4,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type LoadSearchListProps = {
     myself: UserProps;
-    teamName: string;
     accessToken: string;
 };
 
 async function loadSearchList(props: LoadSearchListProps): Promise<SearchListProps[]> {
-    const { myself, teamName, accessToken } = props
+    const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -17,7 +16,7 @@ async function loadSearchList(props: LoadSearchListProps): Promise<SearchListPro
     }
 
     try {
-        const response = await fetch(`${base_url}/search/teamMembersAndGroups/?user_email=${myself.userEmail}&team_name=${teamName}`, {
+        const response = await fetch(`${base_url}/search/teamMembersAndGroups/?user_id=${myself.userId}&team_id=${myself.teamId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -31,7 +30,6 @@ async function loadSearchList(props: LoadSearchListProps): Promise<SearchListPro
             const errorMsg = data.message || "Failed to get all users";
             throw new Error(errorMsg);
         }
-
         return data.searchList || [];
 
     } catch (error) {

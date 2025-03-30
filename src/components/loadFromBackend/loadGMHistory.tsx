@@ -3,12 +3,12 @@ import { ChatProps, LoadGMMessageHistoryResponse } from '../../types';
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type LoadGMHistoryProps = {
-    userEmail: string;
+    userId: string;
     accessToken: string;
 };
 
 async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
-    const { userEmail, accessToken } = props;
+    const { userId, accessToken } = props;
 
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -16,7 +16,7 @@ async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
         return Promise.resolve([]);
     }
 
-    return fetch(`${base_url}/gm/getHistory/?user_email=${userEmail}`, {
+    return fetch(`${base_url}/gm/getHistory/?user_id=${userId}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",

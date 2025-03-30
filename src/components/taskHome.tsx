@@ -26,7 +26,7 @@ export default function TaskHome() {
 
                 <PanelGroup direction="horizontal">
 
-                    <Panel id={'1'} order={1} defaultSize={10} minSize={5} maxSize={30}>
+                    <Panel id={'1'} order={1} minSize={5} maxSize={20}>
                         <TaskSidebar />
                     </Panel>
 
@@ -42,7 +42,7 @@ export default function TaskHome() {
                     />
 
                     {/* left pane */}
-                    <Panel id={'2'} order={2} defaultSize={40} minSize={30} maxSize={100}>
+                    <Panel id={'2'} order={2} minSize={30} maxSize={100}>
                         <Box
                             component="main"
                             className="MainContent"
@@ -114,7 +114,7 @@ export default function TaskHome() {
                             />
 
                             {/* right pane */}
-                            <Panel id={'3'} order={3} defaultSize={45} minSize={30} maxSize={100}>
+                            <Panel id={'3'} order={3} minSize={30} maxSize={100}>
                                 <Box
                                     sx={{
                                         px: { xs: 1, md: 2 },
