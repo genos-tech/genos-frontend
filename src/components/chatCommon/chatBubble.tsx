@@ -56,6 +56,7 @@ function extractHHMM(ts: string) {
 
 const insertDMThreadMessage = async (
   threadName: string,
+  dmPartnerUserId: string | null,
   newDMThreadMessage: ThreadMessageProps,
   setCurrentThreadChat: (chat: ThreadProps) => void
 ): Promise<string> => {
@@ -81,9 +82,9 @@ const insertDMThreadMessage = async (
           const newThread: ThreadProps = {
             chatId: newDMThreadMessage.chatId,
             chatName: threadName,
-            chatEmail: newDMThreadMessage.chatEmail,
             threadId: newDMThreadMessage.threadId,
             isDm: true,
+            dmPartnerUserId: dmPartnerUserId,
             unread: false,
             messages: fetchedMessages,
             TSLastMessage: getCurrentTimestamp(),
@@ -134,9 +135,9 @@ const insertGMThreadMessage = async (
           const newThread: ThreadProps = {
             chatId: newGMThreadMessage.chatId,
             chatName: threadName,
-            chatEmail: newGMThreadMessage.chatEmail,
             threadId: newGMThreadMessage.threadId,
             isDm: false,
+            dmPartnerUserId: null,
             unread: false,
             messages: fetchedMessages,
             TSLastMessage: getCurrentTimestamp(),
@@ -292,10 +293,11 @@ export default function ChatBubble(props: ChatBubbleProps) {
                               threadId: messageId,
                               threadMessage: content,
                               isDm: chat.isDm,
-                              senderEmail: myself.userEmail,
+                              dmPartnerUserId: chat.dmPartnerUserId,
+                              senderId: myself.userId,
                               senderName: myself.userName,
                               destCGName: chat.chatName,
-                              destCGEmail: chat.chatEmail
+                              destCGId: chat.chatId
                             }, (ack: any) => {
 
                               const newThreadMessage: ThreadMessageProps = {
@@ -303,14 +305,13 @@ export default function ChatBubble(props: ChatBubbleProps) {
                                 chatId: chat.chatId,
                                 threadId: messageId,
                                 messageId: 1,
-                                chatEmail: chat.chatEmail,
                                 content: content,
                                 sender: myself,
                                 tsSent: getCurrentTimestamp(),
                               };
 
                               if (chat.isDm) {
-                                insertDMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+                                insertDMThreadMessage(chat.chatName, chat.dmPartnerUserId, newThreadMessage, setCurrentThreadChat);
                               } else {
                                 insertGMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
                               }
@@ -386,10 +387,11 @@ export default function ChatBubble(props: ChatBubbleProps) {
                       threadId: messageId,
                       threadMessage: content,
                       isDm: chat.isDm,
-                      senderEmail: myself.userEmail,
+                      dmPartnerUserId: chat.dmPartnerUserId,
+                      senderId: myself.userId,
                       senderName: myself.userName,
                       destCGName: chat.chatName,
-                      destCGEmail: chat.chatEmail
+                      destCGId: chat.chatId
                     }, (ack: any) => {
 
                       const newThreadMessage: ThreadMessageProps = {
@@ -397,14 +399,13 @@ export default function ChatBubble(props: ChatBubbleProps) {
                         chatId: chat.chatId,
                         threadId: messageId,
                         messageId: 1,
-                        chatEmail: chat.chatEmail,
                         content: content,
                         sender: myself,
                         tsSent: getCurrentTimestamp(),
                       };
 
                       if (chat.isDm) {
-                        insertDMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+                        insertDMThreadMessage(chat.chatName, chat.dmPartnerUserId, newThreadMessage, setCurrentThreadChat);
                       } else {
                         insertGMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
                       }

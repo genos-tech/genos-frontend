@@ -149,7 +149,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
 
     (async () => {
       const loadedUsers: SearchListProps[] = await loadSearchList({
-        myself: myself, teamName: "origin-tech", accessToken: accessToken || ""
+        myself: myself, accessToken: accessToken || ""
       });
 
       if (active) {
@@ -170,7 +170,6 @@ export default function ChatsPane(props: ChatsPaneProps) {
 
   const moveToDMChat = async (
     chatId: number,
-    chatEmail: string,
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
   ): Promise<string> => {
@@ -185,14 +184,13 @@ export default function ChatsPane(props: ChatsPaneProps) {
           const newChat: ChatProps = {
             chatId: chatId,
             chatName: chatName,
-            chatEmail: chatEmail,
             isDm: false,
+            dmPartnerUserId: null,
             unread: false,
             messages: fetchedMessages,
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
-          console.log("newChat:", newChat)
           setCurrentMainChat(newChat)
         } else {
           console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages)
@@ -209,7 +207,6 @@ export default function ChatsPane(props: ChatsPaneProps) {
 
   const moveToGMChat = async (
     chatId: number,
-    chatEmail: string,
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
   ): Promise<string> => {
@@ -224,14 +221,13 @@ export default function ChatsPane(props: ChatsPaneProps) {
           const newChat: ChatProps = {
             chatId: chatId,
             chatName: chatName,
-            chatEmail: chatEmail,
             isDm: false,
+            dmPartnerUserId: null,
             unread: false,
             messages: fetchedMessages,
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
-          console.log("newChat:", newChat)
           setCurrentMainChat(newChat)
         } else {
           console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages)
@@ -261,25 +257,24 @@ export default function ChatsPane(props: ChatsPaneProps) {
     });
   };
 
-  const moveToSelectedChat = async (chatId: number, chatEmail: string, chatName: string, isDm: boolean) => {
+  const moveToSelectedChat = async (chatId: number, chatName: string, isDm: boolean, dmPartnerUserId: string) => {
     try {
       const isKnownChat = await _checkKnownChat(chatId, isDm);
       setOpenUsers(false);
 
       if (!isKnownChat) {
-        console.log("New Chat")
         socket.emit("message", {
           message: 'Joined',
           destCGName: chatName,
-          destCGEmail: chatEmail,
+          destCGId: chatId,
           isDm: isDm,
+          dmPartnerUserId: dmPartnerUserId
         }, (ack: any) => {
           if (isDm) {
             const dmMessage: MessageProps = {
               messageIdWithChatId: `${chatId}-1`,
               chatId: chatId,
               messageId: 1,
-              chatEmail: chatEmail,
               content: 'Joined',
               sender: myself,
               tsSent: getCurrentTimestamp(),
@@ -288,8 +283,8 @@ export default function ChatsPane(props: ChatsPaneProps) {
             const dmChat: AllChatProps = {
               chatId: chatId,
               chatName: chatName,
-              chatEmail: chatEmail,
               isDm: true,
+              dmPartnerUserId: dmPartnerUserId,
               unread: true,
               latestMessage: dmMessage,
               TSLastMessage: getCurrentTimestamp(),
@@ -305,7 +300,6 @@ export default function ChatsPane(props: ChatsPaneProps) {
               messageIdWithChatId: `${chatId}-1`,
               chatId: chatId,
               messageId: 1,
-              chatEmail: chatEmail,
               content: 'Joined',
               sender: myself,
               tsSent: getCurrentTimestamp(),
@@ -314,8 +308,8 @@ export default function ChatsPane(props: ChatsPaneProps) {
             const gmChat: AllChatProps = {
               chatId: chatId,
               chatName: chatName,
-              chatEmail: chatEmail,
               isDm: false,
+              dmPartnerUserId: null,
               unread: true,
               latestMessage: gmMessage,
               TSLastMessage: getCurrentTimestamp(),
@@ -327,11 +321,10 @@ export default function ChatsPane(props: ChatsPaneProps) {
           }
         });
       } else {
-        console.log("Existing Chat")
         if (isDm) {
-          moveToDMChat(chatId, chatEmail, chatName, setCurrentMainChat)
+          moveToDMChat(chatId, chatName, setCurrentMainChat)
         } else {
-          moveToGMChat(chatId, chatEmail, chatName, setCurrentMainChat)
+          moveToGMChat(chatId, chatName, setCurrentMainChat)
         }
       }
 
@@ -341,27 +334,27 @@ export default function ChatsPane(props: ChatsPaneProps) {
   };
 
   function onChangeHandler(value: any) {
-    var isDm: boolean = true
-    if (value.type === "Group") {
-      isDm = false;
-    }
+    if (value !== null) {
+      var isDm: boolean = true
+      if (value.type === "Group") {
+        isDm = false;
+      }
 
-    socket.emit("join", {
-      joiningCGId: value.id,
-      joiningCGEmail: value.email,
-      joiningCGName: value.name,
-      isDm: isDm,
-      userEmail: myself.userEmail,
-    }, (ack: any) => {
-      moveToSelectedChat(
-        value.id,
-        value.email,
-        value.name,
-        (value.type === "Group") ? Boolean(false) : Boolean(true)
-      )
+      socket.emit("join", {
+        joiningCGId: value.id, // dm_id or gm_id
+        joiningCGName: value.name, // dm_name or gm_name
+        isDm: isDm,
+        dmPartnerUserId: value.dmPartnerUserId,
+      }, (ack: any) => {
+        moveToSelectedChat(
+          value.id,
+          value.name,
+          (value.type === "Group") ? Boolean(false) : Boolean(true),
+          value.dmPartnerUserId
+        )
+      }
+      );
     }
-    );
-
   }
 
   // Modal configs
@@ -508,7 +501,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             .map((chat) =>
               !chat.isDm && (
                 <ChatListItem
-                  key={chat.chatEmail}
+                  key={chat.chatId}
                   chat={chat}
                   myself={myself}
                   currentMainChat={currentMainChat}
@@ -568,7 +561,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             .map((chat) =>
               chat.isDm && (
                 <ChatListItem
-                  key={chat.chatEmail}
+                  key={chat.chatId}
                   chat={chat}
                   myself={myself}
                   currentMainChat={currentMainChat}

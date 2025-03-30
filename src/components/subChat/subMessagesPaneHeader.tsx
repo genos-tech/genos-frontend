@@ -28,7 +28,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
     setCurrentMainChat,
     setCurrentSubChat,
     setIsSubChatVisible } = props;
-  const isYou = myself.userEmail === subChat.chatEmail;
+  const isYou = myself.userId === subChat.dmPartnerUserId;
 
   const swapChat = () => {
     setCurrentMainChat(subChat)
@@ -85,18 +85,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
             }
             sx={{ fontWeight: 'lg', fontSize: 'lg' }}
           >
-            {isYou ? `${subChat.chatName} (me)` : subChat.chatName}
-          </Typography>
-          <Typography
-            level="body-sm"
-            sx={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '300px'
-            }}
-          >
-            {subChat.chatEmail}
+            {isYou ? `${subChat.chatName} (you)` : subChat.chatName}
           </Typography>
         </div>
       </Stack>

@@ -14,7 +14,6 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 type CreateCGResponse = {
     chatId: number,
     chatName: string,
-    chatEmail: string,
     message: string,
 };
 
@@ -47,9 +46,9 @@ const insertGMChatAndMessage = async (
             setAllChats([...allChats, {
                 chatId: newGMChat.chatId,
                 chatName: newGMChat.chatName,
-                chatEmail: newGMChat.chatEmail,
                 unread: false,
                 isDm: false,
+                dmPartnerUserId: null,
                 latestMessage: newGMChat.latestMessage,
                 TSLastMessage: getCurrentTimestamp()
             }]);
@@ -63,7 +62,7 @@ const insertGMChatAndMessage = async (
         const insertGMChatWorker = new InsertGMChatWorker();
         insertGMChatWorker.postMessage({ gmChat: newGMChat });
         insertGMChatWorker.onmessage = (event) => {
-            moveToGMChat(newGMChat.chatId, newGMChat.chatEmail, newGMChat.chatName, setCurrentMainChat)
+            moveToGMChat(newGMChat.chatId, newGMChat.chatName, setCurrentMainChat)
             resolve(event.data);
             insertGMChatWorker.terminate();
         };
@@ -76,7 +75,6 @@ const insertGMChatAndMessage = async (
 
 const moveToGMChat = async (
     chatId: number,
-    chatEmail: string,
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
 ): Promise<string> => {
@@ -91,8 +89,8 @@ const moveToGMChat = async (
                 const newChat: ChatProps = {
                     chatId: chatId,
                     chatName: chatName,
-                    chatEmail: chatEmail,
                     isDm: false,
+                    dmPartnerUserId: null,
                     unread: false,
                     messages: fetchedMessages,
                     latestMessage: fetchedMessages[fetchedMessages.length - 1],
@@ -124,15 +122,14 @@ async function createChatGroup(
     setCurrentMainChat: (chat: ChatProps) => void,
     accessToken: string,
 ): Promise<CreateCGResponse> {
-    const userEmail = myself.userEmail;
-    const userName = myself.userName;
+    const userId = myself.userId;
 
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
         setCreateCGErrorMessage(errorMsg);
         setGroupName("");
-        return { message: errorMsg, chatId: -1, chatName: "", chatEmail: "" };
+        return { message: errorMsg, chatId: -1, chatName: "" };
     }
 
     try {
@@ -145,8 +142,8 @@ async function createChatGroup(
             body: JSON.stringify({
                 group_email: `${chatName}@origin.tech`,
                 group_name: chatName,
-                owner_email: userEmail,
-                owner_team: "origin-tech"
+                owner_user: localStorage.getItem("userId"),
+                owner_team: localStorage.getItem("teamId"),
             }),
         });
 
@@ -159,30 +156,30 @@ async function createChatGroup(
             throw new Error(errorMsg);
         } else {
             socket.emit("join", {
-                joiningCGEmail: data.chatEmail,
-                joiningCGName: data.chatName,
+                joiningCGId: data.chatId, // gm_id
+                joiningCGName: data.chatName, // gm_name
                 isDm: false,
-                userEmail: userEmail
+                dmPartnerUserId: null,
             }, (ack: any) => {
                 socket.emit("message", {
-                    message: 'I created this group',
+                    message: 'Created this group',
                     destCGName: chatName,
-                    destCGEmail: data.chatEmail,
+                    destCGId: data.chatId,
                     isDm: false,
+                    dmPartnerUserId: null,
                 });
             });
 
             const newGMChat: AllChatProps = {
                 chatId: data.chatId,
                 chatName: chatName,
-                chatEmail: data.chatEmail,
                 isDm: false,
+                dmPartnerUserId: null,
                 unread: false,
                 latestMessage: {
                     messageIdWithChatId: `${data.chatId}-1`,
                     chatId: data.chatId,
                     messageId: 1,
-                    chatEmail: data.chatEmail,
                     content: 'I created this group',
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
@@ -206,7 +203,7 @@ async function createChatGroup(
         console.error(errorMsg);
         setCreateCGErrorMessage(errorMsg);
         setGroupName("");
-        return { message: errorMsg, chatId: -1, chatName: "", chatEmail: "" };
+        return { message: errorMsg, chatId: -1, chatName: "" };
     }
 
 }

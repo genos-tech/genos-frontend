@@ -13,15 +13,20 @@ import QuestionAnswerRoundedIcon from '@mui/icons-material/QuestionAnswerRounded
 import CircleIcon from '@mui/icons-material/Circle';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import BrightnessAutoRoundedIcon from '@mui/icons-material/BrightnessAutoRounded';
 import { useAuth } from "../../components/admin/AuthContext";
-
+import TeamDropdown from '../team/teamDropdown';
 import ColorSchemeToggle from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';
+import { UserProps } from '../../types';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-export default function Sidebar() {
+type SidebarProps = {
+  myself: UserProps;
+  setMyself: (me: UserProps) => void;
+};
+
+export default function Sidebar(props: SidebarProps) {
   const { setAccessToken } = useAuth();
   const navigate = useNavigate();
 
@@ -37,6 +42,7 @@ export default function Sidebar() {
         localStorage.setItem("isSigningIn", "no");
         localStorage.setItem("userEmail", "");
         localStorage.setItem("userName", "");
+        localStorage.setItem("userId", "");
         setAccessToken(null);
         navigate("/");
       } else {
@@ -109,9 +115,7 @@ export default function Sidebar() {
         onClick={() => closeSidebar()}
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-        <IconButton component='a' variant="soft" color="primary" size="sm" title='Dark Mode'>
-          <BrightnessAutoRoundedIcon />
-        </IconButton>
+        <TeamDropdown myself={props.myself} setMyself={props.setMyself} />
         <ColorSchemeToggle />
       </Box>
 

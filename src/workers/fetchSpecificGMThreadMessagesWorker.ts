@@ -4,8 +4,6 @@ import { messageIdWithChatId } from "../components/indexedDBUtils/crud";
 self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;
     const threadId: number = event.data.threadId;
-    // console.log("Fetch GM chatId:", chatId)
-    // console.log("Fetch GM threadId:", threadId)
 
     if (chatId !== undefined && threadId !== undefined) {
         const gmThreadMessages = await messageIdWithChatId({

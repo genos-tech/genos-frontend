@@ -40,7 +40,7 @@ type MessagesPaneHeaderProps = {
 
 export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
   const { myself, thread, setCurrentThreadChat, setIsThreadVisible, setIsTaskContentVisible } = props;
-  const isYou = myself.userEmail === thread?.chatEmail;
+  const isYou = myself.userId === thread.dmPartnerUserId;
 
   const [taskContent, setTaskContent] = useState(taskContents.content);
 
@@ -58,9 +58,9 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
   const dummyThreadChat: ThreadProps = {
     chatId: thread.chatId,
     chatName: thread.chatName,
-    chatEmail: thread.chatEmail,
     threadId: thread.threadId,
     isDm: thread.isDm,
+    dmPartnerUserId: thread.dmPartnerUserId,
     unread: false,
     messages: [],
     TSLastMessage: thread.TSLastMessage,
@@ -95,19 +95,7 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
             noWrap
             sx={{ fontWeight: 'lg', fontSize: 'lg' }}
           >
-            {isYou ? `${thread?.chatName} (me)` : thread?.chatName}
-          </Typography>
-
-          <Typography
-            level="body-sm"
-            sx={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              maxWidth: '300px'
-            }}
-          >
-            {thread?.chatEmail}
+            {isYou ? `${thread?.chatName} (you)` : thread?.chatName}
           </Typography>
 
         </div>

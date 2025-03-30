@@ -26,7 +26,6 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                     { unique: false }
                 );
             }
-            // DM messages store (Corresponding "chat" can be found by "chatEmail")
             if (!db.objectStoreNames.contains(STORES.DM_MESSAGES)) {
                 const dmMessagesStore = db.createObjectStore(
                     STORES.DM_MESSAGES,
@@ -44,7 +43,6 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                     { unique: true }
                 );
             }
-            // DM thread messages store (Corresponding "chat" can be found by "chatEmail")
             if (!db.objectStoreNames.contains(STORES.DM_THREAD_MESSAGES)) {
                 const dmThreadMessagesStore = db.createObjectStore(
                     STORES.DM_THREAD_MESSAGES,
@@ -76,7 +74,6 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                     { unique: false }
                 );
             }
-            // GM messages store (Corresponding "chat" can be found by "chatEmail")
             if (!db.objectStoreNames.contains(STORES.GM_MESSAGES)) {
                 const gmMessagesStore = db.createObjectStore(
                     STORES.GM_MESSAGES,
@@ -94,7 +91,6 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                     { unique: true }
                 );
             }
-            // GM thread messages store (Corresponding "chat" can be found by "chatEmail")
             if (!db.objectStoreNames.contains(STORES.GM_THREAD_MESSAGES)) {
                 const gmThreadMessagesStore = db.createObjectStore(
                     STORES.GM_THREAD_MESSAGES,

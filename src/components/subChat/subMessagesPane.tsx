@@ -27,7 +27,7 @@ type MessagesPaneProps = {
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsSubChatVisible: (value: boolean) => void;
   setIsThreadVisible: (value: boolean) => void;
-  currentSubChatEmail: string;
+  currentSubChatId: number;
 };
 
 export default function MessagesSubPane(props: MessagesPaneProps) {
@@ -43,7 +43,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
     setCurrentThreadChat,
     setIsSubChatVisible,
     setIsThreadVisible,
-    currentSubChatEmail } = props;
+    currentSubChatId } = props;
   const [chatMessages, setChatMessages] = useState(subChat.messages);
   const [content, setContent] = useState("");
 
@@ -82,7 +82,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         })
       }, 300)
     }
-  }, [currentSubChatEmail])
+  }, [currentSubChatId])
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -93,7 +93,6 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
   const handleFiles = (selectedFiles: File[]) => {
     selectedFiles.forEach((file) => {
       const fileType = file.type;
-      console.log("Got file:", fileType)
       if (fileType === "image/jpeg" || fileType === "image/png") {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -108,7 +107,6 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         reader.readAsDataURL(file);
       } else {
         const fileURL = URL.createObjectURL(file);
-        console.log("uploaded file:", fileURL)
       }
     });
   };
@@ -142,7 +140,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
             atBottomThreshold={128}
             itemContent={(index) => {
               const message = chatMessages[index];
-              const isYou = message.sender.userName === myself.userName;
+              const isYou = myself.userId === message.sender.userId;
               return (
                 <div>
                   <Stack

@@ -1,39 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { CssVarsProvider, useColorScheme } from '@mui/joy/styles';
 import GlobalStyles from '@mui/joy/GlobalStyles';
 import CssBaseline from '@mui/joy/CssBaseline';
-import { Alert } from "@mui/joy";
 import Box from '@mui/joy/Box';
-import Button from '@mui/joy/Button';
-import FormControl from '@mui/joy/FormControl';
-import FormLabel from '@mui/joy/FormLabel';
 import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
-import Input from '@mui/joy/Input';
 import Typography from '@mui/joy/Typography';
-import Stack from '@mui/joy/Stack';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import BusinessIcon from '@mui/icons-material/Business';
-import Link from '@mui/joy/Link';
+import { useAuth } from "../admin/AuthContext";
+import List from '@mui/joy/List';
+import ListItemDecorator from '@mui/joy/ListItemDecorator';
+import ListItemButton from '@mui/joy/ListItemButton';
+import AcUnitIcon from '@mui/icons-material/AcUnit';
+import loadAllTeams from '../loadFromBackend/loadAllTeams';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-interface FormElements extends HTMLFormControlsCollection {
-    userName: HTMLInputElement;
-    email: HTMLInputElement;
-    password: HTMLInputElement;
-    confirm_password: HTMLInputElement;
-}
-interface SignUpFormElement extends HTMLFormElement {
-    readonly elements: FormElements;
-}
-
-type SignUpResponse = {
-    access: string | null;
-    refresh: string | null;
-    user: any | null;
-    message: string;
+type CreateMyDMResponse = {
+    dm_id: string | null;
+    ts_created_at: string | null;
+    ts_updated_at: string | null;
+    user_1_id: string | null;
+    user_2_id: string | null;
 };
 
 function ColorSchemeToggle(props: IconButtonProps) {
@@ -60,45 +50,94 @@ function ColorSchemeToggle(props: IconButtonProps) {
     );
 }
 
+type Team = {
+    team_id: string,
+    team_name: string,
+    team_email: string,
+}
 
-export default function SignUp() {
+type CreateTeamResponse = {
+    team_id: number;
+    detail: string | null;
+    hint: string | null;
+};
+
+export default function SelectTeam() {
     const navigate = useNavigate();
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const { accessToken } = useAuth();
+    const [teams, setTeams] = useState<Team[]>([]);
 
-    async function signUp(name: string, email: string, password: string): Promise<SignUpResponse> {
+    useEffect(() => {
+        if (accessToken !== null) {
+            (async () => {
+                const loadedTeams: Team[] = await loadAllTeams({ accessToken: accessToken || "" });
+                setTeams(loadedTeams)
+            })();
+        }
+    }, [accessToken])
 
+    async function moveToTeam(teamId: string) {
         try {
-            const signupResponse = await fetch(`${base_url}/user/signup/`, {
+            const joinTeamResponse = await fetch(`${base_url}/team/join/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${accessToken}`
                 },
                 body: JSON.stringify({
-                    username: name,
-                    email: email,
-                    password: password
+                    team_id: teamId,
+                    attendee_id: localStorage.getItem("userId")
                 }),
             });
 
-            const signupData: SignUpResponse = await signupResponse.json();
+            const joinTeamData = await joinTeamResponse.json();
 
-            if (!signupResponse.ok) {
-                setErrorMessage(signupData.message || 'User Creation Failed');
-                throw new Error(signupData.message || 'User Creation Failed');
+            localStorage.setItem("teamId", joinTeamData.team);
+
+            if (!joinTeamResponse.ok) {
+                console.error("joinTeamData:", joinTeamData)
+                throw new Error('Failed to join team');
+            } else {
+                // Send initial DM message to myself
+                const myUserId = localStorage.getItem("userId")
+                // 1. Crete DM for myself
+                const createMyDMResponse = await fetch(`${base_url}/dm/create/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        user_1_id: myUserId
+                        , user_2_id: myUserId
+                    }),
+                });
+
+                const createMyDMData: CreateMyDMResponse = await createMyDMResponse.json();
+                
+                // 2. Send an initial message
+                const initMessageResponse = await fetch(`${base_url}/dm/addMessage/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        dm_id: createMyDMData.dm_id,
+                        sender_id: myUserId,
+                        receiver_id: myUserId,
+                        message_body: "Joined",
+                        is_init: true
+                    }),
+                });
+                const initMessageData = await initMessageResponse.json();
             }
 
-            navigate('/');
-
-            return signupData
-
+            navigate('/App')
         } catch (error) {
             const err_msg = `${error}`
             console.error(err_msg);
-            setErrorMessage(err_msg);
-            navigate('/SignUp');
-            return { message: err_msg, user: null, access: null, refresh: null }
         }
-
     }
 
     return (
@@ -172,63 +211,30 @@ export default function SignUp() {
                             },
                         }}
                     >
-                        <Stack sx={{ gap: 4, mb: 2 }}>
-                            <Stack sx={{ gap: 1 }}>
-                                <Typography component="h1" level="h3">
-                                    Sign Up
-                                </Typography>
-                            </Stack>
-                            {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
-                        </Stack>
-
-                        <Stack sx={{ gap: 4, mt: 2 }}>
-                            <form
-                                onSubmit={(event: React.FormEvent<SignUpFormElement>) => {
-                                    event.preventDefault(); // Needs for prevent reload page
-
-                                    const formElements = event.currentTarget.elements;
-                                    const name = formElements.userName.value
-                                    const email = formElements.email.value
-                                    const password = formElements.password.value
-                                    const confirm_password = formElements.confirm_password.value
-
-                                    if (password !== confirm_password) {
-                                        setErrorMessage('Failed to confirm your password.');
-                                    } else {
-                                        signUp(name, email, password);
-                                    }
-
-                                }}
-                            >
-                                <FormControl required>
-                                    <FormLabel>Name</FormLabel>
-                                    <Input type="name" name="userName" />
-                                </FormControl>
-                                <FormControl required>
-                                    <FormLabel>Email</FormLabel>
-                                    <Input type="email" name="email" />
-                                </FormControl>
-                                <FormControl required>
-                                    <FormLabel>Password</FormLabel>
-                                    <Input type="password" name="password" />
-                                </FormControl>
-                                <FormControl required>
-                                    <FormLabel>Confirm Password</FormLabel>
-                                    <Input type="password" name="confirm_password" />
-                                </FormControl>
-                                <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Button type="submit" fullWidth>
-                                        Sign up
-                                    </Button>
-                                </Stack>
-                            </form>
-                        </Stack>
-                        <Typography level="body-sm" textAlign={'right'}>
-                            <Link href="SignIn" level="title-sm">
-                                Back to Sign in
-                            </Link>
+                        <Typography component="h1" level="h3">
+                            Select Team
                         </Typography>
+                        <List component="nav"
+                            sx={{
+                                maxHeight: 300,
+                                overflow: 'auto',
+                            }}
+                        >
+                            {teams.map((team) => (
+                                <ListItemButton key={team.team_id} title={team.team_email} onClick={() => {
+                                    moveToTeam(team.team_id);
+                                }}>
+                                    <ListItemDecorator>
+                                        <AcUnitIcon />
+                                    </ListItemDecorator>
+                                    <Typography component="h1" level="h4">
+                                        {team.team_name}
+                                    </Typography>
+                                </ListItemButton>
+                            ))}
+                        </List>
                     </Box>
+
                     <Box component="footer" sx={{ py: 3 }}>
                         <Typography level="body-xs" sx={{ textAlign: 'center' }}>
                             © Origin {new Date().getFullYear()}

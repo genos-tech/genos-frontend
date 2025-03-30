@@ -87,12 +87,12 @@ export default function ChatListItem(props: ChatListItemProps) {
     isSubChatVisible,
     setIsSubChatVisible } = props;
   const selected = currentMainChat.chatName === chat.chatName || (isSubChatVisible && currentSubChat.chatName === chat.chatName);
-  const isYou = myself.userEmail === chat.chatEmail;
+  const isYou = myself.userId === chat.dmPartnerUserId;
 
   const always_online: boolean = true; // TODO: need to get status from WS
 
   const onClickHandler = () => {
-    if (isSubChatVisible === false || currentSubChat.chatEmail !== chat.chatEmail) {
+    if (isSubChatVisible === false || currentSubChat.chatId !== chat.chatId) {
       toggleMessagesPane();
       chat.unread = Boolean(false);
       if (chat.isDm) {
@@ -101,8 +101,8 @@ export default function ChatListItem(props: ChatListItemProps) {
             const newMessages: ChatProps = {
               chatId: chat.chatId,
               chatName: chat.chatName,
-              chatEmail: chat.chatEmail,
               isDm: chat.isDm,
+              dmPartnerUserId: chat.dmPartnerUserId,
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
@@ -117,8 +117,8 @@ export default function ChatListItem(props: ChatListItemProps) {
             const newMessages: ChatProps = {
               chatId: chat.chatId,
               chatName: chat.chatName,
-              chatEmail: chat.chatEmail,
               isDm: chat.isDm,
+              dmPartnerUserId: chat.dmPartnerUserId,
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
@@ -132,7 +132,7 @@ export default function ChatListItem(props: ChatListItemProps) {
   };
 
   const splitOpenHandler = () => {
-    if (currentMainChat.chatEmail !== chat.chatEmail) {
+    if (currentMainChat.chatId !== chat.chatId) {
       toggleMessagesPane();
       if (chat.isDm) {
         _FetchSpecificDMMessagesWorker(chat.chatId)
@@ -140,8 +140,8 @@ export default function ChatListItem(props: ChatListItemProps) {
             const newMessages: ChatProps = {
               chatId: chat.chatId,
               chatName: chat.chatName,
-              chatEmail: chat.chatEmail,
               isDm: chat.isDm,
+              dmPartnerUserId: chat.dmPartnerUserId,
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
@@ -156,8 +156,8 @@ export default function ChatListItem(props: ChatListItemProps) {
             const newMessages: ChatProps = {
               chatId: chat.chatId,
               chatName: chat.chatName,
-              chatEmail: chat.chatEmail,
               isDm: chat.isDm,
+              dmPartnerUserId: chat.dmPartnerUserId,
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
@@ -201,7 +201,7 @@ export default function ChatListItem(props: ChatListItemProps) {
                 </div>
                 <Box>
                   <Typography noWrap level="title-sm">
-                    {isYou ? `${chat.chatName} (me)` : chat.chatName}
+                    {isYou ? `${chat.chatName} (you)` : chat.chatName}
                   </Typography>
                 </Box>
               </Stack>

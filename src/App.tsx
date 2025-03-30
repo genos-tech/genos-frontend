@@ -8,16 +8,50 @@ import {
   UserProps,
   ChatProps,
 } from "./types";
-import { SocketProvider } from "./components/utils/socketContext";
 
-const myself: UserProps = {
-  userName: localStorage.getItem("userName") || "",
-  userEmail: localStorage.getItem("userEmail") || "",
-  avatarImgPath: "/path/to/user/Origin.jpg",
-  online: true,
+type SetMyselfProps = {
+  myself: UserProps;
+  setMyself: (me: UserProps) => void;
+}
+
+const useMyself = (): SetMyselfProps => {
+  const [myself, setMyself] = useState<UserProps>({
+    teamId: "",
+    userId: "",
+    userName: "",
+    userEmail: "",
+    avatarImgPath: "/path/to/user/Origin.jpg",
+    online: true,
+  });
+
+  useEffect(() => {
+    const fetchUserData = () => {
+      setMyself({
+        teamId: localStorage.getItem("teamId") || "",
+        userId: localStorage.getItem("userId") || "",
+        userName: localStorage.getItem("userName") || "",
+        userEmail: localStorage.getItem("userEmail") || "",
+        avatarImgPath: "/path/to/user/Origin.jpg",
+        online: true,
+      });
+    };
+
+    // Add a small delay to ensure localStorage is updated
+    setTimeout(fetchUserData, 50);
+
+    // Listen for storage updates in case another tab updates it
+    window.addEventListener("storage", fetchUserData);
+
+    return () => {
+      window.removeEventListener("storage", fetchUserData);
+    };
+  }, []);
+
+  return { myself, setMyself };
 };
 
 function App() {
+  const { myself, setMyself } = useMyself();
   const [isLoading, setIsLoading] = useState(true);
   const [currentMainChat, setCurrentMainChat] = useState<ChatProps>();
 
@@ -35,6 +69,7 @@ function App() {
 
         <ChatHome
           myself={myself}
+          setMyself={setMyself}
           currentMainChat={currentMainChat}
           setCurrentMainChat={setCurrentMainChat}
         />

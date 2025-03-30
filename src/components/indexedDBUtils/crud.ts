@@ -147,13 +147,11 @@ export const messageIdWithChatId = async (props: any) => {
 };
 
 export const getAllData = async (storeName: string) => {
-    // console.log("getAllData:", storeName)
     const db = await initDB();
     return db.getAll(storeName);
 };
 
 export const deleteData = async (storeName: string, id: string) => {
-    // console.log("deleteData:", storeName)
     const db = await initDB();
     const tx = db.transaction(storeName, "readwrite");
     await tx.store.delete(id);

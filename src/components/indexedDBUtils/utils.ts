@@ -9,12 +9,12 @@ export async function getAllStores(dbName: string): Promise<string[]> {
 
 export async function checkIsKnownDMChat(chatId: number): Promise<boolean> {
     const db = await openDB(DB_NAME, DB_VERSION);
-    const dmChat = db.get(STORES.DM_CHATS, chatId);
+    const dmChat = await db.get(STORES.DM_CHATS, chatId);
     return dmChat !== undefined;
 }
 
 export async function checkIsKnownGMChat(chatId: number): Promise<boolean> {
     const db = await openDB(DB_NAME, DB_VERSION);
-    const gmChat = db.get(STORES.DM_CHATS, chatId);
+    const gmChat = await db.get(STORES.DM_CHATS, chatId);
     return gmChat !== undefined;
 }

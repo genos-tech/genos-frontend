@@ -18,31 +18,28 @@ self.onmessage = async (event) => {
 
     // Load data from backend
     const gmHistory: ChatProps[] = await loadGMHistory({
-        userEmail: myself.userEmail,
+        userId: myself.userId,
         accessToken: accessToken
     });
 
-    // console.log("Num of GM chats:", gmHistory.length)
     for (let i = 0; i < gmHistory.length; i += 1) {
         const gmChat: ChatProps = gmHistory[i]
 
         // Insert chat 
         await addData({
             storeName: STORES.GM_CHATS,
-            chatEmail: gmChat.chatEmail,
             data: {
                 chatId: gmChat.chatId,
-                chatEmail: gmChat.chatEmail,
                 chatName: gmChat.chatName,
                 unread: gmChat.unread,
                 isDm: false,
+                dmPartnerUserId: null,
                 latestMessage: gmChat.latestMessage,
                 TSLastMessage: gmChat.TSLastMessage
             }
         })
 
         // Insert messages by mini-batch
-        // console.log("Num of GM inserting messages:", gmChat.messages.length)
         for (let i = 0; i < gmChat.messages.length; i += BATCH_SIZE) {
             const miniBatchMessages: MessageProps[] = gmChat.messages.slice(i, i + BATCH_SIZE);
             await miniBatchInsertMessages({

@@ -97,6 +97,7 @@ const insertGMThreadMessage = async (gmThreadMessage: ThreadMessageProps): Promi
 const insertDMChat = async (
     chatId: number,
     chatName: string,
+    dmPartnerUserId: string | null,
     newDMMessage: MessageProps,
     setAllChats: (chat: AllChatProps[]
     ) => void): Promise<string> => {
@@ -106,8 +107,8 @@ const insertDMChat = async (
         const dmChat: AllChatProps = {
             chatId: chatId,
             chatName: chatName,
-            chatEmail: newDMMessage.chatEmail,
             isDm: true,
+            dmPartnerUserId: dmPartnerUserId,
             unread: true,
             latestMessage: newDMMessage,
             TSLastMessage: newDMMessage.tsSent,
@@ -148,8 +149,8 @@ const insertGMChat = async (
         const gmChat: AllChatProps = {
             chatId: chatId,
             chatName: chatName,
-            chatEmail: newGMMessage.chatEmail,
             isDm: false,
+            dmPartnerUserId: null,
             unread: true,
             latestMessage: newGMMessage,
             TSLastMessage: newGMMessage.tsSent,
@@ -181,6 +182,7 @@ const insertGMChat = async (
 
 type HomeProps = {
     myself: UserProps;
+    setMyself: (me: UserProps) => void;
     currentMainChat: ChatProps,
     setCurrentMainChat: (chat: ChatProps) => void;
 };
@@ -188,6 +190,7 @@ type HomeProps = {
 export default function Home(props: HomeProps) {
     const { mode } = useColorScheme();
     const { myself,
+        setMyself,
         currentMainChat,
         setCurrentMainChat,
     } = props;
@@ -202,8 +205,10 @@ export default function Home(props: HomeProps) {
         timeout: 10000,               // Timeout for the connection attempt
         withCredentials: true,
         query: {
-            userEmail: localStorage.getItem("userEmail"),
+            teamId: localStorage.getItem("teamId"),
+            userId: localStorage.getItem("userId"),
             userName: localStorage.getItem("userName"),
+            userEmail: localStorage.getItem("userEmail"),
         },
         extraHeaders: {
             Authorization: accessToken || ""
@@ -217,13 +222,13 @@ export default function Home(props: HomeProps) {
     const [isThreadVisible, setIsThreadVisible] = useState(false);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
 
-    const [currentMainChatEmail, setCurrentMainChatEmail] = useState<string>("");
-    const [currentSubChatEmail, setCurrentSubChatEmail] = useState<string>("");
-    const [currentThreadChatEmail, setCurrentThreadChatEmail] = useState<string>("");
+    const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
+    const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
+    const [currentThreadChatId, setCurrentThreadChatId] = useState<number>(-1);
 
     // Load initial Chats with latest one message
     useEffect(() => {
-        console.log("Fetch my all chats")
+
         const fetchAllChatsWorker = new FetchAllChatsWorker();
         fetchAllChatsWorker.postMessage({});
         fetchAllChatsWorker.onmessage = (event) => {
@@ -240,13 +245,13 @@ export default function Home(props: HomeProps) {
     // Web Socket handler
     useEffect(() => {
         socket.on("connect", () => {
-            // Join to initial user room
-            socket.emit("join", {
-                joiningCGEmail: myself.userEmail,
-                joiningCGName: myself.userName,
-                isDm: true,
-                userEmail: myself.userEmail
-            });
+            // // Join to initial user room
+            // socket.emit("join", {
+            //     joiningCGId: -1,
+            //     joiningCGName: myself.userName,
+            //     isDm: true,
+            //     dmPartnerUserId: myself.userId,
+            // });
         });
 
         socket.on("auth_error", (data) => {
@@ -254,266 +259,266 @@ export default function Home(props: HomeProps) {
             // alert(`Error: ${data.message}`);
         });
 
-        var incomingChatEmail: string = ""
-        var incomingChatId: number = -1
-
         socket.on("message", (message) => {
             console.log("message:", message)
-            if (message.isDm === true) {
-                if (message.isThread === true) {
-                    const newMessage: NewThreadMessageProps = message;
-                    var fromMyself: boolean = false
+            if (message.chatId !== null) {
+                if (message.isDm === true) {
+                    if (message.isThread === true) {
+                        const newMessage: NewThreadMessageProps = message;
+                        var fromMe: boolean = false
+                        var toMe: boolean = false
 
-                    if (newMessage.chatEmail === myself.userEmail) {
-                        if (newMessage.chatEmail === newMessage.sender.userEmail) {
-                            console.log("DM thread for personal")
-                            incomingChatEmail = myself.userEmail;
-                            fromMyself = true
+                        if (newMessage.dmPartnerUserId === myself.userId) {
+                            if (newMessage.dmPartnerUserId === newMessage.sender.userId) {
+                                console.log("Personal DM thread")
+                                fromMe = true
+                                toMe = true
+                            } else {
+                                console.log("DM thread from my friend")
+                                toMe = true
+                            }
                         } else {
-                            console.log("DM thread from my friend")
-                            incomingChatEmail = newMessage.sender.userEmail;
+                            if (newMessage.sender.userId === myself.userId) {
+                                console.log("DM thread from myself")
+                                fromMe = true
+                                toMe = true
+                            } else {
+                                console.log("DM thread not for me")
+                            }
+                        }
+
+                        if (fromMe === false && toMe === true) {
+                            const newDMThreadMessage: ThreadMessageProps = {
+                                messageIdWithChatIdAndThreadId: `${newMessage.chatId}-${newMessage.threadId}-${newMessage.messageId}`,
+                                chatId: newMessage.chatId,
+                                threadId: newMessage.threadId,
+                                messageId: newMessage.messageId,
+                                content: newMessage.content,
+                                sender: newMessage.sender,
+                                tsSent: newMessage.tsSent,
+                            }
+                            insertDMThreadMessage(newDMThreadMessage)
+
+                            // Update current visible thread pane
+                            if (currentThreadChat !== undefined
+                                && newMessage.chatId === currentThreadChat.chatId
+                                && newDMThreadMessage.threadId === currentThreadChat.threadId) {
+                                const updatedThreadChat: ThreadProps = {
+                                    chatId: currentThreadChat.chatId,
+                                    chatName: currentThreadChat.chatName,
+                                    threadId: newDMThreadMessage.threadId,
+                                    isDm: newMessage.isDm,
+                                    dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    unread: false,
+                                    messages: [...currentThreadChat.messages, newDMThreadMessage],
+                                    TSLastMessage: newDMThreadMessage.tsSent,
+                                };
+                                setCurrentThreadChat(updatedThreadChat);
+                            }
+
                         }
                     } else {
-                        if (newMessage.sender.userEmail === myself.userEmail) {
-                            console.log("DM thread from myself")
-                            incomingChatEmail = newMessage.chatEmail;
-                            fromMyself = true
+                        const newMessage: NewMessageProps = message;
+                        var fromMe: boolean = false
+                        var toMe: boolean = false
+
+                        if (newMessage.dmPartnerUserId === myself.userId) {
+                            if (newMessage.dmPartnerUserId === newMessage.sender.userId) {
+                                console.log("Personal DM")
+                                fromMe = true
+                                toMe = true
+                            } else {
+                                console.log("DM from my friend")
+                                toMe = true
+                            }
                         } else {
-                            console.log("DM thread not for me")
-                            incomingChatEmail = "";
-                        }
-                    }
-
-                    if (incomingChatEmail !== "" && newMessage.messageId !== -1 && !fromMyself) {
-                        const newDMThreadMessage: ThreadMessageProps = {
-                            messageIdWithChatIdAndThreadId: `${incomingChatId}-${newMessage.threadId}-${newMessage.messageId}`,
-                            chatId: newMessage.chatId,
-                            threadId: newMessage.threadId,
-                            messageId: newMessage.messageId,
-                            chatEmail: incomingChatEmail,
-                            content: newMessage.content,
-                            sender: newMessage.sender,
-                            tsSent: newMessage.tsSent,
-                        }
-                        insertDMThreadMessage(newDMThreadMessage)
-
-                        // Update current visible thread pane
-                        if (currentThreadChat !== undefined
-                            && incomingChatEmail === currentThreadChat.chatEmail
-                            && newDMThreadMessage.threadId === currentThreadChat.threadId) {
-                            const updatedThreadChat: ThreadProps = {
-                                chatId: currentThreadChat.chatId,
-                                chatName: currentThreadChat.chatName,
-                                chatEmail: currentThreadChat.chatEmail,
-                                threadId: newDMThreadMessage.threadId,
-                                isDm: newMessage.isDm,
-                                unread: false,
-                                messages: [...currentThreadChat.messages, newDMThreadMessage],
-                                TSLastMessage: newDMThreadMessage.tsSent,
-                            };
-                            setCurrentThreadChat(updatedThreadChat);
+                            if (newMessage.sender.userId === myself.userId) {
+                                console.log("DM from myself")
+                                fromMe = true
+                                toMe = true
+                            } else {
+                                console.log("DM not for me")
+                            }
                         }
 
+                        if (fromMe === false && toMe === true) {
+                            const newDMMessage: MessageProps = {
+                                messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
+                                chatId: newMessage.chatId,
+                                messageId: newMessage.messageId,
+                                content: newMessage.content,
+                                sender: newMessage.sender,
+                                numReplies: newMessage.numReplies,
+                                tsSent: newMessage.tsSent,
+                            }
+                            insertDMMessage(newDMMessage)
+
+                            insertDMChat(
+                                newMessage.chatId,
+                                newMessage.sender.userName,
+                                newMessage.dmPartnerUserId,
+                                newDMMessage,
+                                setAllChats)
+
+                            if (newMessage.chatId === currentMainChat.chatId) {
+                                const updatedChat: ChatProps = {
+                                    chatId: newMessage.chatId,
+                                    chatName: newMessage.sender.userName,
+                                    isDm: newMessage.isDm,
+                                    dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    unread: false,
+                                    messages: [...currentMainChat.messages, newMessage],
+                                    latestMessage: newMessage,
+                                    TSLastMessage: newMessage.tsSent,
+                                };
+                                setCurrentMainChat(updatedChat);
+                            } else if (newMessage.chatId === currentSubChat?.chatId) {
+                                const updatedChat: ChatProps = {
+                                    chatId: newMessage.chatId,
+                                    chatName: newMessage.sender.userName,
+                                    isDm: newMessage.isDm,
+                                    dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    unread: false,
+                                    messages: [...currentMainChat.messages, newMessage],
+                                    latestMessage: newMessage,
+                                    TSLastMessage: newMessage.tsSent,
+                                };
+                                setCurrentSubChat(updatedChat);
+                            } else {
+                                console.log("Unexpected DM (newMessage.chatId):", newMessage.chatId)
+                                console.log("Unexpected DM (currentMainChat.chatId):", currentMainChat.chatId)
+                                console.log("Unexpected DM (currentSubChat.chatId):", currentSubChat?.chatId)
+                            }
+                        }
+                        else if (fromMe === true && toMe === true) {
+                            // Only updating indexedDB for chat, not updating messaging pane
+                            const newDMMessage: MessageProps = {
+                                messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
+                                chatId: newMessage.chatId,
+                                messageId: newMessage.messageId,
+                                content: newMessage.content,
+                                sender: newMessage.sender,
+                                numReplies: newMessage.numReplies,
+                                tsSent: newMessage.tsSent,
+                            }
+                            insertDMChat(
+                                newMessage.chatId,
+                                newMessage.sender.userName,
+                                newMessage.dmPartnerUserId,
+                                newDMMessage,
+                                setAllChats)
+                        }
                     }
                 } else {
-                    const newMessage: NewMessageProps = message;
-                    var fromMyself: boolean = false
+                    if (message.isThread === true) {
+                        const newMessage: NewThreadMessageProps = message;
+                        var fromMe: boolean = false
 
-                    if (newMessage.chatEmail === myself.userEmail) {
-                        if (newMessage.chatEmail === newMessage.sender.userEmail) {
-                            console.log("DM for personal")
-                            incomingChatEmail = myself.userEmail;
-                            fromMyself = true
+                        if (newMessage.sender.userId === myself.userId) {
+                            console.log("GM thread from myself")
+                            fromMe = true
                         } else {
-                            console.log("DM from my friend")
-                            incomingChatEmail = newMessage.sender.userEmail;
+                            console.log("GM thread from someone")
                         }
+
+                        if (fromMe === false) {
+                            const newGMThreadMessage: ThreadMessageProps = {
+                                messageIdWithChatIdAndThreadId: `${newMessage.chatId}-${newMessage.threadId}-${newMessage.messageId}`,
+                                chatId: newMessage.chatId,
+                                threadId: newMessage.threadId,
+                                messageId: newMessage.messageId,
+                                content: newMessage.content,
+                                sender: newMessage.sender,
+                                tsSent: newMessage.tsSent,
+                            }
+                            insertGMThreadMessage(newGMThreadMessage);
+
+                            // Update current visible thread pane
+                            if (currentThreadChat !== undefined
+                                && newMessage.chatId === currentThreadChat.chatId
+                                && newGMThreadMessage.threadId === currentThreadChat.threadId) {
+                                const updatedThreadChat: ThreadProps = {
+                                    chatId: currentThreadChat.chatId,
+                                    chatName: currentThreadChat.chatName,
+                                    threadId: newGMThreadMessage.threadId,
+                                    isDm: newMessage.isDm,
+                                    dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    unread: false,
+                                    messages: [...currentThreadChat.messages, newGMThreadMessage],
+                                    TSLastMessage: newGMThreadMessage.tsSent,
+                                };
+                                setCurrentThreadChat(updatedThreadChat);
+                            }
+                        }
+
                     } else {
-                        if (newMessage.sender.userEmail === myself.userEmail) {
-                            console.log("DM from myself")
-                            incomingChatEmail = newMessage.chatEmail;
-                            fromMyself = true
+                        const newMessage: NewMessageProps = message;
+                        var fromMe: boolean = false
+
+                        if (newMessage.sender.userId === myself.userId) {
+                            console.log("GM from myself")
+                            fromMe = true
                         } else {
-                            console.log("DM not for me")
-                            incomingChatEmail = "";
+                            console.log("GM from someone")
                         }
-                    }
 
-                    if (incomingChatEmail !== "" && !fromMyself) {
-                        const newDMMessage: MessageProps = {
-                            messageIdWithChatId: `${incomingChatId}-${newMessage.messageId}`,
-                            chatId: newMessage.chatId,
-                            messageId: newMessage.messageId,
-                            chatEmail: incomingChatEmail,
-                            content: newMessage.content,
-                            sender: newMessage.sender,
-                            numReplies: newMessage.numReplies,
-                            tsSent: newMessage.tsSent,
-                        }
-                        insertDMMessage(newDMMessage)
-
-                        insertDMChat(newMessage.chatId, newMessage.sender.userName, newDMMessage, setAllChats)
-
-                        if (incomingChatEmail === currentMainChat.chatEmail) {
-                            const updatedChat: ChatProps = {
+                        if (fromMe === false) {
+                            const newGMMessage: MessageProps = {
+                                messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
                                 chatId: newMessage.chatId,
-                                chatName: newMessage.sender.userName,
-                                chatEmail: newMessage.sender.userEmail,
-                                isDm: newMessage.isDm,
-                                unread: false,
-                                messages: [...currentMainChat.messages, newMessage],
-                                latestMessage: newMessage,
-                                TSLastMessage: newMessage.tsSent,
-                            };
-                            setCurrentMainChat(updatedChat);
-                        } else if (incomingChatEmail === currentSubChat?.chatEmail) {
-                            const updatedChat: ChatProps = {
+                                messageId: newMessage.messageId,
+                                content: newMessage.content,
+                                sender: newMessage.sender,
+                                numReplies: newMessage.numReplies,
+                                tsSent: newMessage.tsSent,
+                            }
+                            insertGMMessage(newGMMessage)
+
+                            if (allChats.length > 0) {
+                                insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, setAllChats)
+                            }
+
+                            if (newMessage.chatId === currentMainChat.chatId) {
+                                const updatedChat: ChatProps = {
+                                    chatId: newMessage.chatId,
+                                    chatName: newMessage.chatName,
+                                    isDm: newMessage.isDm,
+                                    dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    unread: false,
+                                    messages: [...currentMainChat.messages, newMessage],
+                                    latestMessage: newMessage,
+                                    TSLastMessage: newMessage.tsSent,
+                                };
+                                setCurrentMainChat(updatedChat);
+                            } else if (newMessage.chatId === currentSubChat?.chatId) {
+                                const updatedChat: ChatProps = {
+                                    chatId: newMessage.chatId,
+                                    chatName: newMessage.chatName,
+                                    isDm: newMessage.isDm,
+                                    dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    unread: false,
+                                    messages: [...currentMainChat.messages, newMessage],
+                                    latestMessage: newMessage,
+                                    TSLastMessage: newMessage.tsSent,
+                                };
+                                setCurrentSubChat(updatedChat);
+                            } else {
+                                console.log("Unexpected GM (newMessage.chatId):", newMessage.chatId)
+                                console.log("Unexpected GM (currentMainChat.chatId):", currentMainChat.chatId)
+                                console.log("Unexpected GM (currentSubChat.chatId):", currentSubChat?.chatId)
+                            }
+                        }
+                        else if (fromMe) {
+                            // Only updating indexedDB for chat, not updating messaging pane
+                            const newGMMessage: MessageProps = {
+                                messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
                                 chatId: newMessage.chatId,
-                                chatName: newMessage.sender.userName,
-                                chatEmail: newMessage.sender.userEmail,
-                                isDm: newMessage.isDm,
-                                unread: false,
-                                messages: [...currentMainChat.messages, newMessage],
-                                latestMessage: newMessage,
-                                TSLastMessage: newMessage.tsSent,
-                            };
-                            setCurrentSubChat(updatedChat);
-                        } else {
-                            console.log("Unexpected DM (incomingChatEmail):", incomingChatEmail)
-                            console.log("Unexpected DM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
-                            console.log("Unexpected DM (currentSubChat.chatEmail):", currentSubChat?.chatEmail)
-                        }
-                    } else if (fromMyself) {
-                        const newDMMessage: MessageProps = {
-                            messageIdWithChatId: `${incomingChatId}-${newMessage.messageId}`,
-                            chatId: newMessage.chatId,
-                            messageId: newMessage.messageId,
-                            chatEmail: incomingChatEmail,
-                            content: newMessage.content,
-                            sender: newMessage.sender,
-                            numReplies: newMessage.numReplies,
-                            tsSent: newMessage.tsSent,
-                        }
-                        insertDMChat(newMessage.chatId, newMessage.sender.userName, newDMMessage, setAllChats)
-                    }
-                }
-            } else {
-                if (message.isThread === true) {
-                    const newMessage: NewThreadMessageProps = message;
-                    var fromMyself: boolean = false
-
-                    if (newMessage.sender.userEmail === myself.userEmail) {
-                        console.log("GM thread from myself")
-                        incomingChatEmail = newMessage.chatEmail;
-                        fromMyself = true
-                    } else {
-                        console.log("GM thread from someone")
-                        incomingChatEmail = newMessage.chatEmail;
-                    }
-
-                    if (incomingChatEmail !== "" && newMessage.messageId !== -1 && !fromMyself) {
-                        const newGMThreadMessage: ThreadMessageProps = {
-                            messageIdWithChatIdAndThreadId: `${incomingChatId}-${newMessage.threadId}-${newMessage.messageId}`,
-                            chatId: newMessage.chatId,
-                            threadId: newMessage.threadId,
-                            messageId: newMessage.messageId,
-                            chatEmail: incomingChatEmail,
-                            content: newMessage.content,
-                            sender: newMessage.sender,
-                            tsSent: newMessage.tsSent,
-                        }
-                        insertGMThreadMessage(newGMThreadMessage);
-
-                        // Update current visible thread pane
-                        if (currentThreadChat !== undefined
-                            && incomingChatEmail === currentThreadChat.chatEmail
-                            && newGMThreadMessage.threadId === currentThreadChat.threadId) {
-                            const updatedThreadChat: ThreadProps = {
-                                chatId: currentThreadChat.chatId,
-                                chatName: currentThreadChat.chatName,
-                                chatEmail: currentThreadChat.chatEmail,
-                                threadId: newGMThreadMessage.threadId,
-                                isDm: newMessage.isDm,
-                                unread: false,
-                                messages: [...currentThreadChat.messages, newGMThreadMessage],
-                                TSLastMessage: newGMThreadMessage.tsSent,
-                            };
-                            setCurrentThreadChat(updatedThreadChat);
-                        }
-                    }
-
-                } else {
-                    const newMessage: NewMessageProps = message;
-                    var fromMyself: boolean = false
-
-                    if (newMessage.sender.userEmail === myself.userEmail) {
-                        console.log("GM from myself")
-                        incomingChatEmail = newMessage.chatEmail;
-                        fromMyself = true
-                    } else {
-                        console.log("GM from someone")
-                        incomingChatEmail = newMessage.chatEmail;
-                    }
-
-                    if (incomingChatEmail !== "" && !fromMyself) {
-                        const newGMMessage: MessageProps = {
-                            messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
-                            chatId: newMessage.chatId,
-                            messageId: newMessage.messageId,
-                            chatEmail: newMessage.chatEmail,
-                            content: newMessage.content,
-                            sender: newMessage.sender,
-                            numReplies: newMessage.numReplies,
-                            tsSent: newMessage.tsSent,
-                        }
-                        insertGMMessage(newGMMessage)
-
-                        if (allChats.length > 0) {
-                            insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, setAllChats)
-                        }
-
-                        if (incomingChatEmail === currentMainChat.chatEmail) {
-                            const updatedChat: ChatProps = {
-                                chatId: newMessage.chatId,
-                                chatName: newMessage.chatName,
-                                chatEmail: newMessage.chatEmail,
-                                isDm: newMessage.isDm,
-                                unread: false,
-                                messages: [...currentMainChat.messages, newMessage],
-                                latestMessage: newMessage,
-                                TSLastMessage: newMessage.tsSent,
-                            };
-                            setCurrentMainChat(updatedChat);
-                        } else if (incomingChatEmail === currentSubChat?.chatEmail) {
-                            const updatedChat: ChatProps = {
-                                chatId: newMessage.chatId,
-                                chatName: newMessage.chatName,
-                                chatEmail: newMessage.chatEmail,
-                                isDm: newMessage.isDm,
-                                unread: false,
-                                messages: [...currentMainChat.messages, newMessage],
-                                latestMessage: newMessage,
-                                TSLastMessage: newMessage.tsSent,
-                            };
-                            setCurrentSubChat(updatedChat);
-                        } else {
-                            console.log("Unexpected GM (incomingChatEmail):", incomingChatEmail)
-                            console.log("Unexpected GM (currentMainChat.chatEmail):", currentMainChat.chatEmail)
-                            console.log("Unexpected GM (currentSubChat.chatEmail):", currentSubChat?.chatEmail)
-                        }
-                    } else if (fromMyself) {
-                        const newGMMessage: MessageProps = {
-                            messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
-                            chatId: newMessage.chatId,
-                            messageId: newMessage.messageId,
-                            chatEmail: newMessage.chatEmail,
-                            content: newMessage.content,
-                            sender: newMessage.sender,
-                            numReplies: newMessage.numReplies,
-                            tsSent: newMessage.tsSent,
-                        }
-
-                        if (allChats.length > 0) {
+                                messageId: newMessage.messageId,
+                                content: newMessage.content,
+                                sender: newMessage.sender,
+                                numReplies: newMessage.numReplies,
+                                tsSent: newMessage.tsSent,
+                            }
                             insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, setAllChats)
                         }
                     }
@@ -527,20 +532,20 @@ export default function Home(props: HomeProps) {
     }, [accessToken, allChats, currentMainChat, currentSubChat, currentThreadChat]);
 
     useEffect(() => {
-        if (currentMainChatEmail !== currentMainChat.chatEmail) {
-            setCurrentMainChatEmail(currentMainChat.chatEmail)
+        if (currentMainChatId !== currentMainChat.chatId) {
+            setCurrentMainChatId(currentMainChat.chatId)
         }
     }, [currentMainChat]);
 
     useEffect(() => {
-        if (currentSubChat !== undefined && currentSubChatEmail !== currentSubChat.chatEmail) {
-            setCurrentSubChatEmail(currentSubChat.chatEmail)
+        if (currentSubChat !== undefined && currentSubChatId !== currentSubChat.chatId) {
+            setCurrentSubChatId(currentSubChat.chatId)
         }
     }, [currentSubChat]);
 
     useEffect(() => {
-        if (currentThreadChatEmail !== "") {
-            setCurrentThreadChatEmail(currentThreadChatEmail)
+        if (currentThreadChatId !== -1) {
+            setCurrentThreadChatId(currentThreadChatId)
         }
     }, [currentThreadChat]);
 
@@ -594,10 +599,10 @@ export default function Home(props: HomeProps) {
     return (
         <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
 
-            <Sidebar />
+            <Sidebar myself={myself} setMyself={setMyself} />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
-                <Panel id={'1'} order={1} defaultSize={20} minSize={10} maxSize={30}>
+                <Panel id={'1'} order={1} minSize={10} maxSize={30}>
                     <Box
                         sx={{
                             height: '100%',
@@ -664,7 +669,7 @@ export default function Home(props: HomeProps) {
                                 socket={socket}
                                 setCurrentThreadChat={setCurrentThreadChat}
                                 setIsThreadVisible={setIsThreadVisible}
-                                currentThreadChatEmail={currentThreadChatEmail}
+                                currentThreadChatId={currentThreadChatId}
                                 setIsTaskContentVisible={setIsTaskContentVisible}
                             />
                         </Box>
@@ -706,7 +711,7 @@ export default function Home(props: HomeProps) {
 
 
                 {(!isTaskContentVisible || currentThreadChat === undefined) && (<>
-                    <Panel id={'4'} order={4} defaultSize={80} minSize={25} maxSize={90}>
+                    <Panel id={'4'} order={4} minSize={25} maxSize={90}>
                         <PanelGroup autoSaveId="conditional" direction="vertical">
                             {isSubChatVisible && (
                                 <>
@@ -729,7 +734,7 @@ export default function Home(props: HomeProps) {
                                             setCurrentThreadChat={setCurrentThreadChat}
                                             setIsSubChatVisible={setIsSubChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
-                                            currentSubChatEmail={currentSubChatEmail} />
+                                            currentSubChatId={currentSubChatId} />
                                     </Panel>
 
                                     <PanelResizeHandle
@@ -761,7 +766,7 @@ export default function Home(props: HomeProps) {
                                     setIsThreadVisible={setIsThreadVisible}
                                     isSubChatVisible={isSubChatVisible}
                                     setIsSubChatVisible={setIsSubChatVisible}
-                                    currentMainChatEmail={currentMainChatEmail}
+                                    currentMainChatId={currentMainChatId}
                                 />
                             </Panel>
                         </PanelGroup>
@@ -778,7 +783,7 @@ export default function Home(props: HomeProps) {
                                 className="chat-resize-handle"
                             />
 
-                            <Panel id={'7'} order={7} defaultSize={40} minSize={25} maxSize={70}>
+                            <Panel id={'7'} order={7} minSize={25} maxSize={70}>
                                 <Box
                                     sx={{
                                         height: '100%',
@@ -794,7 +799,7 @@ export default function Home(props: HomeProps) {
                                         socket={socket}
                                         setCurrentThreadChat={setCurrentThreadChat}
                                         setIsThreadVisible={setIsThreadVisible}
-                                        currentThreadChatEmail={currentThreadChatEmail}
+                                        currentThreadChatId={currentThreadChatId}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
                                     />
                                 </Box>
