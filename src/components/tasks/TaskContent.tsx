@@ -473,7 +473,7 @@ export default function taskContent(props: TaskContentProps) {
           <div className="md-content">
             <MarkdownEditor
               content={taskContent}
-              setContent={setTaskContent}
+              setBody={setTaskContent}
               height={getMdHeight(taskContent)}
               mdMode={"preview"} />
           </div>
@@ -500,7 +500,7 @@ export default function taskContent(props: TaskContentProps) {
         </Box>
 
         <div className="md-content">
-          <MarkdownEditor content={comment} setContent={setComment} height={200} mdMode={"edit"} />
+          <MarkdownEditor content={comment} setBody={setComment} height={200} mdMode={"edit"} />
         </div>
       </Box>
 

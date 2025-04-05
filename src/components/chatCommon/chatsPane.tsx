@@ -405,7 +405,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
               setOpenUsers(false);
             }}
             isOptionEqualToValue={(option, value) => option.name === value.name}
-            getOptionLabel={(option) => option.name}
+            getOptionLabel={(option) => option.type === 'People' ? `${option.name} | ${option.email}` : option.name}
             options={options}
             loading={loading}
             endDecorator={

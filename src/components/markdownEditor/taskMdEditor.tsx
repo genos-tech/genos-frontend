@@ -20,14 +20,14 @@ import SendIcon from '@mui/icons-material/Send';
 
 type MarkdownEditorProps = {
   content: string;
-  setContent: (text: string) => void;
+  setBody: (text: string) => void;
   height: number;
   mdMode: string;
 };
 
 export const MarkdownEditor = ({
   content,
-  setContent,
+  setBody,
   height,
   mdMode
 }: MarkdownEditorProps) => {
@@ -89,28 +89,6 @@ export const MarkdownEditor = ({
   };
 
 
-  const SendButton = () => {
-    return (
-      <IconButton
-        component='a'
-        variant="plain"
-        sx={{
-          color: 'rgb(217, 217, 217)',
-          paddingRight: '10px',
-          "&:hover": {
-            backgroundColor: "transparent",
-            color: "white",
-            fontWeight: "bold"
-          },
-        }}
-        onClick={
-          () => {console.log("send comment")}
-        }>
-        <SendIcon sx={{ color: 'rgb(217, 217, 217)' }} />
-        &nbsp; Send
-      </IconButton>
-    );
-  };
 
   const EmojiInputButton = () => {
     return (
@@ -196,15 +174,10 @@ export const MarkdownEditor = ({
     icon: <UnorderedListIcon color="rgb(217, 217, 217)" />,
   };
 
-  const customSendCommand = {
-    name: "custom-preview",
-    keyCommand: "custom-preview",
-    icon: <SendButton />,
-  };
 
   useEffect(() => {
     if (selectedEmoji !== null) {
-      setContent(content + selectedEmoji)
+      setBody(content + selectedEmoji)
     }
   }, [selectedEmoji])
 
@@ -212,7 +185,7 @@ export const MarkdownEditor = ({
     if (boxRef.current) {
       const rect = boxRef.current.getBoundingClientRect();
       setPosition({
-        top: 1190,
+        top: 1370,
         left: rect.right,
       });
     }
@@ -260,14 +233,13 @@ export const MarkdownEditor = ({
           customEmojiCommand,
         ]}
         extraCommands={[
-          customSendCommand
         ]}
         preview={(mdMode === "preview" ? "preview" : "edit")}
         previewOptions={{
           rehypePlugins: [[rehypeSanitize]],
         }}
         value={content}
-        onChange={(val) => setContent(val ?? "")}
+        onChange={(val) => setBody(val ?? "")}
         textareaProps={{
           placeholder: "Type something here...",
           onKeyDown: (event) => {

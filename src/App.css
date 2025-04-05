@@ -130,6 +130,10 @@
 }
 
 
+.w-md-editor-text {
+  height: 100%;
+}
+
 .markdown-editor-dark span {
   color: rgb(217, 217, 217);
 }

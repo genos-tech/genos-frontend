@@ -185,6 +185,7 @@ type HomeProps = {
     setMyself: (me: UserProps) => void;
     currentMainChat: ChatProps,
     setCurrentMainChat: (chat: ChatProps) => void;
+    setOpeningService: (service: number) => void;
 };
 
 export default function Home(props: HomeProps) {
@@ -193,6 +194,7 @@ export default function Home(props: HomeProps) {
         setMyself,
         currentMainChat,
         setCurrentMainChat,
+        setOpeningService,
     } = props;
 
     const { accessToken } = useAuth();
@@ -599,7 +601,7 @@ export default function Home(props: HomeProps) {
     return (
         <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
 
-            <Sidebar myself={myself} setMyself={setMyself} />
+            <Sidebar myself={myself} setMyself={setMyself} setOpeningService={setOpeningService} />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
                 <Panel id={'1'} order={1} minSize={10} maxSize={30}>

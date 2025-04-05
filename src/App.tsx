@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import ChatHome from './components/chatHome';
+import TaskHome from './components/taskHome';
 import './App.css';
 import Loading from './components/utils/loading'
 import {
@@ -53,29 +54,42 @@ const useMyself = (): SetMyselfProps => {
 function App() {
   const { myself, setMyself } = useMyself();
   const [isLoading, setIsLoading] = useState(true);
-  const [currentMainChat, setCurrentMainChat] = useState<ChatProps>();
+  const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
+
+  // {1: Chat, 2: Task}
+  const [openingService, setOpeningService] = useState<number>(2);
 
   return (
-    (isLoading
-      || currentMainChat === undefined
-    ) ?
+    isLoading || currentMainChat === undefined ? (
       <Loading
         myself={myself}
         setIsLoading={setIsLoading}
         setCurrentMainChat={setCurrentMainChat}
       />
-      : <CssVarsProvider disableTransitionOnChange>
+    ) : (
+      <CssVarsProvider disableTransitionOnChange>
         <CssBaseline />
 
-        <ChatHome
-          myself={myself}
-          setMyself={setMyself}
-          currentMainChat={currentMainChat}
-          setCurrentMainChat={setCurrentMainChat}
-        />
+        {openingService === 1 ? (
+          <ChatHome
+            myself={myself}
+            setMyself={setMyself}
+            currentMainChat={currentMainChat}
+            setCurrentMainChat={setCurrentMainChat}
+            setOpeningService={setOpeningService}
+          />
+        ) : null}
 
+        {openingService === 2 ? (
+          <TaskHome
+            myself={myself}
+            setMyself={setMyself}
+            setOpeningService={setOpeningService}
+          />
+        ) : null}
       </CssVarsProvider>
-  )
+    )
+  );
 }
 
 export default App

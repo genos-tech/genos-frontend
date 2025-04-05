@@ -4,7 +4,7 @@ export type UserProps = {
     userId: string;
     userName: string;
     userEmail: string;
-    avatarImgPath: string;
+    avatarImgPath: string | null;
     online: boolean | false;
 };
 
@@ -117,11 +117,43 @@ export type NewThreadMessageProps = {
     };
 };
 
+// Task
+export type ProjectProps = {
+    projectId: number,
+    projectName: string
+}
+
+export type TaskProps = {
+    project: ProjectProps,
+    title: string,
+    body: string | null,
+    assignee: UserProps,
+    reporter: UserProps,
+    dueDate: string | null,
+    status: string, // {0: open, 1: wip, 2: close, 3: deleted}
+    priority: string | null, // {0: low, 1: medium, 2: high}
+    effortLevel: string | null, // {0: low, 1: medium, 2: high}
+    tags: {
+        tag: string,
+        color: string
+    }[],
+    githubLink: {
+        url: string,
+        title: string
+    } | null,
+    generalLink: {
+        url: string,
+        title: string
+    } | null,
+    attachments: File[]
+}
+
 // Other Props
 export type SearchListProps = {
     id: number,
     type: string,
     name: string,
+    email: string | null,
     dmPartnerUserId: string | null,
 }
 
