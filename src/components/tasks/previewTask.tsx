@@ -10,15 +10,18 @@ import ListItem from '@mui/joy/ListItem';
 import Divider from '@mui/joy/Divider';
 import { Input, Grid, Button, Stack } from "@mui/joy";
 import Snackbar from '@mui/joy/Snackbar';
+import FileUpload from '../fileUpload/upload'
 import IconButton from '@mui/joy/IconButton';
 import CancelIcon from '@mui/icons-material/Cancel';
 import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
-import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
+import EditIcon from '@mui/icons-material/Edit';
+import { MarkdownEditor } from "../markdownEditor/taskMdEditor";
 import {
     UserProps,
     TaskProps,
     ProjectProps,
+    TaskStatusProps,
     TaskPriorityProps,
     TaskEffortLevelProps,
     UploadingFileProps
@@ -26,10 +29,10 @@ import {
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import FormControl from '@mui/joy/FormControl';
-import { useAuth } from "../../components/admin/AuthContext";
-import FileUpload from '../fileUpload/upload'
-
+import { useAuth } from "../admin/AuthContext";
+import TaskCommentBubble from './TaskCommentBubble'
 const base_url = import.meta.env.VITE_API_BASE_URL;
+
 
 // sampleUsers[0] must be my self
 const sampleUsers: UserProps[] = [
@@ -71,6 +74,13 @@ const sampleTags = [
     { tag: 'Infra', color: 'warning' }
 ]
 
+const statuses: TaskStatusProps[] = [
+    { code: 0, status: 'Open', color: 'primary' },
+    { code: 1, status: 'WIP', color: 'warning' },
+    { code: 2, status: 'Close', color: 'success' },
+    { code: 3, status: 'Deleted', color: 'danger' }
+]
+
 const priorities: TaskPriorityProps[] = [
     { code: 0, priority: 'Low', color: 'primary' },
     { code: 1, priority: 'Medium', color: 'warning' },
@@ -83,6 +93,8 @@ const effortLevels: TaskEffortLevelProps[] = [
     { code: 2, level: 'High', color: 'danger' }
 ]
 
+const initUploadingFiles: UploadingFileProps[] = []
+
 const getFormattedTodayDateStr = (): string => {
     const today = new Date();
     return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
@@ -92,93 +104,6 @@ const getFormattedDateStr = (date: Date): string => {
     return date.toISOString().split("T")[0]; // Extract YYYY-MM-DD from ISO string
 };
 
-type saveTaskProps = {
-    myself: UserProps,
-    taskContents: TaskProps,
-    accessToken: string,
-    setIsSubmitted: (value: boolean) => void,
-    setTitleError: (value: string) => void,
-    setTitleErrorOpen: (value: boolean) => void,
-}
-
-const saveTask = async (props: saveTaskProps) => {
-    const { myself,
-        taskContents,
-        accessToken,
-        setIsSubmitted,
-        setTitleError,
-        setTitleErrorOpen } = props;
-
-    if (taskContents.title === "") {
-        setTitleError("Task title is required !!!")
-        setTitleErrorOpen(true);
-    } else {
-        try {
-            const responseBody = {
-                team: myself.teamId,
-                project: taskContents.project.id,
-                assignee: taskContents.assignee.userId,
-                reporter: taskContents.reporter.userId,
-                title: taskContents.title,
-                priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
-                effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
-                status: (taskContents.status.status !== "") ? taskContents.status.status : null,
-                content: (taskContents.body !== "") ? taskContents.body : null,
-                due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
-                github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
-                github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
-                general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
-                general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
-                tags: taskContents.tags,
-            }
-            console.log("responseBody:", responseBody)
-            const taskCreateResponse = await fetch(`${base_url}/task/create/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "Authorization": `Bearer ${accessToken}`
-                },
-                body: JSON.stringify(responseBody),
-            });
-
-            const taskCreateData = await taskCreateResponse.json();
-            console.log("taskCreateData:", taskCreateData)
-
-            if (!taskCreateResponse.ok) {
-                throw new Error('Failed to create a task');
-            } else {
-                for (const attachment of taskContents.attachments) {
-                    const formData = new FormData()
-                    formData.append("task", taskCreateData.task_id)
-                    formData.append("attached_file", attachment.file)
-                    formData.append("attached_type", attachment.file.type)
-
-                    const uploadAttachmentResponse = await fetch(`${base_url}/task/addTaskAttachment/`, {
-                        method: 'POST',
-                        headers: {
-                            "Authorization": `Bearer ${accessToken}`
-                        },
-                        body: formData,
-                    });
-
-                    const uploadAttachmentData = await uploadAttachmentResponse.json();
-                    console.log("uploadAttachmentData:", uploadAttachmentData)
-
-                    if (!uploadAttachmentResponse.ok) {
-                        throw new Error(uploadAttachmentData.message || 'Attachment Upload Failed');
-                    }
-                }
-
-                setIsSubmitted(true)
-            }
-        } catch (error) {
-            console.error(error);
-            return [];
-        }
-    }
-
-};
-
 type TaskContentProps = {
     myself: UserProps,
     currentProject: ProjectProps,
@@ -186,31 +111,41 @@ type TaskContentProps = {
     setIsTaskContentVisible: (value: boolean) => void;
 };
 
-const initUploadingFiles: UploadingFileProps[] = []
-
-export default function CreateTask(props: TaskContentProps) {
+export default function taskPreview(props: TaskContentProps) {
     const { myself, currentProject, setIsCreatingTask, setIsTaskContentVisible } = props
     const { accessToken } = useAuth();
+    const [comment, setComment] = useState("");
     const [uploadedFiles, setUploadedFiles] = useState<UploadingFileProps[]>(initUploadingFiles);
 
     const [taskContents, setTaskContents] = useState<TaskProps>({
-        project: currentProject,
-        title: "",
-        body: "",
-        assignee: myself,
-        reporter: myself,
+        project: sampleProjects[0],
+        title: "This Is My First Task",
+        body: "I need to do XXX",
+        assignee: sampleUsers[0],
+        reporter: sampleUsers[0],
         dueDate: getFormattedTodayDateStr(),
-        status: { code: 0, status: 'open', color: 'primary' },
-        priority: { code: -1, priority: '', color: '' },
-        effortLevel: { code: -1, level: '', color: '' },
-        tags: [],
-        githubLink: { url: '', title: '' },
-        generalLink: { url: '', title: '' },
+        status: statuses[0],
+        priority: priorities[0],
+        effortLevel: effortLevels[0],
+        tags: sampleTags,
+        githubLink: {
+            url: "https://github.com/weikiy-tech/chat-app-prototype/pull/33",
+            title: "Create task upload component"
+        },
+        generalLink: { url: "", title: "" },
         attachments: initUploadingFiles
     });
-    const [taskTitle, setTaskTitle] = useState<string>("");
-    const [body, setBody] = useState<string>("");
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [taskTitle, setTaskTitle] = useState<string>(taskContents.title);
+    const [body, setBody] = useState<string>(taskContents.body || "");
+    const initAutocompleteValues = {
+        project: sampleProjects[0],
+        assignee: sampleUsers[0],
+        reporter: sampleUsers[0],
+        status: statuses[0],
+        priority: priorities[0],
+        effortLevel: effortLevels[0],
+        tags: sampleTags,
+    }
 
     useEffect(() => {
         if (taskTitle !== "") {
@@ -227,13 +162,6 @@ export default function CreateTask(props: TaskContentProps) {
             body: body
         }));
     }, [body])
-
-    useEffect(() => {
-        if (isSubmitted) {
-            setIsCreatingTask(false)
-            setIsTaskContentVisible(true)
-        }
-    }, [isSubmitted])
 
     useEffect(() => {
         setTaskContents(prevState => ({
@@ -263,14 +191,15 @@ export default function CreateTask(props: TaskContentProps) {
         }
     };
 
+
     function getMdHeight(text: string): number {
         const height: number = Math.min(Math.max(text.split('\n').length * 20, 450), 800)
         return height;
     }
 
     // Github URL link manager
-    const [prUrl, setPRUrl] = useState("");
-    const [prTitle, setPRTitle] = useState("");
+    const [prUrl, setPRUrl] = useState<string>(taskContents.githubLink?.url || "");
+    const [prTitle, setPRTitle] = useState<string>(taskContents.githubLink?.title) || "";
     const [prError, setPRError] = useState("");
     const isValidGitHubPR = (url: string) => {
         // return /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+$/.test(url);
@@ -328,9 +257,6 @@ export default function CreateTask(props: TaskContentProps) {
     };
     const [errorOpen, setErrorOpen] = React.useState(false);
 
-    const [titleErrorOpen, setTitleErrorOpen] = React.useState(false);
-    const [titleError, setTitleError] = useState("");
-
     return (
         <Sheet
             className="custom-scrollbar"
@@ -370,28 +296,13 @@ export default function CreateTask(props: TaskContentProps) {
                     </Box>
 
                     <IconButton
-                        size="sm"
+                        size="md"
                         variant="plain"
                         color="neutral"
                         onClick={() => { setIsCreatingTask(false) }}
                     >
                         <CancelIcon />
                     </IconButton>
-                    {titleError && <Snackbar
-                        autoHideDuration={5000}
-                        open={titleErrorOpen}
-                        variant='soft'
-                        color='danger'
-                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                        onClose={(event, reason) => {
-                            if (reason === 'clickaway') {
-                                return;
-                            }
-                            setTitleErrorOpen(false);
-                        }}
-                    >
-                        {titleError}
-                    </Snackbar>}
                 </Stack>
             </Box>
 
@@ -413,7 +324,7 @@ export default function CreateTask(props: TaskContentProps) {
                             <Autocomplete
                                 options={sampleUsers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={sampleUsers[0]}
+                                defaultValue={initAutocompleteValues.assignee}
                                 onChange={(event, value) => {
                                     if (value !== null) {
                                         setTaskContents(prevState => ({
@@ -433,7 +344,7 @@ export default function CreateTask(props: TaskContentProps) {
                             <Autocomplete
                                 options={sampleUsers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={sampleUsers[0]}
+                                defaultValue={initAutocompleteValues.reporter}
                                 onChange={(event, value) => {
                                     if (value !== null) {
                                         setTaskContents(prevState => ({
@@ -454,6 +365,7 @@ export default function CreateTask(props: TaskContentProps) {
                                     <Autocomplete
                                         options={sampleProjects}
                                         getOptionLabel={(option) => option.name}
+                                        defaultValue={initAutocompleteValues.project}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 setTaskContents(prevState => ({
@@ -478,6 +390,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         multiple
                                         options={sampleTags}
                                         getOptionLabel={(option) => option.tag}
+                                        defaultValue={initAutocompleteValues.tags}
                                         limitTags={4}
                                         renderTags={(tags, getTagProps) =>
                                             tags.map((item, index) => {
@@ -518,6 +431,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         multiple
                                         options={priorities}
                                         getOptionLabel={(option) => option.priority}
+                                        defaultValue={[initAutocompleteValues.priority]}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
                                                 const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
@@ -556,6 +470,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         multiple
                                         options={effortLevels}
                                         getOptionLabel={(option) => option.level}
+                                        defaultValue={[initAutocompleteValues.effortLevel]}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
                                                 const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
@@ -588,14 +503,15 @@ export default function CreateTask(props: TaskContentProps) {
                             </Grid>
                         </Grid>
 
+
                         <ListItem>
-                            <Typography sx={{ minWidth: "100px" }}>Due Date:</Typography>
+                            <Typography sx={{ minWidth: "80px" }}>Due Date:</Typography>
                             <Input
                                 type="date"
                                 color="neutral"
                                 variant="outlined"
-                                size="sm"
-                                value={(taskContents.dueDate) ? taskContents.dueDate : ""}
+                                size="md"
+                                defaultValue={(taskContents.dueDate) ? taskContents.dueDate : ""}
                                 onChange={(e) => {
                                     setTaskContents(prevState => ({
                                         ...prevState,
@@ -608,31 +524,18 @@ export default function CreateTask(props: TaskContentProps) {
                                     },
                                 }}
                             />
-                            <Button
-                                component='a'
-                                variant="outlined"
-                                color="neutral"
-                                size='sm'
-                                onClick={() => {
-                                    setTaskContents(prevState => ({
-                                        ...prevState,
-                                        dueDate: ""
-                                    }));
-                                }}>
-                                TBD
-                            </Button>
                         </ListItem>
 
                         <ListItem>
                             <GithubIcon />
 
                             {(!taskContents.githubLink?.url || taskContents.githubLink.url === "") && (
-                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                                <Stack direction="row" spacing={1.5}>
                                     <Input
                                         key={'prTitle'}
                                         size='sm'
                                         placeholder="PR Title"
-                                        value={prTitle}
+                                        defaultValue={prTitle}
                                         onChange={(e) => {
                                             setPRTitle(e.target.value)
                                         }}
@@ -642,7 +545,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         key={'prUrl'}
                                         size='sm'
                                         placeholder="PR URL"
-                                        value={prUrl}
+                                        defaultValue={prUrl}
                                         onChange={(e) => setPRUrl(e.target.value)}
                                         type="url"
                                         sx={{ width: '150px', height: '30px' }}
@@ -663,7 +566,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         {prError}
                                     </Snackbar>}
                                     <Button
-                                        component='a'
+                                        component='p'
                                         variant="outlined"
                                         color="neutral"
                                         size='sm'
@@ -674,11 +577,22 @@ export default function CreateTask(props: TaskContentProps) {
                             )}
 
                             {taskContents.githubLink?.url && (
-                                <Typography>
-                                    <a href={taskContents.githubLink.url} target="_blank" rel="noopener noreferrer">
-                                        {prTitle}
-                                    </a>
-                                </Typography>
+                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                                    <Typography>
+                                        <a href={taskContents.githubLink.url} target="_blank" rel="noopener noreferrer">
+                                            {prTitle}
+                                        </a>
+                                    </Typography>
+                                    <IconButton
+                                        component='p'
+                                        variant="outlined"
+                                        color="neutral"
+                                        size='sm'
+                                        onClick={() => { console.log("Edit pr link") }}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Stack>
                             )}
                         </ListItem>
 
@@ -686,12 +600,12 @@ export default function CreateTask(props: TaskContentProps) {
                             <CustomLinkIcon />
 
                             {(!taskContents.generalLink?.url || taskContents.generalLink.url === "") && (
-                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                                <Stack direction="row" spacing={1.5}>
                                     <Input
                                         key={'title'}
                                         size='sm'
                                         placeholder="Title"
-                                        value={title}
+                                        defaultValue={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         sx={{ width: '150px', height: '30px' }}
                                     />
@@ -699,7 +613,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         key={'url'}
                                         size='sm'
                                         placeholder="URL"
-                                        value={url}
+                                        defaultValue={url}
                                         onChange={(e) => setUrl(e.target.value)}
                                         type="url"
                                         sx={{ width: '150px', height: '30px' }}
@@ -720,7 +634,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         {error}
                                     </Snackbar>}
                                     <Button
-                                        component='a'
+                                        component='p'
                                         variant="outlined"
                                         color="neutral"
                                         size='sm'
@@ -731,11 +645,22 @@ export default function CreateTask(props: TaskContentProps) {
                             )}
 
                             {taskContents.generalLink?.url && (
-                                <Typography>
-                                    <a href={taskContents.generalLink.url} target="_blank" rel="noopener noreferrer">
-                                        {taskContents.generalLink.title}
-                                    </a>
-                                </Typography>
+                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                                    <Typography>
+                                        <a href={taskContents.generalLink.url} target="_blank" rel="noopener noreferrer">
+                                            {taskContents.generalLink.title}
+                                        </a>
+                                    </Typography>
+                                    <IconButton
+                                        component='p'
+                                        variant="outlined"
+                                        color="neutral"
+                                        size='sm'
+                                        onClick={() => { console.log("Edit general link") }}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Stack>
                             )}
                         </ListItem>
                     </List>
@@ -751,12 +676,12 @@ export default function CreateTask(props: TaskContentProps) {
                             content={body}
                             setBody={setBody}
                             height={getMdHeight(body)}
-                            mdMode={"edit"} />
+                            mdMode={"preview"} />
                     </div>
                 </Box>
             </Stack>
 
-            <Divider sx={{ m: 2 }} />
+            <Divider sx={{ mt: 2 }} />
 
             <Stack direction="row" alignItems="center" sx={{ width: '100%' }}>
                 <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
@@ -786,37 +711,24 @@ export default function CreateTask(props: TaskContentProps) {
 
             <Divider sx={{ m: 2 }} />
 
-            <Stack
-                direction="row"
-                sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}
-            >
-                <Button
-                    component='button'
-                    type="submit"
-                    variant="soft"
-                    color="primary"
-                    onClick={() => {
-                        saveTask({
-                            myself: myself,
-                            taskContents: taskContents,
-                            accessToken: accessToken || "",
-                            setIsSubmitted: setIsSubmitted,
-                            setTitleError: setTitleError,
-                            setTitleErrorOpen: setTitleErrorOpen
-                        })
-                    }}
-                >
-                    Create
-                </Button>
-                <Button
-                    component='button'
-                    variant="outlined"
-                    color="danger"
-                    size='sm'
-                    onClick={() => { console.log("Cancel task") }}>
-                    Cancel
-                </Button>
-            </Stack>
+            <Box sx={{ mt: 2 }}>
+                <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
+                    Comments
+                </Typography>
+
+                <Box sx={{ mb: 1 }}>
+                    <TaskCommentBubble />
+                </Box>
+
+                <div className="md-content">
+                    <MarkdownEditor
+                        content={comment}
+                        setBody={setComment}
+                        height={200}
+                        mdMode={"edit"} />
+                </div>
+            </Box>
+
         </Sheet>
     );
 }

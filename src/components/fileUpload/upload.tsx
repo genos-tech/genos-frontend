@@ -1,12 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@mui/joy";
-import { IconButton } from "@mui/joy";
+import React, { useEffect, useState, useRef } from "react";
+import { Card, CardContent, IconButton, Button } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import { TaskProps, UploadingFileProps } from '../../types';
 
-const FileUpload: React.FC = () => {
-    const [images, setImages] = useState<{ url: string; width: number; height: number }[]>([]);
+type FileUploadProps = {
+    setUploadedFiles: (value: UploadingFileProps[]) => void,
+}
+
+export default function FileUpload(props: FileUploadProps) {
+    const {
+        setUploadedFiles
+    } = props
+    const [images, setImages] = useState<{ url: string; name: string, width: number; height: number }[]>([]);
     const [textFiles, setTextFiles] = useState<{ name: string; url: string }[]>([]);
+    const [uploadingFiles, setUploadingFiles] = useState<UploadingFileProps[]>([])
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isUploadedFileExists, setIsUploadedFileExists] = useState<boolean>(false);
 
@@ -14,11 +22,16 @@ const FileUpload: React.FC = () => {
         event.preventDefault();
         const droppedFiles = Array.from(event.dataTransfer.files);
         handleFiles(droppedFiles);
-    };
+    }
 
     const handleFiles = (selectedFiles: File[]) => {
         selectedFiles.forEach((file) => {
             const fileType = file.type;
+
+            setUploadingFiles(prev => ([
+                ...prev, { file: file }
+            ]));
+
             if (fileType === "image/jpeg" || fileType === "image/png") {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -30,6 +43,7 @@ const FileUpload: React.FC = () => {
                                 ...prev,
                                 {
                                     url: img.src,
+                                    name: file.name,
                                     width: Math.max(img.width * 0.03, 80),
                                     height: Math.max(img.height * 0.03, 120)
                                 },
@@ -65,6 +79,10 @@ const FileUpload: React.FC = () => {
             setIsUploadedFileExists(false)
         }
     }, [images, textFiles])
+
+    useEffect(() => {
+        setUploadedFiles(uploadingFiles)
+    }, [uploadingFiles])
 
     return (
         <div>
@@ -162,5 +180,3 @@ const FileUpload: React.FC = () => {
         </div>
     );
 };
-
-export default FileUpload;

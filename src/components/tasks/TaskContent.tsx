@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Chip from '@mui/joy/Chip';
@@ -26,9 +26,12 @@ import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
 
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
+import { UploadingFileProps } from '../../types'
 
 // Temp data
 import { taskContents } from './sampleTaskContents';
+
+const initUploadingFiles: UploadingFileProps[] = []
 
 type TaskContentProps = {
   setIsTaskContentVisible: (value: boolean) => void;
@@ -46,6 +49,20 @@ export default function taskContent(props: TaskContentProps) {
   const [taskContent, setTaskContent] = useState(taskContents.content);
   const [comment, setComment] = useState("");
 
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const handleButtonClick = () => {
+    inputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files
+    if (files) {
+      Array.from(files).map((file, index) => {
+        console.log("do something for a file:", file)
+      })
+    }
+  };
+
   function getMdHeight(text: string): number {
     const height: number = Math.min(Math.max(text.split('\n').length * 20, 200), 800)
     return height;
@@ -54,6 +71,11 @@ export default function taskContent(props: TaskContentProps) {
   const createdDate = '2025-03-08';
   const [selectedDate, setSelectedDate] = useState(createdDate);
   const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
+  const [uploadedFiles, setUploadedFiles] = useState<UploadingFileProps[]>(initUploadingFiles);
+
+  useEffect(() => {
+    console.log("do something for uploadedFiles:", uploadedFiles)
+  }, [uploadedFiles])
 
 
   // Editable Chip for Tag
@@ -482,11 +504,31 @@ export default function taskContent(props: TaskContentProps) {
 
       <Divider sx={{ mt: 2 }} />
 
-      <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
-        Attachments
-      </Typography>
+      <Stack direction="row" alignItems="center" sx={{ width: '100%' }}>
+        <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
+          Attachments
+        </Typography>
+        <Box sx={{ flexGrow: 1 }} />
+        <input
+          type="file"
+          accept="*"
+          multiple={true}
+          ref={inputRef}
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
+        <Button
+          component='p'
+          variant="outlined"
+          color="primary"
+          size="sm"
+          onClick={handleButtonClick}
+        >
+          Select File
+        </Button>
+      </Stack>
 
-      <FileUpload />
+      <FileUpload setUploadedFiles={setUploadedFiles} />
 
       <Divider sx={{ mt: 2 }} />
 

@@ -119,20 +119,43 @@ export type NewThreadMessageProps = {
 
 // Task
 export type ProjectProps = {
-    projectId: number,
-    projectName: string
+    id: number,
+    name: string,
+    color: string | "primary"
+}
+
+export type TaskStatusProps = {
+    code: number,
+    status: string,
+    color: string,
+}
+
+export type TaskPriorityProps = {
+    code: number,
+    priority: string,
+    color: string,
+}
+
+export type TaskEffortLevelProps = {
+    code: number,
+    level: string,
+    color: string,
+}
+
+export type UploadingFileProps = {
+    file: File
 }
 
 export type TaskProps = {
     project: ProjectProps,
     title: string,
-    body: string | null,
+    body: string,
     assignee: UserProps,
     reporter: UserProps,
-    dueDate: string | null,
-    status: string, // {0: open, 1: wip, 2: close, 3: deleted}
-    priority: string | null, // {0: low, 1: medium, 2: high}
-    effortLevel: string | null, // {0: low, 1: medium, 2: high}
+    dueDate: string,
+    status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
+    priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
+    effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
     tags: {
         tag: string,
         color: string
@@ -140,12 +163,12 @@ export type TaskProps = {
     githubLink: {
         url: string,
         title: string
-    } | null,
+    },
     generalLink: {
         url: string,
         title: string
-    } | null,
-    attachments: File[]
+    },
+    attachments: UploadingFileProps[],
 }
 
 // Other Props

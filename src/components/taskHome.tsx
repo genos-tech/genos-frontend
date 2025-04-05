@@ -11,6 +11,7 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import Sidebar from './utils/sidebar';
 import TaskSidebar from './tasks/TaskSidebar';
 import TaskContent from './tasks/TaskContent';
+import TaskPreview from './tasks/previewTask';
 import TaskTable from './tasks/TaskTable';
 import { UserProps, ProjectProps } from './../types';
 import CreateTask from "../components/tasks/createTask";
@@ -33,10 +34,7 @@ const userOptions: User[] = [
     { id: '5', name: 'Ethan', email: 'ethan.hunt@imf.org' },
 ];
 
-const sampleCurrentProject: ProjectProps = {
-    projectId: 1,
-    projectName: "prj-origin-tech"
-}
+const sampleCurrentProject: ProjectProps = { id: 1, name: 'origin-marketing', color: 'primary' }
 
 type TaskProps = {
     myself: UserProps;
@@ -220,7 +218,13 @@ export default function TaskHome(props: TaskProps) {
                                         gap: 1,
                                     }}
                                 >
-                                    <TaskContent setIsTaskContentVisible={setIsTaskContentVisible} />
+                                    {/* <TaskContent setIsTaskContentVisible={setIsTaskContentVisible} /> */}
+                                    <TaskPreview
+                                        myself={myself}
+                                        currentProject={currentProject}
+                                        setIsCreatingTask={setIsCreatingTask}
+                                        setIsTaskContentVisible={setIsTaskContentVisible}
+                                    />
                                 </Box>
                             </Panel>
                         </>
