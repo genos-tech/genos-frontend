@@ -146,7 +146,7 @@ export type UploadingFileProps = {
     file: File
 }
 
-export type TaskProps = {
+export type CreateTaskProps = {
     project: ProjectProps,
     title: string,
     body: string,
@@ -169,6 +169,58 @@ export type TaskProps = {
         title: string
     },
     attachments: UploadingFileProps[],
+}
+
+export type PreviewTaskProps = {
+    id: string,
+    project: ProjectProps,
+    title: string,
+    body: string,
+    assignee: UserProps,
+    reporter: UserProps,
+    dueDate: string,
+    createdDate: string,
+    daysLeft: string,
+    status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
+    priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
+    effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
+    tags: {
+        tag: string,
+        color: string
+    }[],
+    githubLink: {
+        url: string,
+        title: string
+    },
+    generalLink: {
+        url: string,
+        title: string
+    },
+    attachments: UploadingFileProps[],
+    parentTaskId: string,
+    threadId: string,
+}
+
+export type TaskTableProps = {
+    id: string,
+    title: string,
+    priority: string,
+    effortLevel: string,
+    createdDate: string,
+    dueDate: string,
+    daysLeft: string,
+    status: string,
+    assigneeId: string,
+    assigneeEmail: string,
+    assigneeName: string,
+    parentTaskId: string,
+    threadId: string,
+    tags: {
+        tag: string,
+        color: string,
+    }[],
+    teamId: string,
+    projectId: string
 }
 
 // Other Props

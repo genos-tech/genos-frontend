@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IconButton } from "@mui/joy";
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
@@ -10,20 +10,20 @@ import ButtonGroup from '@mui/joy/ButtonGroup';
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import Sidebar from './utils/sidebar';
 import TaskSidebar from './tasks/TaskSidebar';
-import TaskContent from './tasks/TaskContent';
 import TaskPreview from './tasks/previewTask';
 import TaskTable from './tasks/TaskTable';
-import { UserProps, ProjectProps } from './../types';
+import { UserProps, ProjectProps, TaskTableProps, PreviewTaskProps } from './../types';
 import CreateTask from "../components/tasks/createTask";
 import Autocomplete from '@mui/joy/Autocomplete';
-
+import FetchSpecificProjectTasksWorker from "../workers/fetchSpecificProjectTasksWorker.ts?worker";
+import loadSpecificTask from './loadFromBackend/loadSpecificTask';
+import { useAuth } from "../components/admin/AuthContext";
 
 interface User {
     id: string;
     name: string;
     email: string;
 }
-
 
 // SAMPLE DATA
 const userOptions: User[] = [
@@ -44,9 +44,57 @@ type TaskProps = {
 
 export default function TaskHome(props: TaskProps) {
     const { myself, setMyself, setOpeningService } = props
-    const [isTaskContentVisible, setIsTaskContentVisible] = useState(true);
+    const { accessToken } = useAuth();
+    const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps>(sampleCurrentProject);
+    const [projectTasks, setProjectTasks] = useState<TaskTableProps[]>([]);
+    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
+    const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps | null>(null);
+    const fetchProjectTasks = async (projectId: number): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const fetchSpecificProjectTasksWorker = new FetchSpecificProjectTasksWorker();
+            fetchSpecificProjectTasksWorker.postMessage({
+                projectId: projectId,
+            });
+            fetchSpecificProjectTasksWorker.onmessage = (event) => {
+                const fetchedTasks: TaskTableProps[] = event.data;
+                if (fetchedTasks !== undefined) {
+                    setProjectTasks(fetchedTasks)
+                } else {
+                    console.error("Failed to fetch project tasks:", fetchedTasks)
+                }
+                resolve(event.data);
+                fetchSpecificProjectTasksWorker.terminate();
+            };
+            fetchSpecificProjectTasksWorker.onerror = (error) => {
+                reject(error);
+                fetchSpecificProjectTasksWorker.terminate();
+            };
+        });
+    };
+
+    useEffect(() => {
+        fetchProjectTasks(1);
+    }, [])
+
+    useEffect(() => {
+        if (currentPreviewTaskId !== -1) {
+            (async () => {
+                const loadedTask: PreviewTaskProps[] = await loadSpecificTask({
+                    myself: myself,
+                    projectId: currentProject.id,
+                    taskId: currentPreviewTaskId,
+                    accessToken: accessToken || ""
+                });
+                setCurrentPreviewTask(loadedTask[0])
+            })();
+        }
+    }, [currentPreviewTaskId])
+
+    // useEffect(() => {
+    //     console.log("currentPreviewTask:", currentPreviewTask)
+    // }, [currentPreviewTask])
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -139,7 +187,11 @@ export default function TaskHome(props: TaskProps) {
                                     Task
                                 </IconButton>
                             </Box>
-                            <TaskTable setIsTaskContentVisible={setIsTaskContentVisible} />
+                            <TaskTable
+                                projectTasks={projectTasks}
+                                setIsTaskContentVisible={setIsTaskContentVisible}
+                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            />
                         </Box>
                     </Panel>
 
@@ -222,7 +274,8 @@ export default function TaskHome(props: TaskProps) {
                                     <TaskPreview
                                         myself={myself}
                                         currentProject={currentProject}
-                                        setIsCreatingTask={setIsCreatingTask}
+                                        currentPreviewTask={currentPreviewTask}
+                                        setCurrentPreviewTask={setCurrentPreviewTask}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
                                     />
                                 </Box>

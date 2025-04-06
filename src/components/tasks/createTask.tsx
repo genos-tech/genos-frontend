@@ -17,7 +17,7 @@ import CustomLinkIcon from '../../assets/CustomLinkIcon';
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 import {
     UserProps,
-    TaskProps,
+    CreateTaskProps,
     ProjectProps,
     TaskPriorityProps,
     TaskEffortLevelProps,
@@ -94,7 +94,7 @@ const getFormattedDateStr = (date: Date): string => {
 
 type saveTaskProps = {
     myself: UserProps,
-    taskContents: TaskProps,
+    taskContents: CreateTaskProps,
     accessToken: string,
     setIsSubmitted: (value: boolean) => void,
     setTitleError: (value: string) => void,
@@ -193,7 +193,7 @@ export default function CreateTask(props: TaskContentProps) {
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<UploadingFileProps[]>(initUploadingFiles);
 
-    const [taskContents, setTaskContents] = useState<TaskProps>({
+    const [taskContents, setTaskContents] = useState<CreateTaskProps>({
         project: currentProject,
         title: "",
         body: "",

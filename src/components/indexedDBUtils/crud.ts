@@ -146,6 +146,14 @@ export const messageIdWithChatId = async (props: any) => {
     }
 };
 
+export const getProjectTasks = async (projectId: number) => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const taskStore = db.transaction(STORES.TASKS).objectStore(STORES.TASKS);
+    const tasks = await taskStore.index(INDEX.TASKS).getAll(projectId);
+
+    return tasks;
+}
+
 export const getAllData = async (storeName: string) => {
     const db = await initDB();
     return db.getAll(storeName);

@@ -19,7 +19,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { MarkdownEditor } from "../markdownEditor/taskMdEditor";
 import {
     UserProps,
-    TaskProps,
+    PreviewTaskProps,
     ProjectProps,
     TaskStatusProps,
     TaskPriorityProps,
@@ -32,7 +32,6 @@ import FormControl from '@mui/joy/FormControl';
 import { useAuth } from "../admin/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
 const base_url = import.meta.env.VITE_API_BASE_URL;
-
 
 // sampleUsers[0] must be my self
 const sampleUsers: UserProps[] = [
@@ -107,36 +106,43 @@ const getFormattedDateStr = (date: Date): string => {
 type TaskContentProps = {
     myself: UserProps,
     currentProject: ProjectProps,
-    setIsCreatingTask: (value: boolean) => void;
+    currentPreviewTask: PreviewTaskProps | null,
+    setCurrentPreviewTask: (value: PreviewTaskProps) => void;
     setIsTaskContentVisible: (value: boolean) => void;
 };
 
 export default function taskPreview(props: TaskContentProps) {
-    const { myself, currentProject, setIsCreatingTask, setIsTaskContentVisible } = props
+    const { myself, currentProject, currentPreviewTask, setCurrentPreviewTask, setIsTaskContentVisible } = props
     const { accessToken } = useAuth();
     const [comment, setComment] = useState("");
     const [uploadedFiles, setUploadedFiles] = useState<UploadingFileProps[]>(initUploadingFiles);
 
-    const [taskContents, setTaskContents] = useState<TaskProps>({
-        project: sampleProjects[0],
-        title: "This Is My First Task",
-        body: "I need to do XXX",
-        assignee: sampleUsers[0],
-        reporter: sampleUsers[0],
-        dueDate: getFormattedTodayDateStr(),
-        status: statuses[0],
-        priority: priorities[0],
-        effortLevel: effortLevels[0],
-        tags: sampleTags,
-        githubLink: {
-            url: "https://github.com/weikiy-tech/chat-app-prototype/pull/33",
-            title: "Create task upload component"
-        },
-        generalLink: { url: "", title: "" },
-        attachments: initUploadingFiles
-    });
-    const [taskTitle, setTaskTitle] = useState<string>(taskContents.title);
-    const [body, setBody] = useState<string>(taskContents.body || "");
+    // const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>({
+    //     id: '1',
+    //     project: sampleProjects[0],
+    //     title: "This Is My First Task",
+    //     body: "I need to do XXX",
+    //     assignee: sampleUsers[0],
+    //     reporter: sampleUsers[0],
+    //     dueDate: getFormattedTodayDateStr(),
+    //     createdDate: getFormattedTodayDateStr(),
+    //     daysLeft: '1',
+    //     status: statuses[0],
+    //     priority: priorities[0],
+    //     effortLevel: effortLevels[0],
+    //     tags: sampleTags,
+    //     githubLink: {
+    //         url: "https://github.com/weikiy-tech/chat-app-prototype/pull/33",
+    //         title: "Create task upload component"
+    //     },
+    //     generalLink: { url: "", title: "" },
+    //     attachments: initUploadingFiles,
+    //     parentTaskId: '10',
+    //     threadId: '12'
+    // });
+
+    const [taskTitle, setTaskTitle] = useState<string>("");
+    const [body, setBody] = useState<string>("");
     const initAutocompleteValues = {
         project: sampleProjects[0],
         assignee: sampleUsers[0],
@@ -148,27 +154,32 @@ export default function taskPreview(props: TaskContentProps) {
     }
 
     useEffect(() => {
-        if (taskTitle !== "") {
-            setTaskContents(prevState => ({
-                ...prevState,
-                title: taskTitle
-            }));
-        }
-    }, [taskTitle])
+        setTaskTitle(currentPreviewTask?.title || "")
+        setBody(currentPreviewTask?.body || "")
+    }, [currentPreviewTask])
 
-    useEffect(() => {
-        setTaskContents(prevState => ({
-            ...prevState,
-            body: body
-        }));
-    }, [body])
+    // useEffect(() => {
+    //     if (taskTitle !== "") {
+    //         setCurrentPreviewTask(prevState => ({
+    //             ...prevState,
+    //             title: taskTitle
+    //         }));
+    //     }
+    // }, [taskTitle])
 
-    useEffect(() => {
-        setTaskContents(prevState => ({
-            ...prevState,
-            attachments: uploadedFiles
-        }));
-    }, [uploadedFiles])
+    // useEffect(() => {
+    //     setCurrentPreviewTask(prevState => ({
+    //         ...prevState,
+    //         body: body
+    //     }));
+    // }, [body])
+
+    // useEffect(() => {
+    //     setCurrentPreviewTask(prevState => ({
+    //         ...prevState,
+    //         attachments: uploadedFiles
+    //     }));
+    // }, [uploadedFiles])
 
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -182,12 +193,12 @@ export default function taskPreview(props: TaskContentProps) {
             // TODO: Need to add files to setUploadedFiles
             console.log("Selected files:", Array.from(files));
 
-            Array.from(files).map((file, index) => {
-                setTaskContents(prevState => ({
-                    ...prevState,
-                    attachments: [{ file: file }]
-                }));
-            })
+            // Array.from(files).map((file, index) => {
+            //     setCurrentPreviewTask(prevState => ({
+            //         ...prevState,
+            //         attachments: [{ file: file }]
+            //     }));
+            // })
         }
     };
 
@@ -198,8 +209,8 @@ export default function taskPreview(props: TaskContentProps) {
     }
 
     // Github URL link manager
-    const [prUrl, setPRUrl] = useState<string>(taskContents.githubLink?.url || "");
-    const [prTitle, setPRTitle] = useState<string>(taskContents.githubLink?.title) || "";
+    const [prUrl, setPRUrl] = useState<string>(currentPreviewTask?.githubLink?.url || "");
+    const [prTitle, setPRTitle] = useState<string>(currentPreviewTask?.githubLink?.title || "");
     const [prError, setPRError] = useState("");
     const isValidGitHubPR = (url: string) => {
         // return /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+$/.test(url);
@@ -212,10 +223,10 @@ export default function taskPreview(props: TaskContentProps) {
             return;
         }
         if (isValidGitHubPR(prUrl)) {
-            setTaskContents(prevState => ({
-                ...prevState,
-                githubLink: { url: prUrl, title: prTitle }
-            }));
+            // setCurrentPreviewTask(prevState => ({
+            //     ...prevState,
+            //     githubLink: { url: prUrl, title: prTitle }
+            // }));
             setPRTitle(prTitle);
             setPRError("");
         } else {
@@ -245,10 +256,10 @@ export default function taskPreview(props: TaskContentProps) {
             return;
         }
         if (isValidUrl(url)) {
-            setTaskContents(prevState => ({
-                ...prevState,
-                generalLink: { url: url, title: title }
-            }));
+            // setCurrentPreviewTask(prevState => ({
+            //     ...prevState,
+            //     generalLink: { url: url, title: title }
+            // }));
             setError("");
         } else {
             setErrorOpen(true);
@@ -278,7 +289,13 @@ export default function taskPreview(props: TaskContentProps) {
                 }}
             >
                 <Stack direction="row" sx={{ width: '100%', alignItems: 'center' }}>
-                    {/* Wrap the title and task status in the same Box */}
+                    <Box>
+                        <Typography
+                            sx={{ mr: '10px', fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
+                        >
+                            [ID:{currentPreviewTask?.id}]
+                        </Typography>
+                    </Box>
                     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
                         <FormControl required sx={{ width: '100%' }}>
                             <Input
@@ -299,7 +316,7 @@ export default function taskPreview(props: TaskContentProps) {
                         size="md"
                         variant="plain"
                         color="neutral"
-                        onClick={() => { setIsCreatingTask(false) }}
+                        onClick={() => { setIsTaskContentVisible(false) }}
                     >
                         <CancelIcon />
                     </IconButton>
@@ -327,10 +344,10 @@ export default function taskPreview(props: TaskContentProps) {
                                 defaultValue={initAutocompleteValues.assignee}
                                 onChange={(event, value) => {
                                     if (value !== null) {
-                                        setTaskContents(prevState => ({
-                                            ...prevState,
-                                            assignee: value
-                                        }));
+                                        // setCurrentPreviewTask(prevState => ({
+                                        //     ...prevState,
+                                        //     assignee: value
+                                        // }));
                                     }
                                 }}
                                 size="md"
@@ -347,10 +364,10 @@ export default function taskPreview(props: TaskContentProps) {
                                 defaultValue={initAutocompleteValues.reporter}
                                 onChange={(event, value) => {
                                     if (value !== null) {
-                                        setTaskContents(prevState => ({
-                                            ...prevState,
-                                            reporter: value
-                                        }));
+                                        // setCurrentPreviewTask(prevState => ({
+                                        //     ...prevState,
+                                        //     reporter: value
+                                        // }));
                                     }
                                 }}
                                 size="md"
@@ -368,14 +385,14 @@ export default function taskPreview(props: TaskContentProps) {
                                         defaultValue={initAutocompleteValues.project}
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    project: {
-                                                        id: value.id,
-                                                        name: value.name,
-                                                        color: value.color,
-                                                    }
-                                                }));
+                                                // setCurrentPreviewTask(prevState => ({
+                                                //     ...prevState,
+                                                //     project: {
+                                                //         id: value.id,
+                                                //         name: value.name,
+                                                //         color: value.color,
+                                                //     }
+                                                // }));
                                             }
                                         }}
                                         size="md"
@@ -410,10 +427,10 @@ export default function taskPreview(props: TaskContentProps) {
                                         }
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    tags: value
-                                                }));
+                                                // setCurrentPreviewTask(prevState => ({
+                                                //     ...prevState,
+                                                //     tags: value
+                                                // }));
                                             }
                                         }}
                                         size="md"
@@ -450,10 +467,10 @@ export default function taskPreview(props: TaskContentProps) {
                                         }
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    priority: value.slice(-1)[0]
-                                                }));
+                                                // setCurrentPreviewTask(prevState => ({
+                                                //     ...prevState,
+                                                //     priority: value.slice(-1)[0]
+                                                // }));
                                             }
                                         }}
                                         size="md"
@@ -489,10 +506,10 @@ export default function taskPreview(props: TaskContentProps) {
                                         }
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    effortLevel: value.slice(-1)[0]
-                                                }));
+                                                // setCurrentPreviewTask(prevState => ({
+                                                //     ...prevState,
+                                                //     effortLevel: value.slice(-1)[0]
+                                                // }));
                                             }
                                         }}
                                         size="md"
@@ -511,12 +528,12 @@ export default function taskPreview(props: TaskContentProps) {
                                 color="neutral"
                                 variant="outlined"
                                 size="md"
-                                defaultValue={(taskContents.dueDate) ? taskContents.dueDate : ""}
+                                defaultValue={(currentPreviewTask?.dueDate) ? currentPreviewTask?.dueDate : ""}
                                 onChange={(e) => {
-                                    setTaskContents(prevState => ({
-                                        ...prevState,
-                                        dueDate: getFormattedDateStr(new Date(e.target.value)),
-                                    }));
+                                    // setCurrentPreviewTask(prevState => ({
+                                    //     ...prevState,
+                                    //     dueDate: getFormattedDateStr(new Date(e.target.value)),
+                                    // }));
                                 }}
                                 slotProps={{
                                     input: {
@@ -529,7 +546,7 @@ export default function taskPreview(props: TaskContentProps) {
                         <ListItem>
                             <GithubIcon />
 
-                            {(!taskContents.githubLink?.url || taskContents.githubLink.url === "") && (
+                            {(!currentPreviewTask?.githubLink?.url || currentPreviewTask?.githubLink.url === "") && (
                                 <Stack direction="row" spacing={1.5}>
                                     <Input
                                         key={'prTitle'}
@@ -576,10 +593,10 @@ export default function taskPreview(props: TaskContentProps) {
                                 </Stack>
                             )}
 
-                            {taskContents.githubLink?.url && (
+                            {currentPreviewTask?.githubLink?.url && (
                                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
                                     <Typography>
-                                        <a href={taskContents.githubLink.url} target="_blank" rel="noopener noreferrer">
+                                        <a href={currentPreviewTask?.githubLink.url} target="_blank" rel="noopener noreferrer">
                                             {prTitle}
                                         </a>
                                     </Typography>
@@ -599,7 +616,7 @@ export default function taskPreview(props: TaskContentProps) {
                         <ListItem>
                             <CustomLinkIcon />
 
-                            {(!taskContents.generalLink?.url || taskContents.generalLink.url === "") && (
+                            {(!currentPreviewTask?.generalLink?.url || currentPreviewTask?.generalLink.url === "") && (
                                 <Stack direction="row" spacing={1.5}>
                                     <Input
                                         key={'title'}
@@ -644,11 +661,11 @@ export default function taskPreview(props: TaskContentProps) {
                                 </Stack>
                             )}
 
-                            {taskContents.generalLink?.url && (
+                            {currentPreviewTask?.generalLink?.url && (
                                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
                                     <Typography>
-                                        <a href={taskContents.generalLink.url} target="_blank" rel="noopener noreferrer">
-                                            {taskContents.generalLink.title}
+                                        <a href={currentPreviewTask?.generalLink.url} target="_blank" rel="noopener noreferrer">
+                                            {currentPreviewTask?.generalLink.title}
                                         </a>
                                     </Typography>
                                     <IconButton

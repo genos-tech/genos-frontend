@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useColorScheme } from '@mui/joy/styles';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-
+import { TaskTableProps, PreviewTaskProps } from '../../types';
 import { taskColumns, taskRows } from './sampleTaskLists';
 
 const theme = createTheme({ cssVariables: true });
@@ -33,17 +33,19 @@ const predefinedFilters: { label: string; filterModel: GridFilterModel }[] = [
   },
 ];
 
-type TaskTableProps = {
+type ProjectTaskTableProps = {
+  projectTasks: TaskTableProps[];
   setIsTaskContentVisible: (value: boolean) => void;
+  setCurrentPreviewTaskId: (value: number) => void;
 };
 
-export default function TaskTable(props: TaskTableProps) {
-  const { setIsTaskContentVisible } = props
+export default function TaskTable(props: ProjectTaskTableProps) {
+  const { projectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props
   const { mode } = useColorScheme();
   const className = `task-datagrid-${mode}`
-
   const apiRef = useGridApiRef();
   const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);
+
   const getFilteredRowsCount = useCallback(
     (filterModel: GridFilterModel) => {
       const rowIds = apiRef.current?.getAllRowIds();
@@ -60,18 +62,18 @@ export default function TaskTable(props: TaskTableProps) {
 
   useEffect(() => {
     // Calculate the row count for predefined filters
-    if (taskRows.length === 0) {
+    if (projectTasks.length === 0) {
       return;
     }
 
     setPredefinedFiltersRowCount(
       predefinedFilters.map(({ filterModel }) => getFilteredRowsCount(filterModel)),
     );
-  }, [apiRef, taskRows, getFilteredRowsCount]);
+  }, [apiRef, projectTasks, getFilteredRowsCount]);
 
   return (
     <ThemeProvider theme={theme}>
-      <div style={{ overflow: 'hidden', borderRadius: '5px' }}>
+      <div style={{ height: '100%', overflow: 'hidden', borderRadius: '5px' }}>
         <Stack direction="row" gap={1} mb={1} flexWrap="wrap">
           {predefinedFilters.map(({ label, filterModel }, index) => {
             const count = predefinedFiltersRowCount[index];
@@ -173,13 +175,13 @@ export default function TaskTable(props: TaskTableProps) {
             height: "97%",
             width: '100%',
           }}
-          
         >
           <DataGrid
-            onCellClick={(params) => (console.log("Cell clicked:", params))}
+            onCellClick={(params) => (console.log("Cell clicked"))}
             onRowClick={(params, event, detail) => {
-              console.log("Row clicked:", params);
+              // console.log("Row clicked:", params);
               setIsTaskContentVisible(true);
+              setCurrentPreviewTaskId(Number(params.id))
             }}
             className={className}
             apiRef={apiRef}
@@ -194,7 +196,7 @@ export default function TaskTable(props: TaskTableProps) {
               borderColor: 'transparent',
               fontWeight: 'bold'
             }}
-            rows={taskRows}
+            rows={projectTasks}
             columns={taskColumns}
             initialState={{
               pagination: {
