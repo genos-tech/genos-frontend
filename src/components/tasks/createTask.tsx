@@ -114,31 +114,29 @@ const saveTask = async (props: saveTaskProps) => {
         setTitleErrorOpen(true);
     } else {
         try {
-            const responseBody = {
-                team: myself.teamId,
-                project: taskContents.project.id,
-                assignee: taskContents.assignee.userId,
-                reporter: taskContents.reporter.userId,
-                title: taskContents.title,
-                priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
-                effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
-                status: (taskContents.status.status !== "") ? taskContents.status.status : null,
-                content: (taskContents.body !== "") ? taskContents.body : null,
-                due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
-                github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
-                github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
-                general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
-                general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
-                tags: taskContents.tags,
-            }
-            console.log("responseBody:", responseBody)
             const taskCreateResponse = await fetch(`${base_url}/task/create/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     "Authorization": `Bearer ${accessToken}`
                 },
-                body: JSON.stringify(responseBody),
+                body: JSON.stringify({
+                    team: myself.teamId,
+                    project: taskContents.project.id,
+                    assignee: taskContents.assignee.userId,
+                    reporter: taskContents.reporter.userId,
+                    title: taskContents.title,
+                    priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
+                    effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
+                    status: (taskContents.status.status !== "") ? taskContents.status.status : null,
+                    content: (taskContents.body !== "") ? taskContents.body : null,
+                    due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
+                    github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
+                    github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
+                    general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
+                    general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
+                    tags: taskContents.tags,
+                }),
             });
 
             const taskCreateData = await taskCreateResponse.json();
@@ -774,7 +772,7 @@ export default function CreateTask(props: TaskContentProps) {
                 <Button
                     component='p'
                     variant="outlined"
-                    color="primary"
+                    color="neutral"
                     size="sm"
                     onClick={handleButtonClick}
                 >
@@ -813,7 +811,7 @@ export default function CreateTask(props: TaskContentProps) {
                     variant="outlined"
                     color="danger"
                     size='sm'
-                    onClick={() => { console.log("Cancel task") }}>
+                    onClick={() => { setIsCreatingTask(false) }}>
                     Cancel
                 </Button>
             </Stack>

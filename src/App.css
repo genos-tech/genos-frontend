@@ -211,10 +211,34 @@
   opacity: 0.8;
 }
 
+.task-datagrid-light .MuiDataGrid-filler {
+  background-color: #d9d9d9;
+  opacity: 0.8;
+}
+
+.task-datagrid-light .MuiDataGrid-scrollbarFiller {
+  background-color: #d9d9d9;
+  opacity: 0.8;
+}
+
 .task-datagrid-dark .MuiDataGrid-columnHeader {
   background-color: #a4a4a4;
   color: rgb(0, 0, 0);
   opacity: 0.8;
+}
+
+.task-datagrid-dark .MuiDataGrid-filler {
+  background-color: #a4a4a4;
+  opacity: 0.8;
+}
+
+.task-datagrid-dark .MuiDataGrid-scrollbarFiller {
+  background-color: #a4a4a4;
+  opacity: 0.8;
+}
+
+.task-datagrid-dark .css-4uxqju-MuiSvgIcon-root {
+  color: rgb(255, 255, 255);
 }
 
 .task-datagrid-dark .MuiDataGrid-toolbarContainer {

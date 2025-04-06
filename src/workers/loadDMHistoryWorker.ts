@@ -1,4 +1,4 @@
-import loadDMHistory from '../components/loadFromBackend/loadDMHistory';
+import loadDMHistory from '../components/backendOperation/loadDMHistory';
 import { UserProps, ChatProps, MessageProps } from "../types";
 import { STORES } from "../components/indexedDBUtils/conf";
 import {

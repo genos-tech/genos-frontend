@@ -1,4 +1,4 @@
-import loadProjectTasks from '../components/loadFromBackend/loadTeamTasks';
+import loadProjectTasks from '../components/backendOperation/loadTeamTasks';
 import { UserProps, TaskTableProps } from "../types";
 import { STORES } from "../components/indexedDBUtils/conf";
 import {

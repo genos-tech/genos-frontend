@@ -14,9 +14,8 @@ import TaskPreview from './tasks/previewTask';
 import TaskTable from './tasks/TaskTable';
 import { UserProps, ProjectProps, TaskTableProps, PreviewTaskProps } from './../types';
 import CreateTask from "../components/tasks/createTask";
-import Autocomplete from '@mui/joy/Autocomplete';
 import FetchSpecificProjectTasksWorker from "../workers/fetchSpecificProjectTasksWorker.ts?worker";
-import loadSpecificTask from './loadFromBackend/loadSpecificTask';
+import loadSpecificTask from './backendOperation/loadSpecificTask';
 import { useAuth } from "../components/admin/AuthContext";
 
 interface User {
@@ -50,7 +49,7 @@ export default function TaskHome(props: TaskProps) {
     const [currentProject, setCurrentProject] = useState<ProjectProps>(sampleCurrentProject);
     const [projectTasks, setProjectTasks] = useState<TaskTableProps[]>([]);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
-    const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps | null>(null);
+    const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>();
     const fetchProjectTasks = async (projectId: number): Promise<string> => {
         return new Promise((resolve, reject) => {
             const fetchSpecificProjectTasksWorker = new FetchSpecificProjectTasksWorker();
@@ -156,20 +155,6 @@ export default function TaskHome(props: TaskProps) {
                                 <Typography level="h2" component="h1">
                                     All/Project/Sub Tasks (TBD)
                                 </Typography>
-                                <Autocomplete
-                                    placeholder="Search name or email..."
-                                    isOptionEqualToValue={(option: User, value: User) => option.id === value.id}
-                                    getOptionLabel={(option: User) => `${option.name} | ${option.email}`}
-                                    options={userOptions}
-                                    aria-label="Search"
-                                />
-                                <ButtonGroup variant="outlined">
-                                    {(['List', 'Gannt'] as const).map((anchor) => (
-                                        <Button component='p' key={anchor} onClick={() => { console.log("") }}>
-                                            {anchor}
-                                        </Button>
-                                    ))}
-                                </ButtonGroup>
 
                                 <IconButton
                                     component='p'
@@ -238,7 +223,7 @@ export default function TaskHome(props: TaskProps) {
                         </>
                     )}
 
-                    {isTaskContentVisible && (
+                    {(isTaskContentVisible && currentPreviewTask) && (
                         <>
                             {/* Resizable Handle with MUI sx Styling */}
                             <PanelResizeHandle
@@ -276,6 +261,7 @@ export default function TaskHome(props: TaskProps) {
                                         currentProject={currentProject}
                                         currentPreviewTask={currentPreviewTask}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
+                                        setIsCreatingTask={setIsCreatingTask}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
                                     />
                                 </Box>

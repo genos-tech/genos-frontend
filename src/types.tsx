@@ -174,8 +174,8 @@ export type CreateTaskProps = {
 export type PreviewTaskProps = {
     id: string,
     project: ProjectProps,
-    title: string,
-    body: string,
+    title: string | null,
+    body: string | null,
     assignee: UserProps,
     reporter: UserProps,
     dueDate: string,

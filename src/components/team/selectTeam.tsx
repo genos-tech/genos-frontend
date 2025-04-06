@@ -14,7 +14,7 @@ import List from '@mui/joy/List';
 import ListItemDecorator from '@mui/joy/ListItemDecorator';
 import ListItemButton from '@mui/joy/ListItemButton';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
-import loadAllTeams from '../loadFromBackend/loadAllTeams';
+import loadAllTeams from '../backendOperation/loadAllTeams';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -114,7 +114,7 @@ export default function SelectTeam() {
                 });
 
                 const createMyDMData: CreateMyDMResponse = await createMyDMResponse.json();
-                
+
                 // 2. Send an initial message
                 const initMessageResponse = await fetch(`${base_url}/dm/addMessage/`, {
                     method: 'POST',
