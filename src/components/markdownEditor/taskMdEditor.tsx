@@ -23,13 +23,17 @@ type MarkdownEditorProps = {
   setBody: (text: string) => void;
   height: number;
   mdMode: string;
+  isTaskBody: boolean;
+  setTaskUpdate: (value: boolean) => void;
 };
 
 export const MarkdownEditor = ({
   content,
   setBody,
   height,
-  mdMode
+  mdMode,
+  isTaskBody,
+  setTaskUpdate
 }: MarkdownEditorProps) => {
   const { mode } = useColorScheme();
   const _className: string = `markdown-editor-${mode}`
@@ -240,6 +244,7 @@ export const MarkdownEditor = ({
         }}
         value={content}
         onChange={(val) => setBody(val ?? "")}
+        onBlur={() => { (isTaskBody) ? setTaskUpdate(true) : setTaskUpdate(false) }}
         textareaProps={{
           placeholder: "Type something here...",
           onKeyDown: (event) => {

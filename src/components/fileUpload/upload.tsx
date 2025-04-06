@@ -2,19 +2,25 @@ import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, IconButton, Button } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { TaskProps, UploadingFileProps } from '../../types';
+import { AttachmentFileProps } from '../../types';
+
+
 
 type FileUploadProps = {
-    setUploadedFiles: (value: UploadingFileProps[]) => void,
+    uploadedFiles: AttachmentFileProps[],
+    setUploadedFiles: (value: AttachmentFileProps[]) => void,
+    setTaskUpdate: (value: boolean) => void,
 }
 
 export default function FileUpload(props: FileUploadProps) {
     const {
-        setUploadedFiles
+        uploadedFiles,
+        setUploadedFiles,
+        setTaskUpdate
     } = props
     const [images, setImages] = useState<{ url: string; name: string, width: number; height: number }[]>([]);
     const [textFiles, setTextFiles] = useState<{ name: string; url: string }[]>([]);
-    const [uploadingFiles, setUploadingFiles] = useState<UploadingFileProps[]>([])
+    const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([])
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isUploadedFileExists, setIsUploadedFileExists] = useState<boolean>(false);
 
@@ -81,8 +87,56 @@ export default function FileUpload(props: FileUploadProps) {
     }, [images, textFiles])
 
     useEffect(() => {
-        setUploadedFiles(uploadingFiles)
+        if (uploadingFiles.length > 0 && uploadingFiles.length != uploadedFiles.length) {
+            setUploadedFiles(uploadingFiles)
+            setTaskUpdate(true)
+        }
     }, [uploadingFiles])
+
+    useEffect(() => {
+        if (uploadedFiles.length === 0) {
+            setUploadingFiles([])
+            setImages([])
+            setTextFiles([])
+        } else {
+            setIsUploadedFileExists(true)
+            uploadedFiles.map((attachmentFile, index) => {
+                if (attachmentFile.file_base64) {
+                    const byteCharacters = atob(attachmentFile.file_base64);
+                    const byteNumbers = new Array(byteCharacters.length).fill(0).map((_, i) => byteCharacters.charCodeAt(i));
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray]);
+                    const file = new File([blob], attachmentFile?.name || "attached_file", { type: attachmentFile?.type });
+                    setUploadingFiles((prev) => [...prev, { file: file }])
+
+                    if (attachmentFile?.type === "image/jpeg" || attachmentFile?.type === "image/png") {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            if (e.target?.result) {
+                                const img = new Image();
+                                img.src = e.target.result as string;
+                                img.onload = () => {
+                                    setImages((prev) => [
+                                        ...prev,
+                                        {
+                                            url: img.src,
+                                            name: file.name,
+                                            width: Math.max(img.width * 0.03, 80),
+                                            height: Math.max(img.height * 0.03, 120)
+                                        },
+                                    ]);
+                                };
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        const fileURL = URL.createObjectURL(file);
+                        setTextFiles((prev) => [...prev, { name: file.name, url: fileURL }]);
+                    }
+                }
+            })
+        }
+    }, [uploadedFiles])
 
     return (
         <div>

@@ -21,7 +21,7 @@ import {
     ProjectProps,
     TaskPriorityProps,
     TaskEffortLevelProps,
-    UploadingFileProps
+    AttachmentFileProps
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
@@ -184,12 +184,12 @@ type TaskContentProps = {
     setIsTaskContentVisible: (value: boolean) => void;
 };
 
-const initUploadingFiles: UploadingFileProps[] = []
+const initUploadingFiles: AttachmentFileProps[] = []
 
 export default function CreateTask(props: TaskContentProps) {
     const { myself, currentProject, setIsCreatingTask, setIsTaskContentVisible } = props
     const { accessToken } = useAuth();
-    const [uploadedFiles, setUploadedFiles] = useState<UploadingFileProps[]>(initUploadingFiles);
+    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(initUploadingFiles);
 
     const [taskContents, setTaskContents] = useState<CreateTaskProps>({
         project: currentProject,
@@ -749,7 +749,10 @@ export default function CreateTask(props: TaskContentProps) {
                             content={body}
                             setBody={setBody}
                             height={getMdHeight(body)}
-                            mdMode={"edit"} />
+                            mdMode={"edit"}
+                            isTaskBody={true}
+                            setTaskUpdate={(val) => { val }}
+                        />
                     </div>
                 </Box>
             </Stack>
@@ -780,7 +783,11 @@ export default function CreateTask(props: TaskContentProps) {
                 </Button>
             </Stack>
 
-            <FileUpload setUploadedFiles={setUploadedFiles} />
+            <FileUpload
+                uploadedFiles={uploadedFiles}
+                setUploadedFiles={setUploadedFiles}
+                setTaskUpdate={() => { }}
+            />
 
             <Divider sx={{ m: 2 }} />
 

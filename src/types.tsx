@@ -142,8 +142,11 @@ export type TaskEffortLevelProps = {
     color: string,
 }
 
-export type UploadingFileProps = {
-    file: File
+export type AttachmentFileProps = {
+    file: File,
+    file_base64?: string,
+    name?: string,
+    type?: string,
 }
 
 export type CreateTaskProps = {
@@ -168,7 +171,7 @@ export type CreateTaskProps = {
         url: string,
         title: string
     },
-    attachments: UploadingFileProps[],
+    attachments: AttachmentFileProps[],
 }
 
 export type PreviewTaskProps = {
@@ -196,7 +199,7 @@ export type PreviewTaskProps = {
         url: string,
         title: string
     },
-    attachments: UploadingFileProps[],
+    attachments: AttachmentFileProps[],
     parentTaskId: string,
     threadId: string,
 }

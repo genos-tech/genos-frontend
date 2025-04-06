@@ -27,7 +27,7 @@ import {
     TaskStatusProps,
     TaskPriorityProps,
     TaskEffortLevelProps,
-    UploadingFileProps
+    AttachmentFileProps
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
@@ -95,7 +95,6 @@ const effortLevels: TaskEffortLevelProps[] = [
     { code: 2, level: 'High', color: 'danger' }
 ]
 
-const initUploadingFiles: UploadingFileProps[] = []
 
 const getFormattedTodayDateStr = (): string => {
     const today = new Date();
@@ -126,10 +125,9 @@ export default function taskPreview(props: TaskContentProps) {
     } = props
     const { accessToken } = useAuth();
     const [comment, setComment] = useState("");
-    const [uploadedFiles, setUploadedFiles] = useState<UploadingFileProps[]>(initUploadingFiles);
+    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
     const nextStatus: string = "Close"
     const [taskUpdated, setTaskUpdate] = useState(false);
-
     const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
     const [taskTitle, setTaskTitle] = useState<string | null>(null);
     const [body, setBody] = useState<string | null>(null);
@@ -149,6 +147,7 @@ export default function taskPreview(props: TaskContentProps) {
         }
         setTaskTitle(currentPreviewTask?.title || null)
         setBody(currentPreviewTask?.body || null)
+        setUploadedFiles(currentPreviewTask?.attachments || [])
     }, [currentPreviewTask])
 
     useEffect(() => {
@@ -175,7 +174,6 @@ export default function taskPreview(props: TaskContentProps) {
                     title: taskTitle
                 }));
             })();
-            setTaskUpdate(true)
         }
     }, [taskTitle])
 
@@ -190,7 +188,6 @@ export default function taskPreview(props: TaskContentProps) {
                     body: body
                 }));
             })();
-            setTaskUpdate(true)
         }
     }, [body])
 
@@ -202,7 +199,6 @@ export default function taskPreview(props: TaskContentProps) {
                     attachments: uploadedFiles
                 }));
             })();
-            setTaskUpdate(true)
         }
     }, [uploadedFiles])
 
@@ -324,6 +320,15 @@ export default function taskPreview(props: TaskContentProps) {
             >
                 <Stack direction="row" sx={{ width: '100%', alignItems: 'center' }}>
                     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+                        <Chip
+                            key={currentPreviewTask.status.status}
+                            size="lg"
+                            variant="soft"
+                            color="primary"
+                            startDecorator={<CheckCircleOutlineIcon style={{ color: "#2bc8ff" }} />}
+                        >
+                            {currentPreviewTask.status.status}
+                        </Chip>
                         <FormControl required sx={{ width: '100%' }}>
                             <Input
                                 key={'taskTitle'}
@@ -333,7 +338,7 @@ export default function taskPreview(props: TaskContentProps) {
                                 onChange={(e) => {
                                     setTaskTitle(e.target.value)
                                 }}
-                                onBlur={() => { console.log("update title") }}
+                                onBlur={() => { setTaskUpdate(true) }}
                                 sx={{ fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
                             />
                         </FormControl>
@@ -752,9 +757,18 @@ export default function taskPreview(props: TaskContentProps) {
                         fontSize: '14px',
                         paddingX: '7px',
                     }}
+                    onClick={() => {
+                        (async () => {
+                            setCurrentTaskContent(prevState => ({
+                                ...prevState,
+                                status: { code: 2, status: 'Close', color: 'success' },
+                            }));
+                        })();
+                        setTaskUpdate(true)
+                    }}
                 >
                     <CheckCircleOutlineIcon sx={{ fontSize: '15px' }} />
-                    {nextStatus}
+                    Close
                 </IconButton>
 
                 {/* Sub Task IconButton aligned to the right */}
@@ -786,6 +800,15 @@ export default function taskPreview(props: TaskContentProps) {
                         fontSize: '14px',
                         paddingX: '7px',
                     }}
+                    onClick={() => {
+                        (async () => {
+                            setCurrentTaskContent(prevState => ({
+                                ...prevState,
+                                status: { code: 3, status: 'Deleted', color: 'danger' },
+                            }));
+                        })();
+                        setTaskUpdate(true)
+                    }}
                 >
                     <DeleteIcon sx={{ fontSize: '15px' }} />
                     Delete
@@ -800,7 +823,10 @@ export default function taskPreview(props: TaskContentProps) {
                             content={body || ""}
                             setBody={setBody}
                             height={getMdHeight(body || "")}
-                            mdMode={"preview"} />
+                            mdMode={"preview"}
+                            isTaskBody={true}
+                            setTaskUpdate={setTaskUpdate}
+                        />
                     </div>
                 </Box>
             </Stack>
@@ -831,7 +857,7 @@ export default function taskPreview(props: TaskContentProps) {
                 </Button>
             </Stack>
 
-            <FileUpload setUploadedFiles={setUploadedFiles} />
+            <FileUpload uploadedFiles={uploadedFiles} setUploadedFiles={setUploadedFiles} setTaskUpdate={setTaskUpdate} />
 
             <Divider sx={{ m: 2 }} />
 
@@ -849,7 +875,10 @@ export default function taskPreview(props: TaskContentProps) {
                         content={comment}
                         setBody={setComment}
                         height={200}
-                        mdMode={"edit"} />
+                        mdMode={"edit"}
+                        isTaskBody={false}
+                        setTaskUpdate={setTaskUpdate}
+                    />
                 </div>
             </Box>
 

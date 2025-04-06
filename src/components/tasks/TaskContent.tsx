@@ -26,12 +26,12 @@ import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
 
 import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
-import { UploadingFileProps } from '../../types'
+import { AttachmentFileProps } from '../../types'
 
 // Temp data
 import { taskContents } from './sampleTaskContents';
 
-const initUploadingFiles: UploadingFileProps[] = []
+const initUploadingFiles: AttachmentFileProps[] = []
 
 type TaskContentProps = {
   setIsTaskContentVisible: (value: boolean) => void;
@@ -71,7 +71,7 @@ export default function taskContent(props: TaskContentProps) {
   const createdDate = '2025-03-08';
   const [selectedDate, setSelectedDate] = useState(createdDate);
   const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
-  const [uploadedFiles, setUploadedFiles] = useState<UploadingFileProps[]>(initUploadingFiles);
+  const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(initUploadingFiles);
 
   useEffect(() => {
     console.log("do something for uploadedFiles:", uploadedFiles)
