@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Sheet from '@mui/joy/Sheet';
 import { io, Socket } from "socket.io-client";
 import ThreadPane from './thread/threadPane';
-import TaskContent from './tasks/TaskContent';
+import TaskPreview from './tasks/previewTask';
 import ChatsPane from './chatCommon/chatsPane';
 import {
     AllChatProps,
@@ -706,7 +706,14 @@ export default function Home(props: HomeProps) {
                                 boxShadow: '0 0 0 1px grey'
                             }}
                         >
-                            <TaskContent setIsTaskContentVisible={setIsTaskContentVisible} />
+                            {/* <TaskPreview
+                                myself={myself}
+                                currentProject={currentProject}
+                                currentPreviewTask={currentPreviewTask}
+                                setCurrentPreviewTask={setCurrentPreviewTask}
+                                setIsCreatingTask={setIsCreatingTask}
+                                setIsTaskContentVisible={setIsTaskContentVisible}
+                            /> */}
                         </Box>
                     </Panel>
                 </>)}

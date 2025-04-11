@@ -27,7 +27,7 @@ import {
   MessageProps
 } from '../../types';
 import createChatGroup from './createChatGroup';
-import loadSearchList from '../backendOperation/loadSearchList';
+import loadSearchList from '../backendOperation/loadChatSearchList';
 import CheckKnownChatWorker from "../../workers/checkKnownChatWorker.ts?worker";
 import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
@@ -394,7 +394,6 @@ export default function ChatsPane(props: ChatsPaneProps) {
         {/* ============================================================================ */}
 
         <Box sx={{ px: 2, pb: 1.5, mt: 2 }}>
-
           <Autocomplete
             placeholder={"Search"}
             open={openUsers}

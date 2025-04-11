@@ -35,12 +35,13 @@ const predefinedFilters: { label: string; filterModel: GridFilterModel }[] = [
 
 type ProjectTaskTableProps = {
   projectTasks: TaskTableProps[];
+  setProjectTasks: (value: TaskTableProps[]) => void;
   setIsTaskContentVisible: (value: boolean) => void;
   setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export default function TaskTable(props: ProjectTaskTableProps) {
-  const { projectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props
+  const { projectTasks, setProjectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props
   const { mode } = useColorScheme();
   const className = `task-datagrid-${mode}`
   const apiRef = useGridApiRef();
@@ -189,6 +190,12 @@ export default function TaskTable(props: ProjectTaskTableProps) {
               "& .MuiDataGrid-columnHeaderTitle": {
                 fontSize: "0.875rem",
                 fontWeight: 'bold',
+              },
+              '& .MuiDataGrid-row.Mui-selected': {
+                backgroundColor: 'rgba(0, 123, 255, 0.2) !important', // light blue
+              },
+              '& .MuiDataGrid-row.Mui-selected:hover': {
+                backgroundColor: 'rgba(0, 123, 255, 0.3) !important', // slightly darker on hover
               },
             }}
             style={{

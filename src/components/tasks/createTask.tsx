@@ -60,9 +60,9 @@ const sampleUsers: UserProps[] = [
 ]
 
 const sampleProjects: ProjectProps[] = [
-    { id: 1, name: 'origin-marketing', color: 'primary' },
-    { id: 2, name: 'origin-analytics', color: 'danger' },
-    { id: 3, name: 'origin-ai', color: 'warning' }]
+    { projectId: 1, projectName: 'origin-marketing' },
+    { projectId: 2, projectName: 'origin-analytics' },
+    { projectId: 3, projectName: 'origin-ai' }]
 
 
 const sampleTags = [
@@ -99,6 +99,7 @@ type saveTaskProps = {
     setIsSubmitted: (value: boolean) => void,
     setTitleError: (value: string) => void,
     setTitleErrorOpen: (value: boolean) => void,
+    setCurrentPreviewTaskId: (value: number) => void,
 }
 
 const saveTask = async (props: saveTaskProps) => {
@@ -107,7 +108,9 @@ const saveTask = async (props: saveTaskProps) => {
         accessToken,
         setIsSubmitted,
         setTitleError,
-        setTitleErrorOpen } = props;
+        setTitleErrorOpen,
+        setCurrentPreviewTaskId
+    } = props;
 
     if (taskContents.title === "") {
         setTitleError("Task title is required !!!")
@@ -122,7 +125,7 @@ const saveTask = async (props: saveTaskProps) => {
                 },
                 body: JSON.stringify({
                     team: myself.teamId,
-                    project: taskContents.project.id,
+                    project: taskContents.project.projectId,
                     assignee: taskContents.assignee.userId,
                     reporter: taskContents.reporter.userId,
                     title: taskContents.title,
@@ -140,11 +143,12 @@ const saveTask = async (props: saveTaskProps) => {
             });
 
             const taskCreateData = await taskCreateResponse.json();
-            console.log("taskCreateData:", taskCreateData)
 
             if (!taskCreateResponse.ok) {
                 throw new Error('Failed to create a task');
             } else {
+                setCurrentPreviewTaskId(taskCreateData.task_id)
+
                 for (const attachment of taskContents.attachments) {
                     const formData = new FormData()
                     formData.append("task", taskCreateData.task_id)
@@ -181,13 +185,21 @@ type TaskContentProps = {
     myself: UserProps,
     currentProject: ProjectProps,
     setIsCreatingTask: (value: boolean) => void;
+    setIsNewTaskCreated: (value: boolean) => void;
     setIsTaskContentVisible: (value: boolean) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 
 const initUploadingFiles: AttachmentFileProps[] = []
 
 export default function CreateTask(props: TaskContentProps) {
-    const { myself, currentProject, setIsCreatingTask, setIsTaskContentVisible } = props
+    const { myself,
+        currentProject,
+        setIsCreatingTask,
+        setIsNewTaskCreated,
+        setIsTaskContentVisible,
+        setCurrentPreviewTaskId,
+    } = props
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(initUploadingFiles);
 
@@ -229,6 +241,7 @@ export default function CreateTask(props: TaskContentProps) {
     useEffect(() => {
         if (isSubmitted) {
             setIsCreatingTask(false)
+            setIsNewTaskCreated(true)
             setIsTaskContentVisible(true)
         }
     }, [isSubmitted])
@@ -451,15 +464,14 @@ export default function CreateTask(props: TaskContentProps) {
                                     <Typography sx={{ minWidth: "80px" }}>Project:</Typography>
                                     <Autocomplete
                                         options={sampleProjects}
-                                        getOptionLabel={(option) => option.name}
+                                        getOptionLabel={(option) => option.projectName}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 setTaskContents(prevState => ({
                                                     ...prevState,
                                                     project: {
-                                                        id: value.id,
-                                                        name: value.name,
-                                                        color: value.color,
+                                                        projectId: value.projectId,
+                                                        projectName: value.projectName,
                                                     }
                                                 }));
                                             }
@@ -807,7 +819,8 @@ export default function CreateTask(props: TaskContentProps) {
                             accessToken: accessToken || "",
                             setIsSubmitted: setIsSubmitted,
                             setTitleError: setTitleError,
-                            setTitleErrorOpen: setTitleErrorOpen
+                            setTitleErrorOpen: setTitleErrorOpen,
+                            setCurrentPreviewTaskId: setCurrentPreviewTaskId,
                         })
                     }}
                 >

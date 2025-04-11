@@ -105,7 +105,7 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
                     online={sender.online}
-                    src={sender.avatarImgPath}
+                    src={sender.avatarImgPath || ""}
                   />
                 </Box>
                 <Box sx={{ flex: 20 }}>

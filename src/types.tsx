@@ -119,9 +119,8 @@ export type NewThreadMessageProps = {
 
 // Task
 export type ProjectProps = {
-    id: number,
-    name: string,
-    color: string | "primary"
+    projectId: number,
+    projectName: string
 }
 
 export type TaskStatusProps = {
@@ -223,7 +222,7 @@ export type TaskTableProps = {
         color: string,
     }[],
     teamId: string,
-    projectId: string
+    projectId: number
 }
 
 // Other Props
@@ -249,3 +248,16 @@ export type LoadGMMessageHistoryResponse = {
     messageHistory: ChatProps[] | [],
     message: string,
 };
+
+export type SearchTeamTasksResponse = {
+    projectId: number,
+    projectName: string,
+    taskId: number,
+    title: string,
+    status: string,
+}
+
+export type TeamProjectsResponse = {
+    projectId: number,
+    projectName: string,
+}

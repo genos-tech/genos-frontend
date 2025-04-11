@@ -31,7 +31,6 @@ import {
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
-import FormControl from '@mui/joy/FormControl';
 import { useAuth } from "../admin/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
 import updateSpecificTask from '../backendOperation/updateSpecificTask';
@@ -65,9 +64,9 @@ const sampleUsers: UserProps[] = [
 ]
 
 const sampleProjects: ProjectProps[] = [
-    { id: 1, name: 'origin-marketing', color: 'primary' },
-    { id: 2, name: 'origin-analytics', color: 'danger' },
-    { id: 3, name: 'origin-ai', color: 'warning' }]
+    { projectId: 1, projectName: 'origin-marketing' },
+    { projectId: 2, projectName: 'origin-analytics' },
+    { projectId: 3, projectName: 'origin-ai' }]
 
 
 const sampleTags = [
@@ -329,19 +328,17 @@ export default function taskPreview(props: TaskContentProps) {
                         >
                             {currentPreviewTask.status.status}
                         </Chip>
-                        <FormControl required sx={{ width: '100%' }}>
-                            <Input
-                                key={'taskTitle'}
-                                variant='soft'
-                                placeholder="Task Title"
-                                defaultValue={taskTitle || ""}
-                                onChange={(e) => {
-                                    setTaskTitle(e.target.value)
-                                }}
-                                onBlur={() => { setTaskUpdate(true) }}
-                                sx={{ fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
-                            />
-                        </FormControl>
+                        <Input
+                            key={'taskTitle'}
+                            variant='soft'
+                            placeholder="Task Title"
+                            defaultValue={taskTitle || ""}
+                            onChange={(e) => {
+                                setTaskTitle(e.target.value)
+                            }}
+                            onBlur={() => { setTaskUpdate(true) }}
+                            sx={{ fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
+                        />
                     </Box>
                     <Box>
                         <Typography
@@ -426,7 +423,7 @@ export default function taskPreview(props: TaskContentProps) {
                                     <Typography sx={{ minWidth: "80px" }}>Project:</Typography>
                                     <Autocomplete
                                         options={sampleProjects}
-                                        getOptionLabel={(option) => option.name}
+                                        getOptionLabel={(option) => option.projectName}
                                         defaultValue={initAutocompleteValues.project}
                                         onChange={(event, value) => {
                                             if (value !== null) {
@@ -434,9 +431,8 @@ export default function taskPreview(props: TaskContentProps) {
                                                     setCurrentTaskContent(prevState => ({
                                                         ...prevState,
                                                         project: {
-                                                            id: value.id,
-                                                            name: value.name,
-                                                            color: value.color,
+                                                            projectId: value.projectId,
+                                                            projectName: value.projectName
                                                         }
                                                     }));
                                                 })();
