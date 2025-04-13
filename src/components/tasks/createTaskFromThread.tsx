@@ -816,12 +816,18 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                 <Box sx={{ mt: 2 }}>
                     <div className="md-content">
                         <MarkdownEditor
+                            myself={myself}
+                            projectId={taskContents.project?.projectId || -1}
+                            taskId={-1}
                             content={body}
                             setBody={setBody}
                             height={getMdHeight(body)}
                             mdMode={"edit"}
+                            sendMode={false}
                             isTaskBody={true}
                             setTaskUpdate={(val) => { val }}
+                            taskComments={[]}
+                            setTaskComments={() => { }}
                         />
                     </div>
                 </Box>

@@ -17,7 +17,6 @@ async function updateSpecificTask(props: UpdateTaskProps): Promise<PreviewTaskPr
     }
 
     try {
-        console.log("updatedData:", updatedData)
         const response = await fetch(`${base_url}/task/updateTask/`, {
             method: "PUT",
             headers: {

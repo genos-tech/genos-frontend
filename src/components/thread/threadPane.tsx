@@ -42,8 +42,6 @@ export default function ThreadPane(props: MessagesPaneProps) {
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
   const [content, setContent] = useState("");
 
-  console.log("thread:", thread)
-
   React.useEffect(() => {
     setThreadMessages(thread.messages || []);
   }, [thread.messages]);

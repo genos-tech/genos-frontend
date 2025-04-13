@@ -38,7 +38,7 @@ function getCurrentTimestamp() {
 
 type MarkdownEditorProps = {
   myself: UserProps;
-  socket: Socket;
+  socket?: Socket;
   projectId: number;
   taskId: number;
   content: string;
@@ -92,23 +92,25 @@ export const MarkdownEditor = ({
           }}
           onClick={
             () => {
-              if (content.trim()) {
-                socket.emit("task_comment", {
-                  project_id: projectId,
-                  task_id: taskId,
-                  comment_body: content
-                }, (ack: any) => {
-                  setBody("")
-                  setTaskComments([...taskComments, {
-                    taskId: taskId,
-                    senderId: myself.userId,
-                    senderName: myself.userName,
-                    commentId: taskComments.length + 1,
-                    commentBody: content,
-                    sentAt: getCurrentTimestamp(),
-                  }])
+              if (socket) {
+                if (content.trim()) {
+                  socket.emit("task_comment", {
+                    project_id: projectId,
+                    task_id: taskId,
+                    comment_body: content
+                  }, (ack: any) => {
+                    setBody("")
+                    setTaskComments([...taskComments, {
+                      taskId: taskId,
+                      senderId: myself.userId,
+                      senderName: myself.userName,
+                      commentId: taskComments.length + 1,
+                      commentBody: content,
+                      sentAt: getCurrentTimestamp(),
+                    }])
+                  }
+                  )
                 }
-                )
               }
             }
           }>

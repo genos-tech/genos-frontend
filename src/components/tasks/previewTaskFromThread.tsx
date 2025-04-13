@@ -29,6 +29,7 @@ import {
     TaskEffortLevelProps,
     AttachmentFileProps,
     TagListProps,
+    TaskCommentProps,
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
@@ -43,6 +44,7 @@ import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
+import loadTaskComments from '../backendOperation/loadTaskComments';
 
 const priorities: TaskPriorityProps[] = [
     { code: 0, priority: 'Low', color: '#0044c2', textColor: "white" },
@@ -294,6 +296,20 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
         })();
     }, [isNewTagCreated, currentTaskContent])
 
+    // Get Task Comments
+    const [taskComments, setTaskComments] = useState<TaskCommentProps[]>([]);
+    useEffect(() => {
+        (async () => {
+            const loadedTaskComments: TaskCommentProps[] = await loadTaskComments({
+                myself: myself, taskId: Number(currentPreviewTask.id), accessToken: accessToken || ""
+            });
+            if (loadedTaskComments.length > 0) {
+                setTaskComments(loadedTaskComments);
+            } else {
+                setTaskComments([]);
+            }
+        })();
+    }, [currentPreviewTask])
 
     return (
         <Sheet
@@ -836,12 +852,18 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
                 <Box sx={{ mt: 2 }}>
                     <div className="md-content">
                         <MarkdownEditor
+                            myself={myself}
+                            projectId={currentPreviewTask.project?.projectId || -1}
+                            taskId={-1}
                             content={body || ""}
                             setBody={setBody}
                             height={getMdHeight(body || "")}
                             mdMode={"preview"}
+                            sendMode={false}
                             isTaskBody={true}
                             setTaskUpdate={setTaskUpdate}
+                            taskComments={[]}
+                            setTaskComments={() => { }}
                         />
                     </div>
                 </Box>
@@ -883,17 +905,23 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
                 </Typography>
 
                 <Box sx={{ mb: 1 }}>
-                    <TaskCommentBubble />
+                    <TaskCommentBubble taskComments={taskComments} />
                 </Box>
 
                 <div className="md-content">
                     <MarkdownEditor
+                        myself={myself}
+                        projectId={currentPreviewTask.project.projectId || -1}
+                        taskId={Number(currentPreviewTask.id)}
                         content={comment}
                         setBody={setComment}
                         height={200}
                         mdMode={"edit"}
+                        sendMode={true}
                         isTaskBody={false}
                         setTaskUpdate={setTaskUpdate}
+                        taskComments={taskComments}
+                        setTaskComments={setTaskComments}
                     />
                 </div>
             </Box>

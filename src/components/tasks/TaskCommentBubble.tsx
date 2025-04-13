@@ -28,45 +28,50 @@ export default function TaskCommentBubble(props: TaskCommentBubbleProps) {
   }, [taskComments]); // Re-scroll on content change
 
   return (
-    <Box
-      ref={boxRef}
-      className="custom-scrollbar"
-      sx={{
-        height: 300,
-        pb: '10px',
-        overflowY: 'scroll',
-        overflowX: 'hidden'
-      }}>
-      <Stack spacing={1}>
-        {taskComments.map((comment, index) => {
-          return (
-            <Box key={index}>
-              <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'rgb(217, 217, 217)' }}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Avatar size="sm">{comment.senderName[0]}</Avatar>
-                  <Typography level="title-md">{comment.senderName}</Typography>
-                  <Typography
-                    level="body-sm"
-                    textColor="black"
-                    sx={{ fontFamily: 'monospace', opacity: 0.7, pl: '5px' }}
-                  >
-                    {comment.sentAt}
-                  </Typography>
-                </Stack>
-                <MarkdownPreview
-                  className="markdown-preview"
-                  source={comment.commentBody}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: 'black'
-                  }}
-                />
-              </Card>
-            </Box>
+    <>
+      {(taskComments.length === 0) && (<div>You can  add your comments here !!!</div>)}
 
-          )
-        })}
-      </Stack>
-    </Box>
+      {(taskComments.length > 0) && (<>
+        <Box
+          ref={boxRef}
+          className="custom-scrollbar"
+          sx={{
+            height: Math.min(taskComments.length * 100, 300),
+            pb: '10px',
+            overflowY: 'scroll',
+            overflowX: 'hidden'
+          }}>
+          <Stack spacing={1}>
+            {taskComments.map((comment, index) => {
+              return (
+                <Box key={index}>
+                  <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'rgb(217, 217, 217)' }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Avatar size="sm">{comment.senderName[0]}</Avatar>
+                      <Typography level="title-md">{comment.senderName}</Typography>
+                      <Typography
+                        level="body-sm"
+                        textColor="black"
+                        sx={{ fontFamily: 'monospace', opacity: 0.7, pl: '5px' }}
+                      >
+                        {comment.sentAt}
+                      </Typography>
+                    </Stack>
+                    <MarkdownPreview
+                      className="markdown-preview"
+                      source={comment.commentBody}
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: 'black'
+                      }}
+                    />
+                  </Card>
+                </Box>
+              )
+            })}
+          </Stack>
+        </Box>
+      </>)}
+    </>
   );
 }

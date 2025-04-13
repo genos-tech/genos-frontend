@@ -799,12 +799,18 @@ export default function CreateTask(props: TaskContentProps) {
                 <Box sx={{ mt: 2 }}>
                     <div className="md-content">
                         <MarkdownEditor
+                            myself={myself}
+                            projectId={currentProject.projectId}
+                            taskId={-1}
                             content={body}
                             setBody={setBody}
                             height={getMdHeight(body)}
                             mdMode={"edit"}
+                            sendMode={false}
                             isTaskBody={true}
                             setTaskUpdate={(val) => { val }}
+                            taskComments={[]}
+                            setTaskComments={() => { }}
                         />
                     </div>
                 </Box>
