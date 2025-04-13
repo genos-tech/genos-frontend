@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-    IconButton,
-    Modal,
-    ModalDialog,
-    Alert,
-    Stack,
-    Button,
-    Input,
+    IconButton
 } from "@mui/joy";
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
@@ -23,7 +17,13 @@ import Sidebar from './utils/sidebar';
 import TaskSidebar from './tasks/TaskSidebar';
 import TaskPreview from './tasks/previewTask';
 import TaskTable from './tasks/TaskTable';
-import { UserProps, ProjectProps, TaskTableProps, PreviewTaskProps, TeamProjectsResponse, SearchTeamTasksResponse } from './../types';
+import {
+    UserProps,
+    ProjectProps,
+    TaskTableProps,
+    PreviewTaskProps,
+    SearchTeamTasksResponse
+} from './../types';
 import CreateTask from "../components/tasks/createTask";
 import FetchSpecificProjectTasksWorker from "../workers/fetchSpecificProjectTasksWorker.ts?worker";
 import loadSpecificTask from './backendOperation/loadSpecificTask';
@@ -33,8 +33,8 @@ import Autocomplete from '@mui/joy/Autocomplete';
 import loadTaskSearchList from './backendOperation/loadTaskSearchList';
 import CircularProgress from '@mui/joy/CircularProgress';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-
-const base_url = import.meta.env.VITE_API_BASE_URL;
+import CreateTagModal from './tasks/modalCreateTag';
+import CreateProjectModal from './tasks/modalCreateProject';
 
 type TaskProps = {
     myself: UserProps;
@@ -57,7 +57,7 @@ export default function TaskHome(props: TaskProps) {
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
-    const [teamTaskOptions, setOptions] = useState<SearchTeamTasksResponse[]>([]);
+    const [teamTaskOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
     const loading = openSearch && teamTaskOptions.length === 0;
     useEffect(() => {
         let active = true;
@@ -72,7 +72,7 @@ export default function TaskHome(props: TaskProps) {
             });
 
             if (active) {
-                setOptions([...loadedTeamTasks]);
+                setTeamTaskOptions([...loadedTeamTasks]);
             }
         })();
 
@@ -93,7 +93,7 @@ export default function TaskHome(props: TaskProps) {
     useEffect(() => {
         // Load the latest project as initial process
         (async () => {
-            const loadedTeamProjects: TeamProjectsResponse[] = await loadTeamProjects({
+            const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
                 myself: myself, accessToken: accessToken || ""
             });
             if (loadedTeamProjects.length > 0) {
@@ -173,58 +173,21 @@ export default function TaskHome(props: TaskProps) {
     }, [currentPreviewTaskId, isNewTaskCreated])
 
 
-    // Modal configs
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [openCreateProject, setOpenCreateProject] = useState(false);
-    const [projectName, setProjectName] = useState("");
-
-    const handleCreateProject = () => {
-        if (projectName.trim()) { createProject() }
-    };
-
-    async function createProject(): Promise<void> {
-        try {
-            const createProjectResponse = await fetch(`${base_url}/project/create/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    "Authorization": `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({
-                    team: myself.teamId,
-                    project_name: projectName,
-                    owner: myself.userId
-                }),
-            });
-
-            const createProjectData = await createProjectResponse.json();
-
-            if (!createProjectResponse.ok) {
-                console.error(createProjectData)
-                throw new Error(createProjectData.hint || 'Project Creation Failed');
-            } else {
-                console.log("Task created:", createProjectData)
-                setCurrentProject(
-                    {
-                        projectId: createProjectData.project_id,
-                        projectName: createProjectData.project_name
-                    }
-                )
-                setOpenCreateProject(false);
-            }
-        } catch (error) {
-            const err_msg = `${error}`
-            console.error(err_msg);
-            setErrorMessage(err_msg);
-        }
-    }
+    const [openCreateTag, setOpenCreateTag] = useState(false);
+    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
+    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
 
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
 
             <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
-                <Sidebar myself={myself} setMyself={setMyself} setOpeningService={setOpeningService} />
+                <Sidebar
+                    myself={myself}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                />
 
                 <PanelGroup direction="horizontal">
 
@@ -232,7 +195,9 @@ export default function TaskHome(props: TaskProps) {
                         <TaskSidebar
                             myself={myself}
                             setCurrentProject={setCurrentProject}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId} />
+                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            setOpenCreateTag={setOpenCreateTag}
+                        />
                     </Panel>
 
                     {/* Resizable Handle with MUI sx Styling */}
@@ -325,6 +290,7 @@ export default function TaskHome(props: TaskProps) {
                                             <IconButton
                                                 component='p'
                                                 variant="outlined"
+                                                size="sm"
                                                 sx={{
                                                     fontSize: '15px',
                                                     paddingRight: '10px'
@@ -340,13 +306,13 @@ export default function TaskHome(props: TaskProps) {
                                             <Dropdown>
                                                 <MenuButton
                                                     slots={{ root: IconButton }}
-                                                    slotProps={{ root: { variant: 'outlined', color: 'neutral' } }}
-                                                    sx={{ ml: '5px' }}
+                                                    slotProps={{ root: { color: 'neutral' } }}
                                                 >
                                                     <MoreVert />
                                                 </MenuButton>
                                                 <Menu>
-                                                    <MenuItem onClick={() => { setOpenCreateProject(true) }}>Create Project</MenuItem>
+                                                    <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
+                                                    <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
                                                 </Menu>
                                             </Dropdown>
                                         </Box>
@@ -399,6 +365,8 @@ export default function TaskHome(props: TaskProps) {
                                                 setIsNewTaskCreated={setIsNewTaskCreated}
                                                 setIsTaskContentVisible={setIsTaskContentVisible}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setOpenCreateProject={setOpenCreateProject}
+                                                setOpenCreateTag={setOpenCreateTag}
                                             />
                                         </Box>
                                     </Panel>
@@ -441,9 +409,10 @@ export default function TaskHome(props: TaskProps) {
                                                 myself={myself}
                                                 currentProject={currentProject}
                                                 currentPreviewTask={currentPreviewTask}
-                                                setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setIsTaskContentVisible={setIsTaskContentVisible}
+                                                setOpenCreateProject={setOpenCreateProject}
+                                                setOpenCreateTag={setOpenCreateTag}
                                             />
                                         </Box>
                                     </Panel>
@@ -479,40 +448,28 @@ export default function TaskHome(props: TaskProps) {
                                         New Project
                                     </IconButton>
                                 </Box>
-
                             </Panel>
                         </>
                     )}
 
 
-                    {/* Modal for creating a new chat group */}
-                    <Modal sx={{ zIndex: 10010 }} open={openCreateProject} onClose={() => setOpenCreateProject(false)}>
-                        <ModalDialog>
-                            <Typography level="h4">Create New Project</Typography>
-                            <Input
-                                placeholder="Enter an unique project name"
-                                value={projectName}
-                                onChange={(e) => setProjectName(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && projectName.trim()) {
-                                        handleCreateProject();
-                                    }
-                                }}
-                                sx={{ mt: 1 }}
-                            />
-                            {errorMessage && errorMessage !== "" && (
-                                <Alert color="danger">{errorMessage}</Alert>
-                            )}
-                            <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                                <Button component='a' variant="outlined" onClick={() => setOpenCreateProject(false)}>
-                                    Cancel
-                                </Button>
-                                <Button component='a' onClick={handleCreateProject} disabled={!projectName.trim()}>
-                                    Create
-                                </Button>
-                            </Stack>
-                        </ModalDialog>
-                    </Modal>
+                    {/* Modal for creating a new project */}
+                    <CreateProjectModal
+                        myself={myself}
+                        openCreateProject={openCreateProject}
+                        setOpenCreateProject={setOpenCreateProject}
+                        setCurrentProject={setCurrentProject}
+                        setIsNewProjectCreated={setIsNewProjectCreated}
+                    />
+
+                    {/* Modal for creating a new tag */}
+                    <CreateTagModal
+                        myself={myself}
+                        currentProject={currentProject}
+                        openCreateTag={openCreateTag}
+                        setOpenCreateTag={setOpenCreateTag}
+                        setIsNewTagCreated={setIsNewTagCreated}
+                    />
 
                 </PanelGroup>
 

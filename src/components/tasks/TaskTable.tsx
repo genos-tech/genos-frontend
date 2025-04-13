@@ -5,8 +5,8 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useColorScheme } from '@mui/joy/styles';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-import { TaskTableProps, PreviewTaskProps } from '../../types';
-import { taskColumns, taskRows } from './sampleTaskLists';
+import { TaskTableProps } from '../../types';
+import { taskColumns } from './tableFormat';
 
 const theme = createTheme({ cssVariables: true });
 
@@ -178,7 +178,7 @@ export default function TaskTable(props: ProjectTaskTableProps) {
           }}
         >
           <DataGrid
-            onCellClick={(params) => (console.log("Cell clicked"))}
+            onCellClick={(params) => { }}
             onRowClick={(params, event, detail) => {
               // console.log("Row clicked:", params);
               setIsTaskContentVisible(true);
@@ -206,6 +206,9 @@ export default function TaskTable(props: ProjectTaskTableProps) {
             rows={projectTasks}
             columns={taskColumns}
             initialState={{
+              sorting: {
+                sortModel: [{ field: 'id', sort: 'desc' }],
+              },
               pagination: {
                 paginationModel: {
                   pageSize: 50,

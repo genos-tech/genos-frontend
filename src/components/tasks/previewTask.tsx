@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from "react";
+import { alpha } from '@mui/system';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Chip from '@mui/joy/Chip';
@@ -27,73 +28,46 @@ import {
     TaskStatusProps,
     TaskPriorityProps,
     TaskEffortLevelProps,
-    AttachmentFileProps
+    AttachmentFileProps,
+    TagListProps,
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import { useAuth } from "../admin/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
 import updateSpecificTask from '../backendOperation/updateSpecificTask';
-
-// sampleUsers[0] must be my self
-const sampleUsers: UserProps[] = [
-    {
-        teamId: "d5918417-471a-4949-b234-f74b27495bd2",
-        userId: "0bed59ca-909a-4cca-ba90-88cbc89c7a72",
-        userName: "Ken",
-        userEmail: "ken@origin.tech",
-        avatarImgPath: null,
-        online: false,
-    },
-    {
-        teamId: "a",
-        userId: "a",
-        userName: "Jun",
-        userEmail: "jun@origin.tech",
-        avatarImgPath: null,
-        online: false,
-    },
-    {
-        teamId: "a",
-        userId: "a",
-        userName: "Ryan",
-        userEmail: "ryan@origin.tech",
-        avatarImgPath: null,
-        online: false,
-    },
-]
-
-const sampleProjects: ProjectProps[] = [
-    { projectId: 1, projectName: 'origin-marketing' },
-    { projectId: 2, projectName: 'origin-analytics' },
-    { projectId: 3, projectName: 'origin-ai' }]
-
-
-const sampleTags = [
-    { tag: 'Frontend', color: 'primary' },
-    { tag: 'Backend', color: 'danger' },
-    { tag: 'Infra', color: 'warning' }
-]
+import loadTeamProjects from '../backendOperation/loadTeamProjects';
+import loadTeamMembers from '../backendOperation/loadTeamMembers';
+import loadProjectTags from '../backendOperation/loadProjectTags';
+import Dropdown from '@mui/joy/Dropdown';
+import Menu from '@mui/joy/Menu';
+import MenuButton from '@mui/joy/MenuButton';
+import MenuItem from '@mui/joy/MenuItem';
+import MoreVert from '@mui/icons-material/MoreVert';
+import AutocompleteOption from '@mui/joy/AutocompleteOption';
+import ListItemDecorator from '@mui/joy/ListItemDecorator';
+import ListItemContent from '@mui/joy/ListItemContent';
 
 const statuses: TaskStatusProps[] = [
-    { code: 0, status: 'Open', color: 'primary' },
-    { code: 1, status: 'WIP', color: 'warning' },
-    { code: 2, status: 'Close', color: 'success' },
-    { code: 3, status: 'Deleted', color: 'danger' }
+    { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
+    { code: 0, status: "WIP", color: "#ffff23", textColor: "grey" },
+    { code: 0, status: "Pending", color: "#ffa823", textColor: "white" },
+    { code: 0, status: "Closed", color: "#1dc200", textColor: "white" },
+    { code: 0, status: "Deleted", color: "#ff2323", textColor: "white" },
 ]
 
+
 const priorities: TaskPriorityProps[] = [
-    { code: 0, priority: 'Low', color: 'primary' },
-    { code: 1, priority: 'Medium', color: 'warning' },
-    { code: 2, priority: 'High', color: 'danger' }
+    { code: 0, priority: 'Low', color: '#0044c2', textColor: "white" },
+    { code: 0, priority: 'Medium', color: '#1dc200', textColor: "white" },
+    { code: 0, priority: 'High', color: '#ff2323', textColor: "white" },
 ]
 
 const effortLevels: TaskEffortLevelProps[] = [
-    { code: 0, level: 'Low', color: 'primary' },
-    { code: 1, level: 'Medium', color: 'warning' },
-    { code: 2, level: 'High', color: 'danger' }
+    { code: 0, level: 'Low', color: '#0044c2', textColor: "white" },
+    { code: 0, level: 'Medium', color: '#1dc200', textColor: "white" },
+    { code: 0, level: 'High', color: '#ff2323', textColor: "white" },
 ]
-
 
 const getFormattedTodayDateStr = (): string => {
     const today = new Date();
@@ -108,9 +82,10 @@ type TaskContentProps = {
     myself: UserProps,
     currentProject: ProjectProps,
     currentPreviewTask: PreviewTaskProps,
-    setCurrentPreviewTask: (value: PreviewTaskProps) => void;
     setIsCreatingTask: (value: boolean) => void;
     setIsTaskContentVisible: (value: boolean) => void;
+    setOpenCreateProject: (value: boolean) => void,
+    setOpenCreateTag: (value: boolean) => void,
 };
 
 export default function taskPreview(props: TaskContentProps) {
@@ -118,27 +93,18 @@ export default function taskPreview(props: TaskContentProps) {
         myself,
         currentProject,
         currentPreviewTask,
-        setCurrentPreviewTask,
         setIsCreatingTask,
-        setIsTaskContentVisible
+        setIsTaskContentVisible,
+        setOpenCreateProject,
+        setOpenCreateTag
     } = props
     const { accessToken } = useAuth();
     const [comment, setComment] = useState("");
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
-    const nextStatus: string = "Close"
     const [taskUpdated, setTaskUpdate] = useState(false);
     const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
     const [taskTitle, setTaskTitle] = useState<string | null>(null);
     const [body, setBody] = useState<string | null>(null);
-    const initAutocompleteValues = {
-        project: sampleProjects[0],
-        assignee: sampleUsers[0],
-        reporter: sampleUsers[0],
-        status: statuses[0],
-        priority: priorities[0],
-        effortLevel: effortLevels[0],
-        tags: sampleTags,
-    }
 
     useEffect(() => {
         if (currentPreviewTask) {
@@ -297,6 +263,48 @@ export default function taskPreview(props: TaskContentProps) {
     };
     const [errorOpen, setErrorOpen] = React.useState(false);
 
+    // Get team members
+    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
+    useEffect(() => {
+        // Load the latest project as initial process
+        (async () => {
+            const loadedTeamMembers: UserProps[] = await loadTeamMembers({
+                myself: myself, accessToken: accessToken || ""
+            });
+            if (loadedTeamMembers.length > 0) {
+                setTeamMembers(loadedTeamMembers);
+            }
+        })();
+    }, [])
+
+    // Get team projects
+    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
+    useEffect(() => {
+        // Load the latest project as initial process
+        (async () => {
+            const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
+                myself: myself, accessToken: accessToken || ""
+            });
+            if (loadedTeamProjects.length > 0) {
+                setTeamProjects(loadedTeamProjects);
+            }
+        })();
+    }, [])
+
+    // Get Project tags
+    const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
+    useEffect(() => {
+        (async () => {
+            const loadedProjectTags: TagListProps[] = await loadProjectTags({
+                myself: myself, projectId: currentProject.projectId, accessToken: accessToken || ""
+            });
+            if (loadedProjectTags.length > 0) {
+                setProjectTags(loadedProjectTags);
+            }
+        })();
+    }, [])
+
+
     return (
         <Sheet
             className="custom-scrollbar"
@@ -323,8 +331,7 @@ export default function taskPreview(props: TaskContentProps) {
                             key={currentPreviewTask.status.status}
                             size="lg"
                             variant="soft"
-                            color="primary"
-                            startDecorator={<CheckCircleOutlineIcon style={{ color: "#2bc8ff" }} />}
+                            sx={{ backgroundColor: alpha(currentPreviewTask.status.color, 0.85), color: currentPreviewTask.status.textColor, fontWeight: 'bold' }}
                         >
                             {currentPreviewTask.status.status}
                         </Chip>
@@ -337,7 +344,7 @@ export default function taskPreview(props: TaskContentProps) {
                                 setTaskTitle(e.target.value)
                             }}
                             onBlur={() => { setTaskUpdate(true) }}
-                            sx={{ fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
+                            sx={{ width: '100%', fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
                         />
                     </Box>
                     <Box>
@@ -356,6 +363,18 @@ export default function taskPreview(props: TaskContentProps) {
                     >
                         <CancelIcon />
                     </IconButton>
+                    <Dropdown>
+                        <MenuButton
+                            slots={{ root: IconButton }}
+                            slotProps={{ root: { color: 'neutral' } }}
+                        >
+                            <MoreVert />
+                        </MenuButton>
+                        <Menu>
+                            <MenuItem onClick={() => { setOpenCreateProject(true) }}>Create Project</MenuItem>
+                            <MenuItem onClick={() => { setOpenCreateTag(true) }}>Create Tag</MenuItem>
+                        </Menu>
+                    </Dropdown>
                 </Stack>
             </Box>
 
@@ -373,11 +392,12 @@ export default function taskPreview(props: TaskContentProps) {
                     <List aria-labelledby="decorated-list-demo">
                         <ListItem sx={{ display: "flex", alignItems: "center" }}>
                             <Typography sx={{ minWidth: "80px" }}>Assignee:</Typography>
-                            <Avatar size="md">K</Avatar>
+                            <Avatar size="sm">{currentTaskContent.assignee.userName[0]}</Avatar>
                             <Autocomplete
-                                options={sampleUsers}
+                                options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={initAutocompleteValues.assignee}
+                                defaultValue={currentTaskContent.assignee}
+                                isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
                                         (async () => {
@@ -396,11 +416,12 @@ export default function taskPreview(props: TaskContentProps) {
 
                         <ListItem sx={{ display: "flex", alignItems: "center" }}>
                             <Typography sx={{ minWidth: "80px" }}>Reporter:</Typography>
-                            <Avatar size="md">R</Avatar>
+                            <Avatar size="sm">{currentTaskContent.reporter.userName[0]}</Avatar>
                             <Autocomplete
-                                options={sampleUsers}
+                                options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={initAutocompleteValues.reporter}
+                                defaultValue={currentTaskContent.reporter}
+                                isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
                                         (async () => {
@@ -422,9 +443,10 @@ export default function taskPreview(props: TaskContentProps) {
                                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                     <Typography sx={{ minWidth: "80px" }}>Project:</Typography>
                                     <Autocomplete
-                                        options={sampleProjects}
+                                        options={teamProjects}
                                         getOptionLabel={(option) => option.projectName}
-                                        defaultValue={initAutocompleteValues.project}
+                                        defaultValue={currentTaskContent.project}
+                                        isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 (async () => {
@@ -449,26 +471,40 @@ export default function taskPreview(props: TaskContentProps) {
                                     <Typography sx={{ minWidth: "40px" }}>Tags:</Typography>
                                     <Autocomplete
                                         multiple
-                                        options={sampleTags}
-                                        getOptionLabel={(option) => option.tag}
-                                        defaultValue={initAutocompleteValues.tags}
+                                        options={projectTags}
+                                        getOptionLabel={(option) => option.tagName}
+                                        defaultValue={currentTaskContent.tags}
+                                        isOptionEqualToValue={(option, value) => option.tagName === value.tagName}
                                         limitTags={4}
                                         renderTags={(tags, getTagProps) =>
                                             tags.map((item, index) => {
                                                 const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
                                                 return (
                                                     <Chip
-                                                        key={key} // pass the key directly
+                                                        key={item.tagName} // pass the key directly
                                                         variant="soft"
-                                                        color='danger'
                                                         endDecorator={<Close />}
-                                                        {...tagProps} // pass the props except the key
+                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.85), color: item.tagTextColor, fontWeight: 'bold' }}
                                                     >
-                                                        {item.tag}
+                                                        {item.tagName}
                                                     </Chip>
                                                 );
                                             })
                                         }
+                                        renderOption={(props, option) => (
+                                            <AutocompleteOption key={option.tagName}>
+                                                <ListItemContent sx={{ fontSize: 'sm' }}>
+                                                    <Chip
+                                                        key={option.tagName} // pass the key directly
+                                                        variant="soft"
+                                                        endDecorator={<Close />}
+                                                        sx={{ backgroundColor: alpha(option.tagColor, 0.85), color: option.tagTextColor, fontWeight: 'bold' }}
+                                                    >
+                                                        {option.tagName}
+                                                    </Chip>
+                                                </ListItemContent>
+                                            </AutocompleteOption>
+                                        )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 (async () => {
@@ -495,7 +531,12 @@ export default function taskPreview(props: TaskContentProps) {
                                         multiple
                                         options={priorities}
                                         getOptionLabel={(option) => option.priority}
-                                        defaultValue={[initAutocompleteValues.priority]}
+                                        defaultValue={
+                                            (currentTaskContent.priority.priority !== null)
+                                                ? [currentTaskContent.priority]
+                                                : []
+                                        }
+                                        isOptionEqualToValue={(option, value) => option.priority === value.priority}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
                                                 const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
@@ -503,15 +544,28 @@ export default function taskPreview(props: TaskContentProps) {
                                                     <Chip
                                                         key={key} // pass the key directly
                                                         variant="soft"
-                                                        color='success'
                                                         endDecorator={<Close />}
-                                                        {...tagProps} // pass the props except the key
+                                                        sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {item.priority}
                                                     </Chip>
                                                 );
                                             })
                                         }
+                                        renderOption={(props, option) => (
+                                            <AutocompleteOption key={option.priority}>
+                                                <ListItemContent sx={{ fontSize: 'sm' }}>
+                                                    <Chip
+                                                        key={option.priority} // pass the key directly
+                                                        variant="soft"
+                                                        endDecorator={<Close />}
+                                                        sx={{ backgroundColor: alpha(option.color, 0.85), color: option.textColor, fontWeight: 'bold' }}
+                                                    >
+                                                        {option.priority}
+                                                    </Chip>
+                                                </ListItemContent>
+                                            </AutocompleteOption>
+                                        )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 (async () => {
@@ -537,7 +591,12 @@ export default function taskPreview(props: TaskContentProps) {
                                         multiple
                                         options={effortLevels}
                                         getOptionLabel={(option) => option.level}
-                                        defaultValue={[initAutocompleteValues.effortLevel]}
+                                        defaultValue={
+                                            (currentTaskContent.effortLevel.level !== null)
+                                                ? [currentTaskContent.effortLevel]
+                                                : []
+                                        }
+                                        isOptionEqualToValue={(option, value) => option.level === value.level}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
                                                 const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
@@ -545,15 +604,28 @@ export default function taskPreview(props: TaskContentProps) {
                                                     <Chip
                                                         key={key} // pass the key directly
                                                         variant="soft"
-                                                        color='primary'
                                                         endDecorator={<Close />}
-                                                        {...tagProps} // pass the props except the key
+                                                        sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {(item) ? item.level : ""}
                                                     </Chip>
                                                 );
                                             })
                                         }
+                                        renderOption={(props, option) => (
+                                            <AutocompleteOption key={option.level}>
+                                                <ListItemContent sx={{ fontSize: 'sm' }}>
+                                                    <Chip
+                                                        key={option.level} // pass the key directly
+                                                        variant="soft"
+                                                        endDecorator={<Close />}
+                                                        sx={{ backgroundColor: alpha(option.color, 0.85), color: option.textColor, fontWeight: 'bold' }}
+                                                    >
+                                                        {option.level}
+                                                    </Chip>
+                                                </ListItemContent>
+                                            </AutocompleteOption>
+                                        )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 (async () => {
@@ -570,9 +642,65 @@ export default function taskPreview(props: TaskContentProps) {
                                     />
                                 </ListItem>
 
-                            </Grid>
-                        </Grid>
+                            </Grid >
+                        </Grid >
 
+                        <ListItem sx={{ width: '50%' }}>
+                            <Typography sx={{ minWidth: "80px" }}>Status:</Typography>
+                            <Autocomplete
+                                multiple
+                                options={statuses}
+                                getOptionLabel={(option) => option.status}
+                                defaultValue={
+                                    (currentTaskContent.status.status !== null)
+                                        ? [currentTaskContent.status]
+                                        : []
+                                }
+                                isOptionEqualToValue={(option, value) => option.status === value.status}
+                                renderTags={(tags, getTagProps) =>
+                                    tags.slice(-1).map((item, index) => {
+                                        const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                                        return (
+                                            <Chip
+                                                key={key} // pass the key directly
+                                                variant="soft"
+                                                endDecorator={<Close />}
+                                                sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
+                                            >
+                                                {(item) ? item.status : ""}
+                                            </Chip>
+                                        );
+                                    })
+                                }
+                                renderOption={(props, option) => (
+                                    <AutocompleteOption key={option.status}>
+                                        <ListItemContent sx={{ fontSize: 'sm' }}>
+                                            <Chip
+                                                key={option.status} // pass the key directly
+                                                variant="soft"
+                                                endDecorator={<Close />}
+                                                sx={{ backgroundColor: alpha(option.color, 0.85), color: option.textColor, fontWeight: 'bold' }}
+                                            >
+                                                {option.status}
+                                            </Chip>
+                                        </ListItemContent>
+                                    </AutocompleteOption>
+                                )}
+                                onChange={(event, value) => {
+                                    if (value !== null) {
+                                        (async () => {
+                                            setCurrentTaskContent(prevState => ({
+                                                ...prevState,
+                                                status: value.slice(-1)[0]
+                                            }));
+                                        })();
+                                        setTaskUpdate(true)
+                                    }
+                                }}
+                                size="md"
+                                sx={{ width: "100%" }}
+                            />
+                        </ListItem>
 
                         <ListItem>
                             <Typography sx={{ minWidth: "80px" }}>Due Date:</Typography>
@@ -736,9 +864,9 @@ export default function taskPreview(props: TaskContentProps) {
                                 </Stack>
                             )}
                         </ListItem>
-                    </List>
-                </Box>
-            </Box>
+                    </List >
+                </Box >
+            </Box >
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
@@ -757,7 +885,7 @@ export default function taskPreview(props: TaskContentProps) {
                         (async () => {
                             setCurrentTaskContent(prevState => ({
                                 ...prevState,
-                                status: { code: 2, status: 'Close', color: 'success' },
+                                status: { code: 0, status: 'Closed', color: '#1dc200', textColor: 'white' },
                             }));
                         })();
                         setTaskUpdate(true)
@@ -800,7 +928,7 @@ export default function taskPreview(props: TaskContentProps) {
                         (async () => {
                             setCurrentTaskContent(prevState => ({
                                 ...prevState,
-                                status: { code: 3, status: 'Deleted', color: 'danger' },
+                                status: { code: 0, status: 'Deleted', color: '#ff2323', textColor: 'white' },
                             }));
                         })();
                         setTaskUpdate(true)
@@ -878,6 +1006,6 @@ export default function taskPreview(props: TaskContentProps) {
                 </div>
             </Box>
 
-        </Sheet>
+        </Sheet >
     );
 }

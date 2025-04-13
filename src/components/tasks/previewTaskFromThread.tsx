@@ -11,14 +11,19 @@ import ListItem from '@mui/joy/ListItem';
 import Divider from '@mui/joy/Divider';
 import { Input, Grid, Button, Stack } from "@mui/joy";
 import Snackbar from '@mui/joy/Snackbar';
+import FileUpload from '../fileUpload/upload'
 import IconButton from '@mui/joy/IconButton';
 import CancelIcon from '@mui/icons-material/Cancel';
 import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
-import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import { MarkdownEditor } from "../markdownEditor/taskMdEditor";
 import {
     UserProps,
-    CreateTaskProps,
+    PreviewTaskProps,
     ProjectProps,
     TaskPriorityProps,
     TaskEffortLevelProps,
@@ -27,9 +32,9 @@ import {
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
-import FormControl from '@mui/joy/FormControl';
-import { useAuth } from "../../components/admin/AuthContext";
-import FileUpload from '../fileUpload/upload'
+import { useAuth } from "../admin/AuthContext";
+import TaskCommentBubble from './TaskCommentBubble'
+import updateSpecificTask from '../backendOperation/updateSpecificTask';
 import loadTeamProjects from '../backendOperation/loadTeamProjects';
 import loadTeamMembers from '../backendOperation/loadTeamMembers';
 import loadProjectTags from '../backendOperation/loadProjectTags';
@@ -38,8 +43,6 @@ import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
-
-const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const priorities: TaskPriorityProps[] = [
     { code: 0, priority: 'Low', color: '#0044c2', textColor: "white" },
@@ -53,6 +56,7 @@ const effortLevels: TaskEffortLevelProps[] = [
     { code: 0, level: 'High', color: '#ff2323', textColor: "white" },
 ]
 
+
 const getFormattedTodayDateStr = (): string => {
     const today = new Date();
     return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
@@ -62,174 +66,95 @@ const getFormattedDateStr = (date: Date): string => {
     return date.toISOString().split("T")[0]; // Extract YYYY-MM-DD from ISO string
 };
 
-type saveTaskProps = {
-    myself: UserProps,
-    taskContents: CreateTaskProps,
-    accessToken: string,
-    setIsSubmitted: (value: boolean) => void,
-    setTitleError: (value: string) => void,
-    setTitleErrorOpen: (value: boolean) => void,
-    setCurrentPreviewTaskId: (value: number) => void
-}
-
-const saveTask = async (props: saveTaskProps) => {
-    const { myself,
-        taskContents,
-        accessToken,
-        setIsSubmitted,
-        setTitleError,
-        setTitleErrorOpen,
-        setCurrentPreviewTaskId,
-    } = props;
-
-    if (taskContents.title === "") {
-        setTitleError("Task title is required !!!")
-        setTitleErrorOpen(true);
-    } else {
-        try {
-            if (taskContents.project !== null) {
-                const taskCreateResponse = await fetch(`${base_url}/task/create/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${accessToken}`
-                    },
-                    body: JSON.stringify({
-                        team: myself.teamId,
-                        project: taskContents.project.projectId,
-                        assignee: taskContents.assignee.userId,
-                        reporter: taskContents.reporter.userId,
-                        title: taskContents.title,
-                        priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
-                        effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
-                        status: (taskContents.status.status !== "") ? taskContents.status.status : null,
-                        content: (taskContents.body !== "") ? taskContents.body : null,
-                        due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
-                        github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
-                        github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
-                        general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
-                        general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
-                        tags: taskContents.tags,
-                    }),
-                });
-
-                const taskCreateData = await taskCreateResponse.json();
-
-                if (!taskCreateResponse.ok) {
-                    throw new Error('Failed to create a task');
-                } else {
-                    setCurrentPreviewTaskId(taskCreateData.task_id)
-
-                    for (const attachment of taskContents.attachments) {
-                        const formData = new FormData()
-                        formData.append("task", taskCreateData.task_id)
-                        formData.append("attached_file", attachment.file)
-                        formData.append("attached_type", attachment.file.type)
-
-                        const uploadAttachmentResponse = await fetch(`${base_url}/task/addTaskAttachment/`, {
-                            method: 'POST',
-                            headers: {
-                                "Authorization": `Bearer ${accessToken}`
-                            },
-                            body: formData,
-                        });
-
-                        const uploadAttachmentData = await uploadAttachmentResponse.json();
-                        console.log("uploadAttachmentData:", uploadAttachmentData)
-
-                        if (!uploadAttachmentResponse.ok) {
-                            throw new Error(uploadAttachmentData.message || 'Attachment Upload Failed');
-                        }
-                    }
-
-                    setIsSubmitted(true)
-                }
-            }
-
-        } catch (error) {
-            console.error(error);
-            return [];
-        }
-    }
-
-};
-
 type TaskContentProps = {
     myself: UserProps,
-    currentProject: ProjectProps,
-    setIsCreatingTask: (value: boolean) => void;
-    setIsNewTaskCreated: (value: boolean) => void;
-    setIsTaskContentVisible: (value: boolean) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
+    currentPreviewTask: PreviewTaskProps,
     setOpenCreateProject: (value: boolean) => void,
     setOpenCreateTag: (value: boolean) => void,
+    setIsOpeningTask: (value: boolean) => void,
+    setIsCreatingTask: (value: boolean) => void,
+    isNewProjectCreated: boolean,
+    isNewTagCreated: boolean,
 };
 
-const initUploadingFiles: AttachmentFileProps[] = []
-
-export default function CreateTask(props: TaskContentProps) {
-    const { myself,
-        currentProject,
-        setIsCreatingTask,
-        setIsNewTaskCreated,
-        setIsTaskContentVisible,
-        setCurrentPreviewTaskId,
+export default function taskPreviewFromThread(props: TaskContentProps) {
+    const {
+        myself,
+        currentPreviewTask,
         setOpenCreateProject,
-        setOpenCreateTag
+        setOpenCreateTag,
+        setIsOpeningTask,
+        setIsCreatingTask,
+        isNewProjectCreated,
+        isNewTagCreated
     } = props
     const { accessToken } = useAuth();
-    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(initUploadingFiles);
-
-    const [taskContents, setTaskContents] = useState<CreateTaskProps>({
-        project: currentProject,
-        title: "",
-        body: "",
-        assignee: myself,
-        reporter: myself,
-        dueDate: getFormattedTodayDateStr(),
-        status: { code: 0, status: 'Open', color: '#0044c2', textColor: 'white' },
-        priority: { code: -1, priority: '', color: '', textColor: '' },
-        effortLevel: { code: -1, level: '', color: '', textColor: '' },
-        tags: [],
-        githubLink: { url: '', title: '' },
-        generalLink: { url: '', title: '' },
-        attachments: initUploadingFiles
-    });
-    const [taskTitle, setTaskTitle] = useState<string>("");
-    const [body, setBody] = useState<string>("");
-    const [assigneeName, setAssigneeName] = useState<string>(myself.userName);
-    const [reporterName, setReporterName] = useState<string>(myself.userName);
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [comment, setComment] = useState("");
+    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
+    const [taskUpdated, setTaskUpdate] = useState(false);
+    const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
+    const [taskTitle, setTaskTitle] = useState<string | null>(null);
+    const [body, setBody] = useState<string | null>(null);
 
     useEffect(() => {
-        if (taskTitle !== "") {
-            setTaskContents(prevState => ({
-                ...prevState,
-                title: taskTitle
-            }));
+        if (currentPreviewTask) {
+            setCurrentTaskContent(currentPreviewTask)
+        }
+        setTaskTitle(currentPreviewTask?.title || null)
+        setBody(currentPreviewTask?.body || null)
+        setUploadedFiles(currentPreviewTask?.attachments || [])
+    }, [currentPreviewTask])
+
+    useEffect(() => {
+        if (taskUpdated === true) {
+            (async () => {
+                await updateSpecificTask({
+                    myself: myself,
+                    updatedData: currentTaskContent,
+                    accessToken: accessToken || ""
+                });
+            })();
+            setTaskUpdate(false)
+        }
+    }, [taskUpdated])
+
+    useEffect(() => {
+        if (currentTaskContent !== null
+            && currentTaskContent !== undefined
+            && currentTaskContent.title !== taskTitle
+            && taskTitle !== null) {
+            (async () => {
+                setCurrentTaskContent(prevState => ({
+                    ...prevState,
+                    title: taskTitle
+                }));
+            })();
         }
     }, [taskTitle])
 
     useEffect(() => {
-        setTaskContents(prevState => ({
-            ...prevState,
-            body: body
-        }));
+        if (currentTaskContent !== null
+            && currentTaskContent !== undefined
+            && currentTaskContent.body !== body
+            && taskTitle !== null) {
+            (async () => {
+                setCurrentTaskContent(prevState => ({
+                    ...prevState,
+                    body: body
+                }));
+            })();
+        }
     }, [body])
 
     useEffect(() => {
-        if (isSubmitted) {
-            setIsCreatingTask(false)
-            setIsNewTaskCreated(true)
-            setIsTaskContentVisible(true)
+        if (currentTaskContent !== null && currentTaskContent !== undefined && uploadedFiles.length > 0) {
+            (async () => {
+                setCurrentTaskContent(prevState => ({
+                    ...prevState,
+                    attachments: uploadedFiles
+                }));
+            })();
         }
-    }, [isSubmitted])
-
-    useEffect(() => {
-        setTaskContents(prevState => ({
-            ...prevState,
-            attachments: uploadedFiles
-        }));
     }, [uploadedFiles])
 
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -245,13 +170,17 @@ export default function CreateTask(props: TaskContentProps) {
             console.log("Selected files:", Array.from(files));
 
             Array.from(files).map((file, index) => {
-                setTaskContents(prevState => ({
-                    ...prevState,
-                    attachments: [{ file: file }]
-                }));
+                (async () => {
+                    setCurrentTaskContent(prevState => ({
+                        ...prevState,
+                        attachments: [{ file: file }]
+                    }));
+                })();
+                setTaskUpdate(true)
             })
         }
     };
+
 
     function getMdHeight(text: string): number {
         const height: number = Math.min(Math.max(text.split('\n').length * 20, 450), 800)
@@ -259,8 +188,8 @@ export default function CreateTask(props: TaskContentProps) {
     }
 
     // Github URL link manager
-    const [prUrl, setPRUrl] = useState("");
-    const [prTitle, setPRTitle] = useState("");
+    const [prUrl, setPRUrl] = useState<string>(currentPreviewTask?.githubLink?.url || "");
+    const [prTitle, setPRTitle] = useState<string>(currentPreviewTask?.githubLink?.title || "");
     const [prError, setPRError] = useState("");
     const isValidGitHubPR = (url: string) => {
         // return /^https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/\d+$/.test(url);
@@ -273,10 +202,13 @@ export default function CreateTask(props: TaskContentProps) {
             return;
         }
         if (isValidGitHubPR(prUrl)) {
-            setTaskContents(prevState => ({
-                ...prevState,
-                githubLink: { url: prUrl, title: prTitle }
-            }));
+            (async () => {
+                setCurrentTaskContent(prevState => ({
+                    ...prevState,
+                    githubLink: { url: prUrl, title: prTitle }
+                }));
+            })();
+            setTaskUpdate(true)
             setPRTitle(prTitle);
             setPRError("");
         } else {
@@ -306,10 +238,13 @@ export default function CreateTask(props: TaskContentProps) {
             return;
         }
         if (isValidUrl(url)) {
-            setTaskContents(prevState => ({
-                ...prevState,
-                generalLink: { url: url, title: title }
-            }));
+            (async () => {
+                setCurrentTaskContent(prevState => ({
+                    ...prevState,
+                    generalLink: { url: url, title: title }
+                }));
+            })();
+            setTaskUpdate(true)
             setError("");
         } else {
             setErrorOpen(true);
@@ -317,9 +252,6 @@ export default function CreateTask(props: TaskContentProps) {
         }
     };
     const [errorOpen, setErrorOpen] = React.useState(false);
-
-    const [titleErrorOpen, setTitleErrorOpen] = React.useState(false);
-    const [titleError, setTitleError] = useState("");
 
     // Get team members
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
@@ -347,20 +279,20 @@ export default function CreateTask(props: TaskContentProps) {
                 setTeamProjects(loadedTeamProjects);
             }
         })();
-    }, [])
+    }, [isNewProjectCreated, currentTaskContent])
 
     // Get Project tags
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
     useEffect(() => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags({
-                myself: myself, projectId: currentProject.projectId, accessToken: accessToken || ""
+                myself: myself, projectId: currentPreviewTask.project.projectId, accessToken: accessToken || ""
             });
             if (loadedProjectTags.length > 0) {
                 setProjectTags(loadedProjectTags);
             }
         })();
-    }, [])
+    }, [isNewTagCreated, currentTaskContent])
 
 
     return (
@@ -384,28 +316,40 @@ export default function CreateTask(props: TaskContentProps) {
                 }}
             >
                 <Stack direction="row" sx={{ width: '100%', alignItems: 'center' }}>
-                    {/* Wrap the title and task status in the same Box */}
                     <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
-                        <FormControl required sx={{ width: '100%' }}>
-                            <Input
-                                key={'taskTitle'}
-                                variant='soft'
-                                placeholder="Task Title"
-                                defaultValue={taskTitle}
-                                onChange={(e) => {
-                                    setTaskTitle(e.target.value)
-                                }}
-                                onBlur={() => { console.log("update title") }}
-                                sx={{ fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
-                            />
-                        </FormControl>
+                        <Chip
+                            key={currentPreviewTask.status.status}
+                            size="lg"
+                            variant="soft"
+                            sx={{ backgroundColor: alpha(currentPreviewTask.status.color, 0.85), color: currentPreviewTask.status.textColor, fontWeight: 'bold' }}
+                        >
+                            {currentPreviewTask.status.status}
+                        </Chip>
+                        <Input
+                            key={'taskTitle'}
+                            variant='soft'
+                            placeholder="Task Title"
+                            defaultValue={taskTitle || ""}
+                            onChange={(e) => {
+                                setTaskTitle(e.target.value)
+                            }}
+                            onBlur={() => { setTaskUpdate(true) }}
+                            sx={{ width: '100%', fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
+                        />
+                    </Box>
+                    <Box>
+                        <Typography
+                            sx={{ ml: '10px', fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
+                        >
+                            [ID:{currentPreviewTask?.id}]
+                        </Typography>
                     </Box>
 
                     <IconButton
-                        size="sm"
+                        size="md"
                         variant="plain"
                         color="neutral"
-                        onClick={() => { setIsCreatingTask(false) }}
+                        onClick={() => { setIsOpeningTask(false) }}
                     >
                         <CancelIcon />
                     </IconButton>
@@ -421,21 +365,6 @@ export default function CreateTask(props: TaskContentProps) {
                             <MenuItem onClick={() => { setOpenCreateTag(true) }}>Create Tag</MenuItem>
                         </Menu>
                     </Dropdown>
-                    {titleError && <Snackbar
-                        autoHideDuration={5000}
-                        open={titleErrorOpen}
-                        variant='soft'
-                        color='danger'
-                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                        onClose={(event, reason) => {
-                            if (reason === 'clickaway') {
-                                return;
-                            }
-                            setTitleErrorOpen(false);
-                        }}
-                    >
-                        {titleError}
-                    </Snackbar>}
                 </Stack>
             </Box>
 
@@ -453,19 +382,21 @@ export default function CreateTask(props: TaskContentProps) {
                     <List aria-labelledby="decorated-list-demo">
                         <ListItem sx={{ display: "flex", alignItems: "center" }}>
                             <Typography sx={{ minWidth: "80px" }}>Assignee:</Typography>
-                            <Avatar size="sm">{assigneeName !== "" ? assigneeName[0] : ""}</Avatar>
+                            <Avatar size="sm">{currentTaskContent.assignee.userName[0]}</Avatar>
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={myself}
+                                defaultValue={currentTaskContent.assignee}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
-                                        setTaskContents(prevState => ({
-                                            ...prevState,
-                                            assignee: value
-                                        }));
-                                        setAssigneeName(value.userName)
+                                        (async () => {
+                                            setCurrentTaskContent(prevState => ({
+                                                ...prevState,
+                                                assignee: value
+                                            }));
+                                        })();
+                                        setTaskUpdate(true)
                                     }
                                 }}
                                 size="md"
@@ -475,19 +406,21 @@ export default function CreateTask(props: TaskContentProps) {
 
                         <ListItem sx={{ display: "flex", alignItems: "center" }}>
                             <Typography sx={{ minWidth: "80px" }}>Reporter:</Typography>
-                            <Avatar size="sm">{reporterName !== "" ? reporterName[0] : ""}</Avatar>
+                            <Avatar size="sm">{currentTaskContent.reporter.userName[0]}</Avatar>
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={myself}
+                                defaultValue={currentTaskContent.reporter}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
-                                        setTaskContents(prevState => ({
-                                            ...prevState,
-                                            reporter: value
-                                        }));
-                                        setReporterName(value.userName)
+                                        (async () => {
+                                            setCurrentTaskContent(prevState => ({
+                                                ...prevState,
+                                                reporter: value
+                                            }));
+                                        })();
+                                        setTaskUpdate(true)
                                     }
                                 }}
                                 size="md"
@@ -502,17 +435,20 @@ export default function CreateTask(props: TaskContentProps) {
                                     <Autocomplete
                                         options={teamProjects}
                                         getOptionLabel={(option) => option.projectName}
-                                        defaultValue={currentProject}
+                                        defaultValue={currentTaskContent.project}
                                         isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    project: {
-                                                        projectId: value.projectId,
-                                                        projectName: value.projectName,
-                                                    }
-                                                }));
+                                                (async () => {
+                                                    setCurrentTaskContent(prevState => ({
+                                                        ...prevState,
+                                                        project: {
+                                                            projectId: value.projectId,
+                                                            projectName: value.projectName
+                                                        }
+                                                    }));
+                                                })();
+                                                setTaskUpdate(true)
                                             }
                                         }}
                                         size="md"
@@ -527,16 +463,17 @@ export default function CreateTask(props: TaskContentProps) {
                                         multiple
                                         options={projectTags}
                                         getOptionLabel={(option) => option.tagName}
+                                        defaultValue={currentTaskContent.tags}
                                         isOptionEqualToValue={(option, value) => option.tagName === value.tagName}
-                                        limitTags={3}
+                                        limitTags={4}
                                         renderTags={(tags, getTagProps) =>
                                             tags.map((item, index) => {
                                                 const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
                                                 return (
                                                     <Chip
-                                                        key={key}
-                                                        endDecorator={<Close />}
+                                                        key={item.tagName} // pass the key directly
                                                         variant="soft"
+                                                        endDecorator={<Close />}
                                                         sx={{ backgroundColor: alpha(item.tagColor, 0.85), color: item.tagTextColor, fontWeight: 'bold' }}
                                                     >
                                                         {item.tagName}
@@ -546,10 +483,13 @@ export default function CreateTask(props: TaskContentProps) {
                                         }
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    tags: value
-                                                }));
+                                                (async () => {
+                                                    setCurrentTaskContent(prevState => ({
+                                                        ...prevState,
+                                                        tags: value
+                                                    }));
+                                                })();
+                                                setTaskUpdate(true)
                                             }
                                         }}
                                         size="md"
@@ -567,6 +507,11 @@ export default function CreateTask(props: TaskContentProps) {
                                         multiple
                                         options={priorities}
                                         getOptionLabel={(option) => option.priority}
+                                        defaultValue={
+                                            (currentTaskContent.priority.priority !== null)
+                                                ? [currentTaskContent.priority]
+                                                : []
+                                        }
                                         isOptionEqualToValue={(option, value) => option.priority === value.priority}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
@@ -574,9 +519,8 @@ export default function CreateTask(props: TaskContentProps) {
                                                 return (
                                                     <Chip
                                                         key={key} // pass the key directly
-                                                        color='success'
-                                                        endDecorator={<Close />}
                                                         variant="soft"
+                                                        endDecorator={<Close />}
                                                         sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {item.priority}
@@ -586,10 +530,13 @@ export default function CreateTask(props: TaskContentProps) {
                                         }
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    priority: value.slice(-1)[0]
-                                                }));
+                                                (async () => {
+                                                    setCurrentTaskContent(prevState => ({
+                                                        ...prevState,
+                                                        priority: value.slice(-1)[0]
+                                                    }));
+                                                })();
+                                                setTaskUpdate(true)
                                             }
                                         }}
                                         size="md"
@@ -606,6 +553,11 @@ export default function CreateTask(props: TaskContentProps) {
                                         multiple
                                         options={effortLevels}
                                         getOptionLabel={(option) => option.level}
+                                        defaultValue={
+                                            (currentTaskContent.effortLevel.level !== null)
+                                                ? [currentTaskContent.effortLevel]
+                                                : []
+                                        }
                                         isOptionEqualToValue={(option, value) => option.level === value.level}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
@@ -613,9 +565,8 @@ export default function CreateTask(props: TaskContentProps) {
                                                 return (
                                                     <Chip
                                                         key={key} // pass the key directly
-                                                        color='primary'
-                                                        endDecorator={<Close />}
                                                         variant="soft"
+                                                        endDecorator={<Close />}
                                                         sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {(item) ? item.level : ""}
@@ -625,10 +576,13 @@ export default function CreateTask(props: TaskContentProps) {
                                         }
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    effortLevel: value.slice(-1)[0]
-                                                }));
+                                                (async () => {
+                                                    setCurrentTaskContent(prevState => ({
+                                                        ...prevState,
+                                                        effortLevel: value.slice(-1)[0]
+                                                    }));
+                                                })();
+                                                setTaskUpdate(true)
                                             }
                                         }}
                                         size="md"
@@ -639,19 +593,23 @@ export default function CreateTask(props: TaskContentProps) {
                             </Grid>
                         </Grid>
 
+
                         <ListItem>
-                            <Typography sx={{ minWidth: "100px" }}>Due Date:</Typography>
+                            <Typography sx={{ minWidth: "80px" }}>Due Date:</Typography>
                             <Input
                                 type="date"
                                 color="neutral"
-                                variant="outlined"
-                                size="sm"
-                                value={(taskContents.dueDate) ? taskContents.dueDate : ""}
+                                variant="soft"
+                                size="md"
+                                defaultValue={(currentPreviewTask?.dueDate) ? currentPreviewTask?.dueDate : ""}
                                 onChange={(e) => {
-                                    setTaskContents(prevState => ({
-                                        ...prevState,
-                                        dueDate: getFormattedDateStr(new Date(e.target.value)),
-                                    }));
+                                    (async () => {
+                                        setCurrentTaskContent(prevState => ({
+                                            ...prevState,
+                                            dueDate: getFormattedDateStr(new Date(e.target.value)),
+                                        }));
+                                    })();
+                                    setTaskUpdate(true)
                                 }}
                                 slotProps={{
                                     input: {
@@ -659,31 +617,18 @@ export default function CreateTask(props: TaskContentProps) {
                                     },
                                 }}
                             />
-                            <Button
-                                component='a'
-                                variant="outlined"
-                                color="neutral"
-                                size='sm'
-                                onClick={() => {
-                                    setTaskContents(prevState => ({
-                                        ...prevState,
-                                        dueDate: ""
-                                    }));
-                                }}>
-                                TBD
-                            </Button>
                         </ListItem>
 
                         <ListItem>
                             <GithubIcon />
 
-                            {(!taskContents.githubLink?.url || taskContents.githubLink.url === "") && (
-                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                            {(!currentPreviewTask?.githubLink?.url || currentPreviewTask?.githubLink.url === "") && (
+                                <Stack direction="row" spacing={1.5}>
                                     <Input
                                         key={'prTitle'}
                                         size='sm'
                                         placeholder="PR Title"
-                                        value={prTitle}
+                                        defaultValue={prTitle}
                                         onChange={(e) => {
                                             setPRTitle(e.target.value)
                                         }}
@@ -693,7 +638,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         key={'prUrl'}
                                         size='sm'
                                         placeholder="PR URL"
-                                        value={prUrl}
+                                        defaultValue={prUrl}
                                         onChange={(e) => setPRUrl(e.target.value)}
                                         type="url"
                                         sx={{ width: '150px', height: '30px' }}
@@ -714,7 +659,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         {prError}
                                     </Snackbar>}
                                     <Button
-                                        component='a'
+                                        component='p'
                                         variant="outlined"
                                         color="neutral"
                                         size='sm'
@@ -724,25 +669,36 @@ export default function CreateTask(props: TaskContentProps) {
                                 </Stack>
                             )}
 
-                            {taskContents.githubLink?.url && (
-                                <Typography>
-                                    <a href={taskContents.githubLink.url} target="_blank" rel="noopener noreferrer">
-                                        {prTitle}
-                                    </a>
-                                </Typography>
+                            {currentPreviewTask?.githubLink?.url && (
+                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                                    <Typography>
+                                        <a href={currentPreviewTask?.githubLink.url} target="_blank" rel="noopener noreferrer">
+                                            {prTitle}
+                                        </a>
+                                    </Typography>
+                                    <IconButton
+                                        component='p'
+                                        variant="outlined"
+                                        color="neutral"
+                                        size='sm'
+                                        onClick={() => { console.log("Edit pr link") }}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Stack>
                             )}
                         </ListItem>
 
                         <ListItem>
                             <CustomLinkIcon />
 
-                            {(!taskContents.generalLink?.url || taskContents.generalLink.url === "") && (
-                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                            {(!currentPreviewTask?.generalLink?.url || currentPreviewTask?.generalLink.url === "") && (
+                                <Stack direction="row" spacing={1.5}>
                                     <Input
                                         key={'title'}
                                         size='sm'
                                         placeholder="Title"
-                                        value={title}
+                                        defaultValue={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         sx={{ width: '150px', height: '30px' }}
                                     />
@@ -750,7 +706,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         key={'url'}
                                         size='sm'
                                         placeholder="URL"
-                                        value={url}
+                                        defaultValue={url}
                                         onChange={(e) => setUrl(e.target.value)}
                                         type="url"
                                         sx={{ width: '150px', height: '30px' }}
@@ -771,7 +727,7 @@ export default function CreateTask(props: TaskContentProps) {
                                         {error}
                                     </Snackbar>}
                                     <Button
-                                        component='a'
+                                        component='p'
                                         variant="outlined"
                                         color="neutral"
                                         size='sm'
@@ -781,12 +737,23 @@ export default function CreateTask(props: TaskContentProps) {
                                 </Stack>
                             )}
 
-                            {taskContents.generalLink?.url && (
-                                <Typography>
-                                    <a href={taskContents.generalLink.url} target="_blank" rel="noopener noreferrer">
-                                        {taskContents.generalLink.title}
-                                    </a>
-                                </Typography>
+                            {currentPreviewTask?.generalLink?.url && (
+                                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                                    <Typography>
+                                        <a href={currentPreviewTask?.generalLink.url} target="_blank" rel="noopener noreferrer">
+                                            {currentPreviewTask?.generalLink.title}
+                                        </a>
+                                    </Typography>
+                                    <IconButton
+                                        component='p'
+                                        variant="outlined"
+                                        color="neutral"
+                                        size='sm'
+                                        onClick={() => { console.log("Edit general link") }}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Stack>
                             )}
                         </ListItem>
                     </List>
@@ -795,22 +762,92 @@ export default function CreateTask(props: TaskContentProps) {
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
+            <Stack direction="row" sx={{ width: '100%', alignItems: 'center', gap: 1 }}>
+                {/* Next Status IconButton */}
+                <IconButton
+                    component="p"
+                    variant="outlined"
+                    color="success"
+                    size='sm'
+                    sx={{
+                        fontSize: '14px',
+                        paddingX: '7px',
+                    }}
+                    onClick={() => {
+                        (async () => {
+                            setCurrentTaskContent(prevState => ({
+                                ...prevState,
+                                status: { code: 0, status: 'Closed', color: '#1dc200', textColor: 'white' },
+                            }));
+                        })();
+                        setTaskUpdate(true)
+                    }}
+                >
+                    <CheckCircleOutlineIcon sx={{ fontSize: '15px' }} />
+                    Close
+                </IconButton>
+
+                {/* Sub Task IconButton aligned to the right */}
+                <IconButton
+                    component="p"
+                    variant="outlined"
+                    size='sm'
+                    sx={{
+                        fontSize: '14px',
+                        paddingX: '7px',
+                        marginLeft: 'auto',
+                    }}
+                    onClick={() => {
+                        setIsOpeningTask(false);
+                        setIsCreatingTask(true);
+                    }}
+                >
+                    <AddIcon />
+                    Sub Task
+                </IconButton>
+
+                {/* Delete IconButton */}
+                <IconButton
+                    component="p"
+                    variant="outlined"
+                    color="danger"
+                    size='sm'
+                    sx={{
+                        fontSize: '14px',
+                        paddingX: '7px',
+                    }}
+                    onClick={() => {
+                        (async () => {
+                            setCurrentTaskContent(prevState => ({
+                                ...prevState,
+                                status: { code: 0, status: 'Deleted', color: '#ff2323', textColor: 'white' },
+                            }));
+                        })();
+                        setTaskUpdate(true)
+                    }}
+                >
+                    <DeleteIcon sx={{ fontSize: '15px' }} />
+                    Delete
+                </IconButton>
+            </Stack>
+
+
             <Stack direction={"column"} sx={{ width: '100%' }}>
                 <Box sx={{ mt: 2 }}>
                     <div className="md-content">
                         <MarkdownEditor
-                            content={body}
+                            content={body || ""}
                             setBody={setBody}
-                            height={getMdHeight(body)}
-                            mdMode={"edit"}
+                            height={getMdHeight(body || "")}
+                            mdMode={"preview"}
                             isTaskBody={true}
-                            setTaskUpdate={(val) => { val }}
+                            setTaskUpdate={setTaskUpdate}
                         />
                     </div>
                 </Box>
             </Stack>
 
-            <Divider sx={{ m: 2 }} />
+            <Divider sx={{ mt: 2 }} />
 
             <Stack direction="row" alignItems="center" sx={{ width: '100%' }}>
                 <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
@@ -836,46 +873,31 @@ export default function CreateTask(props: TaskContentProps) {
                 </Button>
             </Stack>
 
-            <FileUpload
-                uploadedFiles={uploadedFiles}
-                setUploadedFiles={setUploadedFiles}
-                setTaskUpdate={() => { }}
-            />
+            <FileUpload uploadedFiles={uploadedFiles} setUploadedFiles={setUploadedFiles} setTaskUpdate={setTaskUpdate} />
 
             <Divider sx={{ m: 2 }} />
 
-            <Stack
-                direction="row"
-                sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}
-            >
-                <Button
-                    component='button'
-                    type="submit"
-                    variant="soft"
-                    color="primary"
-                    onClick={() => {
-                        saveTask({
-                            myself: myself,
-                            taskContents: taskContents,
-                            accessToken: accessToken || "",
-                            setIsSubmitted: setIsSubmitted,
-                            setTitleError: setTitleError,
-                            setTitleErrorOpen: setTitleErrorOpen,
-                            setCurrentPreviewTaskId: setCurrentPreviewTaskId,
-                        })
-                    }}
-                >
-                    Create
-                </Button>
-                <Button
-                    component='button'
-                    variant="outlined"
-                    color="danger"
-                    size='sm'
-                    onClick={() => { setIsCreatingTask(false) }}>
-                    Cancel
-                </Button>
-            </Stack>
+            <Box sx={{ mt: 2 }}>
+                <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
+                    Comments
+                </Typography>
+
+                <Box sx={{ mb: 1 }}>
+                    <TaskCommentBubble />
+                </Box>
+
+                <div className="md-content">
+                    <MarkdownEditor
+                        content={comment}
+                        setBody={setComment}
+                        height={200}
+                        mdMode={"edit"}
+                        isTaskBody={false}
+                        setTaskUpdate={setTaskUpdate}
+                    />
+                </div>
+            </Box>
+
         </Sheet>
     );
 }

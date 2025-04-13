@@ -1,13 +1,13 @@
-import { ProjectProps, UserProps } from '../../types'
+import { UserProps } from '../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadSearchListProps = {
+type LoadTeamMembersProps = {
     myself: UserProps;
     accessToken: string;
 };
 
-async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProps[]> {
+async function loadTeamMembers(props: LoadTeamMembersProps): Promise<UserProps[]> {
     const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -16,7 +16,7 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
     }
 
     try {
-        const response = await fetch(`${base_url}/project/getTeamProjects/?team_id=${myself.teamId}`, {
+        const response = await fetch(`${base_url}/team/getTeamMembers/?team_id=${myself.teamId}&user_id=${myself.userId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -24,7 +24,7 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
             },
         });
 
-        const data: ProjectProps[] = await response.json();
+        const data: UserProps[] = await response.json();
 
         if (!response.ok) {
             const errorMsg = "Failed to get team projects";
@@ -44,4 +44,4 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
 
 }
 
-export default loadTeamProjects;
+export default loadTeamMembers;

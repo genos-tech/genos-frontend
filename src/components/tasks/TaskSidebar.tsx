@@ -5,6 +5,15 @@ import Box from '@mui/joy/Box';
 import Divider from '@mui/joy/Divider';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
+import {
+  IconButton,
+  Modal,
+  ModalDialog,
+  Alert,
+  Stack,
+  Button,
+  Input,
+} from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
 import ListItemContent from '@mui/joy/ListItemContent';
 import Typography from '@mui/joy/Typography';
@@ -16,11 +25,13 @@ import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { useAuth } from "../../components/admin/AuthContext";
-import { SearchTeamTasksResponse, TeamProjectsResponse, UserProps, ProjectProps } from '../../types'
+import { SearchTeamTasksResponse, ProjectProps, UserProps } from '../../types'
 import loadTaskSearchList from '../backendOperation/loadTaskSearchList';
 import loadTeamProjects from '../backendOperation/loadTeamProjects';
 import CircularProgress from '@mui/joy/CircularProgress';
 import AddIcon from '@mui/icons-material/Add';
+
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 function Toggler({
   defaultExpanded = false,
@@ -60,18 +71,19 @@ type TaskSidebarProps = {
   myself: UserProps,
   setCurrentProject: (value: ProjectProps) => void,
   setCurrentPreviewTaskId: (value: number) => void,
+  setOpenCreateTag: (value: boolean) => void,
 }
 
 export default function TaskSidebar(props: TaskSidebarProps) {
-  const { myself, setCurrentProject, setCurrentPreviewTaskId } = props
+  const { myself, setCurrentProject, setCurrentPreviewTaskId, setOpenCreateTag } = props
   const { accessToken } = useAuth();
 
   const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
-  const [teamProjects, setTeamProjects] = useState<TeamProjectsResponse[]>([]);
+  const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
 
   // =======================================================================
   const [openSearch, setOpenSearch] = useState(false);
-  const [teamTaskOptions, setOptions] = useState<SearchTeamTasksResponse[]>([]);
+  const [teamTaskOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
   const loading = openSearch && teamTaskOptions.length === 0;
   useEffect(() => {
     let active = true;
@@ -86,7 +98,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
       });
 
       if (active) {
-        setOptions([...loadedTeamTasks]);
+        setTeamTaskOptions([...loadedTeamTasks]);
       }
     })();
 
@@ -104,6 +116,53 @@ export default function TaskSidebar(props: TaskSidebarProps) {
   }
   // =======================================================================
 
+  // Modal configs
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [openCreateProject, setOpenCreateProject] = useState(false);
+  const [projectName, setProjectName] = useState("");
+
+  const handleCreateProject = () => {
+    if (projectName.trim()) { createProject() }
+  };
+
+  async function createProject(): Promise<void> {
+    try {
+      const createProjectResponse = await fetch(`${base_url}/project/create/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          team: myself.teamId,
+          project_name: projectName,
+          owner: myself.userId
+        }),
+      });
+
+      const createProjectData = await createProjectResponse.json();
+
+      if (!createProjectResponse.ok) {
+        console.error(createProjectData)
+        throw new Error(createProjectData.hint || 'Project Creation Failed');
+      } else {
+        console.log("Task created:", createProjectData)
+        setCurrentProject(
+          {
+            projectId: createProjectData.project_id,
+            projectName: createProjectData.project_name
+          }
+        )
+        setOpenCreateProject(false);
+      }
+    } catch (error) {
+      const err_msg = `${error}`
+      console.error(err_msg);
+      setErrorMessage(err_msg);
+    }
+  }
+
+
   return (
     <Sheet
       className="TaskSidebar"
@@ -114,7 +173,6 @@ export default function TaskSidebar(props: TaskSidebarProps) {
           md: 'none',
         },
         transition: 'transform 0.4s, width 0.4s',
-        zIndex: 10000,
         height: '100dvh',
         width: '100%',
         top: 0,
@@ -262,7 +320,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                 <ListItemButton onClick={() => {
                   setOpen(!open);
                   (async () => {
-                    const loadedTeamProjects: TeamProjectsResponse[] = await loadTeamProjects({
+                    const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
                       myself: myself, accessToken: accessToken || ""
                     });
                     setTeamProjects([...loadedTeamProjects]);
@@ -289,7 +347,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
               <List sx={{ gap: 0.5 }}>
                 <ListItem key={"createProject"}>
                   <ListItemButton
-                    onClick={() => { console.log("Create Project") }}
+                    onClick={() => { setOpenCreateProject(true) }}
                     sx={{ overflow: 'hidden' }} // ensure children don't overflow
                   >
                     <AddIcon />
@@ -337,6 +395,35 @@ export default function TaskSidebar(props: TaskSidebarProps) {
             </Toggler>
           </ListItem>
 
+          {/* Modal for creating a new chat group */}
+          <Modal sx={{ zIndex: 10010 }} open={openCreateProject} onClose={() => setOpenCreateProject(false)}>
+            <ModalDialog>
+              <Typography level="h4">Create New Project</Typography>
+              <Input
+                placeholder="Unique project name"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && projectName.trim()) {
+                    handleCreateProject();
+                  }
+                }}
+                sx={{ mt: 1 }}
+              />
+              {errorMessage && errorMessage !== "" && (
+                <Alert color="danger">{errorMessage}</Alert>
+              )}
+              <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
+                <Button component='a' variant="outlined" onClick={() => setOpenCreateProject(false)}>
+                  Cancel
+                </Button>
+                <Button component='a' onClick={handleCreateProject} disabled={!projectName.trim()}>
+                  Create
+                </Button>
+              </Stack>
+            </ModalDialog>
+          </Modal>
+
           <ListItem nested>
             <Toggler
               renderToggle={({ open, setOpen }) => (
@@ -362,7 +449,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
               <List sx={{ gap: 0.5 }}>
                 <ListItem key={"createTag"}>
                   <ListItemButton
-                    onClick={() => { console.log("Create Tag") }}
+                    onClick={() => { setOpenCreateTag(true) }}
                     sx={{ overflow: 'hidden' }} // ensure children don't overflow
                   >
                     <AddIcon />

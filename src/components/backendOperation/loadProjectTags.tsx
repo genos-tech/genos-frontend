@@ -1,14 +1,15 @@
-import { ProjectProps, UserProps } from '../../types'
+import { UserProps, TagListProps } from '../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadSearchListProps = {
+type LoadTeamMembersProps = {
     myself: UserProps;
+    projectId: number;
     accessToken: string;
 };
 
-async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProps[]> {
-    const { myself, accessToken } = props
+async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProps[]> {
+    const { myself, projectId, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -16,7 +17,7 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
     }
 
     try {
-        const response = await fetch(`${base_url}/project/getTeamProjects/?team_id=${myself.teamId}`, {
+        const response = await fetch(`${base_url}/project/getProjectTags/?team_id=${myself.teamId}&project_id=${projectId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -24,10 +25,10 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
             },
         });
 
-        const data: ProjectProps[] = await response.json();
+        const data: TagListProps[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get team projects";
+            const errorMsg = "Failed to get project tags";
             throw new Error(errorMsg);
         }
         return data || [];
@@ -36,7 +37,7 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during fetching all projects.";
+                : "An unknown error occurred during fetching project tags.";
 
         console.error(errorMsg);
         return [];
@@ -44,4 +45,4 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
 
 }
 
-export default loadTeamProjects;
+export default loadProjectTags;

@@ -85,6 +85,7 @@ const insertDMThreadMessage = async (
             threadId: newDMThreadMessage.threadId,
             isDm: true,
             dmPartnerUserId: dmPartnerUserId,
+            taskId: null,
             unread: false,
             messages: fetchedMessages,
             TSLastMessage: getCurrentTimestamp(),
@@ -138,6 +139,7 @@ const insertGMThreadMessage = async (
             threadId: newGMThreadMessage.threadId,
             isDm: false,
             dmPartnerUserId: null,
+            taskId: null,
             unread: false,
             messages: fetchedMessages,
             TSLastMessage: getCurrentTimestamp(),
@@ -297,7 +299,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                               senderId: myself.userId,
                               senderName: myself.userName,
                               destCGName: chat.chatName,
-                              destCGId: chat.chatId
+                              destCGId: chat.chatId,
                             }, (ack: any) => {
 
                               const newThreadMessage: ThreadMessageProps = {

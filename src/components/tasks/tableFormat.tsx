@@ -1,48 +1,44 @@
+import { alpha } from '@mui/system';
 import Box from '@mui/joy/Box';
 import Typography from '@mui/joy/Typography';
 import Avatar from '@mui/joy/Avatar';
 import { GridColDef, GridRenderCellParams, GridRenderEditCellParams } from '@mui/x-data-grid';
-import { randomCreatedDate, randomUpdatedDate } from '@mui/x-data-grid-generator';
 import { Select, MenuItem, Chip } from "@mui/material";
 import dayjs from "dayjs";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import PendingIcon from '@mui/icons-material/Pending';
 
 const hmlOptions = [
-    { label: "High", value: "high", color: "#ff2e2e" },
-    { label: "Medium", value: "medium", color: "#e58700" },
-    { label: "Low", value: "low", color: "#2bc8ff" },
+    { label: "Low", value: "Low", color: "#0044c2", textColor: 'white' },
+    { label: "Medium", value: "Medium", color: "#1dc200", textColor: 'white' },
+    { label: "High", value: "High", color: "#ff2323", textColor: 'white' },
 ];
 const getHMLOption = (value: string) => hmlOptions.find((option) => option.value === value);
 
 const statusOptions = [
-    { label: "Open", value: "open", color: "#2bc8ff", icon: <CheckCircleOutlineIcon style={{ color: "#2bc8ff" }} /> },
-    { label: "WIP", value: "wip", color: "#e58700", icon: <AutorenewIcon style={{ color: "#e58700" }} /> },
-    { label: "Closed", value: "closed", color: "#0adc00", icon: <CheckCircleOutlineIcon style={{ color: "#0adc00" }} /> },
-    { label: "Deleted", value: "deleted", color: "#ff2e2e", icon: <HighlightOffIcon style={{ color: "#ff2e2e" }} /> },
+    { label: "Open", value: "Open", color: "#0044c2", textColor: "white", icon: <CheckCircleOutlineIcon style={{ color: "white" }} /> },
+    { label: "WIP", value: "WIP", color: "#ffff23", textColor: "grey", icon: <AutorenewIcon style={{ color: "grey" }} /> },
+    { label: "Pending", value: "Pending", color: "#ffa823", textColor: "white", icon: <PendingIcon style={{ color: "white" }} /> },
+    { label: "Closed", value: "Closed", color: "#1dc200", textColor: "white", icon: <CheckCircleOutlineIcon style={{ color: "white" }} /> },
+    { label: "Deleted", value: "Deleted", color: "#ff2323", textColor: "white", icon: <HighlightOffIcon style={{ color: "white" }} /> },
 ];
 const getStatusOption = (value: string) => statusOptions.find((option) => option.value === value);
 
-const customTagOptions = [
-    { label: "Backend", color: "#aaaaaa" },
-    { label: "Frontend", color: "#ff2e2e" },
-    { label: "Infra", color: "#e58700" }
-];
-const getCustomTagOption = (label: string) => customTagOptions.find((option) => option.label === label);
 
-export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
+export const taskColumns: GridColDef[] = [
     {
         field: 'id',
         headerName: 'ID',
         headerClassName: 'task-col--header',
-        width: 50,
+        width: 70,
     },
     {
         field: 'title',
         headerName: 'Title',
         headerClassName: 'task-col--header',
-        width: 300,
+        width: 200,
         editable: true,
         headerAlign: 'center',
     },
@@ -52,7 +48,7 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
         headerClassName: 'task-col--header',
         editable: false,
         sortable: false,
-        width: 170,
+        width: 250,
         renderCell: (params) => (
             <Box
                 textAlign='left'
@@ -75,17 +71,29 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
         renderCell: (params: GridRenderCellParams) => {
             const option = getHMLOption(params.value);
             const color = option?.color;
+            const textColor = option?.textColor;
             return option ? <Chip
                 label={option.label}
                 variant="outlined"
-                sx={{ color: color, opacity: 0.95 }} /> : null;
+                sx={{ backgroundColor: alpha(color || '#ff2323', 0.85), color: textColor, fontWeight: 'bold' }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
                 value={params.value}
-                onChange={(event) =>
-                    params.api.setEditCellValue({ id: params.id, field: params.field, value: event.target.value })
-                }
+                onChange={(event) => {
+                    const value = event.target.value;
+                    params.api.setEditCellValue({
+                        id: params.id,
+                        field: params.field,
+                        value: value,
+                    }, event);
+
+                    // Exit edit mode after value is set
+                    params.api.stopCellEditMode({
+                        id: params.id,
+                        field: params.field,
+                    });
+                }}
                 fullWidth
             >
                 {hmlOptions.map((option) => (
@@ -94,10 +102,11 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
                             label={option.label}
                             variant="outlined"
                             sx={{
-                                color: option.color,
+                                backgroundColor: option.color,
+                                color: option.textColor,
                                 fontWeight: 'bold',
-                                backgroundColor: 'transparent'
-                            }} />
+                            }}
+                        />
                     </MenuItem>
                 ))}
             </Select>
@@ -114,17 +123,29 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
         renderCell: (params: GridRenderCellParams) => {
             const option = getHMLOption(params.value);
             const color = option?.color;
+            const textColor = option?.textColor;
             return option ? <Chip
                 label={option.label}
                 variant="outlined"
-                sx={{ color: color, opacity: 0.95 }} /> : null;
+                sx={{ backgroundColor: alpha(color || '#ff2323', 0.85), color: textColor, fontWeight: 'bold' }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
                 value={params.value}
-                onChange={(event) =>
-                    params.api.setEditCellValue({ id: params.id, field: params.field, value: event.target.value })
-                }
+                onChange={(event) => {
+                    const value = event.target.value;
+                    params.api.setEditCellValue({
+                        id: params.id,
+                        field: params.field,
+                        value: value,
+                    }, event);
+
+                    // Exit edit mode after value is set
+                    params.api.stopCellEditMode({
+                        id: params.id,
+                        field: params.field,
+                    });
+                }}
                 fullWidth
             >
                 {hmlOptions.map((option) => (
@@ -133,10 +154,11 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
                             label={option.label}
                             variant="outlined"
                             sx={{
-                                color: option.color,
+                                backgroundColor: option.color,
+                                color: option.textColor,
                                 fontWeight: 'bold',
-                                backgroundColor: 'transparent'
-                            }} />
+                            }}
+                        />
                     </MenuItem>
                 ))}
             </Select>
@@ -153,46 +175,58 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
         renderCell: (params: GridRenderCellParams) => {
             const option = getStatusOption(params.value);
             const color = option?.color;
+            const textColor = option?.textColor;
             return option ? <Chip
                 icon={option.icon}
                 label={option.label}
                 variant="outlined"
-                sx={{ color: color, opacity: 0.95 }} /> : null;
+                sx={{ backgroundColor: alpha(color || '#ff2323', 0.85), color: textColor, fontWeight: 'bold' }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
                 value={params.value}
-                onChange={(event) =>
-                    params.api.setEditCellValue({ id: params.id, field: params.field, value: event.target.value })
-                }
+                onChange={(event) => {
+                    const value = event.target.value;
+                    params.api.setEditCellValue({
+                        id: params.id,
+                        field: params.field,
+                        value: value,
+                    }, event);
+
+                    // Exit edit mode after value is set
+                    params.api.stopCellEditMode({
+                        id: params.id,
+                        field: params.field,
+                    });
+                }}
                 fullWidth
             >
                 {statusOptions.map((option) => (
                     <MenuItem key={option.value} value={option.value}>
                         <Chip
-                            icon={option.icon}
                             label={option.label}
                             variant="outlined"
                             sx={{
-                                color: option.color,
+                                backgroundColor: option.color,
+                                color: option.textColor,
                                 fontWeight: 'bold',
-                                backgroundColor: 'transparent'
-                            }} />
+                            }}
+                        />
                     </MenuItem>
                 ))}
             </Select>
         ),
     },
-    {
-        field: 'createdDate',
-        headerName: 'Created On',
-        headerClassName: 'task-col--header',
-        type: 'date',
-        width: 100,
-        align: 'center',
-        headerAlign: 'center',
-        valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
-    },
+    // {
+    //     field: 'createdDate',
+    //     headerName: 'Created On',
+    //     headerClassName: 'task-col--header',
+    //     type: 'date',
+    //     width: 100,
+    //     align: 'center',
+    //     headerAlign: 'center',
+    //     valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
+    // },
     {
         field: 'dueDate',
         headerName: 'Due Date',
@@ -212,6 +246,13 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
         width: 100,
         align: 'center',
         headerAlign: 'center',
+        renderCell: (params: GridRenderCellParams) => {
+            return params.value === -1 ? <Chip
+                label={'Expired'}
+                variant="outlined"
+                size='small'
+                sx={{ backgroundColor: alpha('#ff2323', 0.85), color: 'white', fontWeight: 'bold' }} /> : params.value;
+        },
     },
     {
         field: 'threadId',
@@ -279,29 +320,4 @@ export const taskColumns: GridColDef<(typeof taskRows)[number]>[] = [
     //         </Select>
     //     ),
     // },
-];
-
-export const taskRows = [
-    {
-        id: 'INV-1234',
-        title: '/Users/kamikenpro/git/chat-app-prototype/frontend/weikiy/src/tasks/taskMain.tsx',
-        priority: 'high',
-        effortLevel: 'medium',
-        createdDate: "2025-04-01",
-        dueDate: "2025-04-05",
-        daysLeft: '2',
-        status: 'deleted',
-        assigneeEmail: 'O',
-        assigneeName: 'Olivia Ryhe',
-        parentTaskId: "",
-        tags: [
-            {
-                tag: "Backend",
-                color: 'red',
-            }, {
-                tag: "Frontend",
-                color: 'red',
-            }
-        ]
-    },
 ];

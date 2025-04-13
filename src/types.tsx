@@ -39,6 +39,7 @@ export type ThreadProps = {
     threadId: number;
     isDm: boolean;
     dmPartnerUserId: string | null;
+    taskId: number | null;
     unread: boolean | true;
     messages: ThreadMessageProps[];
     CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
@@ -70,6 +71,7 @@ export type ThreadMessageProps = {
     messageId: number;
     content: string;
     sender: UserProps;
+    taskId: number | null;
     tsSent: string;
     isLiked?: boolean | false;
     attachment?: {
@@ -108,6 +110,7 @@ export type NewThreadMessageProps = {
     isThread: boolean;
     content: string;
     sender: UserProps;
+    taskId: number | null;
     tsSent: string;
     isLiked?: boolean | false;
     attachment?: {
@@ -127,18 +130,21 @@ export type TaskStatusProps = {
     code: number,
     status: string,
     color: string,
+    textColor: string,
 }
 
 export type TaskPriorityProps = {
     code: number,
     priority: string,
     color: string,
+    textColor: string,
 }
 
 export type TaskEffortLevelProps = {
     code: number,
     level: string,
     color: string,
+    textColor: string,
 }
 
 export type AttachmentFileProps = {
@@ -149,7 +155,7 @@ export type AttachmentFileProps = {
 }
 
 export type CreateTaskProps = {
-    project: ProjectProps,
+    project: ProjectProps | null,
     title: string,
     body: string,
     assignee: UserProps,
@@ -158,10 +164,7 @@ export type CreateTaskProps = {
     status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
     priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
     effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
-    tags: {
-        tag: string,
-        color: string
-    }[],
+    tags: TagListProps[],
     githubLink: {
         url: string,
         title: string
@@ -186,10 +189,7 @@ export type PreviewTaskProps = {
     status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
     priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
     effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
-    tags: {
-        tag: string,
-        color: string
-    }[],
+    tags: TagListProps[],
     githubLink: {
         url: string,
         title: string
@@ -217,10 +217,7 @@ export type TaskTableProps = {
     assigneeName: string,
     parentTaskId: string,
     threadId: string,
-    tags: {
-        tag: string,
-        color: string,
-    }[],
+    tags: TagListProps[],
     teamId: string,
     projectId: number
 }
@@ -232,6 +229,27 @@ export type SearchListProps = {
     name: string,
     email: string | null,
     dmPartnerUserId: string | null,
+}
+
+
+export type TaskListByTagProps = {
+    projectId: number,
+    projectName: string,
+    tags: {
+        tagName: string,
+        tagColor: string,
+        tasks: {
+            taskId: number,
+            title: string,
+            status: string,
+        }[]
+    }[]
+}
+
+export type TagListProps = {
+    tagName: string,
+    tagColor: string,
+    tagTextColor: string,
 }
 
 export type LoadSearchListResponse = {
@@ -255,9 +273,4 @@ export type SearchTeamTasksResponse = {
     taskId: number,
     title: string,
     status: string,
-}
-
-export type TeamProjectsResponse = {
-    projectId: number,
-    projectName: string,
 }

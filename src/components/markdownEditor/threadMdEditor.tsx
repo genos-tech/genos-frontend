@@ -175,7 +175,8 @@ export const MarkdownEditor = ({
                 senderId: myself.userId,
                 senderName: myself.userName,
                 destCGName: thread.chatName,
-                destCGId: thread.chatId
+                destCGId: thread.chatId,
+                taskId: thread.taskId
               }, (ack: any) => {
 
                 const updatedChat: ThreadProps = {
@@ -184,6 +185,7 @@ export const MarkdownEditor = ({
                   threadId: thread.threadId,
                   isDm: thread.isDm,
                   dmPartnerUserId: thread.dmPartnerUserId,
+                  taskId: null,
                   unread: false,
                   messages: [...thread.messages, {
                     messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
@@ -398,7 +400,8 @@ export const MarkdownEditor = ({
                   senderId: myself.userId,
                   senderName: myself.userName,
                   destCGName: thread.chatName,
-                  destCGId: thread.chatId
+                  destCGId: thread.chatId,
+                  taskId: thread.taskId
                 }, (ack: any) => {
 
                   const updatedChat: ThreadProps = {
@@ -407,6 +410,7 @@ export const MarkdownEditor = ({
                     threadId: thread.threadId,
                     isDm: thread.isDm,
                     dmPartnerUserId: thread.dmPartnerUserId,
+                    taskId: null,
                     unread: false,
                     messages: [...thread.messages, {
                       messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,

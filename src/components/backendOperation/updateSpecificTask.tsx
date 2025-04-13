@@ -27,7 +27,7 @@ async function updateSpecificTask(props: UpdateTaskProps): Promise<PreviewTaskPr
             body: JSON.stringify({
                 task_id: updatedData.id,
                 team: myself.teamId,
-                project: updatedData.project.id,
+                project: updatedData.project.projectId,
                 thread_id: updatedData.threadId,
                 parent_task_id: updatedData.parentTaskId,
                 assignee: updatedData.assignee.userId,

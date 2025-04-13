@@ -64,88 +64,92 @@ const getFormattedDateStr = (date: Date): string => {
 
 type saveTaskProps = {
     myself: UserProps,
+    threadId: string,
     taskContents: CreateTaskProps,
     accessToken: string,
     setIsSubmitted: (value: boolean) => void,
-    setTitleError: (value: string) => void,
-    setTitleErrorOpen: (value: boolean) => void,
-    setCurrentPreviewTaskId: (value: number) => void
+    setErrorMessage: (value: string) => void,
+    setOpenErrorMessage: (value: boolean) => void,
+    setCurrentPreviewTaskId: (value: number) => void,
 }
 
 const saveTask = async (props: saveTaskProps) => {
     const { myself,
+        threadId,
         taskContents,
         accessToken,
         setIsSubmitted,
-        setTitleError,
-        setTitleErrorOpen,
+        setErrorMessage,
+        setOpenErrorMessage,
         setCurrentPreviewTaskId,
     } = props;
 
     if (taskContents.title === "") {
-        setTitleError("Task title is required !!!")
-        setTitleErrorOpen(true);
-    } else {
+        setErrorMessage("Task title is required !!!")
+        setOpenErrorMessage(true);
+    } else if (taskContents.project === null) {
+        setErrorMessage("Project is required !!!")
+        setOpenErrorMessage(true);
+    }
+    else {
         try {
-            if (taskContents.project !== null) {
-                const taskCreateResponse = await fetch(`${base_url}/task/create/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${accessToken}`
-                    },
-                    body: JSON.stringify({
-                        team: myself.teamId,
-                        project: taskContents.project.projectId,
-                        assignee: taskContents.assignee.userId,
-                        reporter: taskContents.reporter.userId,
-                        title: taskContents.title,
-                        priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
-                        effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
-                        status: (taskContents.status.status !== "") ? taskContents.status.status : null,
-                        content: (taskContents.body !== "") ? taskContents.body : null,
-                        due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
-                        github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
-                        github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
-                        general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
-                        general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
-                        tags: taskContents.tags,
-                    }),
-                });
+            const taskCreateResponse = await fetch(`${base_url}/task/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    team: myself.teamId,
+                    project: taskContents.project.projectId,
+                    assignee: taskContents.assignee.userId,
+                    reporter: taskContents.reporter.userId,
+                    title: taskContents.title,
+                    priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
+                    effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
+                    status: (taskContents.status.status !== "") ? taskContents.status.status : null,
+                    content: (taskContents.body !== "") ? taskContents.body : null,
+                    due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
+                    github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
+                    github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
+                    general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
+                    general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
+                    tags: taskContents.tags,
+                    threadId: threadId, // dm: 0-{dm_id}-{thread_id}, gm: 1-{gm_id}-{thread_id}
+                }),
+            });
 
-                const taskCreateData = await taskCreateResponse.json();
+            const taskCreateData = await taskCreateResponse.json();
 
-                if (!taskCreateResponse.ok) {
-                    throw new Error('Failed to create a task');
-                } else {
-                    setCurrentPreviewTaskId(taskCreateData.task_id)
+            if (!taskCreateResponse.ok) {
+                throw new Error('Failed to create a task');
+            } else {
+                setCurrentPreviewTaskId(taskCreateData.task_id)
 
-                    for (const attachment of taskContents.attachments) {
-                        const formData = new FormData()
-                        formData.append("task", taskCreateData.task_id)
-                        formData.append("attached_file", attachment.file)
-                        formData.append("attached_type", attachment.file.type)
+                for (const attachment of taskContents.attachments) {
+                    const formData = new FormData()
+                    formData.append("task", taskCreateData.task_id)
+                    formData.append("attached_file", attachment.file)
+                    formData.append("attached_type", attachment.file.type)
 
-                        const uploadAttachmentResponse = await fetch(`${base_url}/task/addTaskAttachment/`, {
-                            method: 'POST',
-                            headers: {
-                                "Authorization": `Bearer ${accessToken}`
-                            },
-                            body: formData,
-                        });
+                    const uploadAttachmentResponse = await fetch(`${base_url}/task/addTaskAttachment/`, {
+                        method: 'POST',
+                        headers: {
+                            "Authorization": `Bearer ${accessToken}`
+                        },
+                        body: formData,
+                    });
 
-                        const uploadAttachmentData = await uploadAttachmentResponse.json();
-                        console.log("uploadAttachmentData:", uploadAttachmentData)
+                    const uploadAttachmentData = await uploadAttachmentResponse.json();
+                    console.log("uploadAttachmentData:", uploadAttachmentData)
 
-                        if (!uploadAttachmentResponse.ok) {
-                            throw new Error(uploadAttachmentData.message || 'Attachment Upload Failed');
-                        }
+                    if (!uploadAttachmentResponse.ok) {
+                        throw new Error(uploadAttachmentData.message || 'Attachment Upload Failed');
                     }
-
-                    setIsSubmitted(true)
                 }
-            }
 
+                setIsSubmitted(true)
+            }
         } catch (error) {
             console.error(error);
             return [];
@@ -156,32 +160,39 @@ const saveTask = async (props: saveTaskProps) => {
 
 type TaskContentProps = {
     myself: UserProps,
-    currentProject: ProjectProps,
-    setIsCreatingTask: (value: boolean) => void;
-    setIsNewTaskCreated: (value: boolean) => void;
-    setIsTaskContentVisible: (value: boolean) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
+    threadId: string,
+    setIsTaskContentVisible: (value: boolean) => void,
+    setIsCreatingTask: (value: boolean) => void,
+    setIsOpeningTask: (value: boolean) => void,
     setOpenCreateProject: (value: boolean) => void,
     setOpenCreateTag: (value: boolean) => void,
+    setCurrentProject: (value: ProjectProps) => void,
+    setCurrentPreviewTaskId: (value: number) => void,
+    isNewProjectCreated: boolean,
+    isNewTagCreated: boolean,
 };
 
 const initUploadingFiles: AttachmentFileProps[] = []
 
-export default function CreateTask(props: TaskContentProps) {
-    const { myself,
-        currentProject,
-        setIsCreatingTask,
-        setIsNewTaskCreated,
+export default function CreateTaskFromThread(props: TaskContentProps) {
+    const {
+        myself,
+        threadId,
         setIsTaskContentVisible,
-        setCurrentPreviewTaskId,
+        setIsCreatingTask,
+        setIsOpeningTask,
         setOpenCreateProject,
-        setOpenCreateTag
+        setOpenCreateTag,
+        setCurrentProject,
+        setCurrentPreviewTaskId,
+        isNewProjectCreated,
+        isNewTagCreated
     } = props
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(initUploadingFiles);
 
     const [taskContents, setTaskContents] = useState<CreateTaskProps>({
-        project: currentProject,
+        project: null,
         title: "",
         body: "",
         assignee: myself,
@@ -220,8 +231,7 @@ export default function CreateTask(props: TaskContentProps) {
     useEffect(() => {
         if (isSubmitted) {
             setIsCreatingTask(false)
-            setIsNewTaskCreated(true)
-            setIsTaskContentVisible(true)
+            setIsOpeningTask(true)
         }
     }, [isSubmitted])
 
@@ -318,8 +328,8 @@ export default function CreateTask(props: TaskContentProps) {
     };
     const [errorOpen, setErrorOpen] = React.useState(false);
 
-    const [titleErrorOpen, setTitleErrorOpen] = React.useState(false);
-    const [titleError, setTitleError] = useState("");
+    const [titleErrorOpen, setOpenErrorMessage] = React.useState(false);
+    const [titleError, setErrorMessage] = useState("");
 
     // Get team members
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
@@ -352,16 +362,17 @@ export default function CreateTask(props: TaskContentProps) {
     // Get Project tags
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
     useEffect(() => {
-        (async () => {
-            const loadedProjectTags: TagListProps[] = await loadProjectTags({
-                myself: myself, projectId: currentProject.projectId, accessToken: accessToken || ""
-            });
-            if (loadedProjectTags.length > 0) {
-                setProjectTags(loadedProjectTags);
-            }
-        })();
+        if (taskContents.project !== null) {
+            (async () => {
+                const loadedProjectTags: TagListProps[] = await loadProjectTags({
+                    myself: myself, projectId: taskContents.project?.projectId || -1, accessToken: accessToken || ""
+                });
+                if (loadedProjectTags.length > 0) {
+                    setProjectTags(loadedProjectTags);
+                }
+            })();
+        }
     }, [])
-
 
     return (
         <Sheet
@@ -405,7 +416,10 @@ export default function CreateTask(props: TaskContentProps) {
                         size="sm"
                         variant="plain"
                         color="neutral"
-                        onClick={() => { setIsCreatingTask(false) }}
+                        onClick={() => {
+                            setIsCreatingTask(false)
+                            setIsTaskContentVisible(false)
+                        }}
                     >
                         <CancelIcon />
                     </IconButton>
@@ -431,7 +445,7 @@ export default function CreateTask(props: TaskContentProps) {
                             if (reason === 'clickaway') {
                                 return;
                             }
-                            setTitleErrorOpen(false);
+                            setOpenErrorMessage(false);
                         }}
                     >
                         {titleError}
@@ -502,7 +516,6 @@ export default function CreateTask(props: TaskContentProps) {
                                     <Autocomplete
                                         options={teamProjects}
                                         getOptionLabel={(option) => option.projectName}
-                                        defaultValue={currentProject}
                                         isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
                                         onChange={(event, value) => {
                                             if (value !== null) {
@@ -513,6 +526,10 @@ export default function CreateTask(props: TaskContentProps) {
                                                         projectName: value.projectName,
                                                     }
                                                 }));
+                                                setCurrentProject({
+                                                    projectId: value.projectId,
+                                                    projectName: value.projectName,
+                                                })
                                             }
                                         }}
                                         size="md"
@@ -856,11 +873,12 @@ export default function CreateTask(props: TaskContentProps) {
                     onClick={() => {
                         saveTask({
                             myself: myself,
+                            threadId: threadId,
                             taskContents: taskContents,
                             accessToken: accessToken || "",
                             setIsSubmitted: setIsSubmitted,
-                            setTitleError: setTitleError,
-                            setTitleErrorOpen: setTitleErrorOpen,
+                            setErrorMessage: setErrorMessage,
+                            setOpenErrorMessage: setOpenErrorMessage,
                             setCurrentPreviewTaskId: setCurrentPreviewTaskId,
                         })
                     }}
