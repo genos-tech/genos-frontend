@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { CssVarsProvider, useColorScheme } from '@mui/joy/styles';
 import GlobalStyles from '@mui/joy/GlobalStyles';
@@ -17,6 +17,12 @@ import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import BusinessIcon from '@mui/icons-material/Business';
 import Link from '@mui/joy/Link';
 import { useAuth } from "../admin/AuthContext";
+import loadAllTeams from '../backendOperation/loadAllTeams';
+import { Team } from '../../types';
+import List from '@mui/joy/List';
+import ListItemDecorator from '@mui/joy/ListItemDecorator';
+import ListItemButton from '@mui/joy/ListItemButton';
+import AcUnitIcon from '@mui/icons-material/AcUnit';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -73,8 +79,81 @@ export default function CreateTeam() {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const { accessToken } = useAuth();
 
-    async function createTeam(teamName: string): Promise<CreateTeamResponse> {
+    const [teams, setTeams] = useState<Team[]>([]);
+    useEffect(() => {
+        if (accessToken !== null) {
+            (async () => {
+                const loadedTeams: Team[] = await loadAllTeams({ accessToken: accessToken || "" });
+                setTeams(loadedTeams)
+            })();
+        }
+    }, [accessToken])
 
+    async function moveToTeam(teamId: string) {
+        try {
+            const joinTeamResponse = await fetch(`${base_url}/team/join/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({
+                    team_id: teamId,
+                    attendee_id: localStorage.getItem("userId")
+                }),
+            });
+
+            const joinTeamData = await joinTeamResponse.json();
+
+            localStorage.setItem("teamId", joinTeamData.team);
+
+            if (!joinTeamResponse.ok) {
+                console.error("joinTeamData:", joinTeamData)
+                throw new Error('Failed to join team');
+            } else {
+                // Send initial DM message to myself
+                const myUserId = localStorage.getItem("userId")
+                // 1. Crete DM for myself
+                const createMyDMResponse = await fetch(`${base_url}/dm/create/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        user_1_id: myUserId
+                        , user_2_id: myUserId
+                    }),
+                });
+
+                const createMyDMData: CreateMyDMResponse = await createMyDMResponse.json();
+
+                // 2. Send an initial message
+                const initMessageResponse = await fetch(`${base_url}/dm/addMessage/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "Authorization": `Bearer ${accessToken}`
+                    },
+                    body: JSON.stringify({
+                        dm_id: createMyDMData.dm_id,
+                        sender_id: myUserId,
+                        receiver_id: myUserId,
+                        message_body: "Joined",
+                        is_init: true
+                    }),
+                });
+                const initMessageData = await initMessageResponse.json();
+            }
+
+            navigate('/App')
+        } catch (error) {
+            const err_msg = `${error}`
+            console.error(err_msg);
+        }
+    }
+
+    async function createTeam(teamName: string): Promise<CreateTeamResponse> {
         try {
             const teamCreateResponse = await fetch(`${base_url}/team/create/`, {
                 method: 'POST',
@@ -237,6 +316,54 @@ export default function CreateTeam() {
                             },
                         }}
                     >
+
+                        <Box
+                            component="main"
+                            sx={{
+                                my: 'auto',
+                                py: 2,
+                                pb: 5,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2,
+                                width: 400,
+                                maxWidth: '100%',
+                                mx: 'auto',
+                                borderRadius: 'sm',
+                                '& form': {
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 2,
+                                },
+                                [`& .MuiFormLabel-asterisk`]: {
+                                    visibility: 'hidden',
+                                },
+                            }}
+                        >
+                            <Typography component="h1" level="h3">
+                                Join Team
+                            </Typography>
+                            <List component="nav"
+                                sx={{
+                                    maxHeight: 300,
+                                    overflow: 'auto',
+                                }}
+                            >
+                                {teams.map((team) => (
+                                    <ListItemButton key={team.team_id} title={team.team_email} onClick={() => {
+                                        moveToTeam(team.team_id);
+                                    }}>
+                                        <ListItemDecorator>
+                                            <AcUnitIcon />
+                                        </ListItemDecorator>
+                                        <Typography component="h1" level="h4">
+                                            {team.team_name}
+                                        </Typography>
+                                    </ListItemButton>
+                                ))}
+                            </List>
+                        </Box>
+
                         <Stack sx={{ gap: 4, mb: 2 }}>
                             <Stack sx={{ gap: 1 }}>
                                 <Typography component="h1" level="h3">

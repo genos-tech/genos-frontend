@@ -5,13 +5,13 @@ import { DB_NAME, DB_VERSION, STORES, KEY_PATH, INDEX, INDEX_KEY } from './conf'
 export const initDB = async (): Promise<IDBPDatabase> => {
     return openDB(DB_NAME, DB_VERSION, {
         upgrade(db) {
-            // User info
-            if (!db.objectStoreNames.contains(STORES.USER_INFO)) {
-                db.createObjectStore(
-                    STORES.USER_INFO,
-                    { keyPath: KEY_PATH.USER_INFO }
-                );
-            }
+            // // User info
+            // if (!db.objectStoreNames.contains(STORES.USER_INFO)) {
+            //     db.createObjectStore(
+            //         STORES.USER_INFO,
+            //         { keyPath: KEY_PATH.USER_INFO }
+            //     );
+            // }
 
             // For DM chats
             // DM chats store, not including messages

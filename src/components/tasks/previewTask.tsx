@@ -73,7 +73,8 @@ const effortLevels: TaskEffortLevelProps[] = [
 ]
 
 const getFormattedTodayDateStr = (): string => {
-    const today = new Date();
+    let today = new Date();
+    today.setDate(today.getDate() + 7);
     return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
 };
 
@@ -358,6 +359,27 @@ export default function taskPreview(props: TaskContentProps) {
         };
     }, [accessToken, currentTaskContent]);
 
+    // Update Project and Tag list
+    const updateProjectOptions = () => {
+        (async () => {
+            const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
+                myself: myself, accessToken: accessToken || ""
+            });
+            if (loadedTeamProjects.length > 0) {
+                setTeamProjects(loadedTeamProjects);
+            }
+        })();
+    };
+    const updateTagOptions = () => {
+        (async () => {
+            const loadedProjectTags: TagListProps[] = await loadProjectTags({
+                myself: myself, projectId: currentProject.projectId, accessToken: accessToken || ""
+            });
+            if (loadedProjectTags.length > 0) {
+                setProjectTags(loadedProjectTags);
+            }
+        })();
+    };
 
     return (
         <Sheet
@@ -385,7 +407,7 @@ export default function taskPreview(props: TaskContentProps) {
                             key={currentPreviewTask.status.status}
                             size="lg"
                             variant="soft"
-                            sx={{ backgroundColor: alpha(currentPreviewTask.status.color, 0.85), color: currentPreviewTask.status.textColor, fontWeight: 'bold' }}
+                            sx={{ backgroundColor: alpha(currentPreviewTask.status.color, 0.80), color: currentPreviewTask.status.textColor, fontWeight: 'bold' }}
                         >
                             {currentPreviewTask.status.status}
                         </Chip>
@@ -410,7 +432,7 @@ export default function taskPreview(props: TaskContentProps) {
                     </Box>
 
                     <IconButton
-                        size="md"
+                        size="sm"
                         variant="plain"
                         color="neutral"
                         onClick={() => { setIsTaskContentVisible(false) }}
@@ -425,8 +447,8 @@ export default function taskPreview(props: TaskContentProps) {
                             <MoreVert />
                         </MenuButton>
                         <Menu>
-                            <MenuItem onClick={() => { setOpenCreateProject(true) }}>Create Project</MenuItem>
-                            <MenuItem onClick={() => { setOpenCreateTag(true) }}>Create Tag</MenuItem>
+                            <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
+                            <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
                         </Menu>
                     </Dropdown>
                 </Stack>
@@ -444,7 +466,7 @@ export default function taskPreview(props: TaskContentProps) {
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <List aria-labelledby="decorated-list-demo">
-                        <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
                             <Typography sx={{ minWidth: "80px" }}>Assignee:</Typography>
                             <Avatar size="sm">{currentTaskContent.assignee.userName[0]}</Avatar>
                             <Autocomplete
@@ -463,12 +485,12 @@ export default function taskPreview(props: TaskContentProps) {
                                         setTaskUpdate(true)
                                     }
                                 }}
-                                size="md"
+                                size="sm"
                                 sx={{ width: '100%' }}
                             />
                         </ListItem>
 
-                        <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
                             <Typography sx={{ minWidth: "80px" }}>Reporter:</Typography>
                             <Avatar size="sm">{currentTaskContent.reporter.userName[0]}</Avatar>
                             <Autocomplete
@@ -487,7 +509,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         setTaskUpdate(true)
                                     }
                                 }}
-                                size="md"
+                                size="sm"
                                 sx={{ width: '100%' }}
                             />
                         </ListItem>
@@ -515,7 +537,8 @@ export default function taskPreview(props: TaskContentProps) {
                                                 setTaskUpdate(true)
                                             }
                                         }}
-                                        size="md"
+                                        onOpen={() => { updateProjectOptions() }}
+                                        size="sm"
                                         sx={{ width: '100%' }}
                                     />
                                 </ListItem>
@@ -538,7 +561,7 @@ export default function taskPreview(props: TaskContentProps) {
                                                         key={item.tagName} // pass the key directly
                                                         variant="soft"
                                                         endDecorator={<Close />}
-                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.85), color: item.tagTextColor, fontWeight: 'bold' }}
+                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.80), color: item.tagTextColor, fontWeight: 'bold' }}
                                                     >
                                                         {item.tagName}
                                                     </Chip>
@@ -546,13 +569,17 @@ export default function taskPreview(props: TaskContentProps) {
                                             })
                                         }
                                         renderOption={(props, option) => (
-                                            <AutocompleteOption key={option.tagName}>
+                                            <AutocompleteOption {...props} key={option.tagName}>
                                                 <ListItemContent sx={{ fontSize: 'sm' }}>
                                                     <Chip
-                                                        key={option.tagName} // pass the key directly
+                                                        key={option.tagName}
                                                         variant="soft"
                                                         endDecorator={<Close />}
-                                                        sx={{ backgroundColor: alpha(option.tagColor, 0.85), color: option.tagTextColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(option.tagColor, 0.80),
+                                                            color: option.tagTextColor,
+                                                            fontWeight: 'bold',
+                                                        }}
                                                     >
                                                         {option.tagName}
                                                     </Chip>
@@ -570,7 +597,8 @@ export default function taskPreview(props: TaskContentProps) {
                                                 setTaskUpdate(true)
                                             }
                                         }}
-                                        size="md"
+                                        onOpen={() => { updateTagOptions() }}
+                                        size="sm"
                                         sx={{ width: "100%" }}
                                     />
                                 </ListItem>
@@ -599,7 +627,7 @@ export default function taskPreview(props: TaskContentProps) {
                                                         key={key} // pass the key directly
                                                         variant="soft"
                                                         endDecorator={<Close />}
-                                                        sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {item.priority}
                                                     </Chip>
@@ -607,13 +635,17 @@ export default function taskPreview(props: TaskContentProps) {
                                             })
                                         }
                                         renderOption={(props, option) => (
-                                            <AutocompleteOption key={option.priority}>
+                                            <AutocompleteOption {...props} key={option.priority}>
                                                 <ListItemContent sx={{ fontSize: 'sm' }}>
                                                     <Chip
                                                         key={option.priority} // pass the key directly
                                                         variant="soft"
                                                         endDecorator={<Close />}
-                                                        sx={{ backgroundColor: alpha(option.color, 0.85), color: option.textColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            color: option.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {option.priority}
                                                     </Chip>
@@ -631,7 +663,7 @@ export default function taskPreview(props: TaskContentProps) {
                                                 setTaskUpdate(true)
                                             }
                                         }}
-                                        size="md"
+                                        size="sm"
                                         sx={{ width: "100%" }}
                                         openOnFocus={true}
                                     />
@@ -659,7 +691,7 @@ export default function taskPreview(props: TaskContentProps) {
                                                         key={key} // pass the key directly
                                                         variant="soft"
                                                         endDecorator={<Close />}
-                                                        sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {(item) ? item.level : ""}
                                                     </Chip>
@@ -667,13 +699,17 @@ export default function taskPreview(props: TaskContentProps) {
                                             })
                                         }
                                         renderOption={(props, option) => (
-                                            <AutocompleteOption key={option.level}>
+                                            <AutocompleteOption  {...props} key={option.level}>
                                                 <ListItemContent sx={{ fontSize: 'sm' }}>
                                                     <Chip
                                                         key={option.level} // pass the key directly
                                                         variant="soft"
                                                         endDecorator={<Close />}
-                                                        sx={{ backgroundColor: alpha(option.color, 0.85), color: option.textColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            color: option.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {option.level}
                                                     </Chip>
@@ -691,7 +727,7 @@ export default function taskPreview(props: TaskContentProps) {
                                                 setTaskUpdate(true)
                                             }
                                         }}
-                                        size="md"
+                                        size="sm"
                                         sx={{ width: "100%" }}
                                     />
                                 </ListItem>
@@ -719,7 +755,7 @@ export default function taskPreview(props: TaskContentProps) {
                                                 key={key} // pass the key directly
                                                 variant="soft"
                                                 endDecorator={<Close />}
-                                                sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
+                                                sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
                                             >
                                                 {(item) ? item.status : ""}
                                             </Chip>
@@ -733,7 +769,7 @@ export default function taskPreview(props: TaskContentProps) {
                                                 key={option.status} // pass the key directly
                                                 variant="soft"
                                                 endDecorator={<Close />}
-                                                sx={{ backgroundColor: alpha(option.color, 0.85), color: option.textColor, fontWeight: 'bold' }}
+                                                sx={{ backgroundColor: alpha(option.color, 0.80), color: option.textColor, fontWeight: 'bold' }}
                                             >
                                                 {option.status}
                                             </Chip>
@@ -751,7 +787,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         setTaskUpdate(true)
                                     }
                                 }}
-                                size="md"
+                                size="sm"
                                 sx={{ width: "100%" }}
                             />
                         </ListItem>
@@ -762,7 +798,7 @@ export default function taskPreview(props: TaskContentProps) {
                                 type="date"
                                 color="neutral"
                                 variant="soft"
-                                size="md"
+                                size="sm"
                                 defaultValue={(currentPreviewTask?.dueDate) ? currentPreviewTask?.dueDate : ""}
                                 onChange={(e) => {
                                     (async () => {

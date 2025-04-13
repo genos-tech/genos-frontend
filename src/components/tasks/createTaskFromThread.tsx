@@ -38,6 +38,9 @@ import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
+import AutocompleteOption from '@mui/joy/AutocompleteOption';
+import ListItemContent from '@mui/joy/ListItemContent';
+import AddIcon from '@mui/icons-material/Add';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -54,7 +57,8 @@ const effortLevels: TaskEffortLevelProps[] = [
 ]
 
 const getFormattedTodayDateStr = (): string => {
-    const today = new Date();
+    let today = new Date();
+    today.setDate(today.getDate() + 7);
     return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
 };
 
@@ -64,6 +68,8 @@ const getFormattedDateStr = (date: Date): string => {
 
 type saveTaskProps = {
     myself: UserProps,
+    isDm: boolean,
+    chatId: number,
     threadId: string,
     taskContents: CreateTaskProps,
     accessToken: string,
@@ -75,6 +81,8 @@ type saveTaskProps = {
 
 const saveTask = async (props: saveTaskProps) => {
     const { myself,
+        isDm,
+        chatId,
         threadId,
         taskContents,
         accessToken,
@@ -115,7 +123,9 @@ const saveTask = async (props: saveTaskProps) => {
                     general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
                     general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
                     tags: taskContents.tags,
-                    threadId: threadId, // dm: 0-{dm_id}-{thread_id}, gm: 1-{gm_id}-{thread_id}
+                    chat_type: (isDm ? "dm" : "gm"),
+                    chat_id: chatId,
+                    thread_id: threadId
                 }),
             });
 
@@ -160,6 +170,8 @@ const saveTask = async (props: saveTaskProps) => {
 
 type TaskContentProps = {
     myself: UserProps,
+    isDm: boolean,
+    chatId: number,
     threadId: string,
     setIsTaskContentVisible: (value: boolean) => void,
     setIsCreatingTask: (value: boolean) => void,
@@ -177,6 +189,8 @@ const initUploadingFiles: AttachmentFileProps[] = []
 export default function CreateTaskFromThread(props: TaskContentProps) {
     const {
         myself,
+        isDm,
+        chatId,
         threadId,
         setIsTaskContentVisible,
         setIsCreatingTask,
@@ -374,6 +388,28 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
         }
     }, [])
 
+    // Update Project and Tag list
+    const updateProjectOptions = () => {
+        (async () => {
+            const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
+                myself: myself, accessToken: accessToken || ""
+            });
+            if (loadedTeamProjects.length > 0) {
+                setTeamProjects(loadedTeamProjects);
+            }
+        })();
+    };
+    const updateTagOptions = () => {
+        (async () => {
+            const loadedProjectTags: TagListProps[] = await loadProjectTags({
+                myself: myself, projectId: taskContents.project?.projectId || -1, accessToken: accessToken || ""
+            });
+            if (loadedProjectTags.length > 0) {
+                setProjectTags(loadedProjectTags);
+            }
+        })();
+    };
+
     return (
         <Sheet
             className="custom-scrollbar"
@@ -431,8 +467,8 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                             <MoreVert />
                         </MenuButton>
                         <Menu>
-                            <MenuItem onClick={() => { setOpenCreateProject(true) }}>Create Project</MenuItem>
-                            <MenuItem onClick={() => { setOpenCreateTag(true) }}>Create Tag</MenuItem>
+                            <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
+                            <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
                         </Menu>
                     </Dropdown>
                     {titleError && <Snackbar
@@ -465,7 +501,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <List aria-labelledby="decorated-list-demo">
-                        <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
                             <Typography sx={{ minWidth: "80px" }}>Assignee:</Typography>
                             <Avatar size="sm">{assigneeName !== "" ? assigneeName[0] : ""}</Avatar>
                             <Autocomplete
@@ -482,12 +518,12 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                         setAssigneeName(value.userName)
                                     }
                                 }}
-                                size="md"
+                                size="sm"
                                 sx={{ width: '100%' }}
                             />
                         </ListItem>
 
-                        <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
                             <Typography sx={{ minWidth: "80px" }}>Reporter:</Typography>
                             <Avatar size="sm">{reporterName !== "" ? reporterName[0] : ""}</Avatar>
                             <Autocomplete
@@ -504,7 +540,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                         setReporterName(value.userName)
                                     }
                                 }}
-                                size="md"
+                                size="sm"
                                 sx={{ width: '100%' }}
                             />
                         </ListItem>
@@ -532,7 +568,8 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                 })
                                             }
                                         }}
-                                        size="md"
+                                        onOpen={() => { updateProjectOptions() }}
+                                        size="sm"
                                         sx={{ width: '100%' }}
                                     />
                                 </ListItem>
@@ -554,13 +591,31 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         key={key}
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.85), color: item.tagTextColor, fontWeight: 'bold' }}
+                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.80), color: item.tagTextColor, fontWeight: 'bold' }}
                                                     >
                                                         {item.tagName}
                                                     </Chip>
                                                 );
                                             })
                                         }
+                                        renderOption={(props, option) => (
+                                            <AutocompleteOption {...props} key={option.tagName}>
+                                                <ListItemContent sx={{ fontSize: 'sm' }}>
+                                                    <Chip
+                                                        key={option.tagName}
+                                                        variant="soft"
+                                                        endDecorator={<Close />}
+                                                        sx={{
+                                                            backgroundColor: alpha(option.tagColor, 0.80),
+                                                            color: option.tagTextColor,
+                                                            fontWeight: 'bold',
+                                                        }}
+                                                    >
+                                                        {option.tagName}
+                                                    </Chip>
+                                                </ListItemContent>
+                                            </AutocompleteOption>
+                                        )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 setTaskContents(prevState => ({
@@ -569,7 +624,8 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                 }));
                                             }
                                         }}
-                                        size="md"
+                                        onOpen={() => { updateTagOptions() }}
+                                        size="sm"
                                         sx={{ width: "100%" }}
                                     />
                                 </ListItem>
@@ -594,13 +650,31 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         color='success'
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {item.priority}
                                                     </Chip>
                                                 );
                                             })
                                         }
+                                        renderOption={(props, option) => (
+                                            <AutocompleteOption {...props} key={option.priority}>
+                                                <ListItemContent sx={{ fontSize: 'sm' }}>
+                                                    <Chip
+                                                        key={option.priority} // pass the key directly
+                                                        variant="soft"
+                                                        endDecorator={<Close />}
+                                                        sx={{
+                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            color: option.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
+                                                    >
+                                                        {option.priority}
+                                                    </Chip>
+                                                </ListItemContent>
+                                            </AutocompleteOption>
+                                        )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 setTaskContents(prevState => ({
@@ -609,7 +683,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                 }));
                                             }
                                         }}
-                                        size="md"
+                                        size="sm"
                                         sx={{ width: "100%" }}
                                         openOnFocus={true}
                                     />
@@ -633,13 +707,31 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         color='primary'
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.color, 0.85), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
                                                     >
                                                         {(item) ? item.level : ""}
                                                     </Chip>
                                                 );
                                             })
                                         }
+                                        renderOption={(props, option) => (
+                                            <AutocompleteOption  {...props} key={option.level}>
+                                                <ListItemContent sx={{ fontSize: 'sm' }}>
+                                                    <Chip
+                                                        key={option.level} // pass the key directly
+                                                        variant="soft"
+                                                        endDecorator={<Close />}
+                                                        sx={{
+                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            color: option.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
+                                                    >
+                                                        {option.level}
+                                                    </Chip>
+                                                </ListItemContent>
+                                            </AutocompleteOption>
+                                        )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
                                                 setTaskContents(prevState => ({
@@ -648,7 +740,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                 }));
                                             }
                                         }}
-                                        size="md"
+                                        size="sm"
                                         sx={{ width: "100%" }}
                                     />
                                 </ListItem>
@@ -879,6 +971,8 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                     onClick={() => {
                         saveTask({
                             myself: myself,
+                            isDm: isDm,
+                            chatId: chatId,
                             threadId: threadId,
                             taskContents: taskContents,
                             accessToken: accessToken || "",

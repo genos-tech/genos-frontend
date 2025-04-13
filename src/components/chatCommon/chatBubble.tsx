@@ -309,6 +309,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                                 messageId: 1,
                                 content: content,
                                 sender: myself,
+                                taskId: null,
                                 tsSent: getCurrentTimestamp(),
                               };
 
@@ -403,6 +404,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                         messageId: 1,
                         content: content,
                         sender: myself,
+                        taskId: null,
                         tsSent: getCurrentTimestamp(),
                       };
 

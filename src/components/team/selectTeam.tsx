@@ -15,6 +15,7 @@ import ListItemDecorator from '@mui/joy/ListItemDecorator';
 import ListItemButton from '@mui/joy/ListItemButton';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import loadAllTeams from '../backendOperation/loadAllTeams';
+import { Team } from '../../types';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -49,18 +50,6 @@ function ColorSchemeToggle(props: IconButtonProps) {
         </IconButton>
     );
 }
-
-type Team = {
-    team_id: string,
-    team_name: string,
-    team_email: string,
-}
-
-type CreateTeamResponse = {
-    team_id: number;
-    detail: string | null;
-    hint: string | null;
-};
 
 export default function SelectTeam() {
     const navigate = useNavigate();
@@ -212,7 +201,7 @@ export default function SelectTeam() {
                         }}
                     >
                         <Typography component="h1" level="h3">
-                            Select Team
+                            Join Team
                         </Typography>
                         <List component="nav"
                             sx={{

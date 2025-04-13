@@ -120,6 +120,12 @@ export type NewThreadMessageProps = {
     };
 };
 
+export type Team = {
+    team_id: string,
+    team_name: string,
+    team_email: string,
+}
+
 // Task
 export type ProjectProps = {
     projectId: number,

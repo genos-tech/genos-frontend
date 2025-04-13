@@ -75,7 +75,7 @@ export const taskColumns: GridColDef[] = [
             return option ? <Chip
                 label={option.label}
                 variant="outlined"
-                sx={{ backgroundColor: alpha(color || '#ff2323', 0.85), color: textColor, fontWeight: 'bold' }} /> : null;
+                sx={{ backgroundColor: alpha(color || '#ff2323', 0.80), color: textColor, fontWeight: 'bold' }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -127,7 +127,7 @@ export const taskColumns: GridColDef[] = [
             return option ? <Chip
                 label={option.label}
                 variant="outlined"
-                sx={{ backgroundColor: alpha(color || '#ff2323', 0.85), color: textColor, fontWeight: 'bold' }} /> : null;
+                sx={{ backgroundColor: alpha(color || '#ff2323', 0.80), color: textColor, fontWeight: 'bold' }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -180,7 +180,7 @@ export const taskColumns: GridColDef[] = [
                 icon={option.icon}
                 label={option.label}
                 variant="outlined"
-                sx={{ backgroundColor: alpha(color || '#ff2323', 0.85), color: textColor, fontWeight: 'bold' }} /> : null;
+                sx={{ backgroundColor: alpha(color || '#ff2323', 0.80), color: textColor, fontWeight: 'bold' }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -251,7 +251,7 @@ export const taskColumns: GridColDef[] = [
                 label={'Expired'}
                 variant="outlined"
                 size='small'
-                sx={{ backgroundColor: alpha('#ff2323', 0.85), color: 'white', fontWeight: 'bold' }} /> : params.value;
+                sx={{ backgroundColor: alpha('#ff2323', 0.80), color: 'white', fontWeight: 'bold' }} /> : params.value;
         },
     },
     {
