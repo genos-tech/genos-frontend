@@ -21,6 +21,8 @@ type MessagesPaneProps = {
   setIsThreadVisible: (value: boolean) => void;
   currentThreadChatId: number;
   setIsTaskContentVisible: (value: boolean) => void;
+  setIsOpeningTask: (value: boolean) => void;
+  setIsCreatingTask: (value: boolean) => void;
 };
 
 
@@ -32,7 +34,11 @@ export default function ThreadPane(props: MessagesPaneProps) {
     setCurrentThreadChat,
     setIsThreadVisible,
     currentThreadChatId,
-    setIsTaskContentVisible } = props;
+    setIsTaskContentVisible,
+    setIsOpeningTask,
+    setIsCreatingTask
+  } = props;
+
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
   const [content, setContent] = useState("");
 
@@ -154,7 +160,10 @@ export default function ThreadPane(props: MessagesPaneProps) {
           thread={thread}
           setCurrentThreadChat={setCurrentThreadChat}
           setIsThreadVisible={setIsThreadVisible}
-          setIsTaskContentVisible={setIsTaskContentVisible} />
+          setIsTaskContentVisible={setIsTaskContentVisible}
+          setIsOpeningTask={setIsOpeningTask}
+          setIsCreatingTask={setIsCreatingTask}
+        />
 
         <Box sx={{ px: 0.3, my: 0.2 }}>
           <Virtuoso

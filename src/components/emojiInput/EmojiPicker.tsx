@@ -57,7 +57,7 @@ export const EmojiInput = ({
                     ref={emojiPickerRef}
                     className="absolute z-[9999] bg-white shadow-lg rounded"
                     style={{
-                        top: editorPos.top,
+                        // top: (editorPos.top) ? editorPos.top : null,
                         position: 'absolute',
                         zIndex: 9999,
                         boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',

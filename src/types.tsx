@@ -4,7 +4,7 @@ export type UserProps = {
     userId: string;
     userName: string;
     userEmail: string;
-    avatarImgPath: string;
+    avatarImgPath: string | null;
     online: boolean | false;
 };
 
@@ -39,6 +39,7 @@ export type ThreadProps = {
     threadId: number;
     isDm: boolean;
     dmPartnerUserId: string | null;
+    taskId: number | null;
     unread: boolean | true;
     messages: ThreadMessageProps[];
     CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
@@ -70,6 +71,7 @@ export type ThreadMessageProps = {
     messageId: number;
     content: string;
     sender: UserProps;
+    taskId: number | null;
     tsSent: string;
     isLiked?: boolean | false;
     attachment?: {
@@ -108,6 +110,7 @@ export type NewThreadMessageProps = {
     isThread: boolean;
     content: string;
     sender: UserProps;
+    taskId: number | null;
     tsSent: string;
     isLiked?: boolean | false;
     attachment?: {
@@ -117,12 +120,145 @@ export type NewThreadMessageProps = {
     };
 };
 
+// Task
+export type ProjectProps = {
+    projectId: number,
+    projectName: string
+}
+
+export type TaskStatusProps = {
+    code: number,
+    status: string,
+    color: string,
+    textColor: string,
+}
+
+export type TaskPriorityProps = {
+    code: number,
+    priority: string,
+    color: string,
+    textColor: string,
+}
+
+export type TaskCommentProps = {
+    taskId: number,
+    senderId: string,
+    senderName: string,
+    commentId: number,
+    commentBody: string,
+    sentAt: string,
+}
+
+export type TaskEffortLevelProps = {
+    code: number,
+    level: string,
+    color: string,
+    textColor: string,
+}
+
+export type AttachmentFileProps = {
+    file: File,
+    file_base64?: string,
+    name?: string,
+    type?: string,
+}
+
+export type CreateTaskProps = {
+    project: ProjectProps | null,
+    title: string,
+    body: string,
+    assignee: UserProps,
+    reporter: UserProps,
+    dueDate: string,
+    status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
+    priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
+    effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
+    tags: TagListProps[],
+    githubLink: {
+        url: string,
+        title: string
+    },
+    generalLink: {
+        url: string,
+        title: string
+    },
+    attachments: AttachmentFileProps[],
+}
+
+export type PreviewTaskProps = {
+    id: string,
+    project: ProjectProps,
+    title: string | null,
+    body: string | null,
+    assignee: UserProps,
+    reporter: UserProps,
+    dueDate: string,
+    createdDate: string,
+    daysLeft: string,
+    status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
+    priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
+    effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
+    tags: TagListProps[],
+    githubLink: {
+        url: string,
+        title: string
+    },
+    generalLink: {
+        url: string,
+        title: string
+    },
+    attachments: AttachmentFileProps[],
+    parentTaskId: string,
+    threadId: string,
+}
+
+export type TaskTableProps = {
+    id: string,
+    title: string,
+    priority: string,
+    effortLevel: string,
+    createdDate: string,
+    dueDate: string,
+    daysLeft: string,
+    status: string,
+    assigneeId: string,
+    assigneeEmail: string,
+    assigneeName: string,
+    parentTaskId: string,
+    threadId: string,
+    tags: TagListProps[],
+    teamId: string,
+    projectId: number
+}
+
 // Other Props
 export type SearchListProps = {
     id: number,
     type: string,
     name: string,
+    email: string | null,
     dmPartnerUserId: string | null,
+}
+
+
+export type TaskListByTagProps = {
+    projectId: number,
+    projectName: string,
+    tags: {
+        tagName: string,
+        tagColor: string,
+        tasks: {
+            taskId: number,
+            title: string,
+            status: string,
+        }[]
+    }[]
+}
+
+export type TagListProps = {
+    tagName: string,
+    tagColor: string,
+    tagTextColor: string,
 }
 
 export type LoadSearchListResponse = {
@@ -139,3 +275,11 @@ export type LoadGMMessageHistoryResponse = {
     messageHistory: ChatProps[] | [],
     message: string,
 };
+
+export type SearchTeamTasksResponse = {
+    projectId: number,
+    projectName: string,
+    taskId: number,
+    title: string,
+    status: string,
+}

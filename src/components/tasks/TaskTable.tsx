@@ -5,8 +5,8 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useColorScheme } from '@mui/joy/styles';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-
-import { taskColumns, taskRows } from './sampleTaskLists';
+import { TaskTableProps } from '../../types';
+import { taskColumns } from './tableFormat';
 
 const theme = createTheme({ cssVariables: true });
 
@@ -33,17 +33,20 @@ const predefinedFilters: { label: string; filterModel: GridFilterModel }[] = [
   },
 ];
 
-type TaskTableProps = {
+type ProjectTaskTableProps = {
+  projectTasks: TaskTableProps[];
+  setProjectTasks: (value: TaskTableProps[]) => void;
   setIsTaskContentVisible: (value: boolean) => void;
+  setCurrentPreviewTaskId: (value: number) => void;
 };
 
-export default function TaskTable(props: TaskTableProps) {
-  const { setIsTaskContentVisible } = props
+export default function TaskTable(props: ProjectTaskTableProps) {
+  const { projectTasks, setProjectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props
   const { mode } = useColorScheme();
   const className = `task-datagrid-${mode}`
-
   const apiRef = useGridApiRef();
   const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);
+
   const getFilteredRowsCount = useCallback(
     (filterModel: GridFilterModel) => {
       const rowIds = apiRef.current?.getAllRowIds();
@@ -60,18 +63,18 @@ export default function TaskTable(props: TaskTableProps) {
 
   useEffect(() => {
     // Calculate the row count for predefined filters
-    if (taskRows.length === 0) {
+    if (projectTasks.length === 0) {
       return;
     }
 
     setPredefinedFiltersRowCount(
       predefinedFilters.map(({ filterModel }) => getFilteredRowsCount(filterModel)),
     );
-  }, [apiRef, taskRows, getFilteredRowsCount]);
+  }, [apiRef, projectTasks, getFilteredRowsCount]);
 
   return (
     <ThemeProvider theme={theme}>
-      <div style={{ overflow: 'hidden', borderRadius: '5px' }}>
+      <div style={{ height: '100%', overflow: 'hidden', borderRadius: '5px' }}>
         <Stack direction="row" gap={1} mb={1} flexWrap="wrap">
           {predefinedFilters.map(({ label, filterModel }, index) => {
             const count = predefinedFiltersRowCount[index];
@@ -173,13 +176,13 @@ export default function TaskTable(props: TaskTableProps) {
             height: "97%",
             width: '100%',
           }}
-          
         >
           <DataGrid
-            onCellClick={(params) => (console.log("Cell clicked:", params))}
+            onCellClick={(params) => { }}
             onRowClick={(params, event, detail) => {
-              console.log("Row clicked:", params);
+              // console.log("Row clicked:", params);
               setIsTaskContentVisible(true);
+              setCurrentPreviewTaskId(Number(params.id))
             }}
             className={className}
             apiRef={apiRef}
@@ -188,15 +191,24 @@ export default function TaskTable(props: TaskTableProps) {
                 fontSize: "0.875rem",
                 fontWeight: 'bold',
               },
+              '& .MuiDataGrid-row.Mui-selected': {
+                backgroundColor: 'rgba(0, 123, 255, 0.2) !important', // light blue
+              },
+              '& .MuiDataGrid-row.Mui-selected:hover': {
+                backgroundColor: 'rgba(0, 123, 255, 0.3) !important', // slightly darker on hover
+              },
             }}
             style={{
               color: mode === 'dark' ? '#fbfcfc' : '#373737',
               borderColor: 'transparent',
               fontWeight: 'bold'
             }}
-            rows={taskRows}
+            rows={projectTasks}
             columns={taskColumns}
             initialState={{
+              sorting: {
+                sortModel: [{ field: 'id', sort: 'desc' }],
+              },
               pagination: {
                 paginationModel: {
                   pageSize: 50,

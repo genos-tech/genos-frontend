@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import LoadDMHistoryWorker from "../../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../../workers/loadGMHistoryWorker.ts?worker";
+import LoadTeamTaskWorker from "../../workers/loadTeamTaskWorker.ts?worker";
 import GetLatestDMChatWorker from "../../workers/getLatestDMChatWorker.ts?worker";
 import FetchSpecificDMChatWorker from "../../workers/fetchSpecificDMChatWorker.ts?worker";
 import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
@@ -18,6 +19,7 @@ export function InitialLoad(
 ) {
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
+    const [isTeamTasksLoaded, setIsTeamTasksLoaded] = useState<boolean | null>(false);
     const [latestDmChatId, setLatestDmChatId] = useState<number | null>(null);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
     const [InitialChatMessages, setInitialChatMessages] = useState<MessageProps[]>();
@@ -57,6 +59,24 @@ export function InitialLoad(
             };
             return () => {
                 loadGMHistoryWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
+
+    // Load Team tasks
+    useEffect(() => {
+        if (accessToken && myself.userId !== "" && myself.userName !== "") {
+            const loadTeamTaskWorker = new LoadTeamTaskWorker();
+            loadTeamTaskWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadTeamTaskWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    setIsTeamTasksLoaded(true);
+                } else {
+                    console.error("Filed initial team task loading");
+                }
+            };
+            return () => {
+                loadTeamTaskWorker.terminate();
             };
         }
     }, [myself, accessToken]);
@@ -149,8 +169,8 @@ export function InitialLoad(
 
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
-        if (isDMHistoryLoaded && isGMHistoryLoaded && isInitialChatLoaded) {
+        if (isDMHistoryLoaded && isGMHistoryLoaded && isTeamTasksLoaded && isInitialChatLoaded) {
             setIsLoading(false);
         }
-    }, [isDMHistoryLoaded, isGMHistoryLoaded, isInitialChatLoaded]);
+    }, [isDMHistoryLoaded, isGMHistoryLoaded, isTeamTasksLoaded, isInitialChatLoaded]);
 }

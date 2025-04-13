@@ -1,4 +1,4 @@
-import loadGMHistory from '../components/loadFromBackend/loadGMHistory';
+import loadGMHistory from '../components/backendOperation/loadGMHistory';
 import { UserProps, ChatProps, MessageProps } from "../types";
 import { STORES } from "../components/indexedDBUtils/conf";
 import {

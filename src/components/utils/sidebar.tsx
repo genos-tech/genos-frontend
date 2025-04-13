@@ -24,9 +24,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 type SidebarProps = {
   myself: UserProps;
   setMyself: (me: UserProps) => void;
+  setOpeningService: (service: number) => void;
 };
 
 export default function Sidebar(props: SidebarProps) {
+  const { myself, setMyself, setOpeningService } = props
   const { setAccessToken } = useAuth();
   const navigate = useNavigate();
 
@@ -54,11 +56,11 @@ export default function Sidebar(props: SidebarProps) {
   };
 
   const handleMoveToChat = (): void => {
-    navigate("/App");
+    setOpeningService(1);
   };
 
   const handleMoveToTask = (): void => {
-    navigate("/TaskHome");
+    setOpeningService(2);
   };
 
 
@@ -115,7 +117,7 @@ export default function Sidebar(props: SidebarProps) {
         onClick={() => closeSidebar()}
       />
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-        <TeamDropdown myself={props.myself} setMyself={props.setMyself} />
+        <TeamDropdown myself={myself} setMyself={setMyself} />
         <ColorSchemeToggle />
       </Box>
 

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import Sheet from '@mui/joy/Sheet';
 import { io, Socket } from "socket.io-client";
 import ThreadPane from './thread/threadPane';
-import TaskContent from './tasks/TaskContent';
 import ChatsPane from './chatCommon/chatsPane';
 import {
     AllChatProps,
@@ -13,7 +12,9 @@ import {
     MessageProps,
     ChatProps,
     ThreadProps,
-    ThreadMessageProps
+    ThreadMessageProps,
+    PreviewTaskProps,
+    ProjectProps
 } from "../types";
 import FetchAllChatsWorker from "../workers/fetchAllChatsWorker.ts?worker";
 import InsertDMChatWorker from "../workers/insertDMChatWorker.ts?worker";
@@ -25,11 +26,14 @@ import InsertGMThreadMessageWorker from "../workers/insertGMThreadMessageWorker.
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import Sidebar from '../components/utils/sidebar';
 import { useColorScheme } from '@mui/joy/styles';
-
 import MessagesPane from './mainChat/mainMessagesPane';
 import MessagesSubPane from './subChat/subMessagesPane';
-
+import CreateTaskFromThread from "../components/tasks/createTaskFromThread";
+import TaskPreviewFromThread from './tasks/previewTaskFromThread';
 import { useAuth } from "../components/admin/AuthContext";
+import CreateTagModal from './tasks/modalCreateTag';
+import CreateProjectModal from './tasks/modalCreateProject';
+import loadSpecificTask from './backendOperation/loadSpecificTask';
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
@@ -185,6 +189,7 @@ type HomeProps = {
     setMyself: (me: UserProps) => void;
     currentMainChat: ChatProps,
     setCurrentMainChat: (chat: ChatProps) => void;
+    setOpeningService: (service: number) => void;
 };
 
 export default function Home(props: HomeProps) {
@@ -193,6 +198,7 @@ export default function Home(props: HomeProps) {
         setMyself,
         currentMainChat,
         setCurrentMainChat,
+        setOpeningService,
     } = props;
 
     const { accessToken } = useAuth();
@@ -218,9 +224,20 @@ export default function Home(props: HomeProps) {
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
+    const [currentForeignThreadId, setCurrentForeignThreadId] = useState<string>("");
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
     const [isThreadVisible, setIsThreadVisible] = useState(false);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
+
+    const [isOpeningTask, setIsOpeningTask] = useState(false);
+    const [isCreatingTask, setIsCreatingTask] = useState(false);
+    const [openCreateProject, setOpenCreateProject] = useState(false);
+    const [openCreateTag, setOpenCreateTag] = useState(false);
+    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
+    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
+    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
+    const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>();
+    const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
 
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
     const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
@@ -296,6 +313,7 @@ export default function Home(props: HomeProps) {
                                 content: newMessage.content,
                                 sender: newMessage.sender,
                                 tsSent: newMessage.tsSent,
+                                taskId: newMessage.taskId,
                             }
                             insertDMThreadMessage(newDMThreadMessage)
 
@@ -309,6 +327,7 @@ export default function Home(props: HomeProps) {
                                     threadId: newDMThreadMessage.threadId,
                                     isDm: newMessage.isDm,
                                     dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    taskId: newDMThreadMessage.taskId,
                                     unread: false,
                                     messages: [...currentThreadChat.messages, newDMThreadMessage],
                                     TSLastMessage: newDMThreadMessage.tsSent,
@@ -430,6 +449,7 @@ export default function Home(props: HomeProps) {
                                 content: newMessage.content,
                                 sender: newMessage.sender,
                                 tsSent: newMessage.tsSent,
+                                taskId: newMessage.taskId,
                             }
                             insertGMThreadMessage(newGMThreadMessage);
 
@@ -443,6 +463,7 @@ export default function Home(props: HomeProps) {
                                     threadId: newGMThreadMessage.threadId,
                                     isDm: newMessage.isDm,
                                     dmPartnerUserId: newMessage.dmPartnerUserId,
+                                    taskId: newMessage.taskId,
                                     unread: false,
                                     messages: [...currentThreadChat.messages, newGMThreadMessage],
                                     TSLastMessage: newGMThreadMessage.tsSent,
@@ -546,9 +567,31 @@ export default function Home(props: HomeProps) {
     useEffect(() => {
         if (currentThreadChatId !== -1) {
             setCurrentThreadChatId(currentThreadChatId)
+            if (currentThreadChat !== undefined) {
+                const isDmCode: string = (currentThreadChat.isDm) ? "0" : "1";
+                setCurrentForeignThreadId(`${isDmCode}-${currentThreadChatId}-${currentThreadChat.threadId}`)
+            }
         }
     }, [currentThreadChat]);
 
+    // useEffect(() => {
+    //     console.log("currentForeignThreadId:", currentForeignThreadId)
+    // }, [currentForeignThreadId])
+
+    useEffect(() => {
+        if (currentProject && currentPreviewTaskId !== -1) {
+            (async () => {
+                const loadedTask: PreviewTaskProps[] = await loadSpecificTask({
+                    myself: myself,
+                    projectId: currentProject.projectId,
+                    taskId: currentPreviewTaskId,
+                    accessToken: accessToken || ""
+                });
+                setCurrentPreviewTask(loadedTask[0])
+                setIsTaskContentVisible(true)
+            })();
+        }
+    }, [currentPreviewTaskId])
 
 
     ////////////////////////////////////////////////////////////////////
@@ -599,7 +642,7 @@ export default function Home(props: HomeProps) {
     return (
         <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
 
-            <Sidebar myself={myself} setMyself={setMyself} />
+            <Sidebar myself={myself} setMyself={setMyself} setOpeningService={setOpeningService} />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
                 <Panel id={'1'} order={1} minSize={10} maxSize={30}>
@@ -652,7 +695,6 @@ export default function Home(props: HomeProps) {
                 />
 
                 {isTaskContentVisible && currentThreadChat !== undefined && (<>
-
                     <Panel id={'2'} order={2} minSize={25} maxSize={70}>
                         <Box
                             sx={{
@@ -671,6 +713,8 @@ export default function Home(props: HomeProps) {
                                 setIsThreadVisible={setIsThreadVisible}
                                 currentThreadChatId={currentThreadChatId}
                                 setIsTaskContentVisible={setIsTaskContentVisible}
+                                setIsOpeningTask={setIsOpeningTask}
+                                setIsCreatingTask={setIsCreatingTask}
                             />
                         </Box>
                     </Panel>
@@ -684,40 +728,111 @@ export default function Home(props: HomeProps) {
                         className="chat-resize-handle"
                     />
 
-                    <Panel id={'3'} order={3} minSize={25} maxSize={70}>
-                        <Box
-                            sx={{
-                                px: { xs: 1, md: 2 },
-                                pt: {
-                                    xs: 'calc(12px + var(--Header-height))',
-                                    sm: 'calc(12px + var(--Header-height))',
-                                    md: 2,
-                                },
-                                pb: { xs: 2, sm: 2, md: 3 },
-                                flex: 1,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                minWidth: 0,
-                                height: '100dvh',
-                                gap: 1,
-                                ml: '1px',
-                                boxShadow: '0 0 0 1px grey'
-                            }}
-                        >
-                            <TaskContent setIsTaskContentVisible={setIsTaskContentVisible} />
-                        </Box>
-                    </Panel>
+                    {isOpeningTask && currentPreviewTask && (
+                        <>
+                            <Panel id={'3'} order={3} minSize={35} maxSize={70}>
+                                <Box
+                                    sx={{
+                                        px: { xs: 1, md: 2 },
+                                        pt: {
+                                            xs: 'calc(12px + var(--Header-height))',
+                                            sm: 'calc(12px + var(--Header-height))',
+                                            md: 2,
+                                        },
+                                        pb: { xs: 2, sm: 2, md: 3 },
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        minWidth: 0,
+                                        height: '100dvh',
+                                        gap: 1,
+                                        ml: '1px',
+                                        boxShadow: '0 0 0 1px grey'
+                                    }}
+                                >
+                                    <TaskPreviewFromThread
+                                        myself={myself}
+                                        currentPreviewTask={currentPreviewTask}
+                                        setOpenCreateProject={setOpenCreateProject}
+                                        setOpenCreateTag={setOpenCreateTag}
+                                        setIsOpeningTask={setIsOpeningTask}
+                                        setIsCreatingTask={setIsCreatingTask}
+                                        isNewProjectCreated={isNewProjectCreated}
+                                        isNewTagCreated={isNewTagCreated}
+                                    />
+                                </Box>
+                            </Panel>
+                        </>
+                    )}
+
+                    {isCreatingTask && (
+                        <>
+                            <Panel id={'4'} order={4} minSize={35} maxSize={70}>
+                                <Box
+                                    sx={{
+                                        px: { xs: 1, md: 2 },
+                                        pt: {
+                                            xs: 'calc(12px + var(--Header-height))',
+                                            sm: 'calc(12px + var(--Header-height))',
+                                            md: 2,
+                                        },
+                                        pb: { xs: 2, sm: 2, md: 3 },
+                                        flex: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        minWidth: 0,
+                                        height: '100dvh',
+                                        gap: 1,
+                                        ml: '1px',
+                                        boxShadow: '0 0 0 1px grey'
+                                    }}
+                                >
+                                    <CreateTaskFromThread
+                                        myself={myself}
+                                        threadId={currentForeignThreadId}
+                                        setIsTaskContentVisible={setIsTaskContentVisible}
+                                        setIsCreatingTask={setIsCreatingTask}
+                                        setIsOpeningTask={setIsOpeningTask}
+                                        setOpenCreateProject={setOpenCreateProject}
+                                        setOpenCreateTag={setOpenCreateTag}
+                                        setCurrentProject={setCurrentProject}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        isNewProjectCreated={isNewProjectCreated}
+                                        isNewTagCreated={isNewTagCreated}
+                                    />
+                                </Box>
+                            </Panel>
+                        </>
+                    )}
+
+                    {/* Modal for creating a new project */}
+                    <CreateProjectModal
+                        myself={myself}
+                        openCreateProject={openCreateProject}
+                        setOpenCreateProject={setOpenCreateProject}
+                        setCurrentProject={setCurrentProject}
+                        setIsNewProjectCreated={setIsNewProjectCreated}
+                    />
+
+                    {/* Modal for creating a new tag */}
+                    <CreateTagModal
+                        myself={myself}
+                        currentProject={currentProject}
+                        openCreateTag={openCreateTag}
+                        setOpenCreateTag={setOpenCreateTag}
+                        setIsNewTagCreated={setIsNewTagCreated}
+                    />
                 </>)}
 
 
                 {(!isTaskContentVisible || currentThreadChat === undefined) && (<>
-                    <Panel id={'4'} order={4} minSize={25} maxSize={90}>
+                    <Panel id={'5'} order={5} minSize={25} maxSize={90}>
                         <PanelGroup autoSaveId="conditional" direction="vertical">
                             {isSubChatVisible && (
                                 <>
                                     <Panel
-                                        id={'5'}
-                                        order={5}
+                                        id={'6'}
+                                        order={6}
                                         minSize={30}
                                         maxSize={80}
                                         onResize={setSubChatPanelSize}
@@ -747,8 +862,8 @@ export default function Home(props: HomeProps) {
                                 </>
                             )}
                             <Panel
-                                id={'6'}
-                                order={6}
+                                id={'7'}
+                                order={7}
                                 minSize={30}
                                 maxSize={80}
                                 onResize={setMainChatPanelSize}
@@ -783,7 +898,7 @@ export default function Home(props: HomeProps) {
                                 className="chat-resize-handle"
                             />
 
-                            <Panel id={'7'} order={7} minSize={25} maxSize={70}>
+                            <Panel id={'8'} order={8} minSize={25} maxSize={70}>
                                 <Box
                                     sx={{
                                         height: '100%',
@@ -801,6 +916,8 @@ export default function Home(props: HomeProps) {
                                         setIsThreadVisible={setIsThreadVisible}
                                         currentThreadChatId={currentThreadChatId}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
+                                        setIsOpeningTask={setIsOpeningTask}
+                                        setIsCreatingTask={setIsCreatingTask}
                                     />
                                 </Box>
                             </Panel>
