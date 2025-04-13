@@ -57,7 +57,7 @@ function App() {
   const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
   // {1: Chat, 2: Task}
-  const [openingService, setOpeningService] = useState<number>(1);
+  const [openingService, setOpeningService] = useState<number>(2);
 
   return (
     isLoading || currentMainChat === undefined ? (

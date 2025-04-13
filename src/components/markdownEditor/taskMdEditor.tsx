@@ -17,23 +17,55 @@ import { useColorScheme } from '@mui/joy/styles';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import SendIcon from '@mui/icons-material/Send';
+import { Socket } from "socket.io-client";
+import {
+  UserProps,
+  TaskCommentProps
+} from "../../types";
+
+function getCurrentTimestamp() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 
 type MarkdownEditorProps = {
+  myself: UserProps;
+  socket: Socket;
+  projectId: number;
+  taskId: number;
   content: string;
   setBody: (text: string) => void;
   height: number;
   mdMode: string;
+  sendMode: boolean;
   isTaskBody: boolean;
   setTaskUpdate: (value: boolean) => void;
+  taskComments: TaskCommentProps[];
+  setTaskComments: (value: TaskCommentProps[]) => void;
 };
 
 export const MarkdownEditor = ({
+  myself,
+  socket,
+  projectId,
+  taskId,
   content,
   setBody,
   height,
   mdMode,
+  sendMode,
   isTaskBody,
-  setTaskUpdate
+  setTaskUpdate,
+  taskComments,
+  setTaskComments
 }: MarkdownEditorProps) => {
   const { mode } = useColorScheme();
   const _className: string = `markdown-editor-${mode}`
@@ -42,6 +74,50 @@ export const MarkdownEditor = ({
   const boxRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
+
+  const SendButton = () => {
+    return (
+      (sendMode) ?
+        <IconButton
+          component='a'
+          variant="plain"
+          sx={{
+            color: 'rgb(217, 217, 217)',
+            paddingRight: '10px',
+            "&:hover": {
+              backgroundColor: "transparent",
+              color: "white",
+              fontWeight: "bold"
+            },
+          }}
+          onClick={
+            () => {
+              if (content.trim()) {
+                socket.emit("task_comment", {
+                  project_id: projectId,
+                  task_id: taskId,
+                  comment_body: content
+                }, (ack: any) => {
+                  setBody("")
+                  setTaskComments([...taskComments, {
+                    taskId: taskId,
+                    senderId: myself.userId,
+                    senderName: myself.userName,
+                    commentId: taskComments.length + 1,
+                    commentBody: content,
+                    sentAt: getCurrentTimestamp(),
+                  }])
+                }
+                )
+              }
+            }
+          }>
+          <SendIcon sx={{ color: 'rgb(217, 217, 217)' }} />
+          &nbsp; Send
+        </IconButton>
+        : ""
+    );
+  };
 
   const EditButton = () => {
     const { preview, dispatch } = useContext(EditorContext);
@@ -178,6 +254,11 @@ export const MarkdownEditor = ({
     icon: <UnorderedListIcon color="rgb(217, 217, 217)" />,
   };
 
+  const customSendCommand = {
+    name: "custom-preview",
+    keyCommand: "custom-preview",
+    icon: <SendButton />,
+  };
 
   useEffect(() => {
     if (selectedEmoji !== null) {
@@ -237,6 +318,7 @@ export const MarkdownEditor = ({
           customEmojiCommand,
         ]}
         extraCommands={[
+          customSendCommand
         ]}
         preview={(mdMode === "preview" ? "preview" : "edit")}
         previewOptions={{

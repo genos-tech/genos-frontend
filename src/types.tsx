@@ -140,6 +140,15 @@ export type TaskPriorityProps = {
     textColor: string,
 }
 
+export type TaskCommentProps = {
+    taskId: number,
+    senderId: string,
+    senderName: string,
+    commentId: number,
+    commentBody: string,
+    sentAt: string,
+}
+
 export type TaskEffortLevelProps = {
     code: number,
     level: string,

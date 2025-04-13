@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from "react";
 import { alpha } from '@mui/system';
+import { io, Socket } from "socket.io-client";
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Chip from '@mui/joy/Chip';
@@ -30,6 +31,7 @@ import {
     TaskEffortLevelProps,
     AttachmentFileProps,
     TagListProps,
+    TaskCommentProps
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
@@ -39,14 +41,16 @@ import updateSpecificTask from '../backendOperation/updateSpecificTask';
 import loadTeamProjects from '../backendOperation/loadTeamProjects';
 import loadTeamMembers from '../backendOperation/loadTeamMembers';
 import loadProjectTags from '../backendOperation/loadProjectTags';
+import loadTaskComments from '../backendOperation/loadTaskComments';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
-import ListItemDecorator from '@mui/joy/ListItemDecorator';
 import ListItemContent from '@mui/joy/ListItemContent';
+
+const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
 const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
@@ -55,7 +59,6 @@ const statuses: TaskStatusProps[] = [
     { code: 0, status: "Closed", color: "#1dc200", textColor: "white" },
     { code: 0, status: "Deleted", color: "#ff2323", textColor: "white" },
 ]
-
 
 const priorities: TaskPriorityProps[] = [
     { code: 0, priority: 'Low', color: '#0044c2', textColor: "white" },
@@ -99,6 +102,25 @@ export default function taskPreview(props: TaskContentProps) {
         setOpenCreateTag
     } = props
     const { accessToken } = useAuth();
+
+    const socket: Socket = io(ws_url, {
+        reconnection: true,          // Enable reconnection
+        reconnectionAttempts: 5,     // Try to reconnect 5 times
+        reconnectionDelay: 1000,     // Wait 1 second before reconnecting
+        reconnectionDelayMax: 5000,  // Max delay between reconnection attempts
+        timeout: 10000,               // Timeout for the connection attempt
+        withCredentials: true,
+        query: {
+            teamId: localStorage.getItem("teamId"),
+            userId: localStorage.getItem("userId"),
+            userName: localStorage.getItem("userName"),
+            userEmail: localStorage.getItem("userEmail"),
+        },
+        extraHeaders: {
+            Authorization: accessToken || ""
+        },
+    });
+
     const [comment, setComment] = useState("");
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
     const [taskUpdated, setTaskUpdate] = useState(false);
@@ -303,6 +325,38 @@ export default function taskPreview(props: TaskContentProps) {
             }
         })();
     }, [])
+
+    // Get Task Comments
+    const [taskComments, setTaskComments] = useState<TaskCommentProps[]>([]);
+    useEffect(() => {
+        (async () => {
+            const loadedTaskComments: TaskCommentProps[] = await loadTaskComments({
+                myself: myself, taskId: Number(currentPreviewTask.id), accessToken: accessToken || ""
+            });
+            if (loadedTaskComments.length > 0) {
+                setTaskComments(loadedTaskComments);
+            } else {
+                setTaskComments([]);
+            }
+        })();
+    }, [currentPreviewTask])
+
+    // Web Socket handler
+    useEffect(() => {
+        socket.on("connect", () => {
+            // console.log("WS connected from task home")
+        });
+        socket.on("auth_error", (data) => {
+            console.error("Authentication Error:", data.message);
+        });
+        socket.on("message", (message) => {
+            // console.log("task_comment:", message)
+        })
+        return () => {
+            socket.off("message");
+            socket.off("connect");
+        };
+    }, [accessToken, currentTaskContent]);
 
 
     return (
@@ -944,12 +998,19 @@ export default function taskPreview(props: TaskContentProps) {
                 <Box sx={{ mt: 2 }}>
                     <div className="md-content">
                         <MarkdownEditor
+                            myself={myself}
+                            socket={socket}
+                            projectId={currentProject.projectId}
+                            taskId={Number(currentTaskContent.id)}
                             content={body || ""}
                             setBody={setBody}
                             height={getMdHeight(body || "")}
                             mdMode={"preview"}
+                            sendMode={false}
                             isTaskBody={true}
                             setTaskUpdate={setTaskUpdate}
+                            taskComments={taskComments}
+                            setTaskComments={setTaskComments}
                         />
                     </div>
                 </Box>
@@ -991,17 +1052,24 @@ export default function taskPreview(props: TaskContentProps) {
                 </Typography>
 
                 <Box sx={{ mb: 1 }}>
-                    <TaskCommentBubble />
+                    <TaskCommentBubble taskComments={taskComments} />
                 </Box>
 
                 <div className="md-content">
                     <MarkdownEditor
+                        myself={myself}
+                        socket={socket}
+                        projectId={currentProject.projectId}
+                        taskId={Number(currentTaskContent.id)}
                         content={comment}
                         setBody={setComment}
                         height={200}
                         mdMode={"edit"}
+                        sendMode={true}
                         isTaskBody={false}
                         setTaskUpdate={setTaskUpdate}
+                        taskComments={taskComments}
+                        setTaskComments={setTaskComments}
                     />
                 </div>
             </Box>

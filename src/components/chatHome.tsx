@@ -574,9 +574,9 @@ export default function Home(props: HomeProps) {
         }
     }, [currentThreadChat]);
 
-    useEffect(() => {
-        console.log("currentForeignThreadId:", currentForeignThreadId)
-    }, [currentForeignThreadId])
+    // useEffect(() => {
+    //     console.log("currentForeignThreadId:", currentForeignThreadId)
+    // }, [currentForeignThreadId])
 
     useEffect(() => {
         if (currentProject && currentPreviewTaskId !== -1) {

@@ -195,6 +195,7 @@ export const MarkdownEditor = ({
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
+                    taskId: thread.taskId
                   }],
                   TSLastMessage: getCurrentTimestamp(),
                 };
@@ -208,6 +209,7 @@ export const MarkdownEditor = ({
                   content: messageContent,
                   sender: myself,
                   tsSent: getCurrentTimestamp(),
+                  taskId: thread.taskId
                 };
 
                 if (thread.isDm) {
@@ -420,6 +422,7 @@ export const MarkdownEditor = ({
                       content: messageContent,
                       sender: myself,
                       tsSent: getCurrentTimestamp(),
+                      taskId:  thread.taskId
                     }],
                     TSLastMessage: getCurrentTimestamp(),
                   };
@@ -433,6 +436,7 @@ export const MarkdownEditor = ({
                     content: messageContent,
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
+                    taskId: thread.taskId
                   };
 
                   if (thread.isDm) {
