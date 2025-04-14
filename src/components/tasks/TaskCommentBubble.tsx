@@ -36,7 +36,7 @@ export default function TaskCommentBubble(props: TaskCommentBubbleProps) {
           ref={boxRef}
           className="custom-scrollbar"
           sx={{
-            height: Math.min(taskComments.length * 100, 300),
+            height: Math.min(taskComments.length * 120, 300),
             pb: '10px',
             overflowY: 'scroll',
             overflowX: 'hidden'

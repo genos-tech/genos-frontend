@@ -56,7 +56,7 @@ export default function SubMessagesPaneHeader(props: MessagesPaneHeaderProps) {
 
         <div>
           {subChat.isDm ? (
-            <Avatar src={subChat.CGAvatarImgPath} />
+            <Avatar src={subChat.CGAvatarImgPath}>{subChat.chatName[0]}</Avatar>
           ) : (
             <Avatar >
               <GroupsIcon sx={{ fontSize: 32 }} />

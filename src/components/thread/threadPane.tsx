@@ -8,7 +8,8 @@ import { Socket } from "socket.io-client";
 import ThreadPaneHeader from './threadPaneHeader';
 import {
   UserProps,
-  ThreadProps
+  ThreadProps,
+  PreviewTaskProps
 } from '../../types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { MarkdownEditor } from "../markdownEditor/threadMdEditor";
@@ -23,6 +24,7 @@ type MessagesPaneProps = {
   setIsTaskContentVisible: (value: boolean) => void;
   setIsOpeningTask: (value: boolean) => void;
   setIsCreatingTask: (value: boolean) => void;
+  currentPreviewTask?: PreviewTaskProps;
 };
 
 
@@ -36,7 +38,8 @@ export default function ThreadPane(props: MessagesPaneProps) {
     currentThreadChatId,
     setIsTaskContentVisible,
     setIsOpeningTask,
-    setIsCreatingTask
+    setIsCreatingTask,
+    currentPreviewTask
   } = props;
 
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
@@ -138,76 +141,80 @@ export default function ThreadPane(props: MessagesPaneProps) {
 
 
   return (
-    <div
-      onDrop={handleDrop}
-      onDragOver={(e) => e.preventDefault()}
-      style={{
-        width: "100%",
-        height: "100%",
-      }}
-    >
-      <Sheet
-        ref={containerRef}
-        sx={{
-          height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
-          display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: 'background.body',
+    <>
+      <div
+        onDrop={handleDrop}
+        onDragOver={(e) => e.preventDefault()}
+        style={{
+          width: "100%",
+          height: "100%",
         }}
       >
-        <ThreadPaneHeader
-          myself={myself}
-          thread={thread}
-          setCurrentThreadChat={setCurrentThreadChat}
-          setIsThreadVisible={setIsThreadVisible}
-          setIsTaskContentVisible={setIsTaskContentVisible}
-          setIsOpeningTask={setIsOpeningTask}
-          setIsCreatingTask={setIsCreatingTask}
-        />
-
-        <Box sx={{ px: 0.3, my: 0.2 }}>
-          <Virtuoso
-            ref={virtuosoRef}
-            className="custom-scrollbar"
-            style={{ height: listHeight }}
-            totalCount={threadMessages.length}
-            initialTopMostItemIndex={threadMessages.length - 1}
-            atTopThreshold={64}
-            atTopStateChange={handleAtTop}
-            atBottomThreshold={128}
-            atBottomStateChange={handleAtBottom}
-            itemContent={(index) => {
-              const message = threadMessages[index];
-              const isYou = myself.userId === message.sender.userId;
-              return (
-                <div>
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
-                  >
-                    <ThreadBubble
-                      variant={isYou ? 'sent' : 'received'}
-                      {...message} />
-                  </Stack>
-                </div>
-              );
-            }}
+        <Sheet
+          ref={containerRef}
+          sx={{
+            height: { xs: 'calc(100dvh - var(--Header-height))', md: '100dvh' },
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: 'background.body',
+          }}
+        >
+          <ThreadPaneHeader
+            myself={myself}
+            thread={thread}
+            setCurrentThreadChat={setCurrentThreadChat}
+            setIsThreadVisible={setIsThreadVisible}
+            setIsTaskContentVisible={setIsTaskContentVisible}
+            setIsOpeningTask={setIsOpeningTask}
+            setIsCreatingTask={setIsCreatingTask}
+            currentPreviewTask={currentPreviewTask}
           />
-        </Box>
 
-        <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-          <div className="md-content">
-            <MarkdownEditor myself={myself}
-              socket={socket}
-              thread={thread}
-              messageContent={content}
-              setContent={setContent}
-              setCurrentThreadChat={setCurrentThreadChat} />
-          </div>
-        </Box>
+          <Box sx={{ px: 0.3, my: 0.2 }}>
+            <Virtuoso
+              ref={virtuosoRef}
+              className="custom-scrollbar"
+              style={{ height: listHeight }}
+              totalCount={threadMessages.length}
+              initialTopMostItemIndex={threadMessages.length - 1}
+              atTopThreshold={64}
+              atTopStateChange={handleAtTop}
+              atBottomThreshold={128}
+              atBottomStateChange={handleAtBottom}
+              itemContent={(index) => {
+                const message = threadMessages[index];
+                const isYou = myself.userId === message.sender.userId;
+                return (
+                  <div>
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
+                    >
+                      <ThreadBubble
+                        myself={myself}
+                        variant={isYou ? 'sent' : 'received'}
+                        {...message} />
+                    </Stack>
+                  </div>
+                );
+              }}
+            />
+          </Box>
 
-      </Sheet>
-    </div>
+          <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+            <div className="md-content">
+              <MarkdownEditor myself={myself}
+                socket={socket}
+                thread={thread}
+                messageContent={content}
+                setContent={setContent}
+                setCurrentThreadChat={setCurrentThreadChat} />
+            </div>
+          </Box>
+
+        </Sheet>
+      </div>
+    </>
   );
 }

@@ -373,7 +373,7 @@ export default function taskPreview(props: TaskContentProps) {
     const updateTagOptions = () => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags({
-                myself: myself, projectId: currentProject.projectId, accessToken: accessToken || ""
+                myself: myself, projectId: currentTaskContent.project.projectId, accessToken: accessToken || ""
             });
             if (loadedProjectTags.length > 0) {
                 setProjectTags(loadedProjectTags);
@@ -407,7 +407,11 @@ export default function taskPreview(props: TaskContentProps) {
                             key={currentPreviewTask.status.status}
                             size="lg"
                             variant="soft"
-                            sx={{ backgroundColor: alpha(currentPreviewTask.status.color, 0.80), color: currentPreviewTask.status.textColor, fontWeight: 'bold' }}
+                            sx={{
+                                backgroundColor: alpha(currentPreviewTask.status.color, 0.80),
+                                color: currentPreviewTask.status.textColor,
+                                fontWeight: 'bold'
+                            }}
                         >
                             {currentPreviewTask.status.status}
                         </Chip>
@@ -415,7 +419,7 @@ export default function taskPreview(props: TaskContentProps) {
                             key={'taskTitle'}
                             variant='soft'
                             placeholder="Task Title"
-                            defaultValue={taskTitle || ""}
+                            value={taskTitle || ""}
                             onChange={(e) => {
                                 setTaskTitle(e.target.value)
                             }}
@@ -441,12 +445,13 @@ export default function taskPreview(props: TaskContentProps) {
                     </IconButton>
                     <Dropdown>
                         <MenuButton
+                            size='sm'
                             slots={{ root: IconButton }}
                             slotProps={{ root: { color: 'neutral' } }}
                         >
                             <MoreVert />
                         </MenuButton>
-                        <Menu>
+                        <Menu size="sm">
                             <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
                             <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
                         </Menu>
@@ -472,7 +477,7 @@ export default function taskPreview(props: TaskContentProps) {
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={currentTaskContent.assignee}
+                                value={currentTaskContent.assignee}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
@@ -496,7 +501,7 @@ export default function taskPreview(props: TaskContentProps) {
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={currentTaskContent.reporter}
+                                value={currentTaskContent.reporter}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
@@ -521,7 +526,7 @@ export default function taskPreview(props: TaskContentProps) {
                                     <Autocomplete
                                         options={teamProjects}
                                         getOptionLabel={(option) => option.projectName}
-                                        defaultValue={currentTaskContent.project}
+                                        value={currentTaskContent.project}
                                         isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
                                         onChange={(event, value) => {
                                             if (value !== null) {
@@ -550,7 +555,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         multiple
                                         options={projectTags}
                                         getOptionLabel={(option) => option.tagName}
-                                        defaultValue={currentTaskContent.tags}
+                                        value={currentTaskContent.tags}
                                         isOptionEqualToValue={(option, value) => option.tagName === value.tagName}
                                         limitTags={4}
                                         renderTags={(tags, getTagProps) =>
@@ -613,7 +618,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         multiple
                                         options={priorities}
                                         getOptionLabel={(option) => option.priority}
-                                        defaultValue={
+                                        value={
                                             (currentTaskContent.priority.priority !== null)
                                                 ? [currentTaskContent.priority]
                                                 : []
@@ -677,7 +682,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         multiple
                                         options={effortLevels}
                                         getOptionLabel={(option) => option.level}
-                                        defaultValue={
+                                        value={
                                             (currentTaskContent.effortLevel.level !== null)
                                                 ? [currentTaskContent.effortLevel]
                                                 : []
@@ -741,7 +746,7 @@ export default function taskPreview(props: TaskContentProps) {
                                 multiple
                                 options={statuses}
                                 getOptionLabel={(option) => option.status}
-                                defaultValue={
+                                value={
                                     (currentTaskContent.status.status !== null)
                                         ? [currentTaskContent.status]
                                         : []
@@ -769,7 +774,11 @@ export default function taskPreview(props: TaskContentProps) {
                                                 key={option.status} // pass the key directly
                                                 variant="soft"
                                                 endDecorator={<Close />}
-                                                sx={{ backgroundColor: alpha(option.color, 0.80), color: option.textColor, fontWeight: 'bold' }}
+                                                sx={{
+                                                    backgroundColor: alpha(option.color, 0.80),
+                                                    color: option.textColor,
+                                                    fontWeight: 'bold'
+                                                }}
                                             >
                                                 {option.status}
                                             </Chip>
@@ -799,7 +808,7 @@ export default function taskPreview(props: TaskContentProps) {
                                 color="neutral"
                                 variant="soft"
                                 size="sm"
-                                defaultValue={(currentPreviewTask?.dueDate) ? currentPreviewTask?.dueDate : ""}
+                                value={(currentPreviewTask?.dueDate) ? currentPreviewTask?.dueDate : ""}
                                 onChange={(e) => {
                                     (async () => {
                                         setCurrentTaskContent(prevState => ({
@@ -826,7 +835,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         key={'prTitle'}
                                         size='sm'
                                         placeholder="PR Title"
-                                        defaultValue={prTitle}
+                                        value={prTitle}
                                         onChange={(e) => {
                                             setPRTitle(e.target.value)
                                         }}
@@ -836,7 +845,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         key={'prUrl'}
                                         size='sm'
                                         placeholder="PR URL"
-                                        defaultValue={prUrl}
+                                        value={prUrl}
                                         onChange={(e) => setPRUrl(e.target.value)}
                                         type="url"
                                         sx={{ width: '150px', height: '30px' }}
@@ -896,7 +905,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         key={'title'}
                                         size='sm'
                                         placeholder="Title"
-                                        defaultValue={title}
+                                        value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         sx={{ width: '150px', height: '30px' }}
                                     />
@@ -904,7 +913,7 @@ export default function taskPreview(props: TaskContentProps) {
                                         key={'url'}
                                         size='sm'
                                         placeholder="URL"
-                                        defaultValue={url}
+                                        value={url}
                                         onChange={(e) => setUrl(e.target.value)}
                                         type="url"
                                         sx={{ width: '150px', height: '30px' }}

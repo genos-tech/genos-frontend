@@ -193,10 +193,11 @@ export default function Sidebar(props: SidebarProps) {
 
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
         <Avatar
-          variant="outlined"
+          variant="solid"
           size="sm"
-          src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286"
-        />
+        >
+          {myself.userName[0]}
+        </Avatar>
       </Box>
     </Sheet>
   );

@@ -171,9 +171,20 @@ export default function ChatsPane(props: ChatsPaneProps) {
   const moveToDMChat = async (
     chatId: number,
     chatName: string,
+    dmPartnerUserId: string,
     setCurrentMainChat: (chat: ChatProps) => void
   ): Promise<string> => {
     return new Promise((resolve, reject) => {
+
+      if (chatId === -1) {
+        socket.emit("join", {
+          joiningCGId: -1, // dm_id or gm_id
+          joiningCGName: chatName, // dm_name or gm_name
+          isDm: true,
+          dmPartnerUserId: dmPartnerUserId,
+        })
+      }
+
       const fetchSpecificDMMessagesWorker = new FetchSpecificDMMessagesWorker();
       fetchSpecificDMMessagesWorker.postMessage({
         chatId: chatId,
@@ -322,7 +333,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
         });
       } else {
         if (isDm) {
-          moveToDMChat(chatId, chatName, setCurrentMainChat)
+          moveToDMChat(chatId, chatName, dmPartnerUserId, setCurrentMainChat)
         } else {
           moveToGMChat(chatId, chatName, setCurrentMainChat)
         }
@@ -346,12 +357,13 @@ export default function ChatsPane(props: ChatsPaneProps) {
         isDm: isDm,
         dmPartnerUserId: value.dmPartnerUserId,
       }, (ack: any) => {
-        moveToSelectedChat(
-          value.id,
-          value.name,
-          (value.type === "Group") ? Boolean(false) : Boolean(true),
-          value.dmPartnerUserId
-        )
+        if (Number(value.id) !== -1)
+          moveToSelectedChat(
+            value.id,
+            value.name,
+            (value.type === "Group") ? Boolean(false) : Boolean(true),
+            value.dmPartnerUserId
+          )
       }
       );
     }

@@ -1,15 +1,17 @@
+import { alpha } from '@mui/system';
 import {
   Tooltip,
   Stack,
   Typography,
   IconButton,
-  Avatar,
 } from '@mui/joy';
+import Chip from '@mui/joy/Chip';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ReplyIcon from '@mui/icons-material/Reply';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
-import { ThreadProps, UserProps } from '../../types';
+import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
+import { ThreadProps, UserProps, PreviewTaskProps } from '../../types';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;
@@ -19,6 +21,7 @@ type MessagesPaneHeaderProps = {
   setIsTaskContentVisible: (value: boolean) => void;
   setIsOpeningTask: (value: boolean) => void;
   setIsCreatingTask: (value: boolean) => void;
+  currentPreviewTask?: PreviewTaskProps;
 };
 
 
@@ -29,7 +32,8 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
     setIsThreadVisible,
     setIsTaskContentVisible,
     setIsOpeningTask,
-    setIsCreatingTask } = props;
+    setIsCreatingTask,
+    currentPreviewTask } = props;
   const isYou = myself.userId === thread.dmPartnerUserId;
 
   const dummyThreadChat: ThreadProps = {
@@ -63,9 +67,15 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
         sx={{ alignItems: 'center' }}
       >
 
-        <Avatar sx={{ backgroundColor: 'transparent' }}>
-          <ReplyIcon sx={{ fontSize: 30 }} />
-        </Avatar>
+        <Chip
+          size="lg"
+          variant="solid"
+          color="neutral"
+          startDecorator={<ReplyIcon />}
+          sx={{ borderRadius: '4px' }}
+        >
+          Thread
+        </Chip>
 
         <div>
           <Typography
@@ -80,9 +90,9 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
       </Stack>
 
       <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
-        {/* {thread.taskId === null && (
+        {((currentPreviewTask === undefined) || (currentPreviewTask && currentPreviewTask.id === "null")) && (
           <>
-            <Tooltip title="Create Task" size='sm'>
+            <Tooltip title="New Task" size='sm'>
               <IconButton
                 component='a'
                 size="md"
@@ -99,70 +109,54 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
           </>
         )}
 
-        {thread.taskId !== null && (
+        {currentPreviewTask && currentPreviewTask.id !== "null" && (
           <>
             <Tooltip title="Open Task" size='sm'>
               <IconButton
-                component='a'
-                size="md"
-                variant="plain"
+                component='button'
+                size="sm"
+                variant="soft"
                 color="neutral"
                 onClick={() => {
                   setIsTaskContentVisible(true)
                   setIsOpeningTask(true)
-                }
-                }
+                }}
+                sx={{ pl: '3px', pr: '5px' }}
               >
-                <MenuOpenIcon />
+                <AssignmentRoundedIcon />
+                <Chip
+                  key={currentPreviewTask.status.status}
+                  size="sm"
+                  variant="soft"
+                  sx={{
+                    backgroundColor: alpha(currentPreviewTask.status.color, 0.80),
+                    color: currentPreviewTask.status.textColor,
+                    fontWeight: 'bold',
+                    ml: '5px'
+                  }}
+                >
+                  {currentPreviewTask.status.status}
+                </Chip>
               </IconButton>
             </Tooltip>
           </>
-        )} */}
+        )}
 
-        <Tooltip title="Create Task" size='sm'>
+        <Tooltip title="Close Thread" size='sm'>
           <IconButton
-            component='a'
-            size="md"
+            size="sm"
             variant="plain"
             color="neutral"
             onClick={() => {
-              setIsTaskContentVisible(true)
-              setIsCreatingTask(true)
-            }}
-          >
-            <PlaylistAddIcon />
-          </IconButton>
-        </Tooltip>
-
-        <Tooltip title="Open Task" size='sm'>
-          <IconButton
-            component='a'
-            size="md"
-            variant="plain"
-            color="neutral"
-            onClick={() => {
-              setIsTaskContentVisible(true)
-              setIsOpeningTask(true)
+              setIsThreadVisible(false);
+              setIsTaskContentVisible(false);
+              setCurrentThreadChat(dummyThreadChat);
             }
             }
           >
-            <MenuOpenIcon />
+            <CancelIcon />
           </IconButton>
         </Tooltip>
-
-        <IconButton
-          size="sm"
-          variant="plain"
-          color="neutral"
-          onClick={() => {
-            setIsThreadVisible(false);
-            setIsTaskContentVisible(false);
-            setCurrentThreadChat(dummyThreadChat);
-          }
-          }
-        >
-          <CancelIcon />
-        </IconButton>
       </Stack>
 
     </Stack>

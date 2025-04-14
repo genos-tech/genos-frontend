@@ -63,7 +63,7 @@ export default function MessagesPaneHeader(props: MessagesPaneHeaderProps) {
 
         <div>
           {chat.isDm ? (
-            <Avatar src={chat.CGAvatarImgPath} />
+            <Avatar src={chat.CGAvatarImgPath}>{chat.chatName[0]}</Avatar>
           ) : (
             <Avatar >
               <GroupsIcon sx={{ fontSize: 32 }} />

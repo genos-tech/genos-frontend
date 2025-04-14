@@ -175,10 +175,13 @@ export type CreateTaskProps = {
     body: string,
     assignee: UserProps,
     reporter: UserProps,
+    chatType: string | null,
+    chatId: number | null,
+    threadId: number | null,
     dueDate: string,
-    status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
-    priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
-    effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
+    status: TaskStatusProps,
+    priority: TaskPriorityProps,
+    effortLevel: TaskEffortLevelProps,
     tags: TagListProps[],
     githubLink: {
         url: string,
@@ -201,10 +204,11 @@ export type PreviewTaskProps = {
     dueDate: string,
     createdDate: string,
     daysLeft: string,
-    status: TaskStatusProps, // {0: open, 1: wip, 2: close, 3: deleted}
-    priority: TaskPriorityProps, // {0: low, 1: medium, 2: high}
-    effortLevel: TaskEffortLevelProps, // {0: low, 1: medium, 2: high}
+    status: TaskStatusProps,
+    priority: TaskPriorityProps,
+    effortLevel: TaskEffortLevelProps,
     tags: TagListProps[],
+    concatTags: string,
     githubLink: {
         url: string,
         title: string
@@ -233,6 +237,7 @@ export type TaskTableProps = {
     parentTaskId: string,
     threadId: string,
     tags: TagListProps[],
+    concatTags: string,
     teamId: string,
     projectId: number
 }

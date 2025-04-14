@@ -8,7 +8,8 @@ import MessagesPaneHeader from './mainMessagesPaneHeader';
 import {
   ChatProps,
   UserProps,
-  ThreadProps
+  ThreadProps,
+  PreviewTaskProps
 } from '../../types';
 import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
@@ -28,6 +29,7 @@ type MessagesPaneProps = {
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
   currentMainChatId: number;
+  setCurrentPreviewTask: (value: PreviewTaskProps | undefined) => void;
 };
 
 export default function MessagesPane(props: MessagesPaneProps) {
@@ -44,7 +46,8 @@ export default function MessagesPane(props: MessagesPaneProps) {
     setIsThreadVisible,
     isSubChatVisible,
     setIsSubChatVisible,
-    currentMainChatId } = props;
+    currentMainChatId,
+    setCurrentPreviewTask } = props;
   const [chatMessages, setChatMessages] = useState(chat.messages);
   const [content, setContent] = useState("");
 
@@ -179,6 +182,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
                       {...message}
                       setIsThreadVisible={setIsThreadVisible}
                       setCurrentThreadChat={setCurrentThreadChat}
+                      setCurrentPreviewTask={setCurrentPreviewTask}
                     />
                   </Stack>
                 </div>

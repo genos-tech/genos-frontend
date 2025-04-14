@@ -21,12 +21,15 @@ import {
   ChatProps,
   MessageProps,
   ThreadProps,
-  ThreadMessageProps
+  ThreadMessageProps,
+  PreviewTaskProps
 } from '../../types';
 import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import FetchSpecificDMThreadMessagesWorker from "../../workers/fetchSpecificDMThreadMessagesWorker.ts?worker";
 import FetchSpecificGMThreadMessagesWorker from "../../workers/fetchSpecificGMThreadMessagesWorker.ts?worker";
+import loadSpecificTaskByThreadId from '../backendOperation/loadSpecificTaskByThreadId';
+import { useAuth } from "../../components/admin/AuthContext";
 
 function getCurrentTimestamp() {
   const now = new Date();
@@ -40,19 +43,9 @@ function getCurrentTimestamp() {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-type ChatBubbleProps = MessageProps & {
-  myself: UserProps;
-  variant: 'sent' | 'received';
-  chat: ChatProps;
-  socket: Socket;
-  setIsThreadVisible: (value: boolean) => void;
-  setCurrentThreadChat: (chat: ThreadProps) => void;
-};
-
 function extractHHMM(ts: string) {
   return ts.split(' ')[1].slice(0, 5);
 }
-
 
 const insertDMThreadMessage = async (
   threadName: string,
@@ -163,6 +156,16 @@ const insertGMThreadMessage = async (
   });
 };
 
+type ChatBubbleProps = MessageProps & {
+  myself: UserProps;
+  variant: 'sent' | 'received';
+  chat: ChatProps;
+  socket: Socket;
+  setIsThreadVisible: (value: boolean) => void;
+  setCurrentThreadChat: (value: ThreadProps) => void;
+  setCurrentPreviewTask: (value: PreviewTaskProps | undefined) => void;
+};
+
 export default function ChatBubble(props: ChatBubbleProps) {
   const {
     myself,
@@ -176,11 +179,29 @@ export default function ChatBubble(props: ChatBubbleProps) {
     sender,
     numReplies,
     setIsThreadVisible,
-    setCurrentThreadChat } = props;
+    setCurrentThreadChat,
+    setCurrentPreviewTask } = props;
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
   const _tsSent = extractHHMM(tsSent)
   const { mode } = useColorScheme();
+
+  const { accessToken } = useAuth();
+
+  // Load the thread task if exists
+  const loadTask = (threadId: number) => {
+    (async () => {
+      const chatType: string = (chat.isDm) ? "dm" : "gm"
+      const loadedTask: PreviewTaskProps[] = await loadSpecificTaskByThreadId({
+        myself: myself, chatType: chatType, chatId: chat.chatId, threadId: threadId, accessToken: accessToken || ""
+      });
+      if (loadedTask.length > 0) {
+        setCurrentPreviewTask(loadedTask[0]);
+      } else {
+        setCurrentPreviewTask(undefined)
+      }
+    })();
+  };
 
   return (
     <Box
@@ -254,6 +275,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
               <Stack direction="row" spacing={1.5}>
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
+                    chatName={sender.userName}
                     online={sender.online}
                     src={sender.avatarImgPath || ""}
                   />
@@ -286,6 +308,8 @@ export default function ChatBubble(props: ChatBubbleProps) {
                           component='a'
                           sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                           onClick={() => {
+                            loadTask(messageId);
+
                             // Show thread pane on the right side.
                             setIsThreadVisible(true);
 
@@ -381,6 +405,8 @@ export default function ChatBubble(props: ChatBubbleProps) {
                   size="sm"
                   variant="plain" // Removes background & border
                   onClick={() => {
+                    loadTask(messageId);
+
                     // Show thread pane on the right side.
                     setIsThreadVisible(true);
 
@@ -432,7 +458,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                   {/* TODO: read/unread for thread replies */}
                   {(numReplies == 1)
                     ? <Box sx={{ color: 'neutral.plainColor' }}>
-                      <CircleIcon sx={{ fontSize: 10 }} color="success" />
+                      <CircleIcon sx={{ fontSize: 10 }} color="primary" />
                       &nbsp;
                       {numReplies} reply
                     </Box>

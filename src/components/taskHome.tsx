@@ -35,6 +35,7 @@ import CircularProgress from '@mui/joy/CircularProgress';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import CreateTagModal from './tasks/modalCreateTag';
 import CreateProjectModal from './tasks/modalCreateProject';
+import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
 
 type TaskProps = {
     myself: UserProps;
@@ -46,14 +47,13 @@ export default function TaskHome(props: TaskProps) {
     const { myself, setMyself, setOpeningService } = props
     const { accessToken } = useAuth();
 
-
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
-    const [projectTasks, setProjectTasks] = useState<TaskTableProps[]>([]);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>();
+    const [projectTasks, setProjectTasks] = useState<TaskTableProps[]>([]);
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -101,6 +101,21 @@ export default function TaskHome(props: TaskProps) {
                     projectId: loadedTeamProjects[0].projectId,
                     projectName: loadedTeamProjects[0].projectName,
                 });
+
+                const loadTeamTaskWorker = new LoadTeamTaskWorker();
+                loadTeamTaskWorker.postMessage({ myself: myself, accessToken: accessToken });
+                loadTeamTaskWorker.onmessage = (event) => {
+                    if (event.data === "done") {
+                        fetchProjectTasks(loadedTeamProjects[0].projectId);
+                    } else {
+                        console.error("Filed initial team task loading");
+                    }
+                };
+
+                return () => {
+                    loadTeamTaskWorker.terminate();
+                };
+
             }
         })();
     }, [])
@@ -143,6 +158,7 @@ export default function TaskHome(props: TaskProps) {
                     taskId: currentPreviewTaskId,
                     accessToken: accessToken || ""
                 });
+
                 setCurrentPreviewTask(loadedTask[0])
                 setIsTaskContentVisible(true)
 
@@ -162,6 +178,7 @@ export default function TaskHome(props: TaskProps) {
                         parentTaskId: loadedTask[0].parentTaskId,
                         threadId: loadedTask[0].threadId,
                         tags: loadedTask[0].tags,
+                        concatTags: loadedTask[0].concatTags,
                         teamId: myself.teamId,
                         projectId: loadedTask[0].project.projectId
                     }])
@@ -310,7 +327,7 @@ export default function TaskHome(props: TaskProps) {
                                                 >
                                                     <MoreVert />
                                                 </MenuButton>
-                                                <Menu>
+                                                <Menu size="sm">
                                                     <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
                                                     <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
                                                 </Menu>
@@ -318,6 +335,7 @@ export default function TaskHome(props: TaskProps) {
                                         </Box>
                                     </Box>
                                     <TaskTable
+                                        myself={myself}
                                         projectTasks={projectTasks}
                                         setProjectTasks={setProjectTasks}
                                         setIsTaskContentVisible={setIsTaskContentVisible}

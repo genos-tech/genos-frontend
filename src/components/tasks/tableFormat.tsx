@@ -29,12 +29,6 @@ const getStatusOption = (value: string) => statusOptions.find((option) => option
 
 export const taskColumns: GridColDef[] = [
     {
-        field: 'id',
-        headerName: 'ID',
-        headerClassName: 'task-col--header',
-        width: 70,
-    },
-    {
         field: 'title',
         headerName: 'Title',
         headerClassName: 'task-col--header',
@@ -61,6 +55,35 @@ export const taskColumns: GridColDef[] = [
         ),
     },
     {
+        field: 'tags',
+        headerName: 'Tags',
+        headerClassName: 'task-col--header',
+        width: 100,
+        editable: false,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params: GridRenderCellParams) => {
+            return (
+                <>
+                    {params.value.map((tag: { tagName: string, tagColor: string, tagTextColor: string }, index: number) => {
+                        return (
+                            <Chip
+                                key={index}
+                                label={tag.tagName}
+                                variant="outlined"
+                                sx={{
+                                    backgroundColor: alpha(tag.tagColor || '#ff2323', 0.80),
+                                    color: tag.tagTextColor,
+                                    fontWeight: 'bold'
+                                }}
+                            />
+                        )
+                    })}
+                </>
+            );
+        },
+    },
+    {
         field: 'priority',
         headerName: 'Priority',
         headerClassName: 'task-col--header',
@@ -75,7 +98,11 @@ export const taskColumns: GridColDef[] = [
             return option ? <Chip
                 label={option.label}
                 variant="outlined"
-                sx={{ backgroundColor: alpha(color || '#ff2323', 0.80), color: textColor, fontWeight: 'bold' }} /> : null;
+                sx={{
+                    backgroundColor: alpha(color || '#ff2323', 0.80),
+                    color: textColor,
+                    fontWeight: 'bold'
+                }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -102,7 +129,7 @@ export const taskColumns: GridColDef[] = [
                             label={option.label}
                             variant="outlined"
                             sx={{
-                                backgroundColor: option.color,
+                                backgroundColor: alpha(option.color || '#ff2323', 0.80),
                                 color: option.textColor,
                                 fontWeight: 'bold',
                             }}
@@ -127,7 +154,11 @@ export const taskColumns: GridColDef[] = [
             return option ? <Chip
                 label={option.label}
                 variant="outlined"
-                sx={{ backgroundColor: alpha(color || '#ff2323', 0.80), color: textColor, fontWeight: 'bold' }} /> : null;
+                sx={{
+                    backgroundColor: alpha(color || '#ff2323', 0.80),
+                    color: textColor,
+                    fontWeight: 'bold'
+                }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -154,7 +185,7 @@ export const taskColumns: GridColDef[] = [
                             label={option.label}
                             variant="outlined"
                             sx={{
-                                backgroundColor: option.color,
+                                backgroundColor: alpha(option.color || '#ff2323', 0.80),
                                 color: option.textColor,
                                 fontWeight: 'bold',
                             }}
@@ -180,7 +211,11 @@ export const taskColumns: GridColDef[] = [
                 icon={option.icon}
                 label={option.label}
                 variant="outlined"
-                sx={{ backgroundColor: alpha(color || '#ff2323', 0.80), color: textColor, fontWeight: 'bold' }} /> : null;
+                sx={{
+                    backgroundColor: alpha(color || '#ff2323', 0.80),
+                    color: textColor,
+                    fontWeight: 'bold'
+                }} /> : null;
         },
         renderEditCell: (params: GridRenderEditCellParams) => (
             <Select
@@ -207,7 +242,7 @@ export const taskColumns: GridColDef[] = [
                             label={option.label}
                             variant="outlined"
                             sx={{
-                                backgroundColor: option.color,
+                                backgroundColor: alpha(option.color || '#ff2323', 0.80),
                                 color: option.textColor,
                                 fontWeight: 'bold',
                             }}
@@ -217,16 +252,6 @@ export const taskColumns: GridColDef[] = [
             </Select>
         ),
     },
-    // {
-    //     field: 'createdDate',
-    //     headerName: 'Created On',
-    //     headerClassName: 'task-col--header',
-    //     type: 'date',
-    //     width: 100,
-    //     align: 'center',
-    //     headerAlign: 'center',
-    //     valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
-    // },
     {
         field: 'dueDate',
         headerName: 'Due Date',
@@ -251,7 +276,11 @@ export const taskColumns: GridColDef[] = [
                 label={'Expired'}
                 variant="outlined"
                 size='small'
-                sx={{ backgroundColor: alpha('#ff2323', 0.80), color: 'white', fontWeight: 'bold' }} /> : params.value;
+                sx={{
+                    backgroundColor: alpha('#ff2323', 0.80),
+                    color: 'white',
+                    fontWeight: 'bold'
+                }} /> : params.value;
         },
     },
     {
@@ -270,54 +299,26 @@ export const taskColumns: GridColDef[] = [
         align: 'center',
         headerAlign: 'center',
     },
-    // {
-    //     field: 'tags',
-    //     headerName: 'Tag',
-    //     headerClassName: 'task-col--header',
-    //     width: 300,
-    //     editable: true,
-    //     align: 'center',
-    //     headerAlign: 'center',
-    //     renderCell: (params: GridRenderCellParams) => {
-    //         return (
-    //             <>
-    //                 {params.value.map((tag: { tag: string, color: string }, index: number) => {
-    //                     const option = getCustomTagOption(tag.tag);
-    //                     const color = option?.color;
-    //                     return option ? (
-    //                         <Chip
-    //                             key={index}
-    //                             label={option.label}
-    //                             variant="filled"
-    //                             color='success'
-    //                             sx={{ mr: 0.5 }}
-    //                         />
-    //                     ) : null;
-    //                 })}
-    //             </>
-    //         );
-    //     },
-    //     renderEditCell: (params: GridRenderEditCellParams) => (
-    //         <Select
-    //             value={params.value}
-    //             onChange={(event) =>
-    //                 params.api.setEditCellValue({ id: params.id, field: params.field, value: event.target.value })
-    //             }
-    //             fullWidth
-    //         >
-    //             {customTagOptions.map((option) => (
-    //                 <MenuItem key={option.label} value={option.label}>
-    //                     <Chip
-    //                         label={option.label}
-    //                         variant="outlined"
-    //                         sx={{
-    //                             color: option.color,
-    //                             fontWeight: 'bold',
-    //                             backgroundColor: 'transparent'
-    //                         }} />
-    //                 </MenuItem>
-    //             ))}
-    //         </Select>
-    //     ),
-    // },
+    {
+        field: 'id',
+        headerName: 'ID',
+        headerClassName: 'task-col--header',
+        width: 70,
+    },
+    {
+        field: 'createdDate',
+        headerName: 'Created On',
+        headerClassName: 'task-col--header',
+        type: 'date',
+        width: 100,
+        align: 'center',
+        headerAlign: 'center',
+        valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
+    },
+    {
+        field: 'concatTags',
+        headerName: 'Concat Tags',
+        headerClassName: 'task-col--header',
+        width: 500,
+    },
 ];

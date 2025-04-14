@@ -190,6 +190,9 @@ export default function CreateTask(props: TaskContentProps) {
         body: "",
         assignee: myself,
         reporter: myself,
+        chatType: null,
+        chatId: null,
+        threadId: null,
         dueDate: getFormattedTodayDateStr(),
         status: { code: 0, status: 'Open', color: '#0044c2', textColor: 'white' },
         priority: { code: -1, priority: '', color: '', textColor: '' },
@@ -380,7 +383,7 @@ export default function CreateTask(props: TaskContentProps) {
     const updateTagOptions = () => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags({
-                myself: myself, projectId: currentProject.projectId, accessToken: accessToken || ""
+                myself: myself, projectId: taskContents.project?.projectId || -1, accessToken: accessToken || ""
             });
             if (loadedProjectTags.length > 0) {
                 setProjectTags(loadedProjectTags);
@@ -416,11 +419,10 @@ export default function CreateTask(props: TaskContentProps) {
                                 key={'taskTitle'}
                                 variant='soft'
                                 placeholder="Task Title"
-                                defaultValue={taskTitle}
+                                value={taskTitle}
                                 onChange={(e) => {
                                     setTaskTitle(e.target.value)
                                 }}
-                                onBlur={() => { console.log("update title") }}
                                 sx={{ fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
                             />
                         </FormControl>
@@ -436,12 +438,13 @@ export default function CreateTask(props: TaskContentProps) {
                     </IconButton>
                     <Dropdown>
                         <MenuButton
+                            size='sm'
                             slots={{ root: IconButton }}
                             slotProps={{ root: { color: 'neutral' } }}
                         >
                             <MoreVert />
                         </MenuButton>
-                        <Menu>
+                        <Menu size="sm">
                             <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
                             <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
                         </Menu>
@@ -482,7 +485,7 @@ export default function CreateTask(props: TaskContentProps) {
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={myself}
+                                value={myself}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
@@ -504,7 +507,7 @@ export default function CreateTask(props: TaskContentProps) {
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={myself}
+                                value={myself}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
@@ -527,7 +530,7 @@ export default function CreateTask(props: TaskContentProps) {
                                     <Autocomplete
                                         options={teamProjects}
                                         getOptionLabel={(option) => option.projectName}
-                                        defaultValue={currentProject}
+                                        value={currentProject}
                                         isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
                                         onChange={(event, value) => {
                                             if (value !== null) {
@@ -563,7 +566,11 @@ export default function CreateTask(props: TaskContentProps) {
                                                         key={key}
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.80), color: item.tagTextColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(item.tagColor, 0.80),
+                                                            color: item.tagTextColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {item.tagName}
                                                     </Chip>
@@ -600,6 +607,14 @@ export default function CreateTask(props: TaskContentProps) {
                                         size="sm"
                                         sx={{ width: "100%" }}
                                     />
+                                    <IconButton
+                                        size="sm"
+                                        variant="soft"
+                                        color="neutral"
+                                        onClick={() => { setOpenCreateTag(true) }}
+                                    >
+                                        <AddIcon />
+                                    </IconButton>
                                 </ListItem>
                             </Grid>
                         </Grid>
@@ -622,7 +637,11 @@ export default function CreateTask(props: TaskContentProps) {
                                                         color='success'
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            color: item.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {item.priority}
                                                     </Chip>
@@ -679,7 +698,11 @@ export default function CreateTask(props: TaskContentProps) {
                                                         color='primary'
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            color: item.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {(item) ? item.level : ""}
                                                     </Chip>

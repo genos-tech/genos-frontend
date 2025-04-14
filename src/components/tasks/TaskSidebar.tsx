@@ -354,6 +354,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                     <Typography
                       noWrap
                       sx={{
+                        fontSize: '15px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -456,6 +457,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                     <Typography
                       noWrap
                       sx={{
+                        fontSize: '15px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',

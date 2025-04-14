@@ -10,10 +10,11 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
-import { ThreadMessageProps } from '../../types';
+import { ThreadMessageProps, UserProps } from '../../types';
 import { useColorScheme } from '@mui/joy/styles';
 
 type ThreadBubbleProps = ThreadMessageProps & {
+  myself: UserProps;
   variant: 'sent' | 'received';
 };
 
@@ -22,7 +23,8 @@ function extractHHMM(ts: string) {
 }
 
 export default function ThreadBubble(props: ThreadBubbleProps) {
-  const { variant,
+  const { myself,
+    variant,
     content,
     tsSent,
     attachment = undefined,
@@ -104,6 +106,7 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
               <Stack direction="row" spacing={1.5}>
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
+                    chatName={sender.userName}
                     online={sender.online}
                     src={sender.avatarImgPath || ""}
                   />

@@ -374,12 +374,12 @@ export default function Home(props: HomeProps) {
 
                             insertDMChat(
                                 newMessage.chatId,
-                                newMessage.sender.userName,
+                                newMessage.chatName,
                                 newMessage.dmPartnerUserId,
                                 newDMMessage,
                                 setAllChats)
 
-                            if (newMessage.chatId === currentMainChat.chatId) {
+                            if (newMessage.chatId === currentMainChat.chatId || currentMainChat.chatId === -1) {
                                 const updatedChat: ChatProps = {
                                     chatId: newMessage.chatId,
                                     chatName: newMessage.sender.userName,
@@ -422,10 +422,17 @@ export default function Home(props: HomeProps) {
                             }
                             insertDMChat(
                                 newMessage.chatId,
-                                newMessage.sender.userName,
+                                newMessage.chatName,
                                 newMessage.dmPartnerUserId,
                                 newDMMessage,
-                                setAllChats)
+                                setAllChats
+                            )
+
+                            // Insert the message when a user selects a new user
+                            // for DM from Search list in ChatPane
+                            if (newMessage.chatName !== newMessage.sender.userName) {
+                                insertDMMessage(newDMMessage)
+                            }
                         }
                     }
                 } else {
@@ -593,6 +600,12 @@ export default function Home(props: HomeProps) {
         }
     }, [currentPreviewTaskId])
 
+    useEffect(() => {
+        if (currentPreviewTask) {
+            setCurrentThreadChatId(Number(currentPreviewTask.id))
+        }
+    }, [currentPreviewTask])
+
 
     ////////////////////////////////////////////////////////////////////
     // useEffect(() => {
@@ -684,17 +697,15 @@ export default function Home(props: HomeProps) {
                     </Box>
                 </Panel>
 
-                {/* Resizable Handle with MUI sx Styling */}
-                <PanelResizeHandle
-                    style={{
-                        backgroundColor: "grey",
-                        transition: "all 0.3s ease-in-out",
-                        cursor: "col-resize",
-                    }}
-                    className="chat-resize-handle"
-                />
-
                 {isTaskContentVisible && currentThreadChat !== undefined && (<>
+                    <PanelResizeHandle
+                        style={{
+                            transition: "all 0.3s ease-in-out",
+                            cursor: "col-resize",
+                        }}
+                        className="chat-resize-handle"
+                    />
+
                     <Panel id={'2'} order={2} minSize={25} maxSize={70}>
                         <Box
                             sx={{
@@ -715,21 +726,21 @@ export default function Home(props: HomeProps) {
                                 setIsTaskContentVisible={setIsTaskContentVisible}
                                 setIsOpeningTask={setIsOpeningTask}
                                 setIsCreatingTask={setIsCreatingTask}
+                                currentPreviewTask={currentPreviewTask}
                             />
                         </Box>
                     </Panel>
 
-                    <PanelResizeHandle
-                        style={{
-                            backgroundColor: "grey",
-                            transition: "all 0.3s ease-in-out",
-                            cursor: "col-resize",
-                        }}
-                        className="chat-resize-handle"
-                    />
-
                     {isOpeningTask && currentPreviewTask && (
                         <>
+                            <PanelResizeHandle
+                                style={{
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
+                                }}
+                                className="chat-resize-handle"
+                            />
+
                             <Panel id={'3'} order={3} minSize={35} maxSize={70}>
                                 <Box
                                     sx={{
@@ -757,8 +768,10 @@ export default function Home(props: HomeProps) {
                                         setOpenCreateTag={setOpenCreateTag}
                                         setIsOpeningTask={setIsOpeningTask}
                                         setIsCreatingTask={setIsCreatingTask}
+                                        setIsTaskContentVisible={setIsTaskContentVisible}
                                         isNewProjectCreated={isNewProjectCreated}
                                         isNewTagCreated={isNewTagCreated}
+                                        setOpeningService={setOpeningService}
                                     />
                                 </Box>
                             </Panel>
@@ -767,6 +780,14 @@ export default function Home(props: HomeProps) {
 
                     {isCreatingTask && (
                         <>
+                            <PanelResizeHandle
+                                style={{
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
+                                }}
+                                className="chat-resize-handle"
+                            />
+
                             <Panel id={'4'} order={4} minSize={35} maxSize={70}>
                                 <Box
                                     sx={{
@@ -789,7 +810,9 @@ export default function Home(props: HomeProps) {
                                 >
                                     <CreateTaskFromThread
                                         myself={myself}
-                                        threadId={currentForeignThreadId}
+                                        isDm={currentThreadChat.isDm}
+                                        chatId={currentThreadChat.chatId}
+                                        threadId={currentThreadChat.threadId}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
                                         setIsCreatingTask={setIsCreatingTask}
                                         setIsOpeningTask={setIsOpeningTask}
@@ -825,105 +848,116 @@ export default function Home(props: HomeProps) {
                 </>)}
 
 
-                {(!isTaskContentVisible || currentThreadChat === undefined) && (<>
-                    <Panel id={'5'} order={5} minSize={25} maxSize={90}>
-                        <PanelGroup autoSaveId="conditional" direction="vertical">
-                            {isSubChatVisible && (
-                                <>
-                                    <Panel
-                                        id={'6'}
-                                        order={6}
-                                        minSize={30}
-                                        maxSize={80}
-                                        onResize={setSubChatPanelSize}
-                                    >
-                                        <MessagesSubPane
-                                            currentWindowHeight={height}
-                                            paneSizePCT={subChatPanelSize}
-                                            myself={myself}
-                                            chat={currentMainChat}
-                                            subChat={currentSubChat ? currentSubChat : currentMainChat}
-                                            socket={socket}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            setCurrentSubChat={setCurrentSubChat}
-                                            setCurrentThreadChat={setCurrentThreadChat}
-                                            setIsSubChatVisible={setIsSubChatVisible}
-                                            setIsThreadVisible={setIsThreadVisible}
-                                            currentSubChatId={currentSubChatId} />
-                                    </Panel>
+                {(!isTaskContentVisible || currentThreadChat === undefined) && (
+                    <>
+                        <PanelResizeHandle
+                            style={{
+                                transition: "all 0.3s ease-in-out",
+                                cursor: "col-resize",
+                            }}
+                            className="chat-resize-handle"
+                        />
 
-                                    <PanelResizeHandle
-                                        style={{
-                                            backgroundColor: "grey",
-                                            transition: "all 0.3s ease-in-out",
-                                            cursor: "col-resize",
-                                        }}
-                                        className="chat-resize-handle-ver" />
-                                </>
-                            )}
-                            <Panel
-                                id={'7'}
-                                order={7}
-                                minSize={30}
-                                maxSize={80}
-                                onResize={setMainChatPanelSize}
-                            >
-                                <MessagesPane
-                                    currentWindowHeight={height}
-                                    paneSizePCT={mainChatPanelSize}
-                                    chat={currentMainChat}
-                                    subChat={currentSubChat ? currentSubChat : currentMainChat}
-                                    myself={myself}
-                                    socket={socket}
-                                    setCurrentMainChat={setCurrentMainChat}
-                                    setCurrentSubChat={setCurrentSubChat}
-                                    setCurrentThreadChat={setCurrentThreadChat}
-                                    setIsThreadVisible={setIsThreadVisible}
-                                    isSubChatVisible={isSubChatVisible}
-                                    setIsSubChatVisible={setIsSubChatVisible}
-                                    currentMainChatId={currentMainChatId}
-                                />
-                            </Panel>
-                        </PanelGroup>
-                    </Panel>
+                        <Panel id={'5'} order={5} minSize={25} maxSize={90}>
+                            <PanelGroup autoSaveId="conditional" direction="vertical">
+                                {isSubChatVisible && (
+                                    <>
+                                        <Panel
+                                            id={'6'}
+                                            order={6}
+                                            minSize={30}
+                                            maxSize={80}
+                                            onResize={setSubChatPanelSize}
+                                        >
+                                            <MessagesSubPane
+                                                currentWindowHeight={height}
+                                                paneSizePCT={subChatPanelSize}
+                                                myself={myself}
+                                                chat={currentMainChat}
+                                                subChat={currentSubChat ? currentSubChat : currentMainChat}
+                                                socket={socket}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setCurrentSubChat={setCurrentSubChat}
+                                                setCurrentThreadChat={setCurrentThreadChat}
+                                                setIsSubChatVisible={setIsSubChatVisible}
+                                                setIsThreadVisible={setIsThreadVisible}
+                                                currentSubChatId={currentSubChatId}
+                                                setCurrentPreviewTask={setCurrentPreviewTask}
+                                            />
+                                        </Panel>
 
-                    {isThreadVisible && currentThreadChat !== undefined && (
-                        <>
-                            <PanelResizeHandle
-                                style={{
-                                    backgroundColor: "grey",
-                                    transition: "all 0.3s ease-in-out",
-                                    cursor: "col-resize",
-                                }}
-                                className="chat-resize-handle"
-                            />
-
-                            <Panel id={'8'} order={8} minSize={25} maxSize={70}>
-                                <Box
-                                    sx={{
-                                        height: '100%',
-                                        backgroundColor: 'black',
-                                        borderLeft: mode === 'dark'
-                                            ? '2px black groove'
-                                            : '2px white groove',
-                                    }}
+                                        <PanelResizeHandle
+                                            style={{
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle-ver" />
+                                    </>
+                                )}
+                                <Panel
+                                    id={'7'}
+                                    order={7}
+                                    minSize={30}
+                                    maxSize={80}
+                                    onResize={setMainChatPanelSize}
                                 >
-                                    <ThreadPane
-                                        thread={currentThreadChat}
+                                    <MessagesPane
+                                        currentWindowHeight={height}
+                                        paneSizePCT={mainChatPanelSize}
+                                        chat={currentMainChat}
+                                        subChat={currentSubChat ? currentSubChat : currentMainChat}
                                         myself={myself}
                                         socket={socket}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentSubChat={setCurrentSubChat}
                                         setCurrentThreadChat={setCurrentThreadChat}
                                         setIsThreadVisible={setIsThreadVisible}
-                                        currentThreadChatId={currentThreadChatId}
-                                        setIsTaskContentVisible={setIsTaskContentVisible}
-                                        setIsOpeningTask={setIsOpeningTask}
-                                        setIsCreatingTask={setIsCreatingTask}
+                                        isSubChatVisible={isSubChatVisible}
+                                        setIsSubChatVisible={setIsSubChatVisible}
+                                        currentMainChatId={currentMainChatId}
+                                        setCurrentPreviewTask={setCurrentPreviewTask}
                                     />
-                                </Box>
-                            </Panel>
-                        </>
-                    )}
-                </>)}
+                                </Panel>
+                            </PanelGroup>
+                        </Panel>
+
+                        {isThreadVisible && currentThreadChat !== undefined && (
+                            <>
+                                <PanelResizeHandle
+                                    style={{
+                                        transition: "all 0.3s ease-in-out",
+                                        cursor: "col-resize",
+                                    }}
+                                    className="chat-resize-handle"
+                                />
+
+                                <Panel id={'8'} order={8} minSize={25} maxSize={70}>
+                                    <Box
+                                        sx={{
+                                            height: '100%',
+                                            backgroundColor: 'black',
+                                            borderLeft: mode === 'dark'
+                                                ? '2px black groove'
+                                                : '2px white groove',
+                                        }}
+                                    >
+                                        <ThreadPane
+                                            thread={currentThreadChat}
+                                            myself={myself}
+                                            socket={socket}
+                                            setCurrentThreadChat={setCurrentThreadChat}
+                                            setIsThreadVisible={setIsThreadVisible}
+                                            currentThreadChatId={currentThreadChatId}
+                                            setIsTaskContentVisible={setIsTaskContentVisible}
+                                            setIsOpeningTask={setIsOpeningTask}
+                                            setIsCreatingTask={setIsCreatingTask}
+                                            currentPreviewTask={currentPreviewTask}
+                                        />
+                                    </Box>
+                                </Panel>
+                            </>
+                        )}
+                    </>)}
 
             </PanelGroup>
 
@@ -940,6 +974,7 @@ export default function Home(props: HomeProps) {
                 }
                 `}
             </style>
+
         </Box>
     );
 }

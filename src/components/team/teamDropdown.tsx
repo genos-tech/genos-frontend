@@ -154,7 +154,7 @@ export default function TeamDropdown(props: TeamDropdownProps) {
                 <IconButton component='a' variant="soft" color="primary" size="sm" onClick={handleClick}>
                     <BusinessIcon className="h-5 w-5" />
                 </IconButton>
-                <Menu ref={dropdownRef}
+                <Menu size='sm' ref={dropdownRef}
                     sx={{ zIndex: 10001 }}
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
@@ -167,8 +167,7 @@ export default function TeamDropdown(props: TeamDropdownProps) {
                         </MenuItem>
                     ))}
                     <MenuItem key={"addTeam"} onClick={() => { handleCreateTeam(); }}>
-                        <AddIcon />
-                        Create Team
+                        <AddIcon />New Team
                     </MenuItem>
                 </Menu>
             </Dropdown>

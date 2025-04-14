@@ -70,7 +70,7 @@ type saveTaskProps = {
     myself: UserProps,
     isDm: boolean,
     chatId: number,
-    threadId: string,
+    threadId: number,
     taskContents: CreateTaskProps,
     accessToken: string,
     setIsSubmitted: (value: boolean) => void,
@@ -172,7 +172,7 @@ type TaskContentProps = {
     myself: UserProps,
     isDm: boolean,
     chatId: number,
-    threadId: string,
+    threadId: number,
     setIsTaskContentVisible: (value: boolean) => void,
     setIsCreatingTask: (value: boolean) => void,
     setIsOpeningTask: (value: boolean) => void,
@@ -211,6 +211,9 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
         body: "",
         assignee: myself,
         reporter: myself,
+        chatType: isDm ? "dm" : "gm",
+        chatId: chatId,
+        threadId: threadId,
         dueDate: getFormattedTodayDateStr(),
         status: { code: 0, status: 'Open', color: '#0044c2', textColor: 'white' },
         priority: { code: -1, priority: '', color: '', textColor: '' },
@@ -438,11 +441,10 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                 key={'taskTitle'}
                                 variant='soft'
                                 placeholder="Task Title"
-                                defaultValue={taskTitle}
+                                value={taskTitle}
                                 onChange={(e) => {
                                     setTaskTitle(e.target.value)
                                 }}
-                                onBlur={() => { console.log("update title") }}
                                 sx={{ fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
                             />
                         </FormControl>
@@ -461,12 +463,13 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                     </IconButton>
                     <Dropdown>
                         <MenuButton
+                            size='sm'
                             slots={{ root: IconButton }}
                             slotProps={{ root: { color: 'neutral' } }}
                         >
                             <MoreVert />
                         </MenuButton>
-                        <Menu>
+                        <Menu size="sm">
                             <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
                             <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
                         </Menu>
@@ -507,7 +510,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={myself}
+                                value={myself}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
@@ -529,7 +532,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                             <Autocomplete
                                 options={teamMembers}
                                 getOptionLabel={(option) => `${option.userName} | ${option.userEmail}`}
-                                defaultValue={myself}
+                                value={myself}
                                 isOptionEqualToValue={(option, value) => option.userId === value.userId}
                                 onChange={(event, value) => {
                                     if (value !== null) {
@@ -591,7 +594,11 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         key={key}
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.80), color: item.tagTextColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(item.tagColor, 0.80),
+                                                            color: item.tagTextColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {item.tagName}
                                                     </Chip>
@@ -650,7 +657,11 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         color='success'
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            color: item.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {item.priority}
                                                     </Chip>
@@ -707,7 +718,11 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         color='primary'
                                                         endDecorator={<Close />}
                                                         variant="soft"
-                                                        sx={{ backgroundColor: alpha(item.color, 0.80), color: item.textColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            color: item.textColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {(item) ? item.level : ""}
                                                     </Chip>

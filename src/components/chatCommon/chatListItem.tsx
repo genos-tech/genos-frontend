@@ -192,7 +192,7 @@ export default function ChatListItem(props: ChatListItemProps) {
               <Stack direction="row" spacing={1}>
                 <div>
                   {chat.isDm ? (
-                    <AvatarWithStatus size="sm" online={always_online} src="" />
+                    <AvatarWithStatus size="sm" chatName={chat.chatName} online={always_online} src="" />
                   ) : (
                     <Avatar size="md">
                       <GroupsIcon sx={{ fontSize: 20 }} />
