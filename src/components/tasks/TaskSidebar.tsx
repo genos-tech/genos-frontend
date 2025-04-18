@@ -5,15 +5,6 @@ import Box from '@mui/joy/Box';
 import Divider from '@mui/joy/Divider';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
-import {
-  IconButton,
-  Modal,
-  ModalDialog,
-  Alert,
-  Stack,
-  Button,
-  Input,
-} from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
 import ListItemContent from '@mui/joy/ListItemContent';
 import Typography from '@mui/joy/Typography';
@@ -23,22 +14,21 @@ import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { useAuth } from "../../components/admin/AuthContext";
 import { SearchTeamTasksResponse, ProjectProps, UserProps } from '../../types'
 import loadTaskSearchList from '../backendOperation/loadTaskSearchList';
 import loadTeamProjects from '../backendOperation/loadTeamProjects';
 import CircularProgress from '@mui/joy/CircularProgress';
 import AddIcon from '@mui/icons-material/Add';
-
-const base_url = import.meta.env.VITE_API_BASE_URL;
+import loadAllTeams from '../backendOperation/loadAllTeams';
+import { Team } from '../../types';
 
 function Toggler({
-  defaultExpanded = false,
+  defaultExpanded,
   renderToggle,
   children,
 }: {
-  defaultExpanded?: boolean;
+  defaultExpanded: boolean;
   children: React.ReactNode;
   renderToggle: (params: {
     open: boolean;
@@ -69,17 +59,26 @@ function Toggler({
 
 type TaskSidebarProps = {
   myself: UserProps,
+  setMyself: (value: UserProps) => void,
+  currentProject: ProjectProps | null,
   setCurrentProject: (value: ProjectProps) => void,
+  currentPreviewTaskId: number,
   setCurrentPreviewTaskId: (value: number) => void,
-  setOpenCreateTag: (value: boolean) => void,
+  setOpenCreateTeam: (value: boolean) => void,
+  setOpenCreateProject: (value: boolean) => void,
 }
 
 export default function TaskSidebar(props: TaskSidebarProps) {
-  const { myself, setCurrentProject, setCurrentPreviewTaskId, setOpenCreateTag } = props
+  const { myself,
+    setMyself,
+    currentProject,
+    setCurrentProject,
+    currentPreviewTaskId,
+    setCurrentPreviewTaskId,
+    setOpenCreateTeam,
+    setOpenCreateProject
+  } = props
   const { accessToken } = useAuth();
-
-  const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
-  const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
 
   // =======================================================================
   const [openSearch, setOpenSearch] = useState(false);
@@ -116,52 +115,45 @@ export default function TaskSidebar(props: TaskSidebarProps) {
   }
   // =======================================================================
 
-  // Modal configs
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [openCreateProject, setOpenCreateProject] = useState(false);
-  const [projectName, setProjectName] = useState("");
-
-  const handleCreateProject = () => {
-    if (projectName.trim()) { createProject() }
+  const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
+  const updateRecentTasks = () => {
+    (async () => {
+      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTaskSearchList({
+        myself: myself, accessToken: accessToken || ""
+      });
+      setRecentTasks([...loadedTeamTasks.slice(0, 10)]);
+    })();
   };
 
-  async function createProject(): Promise<void> {
-    try {
-      const createProjectResponse = await fetch(`${base_url}/project/create/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          "Authorization": `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          team: myself.teamId,
-          project_name: projectName,
-          owner: myself.userId
-        }),
+  useEffect(() => {
+    updateRecentTasks();
+  }, [currentPreviewTaskId])
+
+  const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
+  const updateTeamProjects = () => {
+    (async () => {
+      const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
+        myself: myself, accessToken: accessToken || ""
       });
-
-      const createProjectData = await createProjectResponse.json();
-
-      if (!createProjectResponse.ok) {
-        console.error(createProjectData)
-        throw new Error(createProjectData.hint || 'Project Creation Failed');
-      } else {
-        console.log("Task created:", createProjectData)
-        setCurrentProject(
-          {
-            projectId: createProjectData.project_id,
-            projectName: createProjectData.project_name
-          }
-        )
-        setOpenCreateProject(false);
-      }
-    } catch (error) {
-      const err_msg = `${error}`
-      console.error(err_msg);
-      setErrorMessage(err_msg);
-    }
+      setTeamProjects([...loadedTeamProjects]);
+    })();
   }
 
+  useEffect(() => {
+    updateTeamProjects();
+  }, [currentProject])
+
+  const [teams, setTeams] = useState<Team[]>([]);
+  const loadTeams = () => {
+    (async () => {
+      const loadedTeams: Team[] = await loadAllTeams({ accessToken: accessToken || "" });
+      setTeams(loadedTeams)
+    })();
+  };
+
+  useEffect(() => {
+    loadTeams();
+  }, [myself])
 
   return (
     <Sheet
@@ -259,15 +251,11 @@ export default function TaskSidebar(props: TaskSidebarProps) {
 
           <ListItem nested>
             <Toggler
+              defaultExpanded={false}
               renderToggle={({ open, setOpen }) => (
                 <ListItemButton onClick={() => {
                   setOpen(!open);
-                  (async () => {
-                    const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTaskSearchList({
-                      myself: myself, accessToken: accessToken || ""
-                    });
-                    setRecentTasks([...loadedTeamTasks.slice(0, 10)]);
-                  })();
+                  updateRecentTasks();
                 }}>
                   <AssignmentRoundedIcon />
                   <ListItemContent>
@@ -316,15 +304,11 @@ export default function TaskSidebar(props: TaskSidebarProps) {
 
           <ListItem nested>
             <Toggler
+              defaultExpanded={true}
               renderToggle={({ open, setOpen }) => (
                 <ListItemButton onClick={() => {
                   setOpen(!open);
-                  (async () => {
-                    const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
-                      myself: myself, accessToken: accessToken || ""
-                    });
-                    setTeamProjects([...loadedTeamProjects]);
-                  })();
+                  updateTeamProjects();
                 }}>
                   <WorkIcon />
                   <ListItemContent>
@@ -347,6 +331,8 @@ export default function TaskSidebar(props: TaskSidebarProps) {
               <List sx={{ gap: 0.5 }}>
                 <ListItem key={"createProject"}>
                   <ListItemButton
+                    color='neutral'
+                    variant='soft'
                     onClick={() => { setOpenCreateProject(true) }}
                     sx={{ overflow: 'hidden' }} // ensure children don't overflow
                   >
@@ -369,6 +355,8 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                   return (
                     <ListItem key={projectId}>
                       <ListItemButton
+                        color={'neutral'}
+                        variant={(projectId === currentProject?.projectId) ? 'solid' : 'plain'}
                         onClick={() =>
                           setCurrentProject({
                             projectId: projectId,
@@ -380,6 +368,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                         <Typography
                           noWrap
                           sx={{
+                            color: (projectId === currentProject?.projectId) ? 'white' : 'neutral-500',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
@@ -396,42 +385,18 @@ export default function TaskSidebar(props: TaskSidebarProps) {
             </Toggler>
           </ListItem>
 
-          {/* Modal for creating a new chat group */}
-          <Modal sx={{ zIndex: 10010 }} open={openCreateProject} onClose={() => setOpenCreateProject(false)}>
-            <ModalDialog>
-              <Typography level="h4">Create New Project</Typography>
-              <Input
-                placeholder="Unique project name"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && projectName.trim()) {
-                    handleCreateProject();
-                  }
-                }}
-                sx={{ mt: 1 }}
-              />
-              {errorMessage && errorMessage !== "" && (
-                <Alert color="danger">{errorMessage}</Alert>
-              )}
-              <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                <Button component='a' variant="outlined" onClick={() => setOpenCreateProject(false)}>
-                  Cancel
-                </Button>
-                <Button component='a' onClick={handleCreateProject} disabled={!projectName.trim()}>
-                  Create
-                </Button>
-              </Stack>
-            </ModalDialog>
-          </Modal>
-
           <ListItem nested>
             <Toggler
+              defaultExpanded={false}
               renderToggle={({ open, setOpen }) => (
-                <ListItemButton onClick={() => setOpen(!open)}>
-                  <BookmarkIcon />
+                <ListItemButton onClick={() => {
+                  setOpen(!open);
+                  loadTeams();
+                }}
+                >
+                  <WorkIcon />
                   <ListItemContent>
-                    <Typography level="title-sm">Tagged</Typography>
+                    <Typography level="title-sm">Teams</Typography>
                   </ListItemContent>
                   <KeyboardArrowDownIcon
                     sx={[
@@ -448,9 +413,11 @@ export default function TaskSidebar(props: TaskSidebarProps) {
               )}
             >
               <List sx={{ gap: 0.5 }}>
-                <ListItem key={"createTag"}>
+                <ListItem key={"createTeam"}>
                   <ListItemButton
-                    onClick={() => { setOpenCreateTag(true) }}
+                    color='neutral'
+                    variant='soft'
+                    onClick={() => { setOpenCreateTeam(true) }}
                     sx={{ overflow: 'hidden' }} // ensure children don't overflow
                   >
                     <AddIcon />
@@ -464,19 +431,38 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                         width: '100%', // take full width of button
                       }}
                     >
-                      New Tag
+                      New Team
                     </Typography>
                   </ListItemButton>
                 </ListItem>
-                <ListItem >
-                  <ListItemButton>tag-001</ListItemButton>
-                </ListItem>
-                <ListItem>
-                  <ListItemButton>tag-002</ListItemButton>
-                </ListItem>
-                <ListItem>
-                  <ListItemButton>tag-003</ListItemButton>
-                </ListItem>
+                {teams.map(({ teamId, teamName }) => {
+                  return (
+                    <ListItem key={teamId}>
+                      <ListItemButton
+                        color={'neutral'}
+                        variant={(teamId === myself.teamId) ? 'solid' : 'plain'}
+                        onClick={() =>
+                          setMyself({ ...myself, teamId: teamId })
+                        }
+                        sx={{ overflow: 'hidden' }} // ensure children don't overflow
+                      >
+                        <Typography
+                          noWrap
+                          sx={{
+                            color: (teamId === myself.teamId) ? 'white' : 'neutral-500',
+                            borderRadius: 5,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            width: '100%', // take full width of button
+                          }}
+                        >
+                          {teamName}
+                        </Typography>
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
               </List>
             </Toggler>
           </ListItem>
@@ -484,6 +470,6 @@ export default function TaskSidebar(props: TaskSidebarProps) {
         </List>
       </Box>
       <Divider />
-    </Sheet>
+    </Sheet >
   );
 }

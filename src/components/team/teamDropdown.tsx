@@ -8,14 +8,9 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 import AddIcon from '@mui/icons-material/Add';
 import loadAllTeams from '../backendOperation/loadAllTeams';
 import { useAuth } from "../admin/AuthContext";
-import { UserProps } from "../../types"
+import { UserProps, Team } from "../../types"
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
-
-type Team = {
-    team_id: string,
-    team_name: string
-}
 
 type TeamDropdownProps = {
     myself: UserProps;
@@ -161,9 +156,9 @@ export default function TeamDropdown(props: TeamDropdownProps) {
                     onClose={handleClose}
                 >
                     {teams.map((team) => (
-                        <MenuItem key={team.team_name} onClick={() => { handleClicked(team.team_id); }}>
+                        <MenuItem key={team.teamName} onClick={() => { handleClicked(team.teamId); }}>
                             <AcUnitIcon />
-                            {team.team_name}
+                            {team.teamName}
                         </MenuItem>
                     ))}
                     <MenuItem key={"addTeam"} onClick={() => { handleCreateTeam(); }}>

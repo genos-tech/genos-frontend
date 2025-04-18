@@ -210,14 +210,14 @@ export default function SelectTeam() {
                             }}
                         >
                             {teams.map((team) => (
-                                <ListItemButton key={team.team_id} title={team.team_email} onClick={() => {
-                                    moveToTeam(team.team_id);
+                                <ListItemButton key={team.teamId} title={team.teamEmail} onClick={() => {
+                                    moveToTeam(team.teamId);
                                 }}>
                                     <ListItemDecorator>
                                         <AcUnitIcon />
                                     </ListItemDecorator>
                                     <Typography component="h1" level="h4">
-                                        {team.team_name}
+                                        {team.teamName}
                                     </Typography>
                                 </ListItemButton>
                             ))}

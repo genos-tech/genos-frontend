@@ -980,9 +980,17 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
             >
                 <Button
                     component='button'
+                    variant="outlined"
+                    color="danger"
+                    size='sm'
+                    onClick={() => { setIsCreatingTask(false) }}>
+                    Cancel
+                </Button>
+                <Button
+                    component='button'
                     type="submit"
                     variant="soft"
-                    color="primary"
+                    color="neutral"
                     onClick={() => {
                         saveTask({
                             myself: myself,
@@ -997,16 +1005,9 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                             setCurrentPreviewTaskId: setCurrentPreviewTaskId,
                         })
                     }}
+                    disabled={(taskTitle === "")}
                 >
                     Create
-                </Button>
-                <Button
-                    component='button'
-                    variant="outlined"
-                    color="danger"
-                    size='sm'
-                    onClick={() => { setIsCreatingTask(false) }}>
-                    Cancel
                 </Button>
             </Stack>
         </Sheet>

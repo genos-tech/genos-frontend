@@ -36,7 +36,7 @@ import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker
 import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
 import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessagesWorker.ts?worker";
 import { useAuth } from "../../components/admin/AuthContext";
-
+import { useColorScheme } from '@mui/joy/styles';
 
 type ChatsPaneProps = {
   myself: UserProps;
@@ -139,6 +139,8 @@ export default function ChatsPane(props: ChatsPaneProps) {
   const [openUsers, setOpenUsers] = useState(false);
   const [options, setOptions] = useState<SearchListProps[]>([]);
   const loading = openUsers && options.length === 0;
+
+  const { mode } = useColorScheme();
 
   useEffect(() => {
     let active = true;
@@ -437,7 +439,42 @@ export default function ChatsPane(props: ChatsPaneProps) {
         <Stack
           direction="row"
           spacing={1}
-          sx={{ alignItems: "center", justifyContent: "space-between", p: 2, pb: 1.5 }}
+          sx={{
+            backgroundColor: mode === 'dark' ? '#363636' : 'rgb(217, 217, 217)',
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1,
+          }}
+        >
+          <Typography
+            component="h1"
+            endDecorator={
+              <Chip
+                variant="soft"
+                color="primary"
+                size="md"
+                slotProps={{ root: { component: "span" } }}
+              >
+                ?
+              </Chip>
+            }
+            sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}
+          >
+            Pinned
+          </Typography>
+        </Stack>
+
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{
+            backgroundColor: mode === 'dark' ? '#363636' : 'rgb(217, 217, 217)',
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+            py: 0.5,
+          }}
         >
           <Typography
             component="h1"
@@ -455,11 +492,15 @@ export default function ChatsPane(props: ChatsPaneProps) {
           >
             GMs
           </Typography>
-
-          <IconButton component='a' size="sm" variant="plain" color="neutral" onClick={() => setOpen(true)}>
+          <IconButton
+            component='a'
+            size="sm"
+            variant="plain"
+            color="neutral"
+            onClick={() => setOpen(true)}
+          >
             <AddIcon />
           </IconButton>
-
         </Stack>
 
         {/* Modal for creating a new chat group */}
@@ -531,7 +572,13 @@ export default function ChatsPane(props: ChatsPaneProps) {
         <Stack
           direction="row"
           spacing={1}
-          sx={{ alignItems: "center", justifyContent: "space-between", p: 2, pb: 1.5 }}
+          sx={{
+            backgroundColor: mode === 'dark' ? '#363636' : 'rgb(217, 217, 217)',
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 2,
+            py: 1,
+          }}
         >
           <Typography
             component="h1"

@@ -132,7 +132,7 @@ export default function ChatListItem(props: ChatListItemProps) {
   };
 
   const splitOpenHandler = () => {
-    if (currentMainChat.chatId !== chat.chatId) {
+    if (`${currentMainChat.chatId}-${currentMainChat.chatName}` !== `${chat.chatId}-${chat.chatName}`) {
       toggleMessagesPane();
       if (chat.isDm) {
         _FetchSpecificDMMessagesWorker(chat.chatId)

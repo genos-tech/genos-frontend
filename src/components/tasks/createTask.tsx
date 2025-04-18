@@ -695,7 +695,6 @@ export default function CreateTask(props: TaskContentProps) {
                                                 return (
                                                     <Chip
                                                         key={key} // pass the key directly
-                                                        color='primary'
                                                         endDecorator={<Close />}
                                                         variant="soft"
                                                         sx={{
@@ -960,9 +959,17 @@ export default function CreateTask(props: TaskContentProps) {
             >
                 <Button
                     component='button'
+                    variant="outlined"
+                    color="danger"
+                    size='sm'
+                    onClick={() => { setIsCreatingTask(false) }}>
+                    Cancel
+                </Button>
+                <Button
+                    component='button'
                     type="submit"
-                    variant="soft"
-                    color="primary"
+                    variant="solid"
+                    color="neutral"
                     onClick={() => {
                         saveTask({
                             myself: myself,
@@ -974,16 +981,9 @@ export default function CreateTask(props: TaskContentProps) {
                             setCurrentPreviewTaskId: setCurrentPreviewTaskId,
                         })
                     }}
+                    disabled={(taskTitle === "")}
                 >
                     Create
-                </Button>
-                <Button
-                    component='button'
-                    variant="outlined"
-                    color="danger"
-                    size='sm'
-                    onClick={() => { setIsCreatingTask(false) }}>
-                    Cancel
                 </Button>
             </Stack>
         </Sheet>

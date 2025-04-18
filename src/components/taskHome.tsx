@@ -35,6 +35,7 @@ import CircularProgress from '@mui/joy/CircularProgress';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import CreateTagModal from './tasks/modalCreateTag';
 import CreateProjectModal from './tasks/modalCreateProject';
+import CreateTeamModal from './tasks/modalCreateTeam';
 import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
 
 type TaskProps = {
@@ -54,6 +55,12 @@ export default function TaskHome(props: TaskProps) {
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>();
     const [projectTasks, setProjectTasks] = useState<TaskTableProps[]>([]);
+
+    const [openCreateTeam, setOpenCreateTeam] = useState(false);
+    const [openCreateProject, setOpenCreateProject] = useState(false);
+    const [openCreateTag, setOpenCreateTag] = useState(false);
+    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
+    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -90,7 +97,7 @@ export default function TaskHome(props: TaskProps) {
     }
     // =======================================================================
 
-    useEffect(() => {
+    const loadProjects = () => {
         // Load the latest project as initial process
         (async () => {
             const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
@@ -111,14 +118,22 @@ export default function TaskHome(props: TaskProps) {
                         console.error("Filed initial team task loading");
                     }
                 };
-
                 return () => {
                     loadTeamTaskWorker.terminate();
                 };
-
+            } else {
+                setCurrentProject(null)
             }
         })();
+    };
+
+    useEffect(() => {
+        loadProjects();
     }, [])
+
+    useEffect(() => {
+        loadProjects();
+    }, [myself, openCreateTeam, openCreateProject])
 
     const fetchProjectTasks = async (projectId: number): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -189,12 +204,6 @@ export default function TaskHome(props: TaskProps) {
         }
     }, [currentPreviewTaskId, isNewTaskCreated])
 
-
-    const [openCreateProject, setOpenCreateProject] = useState(false);
-    const [openCreateTag, setOpenCreateTag] = useState(false);
-    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
-    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
-
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
@@ -211,9 +220,13 @@ export default function TaskHome(props: TaskProps) {
                     <Panel id={'1'} order={1} minSize={5} maxSize={20}>
                         <TaskSidebar
                             myself={myself}
+                            setMyself={setMyself}
+                            currentProject={currentProject}
                             setCurrentProject={setCurrentProject}
+                            currentPreviewTaskId={currentPreviewTaskId}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setOpenCreateTag={setOpenCreateTag}
+                            setOpenCreateTeam={setOpenCreateTeam}
+                            setOpenCreateProject={setOpenCreateProject}
                         />
                     </Panel>
 
@@ -441,19 +454,20 @@ export default function TaskHome(props: TaskProps) {
 
                     {!currentProject && (
                         <>
-                            <Panel id={'5'} order={5} minSize={30} maxSize={100}>
+                            <Panel id={'5'} order={5} minSize={80} maxSize={100}>
                                 <Box
                                     sx={{
                                         height: '100%',
                                         display: 'flex',
                                         justifyContent: 'center',
                                         alignItems: 'center',
+                                        width: '100%'
                                     }}
                                 >
                                     <IconButton
                                         component="button"
                                         variant="soft"
-                                        color="primary"
+                                        color="neutral"
                                         sx={{
                                             fontSize: '15px',
                                             paddingRight: '10px',
@@ -470,6 +484,13 @@ export default function TaskHome(props: TaskProps) {
                         </>
                     )}
 
+                    {/* Modal for creating a new project */}
+                    <CreateTeamModal
+                        myself={myself}
+                        setMyself={setMyself}
+                        openCreateTeam={openCreateTeam}
+                        setOpenCreateTeam={setOpenCreateTeam}
+                    />
 
                     {/* Modal for creating a new project */}
                     <CreateProjectModal

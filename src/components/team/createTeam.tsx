@@ -36,7 +36,7 @@ interface CreateTeamFormElement extends HTMLFormElement {
 }
 
 type CreateTeamResponse = {
-    team_id: number;
+    teamId: number;
     detail: string | null;
     hint: string | null;
 };
@@ -184,7 +184,7 @@ export default function CreateTeam() {
                         "Authorization": `Bearer ${accessToken}`
                     },
                     body: JSON.stringify({
-                        team_id: teamCreateData.team_id,
+                        team_id: teamCreateData.teamId,
                         attendee_id: localStorage.getItem("userId")
                     }),
                 });
@@ -240,7 +240,7 @@ export default function CreateTeam() {
             console.error(err_msg);
             setErrorMessage(err_msg);
             navigate('/CreateTeam');
-            return { team_id: -1, detail: null, hint: null }
+            return { teamId: -1, detail: null, hint: null }
         }
 
     }
@@ -350,14 +350,14 @@ export default function CreateTeam() {
                                 }}
                             >
                                 {teams.map((team) => (
-                                    <ListItemButton key={team.team_id} title={team.team_email} onClick={() => {
-                                        moveToTeam(team.team_id);
+                                    <ListItemButton key={team.teamId} title={team.teamEmail} onClick={() => {
+                                        moveToTeam(team.teamId);
                                     }}>
                                         <ListItemDecorator>
                                             <AcUnitIcon />
                                         </ListItemDecorator>
                                         <Typography component="h1" level="h4">
-                                            {team.team_name}
+                                            {team.teamName}
                                         </Typography>
                                     </ListItemButton>
                                 ))}

@@ -1,16 +1,12 @@
-const base_url = import.meta.env.VITE_API_BASE_URL;
+import { Team } from '../../types';
 
-export type AllTeam = {
-    team_id: string,
-    team_name: string,
-    team_email: string
-}
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type LoadAllTeam = {
     accessToken: string;
 };
 
-async function loadAllTeams(props: LoadAllTeam): Promise<AllTeam[]> {
+async function loadAllTeams(props: LoadAllTeam): Promise<Team[]> {
     const { accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -27,7 +23,7 @@ async function loadAllTeams(props: LoadAllTeam): Promise<AllTeam[]> {
             },
         });
 
-        const data: AllTeam[] = await response.json();
+        const data: Team[] = await response.json();
 
         if (!response.ok) {
             const errorMsg = "Failed to get all teams";
