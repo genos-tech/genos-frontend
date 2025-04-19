@@ -102,7 +102,9 @@ const insertDMChat = async (
     chatId: number,
     chatName: string,
     dmPartnerUserId: string | null,
-    newDMMessage: MessageProps,
+    latestMessage: MessageProps | undefined,
+    latestMessageText: string,
+    TSLastMessage: string,
     setAllChats: (chat: AllChatProps[]
     ) => void): Promise<string> => {
 
@@ -114,8 +116,9 @@ const insertDMChat = async (
             isDm: true,
             dmPartnerUserId: dmPartnerUserId,
             unread: true,
-            latestMessage: newDMMessage,
-            TSLastMessage: newDMMessage.tsSent,
+            latestMessage: latestMessage,
+            latestMessageText: latestMessageText,
+            TSLastMessage: TSLastMessage,
         }
         insertDMChatWorker.postMessage({ dmChat: dmChat });
         insertDMChatWorker.onmessage = (event) => {
@@ -145,6 +148,7 @@ const insertGMChat = async (
     chatId: number,
     chatName: string,
     newGMMessage: MessageProps,
+    latestMessageText: string,
     setAllChats: (chat: AllChatProps[]
     ) => void): Promise<string> => {
 
@@ -157,6 +161,7 @@ const insertGMChat = async (
             dmPartnerUserId: null,
             unread: true,
             latestMessage: newGMMessage,
+            latestMessageText: latestMessageText,
             TSLastMessage: newGMMessage.tsSent,
         }
         insertGMChatWorker.postMessage({ gmChat: gmChat });
@@ -277,7 +282,7 @@ export default function Home(props: HomeProps) {
         });
 
         socket.on("message", (message) => {
-            console.log("message:", message)
+            // console.log("message:", message)
             if (message.chatId !== null) {
                 if (message.isDm === true) {
                     if (message.isThread === true) {
@@ -311,6 +316,7 @@ export default function Home(props: HomeProps) {
                                 threadId: newMessage.threadId,
                                 messageId: newMessage.messageId,
                                 content: newMessage.content,
+                                contentText: newMessage.contentText,
                                 sender: newMessage.sender,
                                 tsSent: newMessage.tsSent,
                                 taskId: newMessage.taskId,
@@ -366,6 +372,7 @@ export default function Home(props: HomeProps) {
                                 chatId: newMessage.chatId,
                                 messageId: newMessage.messageId,
                                 content: newMessage.content,
+                                contentText: newMessage.contentText,
                                 sender: newMessage.sender,
                                 numReplies: newMessage.numReplies,
                                 tsSent: newMessage.tsSent,
@@ -377,6 +384,8 @@ export default function Home(props: HomeProps) {
                                 newMessage.chatName,
                                 newMessage.dmPartnerUserId,
                                 newDMMessage,
+                                newDMMessage.contentText,
+                                newDMMessage.tsSent,
                                 setAllChats)
 
                             if (newMessage.chatId === currentMainChat.chatId || currentMainChat.chatId === -1) {
@@ -388,6 +397,7 @@ export default function Home(props: HomeProps) {
                                     unread: false,
                                     messages: [...currentMainChat.messages, newMessage],
                                     latestMessage: newMessage,
+                                    latestMessageText: newMessage.contentText,
                                     TSLastMessage: newMessage.tsSent,
                                 };
                                 setCurrentMainChat(updatedChat);
@@ -400,6 +410,7 @@ export default function Home(props: HomeProps) {
                                     unread: false,
                                     messages: [...currentMainChat.messages, newMessage],
                                     latestMessage: newMessage,
+                                    latestMessageText: newMessage.contentText,
                                     TSLastMessage: newMessage.tsSent,
                                 };
                                 setCurrentSubChat(updatedChat);
@@ -416,6 +427,7 @@ export default function Home(props: HomeProps) {
                                 chatId: newMessage.chatId,
                                 messageId: newMessage.messageId,
                                 content: newMessage.content,
+                                contentText: newMessage.contentText,
                                 sender: newMessage.sender,
                                 numReplies: newMessage.numReplies,
                                 tsSent: newMessage.tsSent,
@@ -425,6 +437,8 @@ export default function Home(props: HomeProps) {
                                 newMessage.chatName,
                                 newMessage.dmPartnerUserId,
                                 newDMMessage,
+                                newMessage.contentText,
+                                newDMMessage.tsSent,
                                 setAllChats
                             )
 
@@ -454,6 +468,7 @@ export default function Home(props: HomeProps) {
                                 threadId: newMessage.threadId,
                                 messageId: newMessage.messageId,
                                 content: newMessage.content,
+                                contentText: newMessage.contentText,
                                 sender: newMessage.sender,
                                 tsSent: newMessage.tsSent,
                                 taskId: newMessage.taskId,
@@ -496,6 +511,7 @@ export default function Home(props: HomeProps) {
                                 chatId: newMessage.chatId,
                                 messageId: newMessage.messageId,
                                 content: newMessage.content,
+                                contentText: newMessage.contentText,
                                 sender: newMessage.sender,
                                 numReplies: newMessage.numReplies,
                                 tsSent: newMessage.tsSent,
@@ -503,7 +519,7 @@ export default function Home(props: HomeProps) {
                             insertGMMessage(newGMMessage)
 
                             if (allChats.length > 0) {
-                                insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, setAllChats)
+                                insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, newMessage.contentText, setAllChats)
                             }
 
                             if (newMessage.chatId === currentMainChat.chatId) {
@@ -515,6 +531,7 @@ export default function Home(props: HomeProps) {
                                     unread: false,
                                     messages: [...currentMainChat.messages, newMessage],
                                     latestMessage: newMessage,
+                                    latestMessageText: newMessage.contentText,
                                     TSLastMessage: newMessage.tsSent,
                                 };
                                 setCurrentMainChat(updatedChat);
@@ -527,6 +544,7 @@ export default function Home(props: HomeProps) {
                                     unread: false,
                                     messages: [...currentMainChat.messages, newMessage],
                                     latestMessage: newMessage,
+                                    latestMessageText: newMessage.contentText,
                                     TSLastMessage: newMessage.tsSent,
                                 };
                                 setCurrentSubChat(updatedChat);
@@ -543,11 +561,12 @@ export default function Home(props: HomeProps) {
                                 chatId: newMessage.chatId,
                                 messageId: newMessage.messageId,
                                 content: newMessage.content,
+                                contentText: newMessage.contentText,
                                 sender: newMessage.sender,
                                 numReplies: newMessage.numReplies,
                                 tsSent: newMessage.tsSent,
                             }
-                            insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, setAllChats)
+                            insertGMChat(newMessage.chatId, newMessage.chatName, newGMMessage, newGMMessage.contentText, setAllChats)
                         }
                     }
                 }

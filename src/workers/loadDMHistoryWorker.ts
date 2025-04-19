@@ -34,6 +34,7 @@ self.onmessage = async (event) => {
                 isDm: true,
                 dmPartnerUserId: dmChat.dmPartnerUserId,
                 latestMessage: dmChat.latestMessage,
+                latestMessageText: dmChat.latestMessageText,
                 TSLastMessage: dmChat.TSLastMessage
             }
         }

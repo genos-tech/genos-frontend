@@ -36,11 +36,9 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import { useColorScheme } from '@mui/joy/styles';
-import { UserProps, ChatProps, AllChatProps } from '../../types'
-import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
-import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
-import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
-import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
+import { UserProps, ChatProps, AllChatProps, ThreadMessageProps, ThreadProps } from '../../types'
+import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
+import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Tooltip from '@mui/joy/Tooltip';
 
@@ -57,57 +55,36 @@ function getCurrentTimestamp() {
 }
 
 
-const insertDMChatAndMessage = async (newDMChat: AllChatProps): Promise<string> => {
+const insertDMThreadMessage = async (newDMThreadMessage: ThreadMessageProps): Promise<string> => {
     return new Promise((resolve, reject) => {
-        const insertDMMessageWorker = new InsertDMMessageWorker();
-        insertDMMessageWorker.postMessage({ dmMessage: newDMChat.latestMessage });
-        insertDMMessageWorker.onmessage = (event) => {
+        const insertDMThreadMessageWorker = new InsertDMThreadMessageWorker();
+        insertDMThreadMessageWorker.postMessage({ dmThreadMessage: newDMThreadMessage });
+        insertDMThreadMessageWorker.onmessage = (event) => {
             resolve(event.data);
-            insertDMMessageWorker.terminate();
+            insertDMThreadMessageWorker.terminate();
         };
-        insertDMMessageWorker.onerror = (error) => {
+        insertDMThreadMessageWorker.onerror = (error) => {
             reject(error);
-            insertDMMessageWorker.terminate();
-        };
-
-        const insertDMChatWorker = new InsertDMChatWorker();
-        insertDMChatWorker.postMessage({ dmChat: newDMChat });
-        insertDMChatWorker.onmessage = (event) => {
-            resolve(event.data);
-            insertDMChatWorker.terminate();
-        };
-        insertDMChatWorker.onerror = (error) => {
-            reject(error);
-            insertDMChatWorker.terminate();
+            insertDMThreadMessageWorker.terminate();
         };
     });
 };
 
-const insertGMChatAndMessage = async (newGMChat: AllChatProps): Promise<string> => {
+const insertGMThreadMessage = async (newGMThreadMessage: ThreadMessageProps): Promise<string> => {
     return new Promise((resolve, reject) => {
-        const insertGMMessageWorker = new InsertGMMessageWorker();
-        insertGMMessageWorker.postMessage({ gmMessage: newGMChat.latestMessage });
-        insertGMMessageWorker.onmessage = (event) => {
+        const insertGMThreadMessageWorker = new InsertGMThreadMessageWorker();
+        insertGMThreadMessageWorker.postMessage({ gmThreadMessage: newGMThreadMessage });
+        insertGMThreadMessageWorker.onmessage = (event) => {
             resolve(event.data);
-            insertGMMessageWorker.terminate();
+            insertGMThreadMessageWorker.terminate();
         };
-        insertGMMessageWorker.onerror = (error) => {
+        insertGMThreadMessageWorker.onerror = (error) => {
             reject(error);
-            insertGMMessageWorker.terminate();
-        };
-
-        const insertGMChatWorker = new InsertGMChatWorker();
-        insertGMChatWorker.postMessage({ gmChat: newGMChat });
-        insertGMChatWorker.onmessage = (event) => {
-            resolve(event.data);
-            insertGMChatWorker.terminate();
-        };
-        insertGMChatWorker.onerror = (error) => {
-            reject(error);
-            insertGMChatWorker.terminate();
+            insertGMThreadMessageWorker.terminate();
         };
     });
 };
+
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -155,19 +132,19 @@ const getCustomSlashMenuItems = (
     editor: typeof schema.BlockNoteEditor
 ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
-type BnEditorProps = {
+type BnThreadEditorProps = {
     myself: UserProps;
     socket: Socket;
-    chat: ChatProps;
-    setCurrentChat: (chat: ChatProps) => void;
+    thread: ThreadProps;
+    setCurrentThreadChat: (chat: ThreadProps) => void;
 }
 
-export function BnEditor(props: BnEditorProps) {
+export function BnThreadEditor(props: BnThreadEditorProps) {
     const {
         myself,
         socket,
-        chat,
-        setCurrentChat } = props;
+        thread,
+        setCurrentThreadChat } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`
 
@@ -229,69 +206,61 @@ export function BnEditor(props: BnEditorProps) {
                                     contentText = content[0].text
                                 }
 
-                                socket.emit("message", {
-                                    message: editor.document,
-                                    destCGName: chat.chatName,
-                                    destCGId: chat.chatId,
-                                    isDm: chat.isDm,
-                                    dmPartnerUserId: myself.userId,
+                                socket.emit("thread_message", {
+                                    isInit: false,
+                                    rootMessageTSSent: "",
+                                    threadId: thread.threadId,
+                                    threadMessage: editor.document,
+                                    isDm: thread.isDm,
+                                    dmPartnerUserId: thread.dmPartnerUserId,
+                                    senderId: myself.userId,
+                                    senderName: myself.userName,
+                                    destCGName: thread.chatName,
+                                    destCGId: thread.chatId,
+                                    taskId: thread.taskId
                                 }, (ack: any) => {
-                                    const updatedChat: ChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.dmPartnerUserId,
+
+                                    const updatedChat: ThreadProps = {
+                                        chatId: thread.chatId,
+                                        chatName: thread.chatName,
+                                        threadId: thread.threadId,
+                                        isDm: thread.isDm,
+                                        dmPartnerUserId: thread.dmPartnerUserId,
+                                        taskId: null,
                                         unread: false,
-                                        messages: [...chat.messages, {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
+                                        messages: [...thread.messages, {
+                                            messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                                            chatId: thread.chatId,
+                                            threadId: thread.threadId,
+                                            messageId: Number(thread.messages.length) + 1,
                                             content: editor.document,
                                             contentText: contentText,
                                             sender: myself,
                                             tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
+                                            taskId: thread.taskId
                                         }],
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
                                         TSLastMessage: getCurrentTimestamp(),
                                     };
-                                    setCurrentChat(updatedChat);
+                                    setCurrentThreadChat(updatedChat);
 
-                                    const newChat: AllChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.dmPartnerUserId,
-                                        unread: false,
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
-                                        TSLastMessage: getCurrentTimestamp(),
+                                    const newThreadMessage: ThreadMessageProps = {
+                                        messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                                        chatId: thread.chatId,
+                                        threadId: thread.threadId,
+                                        messageId: Number(thread.messages.length) + 1,
+                                        content: editor.document,
+                                        contentText: contentText,
+                                        sender: myself,
+                                        tsSent: getCurrentTimestamp(),
+                                        taskId: thread.taskId
                                     };
 
-                                    if (chat.isDm) {
-                                        insertDMChatAndMessage(newChat);
+                                    if (thread.isDm) {
+                                        insertDMThreadMessage(newThreadMessage);
                                     } else {
-                                        insertGMChatAndMessage(newChat);
+                                        insertGMThreadMessage(newThreadMessage);
                                     }
+
                                     editor.replaceBlocks(editor.document, [])
                                 });
                             }
@@ -335,69 +304,61 @@ export function BnEditor(props: BnEditorProps) {
                                     contentText = content[0].text
                                 }
 
-                                socket.emit("message", {
-                                    message: editor.document,
-                                    destCGName: chat.chatName,
-                                    destCGId: chat.chatId,
-                                    isDm: chat.isDm,
-                                    dmPartnerUserId: chat.dmPartnerUserId,
+                                socket.emit("thread_message", {
+                                    isInit: false,
+                                    rootMessageTSSent: "",
+                                    threadId: thread.threadId,
+                                    threadMessage: editor.document,
+                                    isDm: thread.isDm,
+                                    dmPartnerUserId: thread.dmPartnerUserId,
+                                    senderId: myself.userId,
+                                    senderName: myself.userName,
+                                    destCGName: thread.chatName,
+                                    destCGId: thread.chatId,
+                                    taskId: thread.taskId
                                 }, (ack: any) => {
 
-                                    const updatedChat: ChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.dmPartnerUserId,
+                                    const updatedChat: ThreadProps = {
+                                        chatId: thread.chatId,
+                                        chatName: thread.chatName,
+                                        threadId: thread.threadId,
+                                        isDm: thread.isDm,
+                                        dmPartnerUserId: thread.dmPartnerUserId,
+                                        taskId: null,
                                         unread: false,
-                                        messages: [...chat.messages, {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
+                                        messages: [...thread.messages, {
+                                            messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                                            chatId: thread.chatId,
+                                            threadId: thread.threadId,
+                                            messageId: Number(thread.messages.length) + 1,
                                             content: editor.document,
                                             contentText: contentText,
                                             sender: myself,
                                             tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
+                                            taskId: thread.taskId
                                         }],
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
                                         TSLastMessage: getCurrentTimestamp(),
                                     };
-                                    setCurrentChat(updatedChat);
+                                    setCurrentThreadChat(updatedChat);
 
-                                    const newChat: AllChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.dmPartnerUserId,
-                                        unread: false,
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
-                                        TSLastMessage: getCurrentTimestamp(),
+                                    const newThreadMessage: ThreadMessageProps = {
+                                        messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                                        chatId: thread.chatId,
+                                        threadId: thread.threadId,
+                                        messageId: Number(thread.messages.length) + 1,
+                                        content: editor.document,
+                                        contentText: contentText,
+                                        sender: myself,
+                                        tsSent: getCurrentTimestamp(),
+                                        taskId: thread.taskId
                                     };
-                                    if (chat.isDm) {
-                                        insertDMChatAndMessage(newChat);
+
+                                    if (thread.isDm) {
+                                        insertDMThreadMessage(newThreadMessage);
                                     } else {
-                                        insertGMChatAndMessage(newChat);
+                                        insertGMThreadMessage(newThreadMessage);
                                     }
+
                                     editor.replaceBlocks(editor.document, [])
                                 });
                             }
@@ -492,6 +453,6 @@ export function BnEditor(props: BnEditorProps) {
     );
 }
 
-export default BnEditor;
+export default BnThreadEditor;
 
 

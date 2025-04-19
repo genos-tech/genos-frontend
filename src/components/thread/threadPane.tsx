@@ -12,7 +12,7 @@ import {
   PreviewTaskProps
 } from '../../types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
-import BnEditor from '../../components/richTextEditor/bnEditor'
+import BnThreadEditor from '../../components/richTextEditor/bnThreadEditor'
 
 
 type MessagesPaneProps = {
@@ -204,7 +204,13 @@ export default function ThreadPane(props: MessagesPaneProps) {
           </Box>
 
           <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-            <BnEditor />
+
+            <BnThreadEditor
+              myself={myself}
+              socket={socket}
+              thread={thread}
+              setCurrentThreadChat={setCurrentThreadChat}
+            />
           </Box>
 
         </Sheet>

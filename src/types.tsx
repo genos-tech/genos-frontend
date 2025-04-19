@@ -1,3 +1,5 @@
+import { PartialBlock } from "@blocknote/core";
+
 // User Props
 export type UserProps = {
     teamId: string;
@@ -16,6 +18,7 @@ export type AllChatProps = {
     dmPartnerUserId: string | null;
     unread: boolean | true;
     latestMessage?: MessageProps;
+    latestMessageText: string;
     CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
     TSLastMessage: string;
 };
@@ -28,8 +31,9 @@ export type ChatProps = {
     unread: boolean | true;
     messages: MessageProps[];
     latestMessage?: MessageProps;
+    latestMessageText: string;
     CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
-    TSLastMessage?: string;
+    TSLastMessage: string;
 };
 
 // Thread Props
@@ -51,7 +55,8 @@ export type MessageProps = {
     messageIdWithChatId?: string;
     chatId: number;
     messageId: number;
-    content: string;
+    content: PartialBlock[] | any[];
+    contentText:  string;
     sender: UserProps;
     tsSent: string;
     isLiked?: boolean | false;
@@ -69,7 +74,8 @@ export type ThreadMessageProps = {
     chatId: number;
     threadId: number;
     messageId: number;
-    content: string;
+    content: PartialBlock[] | any[];
+    contentText:  string;
     sender: UserProps;
     taskId: number | null;
     tsSent: string;
@@ -88,7 +94,8 @@ export type NewMessageProps = {
     isDm: boolean;
     dmPartnerUserId: string | null;
     isThread: boolean;
-    content: string;
+    content: PartialBlock[] | any[];
+    contentText:  string;
     sender: UserProps;
     tsSent: string;
     isLiked?: boolean | false;
@@ -108,7 +115,8 @@ export type NewThreadMessageProps = {
     isDm: boolean;
     dmPartnerUserId: string | null;
     isThread: boolean;
-    content: string;
+    content: PartialBlock[] | any[];
+    contentText:  string;
     sender: UserProps;
     taskId: number | null;
     tsSent: string;
@@ -151,7 +159,7 @@ export type TaskCommentProps = {
     senderId: string,
     senderName: string,
     commentId: number,
-    commentBody: string,
+    commentBody: any,
     sentAt: string,
 }
 

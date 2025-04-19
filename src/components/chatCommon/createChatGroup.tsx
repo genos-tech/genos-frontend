@@ -50,6 +50,7 @@ const insertGMChatAndMessage = async (
                 isDm: false,
                 dmPartnerUserId: null,
                 latestMessage: newGMChat.latestMessage,
+                latestMessageText: newGMChat.latestMessageText,
                 TSLastMessage: getCurrentTimestamp()
             }]);
         };
@@ -94,6 +95,7 @@ const moveToGMChat = async (
                     unread: false,
                     messages: fetchedMessages,
                     latestMessage: fetchedMessages[fetchedMessages.length - 1],
+                    latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
                     TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
                 };
                 setCurrentMainChat(newChat)
@@ -162,7 +164,7 @@ async function createChatGroup(
                 dmPartnerUserId: null,
             }, (ack: any) => {
                 socket.emit("message", {
-                    message: 'Created this group',
+                    message: [{ type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] }, { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }],
                     destCGName: chatName,
                     destCGId: data.chatId,
                     isDm: false,
@@ -180,11 +182,13 @@ async function createChatGroup(
                     messageIdWithChatId: `${data.chatId}-1`,
                     chatId: data.chatId,
                     messageId: 1,
-                    content: 'I created this group',
+                    content: [{ type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] }, { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }],
+                    contentText: "Created this group",
                     sender: myself,
                     tsSent: getCurrentTimestamp(),
                     numReplies: 0
                 },
+                latestMessageText: "Created this group",
                 TSLastMessage: getCurrentTimestamp(),
             }
             insertGMChatAndMessage(newGMChat, allChats, setAllChats, setCurrentMainChat)

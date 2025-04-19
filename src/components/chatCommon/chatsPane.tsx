@@ -202,6 +202,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             unread: false,
             messages: fetchedMessages,
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
+            latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
           setCurrentMainChat(newChat)
@@ -239,6 +240,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
             unread: false,
             messages: fetchedMessages,
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
+            latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
           };
           setCurrentMainChat(newChat)
@@ -288,7 +290,8 @@ export default function ChatsPane(props: ChatsPaneProps) {
               messageIdWithChatId: `${chatId}-1`,
               chatId: chatId,
               messageId: 1,
-              content: 'Joined',
+              content: [{ type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] }, { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }],
+              contentText: "joined",
               sender: myself,
               tsSent: getCurrentTimestamp(),
               numReplies: 0
@@ -300,6 +303,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
               dmPartnerUserId: dmPartnerUserId,
               unread: true,
               latestMessage: dmMessage,
+              latestMessageText: "joined",
               TSLastMessage: getCurrentTimestamp(),
             }
             insertDMChat(dmChat)
@@ -313,7 +317,8 @@ export default function ChatsPane(props: ChatsPaneProps) {
               messageIdWithChatId: `${chatId}-1`,
               chatId: chatId,
               messageId: 1,
-              content: 'Joined',
+              content: [{ type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] }, { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }],
+              contentText: "joined",
               sender: myself,
               tsSent: getCurrentTimestamp(),
               numReplies: 0
@@ -325,6 +330,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
               dmPartnerUserId: null,
               unread: true,
               latestMessage: gmMessage,
+              latestMessageText: "joined",
               TSLastMessage: getCurrentTimestamp(),
             }
             insertGMChat(gmChat)

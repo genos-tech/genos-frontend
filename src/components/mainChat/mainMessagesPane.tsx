@@ -191,7 +191,12 @@ export default function MessagesPane(props: MessagesPaneProps) {
           />
         </Box>
         <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-          <BnEditor />
+          <BnEditor
+            myself={myself}
+            socket={socket}
+            chat={chat}
+            setCurrentChat={setCurrentMainChat}
+          />
         </Box>
       </Sheet >
     </div>

@@ -12,6 +12,7 @@ import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRound
 import AvatarWithStatus from '../utils/avatarWithStatus';
 import { ThreadMessageProps, UserProps } from '../../types';
 import { useColorScheme } from '@mui/joy/styles';
+import BnPreview from '../../components/richTextEditor/bnPreview';
 
 type ThreadBubbleProps = ThreadMessageProps & {
   myself: UserProps;
@@ -158,18 +159,7 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
                   </Stack>
                 </Box>
               </Stack>
-
-              <MarkdownPreview
-                className="markdown-preview"
-                source={content}
-                style={{
-                  backgroundColor: 'transparent',
-                  padding: 1,
-                  color: mode === 'dark'
-                    ? (isSent ? 'black' : 'white')
-                    : (isSent ? 'white' : 'black')
-                }}
-              />
+              {content.length > 0 && <BnPreview content={content} isSent={isSent} />}
             </Stack>
           </Sheet>
         </Box>

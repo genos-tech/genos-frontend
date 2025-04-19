@@ -14,7 +14,6 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
-import MarkdownPreview from '@uiw/react-markdown-preview';
 import { useColorScheme } from '@mui/joy/styles';
 import {
   UserProps,
@@ -30,6 +29,7 @@ import FetchSpecificDMThreadMessagesWorker from "../../workers/fetchSpecificDMTh
 import FetchSpecificGMThreadMessagesWorker from "../../workers/fetchSpecificGMThreadMessagesWorker.ts?worker";
 import loadSpecificTaskByThreadId from '../backendOperation/loadSpecificTaskByThreadId';
 import { useAuth } from "../../components/admin/AuthContext";
+import BnPreview from '../../components/richTextEditor/bnPreview';
 
 function getCurrentTimestamp() {
   const now = new Date();
@@ -332,6 +332,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                                 threadId: messageId,
                                 messageId: 1,
                                 content: content,
+                                contentText: "Need to add",
                                 sender: myself,
                                 taskId: null,
                                 tsSent: getCurrentTimestamp(),
@@ -373,18 +374,12 @@ export default function ChatBubble(props: ChatBubbleProps) {
                   </Stack>
                 </Box>
               </Stack>
-
-              <MarkdownPreview
-                className="markdown-preview"
-                source={content}
-                style={{
-                  backgroundColor: 'transparent',
-                  padding: 1,
-                  color: mode === 'dark'
-                    ? (isSent ? 'black' : 'white')
-                    : (isSent ? 'white' : 'black')
-                }}
-              />
+              {content.length > 0
+                && <BnPreview
+                  key={`${chat.chatId}-${messageId}-${chat.isDm}-${tsSent}`}
+                  content={content}
+                  isSent={isSent}
+                />}
             </Stack>
 
 
@@ -429,6 +424,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                         threadId: messageId,
                         messageId: 1,
                         content: content,
+                        contentText: "Need to add",
                         sender: myself,
                         taskId: null,
                         tsSent: getCurrentTimestamp(),

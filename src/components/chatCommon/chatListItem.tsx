@@ -92,7 +92,9 @@ export default function ChatListItem(props: ChatListItemProps) {
   const always_online: boolean = true; // TODO: need to get status from WS
 
   const onClickHandler = () => {
-    if (isSubChatVisible === false || currentSubChat.chatId !== chat.chatId) {
+    console.log(chat)
+    if (isSubChatVisible === false
+      || (`${currentSubChat.chatId}-${currentSubChat.chatName}` !== `${chat.chatId}-${chat.chatName}`)) {
       toggleMessagesPane();
       chat.unread = Boolean(false);
       if (chat.isDm) {
@@ -106,6 +108,7 @@ export default function ChatListItem(props: ChatListItemProps) {
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
+              latestMessageText: messages[messages.length - 1].contentText,
               TSLastMessage: chat.TSLastMessage
             }
             setCurrentMainChat(newMessages);
@@ -122,12 +125,14 @@ export default function ChatListItem(props: ChatListItemProps) {
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
+              latestMessageText: messages[messages.length - 1].contentText,
               TSLastMessage: chat.TSLastMessage
             }
             setCurrentMainChat(newMessages);
           })
           .catch((error) => console.error(error));
       }
+    } else {
     }
   };
 
@@ -145,6 +150,7 @@ export default function ChatListItem(props: ChatListItemProps) {
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
+              latestMessageText: messages[messages.length - 1].contentText,
               TSLastMessage: chat.TSLastMessage
             }
             setCurrentSubChat(newMessages);
@@ -161,6 +167,7 @@ export default function ChatListItem(props: ChatListItemProps) {
               unread: false,
               messages: messages,
               latestMessage: messages[messages.length - 1],
+              latestMessageText: messages[messages.length - 1].contentText,
               TSLastMessage: chat.TSLastMessage
             }
             setCurrentSubChat(newMessages);
@@ -173,7 +180,7 @@ export default function ChatListItem(props: ChatListItemProps) {
 
   var tsSent: string = ""
   if (chat.latestMessage === undefined) {
-    tsSent = "N/A"
+    tsSent = ""
   } else {
     tsSent = extractHHMM(chat.latestMessage.tsSent)
   }
@@ -241,7 +248,7 @@ export default function ChatListItem(props: ChatListItemProps) {
                   textOverflow: 'ellipsis',
                 }}
               >
-                {chat.latestMessage?.content}
+                {chat.latestMessageText}
               </Typography>
             </Box>
           </Stack>

@@ -139,7 +139,7 @@ export default function CreateTeam() {
                         dm_id: createMyDMData.dm_id,
                         sender_id: myUserId,
                         receiver_id: myUserId,
-                        message_body: "Joined",
+                        message_body: [{ type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] }, { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }],
                         is_init: true
                     }),
                 });
@@ -224,7 +224,7 @@ export default function CreateTeam() {
                             dm_id: createMyDMData.dm_id,
                             sender_id: myUserId,
                             receiver_id: myUserId,
-                            message_body: "Joined"
+                            message_body: [{ type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] }, { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }],
                         }),
                     });
                     const initMessageData = await initMessageResponse.json();
