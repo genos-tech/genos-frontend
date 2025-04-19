@@ -5,13 +5,11 @@ import IconButton from '@mui/joy/IconButton';
 import Stack from '@mui/joy/Stack';
 import Sheet from '@mui/joy/Sheet';
 import Typography from '@mui/joy/Typography';
-import MarkdownPreview from '@uiw/react-markdown-preview';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../utils/avatarWithStatus';
 import { ThreadMessageProps, UserProps } from '../../types';
-import { useColorScheme } from '@mui/joy/styles';
 import BnPreview from '../../components/richTextEditor/bnPreview';
 
 type ThreadBubbleProps = ThreadMessageProps & {
@@ -32,9 +30,7 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
     sender } = props;
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
-  const [isCelebrated, setIsCelebrated] = React.useState<boolean>(false);
   const _tsSent = extractHHMM(tsSent)
-  const { mode } = useColorScheme();
 
   return (
     <Box sx={{

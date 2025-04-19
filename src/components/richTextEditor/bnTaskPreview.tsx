@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Socket } from "socket.io-client";
-import { Box, IconButton } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { en } from "@blocknote/core/locales";
-import SendIcon from '@mui/icons-material/Send';
 import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
@@ -14,7 +12,6 @@ import {
     FileCaptionButton,
     FileReplaceButton,
     FormattingToolbar,
-    NestBlockButton,
     TextAlignButton,
     FormattingToolbarController,
     useCreateBlockNote,
@@ -37,21 +34,6 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import { useColorScheme } from '@mui/joy/styles';
-import { UserProps, TaskCommentProps } from '../../types'
-
-
-function getCurrentTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
-
 
 
 // Disable the Audio and Image blocks from the built-in schema

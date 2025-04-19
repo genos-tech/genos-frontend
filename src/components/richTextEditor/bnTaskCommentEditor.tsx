@@ -14,9 +14,7 @@ import {
     FileCaptionButton,
     FileReplaceButton,
     FormattingToolbar,
-    NestBlockButton,
     TextAlignButton,
-    UnnestBlockButton,
     useCreateBlockNote,
     DefaultReactSuggestionItem,
     SuggestionMenuController,
@@ -27,7 +25,6 @@ import {
     defaultInlineContentSpecs,
     filterSuggestionItems,
     defaultBlockSpecs,
-    PartialBlock
 } from "@blocknote/core";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -37,7 +34,7 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import { useColorScheme } from '@mui/joy/styles';
-import { UserProps, ChatProps, TaskCommentProps } from '../../types'
+import { UserProps, TaskCommentProps } from '../../types'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Tooltip from '@mui/joy/Tooltip';
 
@@ -108,6 +105,8 @@ type BnTaskCommentEditorProps = {
     setTaskUpdate: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
+    isCommentUpdated: boolean;
+    setIsCommentUpdated: (value: boolean) => void;
 }
 
 export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
@@ -118,11 +117,12 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
         taskId,
         setTaskUpdate,
         taskComments,
-        setTaskComments
+        setTaskComments,
+        isCommentUpdated,
+        setIsCommentUpdated,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`
-    const currentCommentLength: number = taskComments.length;
 
     // We use the English, default dictionary
     const locale = en;
@@ -157,10 +157,19 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
     useEffect(() => { if (selectedEmoji !== null) { insertEmoji(selectedEmoji) } }, [selectedEmoji])
 
     useEffect(() => {
-        if (taskComments.length > currentCommentLength) {
+        if (isCommentUpdated) {
+            setTaskComments([...taskComments, {
+                taskId: taskId,
+                senderId: myself.userId,
+                senderName: myself.userName,
+                commentId: taskComments.length + 1,
+                commentBody: editor.document,
+                sentAt: getCurrentTimestamp(),
+            }])
             editor.replaceBlocks(editor.document, [])
+            setIsCommentUpdated(false)
         }
-    }, [taskComments])
+    }, [isCommentUpdated, taskComments])
 
     return (
         <Box>
@@ -187,14 +196,7 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                                         task_id: taskId,
                                         comment_body: editor.document
                                     }, (ack: any) => {
-                                        setTaskComments([...taskComments, {
-                                            taskId: taskId,
-                                            senderId: myself.userId,
-                                            senderName: myself.userName,
-                                            commentId: taskComments.length + 1,
-                                            commentBody: editor.document,
-                                            sentAt: getCurrentTimestamp(),
-                                        }])
+                                        setIsCommentUpdated(true)
                                     }
                                     )
                                 }
@@ -237,15 +239,7 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                                         task_id: taskId,
                                         comment_body: editor.document
                                     }, (ack: any) => {
-                                        editor.replaceBlocks(editor.document, [])
-                                        setTaskComments([...taskComments, {
-                                            taskId: taskId,
-                                            senderId: myself.userId,
-                                            senderName: myself.userName,
-                                            commentId: taskComments.length + 1,
-                                            commentBody: editor.document,
-                                            sentAt: getCurrentTimestamp(),
-                                        }])
+                                        setIsCommentUpdated(true)
                                     }
                                     )
                                 }

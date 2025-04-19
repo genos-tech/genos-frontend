@@ -141,6 +141,7 @@ export function InitialLoad(
                             unread: (InitialChatMessages.length === 1) ? true : false,
                             messages: InitialChatMessages,
                             latestMessage: InitialChatMessages[InitialChatMessages.length - 1],
+                            latestMessageText: InitialChatMessages[InitialChatMessages.length - 1].contentText,
                             TSLastMessage: fetchedChat.TSLastMessage,
                         }
                         setCurrentMainChat(currentMainChat)
@@ -158,6 +159,8 @@ export function InitialLoad(
                     chatName: "Origin",
                     isDm: true,
                     dmPartnerUserId: null,
+                    latestMessageText: "",
+                    TSLastMessage: "",
                     unread: true,
                     messages: [],
                 }

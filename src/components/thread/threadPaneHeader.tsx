@@ -9,7 +9,6 @@ import Chip from '@mui/joy/Chip';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ReplyIcon from '@mui/icons-material/Reply';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import { ThreadProps, UserProps, PreviewTaskProps } from '../../types';
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect, useRef } from "react";
 import { alpha } from '@mui/system';
+import { io, Socket } from "socket.io-client";
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 import Chip from '@mui/joy/Chip';
@@ -20,7 +21,6 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import { MarkdownEditor } from "../markdownEditor/taskMdEditor";
 import {
     UserProps,
     PreviewTaskProps,
@@ -48,6 +48,12 @@ import MoreVert from '@mui/icons-material/MoreVert';
 import loadTaskComments from '../backendOperation/loadTaskComments';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
+import BnTaskPreview from '../../components/richTextEditor/bnTaskPreview'
+import BnTaskCommentPreview from '../../components/richTextEditor/bnTaskCommentEditor'
+import { PartialBlock } from "@blocknote/core";
+
+const ws_url = import.meta.env.VITE_WS_BASE_URL;
+
 
 const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
@@ -112,14 +118,33 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
     const [taskUpdated, setTaskUpdate] = useState(false);
     const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
     const [taskTitle, setTaskTitle] = useState<string | null>(null);
-    const [body, setBody] = useState<string | null>(null);
+    const [body, setBody] = useState<PartialBlock[]>(currentPreviewTask.body);
+    const [isCommentUpdated, setIsCommentUpdated] = useState(false);
+
+    const socket: Socket = io(ws_url, {
+        reconnection: true,          // Enable reconnection
+        reconnectionAttempts: 5,     // Try to reconnect 5 times
+        reconnectionDelay: 1000,     // Wait 1 second before reconnecting
+        reconnectionDelayMax: 5000,  // Max delay between reconnection attempts
+        timeout: 10000,               // Timeout for the connection attempt
+        withCredentials: true,
+        query: {
+            teamId: localStorage.getItem("teamId"),
+            userId: localStorage.getItem("userId"),
+            userName: localStorage.getItem("userName"),
+            userEmail: localStorage.getItem("userEmail"),
+        },
+        extraHeaders: {
+            Authorization: accessToken || ""
+        },
+    });
 
     useEffect(() => {
         if (currentPreviewTask) {
             setCurrentTaskContent(currentPreviewTask)
         }
         setTaskTitle(currentPreviewTask?.title || null)
-        setBody(currentPreviewTask?.body || null)
+        setBody(currentPreviewTask?.body || [])
         setUploadedFiles(currentPreviewTask?.attachments || [])
     }, [currentPreviewTask])
 
@@ -326,6 +351,24 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
             }
         })();
     }, [currentPreviewTask])
+
+    // Web Socket handler
+    useEffect(() => {
+        socket.on("connect", () => {
+            // console.log("WS connected from task home")
+        });
+        socket.on("auth_error", (data) => {
+            console.error("Authentication Error:", data.message);
+        });
+        socket.on("message", (message) => {
+            console.log("task_comment:", message)
+            setIsCommentUpdated(true)
+        })
+        return () => {
+            socket.off("message");
+            socket.off("connect");
+        };
+    }, [accessToken, currentTaskContent]);
 
     // Update Project and Tag list
     const updateProjectOptions = () => {
@@ -1018,22 +1061,11 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
 
             <Stack direction={"column"} sx={{ width: '100%' }}>
                 <Box sx={{ mt: 2 }}>
-                    <div className="md-content">
-                        <MarkdownEditor
-                            myself={myself}
-                            projectId={currentPreviewTask.project?.projectId || -1}
-                            taskId={-1}
-                            content={body || ""}
-                            setBody={setBody}
-                            height={getMdHeight(body || "")}
-                            mdMode={"preview"}
-                            sendMode={false}
-                            isTaskBody={true}
-                            setTaskUpdate={setTaskUpdate}
-                            taskComments={[]}
-                            setTaskComments={() => { }}
-                        />
-                    </div>
+                    <BnTaskPreview
+                        body={body}
+                        setBody={setBody}
+                        setTaskUpdate={setTaskUpdate}
+                    />
                 </Box>
             </Stack>
 
@@ -1076,22 +1108,17 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
                     <TaskCommentBubble taskComments={taskComments} />
                 </Box>
 
-                <div className="md-content">
-                    <MarkdownEditor
-                        myself={myself}
-                        projectId={currentPreviewTask.project.projectId || -1}
-                        taskId={Number(currentPreviewTask.id)}
-                        content={comment}
-                        setBody={setComment}
-                        height={200}
-                        mdMode={"edit"}
-                        sendMode={true}
-                        isTaskBody={false}
-                        setTaskUpdate={setTaskUpdate}
-                        taskComments={taskComments}
-                        setTaskComments={setTaskComments}
-                    />
-                </div>
+                <BnTaskCommentPreview
+                    myself={myself}
+                    socket={socket}
+                    projectId={currentPreviewTask.project.projectId}
+                    taskId={Number(currentTaskContent.id)}
+                    setTaskUpdate={setTaskUpdate}
+                    taskComments={taskComments}
+                    setTaskComments={setTaskComments}
+                    isCommentUpdated={isCommentUpdated}
+                    setIsCommentUpdated={setIsCommentUpdated}
+                />
             </Box>
 
         </Sheet>

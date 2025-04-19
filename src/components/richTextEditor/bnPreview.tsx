@@ -1,4 +1,3 @@
-import { useEffect, useState, useMemo } from "react";
 import { Box } from "@mui/joy";
 import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
