@@ -11,9 +11,9 @@ import {
   ThreadProps,
   PreviewTaskProps
 } from '../../types';
-import { MarkdownEditor } from "../markdownEditor/mdEditor";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { useColorScheme } from '@mui/joy/styles';
+import BnEditor from '../../components/richTextEditor/bnEditor'
 
 
 type MessagesPaneProps = {
@@ -167,15 +167,8 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
             }}
           />
         </Box>
-        <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-          <div className="md-content">
-            <MarkdownEditor myself={myself}
-              socket={socket}
-              chat={subChat}
-              messageContent={content}
-              setContent={setContent}
-              setCurrentChat={setCurrentSubChat} />
-          </div>
+        <Box sx={{ paddingBottom: 1, paddingLeft: 1, paddingRight: 1 }}>
+          <BnEditor />
         </Box>
       </Sheet>
     </div>

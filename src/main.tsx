@@ -25,7 +25,6 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/CreateTeam" element={<CreateTeam />} />
           <Route path="/SelectTeam" element={<SelectTeam />} />
         </Route>
-
       </Routes>
     </Router>
   </AuthProvider>
