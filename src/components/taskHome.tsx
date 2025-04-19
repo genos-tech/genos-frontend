@@ -37,6 +37,7 @@ import CreateTagModal from './tasks/modalCreateTag';
 import CreateProjectModal from './tasks/modalCreateProject';
 import CreateTeamModal from './tasks/modalCreateTeam';
 import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
+import { Socket } from "socket.io-client";
 
 type TaskProps = {
     myself: UserProps;

@@ -446,7 +446,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
           direction="row"
           spacing={1}
           sx={{
-            backgroundColor: mode === 'dark' ? '#363636' : 'rgb(217, 217, 217)',
+            backgroundColor: mode === 'dark' ? '#1f1f1f' : 'rgb(217, 217, 217)',
             alignItems: "center",
             justifyContent: "space-between",
             px: 2,
@@ -475,7 +475,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
           direction="row"
           spacing={1}
           sx={{
-            backgroundColor: mode === 'dark' ? '#363636' : 'rgb(217, 217, 217)',
+            backgroundColor: mode === 'dark' ? '#1f1f1f' : 'rgb(217, 217, 217)',
             alignItems: "center",
             justifyContent: "space-between",
             px: 2,
@@ -579,7 +579,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
           direction="row"
           spacing={1}
           sx={{
-            backgroundColor: mode === 'dark' ? '#363636' : 'rgb(217, 217, 217)',
+            backgroundColor: mode === 'dark' ? '#1f1f1f' : 'rgb(217, 217, 217)',
             alignItems: "center",
             justifyContent: "space-between",
             px: 2,

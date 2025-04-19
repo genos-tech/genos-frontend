@@ -15,7 +15,6 @@ import IconButton from '@mui/joy/IconButton';
 import CancelIcon from '@mui/icons-material/Cancel';
 import GithubIcon from '../../assets/GithubIcon';
 import CustomLinkIcon from '../../assets/CustomLinkIcon';
-import { MarkdownEditor } from "../../components/markdownEditor/taskMdEditor";
 import {
     UserProps,
     CreateTaskProps,
@@ -41,6 +40,8 @@ import MoreVert from '@mui/icons-material/MoreVert';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
 import AddIcon from '@mui/icons-material/Add';
+import BnTaskEditor from '../../components/richTextEditor/bnTaskEditor'
+import { PartialBlock } from "@blocknote/core";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -107,7 +108,7 @@ const saveTask = async (props: saveTaskProps) => {
                         priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
                         effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
                         status: (taskContents.status.status !== "") ? taskContents.status.status : null,
-                        content: (taskContents.body !== "") ? taskContents.body : null,
+                        content: (taskContents.body.length !== 0) ? taskContents.body : [],
                         due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
                         github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
                         github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
@@ -187,7 +188,7 @@ export default function CreateTask(props: TaskContentProps) {
     const [taskContents, setTaskContents] = useState<CreateTaskProps>({
         project: currentProject,
         title: "",
-        body: "",
+        body: [],
         assignee: myself,
         reporter: myself,
         chatType: null,
@@ -203,7 +204,7 @@ export default function CreateTask(props: TaskContentProps) {
         attachments: initUploadingFiles
     });
     const [taskTitle, setTaskTitle] = useState<string>("");
-    const [body, setBody] = useState<string>("");
+    const [body, setBody] = useState<PartialBlock[]>([]);
     const [assigneeName, setAssigneeName] = useState<string>(myself.userName);
     const [reporterName, setReporterName] = useState<string>(myself.userName);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -901,7 +902,7 @@ export default function CreateTask(props: TaskContentProps) {
             <Stack direction={"column"} sx={{ width: '100%' }}>
                 <Box sx={{ mt: 2 }}>
                     <div className="md-content">
-                        <MarkdownEditor
+                        {/* <MarkdownEditor
                             myself={myself}
                             projectId={currentProject.projectId}
                             taskId={-1}
@@ -914,6 +915,9 @@ export default function CreateTask(props: TaskContentProps) {
                             setTaskUpdate={(val) => { val }}
                             taskComments={[]}
                             setTaskComments={() => { }}
+                        /> */}
+                        <BnTaskEditor
+                            setBody={setBody}
                         />
                     </div>
                 </Box>

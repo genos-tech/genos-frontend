@@ -4,11 +4,9 @@ import Stack from '@mui/joy/Stack';
 import Typography from '@mui/joy/Typography';
 import Card from '@mui/joy/Card';
 import Avatar from '@mui/joy/Avatar';
-import MarkdownPreview from '@uiw/react-markdown-preview';
 import { useColorScheme } from '@mui/joy/styles';
-import {
-  TaskCommentProps
-} from "../../types";
+import { TaskCommentProps } from "../../types";
+import BnPreview from '../../components/richTextEditor/bnPreview';
 
 type TaskCommentBubbleProps = {
   taskComments: TaskCommentProps[];
@@ -27,10 +25,10 @@ export default function TaskCommentBubble(props: TaskCommentBubbleProps) {
     }
   }, [taskComments]); // Re-scroll on content change
 
+
   return (
     <>
       {(taskComments.length === 0) && (<div>You can  add your comments here !!!</div>)}
-
       {(taskComments.length > 0) && (<>
         <Box
           ref={boxRef}
@@ -43,31 +41,38 @@ export default function TaskCommentBubble(props: TaskCommentBubbleProps) {
           }}>
           <Stack spacing={1}>
             {taskComments.map((comment, index) => {
-              return (
-                <Box key={index}>
-                  <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'rgb(217, 217, 217)' }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Avatar size="sm">{comment.senderName[0]}</Avatar>
-                      <Typography level="title-md">{comment.senderName}</Typography>
-                      <Typography
-                        level="body-sm"
-                        textColor="black"
-                        sx={{ fontFamily: 'monospace', opacity: 0.7, pl: '5px' }}
-                      >
-                        {comment.sentAt}
-                      </Typography>
-                    </Stack>
-                    <MarkdownPreview
-                      className="markdown-preview"
-                      source={comment.commentBody}
-                      style={{
-                        backgroundColor: 'transparent',
-                        color: 'black'
-                      }}
-                    />
-                  </Card>
-                </Box>
-              )
+              if (comment.commentBody[0].content.length > 0) {
+                return (
+                  <Box key={index}>
+                    <Card sx={{ backgroundColor: mode === 'dark' ? 'grey' : 'rgb(217, 217, 217)' }}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar size="sm">{comment.senderName[0]}</Avatar>
+                        <Typography level="title-md">{comment.senderName}</Typography>
+                        <Typography
+                          level="body-sm"
+                          textColor="black"
+                          sx={{ fontFamily: 'monospace', opacity: 0.7, pl: '5px' }}
+                        >
+                          {comment.sentAt}
+                        </Typography>
+                      </Stack>
+                      {/* <MarkdownPreview
+                        className="markdown-preview"
+                        source={comment.commentBody}
+                        style={{
+                          backgroundColor: 'transparent',
+                          color: 'black'
+                        }}
+                      /> */}
+                      <BnPreview
+                        key={`${taskComments[0].taskId}-${comment.commentId}-${comment.sentAt}`}
+                        content={comment.commentBody}
+                        isSent={true}
+                      />
+                    </Card>
+                  </Box>
+                )
+              }
             })}
           </Stack>
         </Box>

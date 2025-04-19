@@ -49,6 +49,9 @@ import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
+import BnTaskPreview from '../../components/richTextEditor/bnTaskPreview'
+import BnTaskCommentPreview from '../../components/richTextEditor/bnTaskCommentEditor'
+import { PartialBlock } from "@blocknote/core";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
@@ -122,25 +125,25 @@ export default function taskPreview(props: TaskContentProps) {
         },
     });
 
-    const [comment, setComment] = useState("");
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
     const [taskUpdated, setTaskUpdate] = useState(false);
     const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
     const [taskTitle, setTaskTitle] = useState<string | null>(null);
-    const [body, setBody] = useState<string | null>(null);
+    const [body, setBody] = useState<PartialBlock[]>(currentPreviewTask.body);
 
     useEffect(() => {
         if (currentPreviewTask) {
             setCurrentTaskContent(currentPreviewTask)
         }
         setTaskTitle(currentPreviewTask?.title || null)
-        setBody(currentPreviewTask?.body || null)
+        setBody(currentPreviewTask?.body || [])
         setUploadedFiles(currentPreviewTask?.attachments || [])
     }, [currentPreviewTask])
 
     useEffect(() => {
         if (taskUpdated === true) {
             (async () => {
+                console.log("task Updated")
                 await updateSpecificTask({
                     myself: myself,
                     updatedData: currentTaskContent,
@@ -213,12 +216,6 @@ export default function taskPreview(props: TaskContentProps) {
             })
         }
     };
-
-
-    function getMdHeight(text: string): number {
-        const height: number = Math.min(Math.max(text.split('\n').length * 20, 450), 800)
-        return height;
-    }
 
     // Github URL link manager
     const [prUrl, setPRUrl] = useState<string>(currentPreviewTask?.githubLink?.url || "");
@@ -351,7 +348,7 @@ export default function taskPreview(props: TaskContentProps) {
             console.error("Authentication Error:", data.message);
         });
         socket.on("message", (message) => {
-            // console.log("task_comment:", message)
+            console.log("task_comment:", message)
         })
         return () => {
             socket.off("message");
@@ -380,6 +377,8 @@ export default function taskPreview(props: TaskContentProps) {
             }
         })();
     };
+
+    useEffect(() => { console.log("taskComments:", taskComments) }, [taskComments])
 
     return (
         <Sheet
@@ -1042,7 +1041,7 @@ export default function taskPreview(props: TaskContentProps) {
             <Stack direction={"column"} sx={{ width: '100%' }}>
                 <Box sx={{ mt: 2 }}>
                     <div className="md-content">
-                        <MarkdownEditor
+                        {/* <MarkdownEditor
                             myself={myself}
                             socket={socket}
                             projectId={currentProject.projectId}
@@ -1056,6 +1055,11 @@ export default function taskPreview(props: TaskContentProps) {
                             setTaskUpdate={setTaskUpdate}
                             taskComments={taskComments}
                             setTaskComments={setTaskComments}
+                        /> */}
+                        <BnTaskPreview
+                            body={body}
+                            setBody={setBody}
+                            setTaskUpdate={setTaskUpdate}
                         />
                     </div>
                 </Box>
@@ -1100,7 +1104,7 @@ export default function taskPreview(props: TaskContentProps) {
                     <TaskCommentBubble taskComments={taskComments} />
                 </Box>
 
-                <div className="md-content">
+                {/* <div className="md-content">
                     <MarkdownEditor
                         myself={myself}
                         socket={socket}
@@ -1116,7 +1120,16 @@ export default function taskPreview(props: TaskContentProps) {
                         taskComments={taskComments}
                         setTaskComments={setTaskComments}
                     />
-                </div>
+                </div> */}
+                <BnTaskCommentPreview
+                    myself={myself}
+                    socket={socket}
+                    projectId={currentProject.projectId}
+                    taskId={Number(currentTaskContent.id)}
+                    setTaskUpdate={setTaskUpdate}
+                    taskComments={taskComments}
+                    setTaskComments={setTaskComments}
+                />
             </Box>
 
         </Sheet >

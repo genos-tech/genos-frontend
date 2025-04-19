@@ -56,7 +56,7 @@ export type MessageProps = {
     chatId: number;
     messageId: number;
     content: PartialBlock[] | any[];
-    contentText:  string;
+    contentText: string;
     sender: UserProps;
     tsSent: string;
     isLiked?: boolean | false;
@@ -75,7 +75,7 @@ export type ThreadMessageProps = {
     threadId: number;
     messageId: number;
     content: PartialBlock[] | any[];
-    contentText:  string;
+    contentText: string;
     sender: UserProps;
     taskId: number | null;
     tsSent: string;
@@ -95,7 +95,7 @@ export type NewMessageProps = {
     dmPartnerUserId: string | null;
     isThread: boolean;
     content: PartialBlock[] | any[];
-    contentText:  string;
+    contentText: string;
     sender: UserProps;
     tsSent: string;
     isLiked?: boolean | false;
@@ -116,7 +116,7 @@ export type NewThreadMessageProps = {
     dmPartnerUserId: string | null;
     isThread: boolean;
     content: PartialBlock[] | any[];
-    contentText:  string;
+    contentText: string;
     sender: UserProps;
     taskId: number | null;
     tsSent: string;
@@ -159,7 +159,7 @@ export type TaskCommentProps = {
     senderId: string,
     senderName: string,
     commentId: number,
-    commentBody: any,
+    commentBody: PartialBlock[] | any[],
     sentAt: string,
 }
 
@@ -180,7 +180,7 @@ export type AttachmentFileProps = {
 export type CreateTaskProps = {
     project: ProjectProps | null,
     title: string,
-    body: string,
+    body: PartialBlock[],
     assignee: UserProps,
     reporter: UserProps,
     chatType: string | null,
@@ -206,7 +206,7 @@ export type PreviewTaskProps = {
     id: string,
     project: ProjectProps,
     title: string | null,
-    body: string | null,
+    body: PartialBlock[],
     assignee: UserProps,
     reporter: UserProps,
     dueDate: string,
