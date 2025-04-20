@@ -56,14 +56,6 @@ export default function TaskCommentBubble(props: TaskCommentBubbleProps) {
                           {comment.sentAt}
                         </Typography>
                       </Stack>
-                      {/* <MarkdownPreview
-                        className="markdown-preview"
-                        source={comment.commentBody}
-                        style={{
-                          backgroundColor: 'transparent',
-                          color: 'black'
-                        }}
-                      /> */}
                       <BnPreview
                         key={`${taskComments[0].taskId}-${comment.commentId}-${comment.sentAt}`}
                         content={comment.commentBody}

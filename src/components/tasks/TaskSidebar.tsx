@@ -12,6 +12,8 @@ import Sheet from '@mui/joy/Sheet';
 import Autocomplete from '@mui/joy/Autocomplete';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
+import FreeCancellationIcon from '@mui/icons-material/FreeCancellation';
+import BusinessIcon from '@mui/icons-material/Business';
 import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useAuth } from "../../components/admin/AuthContext";
@@ -385,6 +387,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
             </Toggler>
           </ListItem>
 
+
           <ListItem nested>
             <Toggler
               defaultExpanded={false}
@@ -394,7 +397,62 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                   loadTeams();
                 }}
                 >
-                  <WorkIcon />
+                  <FreeCancellationIcon />
+                  <ListItemContent>
+                    <Typography level="title-sm">To-Do</Typography>
+                  </ListItemContent>
+                  <KeyboardArrowDownIcon
+                    sx={[
+                      open
+                        ? {
+                          transform: 'rotate(180deg)',
+                        }
+                        : {
+                          transform: 'none',
+                        },
+                    ]}
+                  />
+                </ListItemButton>
+              )}
+            >
+              <List sx={{ gap: 0.5 }}>
+                <ListItem key={"createTeam"}>
+                  <ListItemButton
+                    color='neutral'
+                    variant='soft'
+                    onClick={() => { setOpenCreateTeam(true) }}
+                    sx={{ overflow: 'hidden' }} // ensure children don't overflow
+                  >
+                    <AddIcon />
+                    <Typography
+                      noWrap
+                      sx={{
+                        fontSize: '15px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        width: '100%', // take full width of button
+                      }}
+                    >
+                      New To-Do
+                    </Typography>
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Toggler>
+          </ListItem>
+
+
+          <ListItem nested>
+            <Toggler
+              defaultExpanded={false}
+              renderToggle={({ open, setOpen }) => (
+                <ListItemButton onClick={() => {
+                  setOpen(!open);
+                  loadTeams();
+                }}
+                >
+                  <BusinessIcon />
                   <ListItemContent>
                     <Typography level="title-sm">Teams</Typography>
                   </ListItemContent>

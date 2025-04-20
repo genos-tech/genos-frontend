@@ -37,7 +37,6 @@ import CreateTagModal from './tasks/modalCreateTag';
 import CreateProjectModal from './tasks/modalCreateProject';
 import CreateTeamModal from './tasks/modalCreateTeam';
 import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
-import { Socket } from "socket.io-client";
 
 type TaskProps = {
     myself: UserProps;
@@ -52,6 +51,7 @@ export default function TaskHome(props: TaskProps) {
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
+    const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>();
@@ -204,6 +204,38 @@ export default function TaskHome(props: TaskProps) {
             })();
         }
     }, [currentPreviewTaskId, isNewTaskCreated])
+
+    useEffect(() => {
+        if (isTaskUpdated && currentPreviewTask) {
+            setProjectTasks(prevTasks =>
+                prevTasks.map(task =>
+                    task.id === currentPreviewTask.id
+                        ? {
+                            id: currentPreviewTask.id,
+                            title: currentPreviewTask.title,
+                            priority: currentPreviewTask.priority.priority,
+                            effortLevel: currentPreviewTask.effortLevel.level,
+                            createdDate: currentPreviewTask.createdDate,
+                            dueDate: currentPreviewTask.dueDate,
+                            daysLeft: currentPreviewTask.daysLeft,
+                            status: currentPreviewTask.status.status,
+                            assigneeId: currentPreviewTask.assignee.userId,
+                            assigneeEmail: currentPreviewTask.assignee.userEmail,
+                            assigneeName: currentPreviewTask.assignee.userName,
+                            parentTaskId: currentPreviewTask.parentTaskId,
+                            threadId: currentPreviewTask.threadId,
+                            tags: currentPreviewTask.tags,
+                            concatTags: currentPreviewTask.concatTags,
+                            teamId: myself.teamId,
+                            projectId: currentPreviewTask.project.projectId
+                        }
+                        : task
+                )
+            );
+            setIsTaskUpdated(false)
+        }
+    }, [isTaskUpdated, currentPreviewTask])
+
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -419,7 +451,7 @@ export default function TaskHome(props: TaskProps) {
                                     />
 
                                     {/* right pane */}
-                                    <Panel id={'3'} order={3} minSize={30} maxSize={100}>
+                                    <Panel id={'3'} order={3} minSize={40} maxSize={100}>
                                         <Box
                                             sx={{
                                                 px: { xs: 1, md: 2 },
@@ -443,8 +475,10 @@ export default function TaskHome(props: TaskProps) {
                                                 currentPreviewTask={currentPreviewTask}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setIsTaskContentVisible={setIsTaskContentVisible}
+                                                setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpenCreateProject={setOpenCreateProject}
                                                 setOpenCreateTag={setOpenCreateTag}
+                                                setIsTaskUpdated={setIsTaskUpdated}
                                             />
                                         </Box>
                                     </Panel>

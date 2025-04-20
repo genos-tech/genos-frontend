@@ -647,7 +647,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                     <Autocomplete
                                         multiple
                                         options={priorities}
-                                        getOptionLabel={(option) => option.priority}
+                                        getOptionLabel={(option) => option.priority || ""}
                                         isOptionEqualToValue={(option, value) => option.priority === value.priority}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
@@ -655,11 +655,10 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                 return (
                                                     <Chip
                                                         key={key} // pass the key directly
-                                                        color='success'
                                                         endDecorator={<Close />}
                                                         variant="soft"
                                                         sx={{
-                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            backgroundColor: item.color ? alpha(item.color, 0.75) : 'transparent',
                                                             color: item.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -677,7 +676,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         variant="soft"
                                                         endDecorator={<Close />}
                                                         sx={{
-                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            backgroundColor: option.color ? alpha(option.color, 0.75) : 'transparent',
                                                             color: option.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -689,10 +688,21 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                         )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    priority: value.slice(-1)[0]
-                                                }));
+                                                if (value.length > 0) {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            priority: value.slice(-1)[0]
+                                                        }));
+                                                    })();
+                                                } else {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            priority: { code: 0, priority: null, color: null, textColor: null }
+                                                        }));
+                                                    })();
+                                                }
                                             }
                                         }}
                                         size="sm"
@@ -708,7 +718,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                     <Autocomplete
                                         multiple
                                         options={effortLevels}
-                                        getOptionLabel={(option) => option.level}
+                                        getOptionLabel={(option) => option.level || ""}
                                         isOptionEqualToValue={(option, value) => option.level === value.level}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
@@ -720,7 +730,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         endDecorator={<Close />}
                                                         variant="soft"
                                                         sx={{
-                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            backgroundColor: item.color ? alpha(item.color, 0.75) : 'transparent',
                                                             color: item.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -738,7 +748,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                                         variant="soft"
                                                         endDecorator={<Close />}
                                                         sx={{
-                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            backgroundColor: option.color ? alpha(option.color, 0.75) : 'transparent',
                                                             color: option.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -750,10 +760,21 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                                         )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    effortLevel: value.slice(-1)[0]
-                                                }));
+                                                if (value.length > 0) {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            effortLevel: value.slice(-1)[0]
+                                                        }));
+                                                    })();
+                                                } else {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            effortLevel: { code: 0, level: null, color: null, textColor: null }
+                                                        }));
+                                                    })();
+                                                }
                                             }
                                         }}
                                         size="sm"
@@ -979,8 +1000,8 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
                 <Button
                     component='button'
                     type="submit"
-                    variant="soft"
-                    color="neutral"
+                    variant="solid"
+                    color="primary"
                     onClick={() => {
                         saveTask({
                             myself: myself,

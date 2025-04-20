@@ -97,7 +97,7 @@ export function BnTaskPreview(props: BnTaskPreviewProps) {
     // We use the English, default dictionary
     const locale = en;
 
-    const editor = useCreateBlockNote({
+    const editor = (body.length > 0) ? useCreateBlockNote({
         schema,
         codeBlock,
         // We override the `placeholders` in our dictionary
@@ -114,6 +114,22 @@ export function BnTaskPreview(props: BnTaskPreviewProps) {
             },
         },
         initialContent: body
+    }) : useCreateBlockNote({
+        schema,
+        codeBlock,
+        // We override the `placeholders` in our dictionary
+        dictionary: {
+            ...locale,
+            placeholders: {
+                ...locale.placeholders,
+                // We override the empty document placeholder
+                emptyDocument: "Start typing...",
+                // We override the default placeholder
+                default: "Type something...",
+                // We override the heading placeholder
+                heading: "Custom heading placeholder",
+            },
+        }
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);

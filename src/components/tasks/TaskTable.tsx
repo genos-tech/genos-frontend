@@ -6,7 +6,7 @@ import { useColorScheme } from '@mui/joy/styles';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { TaskTableProps, TagListProps, UserProps } from '../../types';
-import { taskColumns } from './tableFormat';
+import { getTaskColumns } from './tableFormat';
 import loadProjectTags from '../backendOperation/loadProjectTags';
 import { useAuth } from "../admin/AuthContext";
 
@@ -14,6 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import loadTeamMembers from "../backendOperation/loadTeamMembers";
 
 const options = [
   { name: "Group By Status", filterId: 1 },
@@ -124,6 +125,7 @@ const predefinedEffortLevelFilters: FilterProps[] = [
   },
 ];
 
+
 type ProjectTaskTableProps = {
   myself: UserProps;
   projectTasks: TaskTableProps[];
@@ -141,6 +143,24 @@ export default function TaskTable(props: ProjectTaskTableProps) {
   const [predefinedFilters, setPredefinedFilters] = useState<FilterProps[]>(predefinedStatusFilters);
   const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);
   const { accessToken } = useAuth();
+
+  // Get team members
+  const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
+  // Update Project and Tag list
+  const getTeamMembers = () => {
+    // Load the latest project as initial process
+    (async () => {
+      const loadedTeamMembers: UserProps[] = await loadTeamMembers({
+        myself: myself, accessToken: accessToken || ""
+      });
+      if (loadedTeamMembers.length > 0) {
+        setTeamMembers(loadedTeamMembers);
+      }
+    })();
+  };
+  useEffect(() => {
+    getTeamMembers()
+  }, [])
 
   const getFilteredRowsCount = useCallback(
     (filterModel: GridFilterModel) => {
@@ -160,7 +180,7 @@ export default function TaskTable(props: ProjectTaskTableProps) {
   const updateTagOptions = () => {
     (async () => {
       const loadedProjectTags: TagListProps[] = await loadProjectTags({
-        myself: myself, projectId: projectTasks[0].projectId, accessToken: accessToken || ""
+        myself: myself, projectId: projectTasks[0].projectId || -1, accessToken: accessToken || ""
       });
       if (loadedProjectTags.length > 0) {
         const tagBasedFilters: FilterProps[] = loadedProjectTags.map(tag => ({
@@ -278,7 +298,11 @@ export default function TaskTable(props: ProjectTaskTableProps) {
           }}
         >
           <DataGrid
-            onCellClick={(params) => { }}
+            onCellClick={(params) => {
+              // if (params.field === 'assignee') {
+              //   getTeamMembers()
+              // }
+            }}
             onRowClick={(params, event, detail) => {
               // console.log("Row clicked:", params);
               setIsTaskContentVisible(true);
@@ -305,7 +329,7 @@ export default function TaskTable(props: ProjectTaskTableProps) {
             }}
             columnVisibilityModel={{ concatTags: false }}
             rows={projectTasks}
-            columns={taskColumns}
+            columns={getTaskColumns({ myself: myself, accessToken: accessToken, teamMembers: teamMembers })}
             initialState={{
               sorting: {
                 sortModel: [{ field: 'id', sort: 'desc' }],

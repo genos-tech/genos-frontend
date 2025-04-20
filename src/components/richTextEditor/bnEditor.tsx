@@ -443,7 +443,7 @@ export function BnEditor(props: BnEditorProps) {
                                 basicTextStyle={"code"}
                             />
 
-                            <TextAlignButton
+                            {/* <TextAlignButton
                                 textAlignment={"left"}
                                 key={"textAlignLeftButton"}
                             />
@@ -454,7 +454,7 @@ export function BnEditor(props: BnEditorProps) {
                             <TextAlignButton
                                 textAlignment={"right"}
                                 key={"textAlignRightButton"}
-                            />
+                            /> */}
 
                             <ColorStyleButton key={"colorStyleButton"} />
 

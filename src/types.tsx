@@ -141,17 +141,24 @@ export type ProjectProps = {
 }
 
 export type TaskStatusProps = {
-    code: number,
-    status: string,
-    color: string,
-    textColor: string,
+    code: number | null,
+    status: string | null,
+    color: string | null,
+    textColor: string | null,
 }
 
 export type TaskPriorityProps = {
-    code: number,
-    priority: string,
-    color: string,
-    textColor: string,
+    code: number | null,
+    priority: string | null,
+    color: string | null,
+    textColor: string | null,
+}
+
+export type TaskEffortLevelProps = {
+    code: number | null,
+    level: string | null,
+    color: string | null,
+    textColor: string | null,
 }
 
 export type TaskCommentProps = {
@@ -163,12 +170,6 @@ export type TaskCommentProps = {
     sentAt: string,
 }
 
-export type TaskEffortLevelProps = {
-    code: number,
-    level: string,
-    color: string,
-    textColor: string,
-}
 
 export type AttachmentFileProps = {
     file: File,
@@ -231,23 +232,23 @@ export type PreviewTaskProps = {
 }
 
 export type TaskTableProps = {
-    id: string,
-    title: string,
-    priority: string,
-    effortLevel: string,
-    createdDate: string,
-    dueDate: string,
-    daysLeft: string,
-    status: string,
-    assigneeId: string,
-    assigneeEmail: string,
-    assigneeName: string,
-    parentTaskId: string,
-    threadId: string,
+    id: string | null,
+    title: string | null,
+    priority: string | null,
+    effortLevel: string | null,
+    createdDate: string | null,
+    dueDate: string | null,
+    daysLeft: string | null,
+    status: string | null,
+    assigneeId: string | null,
+    assigneeEmail: string | null,
+    assigneeName: string | null,
+    parentTaskId: string | null,
+    threadId: string | null,
     tags: TagListProps[],
-    concatTags: string,
-    teamId: string,
-    projectId: number
+    concatTags: string | null,
+    teamId: string | null,
+    projectId: number | null
 }
 
 // Other Props

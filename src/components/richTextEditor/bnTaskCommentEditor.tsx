@@ -288,7 +288,7 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                                 basicTextStyle={"code"}
                             />
 
-                            <TextAlignButton
+                            {/* <TextAlignButton
                                 textAlignment={"left"}
                                 key={"textAlignLeftButton"}
                             />
@@ -299,7 +299,7 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                             <TextAlignButton
                                 textAlignment={"right"}
                                 key={"textAlignRightButton"}
-                            />
+                            /> */}
 
                             <ColorStyleButton key={"colorStyleButton"} />
 

@@ -404,7 +404,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                                 basicTextStyle={"code"}
                             />
 
-                            <TextAlignButton
+                            {/* <TextAlignButton
                                 textAlignment={"left"}
                                 key={"textAlignLeftButton"}
                             />
@@ -415,7 +415,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                             <TextAlignButton
                                 textAlignment={"right"}
                                 key={"textAlignRightButton"}
-                            />
+                            /> */}
 
                             <ColorStyleButton key={"colorStyleButton"} />
 

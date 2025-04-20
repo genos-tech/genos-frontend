@@ -49,9 +49,6 @@ export default function MessagesPane(props: MessagesPaneProps) {
     currentMainChatId,
     setCurrentPreviewTask } = props;
   const [chatMessages, setChatMessages] = useState(chat.messages);
-  const [content, setContent] = useState("");
-
-  const { mode } = useColorScheme();
 
   useEffect(() => {
     setChatMessages(chat.messages);

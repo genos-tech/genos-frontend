@@ -261,11 +261,6 @@ export default function CreateTask(props: TaskContentProps) {
         }
     };
 
-    function getMdHeight(text: string): number {
-        const height: number = Math.min(Math.max(text.split('\n').length * 20, 450), 800)
-        return height;
-    }
-
     // Github URL link manager
     const [prUrl, setPRUrl] = useState("");
     const [prTitle, setPRTitle] = useState("");
@@ -627,7 +622,7 @@ export default function CreateTask(props: TaskContentProps) {
                                     <Autocomplete
                                         multiple
                                         options={priorities}
-                                        getOptionLabel={(option) => option.priority}
+                                        getOptionLabel={(option) => option.priority || ""}
                                         isOptionEqualToValue={(option, value) => option.priority === value.priority}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
@@ -635,11 +630,10 @@ export default function CreateTask(props: TaskContentProps) {
                                                 return (
                                                     <Chip
                                                         key={key} // pass the key directly
-                                                        color='success'
                                                         endDecorator={<Close />}
                                                         variant="soft"
                                                         sx={{
-                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            backgroundColor: item.color ? alpha(item.color, 0.75) : 'transparent',
                                                             color: item.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -657,7 +651,7 @@ export default function CreateTask(props: TaskContentProps) {
                                                         variant="soft"
                                                         endDecorator={<Close />}
                                                         sx={{
-                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            backgroundColor: option.color ? alpha(option.color, 0.75) : 'transparent',
                                                             color: option.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -669,10 +663,21 @@ export default function CreateTask(props: TaskContentProps) {
                                         )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    priority: value.slice(-1)[0]
-                                                }));
+                                                if (value.length > 0) {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            priority: value.slice(-1)[0]
+                                                        }));
+                                                    })();
+                                                } else {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            priority: { code: 0, priority: null, color: null, textColor: null }
+                                                        }));
+                                                    })();
+                                                }
                                             }
                                         }}
                                         size="sm"
@@ -688,7 +693,7 @@ export default function CreateTask(props: TaskContentProps) {
                                     <Autocomplete
                                         multiple
                                         options={effortLevels}
-                                        getOptionLabel={(option) => option.level}
+                                        getOptionLabel={(option) => option.level || ""}
                                         isOptionEqualToValue={(option, value) => option.level === value.level}
                                         renderTags={(tags, getTagProps) =>
                                             tags.slice(-1).map((item, index) => {
@@ -699,7 +704,7 @@ export default function CreateTask(props: TaskContentProps) {
                                                         endDecorator={<Close />}
                                                         variant="soft"
                                                         sx={{
-                                                            backgroundColor: alpha(item.color, 0.80),
+                                                            backgroundColor: item.color ? alpha(item.color, 0.75) : 'transparent',
                                                             color: item.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -717,7 +722,7 @@ export default function CreateTask(props: TaskContentProps) {
                                                         variant="soft"
                                                         endDecorator={<Close />}
                                                         sx={{
-                                                            backgroundColor: alpha(option.color, 0.80),
+                                                            backgroundColor: option.color ? alpha(option.color, 0.75) : 'transparent',
                                                             color: option.textColor,
                                                             fontWeight: 'bold'
                                                         }}
@@ -729,10 +734,21 @@ export default function CreateTask(props: TaskContentProps) {
                                         )}
                                         onChange={(event, value) => {
                                             if (value !== null) {
-                                                setTaskContents(prevState => ({
-                                                    ...prevState,
-                                                    effortLevel: value.slice(-1)[0]
-                                                }));
+                                                if (value.length > 0) {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            effortLevel: value.slice(-1)[0]
+                                                        }));
+                                                    })();
+                                                } else {
+                                                    (async () => {
+                                                        setTaskContents(prevState => ({
+                                                            ...prevState,
+                                                            effortLevel: { code: 0, level: null, color: null, textColor: null }
+                                                        }));
+                                                    })();
+                                                }
                                             }
                                         }}
                                         size="sm"
@@ -973,7 +989,7 @@ export default function CreateTask(props: TaskContentProps) {
                     component='button'
                     type="submit"
                     variant="solid"
-                    color="neutral"
+                    color="primary"
                     onClick={() => {
                         saveTask({
                             myself: myself,

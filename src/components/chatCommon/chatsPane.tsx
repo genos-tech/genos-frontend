@@ -279,7 +279,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
 
       if (!isKnownChat) {
         socket.emit("message", {
-          message: 'Joined',
+          message: [{ type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] }, { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }],
           destCGName: chatName,
           destCGId: chatId,
           isDm: isDm,

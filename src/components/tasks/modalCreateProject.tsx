@@ -94,10 +94,10 @@ const CreateProjectModal: React.FC<Props> = ({ myself,
                         <Alert color="danger">{errorMessage}</Alert>
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button component='a' variant="outlined" onClick={() => setOpenCreateProject(false)}>
+                        <Button component='button' color='danger' variant="outlined" onClick={() => setOpenCreateProject(false)}>
                             Cancel
                         </Button>
-                        <Button component='a' onClick={handleCreateProject} disabled={!projectName.trim()}>
+                        <Button component='button' color="primary" onClick={handleCreateProject} disabled={!projectName.trim()}>
                             Create
                         </Button>
                     </Stack>

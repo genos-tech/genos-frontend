@@ -627,9 +627,9 @@ export default function Home(props: HomeProps) {
 
 
     ////////////////////////////////////////////////////////////////////
-    // useEffect(() => {
-    //     console.log("currentMainChat Updated:", currentMainChat);
-    // }, [currentMainChat]);
+    useEffect(() => {
+        console.log("currentMainChat Updated:", currentMainChat);
+    }, [currentMainChat]);
 
     // useEffect(() => {
     //     console.log("initLoad Updated:", initLoad);

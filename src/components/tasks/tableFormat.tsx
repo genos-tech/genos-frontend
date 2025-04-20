@@ -1,4 +1,5 @@
 import { alpha } from '@mui/system';
+import { useState, useEffect } from "react";
 import Box from '@mui/joy/Box';
 import Typography from '@mui/joy/Typography';
 import Avatar from '@mui/joy/Avatar';
@@ -9,6 +10,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import PendingIcon from '@mui/icons-material/Pending';
+import { UserProps } from '../../types';
+import loadTeamMembers from '../backendOperation/loadTeamMembers';
 
 const hmlOptions = [
     { label: "Low", value: "Low", color: "#0044c2", textColor: 'white' },
@@ -26,8 +29,13 @@ const statusOptions = [
 ];
 const getStatusOption = (value: string) => statusOptions.find((option) => option.value === value);
 
+type getTaskColumns = {
+    myself: UserProps;
+    accessToken: string | null;
+    teamMembers: UserProps[];
+}
 
-export const taskColumns: GridColDef[] = [
+export const getTaskColumns = (props: getTaskColumns): GridColDef[] => [
     {
         field: 'title',
         headerName: 'Title',
@@ -43,16 +51,18 @@ export const taskColumns: GridColDef[] = [
         editable: false,
         sortable: false,
         width: 250,
-        renderCell: (params) => (
-            <Box
-                textAlign='left'
-                sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <Avatar size="sm">{params.row.assigneeName[0]}</Avatar>
-                <div>
-                    <Typography level="body-xs">{params.row.assigneeName} | {params.row.assigneeEmail}</Typography>
-                </div>
-            </Box>
-        ),
+        renderCell: (params) => {
+            return (
+                <Box
+                    textAlign='left'
+                    sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Avatar size="sm">{params.row.assigneeName[0]}</Avatar>
+                    <div>
+                        <Typography level="body-xs">{params.row.assigneeName} | {params.row.assigneeEmail}</Typography>
+                    </div>
+                </Box>
+            )
+        }
     },
     {
         field: 'tags',
@@ -310,15 +320,14 @@ export const taskColumns: GridColDef[] = [
         headerName: 'Created On',
         headerClassName: 'task-col--header',
         type: 'date',
-        width: 100,
-        align: 'center',
-        headerAlign: 'center',
+        width: 150,
+        align: 'left',
+        headerAlign: 'left',
         valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
     },
     {
         field: 'concatTags',
         headerName: 'Concat Tags',
         headerClassName: 'task-col--header',
-        width: 500,
     },
 ];

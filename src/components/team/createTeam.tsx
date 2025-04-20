@@ -317,7 +317,7 @@ export default function CreateTeam() {
                         }}
                     >
 
-                        <Box
+                        {teams.length > 0 && (<Box
                             component="main"
                             sx={{
                                 my: 'auto',
@@ -362,7 +362,7 @@ export default function CreateTeam() {
                                     </ListItemButton>
                                 ))}
                             </List>
-                        </Box>
+                        </Box>)}
 
                         <Stack sx={{ gap: 4, mb: 2 }}>
                             <Stack sx={{ gap: 1 }}>
