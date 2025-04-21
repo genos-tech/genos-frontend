@@ -1,4 +1,4 @@
-import { getLatestDMChat } from "../components/indexedDBUtils/crud";
+import { getLatestDMChat } from "../db/crud";
 
 self.onmessage = async (event) => {
     const latestDmChat = await getLatestDMChat()

@@ -9,7 +9,7 @@ import {
     UserProps,
     ChatProps,
     MessageProps,
-} from "../../types";
+} from "../../types/types";
 
 export function InitialLoad(
     myself: UserProps,

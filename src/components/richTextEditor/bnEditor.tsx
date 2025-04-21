@@ -34,7 +34,7 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import { useColorScheme } from '@mui/joy/styles';
-import { UserProps, ChatProps, AllChatProps } from '../../types'
+import { UserProps, ChatProps, AllChatProps } from '../../types/types'
 import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
 import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";

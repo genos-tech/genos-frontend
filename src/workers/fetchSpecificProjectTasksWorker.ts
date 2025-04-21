@@ -1,4 +1,4 @@
-import { getProjectTasks } from "../components/indexedDBUtils/crud";
+import { getProjectTasks } from "../db/crud";
 
 self.onmessage = async (event) => {
     const projectId: number = event.data.projectId;

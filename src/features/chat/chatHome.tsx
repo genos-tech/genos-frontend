@@ -15,7 +15,7 @@ import {
     ThreadMessageProps,
     PreviewTaskProps,
     ProjectProps
-} from "../../types";
+} from "../../types/types";
 import FetchAllChatsWorker from "../../workers/fetchAllChatsWorker.ts?worker";
 import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";

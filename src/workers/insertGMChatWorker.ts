@@ -1,6 +1,6 @@
-import { STORES } from "../components/indexedDBUtils/conf";
-import { addData } from "../components/indexedDBUtils/crud";
-import { AllChatProps } from "../types";
+import { STORES } from "../db/conf";
+import { addData } from "../db/crud";
+import { AllChatProps } from "../types/types";
 
 self.onmessage = async (event) => {
     const gmChat: AllChatProps = event.data.gmChat;

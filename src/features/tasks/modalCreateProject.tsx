@@ -11,7 +11,7 @@ import {
 import {
     UserProps,
     ProjectProps
-} from '../../types';
+} from '../../types/types';
 import { useAuth } from "../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;

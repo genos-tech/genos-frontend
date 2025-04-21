@@ -8,7 +8,7 @@ import Loading from './components/utils/loading'
 import {
   UserProps,
   ChatProps,
-} from "./types";
+} from "./types/types";
 
 type SetMyselfProps = {
   myself: UserProps;

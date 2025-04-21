@@ -10,7 +10,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import ReplyIcon from '@mui/icons-material/Reply';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
-import { ThreadProps, UserProps, PreviewTaskProps } from '../../types';
+import { ThreadProps, UserProps, PreviewTaskProps } from '../../types/types';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;

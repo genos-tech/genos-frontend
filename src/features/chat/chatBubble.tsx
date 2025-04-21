@@ -22,7 +22,7 @@ import {
   ThreadProps,
   ThreadMessageProps,
   PreviewTaskProps
-} from '../../types';
+} from '../../types/types';
 import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import FetchSpecificDMThreadMessagesWorker from "../../workers/fetchSpecificDMThreadMessagesWorker.ts?worker";

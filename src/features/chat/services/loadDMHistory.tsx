@@ -1,4 +1,4 @@
-import { ChatProps, LoadDMMessageHistoryResponse } from '../../../types';
+import { ChatProps, LoadDMMessageHistoryResponse } from '../../../types/types';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

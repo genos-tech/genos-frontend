@@ -1,5 +1,5 @@
-import { STORES } from "../components/indexedDBUtils/conf";
-import { getSpecificDataWithIndex } from "../components/indexedDBUtils/crud";
+import { STORES } from "../db/conf";
+import { getSpecificDataWithIndex } from "../db/crud";
 
 self.onmessage = async (event) => {
     const chatId: string = event.data.chatId;

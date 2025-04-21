@@ -1,10 +1,10 @@
 import loadProjectTasks from '../features/tasks/services/loadTeamTasks';
-import { UserProps, TaskTableProps } from "../types";
-import { STORES } from "../components/indexedDBUtils/conf";
+import { UserProps, TaskTableProps } from "../types/types";
+import { STORES } from "../db/conf";
 import {
     clearStore,
     addData,
-} from "../components/indexedDBUtils/crud";
+} from "../db/crud";
 
 self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;

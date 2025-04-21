@@ -23,12 +23,12 @@ import {
     TaskEffortLevelProps,
     AttachmentFileProps,
     TagListProps,
-} from "../../types";
+} from "../../types/types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import FormControl from '@mui/joy/FormControl';
 import { useAuth } from "../../context/AuthContext";
-import FileUpload from '../../components/fileUpload/upload'
+import FileUpload from './upload'
 import loadTeamProjects from './services/loadTeamProjects';
 import loadTeamMembers from '../admin/services/loadTeamMembers';
 import loadProjectTags from './services/loadProjectTags';

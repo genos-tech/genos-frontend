@@ -10,7 +10,7 @@ import {
   UserProps,
   ThreadProps,
   PreviewTaskProps
-} from '../../types';
+} from '../../types/types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import BnThreadEditor from '../../components/richTextEditor/bnThreadEditor'
 

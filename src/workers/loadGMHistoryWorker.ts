@@ -1,11 +1,11 @@
 import loadGMHistory from '../features/chat/services/loadGMHistory';
-import { UserProps, ChatProps, MessageProps } from "../types";
-import { STORES } from "../components/indexedDBUtils/conf";
+import { UserProps, ChatProps, MessageProps } from "../types/types";
+import { STORES } from "../db/conf";
 import {
     clearStore,
     addData,
     miniBatchInsertMessages,
-} from "../components/indexedDBUtils/crud";
+} from "../db/crud";
 
 
 const BATCH_SIZE = 100;

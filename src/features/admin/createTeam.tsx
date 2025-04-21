@@ -18,7 +18,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import Link from '@mui/joy/Link';
 import { useAuth } from "../../context/AuthContext";
 import loadAllTeams from './services/loadAllTeams';
-import { Team } from '../../types';
+import { Team } from '../../types/types';
 import List from '@mui/joy/List';
 import ListItemDecorator from '@mui/joy/ListItemDecorator';
 import ListItemButton from '@mui/joy/ListItemButton';

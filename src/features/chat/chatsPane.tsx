@@ -25,7 +25,7 @@ import {
   UserProps,
   SearchListProps,
   MessageProps
-} from '../../types';
+} from '../../types/types';
 import createChatGroup from './createChatGroup';
 import loadSearchList from './services/loadChatSearchList';
 import CheckKnownChatWorker from "../../workers/checkKnownChatWorker.ts?worker";

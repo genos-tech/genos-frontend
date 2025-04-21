@@ -4,7 +4,7 @@ import {
     UserProps,
     ChatProps,
     MessageProps
-} from '../../types';
+} from '../../types/types';
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessagesWorker.ts?worker";

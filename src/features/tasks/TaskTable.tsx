@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useColorScheme } from '@mui/joy/styles';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-import { TaskTableProps, TagListProps, UserProps } from '../../types';
+import { TaskTableProps, TagListProps, UserProps } from '../../types/types';
 import { getTaskColumns } from './tableFormat';
 import loadProjectTags from './services/loadProjectTags';
 import { useAuth } from "../../context/AuthContext";

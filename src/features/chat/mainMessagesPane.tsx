@@ -10,7 +10,7 @@ import {
   UserProps,
   ThreadProps,
   PreviewTaskProps
-} from '../../types';
+} from '../../types/types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { useColorScheme } from '@mui/joy/styles';
 import BnEditor from '../../components/richTextEditor/bnEditor'

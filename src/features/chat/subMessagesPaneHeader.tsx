@@ -10,7 +10,7 @@ import PhoneInTalkRoundedIcon from '@mui/icons-material/PhoneInTalkRounded';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CancelIcon from '@mui/icons-material/Cancel';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import { ChatProps, UserProps } from '../../types';
+import { ChatProps, UserProps } from '../../types/types';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;

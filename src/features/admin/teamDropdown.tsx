@@ -8,7 +8,7 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 import AddIcon from '@mui/icons-material/Add';
 import loadAllTeams from './services/loadAllTeams';
 import { useAuth } from "../../context/AuthContext";
-import { UserProps, Team } from "../../types"
+import { UserProps, Team } from "../../types/types"
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

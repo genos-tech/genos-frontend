@@ -16,7 +16,7 @@ import {
   AllChatProps,
   ChatProps,
   UserProps
-} from '../../types';
+} from '../../types/types';
 import { toggleMessagesPane } from '../../utils';
 import { IconButton } from '@mui/joy';
 import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";

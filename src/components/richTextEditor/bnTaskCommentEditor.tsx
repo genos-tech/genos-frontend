@@ -34,7 +34,7 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import { useColorScheme } from '@mui/joy/styles';
-import { UserProps, TaskCommentProps } from '../../types'
+import { UserProps, TaskCommentProps } from '../../types/types'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Tooltip from '@mui/joy/Tooltip';
 

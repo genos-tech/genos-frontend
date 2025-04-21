@@ -12,7 +12,7 @@ import ListItem from '@mui/joy/ListItem';
 import Divider from '@mui/joy/Divider';
 import { Input, Grid, Button, Stack } from "@mui/joy";
 import Snackbar from '@mui/joy/Snackbar';
-import FileUpload from '../../components/fileUpload/upload'
+import FileUpload from './upload'
 import IconButton from '@mui/joy/IconButton';
 import CancelIcon from '@mui/icons-material/Cancel';
 import GithubIcon from '../../assets/GithubIcon';
@@ -31,7 +31,7 @@ import {
     AttachmentFileProps,
     TagListProps,
     TaskCommentProps
-} from "../../types";
+} from "../../types/types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import { useAuth } from "../../context/AuthContext";

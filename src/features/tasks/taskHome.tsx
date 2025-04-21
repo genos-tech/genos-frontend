@@ -23,7 +23,7 @@ import {
     TaskTableProps,
     PreviewTaskProps,
     SearchTeamTasksResponse
-} from '../../types';
+} from '../../types/types';
 import CreateTask from "./createTask";
 import FetchSpecificProjectTasksWorker from "../../workers/fetchSpecificProjectTasksWorker.ts?worker";
 import loadSpecificTask from './services/loadSpecificTask';

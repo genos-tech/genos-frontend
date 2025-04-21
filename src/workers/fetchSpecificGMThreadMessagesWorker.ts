@@ -1,5 +1,5 @@
-import { STORES } from "../components/indexedDBUtils/conf";
-import { messageIdWithChatId } from "../components/indexedDBUtils/crud";
+import { STORES } from "../db/conf";
+import { messageIdWithChatId } from "../db/crud";
 
 self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;

@@ -1,4 +1,4 @@
-import { LoadSearchListResponse, SearchListProps, UserProps } from '../../../types'
+import { LoadSearchListResponse, SearchListProps, UserProps } from '../../../types/types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

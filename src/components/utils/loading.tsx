@@ -3,7 +3,7 @@ import { InitialLoad } from './initialLoad';
 import {
     UserProps,
     ChatProps,
-} from "../../types";
+} from "../../types/types";
 import { useAuth } from "../../context/AuthContext";
 
 type LoadingProps = {

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, IconButton, Button } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { AttachmentFileProps } from '../../types';
+import { AttachmentFileProps } from '../../types/types';
 
 
 

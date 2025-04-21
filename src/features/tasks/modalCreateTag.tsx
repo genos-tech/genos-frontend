@@ -13,7 +13,7 @@ import {
 import {
     UserProps,
     ProjectProps
-} from '../../types';
+} from '../../types/types';
 import { useAuth } from "../../context/AuthContext";
 import ColorPickerMenu from '../../components/utils/colorPickerMenu';
 

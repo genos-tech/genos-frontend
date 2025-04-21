@@ -9,7 +9,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../../components/utils/avatarWithStatus';
-import { ThreadMessageProps, UserProps } from '../../types';
+import { ThreadMessageProps, UserProps } from '../../types/types';
 import BnPreview from '../../components/richTextEditor/bnPreview';
 
 type ThreadBubbleProps = ThreadMessageProps & {
