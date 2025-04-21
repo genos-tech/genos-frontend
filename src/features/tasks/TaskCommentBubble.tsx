@@ -6,7 +6,7 @@ import Card from '@mui/joy/Card';
 import Avatar from '@mui/joy/Avatar';
 import { useColorScheme } from '@mui/joy/styles';
 import { TaskCommentProps } from "../../types/types";
-import BnPreview from '../../components/richTextEditor/bnPreview';
+import BnPreview from '../../components/blockNote/bnPreview';
 
 type TaskCommentBubbleProps = {
   taskComments: TaskCommentProps[];

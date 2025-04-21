@@ -4,7 +4,7 @@ import CssBaseline from '@mui/joy/CssBaseline';
 import ChatHome from './features/chat/chatHome';
 import TaskHome from './features/tasks/taskHome';
 import './App.css';
-import Loading from './components/utils/loading'
+import Loading from './services/loading'
 import {
   UserProps,
   ChatProps,

@@ -13,7 +13,7 @@ import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import Sidebar from '../../components/utils/sidebar';
+import Sidebar from '../../components/layout/sidebar';
 import TaskSidebar from './TaskSidebar';
 import TaskPreview from './previewTask';
 import TaskTable from './TaskTable';

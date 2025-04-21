@@ -40,7 +40,7 @@ import MoreVert from '@mui/icons-material/MoreVert';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
 import AddIcon from '@mui/icons-material/Add';
-import BnTaskEditor from '../../components/richTextEditor/bnTaskEditor'
+import BnTaskEditor from '../../components/blockNote/bnTaskEditor'
 import { PartialBlock } from "@blocknote/core";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;

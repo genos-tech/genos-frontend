@@ -29,7 +29,7 @@ import FetchSpecificDMThreadMessagesWorker from "../../workers/fetchSpecificDMTh
 import FetchSpecificGMThreadMessagesWorker from "../../workers/fetchSpecificGMThreadMessagesWorker.ts?worker";
 import loadSpecificTaskByThreadId from '../tasks/services/loadSpecificTaskByThreadId';
 import { useAuth } from "../../context/AuthContext";
-import BnPreview from '../../components/richTextEditor/bnPreview';
+import BnPreview from '../../components/blockNote/bnPreview';
 
 function getCurrentTimestamp() {
   const now = new Date();

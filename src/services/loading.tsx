@@ -3,8 +3,8 @@ import { InitialLoad } from './initialLoad';
 import {
     UserProps,
     ChatProps,
-} from "../../types/types";
-import { useAuth } from "../../context/AuthContext";
+} from "../types/types";
+import { useAuth } from "../context/AuthContext";
 
 type LoadingProps = {
     myself: UserProps;

@@ -10,7 +10,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../../components/utils/avatarWithStatus';
 import { ThreadMessageProps, UserProps } from '../../types/types';
-import BnPreview from '../../components/richTextEditor/bnPreview';
+import BnPreview from '../../components/blockNote/bnPreview';
 
 type ThreadBubbleProps = ThreadMessageProps & {
   myself: UserProps;

@@ -48,8 +48,8 @@ import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
-import BnTaskPreview from '../../components/richTextEditor/bnTaskPreview'
-import BnTaskCommentPreview from '../../components/richTextEditor/bnTaskCommentEditor'
+import BnTaskPreview from '../../components/blockNote/bnTaskPreview'
+import BnTaskCommentPreview from '../../components/blockNote/bnTaskCommentEditor'
 import { PartialBlock } from "@blocknote/core";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;

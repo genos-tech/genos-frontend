@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import LoadDMHistoryWorker from "../../workers/loadDMHistoryWorker.ts?worker";
-import LoadGMHistoryWorker from "../../workers/loadGMHistoryWorker.ts?worker";
-import LoadTeamTaskWorker from "../../workers/loadTeamTaskWorker.ts?worker";
-import GetLatestDMChatWorker from "../../workers/getLatestDMChatWorker.ts?worker";
-import FetchSpecificDMChatWorker from "../../workers/fetchSpecificDMChatWorker.ts?worker";
-import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
+import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
+import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
+import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
+import GetLatestDMChatWorker from "../workers/getLatestDMChatWorker.ts?worker";
+import FetchSpecificDMChatWorker from "../workers/fetchSpecificDMChatWorker.ts?worker";
+import FetchSpecificDMMessagesWorker from "../workers/fetchSpecificDMMessagesWorker.ts?worker";
 import {
     UserProps,
     ChatProps,
     MessageProps,
-} from "../../types/types";
+} from "../types/types";
 
 export function InitialLoad(
     myself: UserProps,

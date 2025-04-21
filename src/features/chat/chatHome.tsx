@@ -24,7 +24,7 @@ import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWork
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import Sidebar from '../../components/utils/sidebar';
+import Sidebar from '../../components/layout/sidebar';
 import { useColorScheme } from '@mui/joy/styles';
 import MessagesPane from './mainMessagesPane';
 import MessagesSubPane from './subMessagesPane';

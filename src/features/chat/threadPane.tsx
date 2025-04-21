@@ -12,7 +12,7 @@ import {
   PreviewTaskProps
 } from '../../types/types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
-import BnThreadEditor from '../../components/richTextEditor/bnThreadEditor'
+import BnThreadEditor from '../../components/blockNote/bnThreadEditor'
 
 
 type MessagesPaneProps = {
