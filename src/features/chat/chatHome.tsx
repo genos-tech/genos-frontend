@@ -28,11 +28,11 @@ import Sidebar from '../../components/utils/sidebar';
 import { useColorScheme } from '@mui/joy/styles';
 import MessagesPane from './mainMessagesPane';
 import MessagesSubPane from './subMessagesPane';
-import CreateTaskFromThread from "../../components/tasks/createTaskFromThread";
-import TaskPreviewFromThread from '../../components/tasks/previewTaskFromThread';
+import CreateTaskFromThread from "../tasks/createTaskFromThread";
+import TaskPreviewFromThread from '../tasks/previewTaskFromThread';
 import { useAuth } from "../../context/AuthContext";
-import CreateTagModal from '../../components/tasks/modalCreateTag';
-import CreateProjectModal from '../../components/tasks/modalCreateProject';
+import CreateTagModal from '../tasks/modalCreateTag';
+import CreateProjectModal from '../tasks/modalCreateProject';
 import loadSpecificTask from '../tasks/services/loadSpecificTask';
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;

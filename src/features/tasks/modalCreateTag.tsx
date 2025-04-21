@@ -15,7 +15,7 @@ import {
     ProjectProps
 } from '../../types';
 import { useAuth } from "../../context/AuthContext";
-import ColorPickerMenu from '../utils/colorPickerMenu';
+import ColorPickerMenu from '../../components/utils/colorPickerMenu';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

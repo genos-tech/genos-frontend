@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import ChatHome from './features/chat/chatHome';
-import TaskHome from './components/taskHome';
+import TaskHome from './features/tasks/taskHome';
 import './App.css';
 import Loading from './components/utils/loading'
 import {

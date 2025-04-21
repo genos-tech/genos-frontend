@@ -7,14 +7,14 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { TaskTableProps, TagListProps, UserProps } from '../../types';
 import { getTaskColumns } from './tableFormat';
-import loadProjectTags from '../../features/tasks/services/loadProjectTags';
+import loadProjectTags from './services/loadProjectTags';
 import { useAuth } from "../../context/AuthContext";
 
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import loadTeamMembers from "../../features/admin/services/loadTeamMembers";
+import loadTeamMembers from "../admin/services/loadTeamMembers";
 
 const options = [
   { name: "Group By Status", filterId: 1 },

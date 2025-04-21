@@ -13,30 +13,30 @@ import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import Sidebar from './utils/sidebar';
-import TaskSidebar from './tasks/TaskSidebar';
-import TaskPreview from './tasks/previewTask';
-import TaskTable from './tasks/TaskTable';
+import Sidebar from '../../components/utils/sidebar';
+import TaskSidebar from './TaskSidebar';
+import TaskPreview from './previewTask';
+import TaskTable from './TaskTable';
 import {
     UserProps,
     ProjectProps,
     TaskTableProps,
     PreviewTaskProps,
     SearchTeamTasksResponse
-} from './../types';
-import CreateTask from "../components/tasks/createTask";
-import FetchSpecificProjectTasksWorker from "../workers/fetchSpecificProjectTasksWorker.ts?worker";
-import loadSpecificTask from '../features/tasks/services/loadSpecificTask';
-import { useAuth } from "../context/AuthContext";
-import loadTeamProjects from '../features/tasks/services/loadTeamProjects';
+} from '../../types';
+import CreateTask from "./createTask";
+import FetchSpecificProjectTasksWorker from "../../workers/fetchSpecificProjectTasksWorker.ts?worker";
+import loadSpecificTask from './services/loadSpecificTask';
+import { useAuth } from "../../context/AuthContext";
+import loadTeamProjects from './services/loadTeamProjects';
 import Autocomplete from '@mui/joy/Autocomplete';
-import loadTaskSearchList from '../features/tasks/services/loadTaskSearchList';
+import loadTaskSearchList from './services/loadTaskSearchList';
 import CircularProgress from '@mui/joy/CircularProgress';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import CreateTagModal from './tasks/modalCreateTag';
-import CreateProjectModal from './tasks/modalCreateProject';
-import CreateTeamModal from './tasks/modalCreateTeam';
-import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
+import CreateTagModal from './modalCreateTag';
+import CreateProjectModal from './modalCreateProject';
+import CreateTeamModal from './modalCreateTeam';
+import LoadTeamTaskWorker from "../../workers/loadTeamTaskWorker.ts?worker";
 
 type TaskProps = {
     myself: UserProps;

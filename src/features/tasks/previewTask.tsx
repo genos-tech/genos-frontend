@@ -12,7 +12,7 @@ import ListItem from '@mui/joy/ListItem';
 import Divider from '@mui/joy/Divider';
 import { Input, Grid, Button, Stack } from "@mui/joy";
 import Snackbar from '@mui/joy/Snackbar';
-import FileUpload from '../fileUpload/upload'
+import FileUpload from '../../components/fileUpload/upload'
 import IconButton from '@mui/joy/IconButton';
 import CancelIcon from '@mui/icons-material/Cancel';
 import GithubIcon from '../../assets/GithubIcon';
@@ -36,11 +36,11 @@ import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import { useAuth } from "../../context/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
-import updateSpecificTask from '../../features/tasks/services/updateSpecificTask';
-import loadTeamProjects from '../../features/tasks/services/loadTeamProjects';
-import loadTeamMembers from '../../features/admin/services/loadTeamMembers';
-import loadProjectTags from '../../features/tasks/services/loadProjectTags';
-import loadTaskComments from '../../features/tasks/services/loadTaskComments';
+import updateSpecificTask from './services/updateSpecificTask';
+import loadTeamProjects from './services/loadTeamProjects';
+import loadTeamMembers from '../admin/services/loadTeamMembers';
+import loadProjectTags from './services/loadProjectTags';
+import loadTaskComments from './services/loadTaskComments';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
