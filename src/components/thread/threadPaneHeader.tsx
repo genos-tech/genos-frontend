@@ -128,7 +128,7 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
                   size="sm"
                   variant="soft"
                   sx={{
-                    backgroundColor: alpha(currentPreviewTask.status.color, 0.80),
+                    backgroundColor: currentPreviewTask.status.color ? alpha(currentPreviewTask.status.color, 0.80) : 'transparent',
                     color: currentPreviewTask.status.textColor,
                     fontWeight: 'bold',
                     ml: '5px'

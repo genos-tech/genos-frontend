@@ -6,7 +6,7 @@ import Dropdown from "@mui/joy/Dropdown";
 import BusinessIcon from '@mui/icons-material/Business';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import AddIcon from '@mui/icons-material/Add';
-import loadAllTeams from '../backendOperation/loadAllTeams';
+import loadAllTeams from '../../features/admin/services/loadAllTeams';
 import { useAuth } from "../../context/AuthContext";
 import { UserProps, Team } from "../../types"
 

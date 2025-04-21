@@ -1,13 +1,13 @@
-import { ChatProps, LoadGMMessageHistoryResponse } from '../../types';
+import { ChatProps, LoadDMMessageHistoryResponse } from '../../../types';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadGMHistoryProps = {
+type LoadDMHistoryProps = {
     userId: string;
     accessToken: string;
 };
 
-async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
+async function loadDMHistory(props: LoadDMHistoryProps): Promise<ChatProps[]> {
     const { userId, accessToken } = props;
 
     if (!base_url) {
@@ -16,7 +16,7 @@ async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
         return Promise.resolve([]);
     }
 
-    return fetch(`${base_url}/gm/getHistory/?user_id=${userId}`, {
+    return fetch(`${base_url}/dm/getHistory/?user_id=${userId}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -24,7 +24,7 @@ async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
         },
     })
         .then(response => response.json().then(data => ({ response, data })))
-        .then(({ response, data }: { response: Response; data: LoadGMMessageHistoryResponse }) => {
+        .then(({ response, data }: { response: Response; data: LoadDMMessageHistoryResponse }) => {
             if (!response.ok) {
                 const errorMsg = data.message || "Failed to get chat history";
                 throw new Error(errorMsg);
@@ -42,4 +42,4 @@ async function loadGMHistory(props: LoadGMHistoryProps): Promise<ChatProps[]> {
         });
 }
 
-export default loadGMHistory;
+export default loadDMHistory;

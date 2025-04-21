@@ -29,9 +29,9 @@ import Close from '@mui/icons-material/Close';
 import FormControl from '@mui/joy/FormControl';
 import { useAuth } from "../../context/AuthContext";
 import FileUpload from '../fileUpload/upload'
-import loadTeamProjects from '../backendOperation/loadTeamProjects';
-import loadTeamMembers from '../backendOperation/loadTeamMembers';
-import loadProjectTags from '../backendOperation/loadProjectTags';
+import loadTeamProjects from '../../features/tasks/services/loadTeamProjects';
+import loadTeamMembers from '../../features/admin/services/loadTeamMembers';
+import loadProjectTags from '../../features/tasks/services/loadProjectTags';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';

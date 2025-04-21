@@ -1,15 +1,13 @@
-import { UserProps, TaskCommentProps } from '../../types'
+import { Team } from '../../../types';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadTaskCommentsProps = {
-    myself: UserProps;
-    taskId: number;
+type LoadAllTeam = {
     accessToken: string;
 };
 
-async function loadTaskComments(props: LoadTaskCommentsProps): Promise<TaskCommentProps[]> {
-    const { myself, taskId, accessToken } = props
+async function loadAllTeams(props: LoadAllTeam): Promise<Team[]> {
+    const { accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -17,7 +15,7 @@ async function loadTaskComments(props: LoadTaskCommentsProps): Promise<TaskComme
     }
 
     try {
-        const response = await fetch(`${base_url}/task/getComments/?task_id=${taskId}`, {
+        const response = await fetch(`${base_url}/team/getAllTeams/`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -25,19 +23,20 @@ async function loadTaskComments(props: LoadTaskCommentsProps): Promise<TaskComme
             },
         });
 
-        const data: TaskCommentProps[] = await response.json();
+        const data: Team[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get task comments";
+            const errorMsg = "Failed to get all teams";
             throw new Error(errorMsg);
         }
+
         return data || [];
 
     } catch (error) {
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during fetching task comments.";
+                : "An unknown error occurred during fetching team info.";
 
         console.error(errorMsg);
         return [];
@@ -45,4 +44,4 @@ async function loadTaskComments(props: LoadTaskCommentsProps): Promise<TaskComme
 
 }
 
-export default loadTaskComments;
+export default loadAllTeams;

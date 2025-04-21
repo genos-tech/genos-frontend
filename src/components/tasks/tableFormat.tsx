@@ -1,5 +1,4 @@
 import { alpha } from '@mui/system';
-import { useState, useEffect } from "react";
 import Box from '@mui/joy/Box';
 import Typography from '@mui/joy/Typography';
 import Avatar from '@mui/joy/Avatar';
@@ -11,7 +10,6 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import PendingIcon from '@mui/icons-material/Pending';
 import { UserProps } from '../../types';
-import loadTeamMembers from '../backendOperation/loadTeamMembers';
 
 const hmlOptions = [
     { label: "Low", value: "Low", color: "#0044c2", textColor: 'white' },
@@ -22,7 +20,7 @@ const getHMLOption = (value: string) => hmlOptions.find((option) => option.value
 
 const statusOptions = [
     { label: "Open", value: "Open", color: "#0044c2", textColor: "white", icon: <CheckCircleOutlineIcon style={{ color: "white" }} /> },
-    { label: "WIP", value: "WIP", color: "#ffff23", textColor: "grey", icon: <AutorenewIcon style={{ color: "grey" }} /> },
+    { label: "WIP", value: "WIP", color: "#ffff23", textColor: "black", icon: <AutorenewIcon style={{ color: "black" }} /> },
     { label: "Pending", value: "Pending", color: "#ffa823", textColor: "white", icon: <PendingIcon style={{ color: "white" }} /> },
     { label: "Closed", value: "Closed", color: "#1dc200", textColor: "white", icon: <CheckCircleOutlineIcon style={{ color: "white" }} /> },
     { label: "Deleted", value: "Deleted", color: "#ff2323", textColor: "white", icon: <HighlightOffIcon style={{ color: "white" }} /> },

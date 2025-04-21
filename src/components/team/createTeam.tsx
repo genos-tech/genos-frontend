@@ -17,7 +17,7 @@ import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import BusinessIcon from '@mui/icons-material/Business';
 import Link from '@mui/joy/Link';
 import { useAuth } from "../../context/AuthContext";
-import loadAllTeams from '../backendOperation/loadAllTeams';
+import loadAllTeams from '../../features/admin/services/loadAllTeams';
 import { Team } from '../../types';
 import List from '@mui/joy/List';
 import ListItemDecorator from '@mui/joy/ListItemDecorator';

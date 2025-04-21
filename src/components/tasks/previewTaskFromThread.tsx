@@ -36,16 +36,16 @@ import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import { useAuth } from "../../context/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
-import updateSpecificTask from '../backendOperation/updateSpecificTask';
-import loadTeamProjects from '../backendOperation/loadTeamProjects';
-import loadTeamMembers from '../backendOperation/loadTeamMembers';
-import loadProjectTags from '../backendOperation/loadProjectTags';
+import updateSpecificTask from '../../features/tasks/services/updateSpecificTask';
+import loadTeamProjects from '../../features/tasks/services/loadTeamProjects';
+import loadTeamMembers from '../../features/admin/services/loadTeamMembers';
+import loadProjectTags from '../../features/tasks/services/loadProjectTags';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
-import loadTaskComments from '../backendOperation/loadTaskComments';
+import loadTaskComments from '../../features/tasks/services/loadTaskComments';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
 import BnTaskPreview from '../../components/richTextEditor/bnTaskPreview'
@@ -57,7 +57,7 @@ const ws_url = import.meta.env.VITE_WS_BASE_URL;
 
 const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
-    { code: 0, status: "WIP", color: "#ffff23", textColor: "grey" },
+    { code: 0, status: "WIP", color: "#ffff23", textColor: "black" },
     { code: 0, status: "Pending", color: "#ffa823", textColor: "white" },
     { code: 0, status: "Closed", color: "#1dc200", textColor: "white" },
     { code: 0, status: "Deleted", color: "#ff2323", textColor: "white" },

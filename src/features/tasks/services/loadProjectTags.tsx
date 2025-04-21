@@ -1,13 +1,15 @@
-import { Team } from '../../types';
+import { UserProps, TagListProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadAllTeam = {
+type LoadTeamMembersProps = {
+    myself: UserProps;
+    projectId: number;
     accessToken: string;
 };
 
-async function loadAllTeams(props: LoadAllTeam): Promise<Team[]> {
-    const { accessToken } = props
+async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProps[]> {
+    const { myself, projectId, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -15,7 +17,7 @@ async function loadAllTeams(props: LoadAllTeam): Promise<Team[]> {
     }
 
     try {
-        const response = await fetch(`${base_url}/team/getAllTeams/`, {
+        const response = await fetch(`${base_url}/project/getProjectTags/?team_id=${myself.teamId}&project_id=${projectId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -23,20 +25,19 @@ async function loadAllTeams(props: LoadAllTeam): Promise<Team[]> {
             },
         });
 
-        const data: Team[] = await response.json();
+        const data: TagListProps[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get all teams";
+            const errorMsg = "Failed to get project tags";
             throw new Error(errorMsg);
         }
-
         return data || [];
 
     } catch (error) {
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during fetching team info.";
+                : "An unknown error occurred during fetching project tags.";
 
         console.error(errorMsg);
         return [];
@@ -44,4 +45,4 @@ async function loadAllTeams(props: LoadAllTeam): Promise<Team[]> {
 
 }
 
-export default loadAllTeams;
+export default loadProjectTags;

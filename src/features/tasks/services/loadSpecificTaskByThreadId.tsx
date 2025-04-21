@@ -1,14 +1,17 @@
-import { SearchTeamTasksResponse, UserProps } from '../../types'
+import { PreviewTaskProps, UserProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadSearchListProps = {
+type LoadTaskTableProps = {
     myself: UserProps;
+    chatType: string;
+    chatId: number;
+    threadId: number;
     accessToken: string;
 };
 
-async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamTasksResponse[]> {
-    const { myself, accessToken } = props
+async function loadSpecificTaskByThreadId(props: LoadTaskTableProps): Promise<PreviewTaskProps[]> {
+    const { myself, chatType, chatId, threadId, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -16,7 +19,7 @@ async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamT
     }
 
     try {
-        const response = await fetch(`${base_url}/search/getTeamTasks/?team_id=${myself.teamId}`, {
+        const response = await fetch(`${base_url}/task/getTaskByThreadId/?team_id=${myself.teamId}&chat_type=${chatType}&chat_id=${chatId}&thread_id=${threadId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -24,10 +27,10 @@ async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamT
             },
         });
 
-        const data: SearchTeamTasksResponse[] = await response.json();
+        const data: PreviewTaskProps[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get team tasks";
+            const errorMsg = "Failed to get a task";
             throw new Error(errorMsg);
         }
         return data || [];
@@ -36,7 +39,7 @@ async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamT
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during fetching all tasks.";
+                : "An unknown error occurred during loading a task.";
 
         console.error(errorMsg);
         return [];
@@ -44,4 +47,4 @@ async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamT
 
 }
 
-export default loadTeamTaskList;
+export default loadSpecificTaskByThreadId;

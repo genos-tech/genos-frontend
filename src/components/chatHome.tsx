@@ -33,7 +33,7 @@ import TaskPreviewFromThread from './tasks/previewTaskFromThread';
 import { useAuth } from "../context/AuthContext";
 import CreateTagModal from './tasks/modalCreateTag';
 import CreateProjectModal from './tasks/modalCreateProject';
-import loadSpecificTask from './backendOperation/loadSpecificTask';
+import loadSpecificTask from '../features/tasks/services/loadSpecificTask';
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 

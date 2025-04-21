@@ -1,15 +1,14 @@
-import { UserProps, TagListProps } from '../../types'
+import { TaskTableProps, UserProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadTeamMembersProps = {
+type LoadTaskTableProps = {
     myself: UserProps;
-    projectId: number;
     accessToken: string;
 };
 
-async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProps[]> {
-    const { myself, projectId, accessToken } = props
+async function loadTeamTasks(props: LoadTaskTableProps): Promise<TaskTableProps[]> {
+    const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -17,7 +16,7 @@ async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProp
     }
 
     try {
-        const response = await fetch(`${base_url}/project/getProjectTags/?team_id=${myself.teamId}&project_id=${projectId}`, {
+        const response = await fetch(`${base_url}/task/getTeamTasks/?team_id=${myself.teamId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -25,10 +24,10 @@ async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProp
             },
         });
 
-        const data: TagListProps[] = await response.json();
+        const data: TaskTableProps[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get project tags";
+            const errorMsg = "Failed to get tasks";
             throw new Error(errorMsg);
         }
         return data || [];
@@ -37,7 +36,7 @@ async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProp
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during fetching project tags.";
+                : "An unknown error occurred during loading task list.";
 
         console.error(errorMsg);
         return [];
@@ -45,4 +44,4 @@ async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProp
 
 }
 
-export default loadProjectTags;
+export default loadTeamTasks;

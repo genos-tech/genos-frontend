@@ -18,11 +18,11 @@ import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useAuth } from "../../context/AuthContext";
 import { SearchTeamTasksResponse, ProjectProps, UserProps } from '../../types'
-import loadTaskSearchList from '../backendOperation/loadTaskSearchList';
-import loadTeamProjects from '../backendOperation/loadTeamProjects';
+import loadTaskSearchList from '../../features/tasks/services/loadTaskSearchList';
+import loadTeamProjects from '../../features/tasks/services/loadTeamProjects';
 import CircularProgress from '@mui/joy/CircularProgress';
 import AddIcon from '@mui/icons-material/Add';
-import loadAllTeams from '../backendOperation/loadAllTeams';
+import loadAllTeams from '../../features/admin/services/loadAllTeams';
 import { Team } from '../../types';
 
 function Toggler({

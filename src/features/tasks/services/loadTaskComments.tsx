@@ -1,17 +1,15 @@
-import { PreviewTaskProps, UserProps } from '../../types'
+import { UserProps, TaskCommentProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadTaskTableProps = {
+type LoadTaskCommentsProps = {
     myself: UserProps;
-    chatType: string;
-    chatId: number;
-    threadId: number;
+    taskId: number;
     accessToken: string;
 };
 
-async function loadSpecificTaskByThreadId(props: LoadTaskTableProps): Promise<PreviewTaskProps[]> {
-    const { myself, chatType, chatId, threadId, accessToken } = props
+async function loadTaskComments(props: LoadTaskCommentsProps): Promise<TaskCommentProps[]> {
+    const { myself, taskId, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -19,7 +17,7 @@ async function loadSpecificTaskByThreadId(props: LoadTaskTableProps): Promise<Pr
     }
 
     try {
-        const response = await fetch(`${base_url}/task/getTaskByThreadId/?team_id=${myself.teamId}&chat_type=${chatType}&chat_id=${chatId}&thread_id=${threadId}`, {
+        const response = await fetch(`${base_url}/task/getComments/?task_id=${taskId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -27,10 +25,10 @@ async function loadSpecificTaskByThreadId(props: LoadTaskTableProps): Promise<Pr
             },
         });
 
-        const data: PreviewTaskProps[] = await response.json();
+        const data: TaskCommentProps[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get a task";
+            const errorMsg = "Failed to get task comments";
             throw new Error(errorMsg);
         }
         return data || [];
@@ -39,7 +37,7 @@ async function loadSpecificTaskByThreadId(props: LoadTaskTableProps): Promise<Pr
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during loading a task.";
+                : "An unknown error occurred during fetching task comments.";
 
         console.error(errorMsg);
         return [];
@@ -47,4 +45,4 @@ async function loadSpecificTaskByThreadId(props: LoadTaskTableProps): Promise<Pr
 
 }
 
-export default loadSpecificTaskByThreadId;
+export default loadTaskComments;

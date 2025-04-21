@@ -1,4 +1,4 @@
-import { PreviewTaskProps, UserProps } from '../../types'
+import { PreviewTaskProps, UserProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -35,7 +35,7 @@ async function updateSpecificTask(props: UpdateTaskProps): Promise<PreviewTaskPr
                 priority: (updatedData.priority !== null) ? updatedData.priority.priority : null,
                 effort_level: (updatedData.effortLevel !== null) ? updatedData.effortLevel.level : null,
                 status: (updatedData.status.status !== null) ? updatedData.status.status : null,
-                content: (updatedData.body !== "") ? updatedData.body : null,
+                content: (updatedData.body.length !== 0) ? updatedData.body : null,
                 due_date: (updatedData.dueDate !== "") ? updatedData.dueDate : null,
                 github_url: (updatedData.githubLink.url !== "") ? updatedData.githubLink.url : null,
                 github_url_title: (updatedData.githubLink.title !== "") ? updatedData.githubLink.title : null,

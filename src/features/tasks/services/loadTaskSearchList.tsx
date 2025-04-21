@@ -1,4 +1,4 @@
-import { ProjectProps, UserProps } from '../../types'
+import { SearchTeamTasksResponse, UserProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -7,7 +7,7 @@ type LoadSearchListProps = {
     accessToken: string;
 };
 
-async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProps[]> {
+async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamTasksResponse[]> {
     const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -16,7 +16,7 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
     }
 
     try {
-        const response = await fetch(`${base_url}/project/getTeamProjects/?team_id=${myself.teamId}`, {
+        const response = await fetch(`${base_url}/search/getTeamTasks/?team_id=${myself.teamId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -24,10 +24,10 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
             },
         });
 
-        const data: ProjectProps[] = await response.json();
+        const data: SearchTeamTasksResponse[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get team projects";
+            const errorMsg = "Failed to get team tasks";
             throw new Error(errorMsg);
         }
         return data || [];
@@ -36,7 +36,7 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during fetching all projects.";
+                : "An unknown error occurred during fetching all tasks.";
 
         console.error(errorMsg);
         return [];
@@ -44,4 +44,4 @@ async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProp
 
 }
 
-export default loadTeamProjects;
+export default loadTeamTaskList;

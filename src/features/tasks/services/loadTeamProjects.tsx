@@ -1,13 +1,13 @@
-import { TaskListByTagProps, UserProps } from '../../types'
+import { ProjectProps, UserProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadTaskTableProps = {
+type LoadSearchListProps = {
     myself: UserProps;
     accessToken: string;
 };
 
-async function loadTeamTaskListByTag(props: LoadTaskTableProps): Promise<TaskListByTagProps[]> {
+async function loadTeamProjects(props: LoadSearchListProps): Promise<ProjectProps[]> {
     const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -16,7 +16,7 @@ async function loadTeamTaskListByTag(props: LoadTaskTableProps): Promise<TaskLis
     }
 
     try {
-        const response = await fetch(`${base_url}/task/getTeamTasksByTag/?team_id=${myself.teamId}`, {
+        const response = await fetch(`${base_url}/project/getTeamProjects/?team_id=${myself.teamId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -24,10 +24,10 @@ async function loadTeamTaskListByTag(props: LoadTaskTableProps): Promise<TaskLis
             },
         });
 
-        const data: TaskListByTagProps[] = await response.json();
+        const data: ProjectProps[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get tasks";
+            const errorMsg = "Failed to get team projects";
             throw new Error(errorMsg);
         }
         return data || [];
@@ -36,7 +36,7 @@ async function loadTeamTaskListByTag(props: LoadTaskTableProps): Promise<TaskLis
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during loading task list.";
+                : "An unknown error occurred during fetching all projects.";
 
         console.error(errorMsg);
         return [];
@@ -44,4 +44,4 @@ async function loadTeamTaskListByTag(props: LoadTaskTableProps): Promise<TaskLis
 
 }
 
-export default loadTeamTaskListByTag;
+export default loadTeamProjects;

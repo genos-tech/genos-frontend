@@ -27,7 +27,7 @@ import {
   MessageProps
 } from '../../types';
 import createChatGroup from './createChatGroup';
-import loadSearchList from '../backendOperation/loadChatSearchList';
+import loadSearchList from '../../features/chat/services/loadChatSearchList';
 import CheckKnownChatWorker from "../../workers/checkKnownChatWorker.ts?worker";
 import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";

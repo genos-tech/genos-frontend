@@ -26,11 +26,11 @@ import {
 } from './../types';
 import CreateTask from "../components/tasks/createTask";
 import FetchSpecificProjectTasksWorker from "../workers/fetchSpecificProjectTasksWorker.ts?worker";
-import loadSpecificTask from './backendOperation/loadSpecificTask';
+import loadSpecificTask from '../features/tasks/services/loadSpecificTask';
 import { useAuth } from "../context/AuthContext";
-import loadTeamProjects from './backendOperation/loadTeamProjects';
+import loadTeamProjects from '../features/tasks/services/loadTeamProjects';
 import Autocomplete from '@mui/joy/Autocomplete';
-import loadTaskSearchList from './backendOperation/loadTaskSearchList';
+import loadTaskSearchList from '../features/tasks/services/loadTaskSearchList';
 import CircularProgress from '@mui/joy/CircularProgress';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import CreateTagModal from './tasks/modalCreateTag';

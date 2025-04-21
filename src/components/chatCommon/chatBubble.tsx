@@ -27,7 +27,7 @@ import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWork
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import FetchSpecificDMThreadMessagesWorker from "../../workers/fetchSpecificDMThreadMessagesWorker.ts?worker";
 import FetchSpecificGMThreadMessagesWorker from "../../workers/fetchSpecificGMThreadMessagesWorker.ts?worker";
-import loadSpecificTaskByThreadId from '../backendOperation/loadSpecificTaskByThreadId';
+import loadSpecificTaskByThreadId from '../../features/tasks/services/loadSpecificTaskByThreadId';
 import { useAuth } from "../../context/AuthContext";
 import BnPreview from '../../components/richTextEditor/bnPreview';
 

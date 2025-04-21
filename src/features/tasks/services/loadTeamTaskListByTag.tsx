@@ -1,4 +1,4 @@
-import { TaskTableProps, UserProps } from '../../types'
+import { TaskListByTagProps, UserProps } from '../../../types'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -7,7 +7,7 @@ type LoadTaskTableProps = {
     accessToken: string;
 };
 
-async function loadTeamTasks(props: LoadTaskTableProps): Promise<TaskTableProps[]> {
+async function loadTeamTaskListByTag(props: LoadTaskTableProps): Promise<TaskListByTagProps[]> {
     const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -16,7 +16,7 @@ async function loadTeamTasks(props: LoadTaskTableProps): Promise<TaskTableProps[
     }
 
     try {
-        const response = await fetch(`${base_url}/task/getTeamTasks/?team_id=${myself.teamId}`, {
+        const response = await fetch(`${base_url}/task/getTeamTasksByTag/?team_id=${myself.teamId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -24,7 +24,7 @@ async function loadTeamTasks(props: LoadTaskTableProps): Promise<TaskTableProps[
             },
         });
 
-        const data: TaskTableProps[] = await response.json();
+        const data: TaskListByTagProps[] = await response.json();
 
         if (!response.ok) {
             const errorMsg = "Failed to get tasks";
@@ -44,4 +44,4 @@ async function loadTeamTasks(props: LoadTaskTableProps): Promise<TaskTableProps[
 
 }
 
-export default loadTeamTasks;
+export default loadTeamTaskListByTag;
