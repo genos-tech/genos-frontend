@@ -201,6 +201,12 @@ export function BnEditor(props: BnEditorProps) {
 
     useEffect(() => { if (selectedEmoji !== null) { insertEmoji(selectedEmoji) } }, [selectedEmoji])
 
+    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+
+    useEffect(() => {
+        editor.replaceBlocks(editor.document, [])
+    }, [chat])
+
     return (
         <Box>
             <EmojiPicker
@@ -216,6 +222,7 @@ export function BnEditor(props: BnEditorProps) {
                     theme={mode === 'dark' ? 'dark' : 'light'}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
+                    onChange={() => (setEditorDocLength(editor.document.length))}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
                             if (editor.document.length > 1) {
@@ -323,6 +330,7 @@ export function BnEditor(props: BnEditorProps) {
                             zIndex: 1,
                             p: 0.7,
                         }}
+                        disabled={editorDocLength < 2}
                         onClick={() => {
                             if (editor.document.length > 1) {
 

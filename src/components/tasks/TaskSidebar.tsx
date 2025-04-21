@@ -399,7 +399,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                 >
                   <FreeCancellationIcon />
                   <ListItemContent>
-                    <Typography level="title-sm">To-Do</Typography>
+                    <Typography level="title-sm">To-Do (TBD)</Typography>
                   </ListItemContent>
                   <KeyboardArrowDownIcon
                     sx={[
@@ -420,7 +420,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
                   <ListItemButton
                     color='neutral'
                     variant='soft'
-                    onClick={() => { setOpenCreateTeam(true) }}
+                    onClick={() => { }}
                     sx={{ overflow: 'hidden' }} // ensure children don't overflow
                   >
                     <AddIcon />

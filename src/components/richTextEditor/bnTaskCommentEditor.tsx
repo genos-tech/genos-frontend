@@ -171,6 +171,12 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
         }
     }, [isCommentUpdated, taskComments])
 
+    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+
+    useEffect(() => {
+        editor.replaceBlocks(editor.document, [])
+    }, [taskId])
+
     return (
         <Box>
             <EmojiPicker
@@ -187,6 +193,7 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
                     onBlur={() => setTaskUpdate(true)}
+                    onChange={() => (setEditorDocLength(editor.document.length))}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
                             if (socket) {
@@ -231,6 +238,7 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                             zIndex: 1,
                             p: 0.7,
                         }}
+                        disabled={editorDocLength < 2}
                         onClick={() => {
                             if (socket) {
                                 if (editor.document.length > 1) {

@@ -10,7 +10,7 @@ import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
 import Sheet from '@mui/joy/Sheet';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import QuestionAnswerRoundedIcon from '@mui/icons-material/QuestionAnswerRounded';
-import CircleIcon from '@mui/icons-material/Circle';
+import NoteAltIcon from '@mui/icons-material/NoteAlt';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { useAuth } from "../../components/admin/AuthContext";
@@ -144,17 +144,22 @@ export default function Sidebar(props: SidebarProps) {
         >
           <ListItem>
             <ListItemButton onClick={handleMoveToChat} title='Chats'>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', p: '5px' }}>
                 <QuestionAnswerRoundedIcon sx={{ fontSize: 20 }} />
-                <CircleIcon sx={{ fontSize: 7 }} color="primary" />
               </Box>
             </ListItemButton>
           </ListItem>
           <ListItem>
             <ListItemButton onClick={handleMoveToTask} title='Tasks'>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', p: '5px' }}>
                 <AssignmentRoundedIcon sx={{ fontSize: 20 }} />
-                <CircleIcon sx={{ fontSize: 7 }} color="primary" />
+              </Box>
+            </ListItemButton>
+          </ListItem>
+          <ListItem>
+            <ListItemButton onClick={() => { console.log("Open Note") }} title='Notes'>
+              <Box sx={{ display: 'flex', alignItems: 'center', p: '5px' }}>
+                <NoteAltIcon sx={{ fontSize: 20 }} />
               </Box>
             </ListItemButton>
           </ListItem>
