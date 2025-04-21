@@ -13,7 +13,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
-import AvatarWithStatus from '../utils/avatarWithStatus';
+import AvatarWithStatus from '../../components/utils/avatarWithStatus';
 import { useColorScheme } from '@mui/joy/styles';
 import {
   UserProps,
@@ -27,7 +27,7 @@ import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWork
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import FetchSpecificDMThreadMessagesWorker from "../../workers/fetchSpecificDMThreadMessagesWorker.ts?worker";
 import FetchSpecificGMThreadMessagesWorker from "../../workers/fetchSpecificGMThreadMessagesWorker.ts?worker";
-import loadSpecificTaskByThreadId from '../../features/tasks/services/loadSpecificTaskByThreadId';
+import loadSpecificTaskByThreadId from '../tasks/services/loadSpecificTaskByThreadId';
 import { useAuth } from "../../context/AuthContext";
 import BnPreview from '../../components/richTextEditor/bnPreview';
 

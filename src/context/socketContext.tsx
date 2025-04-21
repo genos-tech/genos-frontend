@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "./AuthContext";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 

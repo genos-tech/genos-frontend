@@ -14,7 +14,7 @@ import NoteAltIcon from '@mui/icons-material/NoteAlt';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { useAuth } from "../../context/AuthContext";
-import TeamDropdown from '../team/teamDropdown';
+import TeamDropdown from '../../features/admin/teamDropdown';
 import ColorSchemeToggle from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';
 import { UserProps } from '../../types';

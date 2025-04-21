@@ -8,7 +8,7 @@ import Typography from '@mui/joy/Typography';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
-import AvatarWithStatus from '../utils/avatarWithStatus';
+import AvatarWithStatus from '../../components/utils/avatarWithStatus';
 import { ThreadMessageProps, UserProps } from '../../types';
 import BnPreview from '../../components/richTextEditor/bnPreview';
 

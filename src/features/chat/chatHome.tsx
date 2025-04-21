@@ -2,8 +2,8 @@ import Box from '@mui/joy/Box';
 import { useState, useEffect } from "react";
 import Sheet from '@mui/joy/Sheet';
 import { io, Socket } from "socket.io-client";
-import ThreadPane from './thread/threadPane';
-import ChatsPane from './chatCommon/chatsPane';
+import ThreadPane from './threadPane';
+import ChatsPane from './chatsPane';
 import {
     AllChatProps,
     NewMessageProps,
@@ -15,25 +15,25 @@ import {
     ThreadMessageProps,
     PreviewTaskProps,
     ProjectProps
-} from "../types";
-import FetchAllChatsWorker from "../workers/fetchAllChatsWorker.ts?worker";
-import InsertDMChatWorker from "../workers/insertDMChatWorker.ts?worker";
-import InsertGMChatWorker from "../workers/insertGMChatWorker.ts?worker";
-import InsertDMMessageWorker from "../workers/insertDMMessageWorker.ts?worker";
-import InsertDMThreadMessageWorker from "../workers/insertDMThreadMessageWorker.ts?worker";
-import InsertGMMessageWorker from "../workers/insertGMMessageWorker.ts?worker";
-import InsertGMThreadMessageWorker from "../workers/insertGMThreadMessageWorker.ts?worker";
+} from "../../types";
+import FetchAllChatsWorker from "../../workers/fetchAllChatsWorker.ts?worker";
+import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
+import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
+import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
+import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
+import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
+import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import Sidebar from '../components/utils/sidebar';
+import Sidebar from '../../components/utils/sidebar';
 import { useColorScheme } from '@mui/joy/styles';
-import MessagesPane from './mainChat/mainMessagesPane';
-import MessagesSubPane from './subChat/subMessagesPane';
-import CreateTaskFromThread from "../components/tasks/createTaskFromThread";
-import TaskPreviewFromThread from './tasks/previewTaskFromThread';
-import { useAuth } from "../context/AuthContext";
-import CreateTagModal from './tasks/modalCreateTag';
-import CreateProjectModal from './tasks/modalCreateProject';
-import loadSpecificTask from '../features/tasks/services/loadSpecificTask';
+import MessagesPane from './mainMessagesPane';
+import MessagesSubPane from './subMessagesPane';
+import CreateTaskFromThread from "../../components/tasks/createTaskFromThread";
+import TaskPreviewFromThread from '../../components/tasks/previewTaskFromThread';
+import { useAuth } from "../../context/AuthContext";
+import CreateTagModal from '../../components/tasks/modalCreateTag';
+import CreateProjectModal from '../../components/tasks/modalCreateProject';
+import loadSpecificTask from '../tasks/services/loadSpecificTask';
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 

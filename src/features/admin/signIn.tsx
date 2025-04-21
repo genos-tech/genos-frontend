@@ -17,7 +17,7 @@ import Stack from '@mui/joy/Stack';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import BusinessIcon from '@mui/icons-material/Business';
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

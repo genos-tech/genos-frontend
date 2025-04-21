@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import Box from '@mui/joy/Box';
 import Sheet from '@mui/joy/Sheet';
 import Stack from '@mui/joy/Stack';
-import ChatBubble from '../chatCommon/chatBubble';
+import ChatBubble from './chatBubble';
 import { Socket } from "socket.io-client";
-import SubMessagesPaneHeader from './subMessagesPaneHeader';
+import MessagesPaneHeader from './mainMessagesPaneHeader';
 import {
   ChatProps,
   UserProps,
@@ -15,48 +15,49 @@ import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 import { useColorScheme } from '@mui/joy/styles';
 import BnEditor from '../../components/richTextEditor/bnEditor'
 
-
 type MessagesPaneProps = {
   currentWindowHeight: number;
   paneSizePCT: number;
-  myself: UserProps;
   chat: ChatProps;
   subChat: ChatProps;
+  myself: UserProps;
   socket: Socket;
   setCurrentMainChat: (chat: ChatProps) => void;
   setCurrentSubChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
-  setIsSubChatVisible: (value: boolean) => void;
   setIsThreadVisible: (value: boolean) => void;
-  currentSubChatId: number;
+  isSubChatVisible: boolean;
+  setIsSubChatVisible: (value: boolean) => void;
+  currentMainChatId: number;
   setCurrentPreviewTask: (value: PreviewTaskProps | undefined) => void;
 };
 
-export default function MessagesSubPane(props: MessagesPaneProps) {
+export default function MessagesPane(props: MessagesPaneProps) {
   const {
     currentWindowHeight,
     paneSizePCT,
-    myself,
     chat,
     subChat,
+    myself,
     socket,
     setCurrentMainChat,
     setCurrentSubChat,
     setCurrentThreadChat,
-    setIsSubChatVisible,
     setIsThreadVisible,
-    currentSubChatId,
+    isSubChatVisible,
+    setIsSubChatVisible,
+    currentMainChatId,
     setCurrentPreviewTask } = props;
-  const [chatMessages, setChatMessages] = useState(subChat.messages);
-  const [content, setContent] = useState("");
+  const [chatMessages, setChatMessages] = useState(chat.messages);
 
   useEffect(() => {
-    setChatMessages(subChat.messages);
-  }, [subChat.messages]);
-
-  const { mode } = useColorScheme();
+    setChatMessages(chat.messages);
+  }, [chat.messages]);
 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
+  const ref = useRef({
+    nearBottom: false,
+  })
 
   // Scroll to the bottom when a new message comes.
   useEffect(() => {
@@ -69,9 +70,9 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
           index: 'LAST',
           behavior: 'smooth',
         })
-      }, 200)
+      }, 200) // wait 200ms
     }
-  }, [subChat])
+  }, [chat])
 
   // Scroll to the bottom at first.
   useEffect(() => {
@@ -83,9 +84,21 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         virtuoso.scrollToIndex({
           index: 'LAST',
         })
-      }, 300)
+      }, 300) // wait 300ms
     }
-  }, [currentSubChatId])
+  }, [currentMainChatId])
+
+  // TODO: limit initial num of messages, and load more after
+  const handleAtTop = (atTop: boolean) => {
+    if (atTop) {
+      // loadMore()
+    }
+  }
+
+  // Detecting if scroll bar is near the bottom
+  const handleAtBottom = (atBottom: boolean) => {
+    ref.current.nearBottom = atBottom
+  }
 
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -103,7 +116,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
             const img = new Image();
             img.src = e.target.result as string;
             img.onload = () => {
-              console.log("uploaded image:", img.baseURI)
+              console.log("uploaded image:", img.src)
             }
           }
         };
@@ -123,24 +136,31 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
         height: "100%",
       }}
     >
-      <Sheet sx={{ backgroundColor: 'background.level1' }}>
-        <SubMessagesPaneHeader
+      <Sheet sx={{ backgroundColor: 'background.surface' }}>
+        <MessagesPaneHeader
           myself={myself}
           chat={chat}
           subChat={subChat}
           setCurrentMainChat={setCurrentMainChat}
           setCurrentSubChat={setCurrentSubChat}
-          setIsSubChatVisible={setIsSubChatVisible} />
-
+          isSubChatVisible={isSubChatVisible}
+          setIsSubChatVisible={setIsSubChatVisible}
+        />
         <Box sx={{ px: 0.3, my: 0.2 }}>
           <Virtuoso
             ref={virtuosoRef}
             className="custom-scrollbar"
-            style={{ height: currentWindowHeight * paneSizePCT * 0.01 - 270 }}
+            style={{
+              height: isSubChatVisible
+                ? currentWindowHeight * paneSizePCT * 0.01 - 270
+                : currentWindowHeight - 270
+            }}
             totalCount={chatMessages.length}
             initialTopMostItemIndex={chatMessages.length - 1}
             atTopThreshold={64}
+            atTopStateChange={handleAtTop}
             atBottomThreshold={128}
+            atBottomStateChange={handleAtBottom}
             itemContent={(index) => {
               const message = chatMessages[index];
               const isYou = myself.userId === message.sender.userId;
@@ -154,7 +174,7 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
                     <ChatBubble
                       myself={myself}
                       variant={isYou ? "sent" : "received"}
-                      chat={subChat}
+                      chat={chat}
                       socket={socket}
                       {...message}
                       setIsThreadVisible={setIsThreadVisible}
@@ -167,15 +187,15 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
             }}
           />
         </Box>
-        <Box sx={{ paddingBottom: 1, paddingLeft: 1, paddingRight: 1 }}>
-          <BnEditor 
+        <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+          <BnEditor
             myself={myself}
             socket={socket}
-            chat={subChat}
-            setCurrentChat={setCurrentSubChat}
+            chat={chat}
+            setCurrentChat={setCurrentMainChat}
           />
         </Box>
-      </Sheet>
+      </Sheet >
     </div>
   );
 }

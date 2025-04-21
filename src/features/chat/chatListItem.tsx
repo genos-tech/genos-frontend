@@ -10,7 +10,7 @@ import CircleIcon from '@mui/icons-material/Circle';
 import GroupsIcon from '@mui/icons-material/Groups';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import Avatar from '@mui/joy/Avatar';
-import AvatarWithStatus from '../utils/avatarWithStatus';
+import AvatarWithStatus from '../../components/utils/avatarWithStatus';
 import {
   MessageProps,
   AllChatProps,

@@ -14,7 +14,7 @@ import List from '@mui/joy/List';
 import ListItemDecorator from '@mui/joy/ListItemDecorator';
 import ListItemButton from '@mui/joy/ListItemButton';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
-import loadAllTeams from '../../features/admin/services/loadAllTeams';
+import loadAllTeams from './services/loadAllTeams';
 import { Team } from '../../types';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;

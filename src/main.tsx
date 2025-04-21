@@ -2,13 +2,13 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 import './index.css'
 import App from './App.tsx'
-import SignIn from './features/admin/components/signIn.tsx'
-import SignUp from './features/admin/components/signUp.tsx'
+import SignIn from './features/admin/signIn.tsx'
+import SignUp from './features/admin/signUp.tsx'
 import PageNotFound from './components/utils/pageNotFound.tsx'
 import AuthGuard from './features/admin/authGuard.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
-import CreateTeam from './components/team/createTeam.tsx'
-import SelectTeam from './components/team/selectTeam.tsx'
+import CreateTeam from './features/admin/createTeam.tsx'
+import SelectTeam from './features/admin/selectTeam.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <AuthProvider>
