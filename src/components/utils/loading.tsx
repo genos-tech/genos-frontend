@@ -4,7 +4,7 @@ import {
     UserProps,
     ChatProps,
 } from "../../types";
-import { useAuth } from "../../components/admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 type LoadingProps = {
     myself: UserProps;

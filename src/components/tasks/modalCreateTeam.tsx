@@ -11,7 +11,7 @@ import {
 import {
     UserProps
 } from '../../types';
-import { useAuth } from "../../components/admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

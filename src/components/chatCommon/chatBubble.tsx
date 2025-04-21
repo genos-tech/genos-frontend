@@ -28,7 +28,7 @@ import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWork
 import FetchSpecificDMThreadMessagesWorker from "../../workers/fetchSpecificDMThreadMessagesWorker.ts?worker";
 import FetchSpecificGMThreadMessagesWorker from "../../workers/fetchSpecificGMThreadMessagesWorker.ts?worker";
 import loadSpecificTaskByThreadId from '../backendOperation/loadSpecificTaskByThreadId';
-import { useAuth } from "../../components/admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import BnPreview from '../../components/richTextEditor/bnPreview';
 
 function getCurrentTimestamp() {

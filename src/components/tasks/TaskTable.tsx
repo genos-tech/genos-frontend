@@ -8,7 +8,7 @@ import Stack from '@mui/material/Stack';
 import { TaskTableProps, TagListProps, UserProps } from '../../types';
 import { getTaskColumns } from './tableFormat';
 import loadProjectTags from '../backendOperation/loadProjectTags';
-import { useAuth } from "../admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';

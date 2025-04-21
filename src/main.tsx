@@ -6,7 +6,7 @@ import SignIn from './components/admin/signIn.tsx'
 import SignUp from './components/admin/signUp.tsx'
 import PageNotFound from './components/utils/pageNotFound.tsx'
 import AuthGuard from './components/admin/authGuard.tsx'
-import { AuthProvider } from './components/admin/AuthContext'
+import { AuthProvider } from './context/AuthContext.tsx'
 import CreateTeam from './components/team/createTeam.tsx'
 import SelectTeam from './components/team/selectTeam.tsx'
 

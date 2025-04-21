@@ -7,7 +7,7 @@ import BusinessIcon from '@mui/icons-material/Business';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import AddIcon from '@mui/icons-material/Add';
 import loadAllTeams from '../backendOperation/loadAllTeams';
-import { useAuth } from "../admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { UserProps, Team } from "../../types"
 
 const base_url = import.meta.env.VITE_API_BASE_URL;

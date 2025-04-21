@@ -16,7 +16,7 @@ import FreeCancellationIcon from '@mui/icons-material/FreeCancellation';
 import BusinessIcon from '@mui/icons-material/Business';
 import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { useAuth } from "../../components/admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { SearchTeamTasksResponse, ProjectProps, UserProps } from '../../types'
 import loadTaskSearchList from '../backendOperation/loadTaskSearchList';
 import loadTeamProjects from '../backendOperation/loadTeamProjects';

@@ -30,7 +30,7 @@ import MessagesPane from './mainChat/mainMessagesPane';
 import MessagesSubPane from './subChat/subMessagesPane';
 import CreateTaskFromThread from "../components/tasks/createTaskFromThread";
 import TaskPreviewFromThread from './tasks/previewTaskFromThread';
-import { useAuth } from "../components/admin/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import CreateTagModal from './tasks/modalCreateTag';
 import CreateProjectModal from './tasks/modalCreateProject';
 import loadSpecificTask from './backendOperation/loadSpecificTask';

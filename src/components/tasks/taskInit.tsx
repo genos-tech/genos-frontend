@@ -9,7 +9,7 @@ import Button from '@mui/joy/Button';
 import Box from '@mui/joy/Box';
 import { Alert } from "@mui/joy";
 import { UserProps, ProjectProps } from "../../types";
-import { useAuth } from "../admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

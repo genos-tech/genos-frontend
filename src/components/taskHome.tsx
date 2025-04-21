@@ -27,7 +27,7 @@ import {
 import CreateTask from "../components/tasks/createTask";
 import FetchSpecificProjectTasksWorker from "../workers/fetchSpecificProjectTasksWorker.ts?worker";
 import loadSpecificTask from './backendOperation/loadSpecificTask';
-import { useAuth } from "../components/admin/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import loadTeamProjects from './backendOperation/loadTeamProjects';
 import Autocomplete from '@mui/joy/Autocomplete';
 import loadTaskSearchList from './backendOperation/loadTaskSearchList';

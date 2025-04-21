@@ -13,7 +13,7 @@ import QuestionAnswerRoundedIcon from '@mui/icons-material/QuestionAnswerRounded
 import NoteAltIcon from '@mui/icons-material/NoteAlt';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import { useAuth } from "../../components/admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import TeamDropdown from '../team/teamDropdown';
 import ColorSchemeToggle from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';

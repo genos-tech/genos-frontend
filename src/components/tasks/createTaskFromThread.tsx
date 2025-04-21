@@ -27,7 +27,7 @@ import {
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import FormControl from '@mui/joy/FormControl';
-import { useAuth } from "../../components/admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import FileUpload from '../fileUpload/upload'
 import loadTeamProjects from '../backendOperation/loadTeamProjects';
 import loadTeamMembers from '../backendOperation/loadTeamMembers';

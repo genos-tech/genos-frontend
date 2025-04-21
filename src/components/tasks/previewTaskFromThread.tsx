@@ -34,7 +34,7 @@ import {
 } from "../../types";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
-import { useAuth } from "../admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
 import updateSpecificTask from '../backendOperation/updateSpecificTask';
 import loadTeamProjects from '../backendOperation/loadTeamProjects';

@@ -35,7 +35,7 @@ import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
 import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessagesWorker.ts?worker";
-import { useAuth } from "../../components/admin/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import { useColorScheme } from '@mui/joy/styles';
 
 type ChatsPaneProps = {
