@@ -2,7 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
 
-const AuthGuard = () => {
+export const AuthGuard = () => {
     const { accessToken } = useAuth();
     const [loading, setLoading] = useState(true);
 
@@ -15,4 +15,3 @@ const AuthGuard = () => {
     return (accessToken || localStorage.getItem("isSigningIn") === "yes") ? <Outlet /> : <Navigate to="/SignIn" />;
 };
 
-export default AuthGuard;

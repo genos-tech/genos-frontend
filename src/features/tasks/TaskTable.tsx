@@ -14,7 +14,7 @@ import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import loadTeamMembers from "../admin/services/loadTeamMembers";
+import { loadTeamMembers } from "../admin/services/loadTeamMembers";
 
 const options = [
   { name: "Group By Status", filterId: 1 },
@@ -150,9 +150,7 @@ export default function TaskTable(props: ProjectTaskTableProps) {
   const getTeamMembers = () => {
     // Load the latest project as initial process
     (async () => {
-      const loadedTeamMembers: UserProps[] = await loadTeamMembers({
-        myself: myself, accessToken: accessToken || ""
-      });
+      const loadedTeamMembers: UserProps[] = await loadTeamMembers(myself, accessToken);
       if (loadedTeamMembers.length > 0) {
         setTeamMembers(loadedTeamMembers);
       }

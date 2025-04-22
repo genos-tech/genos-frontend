@@ -38,7 +38,7 @@ import { useAuth } from "../../context/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
 import updateSpecificTask from './services/updateSpecificTask';
 import loadTeamProjects from './services/loadTeamProjects';
-import loadTeamMembers from '../admin/services/loadTeamMembers';
+import { loadTeamMembers } from '../admin/services/loadTeamMembers';
 import loadProjectTags from './services/loadProjectTags';
 import loadTaskComments from './services/loadTaskComments';
 import Dropdown from '@mui/joy/Dropdown';
@@ -296,9 +296,7 @@ export default function taskPreview(props: TaskContentProps) {
     useEffect(() => {
         // Load the latest project as initial process
         (async () => {
-            const loadedTeamMembers: UserProps[] = await loadTeamMembers({
-                myself: myself, accessToken: accessToken || ""
-            });
+            const loadedTeamMembers: UserProps[] = await loadTeamMembers(myself, accessToken);
             if (loadedTeamMembers.length > 0) {
                 setTeamMembers(loadedTeamMembers);
             }

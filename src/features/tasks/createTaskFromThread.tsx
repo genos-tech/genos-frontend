@@ -30,7 +30,7 @@ import FormControl from '@mui/joy/FormControl';
 import { useAuth } from "../../context/AuthContext";
 import FileUpload from './upload'
 import loadTeamProjects from './services/loadTeamProjects';
-import loadTeamMembers from '../admin/services/loadTeamMembers';
+import { loadTeamMembers } from '../admin/services/loadTeamMembers';
 import loadProjectTags from './services/loadProjectTags';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
@@ -354,9 +354,7 @@ export default function CreateTaskFromThread(props: TaskContentProps) {
     useEffect(() => {
         // Load the latest project as initial process
         (async () => {
-            const loadedTeamMembers: UserProps[] = await loadTeamMembers({
-                myself: myself, accessToken: accessToken || ""
-            });
+            const loadedTeamMembers: UserProps[] = await loadTeamMembers(myself, accessToken);
             if (loadedTeamMembers.length > 0) {
                 setTeamMembers(loadedTeamMembers);
             }

@@ -83,7 +83,7 @@ const getCustomSlashMenuItems = (
 ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
 type BnTaskPreviewProps = {
-    body: PartialBlock[];
+    body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setTaskUpdate: (value: boolean) => void;
 }

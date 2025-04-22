@@ -14,7 +14,6 @@ import {
     FileCaptionButton,
     FileReplaceButton,
     FormattingToolbar,
-    TextAlignButton,
     useCreateBlockNote,
     DefaultReactSuggestionItem,
     SuggestionMenuController,
@@ -295,19 +294,6 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                                 key={"codeStyleButton"}
                                 basicTextStyle={"code"}
                             />
-
-                            {/* <TextAlignButton
-                                textAlignment={"left"}
-                                key={"textAlignLeftButton"}
-                            />
-                            <TextAlignButton
-                                textAlignment={"center"}
-                                key={"textAlignCenterButton"}
-                            />
-                            <TextAlignButton
-                                textAlignment={"right"}
-                                key={"textAlignRightButton"}
-                            /> */}
 
                             <ColorStyleButton key={"colorStyleButton"} />
 

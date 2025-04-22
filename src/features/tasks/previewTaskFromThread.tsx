@@ -38,7 +38,7 @@ import { useAuth } from "../../context/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
 import updateSpecificTask from './services/updateSpecificTask';
 import loadTeamProjects from './services/loadTeamProjects';
-import loadTeamMembers from '../admin/services/loadTeamMembers';
+import { loadTeamMembers } from '../admin/services/loadTeamMembers';
 import loadProjectTags from './services/loadProjectTags';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
@@ -113,7 +113,6 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
         setOpeningService
     } = props
     const { accessToken } = useAuth();
-    const [comment, setComment] = useState("");
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
     const [taskUpdated, setTaskUpdate] = useState(false);
     const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
@@ -224,12 +223,6 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
         }
     };
 
-
-    function getMdHeight(text: string): number {
-        const height: number = Math.min(Math.max(text.split('\n').length * 20, 450), 800)
-        return height;
-    }
-
     // Github URL link manager
     const [prUrl, setPRUrl] = useState<string>(currentPreviewTask?.githubLink?.url || "");
     const [prTitle, setPRTitle] = useState<string>(currentPreviewTask?.githubLink?.title || "");
@@ -301,9 +294,7 @@ export default function taskPreviewFromThread(props: TaskContentProps) {
     useEffect(() => {
         // Load the latest project as initial process
         (async () => {
-            const loadedTeamMembers: UserProps[] = await loadTeamMembers({
-                myself: myself, accessToken: accessToken || ""
-            });
+            const loadedTeamMembers: UserProps[] = await loadTeamMembers(myself, accessToken);
             if (loadedTeamMembers.length > 0) {
                 setTeamMembers(loadedTeamMembers);
             }

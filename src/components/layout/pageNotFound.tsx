@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Button, Typography } from '@mui/joy';
 import { useNavigate } from "react-router-dom";
 
-const Error: React.FC = () => {
+export const PageNotFound: React.FC = () => {
     const navigate = useNavigate();
 
     const handleBackHome = (): void => {
@@ -32,4 +32,3 @@ const Error: React.FC = () => {
     );
 };
 
-export default Error;

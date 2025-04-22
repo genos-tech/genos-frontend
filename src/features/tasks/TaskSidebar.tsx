@@ -22,8 +22,8 @@ import loadTaskSearchList from './services/loadTaskSearchList';
 import loadTeamProjects from './services/loadTeamProjects';
 import CircularProgress from '@mui/joy/CircularProgress';
 import AddIcon from '@mui/icons-material/Add';
-import loadAllTeams from '../admin/services/loadAllTeams';
-import { Team } from '../../types/types';
+import { loadAllTeams } from '../admin/services/loadAllTeams';
+import { Team } from '../../types/admin';
 
 function Toggler({
   defaultExpanded,
@@ -148,7 +148,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
   const [teams, setTeams] = useState<Team[]>([]);
   const loadTeams = () => {
     (async () => {
-      const loadedTeams: Team[] = await loadAllTeams({ accessToken: accessToken || "" });
+      const loadedTeams: Team[] = await loadAllTeams(accessToken);
       setTeams(loadedTeams)
     })();
   };
