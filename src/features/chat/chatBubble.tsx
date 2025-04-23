@@ -18,6 +18,8 @@ import BnPreview from '../../components/blockNote/bnPreview';
 import { extractHHMM, getCurrentTimestamp } from "../../components/utils/getTime";
 import { addDMThreadMessage } from "./services/addDMThreadMessage";
 import { addGMThreadMessage } from "./services/addGMThreadMessage";
+import { popDMSpecificThreadMessage } from "./services/popDMSpecificThreadMessage";
+import { popGMSpecificThreadMessage } from "./services/popGMSpecificThreadMessage";
 import { BubbleLikeReactionButton } from "./components/BubbleLikeReactionButton";
 import { BubbleUserName } from "./components/BubbleUserName";
 import { BubbleReplyButton } from "./components/BubbleReplyButton";
@@ -68,7 +70,6 @@ export default function ChatBubble(props: ChatBubbleProps) {
     })();
   };
 
-
   const replayHandler = () => {
     loadTask(messageId);
 
@@ -86,7 +87,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
       senderName: myself.userName,
       destCGName: chat.chatName,
       destCGId: chat.chatId,
-    }, (ack: any) => {
+    }, async (ack: any) => {
 
       const newThreadMessage: ThreadMessageProps = {
         messageIdWithChatIdAndThreadId: `${chat.chatId}-${messageId}-1`,
@@ -100,10 +101,51 @@ export default function ChatBubble(props: ChatBubbleProps) {
         tsSent: getCurrentTimestamp(),
       };
 
-      if (chat.isDm) {
-        addDMThreadMessage(chat.chatName, chat.dmPartnerUserId, newThreadMessage, setCurrentThreadChat);
-      } else {
-        addGMThreadMessage(chat.chatName, newThreadMessage, setCurrentThreadChat);
+      if (newThreadMessage) {
+        if (chat.isDm) {
+          await addDMThreadMessage(newThreadMessage);
+          const threadMessages: ThreadMessageProps[] = await popDMSpecificThreadMessage(
+            newThreadMessage.chatId, newThreadMessage.threadId
+          )
+          if (threadMessages) {
+            const newThread: ThreadProps = {
+              chatId: newThreadMessage.chatId,
+              chatName: chat.chatName,
+              threadId: newThreadMessage.threadId,
+              isDm: true,
+              dmPartnerUserId: chat.dmPartnerUserId,
+              taskId: null,
+              unread: false,
+              messages: threadMessages,
+              TSLastMessage: getCurrentTimestamp(),
+            };
+            if (newThread) {
+              setCurrentThreadChat(newThread)
+            }
+          }
+        } else {
+          await addGMThreadMessage(newThreadMessage);
+          const threadMessages: ThreadMessageProps[] = await popGMSpecificThreadMessage(
+            newThreadMessage.chatId, newThreadMessage.threadId
+          )
+          if (threadMessages) {
+            const newThread: ThreadProps = {
+              chatId: newThreadMessage.chatId,
+              chatName: chat.chatName,
+              threadId: newThreadMessage.threadId,
+              isDm: false,
+              dmPartnerUserId: chat.dmPartnerUserId,
+              taskId: null,
+              unread: false,
+              messages: threadMessages,
+              TSLastMessage: getCurrentTimestamp(),
+            };
+            if (newThread) {
+              setCurrentThreadChat(newThread)
+            }
+          }
+        }
+
       }
     });
   }
