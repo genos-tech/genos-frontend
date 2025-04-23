@@ -1,26 +1,25 @@
 import * as React from 'react';
-import Box from '@mui/joy/Box';
-import Tooltip from '@mui/joy/Tooltip';
-import ListDivider from '@mui/joy/ListDivider';
-import ListItem from '@mui/joy/ListItem';
+import {
+  Avatar,
+  Box,
+  Tooltip,
+  ListDivider,
+  ListItem,
+  Stack,
+  Typography,
+  IconButton
+} from '@mui/joy';
 import ListItemButton, { ListItemButtonProps } from '@mui/joy/ListItemButton';
-import Stack from '@mui/joy/Stack';
-import Typography from '@mui/joy/Typography';
 import CircleIcon from '@mui/icons-material/Circle';
 import GroupsIcon from '@mui/icons-material/Groups';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import Avatar from '@mui/joy/Avatar';
+
+import { popDMSpecificMessages } from "./services/popDMSpecificMessages";
+import { popGMSpecificMessages } from "./services/popGMSpecificMessages";
 import AvatarWithStatus from '../../components/utils/avatarWithStatus';
-import {
-  MessageProps,
-  AllChatProps,
-  ChatProps,
-  UserProps
-} from '../../types/types';
+import { AllChatProps, ChatProps, UserProps } from '../../types/types';
 import { toggleMessagesPane } from '../../utils';
-import { IconButton } from '@mui/joy';
-import FetchSpecificDMMessagesWorker from "../../workers/fetchSpecificDMMessagesWorker.ts?worker";
-import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessagesWorker.ts?worker";
+import { extractMMDDHHMM } from '../../components/utils/getTime';
 
 type ChatListItemProps = ListItemButtonProps & {
   chat: AllChatProps;
@@ -32,50 +31,6 @@ type ChatListItemProps = ListItemButtonProps & {
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
 };
-
-function extractHHMM(ts: string) {
-  if (ts !== undefined) {
-    return ts.slice(5, 16);
-  } else {
-    return ""
-  }
-}
-
-function _FetchSpecificDMMessagesWorker(chatId: number): Promise<MessageProps[]> {
-  return new Promise((resolve, reject) => {
-    const fetchSpecificDMMessagesWorker = new FetchSpecificDMMessagesWorker();
-
-    fetchSpecificDMMessagesWorker.postMessage({ chatId });
-
-    fetchSpecificDMMessagesWorker.onmessage = (event) => {
-      resolve(event.data);
-      fetchSpecificDMMessagesWorker.terminate(); // Clean up the worker
-    };
-
-    fetchSpecificDMMessagesWorker.onerror = (error) => {
-      reject(error);
-      fetchSpecificDMMessagesWorker.terminate(); // Ensure cleanup on error
-    };
-  });
-}
-
-function _FetchSpecificGMMessagesWorker(chatId: number): Promise<MessageProps[]> {
-  return new Promise((resolve, reject) => {
-    const fetchSpecificGMMessagesWorker = new FetchSpecificGMMessagesWorker();
-
-    fetchSpecificGMMessagesWorker.postMessage({ chatId });
-
-    fetchSpecificGMMessagesWorker.onmessage = (event) => {
-      resolve(event.data);
-      fetchSpecificGMMessagesWorker.terminate(); // Clean up the worker
-    };
-
-    fetchSpecificGMMessagesWorker.onerror = (error) => {
-      reject(error);
-      fetchSpecificGMMessagesWorker.terminate(); // Ensure cleanup on error
-    };
-  });
-}
 
 export default function ChatListItem(props: ChatListItemProps) {
   const { chat,
@@ -91,47 +46,39 @@ export default function ChatListItem(props: ChatListItemProps) {
 
   const always_online: boolean = true; // TODO: need to get status from WS
 
+  const defineNewMessages = (messages: any) => {
+    const newMessages: ChatProps = {
+      chatId: chat.chatId,
+      chatName: chat.chatName,
+      isDm: chat.isDm,
+      dmPartnerUserId: chat.dmPartnerUserId,
+      unread: false,
+      messages: messages,
+      latestMessage: messages[messages.length - 1],
+      latestMessageText: messages[messages.length - 1].contentText,
+      TSLastMessage: chat.TSLastMessage
+    }
+    return newMessages
+  }
+
   const onClickHandler = () => {
     if (isSubChatVisible === false
       || (`${currentSubChat.chatId}-${currentSubChat.chatName}` !== `${chat.chatId}-${chat.chatName}`)) {
       toggleMessagesPane();
       chat.unread = Boolean(false);
       if (chat.isDm) {
-        _FetchSpecificDMMessagesWorker(chat.chatId)
+        popDMSpecificMessages(chat.chatId)
           .then((messages) => {
-            const newMessages: ChatProps = {
-              chatId: chat.chatId,
-              chatName: chat.chatName,
-              isDm: chat.isDm,
-              dmPartnerUserId: chat.dmPartnerUserId,
-              unread: false,
-              messages: messages,
-              latestMessage: messages[messages.length - 1],
-              latestMessageText: messages[messages.length - 1].contentText,
-              TSLastMessage: chat.TSLastMessage
-            }
-            setCurrentMainChat(newMessages);
+            setCurrentMainChat(defineNewMessages(messages));
           })
           .catch((error) => console.error(error));
       } else {
-        _FetchSpecificGMMessagesWorker(chat.chatId)
+        popGMSpecificMessages(chat.chatId)
           .then((messages) => {
-            const newMessages: ChatProps = {
-              chatId: chat.chatId,
-              chatName: chat.chatName,
-              isDm: chat.isDm,
-              dmPartnerUserId: chat.dmPartnerUserId,
-              unread: false,
-              messages: messages,
-              latestMessage: messages[messages.length - 1],
-              latestMessageText: messages[messages.length - 1].contentText,
-              TSLastMessage: chat.TSLastMessage
-            }
-            setCurrentMainChat(newMessages);
+            setCurrentMainChat(defineNewMessages(messages));
           })
           .catch((error) => console.error(error));
       }
-    } else {
     }
   };
 
@@ -139,50 +86,21 @@ export default function ChatListItem(props: ChatListItemProps) {
     if (`${currentMainChat.chatId}-${currentMainChat.chatName}` !== `${chat.chatId}-${chat.chatName}`) {
       toggleMessagesPane();
       if (chat.isDm) {
-        _FetchSpecificDMMessagesWorker(chat.chatId)
+        popDMSpecificMessages(chat.chatId)
           .then((messages) => {
-            const newMessages: ChatProps = {
-              chatId: chat.chatId,
-              chatName: chat.chatName,
-              isDm: chat.isDm,
-              dmPartnerUserId: chat.dmPartnerUserId,
-              unread: false,
-              messages: messages,
-              latestMessage: messages[messages.length - 1],
-              latestMessageText: messages[messages.length - 1].contentText,
-              TSLastMessage: chat.TSLastMessage
-            }
-            setCurrentSubChat(newMessages);
+            setCurrentSubChat(defineNewMessages(messages));
           })
           .catch((error) => console.error(error));
       } else {
-        _FetchSpecificGMMessagesWorker(chat.chatId)
+        popGMSpecificMessages(chat.chatId)
           .then((messages) => {
-            const newMessages: ChatProps = {
-              chatId: chat.chatId,
-              chatName: chat.chatName,
-              isDm: chat.isDm,
-              dmPartnerUserId: chat.dmPartnerUserId,
-              unread: false,
-              messages: messages,
-              latestMessage: messages[messages.length - 1],
-              latestMessageText: messages[messages.length - 1].contentText,
-              TSLastMessage: chat.TSLastMessage
-            }
-            setCurrentSubChat(newMessages);
+            setCurrentSubChat(defineNewMessages(messages));
           })
           .catch((error) => console.error(error));
       }
       setIsSubChatVisible(true)
     }
   };
-
-  var tsSent: string = ""
-  if (chat.latestMessage === undefined) {
-    tsSent = ""
-  } else {
-    tsSent = extractHHMM(chat.latestMessage.tsSent)
-  }
 
   return (
     <React.Fragment>
@@ -219,7 +137,7 @@ export default function ChatListItem(props: ChatListItemProps) {
                   noWrap
                   sx={{ display: { xs: "none", md: "block" } }}
                 >
-                  {tsSent}
+                  {chat.latestMessage ? extractMMDDHHMM(chat.latestMessage.tsSent) : ""}
                 </Typography>
                 {chat.unread && <CircleIcon sx={{ fontSize: 12 }} color="primary" />}
                 <Tooltip title="Split View " size="sm">

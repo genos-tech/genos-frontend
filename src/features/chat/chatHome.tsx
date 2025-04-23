@@ -5,7 +5,7 @@ import { useColorScheme } from '@mui/joy/styles';
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
 import ThreadPane from './threadPane';
-import ChatsPane from './chatsPane';
+import { ChatsPane } from './chatsPane';
 import MessagesPane from './mainMessagesPane';
 import MessagesSubPane from './subMessagesPane';
 import { popAllChats } from './services/popAllChats';

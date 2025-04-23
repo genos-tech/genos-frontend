@@ -11,15 +11,12 @@ import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRound
 import AvatarWithStatus from '../../components/utils/avatarWithStatus';
 import { ThreadMessageProps, ThreadProps } from '../../types/types';
 import BnPreview from '../../components/blockNote/bnPreview';
+import { extractHHMM } from '../../components/utils/getTime';
 
 type ThreadBubbleProps = ThreadMessageProps & {
   thread: ThreadProps;
   variant: 'sent' | 'received';
 };
-
-function extractHHMM(ts: string) {
-  return ts.split(' ')[1].slice(0, 5);
-}
 
 export default function ThreadBubble(props: ThreadBubbleProps) {
   const { thread,

@@ -1,7 +1,7 @@
 import { ThreadMessageProps } from '../../../types/types';
 import FetchSpecificGMThreadMessagesWorker from "../../../workers/fetchSpecificGMThreadMessagesWorker.ts?worker";
 
-export const popGMSpecificThreadMessage = (
+export const popGMSpecificThreadMessages = (
     chatId: number,
     threadId: number
 ): Promise<ThreadMessageProps[]> => {

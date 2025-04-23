@@ -48,7 +48,6 @@ export default function MessagesSubPane(props: MessagesPaneProps) {
     currentSubChatId,
     setCurrentPreviewTask } = props;
   const [chatMessages, setChatMessages] = useState(subChat.messages);
-  const [content, setContent] = useState("");
 
   useEffect(() => {
     setChatMessages(subChat.messages);

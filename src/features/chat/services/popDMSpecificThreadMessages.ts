@@ -1,7 +1,7 @@
 import { ThreadMessageProps } from '../../../types/types';
 import FetchSpecificDMThreadMessagesWorker from "../../../workers/fetchSpecificDMThreadMessagesWorker.ts?worker";
 
-export const popDMSpecificThreadMessage = (
+export const popDMSpecificThreadMessages = (
     chatId: number,
     threadId: number
 ): Promise<ThreadMessageProps[]> => {

@@ -12,7 +12,6 @@ import {
   PreviewTaskProps
 } from '../../types/types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
-import { useColorScheme } from '@mui/joy/styles';
 import BnEditor from '../../components/blockNote/bnEditor'
 
 type MessagesPaneProps = {

@@ -9,6 +9,10 @@ export const getCurrentTimestamp = () => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+export const extractMMDDHHMM = (ts: string) => {
+    return ts.slice(5, 16)
+}
+
 export const extractHHMM = (ts: string) => {
     return ts.split(' ')[1].slice(0, 5);
 }

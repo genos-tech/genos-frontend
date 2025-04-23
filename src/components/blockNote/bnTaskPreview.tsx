@@ -152,7 +152,6 @@ export function BnTaskPreview(props: BnTaskPreviewProps) {
             />
             <Box sx={{ position: 'relative' }} className={bnBoxClassName}>
                 <BlockNoteView
-                    className="bn-task-editor"
                     editor={editor}
                     sideMenu={true} // false for Chat/comment, true for Task content
                     theme={mode === 'dark' ? 'dark' : 'light'}

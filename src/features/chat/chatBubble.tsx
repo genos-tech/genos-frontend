@@ -18,8 +18,8 @@ import BnPreview from '../../components/blockNote/bnPreview';
 import { extractHHMM, getCurrentTimestamp } from "../../components/utils/getTime";
 import { addDMThreadMessage } from "./services/addDMThreadMessage";
 import { addGMThreadMessage } from "./services/addGMThreadMessage";
-import { popDMSpecificThreadMessage } from "./services/popDMSpecificThreadMessage";
-import { popGMSpecificThreadMessage } from "./services/popGMSpecificThreadMessage";
+import { popDMSpecificThreadMessages } from "./services/popDMSpecificThreadMessages";
+import { popGMSpecificThreadMessages } from "./services/popGMSpecificThreadMessages";
 import { BubbleLikeReactionButton } from "./components/BubbleLikeReactionButton";
 import { BubbleUserName } from "./components/BubbleUserName";
 import { BubbleReplyButton } from "./components/BubbleReplyButton";
@@ -104,7 +104,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
       if (newThreadMessage) {
         if (chat.isDm) {
           await addDMThreadMessage(newThreadMessage);
-          const threadMessages: ThreadMessageProps[] = await popDMSpecificThreadMessage(
+          const threadMessages: ThreadMessageProps[] = await popDMSpecificThreadMessages(
             newThreadMessage.chatId, newThreadMessage.threadId
           )
           if (threadMessages) {
@@ -125,7 +125,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
           }
         } else {
           await addGMThreadMessage(newThreadMessage);
-          const threadMessages: ThreadMessageProps[] = await popGMSpecificThreadMessage(
+          const threadMessages: ThreadMessageProps[] = await popGMSpecificThreadMessages(
             newThreadMessage.chatId, newThreadMessage.threadId
           )
           if (threadMessages) {
@@ -212,7 +212,7 @@ export default function ChatBubble(props: ChatBubbleProps) {
                   />
                 </Box>
                 <Box sx={{ flex: 20 }}>
-                  <Stack direction="row" spacing={2}>
+                  <Stack direction="row" spacing={1}>
                     <BubbleUserName
                       userName={sender.userName}
                       isSent={isSent}

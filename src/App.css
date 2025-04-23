@@ -164,7 +164,7 @@
 .bn-preview-box-light .bn-editor {
   background-color: transparent;
   padding: 1px;
-  /* color: white; */
+  color: rgb(55, 55, 55);
 }
 
 .bn-preview-box-light-me .bn-editor {

@@ -8,6 +8,7 @@ import {
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
 import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
 import FetchSpecificGMMessagesWorker from "../../workers/fetchSpecificGMMessagesWorker.ts?worker";
+import { getCurrentTimestamp } from '../../components/utils/getTime';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -16,18 +17,6 @@ type CreateCGResponse = {
     chatName: string,
     message: string,
 };
-
-function getCurrentTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
 
 const insertGMChatAndMessage = async (
     newGMChat: AllChatProps,
