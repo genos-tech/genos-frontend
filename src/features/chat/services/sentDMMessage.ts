@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import { authApi } from '../../../services/api';
 
-export const addDmMessage = async (
+export const sentDMMessage = async (
     accessToken: string | null,
     dmId: number,
     senderId: string,

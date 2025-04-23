@@ -124,7 +124,7 @@ export const SignInForm = () => {
                                     Sign in
                                 </Typography>
                                 <Typography level="body-sm">
-                                    New to company?{' '}
+                                    New member?{' '}
                                     <Link href="SignUp" level="title-sm">
                                         Sign up!
                                     </Link>

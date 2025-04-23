@@ -44,7 +44,6 @@ export default function ThreadPane(props: MessagesPaneProps) {
   } = props;
 
   const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
-  const [content, setContent] = useState("");
 
   React.useEffect(() => {
     setThreadMessages(thread.messages || []);
@@ -193,7 +192,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
                       sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
                     >
                       <ThreadBubble
-                        myself={myself}
+                        thread={thread}
                         variant={isYou ? 'sent' : 'received'}
                         {...message} />
                     </Stack>

@@ -27,7 +27,7 @@ import {
   MessageProps
 } from '../../types/types';
 import createChatGroup from './createChatGroup';
-import loadSearchList from './services/loadChatSearchList';
+import { loadSearchList } from './services/loadChatSearchList';
 import CheckKnownChatWorker from "../../workers/checkKnownChatWorker.ts?worker";
 import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
@@ -150,9 +150,7 @@ export default function ChatsPane(props: ChatsPaneProps) {
     }
 
     (async () => {
-      const loadedUsers: SearchListProps[] = await loadSearchList({
-        myself: myself, accessToken: accessToken || ""
-      });
+      const loadedUsers: SearchListProps[] = await loadSearchList(myself, accessToken);
 
       if (active) {
         setOptions([...loadedUsers]);

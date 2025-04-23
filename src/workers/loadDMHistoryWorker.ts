@@ -1,4 +1,4 @@
-import loadDMHistory from '../features/chat/services/loadDMHistory';
+import { loadDMHistory } from '../features/chat/services/loadDMHistory';
 import { UserProps, ChatProps, MessageProps } from "../types/types";
 import { STORES } from "../db/conf";
 import {
@@ -16,42 +16,43 @@ self.onmessage = async (event) => {
     await clearStore(STORES.DM_CHATS)
 
     // Load data from backend
-    const dmHistory: ChatProps[] = await loadDMHistory({
-        userId: myself.userId,
-        accessToken: accessToken
-    });
+    const dmHistory: ChatProps[] | undefined = await loadDMHistory(myself.userId, accessToken);
 
-    for (let i = 0; i < dmHistory.length; i += 1) {
-        const dmChat: ChatProps = dmHistory[i]
+    if (dmHistory) {
+        for (let i = 0; i < dmHistory.length; i += 1) {
+            const dmChat: ChatProps = dmHistory[i]
 
-        // Insert chat 
-        const newChatData = {
-            storeName: STORES.DM_CHATS,
-            data: {
-                chatId: dmChat.chatId,
-                chatName: dmChat.chatName,
-                unread: dmChat.unread,
-                isDm: true,
-                dmPartnerUserId: dmChat.dmPartnerUserId,
-                latestMessage: dmChat.latestMessage,
-                latestMessageText: dmChat.latestMessageText,
-                TSLastMessage: dmChat.TSLastMessage
+            // Insert chat 
+            const newChatData = {
+                storeName: STORES.DM_CHATS,
+                data: {
+                    chatId: dmChat.chatId,
+                    chatName: dmChat.chatName,
+                    unread: dmChat.unread,
+                    isDm: true,
+                    dmPartnerUserId: dmChat.dmPartnerUserId,
+                    latestMessage: dmChat.latestMessage,
+                    latestMessageText: dmChat.latestMessageText,
+                    TSLastMessage: dmChat.TSLastMessage
+                }
+            }
+            await addData(newChatData)
+
+            // Insert messages by mini-batch
+            for (let i = 0; i < dmChat.messages.length; i += BATCH_SIZE) {
+                const miniBatchMessages: MessageProps[] = dmChat.messages.slice(i, i + BATCH_SIZE);
+                await miniBatchInsertMessages({
+                    storeName: STORES.DM_MESSAGES,
+                    miniBatchMessages: miniBatchMessages
+                });
             }
         }
-        await addData(newChatData)
-
-        // Insert messages by mini-batch
-        for (let i = 0; i < dmChat.messages.length; i += BATCH_SIZE) {
-            const miniBatchMessages: MessageProps[] = dmChat.messages.slice(i, i + BATCH_SIZE);
-            await miniBatchInsertMessages({
-                storeName: STORES.DM_MESSAGES,
-                miniBatchMessages: miniBatchMessages
-            });
-        }
+        // Send finish a message
+        self.postMessage("done");
+    } else {
+        self.postMessage("done");
     }
 
-    // Send finish a message
-    self.postMessage("done");
 };
 
 export { };

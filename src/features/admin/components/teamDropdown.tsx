@@ -6,8 +6,8 @@ import AddIcon from '@mui/icons-material/Add';
 
 import { loadAllTeams } from '../services/loadAllTeams';
 import { joinTeam } from "../services/joinTeam";
-import { createDm } from "../../chat/services/createDm";
-import { addDmMessage } from "../../chat/services/addDmMessage";
+import { createDm } from "../../chat/services/createDMChat";
+import { sentDMMessage } from "../../chat/services/sentDMMessage";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/types";
 import { Team, CreateDMResponse } from "../../../types/admin";
@@ -44,7 +44,7 @@ export function TeamDropdown(props: TeamDropdownProps) {
                     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }
                 ]
 
-                await addDmMessage(
+                await sentDMMessage(
                     accessToken,
                     createDmRes.dm_id,
                     createDmRes.user_1_id,

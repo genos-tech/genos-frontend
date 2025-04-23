@@ -627,9 +627,9 @@ export default function Home(props: HomeProps) {
 
 
     ////////////////////////////////////////////////////////////////////
-    useEffect(() => {
-        console.log("currentMainChat Updated:", currentMainChat);
-    }, [currentMainChat]);
+    // useEffect(() => {
+    //     console.log("currentMainChat Updated:", currentMainChat);
+    // }, [currentMainChat]);
 
     // useEffect(() => {
     //     console.log("initLoad Updated:", initLoad);
@@ -645,6 +645,10 @@ export default function Home(props: HomeProps) {
 
     // useEffect(() => {
     //     console.log("currentThreadChat is updated:", currentThreadChat)
+    // }, [currentThreadChat]);
+
+    // useEffect(() => {
+    //     console.log("currentThreadChat Updated:", currentThreadChat);
     // }, [currentThreadChat]);
     ////////////////////////////////////////////////////////////////////
 

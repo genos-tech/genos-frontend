@@ -9,11 +9,11 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import AvatarWithStatus from '../../components/utils/avatarWithStatus';
-import { ThreadMessageProps, UserProps } from '../../types/types';
+import { ThreadMessageProps, ThreadProps } from '../../types/types';
 import BnPreview from '../../components/blockNote/bnPreview';
 
 type ThreadBubbleProps = ThreadMessageProps & {
-  myself: UserProps;
+  thread: ThreadProps;
   variant: 'sent' | 'received';
 };
 
@@ -22,7 +22,7 @@ function extractHHMM(ts: string) {
 }
 
 export default function ThreadBubble(props: ThreadBubbleProps) {
-  const { myself,
+  const { thread,
     variant,
     content,
     tsSent,
@@ -155,7 +155,12 @@ export default function ThreadBubble(props: ThreadBubbleProps) {
                   </Stack>
                 </Box>
               </Stack>
-              {content.length > 0 && <BnPreview content={content} isSent={isSent} />}
+              {content.length > 0
+                && <BnPreview
+                  key={`${thread.chatId}-${thread.threadId}-${thread.isDm}-${tsSent}`}
+                  content={content}
+                  isSent={isSent}
+                />}
             </Stack>
           </Sheet>
         </Box>

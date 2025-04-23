@@ -92,7 +92,6 @@ export default function ChatListItem(props: ChatListItemProps) {
   const always_online: boolean = true; // TODO: need to get status from WS
 
   const onClickHandler = () => {
-    console.log(chat)
     if (isSubChatVisible === false
       || (`${currentSubChat.chatId}-${currentSubChat.chatName}` !== `${chat.chatId}-${chat.chatName}`)) {
       toggleMessagesPane();

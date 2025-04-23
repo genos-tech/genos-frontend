@@ -1,4 +1,4 @@
-import loadGMHistory from '../features/chat/services/loadGMHistory';
+import { loadGMHistory } from '../features/chat/services/loadGMHistory';
 import { UserProps, ChatProps, MessageProps } from "../types/types";
 import { STORES } from "../db/conf";
 import {
@@ -17,10 +17,7 @@ self.onmessage = async (event) => {
     await clearStore(STORES.GM_CHATS)
 
     // Load data from backend
-    const gmHistory: ChatProps[] = await loadGMHistory({
-        userId: myself.userId,
-        accessToken: accessToken
-    });
+    const gmHistory: ChatProps[] = await loadGMHistory(myself.userId, accessToken);
 
     for (let i = 0; i < gmHistory.length; i += 1) {
         const gmChat: ChatProps = gmHistory[i]
