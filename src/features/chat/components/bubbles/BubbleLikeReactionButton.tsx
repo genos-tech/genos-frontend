@@ -9,7 +9,7 @@ type BubbleLikeReactionButtonTypes = {
     isLiked: boolean,
     setIsLiked: (value: boolean) => void,
     isSent: boolean,
-    replayHandler: () => void,
+    replayHandler?: () => void,
 }
 export const BubbleLikeReactionButton = (props: BubbleLikeReactionButtonTypes) => {
     const { isLiked, setIsLiked, isSent, replayHandler } = props

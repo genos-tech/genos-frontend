@@ -4,13 +4,14 @@ import {
   Stack,
   Typography,
   IconButton,
+  Chip
 } from '@mui/joy';
-import Chip from '@mui/joy/Chip';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ReplyIcon from '@mui/icons-material/Reply';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
-import { ThreadProps, UserProps, PreviewTaskProps } from '../../types/types';
+
+import { ThreadProps, UserProps, PreviewTaskProps } from '../../../../types/types';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;
@@ -24,7 +25,7 @@ type MessagesPaneHeaderProps = {
 };
 
 
-export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
+export const ThreadPaneHeader = (props: MessagesPaneHeaderProps) => {
   const { myself,
     thread,
     setCurrentThreadChat,
@@ -84,7 +85,6 @@ export default function ThreadPaneHeader(props: MessagesPaneHeaderProps) {
           >
             {isYou ? `${thread?.chatName} (you)` : thread?.chatName}
           </Typography>
-
         </div>
       </Stack>
 

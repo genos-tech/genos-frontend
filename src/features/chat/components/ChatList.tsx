@@ -1,5 +1,5 @@
 import List from '@mui/joy/List';
-import ChatListItem from '../chatListItem';
+import { ChatListItem } from './chatListItem';
 import { ChatProps, AllChatProps, UserProps } from '../../../types/types';
 
 type ChatListProps = {

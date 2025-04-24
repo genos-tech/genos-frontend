@@ -1,20 +1,23 @@
 import axios from 'axios';
 
 import { authApi } from '../../../services/api';
+import { UserProps } from '../../../types/types';
 
-export const createDMChat = async (
+export const createGMChat = async (
     accessToken: string | null,
-    user1Id: string,
-    user2Id: string,
+    myself: UserProps,
+    chatName: string,
     setErrorMessage?: (value: string) => void
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.post("/dm/create/",
+            const res = await api.post("/gm/create/",
                 {
-                    user_1_id: user1Id,
-                    user_2_id: user2Id
+                    group_email: `${chatName}@origin.tech`,
+                    group_name: chatName,
+                    owner_user: myself.userId,
+                    owner_team: myself.teamId,
                 });
             return res.data
         } else {
@@ -26,9 +29,9 @@ export const createDMChat = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
-                console.error('DM already exists.');
+                console.error('GM already exists.');
                 if (setErrorMessage) {
-                    setErrorMessage('DM already exists.')
+                    setErrorMessage('GM already exists.')
                 }
             } else if (error.response?.status === 401) {
                 console.error('Unauthorized. Please log in again.');

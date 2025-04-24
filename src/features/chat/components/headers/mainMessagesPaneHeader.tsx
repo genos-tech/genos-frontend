@@ -1,16 +1,11 @@
-import Avatar from '@mui/joy/Avatar';
-import Button from '@mui/joy/Button';
-import Chip from '@mui/joy/Chip';
-import IconButton from '@mui/joy/IconButton';
-import Stack from '@mui/joy/Stack';
-import Typography from '@mui/joy/Typography';
-import CircleIcon from '@mui/icons-material/Circle';
+import { Button, IconButton, Stack } from '@mui/joy';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import PhoneInTalkRoundedIcon from '@mui/icons-material/PhoneInTalkRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import GroupsIcon from '@mui/icons-material/Groups';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { ChatProps, UserProps } from '../../types/types';
+
+import { HeaderUserName } from './HeaderUserName';
+import { ChatProps, UserProps } from '../../../../types/types';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;
@@ -22,7 +17,7 @@ type MessagesPaneHeaderProps = {
   setIsSubChatVisible: (value: boolean) => void;
 };
 
-export default function MessagesPaneHeader(props: MessagesPaneHeaderProps) {
+export const MessagesPaneHeader = (props: MessagesPaneHeaderProps) => {
   const { myself,
     chat,
     subChat,
@@ -60,41 +55,7 @@ export default function MessagesPaneHeader(props: MessagesPaneHeaderProps) {
         spacing={{ xs: 1, md: 2 }}
         sx={{ alignItems: 'center' }}
       >
-
-        <div>
-          {chat.isDm ? (
-            <Avatar src={chat.CGAvatarImgPath}>{chat.chatName[0]}</Avatar>
-          ) : (
-            <Avatar >
-              <GroupsIcon sx={{ fontSize: 32 }} />
-            </Avatar>
-          )}
-        </div>
-        <div>
-          <Typography
-            component="h2"
-            noWrap
-            endDecorator={
-              chat.isDm ? (
-                <Chip
-                  variant="outlined"
-                  size="sm"
-                  color="neutral"
-                  sx={{ borderRadius: 'sm' }}
-                  startDecorator={
-                    <CircleIcon sx={{ fontSize: 8 }} color="success" />
-                  }
-                  slotProps={{ root: { component: 'span' } }}
-                >
-                  Online
-                </Chip>
-              ) : undefined
-            }
-            sx={{ fontWeight: 'lg', fontSize: 'lg' }}
-          >
-            {isYou ? `${chat.chatName} (you)` : chat.chatName}
-          </Typography>
-        </div>
+        <HeaderUserName chat={chat} isYou={isYou} />
       </Stack>
       <Stack spacing={1} direction="row" sx={{ alignItems: 'center' }}>
         <Button

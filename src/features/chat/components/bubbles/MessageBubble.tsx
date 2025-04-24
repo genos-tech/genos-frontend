@@ -1,9 +1,15 @@
 import * as React from 'react';
-import Box from '@mui/joy/Box';
-import Stack from '@mui/joy/Stack';
-import Sheet from '@mui/joy/Sheet';
+import { Box, Stack, Sheet } from '@mui/joy';
 import { Socket } from "socket.io-client";
-import AvatarWithStatus from '../../components/utils/avatarWithStatus';
+
+import { addThreadMessage } from "../../services/addThreadMessage";
+import { popSpecificThreadMessages } from "../../services/popSpecificThreadMessages";
+import { BubbleLikeReactionButton } from "./BubbleLikeReactionButton";
+import { BubbleUserName } from "./BubbleUserName";
+import { BubbleReplyButton } from "./BubbleReplyButton";
+import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
+import loadSpecificTaskByThreadId from '../../../tasks/services/loadSpecificTaskByThreadId';
+import { extractHHMM, getCurrentTimestamp } from "../../../../components/utils/getTime";
 import {
   UserProps,
   ChatProps,
@@ -11,21 +17,12 @@ import {
   ThreadProps,
   ThreadMessageProps,
   PreviewTaskProps
-} from '../../types/types';
-import loadSpecificTaskByThreadId from '../tasks/services/loadSpecificTaskByThreadId';
-import { useAuth } from "../../context/AuthContext";
-import BnPreview from '../../components/blockNote/bnPreview';
-import { extractHHMM, getCurrentTimestamp } from "../../components/utils/getTime";
-import { addDMThreadMessage } from "./services/addDMThreadMessage";
-import { addGMThreadMessage } from "./services/addGMThreadMessage";
-import { popDMSpecificThreadMessages } from "./services/popDMSpecificThreadMessages";
-import { popGMSpecificThreadMessages } from "./services/popGMSpecificThreadMessages";
-import { BubbleLikeReactionButton } from "./components/BubbleLikeReactionButton";
-import { BubbleUserName } from "./components/BubbleUserName";
-import { BubbleReplyButton } from "./components/BubbleReplyButton";
-import { BubbleAttachmentSheet } from "./components/BubbleAttachmentSheet";
+} from '../../../../types/types';
+import { useAuth } from "../../../../context/AuthContext";
+import BnPreview from '../../../../components/blockNote/bnPreview';
+import AvatarWithStatus from '../../../../components/utils/avatarWithStatus';
 
-type ChatBubbleProps = MessageProps & {
+type MessageBubbleProps = MessageProps & {
   myself: UserProps;
   variant: 'sent' | 'received';
   chat: ChatProps;
@@ -35,7 +32,7 @@ type ChatBubbleProps = MessageProps & {
   setCurrentPreviewTask: (value: PreviewTaskProps | undefined) => void;
 };
 
-export default function ChatBubble(props: ChatBubbleProps) {
+export const MessageBubble = (props: MessageBubbleProps) => {
   const {
     myself,
     variant,
@@ -103,9 +100,9 @@ export default function ChatBubble(props: ChatBubbleProps) {
 
       if (newThreadMessage) {
         if (chat.isDm) {
-          await addDMThreadMessage(newThreadMessage);
-          const threadMessages: ThreadMessageProps[] = await popDMSpecificThreadMessages(
-            newThreadMessage.chatId, newThreadMessage.threadId
+          await addThreadMessage(newThreadMessage, chat.isDm);
+          const threadMessages: ThreadMessageProps[] = await popSpecificThreadMessages(
+            newThreadMessage.chatId, newThreadMessage.threadId, chat.isDm
           )
           if (threadMessages) {
             const newThread: ThreadProps = {
@@ -124,9 +121,9 @@ export default function ChatBubble(props: ChatBubbleProps) {
             }
           }
         } else {
-          await addGMThreadMessage(newThreadMessage);
-          const threadMessages: ThreadMessageProps[] = await popGMSpecificThreadMessages(
-            newThreadMessage.chatId, newThreadMessage.threadId
+          await addThreadMessage(newThreadMessage, chat.isDm);
+          const threadMessages: ThreadMessageProps[] = await popSpecificThreadMessages(
+            newThreadMessage.chatId, newThreadMessage.threadId, chat.isDm
           )
           if (threadMessages) {
             const newThread: ThreadProps = {

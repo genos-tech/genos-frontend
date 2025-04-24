@@ -2,11 +2,11 @@ import { useState } from 'react';
 import Sheet from '@mui/joy/Sheet';
 import { Socket } from "socket.io-client";
 
-import { ModalCreateGM } from './components/ModalCreateGM';
-import { ChatSearch } from './components/ChatSearch';
-import { ChatList } from './components/ChatList';
-import { DMDivider, GMDivider, PinnedDivider } from './components/ChatPaneDividers';
-import { ChatProps, AllChatProps, UserProps } from '../../types/types';
+import { ModalCreateGM } from './modals/ModalCreateGM';
+import { ChatSearch } from './ChatSearch';
+import { ChatList } from './ChatList';
+import { DMDivider, GMDivider, PinnedDivider } from './ChatPaneDividers';
+import { ChatProps, AllChatProps, UserProps } from '../../../types/types';
 
 type ChatsPaneProps = {
   myself: UserProps;

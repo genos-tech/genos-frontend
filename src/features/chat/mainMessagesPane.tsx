@@ -1,18 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import Box from '@mui/joy/Box';
-import Sheet from '@mui/joy/Sheet';
-import Stack from '@mui/joy/Stack';
-import ChatBubble from './chatBubble';
+import { Box, Sheet, Stack } from '@mui/joy';
 import { Socket } from "socket.io-client";
-import MessagesPaneHeader from './mainMessagesPaneHeader';
-import {
-  ChatProps,
-  UserProps,
-  ThreadProps,
-  PreviewTaskProps
-} from '../../types/types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
+
+import { MessageBubble } from './components/bubbles/MessageBubble';
+import { MessagesPaneHeader } from './components/headers/mainMessagesPaneHeader';
+import {
+  useScrollToBottomOnNewMessage,
+  useScrollToBottomOnChatChange
+} from './hooks/messageBubbleHooks';
+import { handleFileDrop } from "./services/handleFileDrop";
+import { handleAtTop } from "./services/handleBubblePositionAction";
 import BnEditor from '../../components/blockNote/bnEditor'
+import { ChatProps, UserProps, ThreadProps, PreviewTaskProps } from '../../types/types';
 
 type MessagesPaneProps = {
   currentWindowHeight: number;
@@ -31,7 +31,7 @@ type MessagesPaneProps = {
   setCurrentPreviewTask: (value: PreviewTaskProps | undefined) => void;
 };
 
-export default function MessagesPane(props: MessagesPaneProps) {
+export const MessagesPane = (props: MessagesPaneProps) => {
   const {
     currentWindowHeight,
     paneSizePCT,
@@ -54,81 +54,13 @@ export default function MessagesPane(props: MessagesPaneProps) {
   }, [chat.messages]);
 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
-  const ref = useRef({
-    nearBottom: false,
-  })
 
-  // Scroll to the bottom when a new message comes.
-  useEffect(() => {
-    const virtuoso = virtuosoRef.current
-    if (virtuoso === null) {
-      return
-    } else {
-      setTimeout(() => {
-        virtuoso.scrollToIndex({
-          index: 'LAST',
-          behavior: 'smooth',
-        })
-      }, 200) // wait 200ms
-    }
-  }, [chat])
-
-  // Scroll to the bottom at first.
-  useEffect(() => {
-    const virtuoso = virtuosoRef.current
-    if (virtuoso === null) {
-      return
-    } else {
-      setTimeout(() => {
-        virtuoso.scrollToIndex({
-          index: 'LAST',
-        })
-      }, 300) // wait 300ms
-    }
-  }, [currentMainChatId])
-
-  // TODO: limit initial num of messages, and load more after
-  const handleAtTop = (atTop: boolean) => {
-    if (atTop) {
-      // loadMore()
-    }
-  }
-
-  // Detecting if scroll bar is near the bottom
-  const handleAtBottom = (atBottom: boolean) => {
-    ref.current.nearBottom = atBottom
-  }
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const droppedFiles = Array.from(event.dataTransfer.files);
-    handleFiles(droppedFiles);
-  };
-
-  const handleFiles = (selectedFiles: File[]) => {
-    selectedFiles.forEach((file) => {
-      const fileType = file.type;
-      if (fileType === "image/jpeg" || fileType === "image/png") {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            const img = new Image();
-            img.src = e.target.result as string;
-            img.onload = () => {
-              console.log("uploaded image:", img.src)
-            }
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        const fileURL = URL.createObjectURL(file);
-      }
-    });
-  };
+  useScrollToBottomOnNewMessage(virtuosoRef as React.RefObject<VirtuosoHandle>, chat);
+  useScrollToBottomOnChatChange(virtuosoRef as React.RefObject<VirtuosoHandle>, currentMainChatId);
 
   return (
     <div
-      onDrop={handleDrop}
+      onDrop={handleFileDrop}
       onDragOver={(e) => e.preventDefault()}
       style={{
         width: "100%",
@@ -159,7 +91,6 @@ export default function MessagesPane(props: MessagesPaneProps) {
             atTopThreshold={64}
             atTopStateChange={handleAtTop}
             atBottomThreshold={128}
-            atBottomStateChange={handleAtBottom}
             itemContent={(index) => {
               const message = chatMessages[index];
               const isYou = myself.userId === message.sender.userId;
@@ -170,7 +101,7 @@ export default function MessagesPane(props: MessagesPaneProps) {
                     spacing={2}
                     sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
                   >
-                    <ChatBubble
+                    <MessageBubble
                       myself={myself}
                       variant={isYou ? "sent" : "received"}
                       chat={chat}

@@ -24,7 +24,7 @@ import { AdminHeader } from "./Header";
 import { createTeam } from "../services/createTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadAllTeams } from '../services/loadAllTeams';
-import { createDm } from "../../chat/services/createDMChat";
+import { createDMChat } from "../../chat/services/createDMChat";
 import { sentDMMessage } from "../../chat/services/sentDMMessage";
 import { sleepMilliSeconds } from "../../../components/utils/sleep";
 import { useAuth } from "../../../context/AuthContext";
@@ -57,7 +57,7 @@ export function JoinTeam() {
             localStorage.setItem("teamId", joinTeamRes.team);
 
             if (joinTeamRes) {
-                const createDmRes: CreateDMResponse = await createDm(
+                const createDmRes: CreateDMResponse = await createDMChat(
                     accessToken,
                     userId,
                     userId,

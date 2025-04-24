@@ -14,12 +14,11 @@ import CircleIcon from '@mui/icons-material/Circle';
 import GroupsIcon from '@mui/icons-material/Groups';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-import { popDMSpecificMessages } from "./services/popDMSpecificMessages";
-import { popGMSpecificMessages } from "./services/popGMSpecificMessages";
-import AvatarWithStatus from '../../components/utils/avatarWithStatus';
-import { AllChatProps, ChatProps, UserProps } from '../../types/types';
-import { toggleMessagesPane } from '../../utils';
-import { extractMMDDHHMM } from '../../components/utils/getTime';
+import { popSpecificMessages } from "../services/popSpecificMessages";
+import AvatarWithStatus from '../../../components/utils/avatarWithStatus';
+import { AllChatProps, ChatProps, UserProps } from '../../../types/types';
+import { toggleMessagesPane } from '../../../utils';
+import { extractMMDDHHMM } from '../../../components/utils/getTime';
 
 type ChatListItemProps = ListItemButtonProps & {
   chat: AllChatProps;
@@ -32,7 +31,7 @@ type ChatListItemProps = ListItemButtonProps & {
   setIsSubChatVisible: (value: boolean) => void;
 };
 
-export default function ChatListItem(props: ChatListItemProps) {
+export const ChatListItem = (props: ChatListItemProps) => {
   const { chat,
     myself,
     currentMainChat,
@@ -67,13 +66,13 @@ export default function ChatListItem(props: ChatListItemProps) {
       toggleMessagesPane();
       chat.unread = Boolean(false);
       if (chat.isDm) {
-        popDMSpecificMessages(chat.chatId)
+        popSpecificMessages(chat.chatId, chat.isDm)
           .then((messages) => {
             setCurrentMainChat(defineNewMessages(messages));
           })
           .catch((error) => console.error(error));
       } else {
-        popGMSpecificMessages(chat.chatId)
+        popSpecificMessages(chat.chatId, chat.isDm)
           .then((messages) => {
             setCurrentMainChat(defineNewMessages(messages));
           })
@@ -86,13 +85,13 @@ export default function ChatListItem(props: ChatListItemProps) {
     if (`${currentMainChat.chatId}-${currentMainChat.chatName}` !== `${chat.chatId}-${chat.chatName}`) {
       toggleMessagesPane();
       if (chat.isDm) {
-        popDMSpecificMessages(chat.chatId)
+        popSpecificMessages(chat.chatId, chat.isDm)
           .then((messages) => {
             setCurrentSubChat(defineNewMessages(messages));
           })
           .catch((error) => console.error(error));
       } else {
-        popGMSpecificMessages(chat.chatId)
+        popSpecificMessages(chat.chatId, chat.isDm)
           .then((messages) => {
             setCurrentSubChat(defineNewMessages(messages));
           })

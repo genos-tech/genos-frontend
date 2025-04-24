@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 
 import { loadAllTeams } from '../services/loadAllTeams';
 import { joinTeam } from "../services/joinTeam";
-import { createDm } from "../../chat/services/createDMChat";
+import { createDMChat } from "../../chat/services/createDMChat";
 import { sentDMMessage } from "../../chat/services/sentDMMessage";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/types";
@@ -32,7 +32,7 @@ export function TeamDropdown(props: TeamDropdownProps) {
         );
 
         if (joinTeamRes) {
-            const createDmRes: CreateDMResponse = await createDm(
+            const createDmRes: CreateDMResponse = await createDMChat(
                 accessToken,
                 myself.userId,
                 myself.userId

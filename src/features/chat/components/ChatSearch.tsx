@@ -6,12 +6,9 @@ import { Socket } from 'socket.io-client';
 
 import { loadSearchList } from '../services/loadChatSearchList';
 import { checkKnownChat } from "../services/checkKnownChat";
-import { addDMChat } from '../services/addDMChat';
-import { addGMChat } from '../services/addGMChat';
-import { addDMMessage } from '../services/addDMMessage';
-import { addGMMessage } from '../services/addGMMessage';
-import { popDMSpecificMessages } from '../services/popDMSpecificMessages';
-import { popGMSpecificMessages } from '../services/popGMSpecificMessages';
+import { addChat } from '../services/addChat';
+import { addMessage } from '../services/addMessage';
+import { popSpecificMessages } from '../services/popSpecificMessages';
 import { getCurrentTimestamp } from '../../../components/utils/getTime';
 import { useAuth } from "../../../context/AuthContext";
 import {
@@ -86,7 +83,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
             })
         }
 
-        const fetchedMessages: MessageProps[] = await popDMSpecificMessages(chatId)
+        const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, true)
         if (fetchedMessages) {
             setCurrentMainChat(defineNewChat(chatId, chatName, true, dmPartnerUserId, fetchedMessages))
         } else {
@@ -99,7 +96,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
         chatName: string,
         setCurrentMainChat: (chat: ChatProps) => void
     ) => {
-        const fetchedMessages: MessageProps[] = await popGMSpecificMessages(chatId)
+        const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false)
         if (fetchedMessages) {
             setCurrentMainChat(defineNewChat(chatId, chatName, false, null, fetchedMessages))
         } else {
@@ -142,13 +139,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
                         TSLastMessage: getCurrentTimestamp(),
                     }
 
-                    if (isDm) {
-                        await addDMChat(chat)
-                        await addDMMessage(message)
-                    } else {
-                        await addGMChat(chat)
-                        await addGMMessage(message)
-                    }
+                    await addChat(chat, chat.isDm)
+                    await addMessage(message, chat.isDm)
 
                     setCurrentMainChat({ ...chat, messages: [message] })
                     setAllChats([...allChats, chat]);

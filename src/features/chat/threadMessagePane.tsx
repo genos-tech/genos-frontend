@@ -1,19 +1,18 @@
-import * as React from 'react';
 import { useState, useEffect, useRef } from "react";
-import Box from '@mui/joy/Box';
-import Sheet from '@mui/joy/Sheet';
-import Stack from '@mui/joy/Stack';
-import ThreadBubble from './threadBubble';
+import { Box, Sheet, Stack } from '@mui/joy';
 import { Socket } from "socket.io-client";
-import ThreadPaneHeader from './threadPaneHeader';
-import {
-  UserProps,
-  ThreadProps,
-  PreviewTaskProps
-} from '../../types/types';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
-import BnThreadEditor from '../../components/blockNote/bnThreadEditor'
 
+import { ThreadMessageBubble } from './components/bubbles/threadMessageBubble';
+import { ThreadPaneHeader } from './components/headers/threadMessagePaneHeader';
+import {
+  useScrollToBottomOnNewMessage,
+  useScrollToBottomOnChatChange
+} from './hooks/messageBubbleHooks';
+import { handleFileDrop } from "./services/handleFileDrop";
+import { handleAtTop } from "./services/handleBubblePositionAction";
+import BnThreadEditor from '../../components/blockNote/bnThreadEditor'
+import { UserProps, ThreadProps, PreviewTaskProps } from '../../types/types';
 
 type MessagesPaneProps = {
   thread: ThreadProps;
@@ -28,9 +27,7 @@ type MessagesPaneProps = {
   currentPreviewTask?: PreviewTaskProps;
 };
 
-
-
-export default function ThreadPane(props: MessagesPaneProps) {
+export const ThreadPane = (props: MessagesPaneProps) => {
   const { thread,
     myself,
     socket,
@@ -43,58 +40,16 @@ export default function ThreadPane(props: MessagesPaneProps) {
     currentPreviewTask
   } = props;
 
-  const [threadMessages, setThreadMessages] = React.useState(thread.messages || []);
+  const [threadMessages, setThreadMessages] = useState(thread.messages || []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setThreadMessages(thread.messages || []);
   }, [thread.messages]);
 
   const virtuosoRef = useRef<VirtuosoHandle | null>(null)
-  const ref = useRef({
-    nearBottom: false,
-  })
 
-
-  // Scroll to the bottom when a new message comes.
-  useEffect(() => {
-    const virtuoso = virtuosoRef.current
-    if (virtuoso === null) {
-      return
-    } else {
-      setTimeout(() => {
-        virtuoso.scrollToIndex({
-          index: 'LAST',
-          behavior: 'smooth',
-        })
-      }, 200)
-    }
-  }, [thread])
-
-  // Scroll to the bottom at first.
-  useEffect(() => {
-    const virtuoso = virtuosoRef.current
-    if (virtuoso === null) {
-      return
-    } else {
-      setTimeout(() => {
-        virtuoso.scrollToIndex({
-          index: 'LAST',
-        })
-      }, 300)
-    }
-  }, [currentThreadChatId])
-
-  // TODO: limit initial num of messages, and load more after
-  const handleAtTop = (atTop: boolean) => {
-    if (atTop) {
-      // loadMore()
-    }
-  }
-
-  // Detecting if scroll bar is near the bottom
-  const handleAtBottom = (atBottom: boolean) => {
-    ref.current.nearBottom = atBottom
-  }
+  useScrollToBottomOnNewMessage(virtuosoRef as React.RefObject<VirtuosoHandle>, thread);
+  useScrollToBottomOnChatChange(virtuosoRef as React.RefObject<VirtuosoHandle>, currentThreadChatId);
 
   // Calculate thread pane height dynamically
   const containerRef = useRef<HTMLDivElement>(null);
@@ -113,37 +68,10 @@ export default function ThreadPane(props: MessagesPaneProps) {
     return () => window.removeEventListener("resize", updateHeight);
   }, [thread]);
 
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const droppedFiles = Array.from(event.dataTransfer.files);
-    handleFiles(droppedFiles);
-  };
-
-  const handleFiles = (selectedFiles: File[]) => {
-    selectedFiles.forEach((file) => {
-      const fileType = file.type;
-      if (fileType === "image/jpeg" || fileType === "image/png") {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            const img = new Image();
-            img.src = e.target.result as string;
-            img.onload = () => {
-            }
-          }
-        };
-        reader.readAsDataURL(file);
-      } else {
-        const fileURL = URL.createObjectURL(file);
-      }
-    });
-  };
-
-
   return (
     <>
       <div
-        onDrop={handleDrop}
+        onDrop={handleFileDrop}
         onDragOver={(e) => e.preventDefault()}
         style={{
           width: "100%",
@@ -180,7 +108,6 @@ export default function ThreadPane(props: MessagesPaneProps) {
               atTopThreshold={64}
               atTopStateChange={handleAtTop}
               atBottomThreshold={128}
-              atBottomStateChange={handleAtBottom}
               itemContent={(index) => {
                 const message = threadMessages[index];
                 const isYou = myself.userId === message.sender.userId;
@@ -191,7 +118,7 @@ export default function ThreadPane(props: MessagesPaneProps) {
                       spacing={2}
                       sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
                     >
-                      <ThreadBubble
+                      <ThreadMessageBubble
                         thread={thread}
                         variant={isYou ? 'sent' : 'received'}
                         {...message} />

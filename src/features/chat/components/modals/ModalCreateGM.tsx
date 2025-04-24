@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import createChatGroup from '../createChatGroup';
-import { useAuth } from "../../../context/AuthContext";
-import { UserProps, AllChatProps, ChatProps } from '../../../types/types';
+import { createChatGroup } from '../../services/createChatGroup';
+import { useAuth } from "../../../../context/AuthContext";
+import { UserProps, AllChatProps, ChatProps } from '../../../../types/types';
 
 type Props = {
     socket: Socket;
