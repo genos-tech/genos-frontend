@@ -4,14 +4,14 @@ import { addChat } from "./addChat";
 import { addMessage } from "./addMessage";
 import { popSpecificMessages } from "./popSpecificMessages";
 import { createGMChat } from "./createGMChat";
+import { UserProps } from '../../../types/admin';
 import {
     AllChatProps,
-    UserProps,
     ChatProps,
     MessageProps
-} from '../../../types/types';
+} from '../../../types/chat';
 import { CreateGMResponse } from '../../../types/chat';
-import { getCurrentTimestamp } from '../../../components/utils/getTime';
+import { getCurrentTimestamp } from '../../../components/utils/dateUtils';
 
 const createGroupMessage = [
     { type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] },

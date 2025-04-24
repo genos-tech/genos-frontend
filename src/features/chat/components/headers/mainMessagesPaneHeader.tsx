@@ -5,7 +5,8 @@ import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 import { HeaderUserName } from './HeaderUserName';
-import { ChatProps, UserProps } from '../../../../types/types';
+import { UserProps } from '../../../../types/admin';
+import { ChatProps } from '../../../../types/chat';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;

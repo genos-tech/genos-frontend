@@ -13,25 +13,23 @@ import { Input, Grid, Button, Stack } from "@mui/joy";
 import Snackbar from '@mui/joy/Snackbar';
 import IconButton from '@mui/joy/IconButton';
 import CancelIcon from '@mui/icons-material/Cancel';
-import GithubIcon from '../../assets/GithubIcon';
-import CustomLinkIcon from '../../assets/CustomLinkIcon';
+import GithubIcon from '../../../assets/GithubIcon';
+import CustomLinkIcon from '../../../assets/CustomLinkIcon';
 import {
-    UserProps,
-    CreateTaskProps,
+    TaskFormProps,
     ProjectProps,
-    TaskPriorityProps,
-    TaskEffortLevelProps,
-    AttachmentFileProps,
     TagListProps,
-} from "../../types/types";
+} from "../../../types/tasks";
+import { UserProps } from '../../../types/admin';
+import { AttachmentFileProps } from "../../../types/chat";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
 import FormControl from '@mui/joy/FormControl';
-import { useAuth } from "../../context/AuthContext";
-import FileUpload from './upload'
-import loadTeamProjects from './services/loadTeamProjects';
-import loadProjectTags from './services/loadProjectTags';
-import { loadTeamMembers } from '../admin/services/loadTeamMembers';
+import { useAuth } from "../../../context/AuthContext";
+import FileUpload from './FileUploadForm'
+import { loadTeamProjects } from '../services/loadTeamProjects';
+import { loadProjectTags } from '../services/loadProjectTags';
+import { loadTeamMembers } from '../../admin/services/loadTeamMembers';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
@@ -40,126 +38,13 @@ import MoreVert from '@mui/icons-material/MoreVert';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
 import AddIcon from '@mui/icons-material/Add';
-import BnTaskEditor from '../../components/blockNote/bnTaskEditor'
+import BnTaskEditor from '../../../components/blockNote/bnTaskEditor'
 import { PartialBlock } from "@blocknote/core";
+import { priorities, effortLevels } from "../utils/taskMeta";
+import { getFormattedDateStr, getFormattedTodayDateStr } from '../../../components/utils/dateUtils';
+import { uploadTask } from '../services/uploadTask';
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
-
-const priorities: TaskPriorityProps[] = [
-    { code: 0, priority: 'Low', color: '#0044c2', textColor: "white" },
-    { code: 0, priority: 'Medium', color: '#1dc200', textColor: "white" },
-    { code: 0, priority: 'High', color: '#ff2323', textColor: "white" },
-]
-
-const effortLevels: TaskEffortLevelProps[] = [
-    { code: 0, level: 'Low', color: '#0044c2', textColor: "white" },
-    { code: 0, level: 'Medium', color: '#1dc200', textColor: "white" },
-    { code: 0, level: 'High', color: '#ff2323', textColor: "white" },
-]
-
-const getFormattedTodayDateStr = (): string => {
-    let today = new Date();
-    today.setDate(today.getDate() + 7);
-    return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
-};
-
-const getFormattedDateStr = (date: Date): string => {
-    return date.toISOString().split("T")[0]; // Extract YYYY-MM-DD from ISO string
-};
-
-type saveTaskProps = {
-    myself: UserProps,
-    taskContents: CreateTaskProps,
-    accessToken: string,
-    setIsSubmitted: (value: boolean) => void,
-    setTitleError: (value: string) => void,
-    setTitleErrorOpen: (value: boolean) => void,
-    setCurrentPreviewTaskId: (value: number) => void
-}
-
-const saveTask = async (props: saveTaskProps) => {
-    const { myself,
-        taskContents,
-        accessToken,
-        setIsSubmitted,
-        setTitleError,
-        setTitleErrorOpen,
-        setCurrentPreviewTaskId,
-    } = props;
-
-    if (taskContents.title === "") {
-        setTitleError("Task title is required !!!")
-        setTitleErrorOpen(true);
-    } else {
-        try {
-            if (taskContents.project !== null) {
-                const taskCreateResponse = await fetch(`${base_url}/task/create/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        "Authorization": `Bearer ${accessToken}`
-                    },
-                    body: JSON.stringify({
-                        team: myself.teamId,
-                        project: taskContents.project.projectId,
-                        assignee: taskContents.assignee.userId,
-                        reporter: taskContents.reporter.userId,
-                        title: taskContents.title,
-                        priority: (taskContents.priority.priority !== "") ? taskContents.priority.priority : null,
-                        effort_level: (taskContents.effortLevel.level !== "") ? taskContents.effortLevel.level : null,
-                        status: (taskContents.status.status !== "") ? taskContents.status.status : null,
-                        content: (taskContents.body.length !== 0) ? taskContents.body : [],
-                        due_date: (taskContents.dueDate !== "") ? taskContents.dueDate : null,
-                        github_url: (taskContents.githubLink.url !== "") ? taskContents.githubLink.url : null,
-                        github_url_title: (taskContents.githubLink.title !== "") ? taskContents.githubLink.title : null,
-                        general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
-                        general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
-                        tags: taskContents.tags,
-                    }),
-                });
-
-                const taskCreateData = await taskCreateResponse.json();
-
-                if (!taskCreateResponse.ok) {
-                    throw new Error('Failed to create a task');
-                } else {
-                    setCurrentPreviewTaskId(taskCreateData.task_id)
-
-                    for (const attachment of taskContents.attachments) {
-                        const formData = new FormData()
-                        formData.append("task", taskCreateData.task_id)
-                        formData.append("attached_file", attachment.file)
-                        formData.append("attached_type", attachment.file.type)
-
-                        const uploadAttachmentResponse = await fetch(`${base_url}/task/addTaskAttachment/`, {
-                            method: 'POST',
-                            headers: {
-                                "Authorization": `Bearer ${accessToken}`
-                            },
-                            body: formData,
-                        });
-
-                        const uploadAttachmentData = await uploadAttachmentResponse.json();
-                        console.log("uploadAttachmentData:", uploadAttachmentData)
-
-                        if (!uploadAttachmentResponse.ok) {
-                            throw new Error(uploadAttachmentData.message || 'Attachment Upload Failed');
-                        }
-                    }
-
-                    setIsSubmitted(true)
-                }
-            }
-
-        } catch (error) {
-            console.error(error);
-            return [];
-        }
-    }
-
-};
-
-type TaskContentProps = {
+type CreateTaskFormProps = {
     myself: UserProps,
     currentProject: ProjectProps,
     setIsCreatingTask: (value: boolean) => void;
@@ -170,9 +55,7 @@ type TaskContentProps = {
     setOpenCreateTag: (value: boolean) => void,
 };
 
-const initUploadingFiles: AttachmentFileProps[] = []
-
-export default function CreateTask(props: TaskContentProps) {
+export const CreateTaskForm = (props: CreateTaskFormProps) => {
     const { myself,
         currentProject,
         setIsCreatingTask,
@@ -183,9 +66,9 @@ export default function CreateTask(props: TaskContentProps) {
         setOpenCreateTag
     } = props
     const { accessToken } = useAuth();
-    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(initUploadingFiles);
+    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
 
-    const [taskContents, setTaskContents] = useState<CreateTaskProps>({
+    const [taskContents, setTaskContents] = useState<TaskFormProps>({
         project: currentProject,
         title: "",
         body: [],
@@ -201,7 +84,7 @@ export default function CreateTask(props: TaskContentProps) {
         tags: [],
         githubLink: { url: '', title: '' },
         generalLink: { url: '', title: '' },
-        attachments: initUploadingFiles
+        attachments: []
     });
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>([]);
@@ -374,6 +257,7 @@ export default function CreateTask(props: TaskContentProps) {
             }
         })();
     };
+
     const updateTagOptions = () => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags({
@@ -989,7 +873,7 @@ export default function CreateTask(props: TaskContentProps) {
                     variant="solid"
                     color="primary"
                     onClick={() => {
-                        saveTask({
+                        uploadTask({
                             myself: myself,
                             taskContents: taskContents,
                             accessToken: accessToken || "",

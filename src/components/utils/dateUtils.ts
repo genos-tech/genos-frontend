@@ -16,3 +16,13 @@ export const extractMMDDHHMM = (ts: string) => {
 export const extractHHMM = (ts: string) => {
     return ts.split(' ')[1].slice(0, 5);
 }
+
+export const getFormattedTodayDateStr = (): string => {
+    let today = new Date();
+    today.setDate(today.getDate() + 7);
+    return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
+};
+
+export const getFormattedDateStr = (date: Date): string => {
+    return date.toISOString().split("T")[0]; // Extract YYYY-MM-DD from ISO string
+};

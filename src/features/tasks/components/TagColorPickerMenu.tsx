@@ -2,13 +2,10 @@ import React, { useState } from 'react';
 import { Menu, MenuItem, IconButton, ListItemDecorator } from '@mui/joy';
 import PaletteIcon from '@mui/icons-material/Palette';
 
-type ColorOption = {
-    name: string;
-    value: string;
-    textColor: string;
-};
+import { TagColorOption } from '../../../types/tasks';
 
-const COLORS: ColorOption[] = [
+
+const COLORS: TagColorOption[] = [
     { name: 'Red', value: '#ff2323', textColor: 'white' },
     { name: 'Green', value: '#1dc200', textColor: 'white' },
     { name: 'Blue', value: '#0044c2', textColor: 'white' },
@@ -21,10 +18,10 @@ const COLORS: ColorOption[] = [
 ];
 
 type ColorPickerMenuProps = {
-    onSelectColor: (color: ColorOption) => void;
+    onSelectColor: (color: TagColorOption) => void;
 };
 
-const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor }) => {
+export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor }) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -35,7 +32,7 @@ const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor }) => {
         setAnchorEl(null);
     };
 
-    const handleSelect = (color: ColorOption) => {
+    const handleSelect = (color: TagColorOption) => {
         onSelectColor(color);
         handleClose();
     };
@@ -75,5 +72,3 @@ const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor }) => {
         </>
     );
 };
-
-export default ColorPickerMenu;

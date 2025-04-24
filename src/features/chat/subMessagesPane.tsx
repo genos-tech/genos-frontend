@@ -12,7 +12,9 @@ import {
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import BnEditor from '../../components/blockNote/bnEditor'
-import { ChatProps, UserProps, ThreadProps, PreviewTaskProps } from '../../types/types';
+import { UserProps } from '../../types/admin';
+import { ChatProps, ThreadProps } from '../../types/chat';
+import { PreviewTaskProps } from '../../types/tasks';
 
 type MessagesPaneProps = {
   currentWindowHeight: number;

@@ -8,11 +8,9 @@ import {
     Input,
     Typography,
 } from "@mui/joy";
-import {
-    UserProps,
-    ProjectProps
-} from '../../types/types';
-import { useAuth } from "../../context/AuthContext";
+import { UserProps } from '../../../../types/admin';
+import { ProjectProps } from '../../../../types/tasks';
+import { useAuth } from "../../../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -24,11 +22,12 @@ type Props = {
     setIsNewProjectCreated: (value: boolean) => void;
 };
 
-const CreateProjectModal: React.FC<Props> = ({ myself,
+export const ModalCreateProject: React.FC<Props> = ({ myself,
     openCreateProject,
     setOpenCreateProject,
     setCurrentProject,
-    setIsNewProjectCreated }) => {
+    setIsNewProjectCreated }
+) => {
     const { accessToken } = useAuth();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -106,5 +105,3 @@ const CreateProjectModal: React.FC<Props> = ({ myself,
         </>
     );
 };
-
-export default CreateProjectModal;

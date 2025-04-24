@@ -14,7 +14,6 @@ import {
     FileCaptionButton,
     FileReplaceButton,
     FormattingToolbar,
-    TextAlignButton,
     useCreateBlockNote,
     DefaultReactSuggestionItem,
     SuggestionMenuController,
@@ -34,7 +33,8 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import { useColorScheme } from '@mui/joy/styles';
-import { UserProps, ChatProps, AllChatProps } from '../../types/types'
+import { UserProps } from '../../types/admin';
+import { ChatProps, AllChatProps } from '../../types/chat'
 import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
 import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
 import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";

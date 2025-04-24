@@ -9,15 +9,15 @@ import { checkKnownChat } from "../services/checkKnownChat";
 import { addChat } from '../services/addChat';
 import { addMessage } from '../services/addMessage';
 import { popSpecificMessages } from '../services/popSpecificMessages';
-import { getCurrentTimestamp } from '../../../components/utils/getTime';
+import { getCurrentTimestamp } from '../../../components/utils/dateUtils';
 import { useAuth } from "../../../context/AuthContext";
+import { UserProps } from '../../../types/admin';
 import {
     SearchListProps,
-    UserProps,
     MessageProps,
     AllChatProps,
     ChatProps
-} from "../../../types/types";
+} from "../../../types/chat";
 
 const joinedMessage = [
     { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },

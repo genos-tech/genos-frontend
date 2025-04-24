@@ -3,7 +3,7 @@ import { Box, Sheet, Stack } from '@mui/joy';
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 
-import { ThreadMessageBubble } from './components/bubbles/threadMessageBubble';
+import { ThreadMessageBubble } from './components/bubbles/ThreadMessageBubble';
 import { ThreadPaneHeader } from './components/headers/threadMessagePaneHeader';
 import {
   useScrollToBottomOnNewMessage,
@@ -12,7 +12,9 @@ import {
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import BnThreadEditor from '../../components/blockNote/bnThreadEditor'
-import { UserProps, ThreadProps, PreviewTaskProps } from '../../types/types';
+import { UserProps } from '../../types/admin';
+import { ThreadProps } from '../../types/chat';
+import { PreviewTaskProps } from '../../types/tasks';
 
 type MessagesPaneProps = {
   thread: ThreadProps;

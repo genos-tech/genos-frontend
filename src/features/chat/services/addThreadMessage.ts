@@ -1,4 +1,4 @@
-import { ThreadMessageProps } from '../../../types/types';
+import { ThreadMessageProps } from '../../../types/chat';
 import AddThreadMessageWorker from "../../../workers/addThreadMessageWorker.ts?worker";
 
 

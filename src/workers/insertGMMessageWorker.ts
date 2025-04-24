@@ -1,6 +1,6 @@
 import { STORES } from "../db/conf";
 import { addData } from "../db/crud";
-import { MessageProps } from "../types/types";
+import { MessageProps } from "../types/chat";
 
 self.onmessage = async (event) => {
     const gmMessage: MessageProps = event.data.gmMessage;

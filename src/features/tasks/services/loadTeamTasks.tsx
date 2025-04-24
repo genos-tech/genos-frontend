@@ -1,4 +1,5 @@
-import { TaskTableProps, UserProps } from '../../../types/types'
+import { UserProps } from '../../../types/admin'
+import { TaskTableProps } from '../../../types/tasks';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -7,7 +8,7 @@ type LoadTaskTableProps = {
     accessToken: string;
 };
 
-async function loadTeamTasks(props: LoadTaskTableProps): Promise<TaskTableProps[]> {
+export const loadTeamTasks = async (props: LoadTaskTableProps) => {
     const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -43,5 +44,3 @@ async function loadTeamTasks(props: LoadTaskTableProps): Promise<TaskTableProps[
     }
 
 }
-
-export default loadTeamTasks;

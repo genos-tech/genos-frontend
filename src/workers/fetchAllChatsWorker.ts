@@ -1,6 +1,6 @@
 import { STORES } from "../db/conf";
 import { messageIdWithChatId } from "../db/crud";
-import { AllChatProps } from '../types/types';
+import { AllChatProps } from '../types/chat';
 
 self.onmessage = async (event) => {
     const dmChats: AllChatProps[] = await messageIdWithChatId({

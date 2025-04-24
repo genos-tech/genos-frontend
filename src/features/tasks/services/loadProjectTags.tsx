@@ -1,4 +1,5 @@
-import { UserProps, TagListProps } from '../../../types/types'
+import { UserProps } from '../../../types/admin'
+import { TagListProps } from '../../../types/tasks';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -8,7 +9,7 @@ type LoadTeamMembersProps = {
     accessToken: string;
 };
 
-async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProps[]> {
+export const loadProjectTags = async (props: LoadTeamMembersProps) => {
     const { myself, projectId, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -44,5 +45,3 @@ async function loadProjectTags(props: LoadTeamMembersProps): Promise<TagListProp
     }
 
 }
-
-export default loadProjectTags;

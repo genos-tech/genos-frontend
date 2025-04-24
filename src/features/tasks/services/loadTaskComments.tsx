@@ -1,4 +1,5 @@
-import { UserProps, TaskCommentProps } from '../../../types/types'
+import { UserProps } from '../../../types/admin'
+import { TaskCommentProps } from '../../../types/tasks';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -8,7 +9,7 @@ type LoadTaskCommentsProps = {
     accessToken: string;
 };
 
-async function loadTaskComments(props: LoadTaskCommentsProps): Promise<TaskCommentProps[]> {
+export const loadTaskComments = async (props: LoadTaskCommentsProps) => {
     const { myself, taskId, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -44,5 +45,3 @@ async function loadTaskComments(props: LoadTaskCommentsProps): Promise<TaskComme
     }
 
 }
-
-export default loadTaskComments;

@@ -5,10 +5,8 @@ import ChatHome from './features/chat/chatHome';
 import TaskHome from './features/tasks/taskHome';
 import './App.css';
 import Loading from './services/loading'
-import {
-  UserProps,
-  ChatProps,
-} from "./types/types";
+import { UserProps } from "./types/admin";
+import { ChatProps } from "./types/chat";
 
 type SetMyselfProps = {
   myself: UserProps;

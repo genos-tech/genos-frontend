@@ -1,3 +1,13 @@
+// User Props
+export type UserProps = {
+    teamId: string;
+    userId: string;
+    userName: string;
+    userEmail: string;
+    avatarImgPath: string | null;
+    online: boolean | false;
+};
+
 export type Team = {
     teamId: string,
     teamName: string,

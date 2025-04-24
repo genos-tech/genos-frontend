@@ -5,16 +5,17 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useColorScheme } from '@mui/joy/styles';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-import { TaskTableProps, TagListProps, UserProps } from '../../types/types';
-import { getTaskColumns } from './tableFormat';
-import loadProjectTags from './services/loadProjectTags';
-import { useAuth } from "../../context/AuthContext";
+import { UserProps } from '../../../types/admin';
+import { TaskTableProps, TagListProps } from "../../../types/tasks";
+import { getTaskColumns } from '../utils/tableFormat';
+import { loadProjectTags } from '../services/loadProjectTags';
+import { useAuth } from "../../../context/AuthContext";
 
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { loadTeamMembers } from "../admin/services/loadTeamMembers";
+import { loadTeamMembers } from "../../admin/services/loadTeamMembers";
 
 const options = [
   { name: "Group By Status", filterId: 1 },

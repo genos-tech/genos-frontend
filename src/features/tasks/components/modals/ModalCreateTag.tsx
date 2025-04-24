@@ -10,12 +10,10 @@ import {
     Chip,
     Typography,
 } from "@mui/joy";
-import {
-    UserProps,
-    ProjectProps
-} from '../../types/types';
-import { useAuth } from "../../context/AuthContext";
-import ColorPickerMenu from './colorPickerMenu';
+import { UserProps } from '../../../../types/admin';
+import { ProjectProps } from '../../../../types/tasks';
+import { useAuth } from "../../../../context/AuthContext";
+import { ColorPickerMenu } from '../TagColorPickerMenu';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -27,7 +25,9 @@ type Props = {
     setIsNewTagCreated: (value: boolean) => void;
 };
 
-const CreateTagModal: React.FC<Props> = ({ myself, currentProject, openCreateTag, setOpenCreateTag, setIsNewTagCreated }) => {
+export const ModalCreateTag: React.FC<Props> = (
+    { myself, currentProject, openCreateTag, setOpenCreateTag, setIsNewTagCreated }
+) => {
     const { accessToken } = useAuth();
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
@@ -127,5 +127,3 @@ const CreateTagModal: React.FC<Props> = ({ myself, currentProject, openCreateTag
         </>
     );
 };
-
-export default CreateTagModal;

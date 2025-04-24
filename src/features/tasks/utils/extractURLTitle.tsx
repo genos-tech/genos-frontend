@@ -1,4 +1,4 @@
-export async function fetchPageTitle(url: string): Promise<string> {
+export const fetchPageTitle = async (url: string): Promise<string> => {
     try {
         const response = await fetch(url, { mode: 'cors' });
 
@@ -17,7 +17,7 @@ export async function fetchPageTitle(url: string): Promise<string> {
     }
 }
 
-function extractDomain(url: string): string {
+export const extractDomain = (url: string): string => {
     try {
         const { hostname } = new URL(url);
         // Optional: remove 'www.' prefix

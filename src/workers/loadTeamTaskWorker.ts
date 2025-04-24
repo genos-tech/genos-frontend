@@ -1,5 +1,6 @@
-import loadProjectTasks from '../features/tasks/services/loadTeamTasks';
-import { UserProps, TaskTableProps } from "../types/types";
+import { loadTeamTasks } from '../features/tasks/services/loadTeamTasks';
+import { UserProps } from "../types/admin";
+import { TaskTableProps } from "../types/tasks";
 import { STORES } from "../db/conf";
 import {
     clearStore,
@@ -13,7 +14,7 @@ self.onmessage = async (event) => {
     await clearStore(STORES.TASKS)
 
     // Load data from backend
-    const taskList: TaskTableProps[] = await loadProjectTasks({
+    const taskList: TaskTableProps[] = await loadTeamTasks({
         myself: myself,
         accessToken: accessToken
     });

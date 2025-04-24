@@ -12,47 +12,48 @@ import ListItem from '@mui/joy/ListItem';
 import Divider from '@mui/joy/Divider';
 import { Input, Grid, Button, Stack } from "@mui/joy";
 import Snackbar from '@mui/joy/Snackbar';
-import FileUpload from './upload'
+import FileUpload from './FileUploadForm'
 import IconButton from '@mui/joy/IconButton';
 import CancelIcon from '@mui/icons-material/Cancel';
-import GithubIcon from '../../assets/GithubIcon';
-import CustomLinkIcon from '../../assets/CustomLinkIcon';
+import GithubIcon from '../../../assets/GithubIcon';
+import CustomLinkIcon from '../../../assets/CustomLinkIcon';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import {
-    UserProps,
     PreviewTaskProps,
     ProjectProps,
-    TaskStatusProps,
     TaskPriorityProps,
     TaskEffortLevelProps,
-    AttachmentFileProps,
     TagListProps,
-    TaskCommentProps
-} from "../../types/types";
+    TaskCommentProps,
+    TaskStatusProps
+} from "../../../types/tasks";
+import { UserProps } from '../../../types/admin';
+import { AttachmentFileProps } from "../../../types/chat";
 import Autocomplete from '@mui/joy/Autocomplete';
 import Close from '@mui/icons-material/Close';
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import TaskCommentBubble from './TaskCommentBubble'
-import updateSpecificTask from './services/updateSpecificTask';
-import loadTeamProjects from './services/loadTeamProjects';
-import { loadTeamMembers } from '../admin/services/loadTeamMembers';
-import loadProjectTags from './services/loadProjectTags';
-import loadTaskComments from './services/loadTaskComments';
+import { updateSpecificTask } from '../services/updateSpecificTask';
+import { loadTeamProjects } from '../services/loadTeamProjects';
+import { loadTeamMembers } from '../../admin/services/loadTeamMembers';
+import { loadProjectTags } from '../services/loadProjectTags';
 import Dropdown from '@mui/joy/Dropdown';
 import Menu from '@mui/joy/Menu';
 import MenuButton from '@mui/joy/MenuButton';
 import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
+import { loadTaskComments } from '../services/loadTaskComments';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
 import ListItemContent from '@mui/joy/ListItemContent';
-import BnTaskPreview from '../../components/blockNote/bnTaskPreview'
-import BnTaskCommentPreview from '../../components/blockNote/bnTaskCommentEditor'
+import BnTaskPreview from '../../../components/blockNote/bnTaskPreview'
+import BnTaskCommentPreview from '../../../components/blockNote/bnTaskCommentEditor'
 import { PartialBlock } from "@blocknote/core";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
+
 
 const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
@@ -74,6 +75,7 @@ const effortLevels: TaskEffortLevelProps[] = [
     { code: 0, level: 'High', color: '#ff2323', textColor: "white" },
 ]
 
+
 const getFormattedTodayDateStr = (): string => {
     let today = new Date();
     today.setDate(today.getDate() + 7);
@@ -85,30 +87,38 @@ const getFormattedDateStr = (date: Date): string => {
 };
 
 type TaskContentProps = {
-    myself: UserProps,
-    currentProject: ProjectProps,
-    currentPreviewTask: PreviewTaskProps,
+    myself: UserProps;
+    currentPreviewTask: PreviewTaskProps;
+    setOpenCreateProject: (value: boolean) => void;
+    setOpenCreateTag: (value: boolean) => void;
+    setIsOpeningTask: (value: boolean) => void;
     setIsCreatingTask: (value: boolean) => void;
     setIsTaskContentVisible: (value: boolean) => void;
-    setCurrentPreviewTask: (value: PreviewTaskProps) => void;
-    setOpenCreateProject: (value: boolean) => void,
-    setOpenCreateTag: (value: boolean) => void,
-    setIsTaskUpdated: (value: boolean) => void,
+    isNewProjectCreated: boolean;
+    isNewTagCreated: boolean;
+    setOpeningService: (value: number) => void;
 };
 
-export default function taskPreview(props: TaskContentProps) {
+export default function taskPreviewFromThread(props: TaskContentProps) {
     const {
         myself,
-        currentProject,
         currentPreviewTask,
-        setIsCreatingTask,
-        setIsTaskContentVisible,
-        setCurrentPreviewTask,
         setOpenCreateProject,
         setOpenCreateTag,
-        setIsTaskUpdated
+        setIsOpeningTask,
+        setIsCreatingTask,
+        setIsTaskContentVisible,
+        isNewProjectCreated,
+        isNewTagCreated,
+        setOpeningService
     } = props
     const { accessToken } = useAuth();
+    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
+    const [taskUpdated, setTaskUpdate] = useState(false);
+    const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
+    const [taskTitle, setTaskTitle] = useState<string | null>(null);
+    const [body, setBody] = useState<PartialBlock[]>(currentPreviewTask.body);
+    const [isCommentUpdated, setIsCommentUpdated] = useState(false);
 
     const socket: Socket = io(ws_url, {
         reconnection: true,          // Enable reconnection
@@ -127,13 +137,6 @@ export default function taskPreview(props: TaskContentProps) {
             Authorization: accessToken || ""
         },
     });
-
-    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
-    const [taskUpdated, setTaskUpdate] = useState(false);
-    const [currentTaskContent, setCurrentTaskContent] = useState<PreviewTaskProps>(currentPreviewTask);
-    const [taskTitle, setTaskTitle] = useState<string | null>(null);
-    const [body, setBody] = useState<PartialBlock[]>(currentPreviewTask.body);
-    const [isCommentUpdated, setIsCommentUpdated] = useState(false);
 
     useEffect(() => {
         if (currentPreviewTask) {
@@ -195,11 +198,6 @@ export default function taskPreview(props: TaskContentProps) {
             })();
         }
     }, [uploadedFiles])
-
-    useEffect(() => {
-        setCurrentPreviewTask(currentTaskContent)
-        setIsTaskUpdated(true)
-    }, [currentTaskContent])
 
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -315,20 +313,20 @@ export default function taskPreview(props: TaskContentProps) {
                 setTeamProjects(loadedTeamProjects);
             }
         })();
-    }, [])
+    }, [isNewProjectCreated, currentTaskContent])
 
     // Get Project tags
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
     useEffect(() => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags({
-                myself: myself, projectId: currentProject.projectId, accessToken: accessToken || ""
+                myself: myself, projectId: currentPreviewTask.project.projectId, accessToken: accessToken || ""
             });
             if (loadedProjectTags.length > 0) {
                 setProjectTags(loadedProjectTags);
             }
         })();
-    }, [])
+    }, [isNewTagCreated, currentTaskContent])
 
     // Get Task Comments
     const [taskComments, setTaskComments] = useState<TaskCommentProps[]>([]);
@@ -377,13 +375,14 @@ export default function taskPreview(props: TaskContentProps) {
     const updateTagOptions = () => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags({
-                myself: myself, projectId: currentTaskContent.project.projectId, accessToken: accessToken || ""
+                myself: myself, projectId: currentPreviewTask.project.projectId, accessToken: accessToken || ""
             });
             if (loadedProjectTags.length > 0) {
                 setProjectTags(loadedProjectTags);
             }
         })();
     };
+
 
     return (
         <Sheet
@@ -443,7 +442,10 @@ export default function taskPreview(props: TaskContentProps) {
                         size="sm"
                         variant="plain"
                         color="neutral"
-                        onClick={() => { setIsTaskContentVisible(false) }}
+                        onClick={() => {
+                            setIsOpeningTask(false);
+                            setIsTaskContentVisible(false);
+                        }}
                     >
                         <CancelIcon />
                     </IconButton>
@@ -458,6 +460,7 @@ export default function taskPreview(props: TaskContentProps) {
                         <Menu size="sm">
                             <MenuItem onClick={() => { setOpenCreateProject(true) }}><AddIcon />New Project</MenuItem>
                             <MenuItem onClick={() => { setOpenCreateTag(true) }}><AddIcon />New Tag</MenuItem>
+                            <MenuItem onClick={() => { setOpeningService(2) }}>Go to Task Home</MenuItem>
                         </Menu>
                     </Dropdown>
                 </Stack>
@@ -570,7 +573,11 @@ export default function taskPreview(props: TaskContentProps) {
                                                         key={item.tagName} // pass the key directly
                                                         variant="soft"
                                                         endDecorator={<Close />}
-                                                        sx={{ backgroundColor: alpha(item.tagColor, 0.80), color: item.tagTextColor, fontWeight: 'bold' }}
+                                                        sx={{
+                                                            backgroundColor: alpha(item.tagColor, 0.80),
+                                                            color: item.tagTextColor,
+                                                            fontWeight: 'bold'
+                                                        }}
                                                     >
                                                         {item.tagName}
                                                     </Chip>
@@ -776,9 +783,8 @@ export default function taskPreview(props: TaskContentProps) {
                                         sx={{ width: "100%" }}
                                     />
                                 </ListItem>
-
-                            </Grid >
-                        </Grid >
+                            </Grid>
+                        </Grid>
 
                         <ListItem sx={{ width: '50%' }}>
                             <Typography sx={{ minWidth: "80px" }}>Status:</Typography>
@@ -840,6 +846,7 @@ export default function taskPreview(props: TaskContentProps) {
                                 sx={{ width: "100%" }}
                             />
                         </ListItem>
+
 
                         <ListItem>
                             <Typography sx={{ minWidth: "80px" }}>Due Date:</Typography>
@@ -1003,9 +1010,9 @@ export default function taskPreview(props: TaskContentProps) {
                                 </Stack>
                             )}
                         </ListItem>
-                    </List >
-                </Box >
-            </Box >
+                    </List>
+                </Box>
+            </Box>
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
@@ -1045,7 +1052,7 @@ export default function taskPreview(props: TaskContentProps) {
                         marginLeft: 'auto',
                     }}
                     onClick={() => {
-                        setIsTaskContentVisible(false);
+                        setIsOpeningTask(false);
                         setIsCreatingTask(true);
                     }}
                 >
@@ -1131,7 +1138,7 @@ export default function taskPreview(props: TaskContentProps) {
                 <BnTaskCommentPreview
                     myself={myself}
                     socket={socket}
-                    projectId={currentProject.projectId}
+                    projectId={currentPreviewTask.project.projectId}
                     taskId={Number(currentTaskContent.id)}
                     setTaskUpdate={setTaskUpdate}
                     taskComments={taskComments}
@@ -1141,6 +1148,6 @@ export default function taskPreview(props: TaskContentProps) {
                 />
             </Box>
 
-        </Sheet >
+        </Sheet>
     );
 }

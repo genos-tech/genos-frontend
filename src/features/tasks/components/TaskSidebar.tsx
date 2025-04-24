@@ -16,14 +16,16 @@ import FreeCancellationIcon from '@mui/icons-material/FreeCancellation';
 import BusinessIcon from '@mui/icons-material/Business';
 import WorkIcon from '@mui/icons-material/Work';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import { useAuth } from "../../context/AuthContext";
-import { SearchTeamTasksResponse, ProjectProps, UserProps } from '../../types/types'
-import loadTaskSearchList from './services/loadTaskSearchList';
-import loadTeamProjects from './services/loadTeamProjects';
+import { useAuth } from "../../../context/AuthContext";
+import { UserProps } from '../../../types/admin';
+import { SearchTeamTasksResponse } from '../../../types/chat'
+import { ProjectProps } from "../../../types/tasks";
+import { loadTeamTaskList } from '../services/loadTaskSearchList';
+import { loadTeamProjects } from '../services/loadTeamProjects';
 import CircularProgress from '@mui/joy/CircularProgress';
 import AddIcon from '@mui/icons-material/Add';
-import { loadAllTeams } from '../admin/services/loadAllTeams';
-import { Team } from '../../types/admin';
+import { loadAllTeams } from '../../admin/services/loadAllTeams';
+import { Team } from '../../../types/admin';
 
 function Toggler({
   defaultExpanded,
@@ -94,7 +96,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
     }
 
     (async () => {
-      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTaskSearchList({
+      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList({
         myself: myself, accessToken: accessToken || ""
       });
 
@@ -120,7 +122,7 @@ export default function TaskSidebar(props: TaskSidebarProps) {
   const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
   const updateRecentTasks = () => {
     (async () => {
-      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTaskSearchList({
+      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList({
         myself: myself, accessToken: accessToken || ""
       });
       setRecentTasks([...loadedTeamTasks.slice(0, 10)]);

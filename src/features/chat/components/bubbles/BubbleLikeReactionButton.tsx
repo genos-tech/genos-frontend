@@ -1,6 +1,4 @@
-import Tooltip from '@mui/joy/Tooltip';
-import Box from '@mui/joy/Box';
-import IconButton from '@mui/joy/IconButton';
+import { Tooltip, Box, IconButton } from '@mui/joy';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';

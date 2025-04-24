@@ -8,16 +8,16 @@ import { BubbleLikeReactionButton } from "./BubbleLikeReactionButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleReplyButton } from "./BubbleReplyButton";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import loadSpecificTaskByThreadId from '../../../tasks/services/loadSpecificTaskByThreadId';
-import { extractHHMM, getCurrentTimestamp } from "../../../../components/utils/getTime";
+import { loadSpecificTaskByThreadId } from '../../../tasks/services/loadSpecificTaskByThreadId';
+import { extractHHMM, getCurrentTimestamp } from "../../../../components/utils/dateUtils";
+import { UserProps } from '../../../../types/admin';
 import {
-  UserProps,
   ChatProps,
   MessageProps,
   ThreadProps,
-  ThreadMessageProps,
-  PreviewTaskProps
-} from '../../../../types/types';
+  ThreadMessageProps
+} from '../../../../types/chat';
+import { PreviewTaskProps } from '../../../../types/tasks';
 import { useAuth } from "../../../../context/AuthContext";
 import BnPreview from '../../../../components/blockNote/bnPreview';
 import AvatarWithStatus from '../../../../components/utils/avatarWithStatus';

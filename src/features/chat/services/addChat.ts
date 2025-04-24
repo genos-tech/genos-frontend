@@ -1,5 +1,5 @@
 import AddChatWorker from "../../../workers/addChatWorker.ts?worker";
-import { AllChatProps } from "../../../types/types";
+import { AllChatProps } from "../../../types/chat";
 
 export const addChat = (
     chat: AllChatProps,

@@ -14,28 +14,24 @@ import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import Sidebar from '../../components/layout/sidebar';
-import TaskSidebar from './TaskSidebar';
-import TaskPreview from './previewTask';
-import TaskTable from './TaskTable';
-import {
-    UserProps,
-    ProjectProps,
-    TaskTableProps,
-    PreviewTaskProps,
-    SearchTeamTasksResponse
-} from '../../types/types';
-import CreateTask from "./createTask";
+import TaskSidebar from './components/TaskSidebar';
+import TaskPreview from './components/previewTask';
+import TaskTable from './components/TaskTable';
+import { UserProps } from '../../types/admin';
+import { SearchTeamTasksResponse } from '../../types/chat';
+import { ProjectProps, TaskTableProps, PreviewTaskProps } from "../../types/tasks";
+import { CreateTaskForm } from "./components/CreateTaskForm";
 import FetchSpecificProjectTasksWorker from "../../workers/fetchSpecificProjectTasksWorker.ts?worker";
-import loadSpecificTask from './services/loadSpecificTask';
+import { loadSpecificTask } from './services/loadSpecificTask';
 import { useAuth } from "../../context/AuthContext";
-import loadTeamProjects from './services/loadTeamProjects';
+import { loadTeamProjects } from './services/loadTeamProjects';
 import Autocomplete from '@mui/joy/Autocomplete';
-import loadTaskSearchList from './services/loadTaskSearchList';
+import { loadTeamTaskList } from './services/loadTaskSearchList';
 import CircularProgress from '@mui/joy/CircularProgress';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import CreateTagModal from './modalCreateTag';
-import CreateProjectModal from './modalCreateProject';
-import CreateTeamModal from './modalCreateTeam';
+import { ModalCreateTag } from './components/modals/modalCreateTag';
+import { ModalCreateProject } from './components/modals/modalCreateProject';
+import { ModalCreateTeam } from './components/modals/modalCreateTeam';
 import LoadTeamTaskWorker from "../../workers/loadTeamTaskWorker.ts?worker";
 
 type TaskProps = {
@@ -75,7 +71,7 @@ export default function TaskHome(props: TaskProps) {
         }
 
         (async () => {
-            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTaskSearchList({
+            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList({
                 myself: myself, accessToken: accessToken || ""
             });
 
@@ -422,7 +418,7 @@ export default function TaskHome(props: TaskProps) {
                                                 gap: 1,
                                             }}
                                         >
-                                            <CreateTask
+                                            <CreateTaskForm
                                                 myself={myself}
                                                 currentProject={currentProject}
                                                 setIsCreatingTask={setIsCreatingTask}
@@ -520,7 +516,7 @@ export default function TaskHome(props: TaskProps) {
                     )}
 
                     {/* Modal for creating a new project */}
-                    <CreateTeamModal
+                    <ModalCreateTeam
                         myself={myself}
                         setMyself={setMyself}
                         openCreateTeam={openCreateTeam}
@@ -528,7 +524,7 @@ export default function TaskHome(props: TaskProps) {
                     />
 
                     {/* Modal for creating a new project */}
-                    <CreateProjectModal
+                    <ModalCreateProject
                         myself={myself}
                         openCreateProject={openCreateProject}
                         setOpenCreateProject={setOpenCreateProject}
@@ -537,7 +533,7 @@ export default function TaskHome(props: TaskProps) {
                     />
 
                     {/* Modal for creating a new tag */}
-                    <CreateTagModal
+                    <ModalCreateTag
                         myself={myself}
                         currentProject={currentProject}
                         openCreateTag={openCreateTag}

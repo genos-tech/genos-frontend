@@ -1,7 +1,4 @@
-import Avatar from '@mui/joy/Avatar';
-import Stack from '@mui/joy/Stack';
-import Sheet from '@mui/joy/Sheet';
-import Typography from '@mui/joy/Typography';
+import { Avatar, Stack, Sheet, Typography } from '@mui/joy';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 
 type BubbleAttachmentSheetTypes = {

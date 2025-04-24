@@ -1,4 +1,5 @@
-import { SearchTeamTasksResponse, UserProps } from '../../../types/types'
+import { UserProps } from '../../../types/admin';
+import { SearchTeamTasksResponse } from '../../../types/chat'
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -7,7 +8,7 @@ type LoadSearchListProps = {
     accessToken: string;
 };
 
-async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamTasksResponse[]> {
+export const loadTeamTaskList = async (props: LoadSearchListProps) => {
     const { myself, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
@@ -41,7 +42,4 @@ async function loadTeamTaskList(props: LoadSearchListProps): Promise<SearchTeamT
         console.error(errorMsg);
         return [];
     }
-
 }
-
-export default loadTeamTaskList;

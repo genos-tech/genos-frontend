@@ -6,7 +6,8 @@ import { ModalCreateGM } from './modals/ModalCreateGM';
 import { ChatSearch } from './ChatSearch';
 import { ChatList } from './ChatList';
 import { DMDivider, GMDivider, PinnedDivider } from './ChatPaneDividers';
-import { ChatProps, AllChatProps, UserProps } from '../../../types/types';
+import { UserProps } from '../../../types/admin';
+import { ChatProps, AllChatProps } from '../../../types/chat';
 
 type ChatsPaneProps = {
   myself: UserProps;

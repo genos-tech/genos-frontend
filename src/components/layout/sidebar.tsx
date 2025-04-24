@@ -17,7 +17,7 @@ import { useAuth } from "../../context/AuthContext";
 import { TeamDropdown } from '../../features/admin/components/teamDropdown';
 import { ColorSchemeToggle } from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';
-import { UserProps } from '../../types/types';
+import { UserProps } from '../../types/admin';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

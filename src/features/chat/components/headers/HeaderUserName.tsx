@@ -1,9 +1,7 @@
-import Avatar from '@mui/joy/Avatar';
-import Chip from '@mui/joy/Chip';
-import Typography from '@mui/joy/Typography';
+import { Avatar, Chip, Typography } from '@mui/joy';
 import CircleIcon from '@mui/icons-material/Circle';
 import GroupsIcon from '@mui/icons-material/Groups';
-import { ChatProps } from '../../../../types/types';
+import { ChatProps } from '../../../../types/chat';
 
 export const HeaderUserName = (props: { chat: ChatProps; isYou: boolean }) => {
     const { chat, isYou } = props;

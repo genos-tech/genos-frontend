@@ -4,7 +4,8 @@ import { Socket } from "socket.io-client";
 
 import { createChatGroup } from '../../services/createChatGroup';
 import { useAuth } from "../../../../context/AuthContext";
-import { UserProps, AllChatProps, ChatProps } from '../../../../types/types';
+import { UserProps } from '../../../../types/admin';
+import { AllChatProps, ChatProps } from '../../../../types/chat';
 
 type Props = {
     socket: Socket;

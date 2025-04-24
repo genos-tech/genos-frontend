@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Socket } from "socket.io-client";
+import { UserProps } from '../../../types/admin';
 import {
-    UserProps,
     AllChatProps,
     ChatProps,
     MessageProps,
@@ -9,7 +9,7 @@ import {
     NewMessageProps,
     NewThreadMessageProps,
     ThreadProps
-} from "../../../types/types";
+} from "../../../types/chat";
 import { addChat } from '../services/addChat';
 import { addMessage } from "../services/addMessage";
 import { addThreadMessage } from "../services/addThreadMessage";

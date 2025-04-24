@@ -1,4 +1,4 @@
-import { MessageProps } from '../../../types/types';
+import { MessageProps } from '../../../types/chat';
 import PopSpecificMessagesWorker from "../../../workers/popSpecificMessagesWorker.ts?worker";
 
 export const popSpecificMessages = (

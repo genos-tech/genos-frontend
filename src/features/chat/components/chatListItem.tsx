@@ -16,9 +16,10 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import AvatarWithStatus from '../../../components/utils/avatarWithStatus';
-import { AllChatProps, ChatProps, UserProps } from '../../../types/types';
+import { UserProps } from '../../../types/admin';
+import { AllChatProps, ChatProps } from '../../../types/chat';
 import { toggleMessagesPane } from '../../../utils';
-import { extractMMDDHHMM } from '../../../components/utils/getTime';
+import { extractMMDDHHMM } from '../../../components/utils/dateUtils';
 
 type ChatListItemProps = ListItemButtonProps & {
   chat: AllChatProps;

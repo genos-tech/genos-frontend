@@ -1,4 +1,4 @@
-import { ThreadMessageProps } from '../../../types/types';
+import { ThreadMessageProps } from '../../../types/chat';
 import PopSpecificThreadMessagesWorker from "../../../workers/popSpecificThreadMessagesWorker.ts?worker";
 
 export const popSpecificThreadMessages = (

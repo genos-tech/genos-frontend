@@ -1,5 +1,5 @@
 import AddMessageWorker from "../../../workers/addMessageWorker.ts?worker";
-import { MessageProps } from "../../../types/types";
+import { MessageProps } from "../../../types/chat";
 
 export const addMessage = (
     message: MessageProps,

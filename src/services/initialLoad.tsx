@@ -5,11 +5,8 @@ import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
 import GetLatestDMChatWorker from "../workers/getLatestDMChatWorker.ts?worker";
 import FetchSpecificDMChatWorker from "../workers/fetchSpecificDMChatWorker.ts?worker";
 import FetchSpecificDMMessagesWorker from "../workers/fetchSpecificDMMessagesWorker.ts?worker";
-import {
-    UserProps,
-    ChatProps,
-    MessageProps,
-} from "../types/types";
+import { UserProps } from "../types/admin";
+import { ChatProps, MessageProps } from "../types/chat";
 
 export function InitialLoad(
     myself: UserProps,

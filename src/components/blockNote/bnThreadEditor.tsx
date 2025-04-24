@@ -14,7 +14,6 @@ import {
     FileCaptionButton,
     FileReplaceButton,
     FormattingToolbar,
-    TextAlignButton,
     useCreateBlockNote,
     DefaultReactSuggestionItem,
     SuggestionMenuController,
@@ -34,7 +33,8 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
 import EmojiPicker from '../emojiInput/EmojiPicker'
 import { useColorScheme } from '@mui/joy/styles';
-import { UserProps, ThreadMessageProps, ThreadProps } from '../../types/types'
+import { UserProps } from '../../types/admin';
+import { ThreadMessageProps, ThreadProps } from '../../types/chat'
 import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';

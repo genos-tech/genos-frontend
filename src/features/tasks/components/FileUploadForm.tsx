@@ -2,17 +2,17 @@ import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent, IconButton, Button } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { AttachmentFileProps } from '../../types/types';
+import { AttachmentFileProps } from '../../../types/chat';
 
 
 
-type FileUploadProps = {
+type FileUploadFormProps = {
     uploadedFiles: AttachmentFileProps[],
     setUploadedFiles: (value: AttachmentFileProps[]) => void,
     setTaskUpdate: (value: boolean) => void,
 }
 
-export default function FileUpload(props: FileUploadProps) {
+export default function FileUploadForm(props: FileUploadFormProps) {
     const {
         uploadedFiles,
         setUploadedFiles,

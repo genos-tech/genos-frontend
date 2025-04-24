@@ -1,7 +1,8 @@
 import { CircularProgress, Typography, Box } from "@mui/joy";
 
 import { InitialLoad } from './initialLoad';
-import { UserProps, ChatProps } from "../types/types";
+import { UserProps } from "../types/admin";
+import { ChatProps } from "../types/chat";
 import { useAuth } from "../context/AuthContext";
 
 type LoadingProps = {

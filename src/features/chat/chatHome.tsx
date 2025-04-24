@@ -9,19 +9,18 @@ import { ChatsPane } from './components/chatsPane';
 import { MessagesPane } from './mainMessagesPane';
 import { MessagesSubPane } from './subMessagesPane';
 import { popAllChats } from './services/popAllChats';
+import { UserProps } from '../../types/admin';
 import {
     AllChatProps,
-    UserProps,
     ChatProps,
-    ThreadProps,
-    PreviewTaskProps,
-    ProjectProps
-} from "../../types/types";
-import CreateTagModal from '../tasks/modalCreateTag';
-import CreateProjectModal from '../tasks/modalCreateProject';
-import loadSpecificTask from '../tasks/services/loadSpecificTask';
-import CreateTaskFromThread from "../tasks/createTaskFromThread";
-import TaskPreviewFromThread from '../tasks/previewTaskFromThread';
+    ThreadProps
+} from "../../types/chat";
+import { PreviewTaskProps, ProjectProps } from "../../types/tasks";
+import { ModalCreateTag } from '../tasks/components/modals/modalCreateTag';
+import { ModalCreateProject } from '../tasks/components/modals/modalCreateProject';
+import { loadSpecificTask } from '../tasks/services/loadSpecificTask';
+import CreateTaskFromThread from "../tasks/components/CreateTaskFormFromThread";
+import TaskPreviewFromThread from '../tasks/components/previewTaskFromThread';
 import Sidebar from '../../components/layout/sidebar';
 import { useAuth } from "../../context/AuthContext";
 import { wsMessageHandleHook } from "./hooks/WSHooks";
@@ -378,7 +377,7 @@ export default function Home(props: HomeProps) {
                     )}
 
                     {/* Modal for creating a new project */}
-                    <CreateProjectModal
+                    <ModalCreateProject
                         myself={myself}
                         openCreateProject={openCreateProject}
                         setOpenCreateProject={setOpenCreateProject}
@@ -387,7 +386,7 @@ export default function Home(props: HomeProps) {
                     />
 
                     {/* Modal for creating a new tag */}
-                    <CreateTagModal
+                    <ModalCreateTag
                         myself={myself}
                         currentProject={currentProject}
                         openCreateTag={openCreateTag}

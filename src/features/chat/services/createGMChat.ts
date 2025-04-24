@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { authApi } from '../../../services/api';
-import { UserProps } from '../../../types/types';
+import { UserProps } from '../../../types/admin';
 
 export const createGMChat = async (
     accessToken: string | null,

@@ -11,7 +11,9 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 
-import { ThreadProps, UserProps, PreviewTaskProps } from '../../../../types/types';
+import { UserProps } from '../../../../types/admin';
+import { ThreadProps } from '../../../../types/chat';
+import { PreviewTaskProps } from '../../../../types/tasks';
 
 type MessagesPaneHeaderProps = {
   myself: UserProps;

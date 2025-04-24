@@ -9,7 +9,7 @@ import { joinTeam } from "../services/joinTeam";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sentDMMessage } from "../../chat/services/sentDMMessage";
 import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from "../../../types/types";
+import { UserProps } from "../../../types/admin";
 import { Team, CreateDMResponse } from "../../../types/admin";
 
 type TeamDropdownProps = {

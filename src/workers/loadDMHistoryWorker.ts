@@ -1,5 +1,6 @@
 import { loadDMHistory } from '../features/chat/services/loadDMHistory';
-import { UserProps, ChatProps, MessageProps } from "../types/types";
+import { UserProps } from "../types/admin";
+import { ChatProps, MessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
 import {
     clearStore,

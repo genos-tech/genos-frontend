@@ -1,6 +1,6 @@
 import { STORES } from "../db/conf";
 import { addData } from "../db/crud";
-import { AllChatProps } from "../types/types";
+import { AllChatProps } from "../types/chat";
 
 self.onmessage = async (event) => {
     const dmChat: AllChatProps = event.data.dmChat;

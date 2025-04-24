@@ -8,10 +8,8 @@ import {
     Input,
     Typography,
 } from "@mui/joy";
-import {
-    UserProps
-} from '../../types/types';
-import { useAuth } from "../../context/AuthContext";
+import { UserProps } from '../../../../types/admin';
+import { useAuth } from "../../../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -22,7 +20,7 @@ type Props = {
     setOpenCreateTeam: (value: boolean) => void;
 };
 
-const CreateTeamModal: React.FC<Props> = ({
+export const ModalCreateTeam: React.FC<Props> = ({
     myself,
     setMyself,
     openCreateTeam,
@@ -99,5 +97,3 @@ const CreateTeamModal: React.FC<Props> = ({
         </>
     );
 };
-
-export default CreateTeamModal;
