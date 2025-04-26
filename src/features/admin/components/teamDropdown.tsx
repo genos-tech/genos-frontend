@@ -7,7 +7,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { loadAllTeams } from '../services/loadAllTeams';
 import { joinTeam } from "../services/joinTeam";
 import { createDMChat } from "../../chat/services/createDMChat";
-import { sentDMMessage } from "../../chat/services/sentDMMessage";
+import { sentDMMessage } from "../../chat/services/sendDMMessage";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { Team, CreateDMResponse } from "../../../types/admin";
@@ -17,7 +17,7 @@ type TeamDropdownProps = {
     setMyself: (me: UserProps) => void;
 };
 
-export function TeamDropdown(props: TeamDropdownProps) {
+export const TeamDropdown = (props: TeamDropdownProps) => {
     const { myself, setMyself } = props;
     const { accessToken } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -100,7 +100,7 @@ export function TeamDropdown(props: TeamDropdownProps) {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <IconButton component='a' variant="soft" color="primary" size="sm" onClick={handleClick}>
+                <IconButton component='a' variant="outlined" color="neutral" size="sm" onClick={handleClick}>
                     <BusinessIcon className="h-5 w-5" />
                 </IconButton>
                 <Menu size='sm' ref={dropdownRef}

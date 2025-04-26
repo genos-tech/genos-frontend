@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Socket } from "socket.io-client";
-import { Box, IconButton } from "@mui/joy";
-import { en } from "@blocknote/core/locales";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useColorScheme } from '@mui/joy/styles';
 import SendIcon from '@mui/icons-material/Send';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { en } from "@blocknote/core/locales";
 import "@blocknote/core/fonts/inter.css";
-import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import { codeBlock } from "@blocknote/code-block";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
@@ -25,33 +28,15 @@ import {
     filterSuggestionItems,
     defaultBlockSpecs
 } from "@blocknote/core";
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-// This packages some of the most used languages in on-demand bundle
-import { codeBlock } from "@blocknote/code-block";
+
 import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
-import EmojiPicker from '../emojiInput/EmojiPicker'
-import { useColorScheme } from '@mui/joy/styles';
+import { EmojiPicker } from '../emojiInput/EmojiPicker'
 import { UserProps } from '../../types/admin';
 import { ThreadMessageProps, ThreadProps } from '../../types/chat'
 import InsertDMThreadMessageWorker from "../../workers/insertDMThreadMessageWorker.ts?worker";
 import InsertGMThreadMessageWorker from "../../workers/insertGMThreadMessageWorker.ts?worker";
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import Tooltip from '@mui/joy/Tooltip';
-
-function getCurrentTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
-
+import { getCurrentTimestamp } from "../utils/dateUtils";
 
 const insertDMThreadMessage = async (newDMThreadMessage: ThreadMessageProps): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -132,12 +117,12 @@ const getCustomSlashMenuItems = (
 
 type BnThreadEditorProps = {
     myself: UserProps;
-    socket: Socket;
+    socket: Socket | null;
     thread: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
 }
 
-export function BnThreadEditor(props: BnThreadEditorProps) {
+export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
         myself,
         socket,
@@ -200,7 +185,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                     data-changing-font-demo // custom font
                     onChange={() => (setEditorDocLength(editor.document.length))}
                     onKeyDown={(event) => {
-                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && socket !== null) {
                             if (editor.document.length > 1) {
 
                                 // Set input text
@@ -216,7 +201,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                                     threadId: thread.threadId,
                                     threadMessage: editor.document,
                                     isDm: thread.isDm,
-                                    dmPartnerUserId: thread.dmPartnerUserId,
+                                    dmPartnerUserId: thread.isDm ? thread.dmPartnerUserId : null,
                                     senderId: myself.userId,
                                     senderName: myself.userName,
                                     destCGName: thread.chatName,
@@ -229,7 +214,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                                         chatName: thread.chatName,
                                         threadId: thread.threadId,
                                         isDm: thread.isDm,
-                                        dmPartnerUserId: thread.dmPartnerUserId,
+                                        dmPartnerUserId: thread.isDm ? thread.dmPartnerUserId : null,
                                         taskId: null,
                                         unread: false,
                                         messages: [...thread.messages, {
@@ -300,7 +285,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                         }}
                         disabled={editorDocLength < 2}
                         onClick={() => {
-                            if (editor.document.length > 1) {
+                            if (editor.document.length > 1 && socket !== null) {
 
                                 // Set input text
                                 const content: any[] | any = editor.document.slice(-2, -1)[0].content;
@@ -315,7 +300,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                                     threadId: thread.threadId,
                                     threadMessage: editor.document,
                                     isDm: thread.isDm,
-                                    dmPartnerUserId: thread.dmPartnerUserId,
+                                    dmPartnerUserId: thread.isDm ? thread.dmPartnerUserId : null,
                                     senderId: myself.userId,
                                     senderName: myself.userName,
                                     destCGName: thread.chatName,
@@ -328,7 +313,7 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
                                         chatName: thread.chatName,
                                         threadId: thread.threadId,
                                         isDm: thread.isDm,
-                                        dmPartnerUserId: thread.dmPartnerUserId,
+                                        dmPartnerUserId: thread.isDm ? thread.dmPartnerUserId : null,
                                         taskId: null,
                                         unread: false,
                                         messages: [...thread.messages, {
@@ -457,7 +442,3 @@ export function BnThreadEditor(props: BnThreadEditorProps) {
         </Box>
     );
 }
-
-export default BnThreadEditor;
-
-

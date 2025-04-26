@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Box } from "@mui/joy";
-import { en } from "@blocknote/core/locales";
+import { useColorScheme } from '@mui/joy/styles';
 import "@blocknote/core/fonts/inter.css";
-import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
+import { codeBlock } from "@blocknote/code-block";
+import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
@@ -26,14 +28,11 @@ import {
     defaultBlockSpecs,
     PartialBlock
 } from "@blocknote/core";
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-// This packages some of the most used languages in on-demand bundle
-import { codeBlock } from "@blocknote/code-block";
+
 import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
-import EmojiPicker from '../emojiInput/EmojiPicker'
-import { useColorScheme } from '@mui/joy/styles';
+import { EmojiPicker } from '../emojiInput/EmojiPicker'
+
 
 
 // Disable the Audio and Image blocks from the built-in schema

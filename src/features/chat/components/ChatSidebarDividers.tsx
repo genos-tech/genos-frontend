@@ -1,7 +1,6 @@
-import { Stack, Typography, Chip, IconButton } from '@mui/joy';
+import { Stack, Typography, IconButton } from '@mui/joy';
 import AddIcon from '@mui/icons-material/Add';
 import { useColorScheme } from '@mui/joy/styles';
-
 
 export const PinnedDivider = () => {
     const { mode } = useColorScheme();
@@ -19,16 +18,6 @@ export const PinnedDivider = () => {
         >
             <Typography
                 component="h1"
-                endDecorator={
-                    <Chip
-                        variant="soft"
-                        color="primary"
-                        size="md"
-                        slotProps={{ root: { component: "span" } }}
-                    >
-                        ?
-                    </Chip>
-                }
                 sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}
             >
                 Pinned
@@ -57,16 +46,6 @@ export const GMDivider = (props: GMDividerProps) => {
         >
             <Typography
                 component="h1"
-                endDecorator={
-                    <Chip
-                        variant="soft"
-                        color="primary"
-                        size="md"
-                        slotProps={{ root: { component: "span" } }}
-                    >
-                        ?
-                    </Chip>
-                }
                 sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}
             >
                 GMs
@@ -84,8 +63,6 @@ export const GMDivider = (props: GMDividerProps) => {
     )
 }
 
-
-
 export const DMDivider = () => {
     const { mode } = useColorScheme();
     return (
@@ -102,16 +79,6 @@ export const DMDivider = () => {
         >
             <Typography
                 component="h1"
-                endDecorator={
-                    <Chip
-                        variant="soft"
-                        color="primary"
-                        size="md"
-                        slotProps={{ root: { component: "span" } }}
-                    >
-                        ?
-                    </Chip>
-                }
                 sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}
             >
                 DMs

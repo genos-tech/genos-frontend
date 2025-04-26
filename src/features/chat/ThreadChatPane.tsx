@@ -4,29 +4,29 @@ import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 
 import { ThreadMessageBubble } from './components/bubbles/ThreadMessageBubble';
-import { ThreadPaneHeader } from './components/headers/threadMessagePaneHeader';
+import { ThreadChatPaneHeader } from './components/headers/ThreadChatPaneHeader';
 import {
   useScrollToBottomOnNewMessage,
   useScrollToBottomOnChatChange
 } from './hooks/messageBubbleHooks';
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
-import BnThreadEditor from '../../components/blockNote/bnThreadEditor'
+import { BnThreadEditor } from '../../components/blockNote/bnThreadEditor'
 import { UserProps } from '../../types/admin';
 import { ThreadProps } from '../../types/chat';
-import { PreviewTaskProps } from '../../types/tasks';
+import { TaskProps } from '../../types/tasks';
 
 type MessagesPaneProps = {
   thread: ThreadProps;
   myself: UserProps;
-  socket: Socket;
+  socket: Socket | null;
   setCurrentThreadChat: (chat: ThreadProps) => void;
   setIsThreadVisible: (value: boolean) => void;
   currentThreadChatId: number;
   setIsTaskContentVisible: (value: boolean) => void;
   setIsOpeningTask: (value: boolean) => void;
   setIsCreatingTask: (value: boolean) => void;
-  currentPreviewTask?: PreviewTaskProps;
+  currentPreviewTask?: TaskProps;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -89,7 +89,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
             backgroundColor: 'background.body',
           }}
         >
-          <ThreadPaneHeader
+          <ThreadChatPaneHeader
             myself={myself}
             thread={thread}
             setCurrentThreadChat={setCurrentThreadChat}

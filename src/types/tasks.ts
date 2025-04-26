@@ -1,12 +1,18 @@
 import { PartialBlock } from "@blocknote/core";
 import { UserProps } from './admin';
-import { AttachmentFileProps } from './chat';
 
 export type TagColorOption = {
     name: string;
     value: string;
     textColor: string;
 };
+
+export type AttachmentFileProps = {
+    file: File,
+    file_base64?: string,
+    name?: string,
+    type?: string,
+}
 
 export type TagListProps = {
     tagName: string,
@@ -49,31 +55,6 @@ export type TaskStatusProps = {
     textColor: string | null,
 }
 
-export type TaskFormProps = {
-    project: ProjectProps | null,
-    title: string,
-    body: PartialBlock[],
-    assignee: UserProps,
-    reporter: UserProps,
-    chatType: string | null,
-    chatId: number | null,
-    threadId: number | null,
-    dueDate: string,
-    status: TaskStatusProps,
-    priority: TaskPriorityProps,
-    effortLevel: TaskEffortLevelProps,
-    tags: TagListProps[],
-    githubLink: {
-        url: string,
-        title: string
-    },
-    generalLink: {
-        url: string,
-        title: string
-    },
-    attachments: AttachmentFileProps[],
-}
-
 export type TaskListByTagProps = {
     projectId: number,
     projectName: string,
@@ -88,57 +69,8 @@ export type TaskListByTagProps = {
     }[]
 }
 
-
-
-export type PreviewTaskProps = {
-    id: string,
-    project: ProjectProps,
-    title: string | null,
-    body: PartialBlock[],
-    assignee: UserProps,
-    reporter: UserProps,
-    dueDate: string,
-    createdDate: string,
-    daysLeft: string,
-    status: TaskStatusProps,
-    priority: TaskPriorityProps,
-    effortLevel: TaskEffortLevelProps,
-    tags: TagListProps[],
-    concatTags: string,
-    githubLink: {
-        url: string,
-        title: string
-    },
-    generalLink: {
-        url: string,
-        title: string
-    },
-    attachments: AttachmentFileProps[],
-    parentTaskId: string,
-    threadId: string,
-}
-
-export type TaskTableProps = {
-    id: string | null,
-    title: string | null,
-    priority: string | null,
-    effortLevel: string | null,
-    createdDate: string | null,
-    dueDate: string | null,
-    daysLeft: string | null,
-    status: string | null,
-    assigneeId: string | null,
-    assigneeEmail: string | null,
-    assigneeName: string | null,
-    parentTaskId: string | null,
-    threadId: string | null,
-    tags: TagListProps[],
-    concatTags: string | null,
-    teamId: string | null,
-    projectId: number | null
-}
-
-export type CreateTaskProps = {
+export type TaskProps = {
+    id?: string,
     project: ProjectProps | null,
     title: string,
     body: PartialBlock[],
@@ -148,10 +80,13 @@ export type CreateTaskProps = {
     chatId: number | null,
     threadId: number | null,
     dueDate: string,
+    daysLeft?: number,
+    createdDate?: string,
     status: TaskStatusProps,
     priority: TaskPriorityProps,
     effortLevel: TaskEffortLevelProps,
     tags: TagListProps[],
+    concatTags?: string,
     githubLink: {
         url: string,
         title: string
@@ -161,4 +96,25 @@ export type CreateTaskProps = {
         title: string
     },
     attachments: AttachmentFileProps[],
+    parentTaskId?: number
+}
+
+export type TaskTableProps = {
+    id: string | null,
+    title: string | null,
+    priority: string | null,
+    effortLevel: string | null,
+    createdDate: string | null,
+    dueDate: string | null,
+    daysLeft: number | null,
+    status: string | null,
+    assigneeId: string | null,
+    assigneeEmail: string | null,
+    assigneeName: string | null,
+    parentTaskId: number | null,
+    threadId: number | null,
+    tags: TagListProps[],
+    concatTags: string | null,
+    teamId: string | null,
+    projectId: number | null
 }

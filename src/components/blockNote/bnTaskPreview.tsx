@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Box } from "@mui/joy";
+import { useColorScheme } from '@mui/joy/styles';
 import { en } from "@blocknote/core/locales";
-import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
+import { codeBlock } from "@blocknote/code-block";
+import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import {
     BasicTextStyleButton,
@@ -26,15 +28,10 @@ import {
     defaultBlockSpecs,
     PartialBlock
 } from "@blocknote/core";
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-// This packages some of the most used languages in on-demand bundle
-import { codeBlock } from "@blocknote/code-block";
-import { CustomEmojiToolbar } from './customEmojiToolbar';
-import { Mention } from "./Mention";
-import EmojiPicker from '../emojiInput/EmojiPicker'
-import { useColorScheme } from '@mui/joy/styles';
 
+import { Mention } from "./Mention";
+import { CustomEmojiToolbar } from './customEmojiToolbar';
+import { EmojiPicker } from '../emojiInput/EmojiPicker'
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -85,11 +82,11 @@ const getCustomSlashMenuItems = (
 type BnTaskPreviewProps = {
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
-    setTaskUpdate: (value: boolean) => void;
+    setTaskUpdated?: (value: boolean) => void;
 }
 
-export function BnTaskPreview(props: BnTaskPreviewProps) {
-    const { body, setBody, setTaskUpdate } = props;
+export const BnTaskPreview = (props: BnTaskPreviewProps) => {
+    const { body, setBody, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-box-${mode}`
@@ -157,7 +154,7 @@ export function BnTaskPreview(props: BnTaskPreviewProps) {
                     theme={mode === 'dark' ? 'dark' : 'light'}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onBlur={() => setTaskUpdate(true)}
+                    onBlur={() => { if (setTaskUpdated) { setTaskUpdated(true) } }}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
                             if (editor.document.length > 1) { }
@@ -242,5 +239,3 @@ export function BnTaskPreview(props: BnTaskPreviewProps) {
         </Box >
     );
 }
-
-export default BnTaskPreview;

@@ -10,10 +10,11 @@ import {
     Chip,
     Typography,
 } from "@mui/joy";
+
+import { ColorPickerMenu } from '../base/common/TagColorPickerMenu';
 import { UserProps } from '../../../../types/admin';
 import { ProjectProps } from '../../../../types/tasks';
 import { useAuth } from "../../../../context/AuthContext";
-import { ColorPickerMenu } from '../TagColorPickerMenu';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

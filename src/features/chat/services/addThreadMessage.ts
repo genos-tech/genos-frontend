@@ -1,7 +1,6 @@
 import { ThreadMessageProps } from '../../../types/chat';
 import AddThreadMessageWorker from "../../../workers/addThreadMessageWorker.ts?worker";
 
-
 export const addThreadMessage = (
     threadMessage: ThreadMessageProps,
     isDm: boolean

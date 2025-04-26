@@ -1,5 +1,5 @@
 import { UserProps } from '../../../types/admin'
-import { PreviewTaskProps } from '../../../types/tasks';
+import { TaskProps } from '../../../types/tasks';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -27,7 +27,7 @@ export const loadSpecificTask = async (props: LoadTaskTableProps) => {
             },
         });
 
-        const data: PreviewTaskProps[] = await response.json();
+        const data: TaskProps[] = await response.json();
 
         if (!response.ok) {
             const errorMsg = "Failed to get a task";

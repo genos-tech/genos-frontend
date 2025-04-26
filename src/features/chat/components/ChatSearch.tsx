@@ -26,13 +26,14 @@ const joinedMessage = [
 
 type ChatSearchProps = {
     myself: UserProps;
-    socket: Socket;
+    socket: Socket | null;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
     setCurrentMainChat: (value: ChatProps) => void;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
 }
+
 export const ChatSearch = (props: ChatSearchProps) => {
     const {
         myself,
@@ -58,7 +59,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
             chatId: chatId,
             chatName: chatName,
             isDm: isDm,
-            dmPartnerUserId: dmPartnerUserId,
+            dmPartnerUserId: isDm ? dmPartnerUserId : null,
             unread: false,
             messages: messages,
             latestMessage: messages[messages.length - 1],
@@ -74,7 +75,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
         dmPartnerUserId: string,
         setCurrentMainChat: (chat: ChatProps) => void
     ) => {
-        if (chatId === -1) {
+        if (chatId === -1 && socket !== null) {
             socket.emit("join", {
                 joiningCGId: -1, // dm_id or gm_id
                 joiningCGName: chatName, // dm_name or gm_name
@@ -110,13 +111,13 @@ export const ChatSearch = (props: ChatSearchProps) => {
             const isKnownChat: boolean = await checkKnownChat(chatId, isDm);
             setOpenSearchBox(false);
 
-            if (!isKnownChat) {
+            if (!isKnownChat && socket !== null) {
                 socket.emit("message", {
                     message: joinedMessage,
                     destCGName: chatName,
                     destCGId: chatId,
                     isDm: isDm,
-                    dmPartnerUserId: dmPartnerUserId
+                    dmPartnerUserId: isDm ? dmPartnerUserId : null,
                 }, async (ack: any) => {
                     const message: MessageProps = {
                         messageIdWithChatId: `${chatId}-1`,
@@ -159,7 +160,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
     };
 
     const onChangeHandler = async (value: any) => {
-        if (value !== null) {
+        if (value !== null && socket !== null) {
             var isDm: boolean = true
             if (value.type === "Group") {
                 isDm = false;

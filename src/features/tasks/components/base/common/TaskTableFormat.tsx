@@ -9,7 +9,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import PendingIcon from '@mui/icons-material/Pending';
-import { UserProps } from '../../../types/admin';
+
+import { UserProps } from '../../../../../types/admin';
 
 const hmlOptions = [
     { label: "Low", value: "Low", color: "#0044c2", textColor: 'white' },

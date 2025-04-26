@@ -17,19 +17,19 @@ import {
   ThreadProps,
   ThreadMessageProps
 } from '../../../../types/chat';
-import { PreviewTaskProps } from '../../../../types/tasks';
+import { TaskProps } from '../../../../types/tasks';
 import { useAuth } from "../../../../context/AuthContext";
-import BnPreview from '../../../../components/blockNote/bnPreview';
-import AvatarWithStatus from '../../../../components/utils/avatarWithStatus';
+import { BnPreview } from '../../../../components/blockNote/bnPreview';
+import { AvatarWithStatus } from '../../../../components/utils/avatarWithStatus';
 
 type MessageBubbleProps = MessageProps & {
   myself: UserProps;
   variant: 'sent' | 'received';
   chat: ChatProps;
-  socket: Socket;
+  socket: Socket | null;
   setIsThreadVisible: (value: boolean) => void;
   setCurrentThreadChat: (value: ThreadProps) => void;
-  setCurrentPreviewTask: (value: PreviewTaskProps | undefined) => void;
+  setCurrentPreviewTask: (value: TaskProps | undefined) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -56,7 +56,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
   const loadTask = (threadId: number) => {
     (async () => {
       const chatType: string = (chat.isDm) ? "dm" : "gm"
-      const loadedTask: PreviewTaskProps[] = await loadSpecificTaskByThreadId({
+      const loadedTask: TaskProps[] = await loadSpecificTaskByThreadId({
         myself: myself, chatType: chatType, chatId: chat.chatId, threadId: threadId, accessToken: accessToken || ""
       });
       if (loadedTask.length > 0) {
@@ -73,78 +73,80 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     // Show thread pane on the right side.
     setIsThreadVisible(true);
 
-    socket.emit("thread_message", {
-      isInit: true,
-      rootMessageTSSent: tsSent,
-      threadId: messageId,
-      threadMessage: content,
-      isDm: chat.isDm,
-      dmPartnerUserId: chat.dmPartnerUserId,
-      senderId: myself.userId,
-      senderName: myself.userName,
-      destCGName: chat.chatName,
-      destCGId: chat.chatId,
-    }, async (ack: any) => {
-
-      const newThreadMessage: ThreadMessageProps = {
-        messageIdWithChatIdAndThreadId: `${chat.chatId}-${messageId}-1`,
-        chatId: chat.chatId,
+    if (socket !== null) {
+      socket.emit("thread_message", {
+        isInit: true,
+        rootMessageTSSent: tsSent,
         threadId: messageId,
-        messageId: 1,
-        content: content,
-        contentText: "Need to add",
-        sender: myself,
-        taskId: null,
-        tsSent: getCurrentTimestamp(),
-      };
+        threadMessage: content,
+        isDm: chat.isDm,
+        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+        senderId: myself.userId,
+        senderName: myself.userName,
+        destCGName: chat.chatName,
+        destCGId: chat.chatId,
+      }, async (ack: any) => {
 
-      if (newThreadMessage) {
-        if (chat.isDm) {
-          await addThreadMessage(newThreadMessage, chat.isDm);
-          const threadMessages: ThreadMessageProps[] = await popSpecificThreadMessages(
-            newThreadMessage.chatId, newThreadMessage.threadId, chat.isDm
-          )
-          if (threadMessages) {
-            const newThread: ThreadProps = {
-              chatId: newThreadMessage.chatId,
-              chatName: chat.chatName,
-              threadId: newThreadMessage.threadId,
-              isDm: true,
-              dmPartnerUserId: chat.dmPartnerUserId,
-              taskId: null,
-              unread: false,
-              messages: threadMessages,
-              TSLastMessage: getCurrentTimestamp(),
-            };
-            if (newThread) {
-              setCurrentThreadChat(newThread)
+        const newThreadMessage: ThreadMessageProps = {
+          messageIdWithChatIdAndThreadId: `${chat.chatId}-${messageId}-1`,
+          chatId: chat.chatId,
+          threadId: messageId,
+          messageId: 1,
+          content: content,
+          contentText: "Need to add",
+          sender: myself,
+          taskId: null,
+          tsSent: getCurrentTimestamp(),
+        };
+
+        if (newThreadMessage) {
+          if (chat.isDm) {
+            await addThreadMessage(newThreadMessage, chat.isDm);
+            const threadMessages: ThreadMessageProps[] = await popSpecificThreadMessages(
+              newThreadMessage.chatId, newThreadMessage.threadId, chat.isDm
+            )
+            if (threadMessages) {
+              const newThread: ThreadProps = {
+                chatId: newThreadMessage.chatId,
+                chatName: chat.chatName,
+                threadId: newThreadMessage.threadId,
+                isDm: true,
+                dmPartnerUserId: chat.dmPartnerUserId,
+                taskId: null,
+                unread: false,
+                messages: threadMessages,
+                TSLastMessage: getCurrentTimestamp(),
+              };
+              if (newThread) {
+                setCurrentThreadChat(newThread)
+              }
+            }
+          } else {
+            await addThreadMessage(newThreadMessage, chat.isDm);
+            const threadMessages: ThreadMessageProps[] = await popSpecificThreadMessages(
+              newThreadMessage.chatId, newThreadMessage.threadId, chat.isDm
+            )
+            if (threadMessages) {
+              const newThread: ThreadProps = {
+                chatId: newThreadMessage.chatId,
+                chatName: chat.chatName,
+                threadId: newThreadMessage.threadId,
+                isDm: false,
+                dmPartnerUserId: null,
+                taskId: null,
+                unread: false,
+                messages: threadMessages,
+                TSLastMessage: getCurrentTimestamp(),
+              };
+              if (newThread) {
+                setCurrentThreadChat(newThread)
+              }
             }
           }
-        } else {
-          await addThreadMessage(newThreadMessage, chat.isDm);
-          const threadMessages: ThreadMessageProps[] = await popSpecificThreadMessages(
-            newThreadMessage.chatId, newThreadMessage.threadId, chat.isDm
-          )
-          if (threadMessages) {
-            const newThread: ThreadProps = {
-              chatId: newThreadMessage.chatId,
-              chatName: chat.chatName,
-              threadId: newThreadMessage.threadId,
-              isDm: false,
-              dmPartnerUserId: chat.dmPartnerUserId,
-              taskId: null,
-              unread: false,
-              messages: threadMessages,
-              TSLastMessage: getCurrentTimestamp(),
-            };
-            if (newThread) {
-              setCurrentThreadChat(newThread)
-            }
-          }
+
         }
-
-      }
-    });
+      });
+    }
   }
 
 

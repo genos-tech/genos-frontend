@@ -13,9 +13,9 @@ import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 
 import { UserProps } from '../../../../types/admin';
 import { ThreadProps } from '../../../../types/chat';
-import { PreviewTaskProps } from '../../../../types/tasks';
+import { TaskProps } from '../../../../types/tasks';
 
-type MessagesPaneHeaderProps = {
+type ThreadChatPaneHeaderProps = {
   myself: UserProps;
   thread: ThreadProps;
   setCurrentThreadChat: (chat: ThreadProps) => void;
@@ -23,11 +23,10 @@ type MessagesPaneHeaderProps = {
   setIsTaskContentVisible: (value: boolean) => void;
   setIsOpeningTask: (value: boolean) => void;
   setIsCreatingTask: (value: boolean) => void;
-  currentPreviewTask?: PreviewTaskProps;
+  currentPreviewTask?: TaskProps;
 };
 
-
-export const ThreadPaneHeader = (props: MessagesPaneHeaderProps) => {
+export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
   const { myself,
     thread,
     setCurrentThreadChat,
@@ -43,7 +42,7 @@ export const ThreadPaneHeader = (props: MessagesPaneHeaderProps) => {
     chatName: thread.chatName,
     threadId: thread.threadId,
     isDm: thread.isDm,
-    dmPartnerUserId: thread.dmPartnerUserId,
+    dmPartnerUserId: thread.isDm ? thread.dmPartnerUserId : null,
     taskId: thread.taskId,
     unread: false,
     messages: [],

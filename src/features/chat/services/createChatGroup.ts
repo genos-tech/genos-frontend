@@ -93,7 +93,7 @@ export const createChatGroup = async (
     myself: UserProps,
     chatName: string,
     allChats: AllChatProps[],
-    socket: Socket,
+    socket: Socket | null,
     setCreateCGErrorMessage: (msg: string) => void,
     setOpen: (e: boolean) => void,
     setGroupName: (e: string) => void,
@@ -105,7 +105,7 @@ export const createChatGroup = async (
         accessToken, myself, chatName, setCreateCGErrorMessage
     );
 
-    if (data) {
+    if (data && socket !== null) {
         socket.emit("join", {
             joiningCGId: data.chatId, // gm_id
             joiningCGName: data.chatName, // gm_name

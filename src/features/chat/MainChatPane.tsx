@@ -4,17 +4,17 @@ import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 
 import { MessageBubble } from './components/bubbles/MessageBubble';
-import { MessagesPaneHeader } from './components/headers/mainMessagesPaneHeader';
+import { MainChatPaneHeader } from './components/headers/MainChatPaneHeader';
 import {
   useScrollToBottomOnNewMessage,
   useScrollToBottomOnChatChange
 } from './hooks/messageBubbleHooks';
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
-import BnEditor from '../../components/blockNote/bnEditor'
+import { BnEditor } from '../../components/blockNote/bnEditor'
 import { UserProps } from '../../types/admin';
 import { ChatProps, ThreadProps } from '../../types/chat';
-import { PreviewTaskProps } from '../../types/tasks';
+import { TaskProps } from '../../types/tasks';
 
 type MessagesPaneProps = {
   currentWindowHeight: number;
@@ -22,7 +22,7 @@ type MessagesPaneProps = {
   chat: ChatProps;
   subChat: ChatProps;
   myself: UserProps;
-  socket: Socket;
+  socket: Socket | null;
   setCurrentMainChat: (chat: ChatProps) => void;
   setCurrentSubChat: (chat: ChatProps) => void;
   setCurrentThreadChat: (chat: ThreadProps) => void;
@@ -30,7 +30,7 @@ type MessagesPaneProps = {
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
   currentMainChatId: number;
-  setCurrentPreviewTask: (value: PreviewTaskProps | undefined) => void;
+  setCurrentPreviewTask: (value: TaskProps | undefined) => void;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -70,7 +70,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
       }}
     >
       <Sheet sx={{ backgroundColor: 'background.surface' }}>
-        <MessagesPaneHeader
+        <MainChatPaneHeader
           myself={myself}
           chat={chat}
           subChat={subChat}

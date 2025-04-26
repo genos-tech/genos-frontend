@@ -31,7 +31,7 @@ interface SignUpFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
-export function SignUpForm() {
+export const SignUpForm = () => {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

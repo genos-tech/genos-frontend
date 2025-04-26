@@ -1,21 +1,24 @@
 import { useNavigate } from 'react-router-dom';
-import GlobalStyles from '@mui/joy/GlobalStyles';
-import Avatar from '@mui/joy/Avatar';
-import Box from '@mui/joy/Box';
-import Divider from '@mui/joy/Divider';
-import IconButton from '@mui/joy/IconButton';
-import List from '@mui/joy/List';
-import ListItem from '@mui/joy/ListItem';
+import {
+  GlobalStyles,
+  Avatar,
+  Box,
+  Divider,
+  IconButton,
+  List,
+  ListItem,
+  Sheet,
+} from '@mui/joy';
 import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
-import Sheet from '@mui/joy/Sheet';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import QuestionAnswerRoundedIcon from '@mui/icons-material/QuestionAnswerRounded';
 import NoteAltIcon from '@mui/icons-material/NoteAlt';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+
+import { ColorSchemeToggle } from './colorSchemeToggle';
 import { useAuth } from "../../context/AuthContext";
 import { TeamDropdown } from '../../features/admin/components/teamDropdown';
-import { ColorSchemeToggle } from './colorSchemeToggle';
 import { closeSidebar } from '../../utils';
 import { UserProps } from '../../types/admin';
 
@@ -26,8 +29,7 @@ type SidebarProps = {
   setMyself: (me: UserProps) => void;
   setOpeningService: (service: number) => void;
 };
-
-export default function Sidebar(props: SidebarProps) {
+export const Sidebar = (props: SidebarProps) => {
   const { myself, setMyself, setOpeningService } = props
   const { setAccessToken } = useAuth();
   const navigate = useNavigate();

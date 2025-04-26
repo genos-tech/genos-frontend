@@ -1,5 +1,9 @@
 import { useEffect } from "react";
 import { Socket } from "socket.io-client";
+
+import { addChat } from '../services/addChat';
+import { addMessage } from "../services/addMessage";
+import { addThreadMessage } from "../services/addThreadMessage";
 import { UserProps } from '../../../types/admin';
 import {
     AllChatProps,
@@ -10,13 +14,9 @@ import {
     NewThreadMessageProps,
     ThreadProps
 } from "../../../types/chat";
-import { addChat } from '../services/addChat';
-import { addMessage } from "../services/addMessage";
-import { addThreadMessage } from "../services/addThreadMessage";
-
 
 type wsMessageHandleHookProps = {
-    socket: Socket;
+    socket: Socket | null;
     accessToken: string | null;
     myself: UserProps;
     allChats: AllChatProps[];
@@ -28,7 +28,6 @@ type wsMessageHandleHookProps = {
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setAllChats: () => void;
 };
-
 
 export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
     const {
@@ -50,7 +49,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
             chatId: newMessage.chatId,
             chatName: newMessage.chatName,
             isDm: newMessage.isDm ? true : false,
-            dmPartnerUserId: newMessage.dmPartnerUserId,
+            dmPartnerUserId: newMessage.isDm ? newMessage.dmPartnerUserId : null,
             unread: true,
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
@@ -64,6 +63,10 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
 
 
     useEffect(() => {
+        if (socket === null) {
+            return;
+        }
+
         socket.on("connect", () => {
             // // Join to initial user room
             // socket.emit("join", {
@@ -80,7 +83,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
         });
 
         socket.on("message", async (message) => {
-            // console.log("message:", message)
+            console.log("message:", message)
             if (message.chatId !== null) {
                 var fromMe: boolean = false
                 var toMe: boolean = false
@@ -103,7 +106,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         chatName: newMessage.chatName,
                         threadId: newThreadMessage.threadId,
                         isDm: newMessage.isDm,
-                        dmPartnerUserId: newMessage.dmPartnerUserId,
+                        dmPartnerUserId: newMessage.isDm ? newMessage.dmPartnerUserId : null,
                         taskId: newThreadMessage.taskId,
                         unread: false,
                         messages: currentThreadChat ? [...currentThreadChat.messages, newThreadMessage] : [newThreadMessage],
@@ -176,7 +179,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         chatId: newMessage.chatId,
                         chatName: newMessage.chatName,
                         isDm: newMessage.isDm,
-                        dmPartnerUserId: newMessage.dmPartnerUserId,
+                        dmPartnerUserId: newMessage.isDm ? newMessage.dmPartnerUserId : null,
                         unread: false,
                         messages: [...currentMainChat.messages, newMessage],
                         latestMessage: newMessage,

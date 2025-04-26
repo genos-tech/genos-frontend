@@ -1,16 +1,18 @@
 import { UserProps } from '../../../types/admin'
-import { TaskCommentProps } from '../../../types/tasks';
+import { TaskProps } from '../../../types/tasks';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
-type LoadTaskCommentsProps = {
+type LoadTaskTableProps = {
     myself: UserProps;
-    taskId: number;
+    chatType: string;
+    chatId: number;
+    threadId: number;
     accessToken: string;
 };
 
-export const loadTaskComments = async (props: LoadTaskCommentsProps) => {
-    const { myself, taskId, accessToken } = props
+export const loadSpecificTaskByThreadId = async (props: LoadTaskTableProps) => {
+    const { myself, chatType, chatId, threadId, accessToken } = props
     if (!base_url) {
         const errorMsg = "API base URL is not defined.";
         console.error(errorMsg);
@@ -18,7 +20,7 @@ export const loadTaskComments = async (props: LoadTaskCommentsProps) => {
     }
 
     try {
-        const response = await fetch(`${base_url}/task/getComments/?task_id=${taskId}`, {
+        const response = await fetch(`${base_url}/task/getTaskByThreadId/?team_id=${myself.teamId}&chat_type=${chatType}&chat_id=${chatId}&thread_id=${threadId}`, {
             method: "GET",
             headers: {
                 'Content-Type': 'application/json',
@@ -26,10 +28,10 @@ export const loadTaskComments = async (props: LoadTaskCommentsProps) => {
             },
         });
 
-        const data: TaskCommentProps[] = await response.json();
+        const data: TaskProps[] = await response.json();
 
         if (!response.ok) {
-            const errorMsg = "Failed to get task comments";
+            const errorMsg = "Failed to get a task";
             throw new Error(errorMsg);
         }
         return data || [];
@@ -38,7 +40,7 @@ export const loadTaskComments = async (props: LoadTaskCommentsProps) => {
         const errorMsg =
             error instanceof Error
                 ? error.message
-                : "An unknown error occurred during fetching task comments.";
+                : "An unknown error occurred during loading a task.";
 
         console.error(errorMsg);
         return [];

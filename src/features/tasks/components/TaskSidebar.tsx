@@ -1,29 +1,32 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import GlobalStyles from '@mui/joy/GlobalStyles';
-import Box from '@mui/joy/Box';
-import Divider from '@mui/joy/Divider';
-import List from '@mui/joy/List';
-import ListItem from '@mui/joy/ListItem';
+import {
+  GlobalStyles,
+  Box,
+  Divider,
+  List,
+  ListItem,
+  ListItemContent,
+  Typography,
+  Sheet,
+  Autocomplete,
+  CircularProgress
+} from '@mui/joy';
 import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
-import ListItemContent from '@mui/joy/ListItemContent';
-import Typography from '@mui/joy/Typography';
-import Sheet from '@mui/joy/Sheet';
-import Autocomplete from '@mui/joy/Autocomplete';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import AssignmentRoundedIcon from '@mui/icons-material/AssignmentRounded';
 import FreeCancellationIcon from '@mui/icons-material/FreeCancellation';
 import BusinessIcon from '@mui/icons-material/Business';
 import WorkIcon from '@mui/icons-material/Work';
+import AddIcon from '@mui/icons-material/Add';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+
+import { loadTeamTaskList } from '../services/loadTaskSearchList';
+import { loadTeamProjects } from '../services/loadTeamProjects';
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from '../../../types/admin';
 import { SearchTeamTasksResponse } from '../../../types/chat'
 import { ProjectProps } from "../../../types/tasks";
-import { loadTeamTaskList } from '../services/loadTaskSearchList';
-import { loadTeamProjects } from '../services/loadTeamProjects';
-import CircularProgress from '@mui/joy/CircularProgress';
-import AddIcon from '@mui/icons-material/Add';
 import { loadAllTeams } from '../../admin/services/loadAllTeams';
 import { Team } from '../../../types/admin';
 
@@ -72,7 +75,7 @@ type TaskSidebarProps = {
   setOpenCreateProject: (value: boolean) => void,
 }
 
-export default function TaskSidebar(props: TaskSidebarProps) {
+export const TaskSidebar = (props: TaskSidebarProps) => {
   const { myself,
     setMyself,
     currentProject,

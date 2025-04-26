@@ -1,4 +1,5 @@
 import List from '@mui/joy/List';
+
 import { ChatListItem } from './chatListItem';
 import { UserProps } from '../../../types/admin';
 import { ChatProps, AllChatProps } from '../../../types/chat';
@@ -50,7 +51,7 @@ export const ChatList = (props: ChatListProps) => {
                 .map((chat) =>
                     chat.isDm === isDm && (
                         <ChatListItem
-                            key={chat.chatId}
+                            key={`${chat.chatId}-${chat.isDm}-${chat.chatName}`}
                             chat={chat}
                             myself={myself}
                             currentMainChat={currentMainChat}

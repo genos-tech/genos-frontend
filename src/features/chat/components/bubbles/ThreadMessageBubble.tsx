@@ -5,9 +5,9 @@ import { BubbleAttachmentSheet } from './BubbleAttachmentSheet';
 import { BubbleLikeReactionButton } from "./BubbleLikeReactionButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { ThreadMessageProps, ThreadProps } from '../../../../types/chat';
-import AvatarWithStatus from '../../../../components/utils/avatarWithStatus';
+import { AvatarWithStatus } from '../../../../components/utils/avatarWithStatus';
 import { extractHHMM } from '../../../../components/utils/dateUtils';
-import BnPreview from '../../../../components/blockNote/bnPreview';
+import { BnPreview } from '../../../../components/blockNote/bnPreview';
 
 type threadMessageBubbleProps = ThreadMessageProps & {
   thread: ThreadProps;

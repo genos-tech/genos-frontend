@@ -8,7 +8,7 @@ import { UserProps } from '../../../../types/admin';
 import { AllChatProps, ChatProps } from '../../../../types/chat';
 
 type Props = {
-    socket: Socket;
+    socket: Socket | null;
     myself: UserProps;
     open: boolean;
     setOpen: (value: boolean) => void;

@@ -5,11 +5,11 @@ import { Socket } from "socket.io-client";
 import { ModalCreateGM } from './modals/ModalCreateGM';
 import { ChatSearch } from './ChatSearch';
 import { ChatList } from './ChatList';
-import { DMDivider, GMDivider, PinnedDivider } from './ChatPaneDividers';
+import { DMDivider, GMDivider, PinnedDivider } from './ChatSidebarDividers';
 import { UserProps } from '../../../types/admin';
 import { ChatProps, AllChatProps } from '../../../types/chat';
 
-type ChatsPaneProps = {
+type ChatSidebarProps = {
   myself: UserProps;
   allChats: AllChatProps[];
   setAllChats: (chat: AllChatProps[]) => void;
@@ -17,12 +17,12 @@ type ChatsPaneProps = {
   setCurrentSubChat: (chat: ChatProps) => void;
   currentMainChat: ChatProps;
   currentSubChat: ChatProps;
-  socket: Socket;
+  socket: Socket | null;
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
 };
 
-export const ChatsPane = (props: ChatsPaneProps) => {
+export const ChatSidebar = (props: ChatSidebarProps) => {
   const { myself,
     allChats,
     setAllChats,

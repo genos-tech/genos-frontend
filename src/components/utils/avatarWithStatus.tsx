@@ -5,8 +5,7 @@ type AvatarWithStatusProps = AvatarProps & {
   chatName: string;
   online?: boolean;
 };
-
-export default function AvatarWithStatus(props: AvatarWithStatusProps) {
+export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
   const { online = false, chatName, ...other } = props;
   return (
     <div>

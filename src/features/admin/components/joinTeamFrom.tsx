@@ -25,7 +25,7 @@ import { createTeam } from "../services/createTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadAllTeams } from '../services/loadAllTeams';
 import { createDMChat } from "../../chat/services/createDMChat";
-import { sentDMMessage } from "../../chat/services/sentDMMessage";
+import { sentDMMessage } from "../../chat/services/sendDMMessage";
 import { sleepMilliSeconds } from "../../../components/utils/sleep";
 import { useAuth } from "../../../context/AuthContext";
 import { Team, CreateDMResponse, JoinTeamResponse } from '../../../types/admin';
@@ -37,7 +37,7 @@ interface JoinTeamFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
-export function JoinTeam() {
+export const JoinTeam = () => {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const { accessToken } = useAuth();

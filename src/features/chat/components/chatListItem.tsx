@@ -15,7 +15,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import { popSpecificMessages } from "../services/popSpecificMessages";
-import AvatarWithStatus from '../../../components/utils/avatarWithStatus';
+import { AvatarWithStatus } from '../../../components/utils/avatarWithStatus';
 import { UserProps } from '../../../types/admin';
 import { AllChatProps, ChatProps } from '../../../types/chat';
 import { toggleMessagesPane } from '../../../utils';
@@ -33,7 +33,8 @@ type ChatListItemProps = ListItemButtonProps & {
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
-  const { chat,
+  const {
+    chat,
     myself,
     currentMainChat,
     currentSubChat,
@@ -41,6 +42,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
     setCurrentSubChat,
     isSubChatVisible,
     setIsSubChatVisible } = props;
+
   const selected = currentMainChat.chatName === chat.chatName || (isSubChatVisible && currentSubChat.chatName === chat.chatName);
   const isYou = myself.userId === chat.dmPartnerUserId;
 
@@ -51,7 +53,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
       chatId: chat.chatId,
       chatName: chat.chatName,
       isDm: chat.isDm,
-      dmPartnerUserId: chat.dmPartnerUserId,
+      dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
       unread: false,
       messages: messages,
       latestMessage: messages[messages.length - 1],
@@ -116,10 +118,15 @@ export const ChatListItem = (props: ChatListItemProps) => {
               <Stack direction="row" spacing={1}>
                 <div>
                   {chat.isDm ? (
-                    <AvatarWithStatus size="sm" chatName={chat.chatName} online={always_online} src="" />
+                    <AvatarWithStatus
+                      size="sm"
+                      chatName={chat.chatName}
+                      online={always_online}
+                      src=""
+                    />
                   ) : (
-                    <Avatar size="md">
-                      <GroupsIcon sx={{ fontSize: 20 }} />
+                    <Avatar size="sm">
+                      <GroupsIcon />
                     </Avatar>
                   )}
                 </div>

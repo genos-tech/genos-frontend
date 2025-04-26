@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
 import { Socket } from "socket.io-client";
-import { Box, IconButton } from "@mui/joy";
-import { en } from "@blocknote/core/locales";
+import { useState, useEffect } from 'react';
+import { useColorScheme } from '@mui/joy/styles';
+import { Box, IconButton, Tooltip } from "@mui/joy";
 import SendIcon from '@mui/icons-material/Send';
-import "@blocknote/core/fonts/inter.css";
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
+import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import { codeBlock } from "@blocknote/code-block";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
@@ -25,31 +28,13 @@ import {
     filterSuggestionItems,
     defaultBlockSpecs,
 } from "@blocknote/core";
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-// This packages some of the most used languages in on-demand bundle
-import { codeBlock } from "@blocknote/code-block";
+
 import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { Mention } from "./Mention";
-import EmojiPicker from '../emojiInput/EmojiPicker'
-import { useColorScheme } from '@mui/joy/styles';
+import { EmojiPicker } from '../emojiInput/EmojiPicker'
 import { UserProps } from '../../types/admin';
 import { TaskCommentProps } from '../../types/tasks'
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import Tooltip from '@mui/joy/Tooltip';
-
-function getCurrentTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
-
+import { getCurrentTimestamp } from "../utils/dateUtils";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -99,23 +84,23 @@ const getCustomSlashMenuItems = (
 
 type BnTaskCommentEditorProps = {
     myself: UserProps;
-    socket?: Socket;
+    socket: Socket | null;
     projectId: number;
     taskId: number;
-    setTaskUpdate: (value: boolean) => void;
+    setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
 }
 
-export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
+export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const {
         myself,
         socket,
         projectId,
         taskId,
-        setTaskUpdate,
+        setTaskUpdated,
         taskComments,
         setTaskComments,
         isCommentUpdated,
@@ -192,7 +177,7 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
                     theme={mode === 'dark' ? 'dark' : 'light'}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onBlur={() => setTaskUpdate(true)}
+                    onBlur={() => { if (setTaskUpdated) { setTaskUpdated(true) } }}
                     onChange={() => (setEditorDocLength(editor.document.length))}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
@@ -329,7 +314,3 @@ export function BnTaskCommentEditor(props: BnTaskCommentEditorProps) {
         </Box >
     );
 }
-
-export default BnTaskCommentEditor;
-
-

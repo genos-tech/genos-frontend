@@ -1,23 +1,22 @@
 import { Box } from "@mui/joy";
-import "@blocknote/core/fonts/inter.css";
-import { BlockNoteView } from "@blocknote/mantine";
-import "@blocknote/mantine/style.css";
-import { useCreateBlockNote } from "@blocknote/react";
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-import { PartialBlock } from "@blocknote/core";
 import { useColorScheme } from '@mui/joy/styles';
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/mantine/style.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import { useCreateBlockNote } from "@blocknote/react";
+import { PartialBlock } from "@blocknote/core";
 import { codeBlock } from "@blocknote/code-block";
 
 type BnPreviewProps = {
     content: PartialBlock[];
     isSent: boolean;
+    customClassName?: string;
 }
-
-export function BnPreview(props: BnPreviewProps) {
-    const { content, isSent } = props;
+export const BnPreview = (props: BnPreviewProps) => {
+    const { content, isSent, customClassName } = props;
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = isSent ? `bn-preview-box-${mode}-me` : `bn-preview-box-${mode}`
+    const _bnBoxClassName: string = isSent ? `bn-preview-box-${mode}-me` : `bn-preview-box-${mode}`
+    const bnBoxClassName = customClassName ? `${customClassName}-${mode}` : _bnBoxClassName;
 
     const editor = useCreateBlockNote({
         codeBlock,
@@ -39,10 +38,5 @@ export function BnPreview(props: BnPreviewProps) {
             >
             </BlockNoteView>
         </Box>
-
     );
 }
-
-export default BnPreview;
-
-

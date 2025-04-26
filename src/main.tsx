@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 import './index.css'
-import App from './App'
+import { App } from './App'
 import { SignInForm } from './features/admin/components/SignInForm'
 import { SignUpForm } from './features/admin/components/SignUpForm'
 import { PageNotFound } from './components/layout/pageNotFound'

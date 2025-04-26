@@ -119,13 +119,6 @@ export type NewThreadMessageProps = {
     };
 };
 
-export type AttachmentFileProps = {
-    file: File,
-    file_base64?: string,
-    name?: string,
-    type?: string,
-}
-
 // Other Props
 export type SearchListProps = {
     id: number,

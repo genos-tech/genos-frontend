@@ -11,7 +11,7 @@ type LoadingProps = {
     setCurrentMainChat: (value: ChatProps) => void;
 }
 
-export default function Loading(props: LoadingProps) {
+export const Loading = (props: LoadingProps) => {
     const {
         myself,
         setIsLoading,

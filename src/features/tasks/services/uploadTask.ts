@@ -1,11 +1,14 @@
 import { UserProps } from "../../../types/admin";
-import { TaskFormProps } from "../../../types/tasks";
+import { TaskProps } from "../../../types/tasks";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type uploadTaskProps = {
     myself: UserProps,
-    taskContents: TaskFormProps,
+    taskContents: TaskProps,
+    isDm: boolean | null,
+    chatId: number | null,
+    threadId: number | null,
     accessToken: string,
     setIsSubmitted: (value: boolean) => void,
     setTitleError: (value: string) => void,
@@ -16,6 +19,9 @@ type uploadTaskProps = {
 export const uploadTask = async (props: uploadTaskProps) => {
     const { myself,
         taskContents,
+        isDm,
+        chatId,
+        threadId,
         accessToken,
         setIsSubmitted,
         setTitleError,
@@ -51,6 +57,9 @@ export const uploadTask = async (props: uploadTaskProps) => {
                         general_url: (taskContents.generalLink.url !== "") ? taskContents.generalLink.url : null,
                         general_url_title: (taskContents.generalLink.title !== "") ? taskContents.generalLink.title : null,
                         tags: taskContents.tags,
+                        chat_type: (isDm === null || isDm === undefined) ? null : (isDm ? "dm" : "gm"),
+                        chat_id: chatId || null,
+                        thread_id: threadId || null
                     }),
                 });
 
@@ -85,6 +94,8 @@ export const uploadTask = async (props: uploadTaskProps) => {
 
                     setIsSubmitted(true)
                 }
+            } else {
+                console.error("taskContents.project is null:", taskContents.project)
             }
 
         } catch (error) {

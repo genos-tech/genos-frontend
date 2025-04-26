@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/joy';
+import { Box, Typography, Stack } from '@mui/joy';
 
 type BubbleUserNameTypes = {
     userName: string,
@@ -9,23 +9,46 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
     const { userName, isSent, tsSent } = props
     return (
         <Box sx={{ flex: 1 }}>
-            <Typography
-                level="body-xs"
-                sx={[
-                    {
-                        lineHeight: 2
-                    },
-                    isSent
-                        ? {
-                            color: 'background.body',
-                        }
-                        : {
-                            color: 'var(--joy-palette-text-primary)',
-                        },
-                ]}
+            <Stack
+                direction="column"
+                justifyContent={isSent ? "flex-end" : "flex-start"}
+                alignItems="left"
             >
-                {userName} &nbsp;  {tsSent}
-            </Typography>
+                <Typography
+                    level="body-xs"
+                    sx={[
+                        {
+                            lineHeight: 1.5
+                        },
+                        isSent
+                            ? {
+                                color: 'background.body',
+                            }
+                            : {
+                                color: 'var(--joy-palette-text-primary)',
+                            },
+                    ]}
+                >
+                    {userName}
+                </Typography>
+                <Typography
+                    level="body-xs"
+                    sx={[
+                        {
+                            lineHeight: 1.5
+                        },
+                        isSent
+                            ? {
+                                color: 'background.body',
+                            }
+                            : {
+                                color: 'var(--joy-palette-text-primary)',
+                            },
+                    ]}
+                >
+                    {tsSent}
+                </Typography>
+            </Stack>
         </Box>
     )
 }

@@ -3,7 +3,6 @@ import axios from 'axios';
 import { authApi } from '../../../services/api';
 import { UserProps } from '../../../types/admin';
 
-
 export const loadSearchList = async (
     myself: UserProps,
     accessToken: string | null

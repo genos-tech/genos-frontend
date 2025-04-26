@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { io, Socket } from "socket.io-client";
+import { Socket } from "socket.io-client";
 import { Box, Sheet } from '@mui/joy';
 import { useColorScheme } from '@mui/joy/styles';
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
-import { ThreadPane } from './threadMessagePane';
-import { ChatsPane } from './components/chatsPane';
-import { MessagesPane } from './mainMessagesPane';
-import { MessagesSubPane } from './subMessagesPane';
+import { ThreadPane } from './ThreadChatPane';
+import { ChatSidebar } from './components/ChatSidebar';
+import { MessagesPane } from './MainChatPane';
+import { MessagesSubPane } from './SubChatPane';
 import { popAllChats } from './services/popAllChats';
 import { UserProps } from '../../types/admin';
 import {
@@ -15,20 +15,18 @@ import {
     ChatProps,
     ThreadProps
 } from "../../types/chat";
-import { PreviewTaskProps, ProjectProps } from "../../types/tasks";
-import { ModalCreateTag } from '../tasks/components/modals/modalCreateTag';
-import { ModalCreateProject } from '../tasks/components/modals/modalCreateProject';
+import { TaskProps, ProjectProps } from "../../types/tasks";
+import { ModalCreateTag } from '../tasks/components/modals/ModalCreateTag';
+import { ModalCreateProject } from '../tasks/components/modals/ModalCreateProject';
 import { loadSpecificTask } from '../tasks/services/loadSpecificTask';
-import CreateTaskFromThread from "../tasks/components/CreateTaskFormFromThread";
-import TaskPreviewFromThread from '../tasks/components/previewTaskFromThread';
-import Sidebar from '../../components/layout/sidebar';
+import { CreateTaskForm } from "../tasks/components/CreateTaskForm";
+import { TaskPreview } from '../tasks/components/TaskPreview';
+import { Sidebar } from '../../components/layout/sidebar';
 import { useAuth } from "../../context/AuthContext";
-import { wsMessageHandleHook } from "./hooks/WSHooks";
+import { wsMessageHandleHook } from "./hooks/WSChatHooks";
 
-const ws_url = import.meta.env.VITE_WS_BASE_URL;
-
-
-type HomeProps = {
+type ChatHomeProps = {
+    socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     currentMainChat: ChatProps,
@@ -36,15 +34,16 @@ type HomeProps = {
     setOpeningService: (service: number) => void;
 };
 
-export default function Home(props: HomeProps) {
-    const { mode } = useColorScheme();
-    const { myself,
+export const ChatHome = (props: ChatHomeProps) => {
+    const {
+        socket,
+        myself,
         setMyself,
         currentMainChat,
         setCurrentMainChat,
         setOpeningService,
     } = props;
-
+    const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
@@ -60,30 +59,12 @@ export default function Home(props: HomeProps) {
     const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
-    const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>();
+    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
 
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
     const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
     const [currentThreadChatId, setCurrentThreadChatId] = useState<number>(-1);
-
-    const socket: Socket = io(ws_url, {
-        reconnection: true,          // Enable reconnection
-        reconnectionAttempts: 5,     // Try to reconnect 5 times
-        reconnectionDelay: 1000,     // Wait 1 second before reconnecting
-        reconnectionDelayMax: 5000,  // Max delay between reconnection attempts
-        timeout: 10000,               // Timeout for the connection attempt
-        withCredentials: true,
-        query: {
-            teamId: localStorage.getItem("teamId"),
-            userId: localStorage.getItem("userId"),
-            userName: localStorage.getItem("userName"),
-            userEmail: localStorage.getItem("userEmail"),
-        },
-        extraHeaders: {
-            Authorization: accessToken || ""
-        },
-    });
 
     const _setAllChats = async () => {
         const allChats: AllChatProps[] = await popAllChats()
@@ -130,11 +111,11 @@ export default function Home(props: HomeProps) {
     }, [currentThreadChat]);
 
     useEffect(() => {
-        if (currentProject && currentPreviewTaskId !== -1) {
+        if (currentPreviewTask?.project && currentPreviewTaskId !== -1) {
             (async () => {
-                const loadedTask: PreviewTaskProps[] = await loadSpecificTask({
+                const loadedTask: TaskProps[] = await loadSpecificTask({
                     myself: myself,
-                    projectId: currentProject.projectId,
+                    projectId: currentPreviewTask.project?.projectId || -1,
                     taskId: currentPreviewTaskId,
                     accessToken: accessToken || ""
                 });
@@ -229,7 +210,7 @@ export default function Home(props: HomeProps) {
                                 top: 10,
                             }}
                         >
-                            <ChatsPane
+                            <ChatSidebar
                                 myself={myself}
                                 allChats={allChats}
                                 setAllChats={setAllChats}
@@ -309,17 +290,16 @@ export default function Home(props: HomeProps) {
                                         boxShadow: '0 0 0 1px grey'
                                     }}
                                 >
-                                    <TaskPreviewFromThread
+                                    <TaskPreview
+                                        socket={socket}
                                         myself={myself}
+                                        setCurrentProject={setCurrentProject}
                                         currentPreviewTask={currentPreviewTask}
-                                        setOpenCreateProject={setOpenCreateProject}
-                                        setOpenCreateTag={setOpenCreateTag}
-                                        setIsOpeningTask={setIsOpeningTask}
                                         setIsCreatingTask={setIsCreatingTask}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
-                                        isNewProjectCreated={isNewProjectCreated}
-                                        isNewTagCreated={isNewTagCreated}
-                                        setOpeningService={setOpeningService}
+                                        setCurrentPreviewTask={setCurrentPreviewTask}
+                                        setOpenCreateProject={setOpenCreateProject}
+                                        setOpenCreateTag={setOpenCreateTag}
                                     />
                                 </Box>
                             </Panel>
@@ -356,7 +336,7 @@ export default function Home(props: HomeProps) {
                                         boxShadow: '0 0 0 1px grey'
                                     }}
                                 >
-                                    <CreateTaskFromThread
+                                    <CreateTaskForm
                                         myself={myself}
                                         isDm={currentThreadChat.isDm}
                                         chatId={currentThreadChat.chatId}
@@ -366,6 +346,7 @@ export default function Home(props: HomeProps) {
                                         setIsOpeningTask={setIsOpeningTask}
                                         setOpenCreateProject={setOpenCreateProject}
                                         setOpenCreateTag={setOpenCreateTag}
+                                        currentProject={currentProject}
                                         setCurrentProject={setCurrentProject}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         isNewProjectCreated={isNewProjectCreated}

@@ -1,6 +1,6 @@
 import { Sheet } from '@mui/joy';
 
-export default function Header() {
+export const Header = () => {
     return (
         <Sheet
             sx={{

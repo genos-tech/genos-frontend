@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Menu, MenuItem, IconButton, ListItemDecorator } from '@mui/joy';
 import PaletteIcon from '@mui/icons-material/Palette';
 
-import { TagColorOption } from '../../../types/tasks';
+import { TagColorOption } from '../../../../../types/tasks';
 
 
 const COLORS: TagColorOption[] = [

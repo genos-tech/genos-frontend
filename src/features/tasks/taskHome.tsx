@@ -1,47 +1,50 @@
 import { useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
 import {
-    IconButton
+    IconButton,
+    CssBaseline,
+    Box,
+    Typography,
+    Dropdown,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Autocomplete,
+    CircularProgress
 } from "@mui/joy";
 import { CssVarsProvider } from '@mui/joy/styles';
-import CssBaseline from '@mui/joy/CssBaseline';
-import Box from '@mui/joy/Box';
 import AddIcon from '@mui/icons-material/Add';
-import Typography from '@mui/joy/Typography';
-import Dropdown from '@mui/joy/Dropdown';
-import Menu from '@mui/joy/Menu';
-import MenuButton from '@mui/joy/MenuButton';
-import MenuItem from '@mui/joy/MenuItem';
 import MoreVert from '@mui/icons-material/MoreVert';
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import Sidebar from '../../components/layout/sidebar';
-import TaskSidebar from './components/TaskSidebar';
-import TaskPreview from './components/previewTask';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+
+import { TaskSidebar } from './components/TaskSidebar';
+import { TaskPreview } from './components/TaskPreview';
 import TaskTable from './components/TaskTable';
+import { CreateTaskForm } from "./components/CreateTaskForm";
+import { loadSpecificTask } from './services/loadSpecificTask';
+import { loadTeamProjects } from './services/loadTeamProjects';
+import { loadTeamTaskList } from './services/loadTaskSearchList';
+import { ModalCreateTag } from './components/modals/ModalCreateTag';
+import { ModalCreateProject } from './components/modals/ModalCreateProject';
+import { ModalCreateTeam } from './components/modals/ModalCreateTeam';
+import { Sidebar } from '../../components/layout/sidebar';
 import { UserProps } from '../../types/admin';
 import { SearchTeamTasksResponse } from '../../types/chat';
-import { ProjectProps, TaskTableProps, PreviewTaskProps } from "../../types/tasks";
-import { CreateTaskForm } from "./components/CreateTaskForm";
+import { ProjectProps, TaskTableProps, TaskProps } from "../../types/tasks";
 import FetchSpecificProjectTasksWorker from "../../workers/fetchSpecificProjectTasksWorker.ts?worker";
-import { loadSpecificTask } from './services/loadSpecificTask';
 import { useAuth } from "../../context/AuthContext";
-import { loadTeamProjects } from './services/loadTeamProjects';
-import Autocomplete from '@mui/joy/Autocomplete';
-import { loadTeamTaskList } from './services/loadTaskSearchList';
-import CircularProgress from '@mui/joy/CircularProgress';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import { ModalCreateTag } from './components/modals/modalCreateTag';
-import { ModalCreateProject } from './components/modals/modalCreateProject';
-import { ModalCreateTeam } from './components/modals/modalCreateTeam';
 import LoadTeamTaskWorker from "../../workers/loadTeamTaskWorker.ts?worker";
 
-type TaskProps = {
+type TaskHomeProps = {
+    socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setOpeningService: (service: number) => void;
 };
 
-export default function TaskHome(props: TaskProps) {
-    const { myself, setMyself, setOpeningService } = props
+export const TaskHome = (props: TaskHomeProps) => {
+    const { socket, myself, setMyself, setOpeningService } = props
     const { accessToken } = useAuth();
 
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
@@ -50,7 +53,7 @@ export default function TaskHome(props: TaskProps) {
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
-    const [currentPreviewTask, setCurrentPreviewTask] = useState<PreviewTaskProps>();
+    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
     const [projectTasks, setProjectTasks] = useState<TaskTableProps[]>([]);
 
     const [openCreateTeam, setOpenCreateTeam] = useState(false);
@@ -134,23 +137,31 @@ export default function TaskHome(props: TaskProps) {
 
     const fetchProjectTasks = async (projectId: number): Promise<string> => {
         return new Promise((resolve, reject) => {
-            const fetchSpecificProjectTasksWorker = new FetchSpecificProjectTasksWorker();
-            fetchSpecificProjectTasksWorker.postMessage({
-                projectId: projectId,
-            });
-            fetchSpecificProjectTasksWorker.onmessage = (event) => {
-                const fetchedTasks: TaskTableProps[] = event.data;
-                if (fetchedTasks !== undefined) {
-                    setProjectTasks(fetchedTasks)
+            const loadTeamTaskWorker = new LoadTeamTaskWorker();
+            loadTeamTaskWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadTeamTaskWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    const fetchSpecificProjectTasksWorker = new FetchSpecificProjectTasksWorker();
+                    fetchSpecificProjectTasksWorker.postMessage({
+                        projectId: projectId,
+                    });
+                    fetchSpecificProjectTasksWorker.onmessage = (event) => {
+                        const fetchedTasks: TaskTableProps[] = event.data;
+                        if (fetchedTasks !== undefined) {
+                            setProjectTasks(fetchedTasks)
+                        } else {
+                            console.error("Failed to fetch project tasks:", fetchedTasks)
+                        }
+                        resolve(event.data);
+                        fetchSpecificProjectTasksWorker.terminate();
+                    };
+                    fetchSpecificProjectTasksWorker.onerror = (error) => {
+                        reject(error);
+                        fetchSpecificProjectTasksWorker.terminate();
+                    };
                 } else {
-                    console.error("Failed to fetch project tasks:", fetchedTasks)
+                    console.error("Filed to load updated team tasks");
                 }
-                resolve(event.data);
-                fetchSpecificProjectTasksWorker.terminate();
-            };
-            fetchSpecificProjectTasksWorker.onerror = (error) => {
-                reject(error);
-                fetchSpecificProjectTasksWorker.terminate();
             };
         });
     };
@@ -164,7 +175,7 @@ export default function TaskHome(props: TaskProps) {
     useEffect(() => {
         if (currentProject && currentPreviewTaskId !== -1) {
             (async () => {
-                const loadedTask: PreviewTaskProps[] = await loadSpecificTask({
+                const loadedTask: TaskProps[] = await loadSpecificTask({
                     myself: myself,
                     projectId: currentProject.projectId,
                     taskId: currentPreviewTaskId,
@@ -176,23 +187,23 @@ export default function TaskHome(props: TaskProps) {
 
                 if (isNewTaskCreated) {
                     setProjectTasks((prev) => [...prev, {
-                        id: loadedTask[0].id,
+                        id: loadedTask[0].id || null,
                         title: loadedTask[0].title || "",
-                        priority: loadedTask[0].priority.priority,
-                        effortLevel: loadedTask[0].effortLevel.level,
-                        createdDate: loadedTask[0].createdDate,
-                        dueDate: loadedTask[0].dueDate,
-                        daysLeft: loadedTask[0].daysLeft,
-                        status: loadedTask[0].status.status,
-                        assigneeId: loadedTask[0].assignee.userId,
-                        assigneeEmail: loadedTask[0].assignee.userEmail,
-                        assigneeName: loadedTask[0].assignee.userName,
-                        parentTaskId: loadedTask[0].parentTaskId,
-                        threadId: loadedTask[0].threadId,
-                        tags: loadedTask[0].tags,
-                        concatTags: loadedTask[0].concatTags,
-                        teamId: myself.teamId,
-                        projectId: loadedTask[0].project.projectId
+                        priority: loadedTask[0].priority.priority || null,
+                        effortLevel: loadedTask[0].effortLevel.level || null,
+                        createdDate: loadedTask[0].createdDate || null,
+                        dueDate: loadedTask[0].dueDate || null,
+                        daysLeft: loadedTask[0].daysLeft || null,
+                        status: loadedTask[0].status.status || null,
+                        assigneeId: loadedTask[0].assignee.userId || null,
+                        assigneeEmail: loadedTask[0].assignee.userEmail || null,
+                        assigneeName: loadedTask[0].assignee.userName || null,
+                        parentTaskId: loadedTask[0].parentTaskId || null,
+                        threadId: loadedTask[0].threadId || null,
+                        tags: loadedTask[0].tags || [],
+                        concatTags: loadedTask[0].concatTags || null,
+                        teamId: myself.teamId || null,
+                        projectId: loadedTask[0].project?.projectId || null
                     }])
                     setIsNewTaskCreated(false)
                 }
@@ -207,23 +218,23 @@ export default function TaskHome(props: TaskProps) {
                 prevTasks.map(task =>
                     task.id === currentPreviewTask.id
                         ? {
-                            id: currentPreviewTask.id,
-                            title: currentPreviewTask.title,
-                            priority: currentPreviewTask.priority.priority,
-                            effortLevel: currentPreviewTask.effortLevel.level,
-                            createdDate: currentPreviewTask.createdDate,
-                            dueDate: currentPreviewTask.dueDate,
-                            daysLeft: currentPreviewTask.daysLeft,
-                            status: currentPreviewTask.status.status,
-                            assigneeId: currentPreviewTask.assignee.userId,
-                            assigneeEmail: currentPreviewTask.assignee.userEmail,
-                            assigneeName: currentPreviewTask.assignee.userName,
-                            parentTaskId: currentPreviewTask.parentTaskId,
-                            threadId: currentPreviewTask.threadId,
-                            tags: currentPreviewTask.tags,
-                            concatTags: currentPreviewTask.concatTags,
-                            teamId: myself.teamId,
-                            projectId: currentPreviewTask.project.projectId
+                            id: currentPreviewTask.id || null,
+                            title: currentPreviewTask.title || null,
+                            priority: currentPreviewTask.priority.priority || null,
+                            effortLevel: currentPreviewTask.effortLevel.level || null,
+                            createdDate: currentPreviewTask.createdDate || null,
+                            dueDate: currentPreviewTask.dueDate || null,
+                            daysLeft: currentPreviewTask.daysLeft || null,
+                            status: currentPreviewTask.status.status || null,
+                            assigneeId: currentPreviewTask.assignee.userId || null,
+                            assigneeEmail: currentPreviewTask.assignee.userEmail || null,
+                            assigneeName: currentPreviewTask.assignee.userName || null,
+                            parentTaskId: currentPreviewTask.parentTaskId || null,
+                            threadId: currentPreviewTask.threadId || null,
+                            tags: currentPreviewTask.tags || [],
+                            concatTags: currentPreviewTask.concatTags || null,
+                            teamId: myself.teamId || null,
+                            projectId: currentPreviewTask.project?.projectId || null,
                         }
                         : task
                 )
@@ -355,7 +366,6 @@ export default function TaskHome(props: TaskProps) {
                                                     paddingRight: '10px'
                                                 }}
                                                 onClick={() => {
-                                                    setIsTaskContentVisible(false);
                                                     setIsCreatingTask(true);
                                                 }}
                                             >
@@ -379,7 +389,6 @@ export default function TaskHome(props: TaskProps) {
                                     <TaskTable
                                         myself={myself}
                                         projectTasks={projectTasks}
-                                        setProjectTasks={setProjectTasks}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     />
@@ -420,13 +429,19 @@ export default function TaskHome(props: TaskProps) {
                                         >
                                             <CreateTaskForm
                                                 myself={myself}
-                                                currentProject={currentProject}
-                                                setIsCreatingTask={setIsCreatingTask}
-                                                setIsNewTaskCreated={setIsNewTaskCreated}
+                                                isDm={null}
+                                                chatId={null}
+                                                threadId={null}
                                                 setIsTaskContentVisible={setIsTaskContentVisible}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setIsCreatingTask={setIsCreatingTask}
                                                 setOpenCreateProject={setOpenCreateProject}
                                                 setOpenCreateTag={setOpenCreateTag}
+                                                currentProject={currentProject}
+                                                setCurrentProject={setCurrentProject}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                isNewProjectCreated={isNewProjectCreated}
+                                                isNewTagCreated={isNewTagCreated}
+                                                setIsNewTaskCreated={setIsNewTaskCreated}
                                             />
                                         </Box>
                                     </Panel>
@@ -466,14 +481,16 @@ export default function TaskHome(props: TaskProps) {
                                             }}
                                         >
                                             <TaskPreview
+                                                socket={socket}
                                                 myself={myself}
-                                                currentProject={currentProject}
+                                                setCurrentProject={setCurrentProject}
                                                 currentPreviewTask={currentPreviewTask}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setIsTaskContentVisible={setIsTaskContentVisible}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpenCreateProject={setOpenCreateProject}
                                                 setOpenCreateTag={setOpenCreateTag}
+                                                isTaskUpdated={isTaskUpdated}
                                                 setIsTaskUpdated={setIsTaskUpdated}
                                             />
                                         </Box>

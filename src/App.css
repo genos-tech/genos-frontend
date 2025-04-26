@@ -299,3 +299,19 @@ div[data-floating-ui-focusable] {
   /* Firefox */
   scrollbar-color: #888 transparent;
 }
+
+.task-comment-preview-light .bn-editor {
+  color: black;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.task-comment-preview-dark .bn-editor {
+  color: white;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.css-ljwjwd-JoyStack-root>:not(style)~:not(style) {
+  margin-top: 5px !important;
+}

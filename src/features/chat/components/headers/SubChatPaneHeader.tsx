@@ -8,7 +8,7 @@ import { HeaderUserName } from './HeaderUserName';
 import { UserProps } from '../../../../types/admin';
 import { ChatProps } from '../../../../types/chat';
 
-type MessagesPaneHeaderProps = {
+type SubChatPaneHeaderProps = {
   myself: UserProps;
   chat: ChatProps;
   subChat: ChatProps;
@@ -17,7 +17,7 @@ type MessagesPaneHeaderProps = {
   setIsSubChatVisible: (value: boolean) => void;
 };
 
-export const SubMessagesPaneHeader = (props: MessagesPaneHeaderProps) => {
+export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
   const { myself,
     chat,
     subChat,

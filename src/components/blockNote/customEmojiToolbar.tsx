@@ -8,7 +8,7 @@ type CustomEmojiToolbarProps = {
 };
 
 // Custom Formatting Toolbar Button to toggle blue text & background color.
-export function CustomEmojiToolbar(props: CustomEmojiToolbarProps) {
+export const CustomEmojiToolbar = (props: CustomEmojiToolbarProps) => {
     const { setShowEmojiPicker } = props
     const { mode } = useColorScheme();
     const Components = useComponentsContext()!;

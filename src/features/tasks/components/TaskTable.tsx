@@ -1,21 +1,16 @@
 import { useState, useCallback, useEffect } from "react";
-import Box from '@mui/material/Box';
 import { DataGrid, GridToolbar, GridFilterModel, useGridApiRef } from '@mui/x-data-grid';
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { useColorScheme } from '@mui/joy/styles';
-import Button from '@mui/material/Button';
-import Stack from '@mui/material/Stack';
+import { Box, Button, Stack, IconButton, Menu, MenuItem } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+
+import { getTaskColumns } from './base/common/TaskTableFormat';
+import { loadProjectTags } from '../services/loadProjectTags';
+import { loadTeamMembers } from "../../admin/services/loadTeamMembers";
+import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from '../../../types/admin';
 import { TaskTableProps, TagListProps } from "../../../types/tasks";
-import { getTaskColumns } from '../utils/tableFormat';
-import { loadProjectTags } from '../services/loadProjectTags';
-import { useAuth } from "../../../context/AuthContext";
-
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { loadTeamMembers } from "../../admin/services/loadTeamMembers";
 
 const options = [
   { name: "Group By Status", filterId: 1 },
@@ -130,13 +125,12 @@ const predefinedEffortLevelFilters: FilterProps[] = [
 type ProjectTaskTableProps = {
   myself: UserProps;
   projectTasks: TaskTableProps[];
-  setProjectTasks: (value: TaskTableProps[]) => void;
   setIsTaskContentVisible: (value: boolean) => void;
   setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export default function TaskTable(props: ProjectTaskTableProps) {
-  const { myself, projectTasks, setProjectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props
+  const { myself, projectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props
   const { mode } = useColorScheme();
   const className = `task-datagrid-${mode}`
   const apiRef = useGridApiRef();

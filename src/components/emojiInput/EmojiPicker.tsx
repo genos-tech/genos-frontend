@@ -1,20 +1,19 @@
 import { useRef, useEffect } from 'react';
+import { useColorScheme } from '@mui/joy/styles';
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import { useColorScheme } from '@mui/joy/styles';
 
-type EmojiInputProps = {
+type EmojiPickerProps = {
     editorPos?: any;
     showEmojiPicker: boolean;
     setShowEmojiPicker: (value: boolean) => void;
     setSelectedEmoji: (emoji: any) => void;
 };
-
-export const EmojiInput = ({
+export const EmojiPicker = ({
     showEmojiPicker,
     setShowEmojiPicker,
     setSelectedEmoji
-}: EmojiInputProps) => {
+}: EmojiPickerProps) => {
     const { mode } = useColorScheme();
     const emojiPickerRef = useRef<HTMLDivElement>(null);
 
@@ -72,5 +71,3 @@ export const EmojiInput = ({
         </div>
     );
 };
-
-export default EmojiInput;

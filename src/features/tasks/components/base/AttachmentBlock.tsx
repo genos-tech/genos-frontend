@@ -1,23 +1,28 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Card, CardContent, IconButton, Button } from "@mui/joy";
+import { Box, Typography, Card, CardContent, IconButton, Button, Stack } from "@mui/joy";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { AttachmentFileProps } from '../../../types/chat';
 
+import { AttachmentFileProps } from '../../../../types/tasks';
+import { TaskProps } from '../../../../types/tasks';
 
-
-type FileUploadFormProps = {
+type AttachmentBlockProps = {
     uploadedFiles: AttachmentFileProps[],
     setUploadedFiles: (value: AttachmentFileProps[]) => void,
-    setTaskUpdate: (value: boolean) => void,
+    setTaskUpdated?: (value: boolean) => void,
+    taskContents?: TaskProps,
+    setTaskContents?: (value: TaskProps) => void,
 }
 
-export default function FileUploadForm(props: FileUploadFormProps) {
+export const AttachmentBlock = (props: AttachmentBlockProps) => {
     const {
         uploadedFiles,
         setUploadedFiles,
-        setTaskUpdate
+        setTaskUpdated,
+        taskContents,
+        setTaskContents
     } = props
+
     const [images, setImages] = useState<{ url: string; name: string, width: number; height: number }[]>([]);
     const [textFiles, setTextFiles] = useState<{ name: string; url: string }[]>([]);
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([])
@@ -89,7 +94,9 @@ export default function FileUploadForm(props: FileUploadFormProps) {
     useEffect(() => {
         if (uploadingFiles.length > 0 && uploadingFiles.length != uploadedFiles.length) {
             setUploadedFiles(uploadingFiles)
-            setTaskUpdate(true)
+            if (setTaskUpdated) {
+                setTaskUpdated(true)
+            }
         }
     }, [uploadingFiles])
 
@@ -138,8 +145,51 @@ export default function FileUploadForm(props: FileUploadFormProps) {
         }
     }, [uploadedFiles])
 
+    // File upload manager via button (not drag and drop)
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const handleButtonClick = () => { inputRef.current?.click(); };
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files
+        if (taskContents && setTaskContents) {
+            if (files) {
+                // TODO: Need to add files to setUploadedFiles
+                console.log("Selected files:", Array.from(files));
+                Array.from(files).map((file, index) => {
+                    setTaskContents({
+                        ...taskContents,
+                        attachments: [{ file: file }]
+                    });
+                })
+            }
+        }
+    };
+
     return (
         <div>
+            <Stack direction="row" alignItems="center" sx={{ width: '100%' }}>
+                <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
+                    Attachments
+                </Typography>
+                <Box sx={{ flexGrow: 1 }} />
+                <input
+                    type="file"
+                    accept="*"
+                    multiple={true}
+                    ref={inputRef}
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                />
+                <Button
+                    component='p'
+                    variant="outlined"
+                    color="neutral"
+                    size="sm"
+                    onClick={handleButtonClick}
+                >
+                    Select File
+                </Button>
+            </Stack>
+
             <div
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
