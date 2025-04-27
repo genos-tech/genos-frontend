@@ -2,6 +2,7 @@ import { alpha } from '@mui/system';
 import { ListItemContent, Chip } from '@mui/joy';
 import Autocomplete from '@mui/joy/Autocomplete';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
+import { useColorScheme } from '@mui/joy/styles';
 
 import { TagListProps, TaskProps } from '../../../../types/tasks';
 
@@ -23,6 +24,8 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
         setTaskUpdated
     } = props;
 
+    const { mode } = useColorScheme();
+
     return (
         <Autocomplete
             key={taskContents.id}
@@ -41,10 +44,12 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                             key={key}
                             variant="soft"
                             sx={{
-                                backgroundColor: alpha(item.tagColor, 0.80),
+                                backgroundColor: alpha(item.tagColor, mode === 'dark' ? 0.5 : 0.75),
                                 color: item.tagTextColor,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                borderRadius: '7px',
                             }}
+                            size='sm'
                         >
                             {item.tagName}
                         </Chip>
@@ -58,10 +63,12 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                             key={option.tagName}
                             variant="soft"
                             sx={{
-                                backgroundColor: alpha(option.tagColor, 0.80),
+                                backgroundColor: alpha(option.tagColor, mode === 'dark' ? 0.5 : 0.75),
                                 color: option.tagTextColor,
                                 fontWeight: 'bold',
+                                borderRadius: '7px',
                             }}
+                            size='sm'
                         >
                             {option.tagName}
                         </Chip>

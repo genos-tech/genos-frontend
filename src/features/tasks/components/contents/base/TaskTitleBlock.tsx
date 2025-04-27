@@ -16,8 +16,9 @@ import {
 import MoreVert from '@mui/icons-material/MoreVert';
 import CancelIcon from '@mui/icons-material/Cancel';
 import AddIcon from '@mui/icons-material/Add';
+import { useColorScheme } from '@mui/joy/styles';
 
-import { TaskProps } from '../../../../types/tasks';
+import { TaskProps } from '../../../../../types/tasks';
 
 type TaskTitleBlockProps = {
     taskContents: TaskProps,
@@ -49,6 +50,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         isPreviewMode
     } = props
 
+    const { mode } = useColorScheme();
+
     return (
         <Box
             sx={{
@@ -67,9 +70,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             size="lg"
                             variant="soft"
                             sx={{
-                                backgroundColor: taskContents.status.color ? alpha(taskContents.status.color, 0.75) : 'transparent',
+                                backgroundColor: taskContents.status.color ? alpha(taskContents.status.color, mode === 'dark' ? 0.5 : 0.75) : 'transparent',
                                 color: taskContents.status.textColor,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                borderRadius: '7px',
                             }}
                         >
                             {taskContents.status.status || "Open"}
@@ -93,7 +97,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             <Typography
                                 sx={{ ml: '10px', fontSize: '20px', fontWeight: 'bold', backgroundColor: 'transparent' }}
                             >
-                                [ID:{taskContents.id}]
+                                ID:{taskContents.id}
                             </Typography>
                         </Box>
                     )}

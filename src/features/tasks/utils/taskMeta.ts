@@ -7,7 +7,7 @@ import {
 export const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
     { code: 0, status: "WIP", color: "#ffff23", textColor: "black" },
-    { code: 0, status: "Pending", color: "#ffa823", textColor: "white" },
+    { code: 0, status: "Pending", color: "#b900ff", textColor: "white" },
     { code: 0, status: "Closed", color: "#1dc200", textColor: "white" },
     { code: 0, status: "Deleted", color: "#ff2323", textColor: "white" },
 ]

@@ -2,6 +2,7 @@ import { alpha } from '@mui/system';
 import { ListItemContent, Chip } from '@mui/joy';
 import Autocomplete from '@mui/joy/Autocomplete';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
+import { useColorScheme } from '@mui/joy/styles';
 
 import { effortLevels } from "../../utils/taskMeta";
 import { TaskProps } from '../../../../types/tasks';
@@ -17,6 +18,8 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
         setTaskContents,
         setTaskUpdated
     } = props;
+
+    const { mode } = useColorScheme();
 
     return (
         <Autocomplete
@@ -39,10 +42,12 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                             key={key} // pass the key directly
                             variant="soft"
                             sx={{
-                                backgroundColor: item.color ? alpha(item.color, 0.75) : 'transparent',
+                                backgroundColor: item.color ? alpha(item.color, mode === 'dark' ? 0.5 : 0.75) : 'transparent',
                                 color: item.textColor,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                borderRadius: '7px',
                             }}
+                            size='sm'
                         >
                             {item.level}
                         </Chip>
@@ -56,10 +61,12 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                             key={option.level} // pass the key directly
                             variant="soft"
                             sx={{
-                                backgroundColor: option.color ? alpha(option.color, 0.75) : 'transparent',
+                                backgroundColor: option.color ? alpha(option.color, mode === 'dark' ? 0.5 : 0.75) : 'transparent',
                                 color: option.textColor,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                borderRadius: '7px',
                             }}
+                            size='sm'
                         >
                             {option.level}
                         </Chip>
@@ -68,7 +75,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
             )}
             onChange={(event, value) => {
                 if (value !== null) {
-                    console.log("setTaskUpdated:",setTaskUpdated)
+                    console.log("setTaskUpdated:", setTaskUpdated)
                     if (value.length > 0) {
                         (async () => {
                             setTaskContents({

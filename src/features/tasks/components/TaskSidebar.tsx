@@ -208,7 +208,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             setOpenSearch(false);
           }}
           isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
-          getOptionLabel={(option) => `[${option.taskId}] ${option.title}`}
+          getOptionLabel={(option) => `${option.taskId} | ${option.title}`}
           options={teamTaskOptions}
           loading={loading}
           endDecorator={
@@ -299,7 +299,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                             width: '100%', // take full width of button
                           }}
                         >
-                          {`[${taskId}] ${title}`}
+                          {`${taskId} | ${title}`}
                         </Typography>
                       </ListItemButton>
                     </ListItem>

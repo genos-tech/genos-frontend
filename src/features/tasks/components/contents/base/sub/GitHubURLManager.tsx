@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Input, Snackbar, Button, Stack, Typography, IconButton } from "@mui/joy";
 import EditIcon from '@mui/icons-material/Edit';
 
-import { GitHubIcon } from '../../../../../assets/GithubIcon';
-import { TaskProps } from '../../../../../types/tasks';
+import { GitHubIcon } from '../../../../../../assets/GithubIcon';
+import { TaskProps } from '../../../../../../types/tasks';
 
 type GitHubURLManagerProps = {
     githubLink: { url: string, title: string },

@@ -3,7 +3,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
-import { TaskProps } from "../../../../types/tasks";
+import { TaskProps } from "../../../../../types/tasks";
 
 type TaskPreviewCustomBarProps = {
     currentTaskContent: TaskProps,

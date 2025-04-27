@@ -1,7 +1,7 @@
 import { Box, Stack } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 
-import { BnTaskPreview } from '../../../../components/blockNote/bnTaskPreview'
+import { BnTaskPreview } from '../../../../../components/blockNote/bnTaskPreview'
 
 type TaskBodyPreviewBlockProps = {
     body: PartialBlock[] | null;

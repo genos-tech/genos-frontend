@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Menu, MenuItem, IconButton, ListItemDecorator } from '@mui/joy';
 import PaletteIcon from '@mui/icons-material/Palette';
 
-import { TagColorOption } from '../../../../../types/tasks';
+import { TagColorOption } from '../../../../../../types/tasks';
 
 
 const COLORS: TagColorOption[] = [
@@ -13,7 +13,6 @@ const COLORS: TagColorOption[] = [
     { name: 'Orange', value: '#ffa823', textColor: 'black' },
     { name: 'Purple', value: '#8e23ff', textColor: 'white' },
     { name: 'Pink', value: '#ff238a', textColor: 'white' },
-    { name: 'Black', value: '#000000', textColor: 'white' },
     { name: 'White', value: '#ffffff', textColor: 'black' },
 ];
 

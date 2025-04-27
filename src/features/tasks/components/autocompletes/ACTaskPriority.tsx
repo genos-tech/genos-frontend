@@ -2,6 +2,7 @@ import { alpha } from '@mui/system';
 import { ListItemContent, Chip } from '@mui/joy';
 import Autocomplete from '@mui/joy/Autocomplete';
 import AutocompleteOption from '@mui/joy/AutocompleteOption';
+import { useColorScheme } from '@mui/joy/styles';
 
 import { priorities } from "../../utils/taskMeta";
 import { TaskProps } from '../../../../types/tasks';
@@ -17,6 +18,8 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
         setTaskContents,
         setTaskUpdated
     } = props;
+
+    const { mode } = useColorScheme();
 
     return (
         <Autocomplete
@@ -39,10 +42,12 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                             key={key} // pass the key directly
                             variant="soft"
                             sx={{
-                                backgroundColor: item.color ? alpha(item.color, 0.75) : 'transparent',
+                                backgroundColor: item.color ? alpha(item.color, mode === 'dark' ? 0.5 : 0.75) : 'transparent',
                                 color: item.textColor,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                borderRadius: '7px',
                             }}
+                            size='sm'
                         >
                             {item.priority}
                         </Chip>
@@ -56,10 +61,12 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                             key={option.priority} // pass the key directly
                             variant="soft"
                             sx={{
-                                backgroundColor: option.color ? alpha(option.color, 0.75) : 'transparent',
+                                backgroundColor: option.color ? alpha(option.color, mode === 'dark' ? 0.5 : 0.75) : 'transparent',
                                 color: option.textColor,
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                borderRadius: '7px',
                             }}
+                            size='sm'
                         >
                             {option.priority}
                         </Chip>

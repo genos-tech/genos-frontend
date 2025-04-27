@@ -1,8 +1,8 @@
 import { Button, Stack } from "@mui/joy";
 
-import { uploadTask } from '../../services/uploadTask';
-import { UserProps } from "../../../../types/admin";
-import { TaskProps } from "../../../../types/tasks";
+import { uploadTask } from '../../../services/uploadTask';
+import { UserProps } from "../../../../../types/admin";
+import { TaskProps } from "../../../../../types/tasks";
 
 type CreateTaskFooterProps = {
     myself: UserProps,

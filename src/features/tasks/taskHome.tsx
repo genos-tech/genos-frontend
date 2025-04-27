@@ -19,15 +19,15 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 
 import { TaskSidebar } from './components/TaskSidebar';
-import { TaskPreview } from './components/TaskPreview';
-import TaskTable from './components/TaskTable';
-import { CreateTaskForm } from "./components/CreateTaskForm";
+import { TaskPreview } from './components/contents/TaskPreview';
+import TaskTable from './components/table/TaskTable';
+import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { loadSpecificTask } from './services/loadSpecificTask';
 import { loadTeamProjects } from './services/loadTeamProjects';
 import { loadTeamTaskList } from './services/loadTaskSearchList';
 import { ModalCreateTag } from './components/modals/ModalCreateTag';
 import { ModalCreateProject } from './components/modals/ModalCreateProject';
-import { ModalCreateTeam } from './components/modals/ModalCreateTeam';
+import { ModalCreateTeam } from '../admin/components/modals/ModalCreateTeam';
 import { Sidebar } from '../../components/layout/sidebar';
 import { UserProps } from '../../types/admin';
 import { SearchTeamTasksResponse } from '../../types/chat';
@@ -333,7 +333,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     setOpenSearch(false);
                                                 }}
                                                 isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
-                                                getOptionLabel={(option) => `[${option.taskId}] ${option.title}`}
+                                                getOptionLabel={(option) => `${option.taskId} | ${option.title}`}
                                                 options={teamTaskOptions}
                                                 loading={loading}
                                                 endDecorator={

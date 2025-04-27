@@ -86,7 +86,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
                         <Alert color="danger">{errorMessage}</Alert>
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button component='a' variant="outlined" onClick={() => setOpenCreateTeam(false)}>
+                        <Button component='a' color="danger" variant="outlined" onClick={() => setOpenCreateTeam(false)}>
                             Cancel
                         </Button>
                         <Button component='a' onClick={handleCreateTeam} disabled={!teamName.trim()}>

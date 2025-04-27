@@ -3,8 +3,8 @@ import { Box, Typography, Card, CardContent, IconButton, Button, Stack } from "@
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
-import { AttachmentFileProps } from '../../../../types/tasks';
-import { TaskProps } from '../../../../types/tasks';
+import { AttachmentFileProps } from '../../../../../types/tasks';
+import { TaskProps } from '../../../../../types/tasks';
 
 type AttachmentBlockProps = {
     uploadedFiles: AttachmentFileProps[],

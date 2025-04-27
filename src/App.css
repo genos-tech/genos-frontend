@@ -83,6 +83,20 @@
 }
 
 
+.css-rxb3rp-MuiToolbar-root-MuiTablePagination-toolbar {
+  min-height: 52px;
+  padding-right: 2px;
+  padding-bottom: 15px;
+}
+
+.task-datagrid-dark .MuiIconButton-root.MuiIconButton-sizeSmall {
+  color: white !important;
+}
+
+.task-datagrid-dark .MuiDataGrid-menuIconButton {
+  color: white !important;
+}
+
 .task-datagrid-light .MuiDataGrid-columnHeader {
   background-color: #d9d9d9;
   color: rgb(55, 55, 55);
@@ -158,6 +172,46 @@
 .task-datagrid-light .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
   color: rgb(55, 55, 55) !important;
   font-weight: bold;
+}
+
+.css-nk6ga4-MuiDataGrid-root .MuiDataGrid-cell.MuiDataGrid-cell--editing {
+  background-color: transparent !important;
+}
+
+.task-datagrid-dark .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
+  background-color: #161616 !important;
+  color: rgb(255, 255, 255) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-light .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
+  background-color: transparent !important;
+  color: rgb(55, 55, 55) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-dark .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+  background-color: #161616 !important;
+  color: rgb(255, 255, 255) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-light .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+  background-color: #d9d9d9;
+  color: rgb(255, 255, 255) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-dark .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
+  color: white !important;
+}
+
+.task-datagrid-light .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
+  color: rgb(55, 55, 55) !important;
+}
+
+.task-datagrid-light .css-157nff6-MuiButtonBase-root-MuiIconButton-root.Mui-disabled {
+  color: rgb(55, 55, 55) !important;
 }
 
 /* editor preview */
@@ -314,4 +368,5 @@ div[data-floating-ui-focusable] {
 
 .css-ljwjwd-JoyStack-root>:not(style)~:not(style) {
   margin-top: 5px !important;
+  margin-left: 10px !important;
 }

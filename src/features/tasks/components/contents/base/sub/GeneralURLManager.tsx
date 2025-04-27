@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Input, Snackbar, Button, Stack, Typography, IconButton } from "@mui/joy";
 import EditIcon from '@mui/icons-material/Edit';
-import { CustomLinkIcon } from '../../../../../assets/CustomLinkIcon';
-import { TaskProps } from '../../../../../types/tasks';
+import { CustomLinkIcon } from '../../../../../../assets/CustomLinkIcon';
+import { TaskProps } from '../../../../../../types/tasks';
 
 type GeneralURLManagerProps = {
     generalLink: { url: string, title: string },

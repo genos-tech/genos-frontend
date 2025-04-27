@@ -9,23 +9,23 @@ import { TaskMainBlock } from './base/TaskMainBlock';
 import { TaskBodyPreviewBlock } from './base/TaskBodyPreviewBlock';
 import { TaskPreviewCustomBar } from './base/TaskPreviewCustomBar';
 import { TaskCommentBlock } from './base/TaskCommentBlock'
-import { updateSpecificTask } from '../services/updateSpecificTask';
-import { loadTaskComments } from '../services/loadTaskComments';
-import { wsTaskHandleHook } from '../hooks/WSTaskHooks';
+import { updateSpecificTask } from '../../services/updateSpecificTask';
+import { loadTaskComments } from '../../services/loadTaskComments';
+import { wsTaskHandleHook } from '../../hooks/WSTaskHooks';
 import {
     updateTeamMembersOptions,
     updateProjectOptions,
     updateTagOptions
-} from '../services/updateTaskAutoCompleteOptions';
-import { UserProps } from '../../../types/admin';
-import { AttachmentFileProps } from "../../../types/tasks";
-import { useAuth } from "../../../context/AuthContext";
+} from '../../services/updateTaskAutoCompleteOptions';
+import { UserProps } from '../../../../types/admin';
+import { AttachmentFileProps } from "../../../../types/tasks";
+import { useAuth } from "../../../../context/AuthContext";
 import {
     TaskProps,
     ProjectProps,
     TagListProps,
     TaskCommentProps
-} from "../../../types/tasks";
+} from "../../../../types/tasks";
 
 type TaskPreviewProps = {
     socket: Socket | null;

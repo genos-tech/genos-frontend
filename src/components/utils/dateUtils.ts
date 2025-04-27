@@ -27,7 +27,7 @@ const convertAlmostIsoUtcToLocalFormatted = (utcTimestamp: string): string => {
     return formatDateLocal(date);
 }
 
-const checkTimestampDay = (utcTimestamp: string): "today" | "yesterday" | "other" => {
+const checkTimestampDay = (utcTimestamp: string): "today" | "yesterday" | "withinAYear" | "other" => {
     // Replace space with 'T' to make ISO 8601
     const isoTimestamp = utcTimestamp.replace(' ', 'T');
     const date = new Date(isoTimestamp);
@@ -50,6 +50,8 @@ const checkTimestampDay = (utcTimestamp: string): "today" | "yesterday" | "other
         return "today";
     } else if (diffDays === -1) {
         return "yesterday";
+    } else if (diffDays >= -365) {
+        return "withinAYear";
     } else {
         return "other";
     }
@@ -76,8 +78,10 @@ export const extractHHMM = (ts: string) => {
         return `Today ${tsLocal.slice(11, 16)}`;
     } else if (tsDay === "yesterday") {
         return `Yesterday ${tsLocal.slice(11, 16)}`;
+    } else if (tsDay === "withinAYear") {
+        return `${tsLocal.slice(5, 10)} ${tsLocal.slice(11, 16)}`;
     }
-    return `${tsLocal.slice(5, 10)} ${tsLocal.slice(11, 16)}`;
+    return tsLocal;
 }
 
 export const getFormattedTodayDateStr = (): string => {

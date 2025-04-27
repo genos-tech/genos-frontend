@@ -5,12 +5,12 @@ import { useColorScheme } from '@mui/joy/styles';
 import { Box, Button, Stack, IconButton, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
-import { getTaskColumns } from './base/common/TaskTableFormat';
-import { loadProjectTags } from '../services/loadProjectTags';
-import { loadTeamMembers } from "../../admin/services/loadTeamMembers";
-import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from '../../../types/admin';
-import { TaskTableProps, TagListProps } from "../../../types/tasks";
+import { getTaskColumns } from './TaskTableFormat';
+import { loadProjectTags } from '../../services/loadProjectTags';
+import { loadTeamMembers } from "../../../admin/services/loadTeamMembers";
+import { useAuth } from "../../../../context/AuthContext";
+import { UserProps } from '../../../../types/admin';
+import { TaskTableProps, TagListProps } from "../../../../types/tasks";
 
 const options = [
   { name: "Group By Status", filterId: 1 },
@@ -234,7 +234,7 @@ export default function TaskTable(props: ProjectTaskTableProps) {
             return (
               <Button
                 key={label}
-                onClick={() => apiRef.current.setFilterModel(filterModel)}
+                onClick={() => apiRef.current?.setFilterModel(filterModel)}
                 variant="outlined"
                 sx={{
                   color: mode === 'dark' ? darkModeColor : lightModeColor,
@@ -255,6 +255,7 @@ export default function TaskTable(props: ProjectTaskTableProps) {
             onClick={handleClick}
             size="small"
             sx={{
+              color: mode === 'dark' ? '#ffffff' : '#000000',
               borderRadius: 1,  // removes the circular style
               padding: 1,       // optional, adjust to taste
             }}>
@@ -291,15 +292,14 @@ export default function TaskTable(props: ProjectTaskTableProps) {
           }}
         >
           <DataGrid
-            onCellClick={(params) => {
-              // if (params.field === 'assignee') {
-              //   getTeamMembers()
-              // }
-            }}
-            onRowClick={(params, event, detail) => {
-              // console.log("Row clicked:", params);
+            onCellClick={(params) => { }}
+            onCellDoubleClick={(params => {
               setIsTaskContentVisible(true);
-              setCurrentPreviewTaskId(Number(params.id))
+              setCurrentPreviewTaskId(Number(params.id));
+            })}
+            onRowClick={(params, event, detail) => {
+              // setIsTaskContentVisible(true);
+              // setCurrentPreviewTaskId(Number(params.id));
             }}
             className={className}
             apiRef={apiRef}
@@ -320,10 +320,16 @@ export default function TaskTable(props: ProjectTaskTableProps) {
               borderColor: 'transparent',
               fontWeight: 'bold'
             }}
-            columnVisibilityModel={{ concatTags: false }}
             rows={projectTasks}
             columns={getTaskColumns({ myself: myself, accessToken: accessToken, teamMembers: teamMembers })}
             initialState={{
+              density: 'compact',
+              filter: {
+                filterModel: {
+                  items: [
+                    { field: 'status', operator: 'isAnyOf', value: ['Open', 'WIP'] }]
+                }
+              },
               sorting: {
                 sortModel: [{ field: 'id', sort: 'desc' }],
               },
@@ -344,10 +350,12 @@ export default function TaskTable(props: ProjectTaskTableProps) {
                   status: true,
                   assigneeEmail: true,
                   assigneeName: true,
-                  parentTaskId: true
+                  parentTaskId: true,
+                  concatTags: false
                 }
               }
-            }}
+            }
+            }
             slots={{
               toolbar: GridToolbar,
             }}
@@ -356,9 +364,9 @@ export default function TaskTable(props: ProjectTaskTableProps) {
                 showQuickFilter: true,
               },
             }}
+            keepNonExistentRowsSelected
             checkboxSelection
             disableRowSelectionOnClick
-            keepNonExistentRowsSelected
           />
         </Box>
       </div>

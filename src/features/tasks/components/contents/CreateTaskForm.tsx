@@ -11,17 +11,17 @@ import {
     updateTaskTitle,
     updateTaskBody,
     updateTaskAttachments
-} from '../hooks/taskUpdateHooks';
+} from '../../hooks/taskUpdateHooks';
 import {
     updateTeamMembersOptions,
     updateProjectOptions,
     updateTagOptions
-} from '../services/updateTaskAutoCompleteOptions'
-import { useAuth } from "../../../context/AuthContext";
-import { getFormattedTodayDateStr } from '../../../components/utils/dateUtils';
-import { UserProps } from '../../../types/admin';
-import { AttachmentFileProps } from "../../../types/tasks";
-import { TaskProps, ProjectProps, TagListProps } from "../../../types/tasks";
+} from '../../services/updateTaskAutoCompleteOptions'
+import { useAuth } from "../../../../context/AuthContext";
+import { getFormattedTodayDateStr } from '../../../../components/utils/dateUtils';
+import { UserProps } from '../../../../types/admin';
+import { AttachmentFileProps } from "../../../../types/tasks";
+import { TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
 
 type CreateTaskProps = {
     myself: UserProps,

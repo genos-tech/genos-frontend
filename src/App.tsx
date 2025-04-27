@@ -98,29 +98,32 @@ export const App = () => {
         setCurrentMainChat={setCurrentMainChat}
       />
     ) : (
-      <CssVarsProvider disableTransitionOnChange>
-        <CssBaseline />
+      <div className="main-container">
 
-        {openingService === 1 ? (
-          <ChatHome
-            socket={socketInstance}
-            myself={myself}
-            setMyself={setMyself}
-            currentMainChat={currentMainChat}
-            setCurrentMainChat={setCurrentMainChat}
-            setOpeningService={setOpeningService}
-          />
-        ) : null}
+        <CssVarsProvider disableTransitionOnChange>
+          <CssBaseline />
+          {openingService === 1 ? (
+            <ChatHome
+              socket={socketInstance}
+              myself={myself}
+              setMyself={setMyself}
+              currentMainChat={currentMainChat}
+              setCurrentMainChat={setCurrentMainChat}
+              setOpeningService={setOpeningService}
+            />
+          ) : null}
 
-        {openingService === 2 ? (
-          <TaskHome
-            socket={socketInstance}
-            myself={myself}
-            setMyself={setMyself}
-            setOpeningService={setOpeningService}
-          />
-        ) : null}
-      </CssVarsProvider>
+          {openingService === 2 ? (
+            <TaskHome
+              socket={socketInstance}
+              myself={myself}
+              setMyself={setMyself}
+              setOpeningService={setOpeningService}
+            />
+          ) : null}
+        </CssVarsProvider>
+      </div>
+
     )
   );
 }

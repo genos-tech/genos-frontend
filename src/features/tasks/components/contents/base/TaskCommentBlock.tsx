@@ -3,11 +3,11 @@ import { useEffect, useRef } from 'react';
 import { Box, Stack, Typography, Card, Avatar } from '@mui/joy';
 import { useColorScheme } from '@mui/joy/styles';
 
-import { TaskCommentProps } from "../../../../types/tasks";
-import { BnPreview } from '../../../../components/blockNote/bnPreview';
-import { BnTaskCommentEditor } from '../../../../components/blockNote/bnTaskCommentEditor';
-import { UserProps } from '../../../../types/admin';
-import { extractMMDDHHMM } from '../../../../components/utils/dateUtils';
+import { TaskCommentProps } from "../../../../../types/tasks";
+import { BnPreview } from '../../../../../components/blockNote/bnPreview';
+import { BnTaskCommentEditor } from '../../../../../components/blockNote/bnTaskCommentEditor';
+import { UserProps } from '../../../../../types/admin';
+import { extractMMDDHHMM } from '../../../../../components/utils/dateUtils';
 
 type TaskCommentBlockProps = {
   myself: UserProps;

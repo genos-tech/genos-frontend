@@ -1,21 +1,21 @@
 import { Box, Avatar, Grid, IconButton, ListItem, List, Typography } from "@mui/joy";
 import AddIcon from '@mui/icons-material/Add';
 
-import { TaskDueDateInput } from './common/TaskDueDateInput';
-import { GitHubURLManager } from './common/GitHubURLManager';
-import { GeneralURLManager } from './common/GeneralURLManager';
-import { ACProjectTags } from '../autocompletes/ACProjectTags';
-import { ACTeamUsers } from '../autocompletes/ACTeamUsers';
-import { ACTeamProjects } from '../autocompletes/ACTeamProjects';
-import { ACTaskPriority } from '../autocompletes/ACTaskPriority';
-import { ACTaskEffortLevel } from '../autocompletes/ACTaskEffortLevel';
-import { ACTaskStatus } from '../autocompletes/ACTaskStatus';
+import { TaskDueDateInput } from './sub/TaskDueDateInput';
+import { GitHubURLManager } from './sub/GitHubURLManager';
+import { GeneralURLManager } from './sub/GeneralURLManager';
+import { ACProjectTags } from '../../autocompletes/ACProjectTags';
+import { ACTeamUsers } from '../../autocompletes/ACTeamUsers';
+import { ACTeamProjects } from '../../autocompletes/ACTeamProjects';
+import { ACTaskPriority } from '../../autocompletes/ACTaskPriority';
+import { ACTaskEffortLevel } from '../../autocompletes/ACTaskEffortLevel';
+import { ACTaskStatus } from '../../autocompletes/ACTaskStatus';
 import {
     TaskProps,
     ProjectProps,
     TagListProps,
-} from "../../../../types/tasks";
-import { UserProps } from '../../../../types/admin';
+} from "../../../../../types/tasks";
+import { UserProps } from '../../../../../types/admin';
 
 type TaskMainBlockProps = {
     taskContents: TaskProps,
@@ -136,7 +136,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 />
                                 <IconButton
                                     size="sm"
-                                    variant="soft"
+                                    variant="plain"
                                     color="neutral"
                                     onClick={() => { setOpenCreateTag(true) }}
                                 >
@@ -172,7 +172,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </Grid>
 
                     {isPreviewMode === true && (
-                        <ListItem sx={{ width: '50%' }}>
+                        <ListItem sx={{ width: '49%' }}>
                             <Typography sx={{ minWidth: "80px" }}>Status:</Typography>
                             <ACTaskStatus
                                 taskContents={taskContents}

@@ -11,7 +11,7 @@ import {
     Typography,
 } from "@mui/joy";
 
-import { ColorPickerMenu } from '../base/common/TagColorPickerMenu';
+import { ColorPickerMenu } from '../contents/base/sub/TagColorPickerMenu';
 import { UserProps } from '../../../../types/admin';
 import { ProjectProps } from '../../../../types/tasks';
 import { useAuth } from "../../../../context/AuthContext";
@@ -116,7 +116,7 @@ export const ModalCreateTag: React.FC<Props> = (
                         </Box>
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button component='a' variant="outlined" onClick={() => setOpenCreateTag(false)}>
+                        <Button component='a' variant="outlined" color='danger' onClick={() => setOpenCreateTag(false)}>
                             Cancel
                         </Button>
                         <Button component='a' onClick={handleCreateTag} disabled={!tagName.trim()}>

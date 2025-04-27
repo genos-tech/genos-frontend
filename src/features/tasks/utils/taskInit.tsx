@@ -11,9 +11,9 @@ import {
     Box
 } from "@mui/joy";
 
-import { UserProps } from "../../types/admin";
-import { ProjectProps } from "../../types/tasks";
-import { useAuth } from "../../context/AuthContext";
+import { UserProps } from "../../../types/admin";
+import { ProjectProps } from "../../../types/tasks";
+import { useAuth } from "../../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
