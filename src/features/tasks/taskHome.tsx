@@ -19,8 +19,9 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 
 import { TaskSidebar } from './components/TaskSidebar';
+import { TaskDashboard } from "./components/home/TaskDashboard";
 import { TaskPreview } from './components/contents/TaskPreview';
-import TaskTable from './components/table/TaskTable';
+import { TaskTable } from './components/table/TaskTable';
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { loadSpecificTask } from './services/loadSpecificTask';
 import { loadTeamProjects } from './services/loadTeamProjects';
@@ -47,6 +48,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     const { socket, myself, setMyself, setOpeningService } = props
     const { accessToken } = useAuth();
 
+    const [isDashboardVisible, setIsDashboardVisible] = useState(true);
+    const [isTaskTableVisible, setTaskTableVisible] = useState(false);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
@@ -261,6 +264,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                         <TaskSidebar
                             myself={myself}
                             setMyself={setMyself}
+                            setIsDashboardVisible={setIsDashboardVisible}
+                            setTaskTableVisible={setTaskTableVisible}
                             currentProject={currentProject}
                             setCurrentProject={setCurrentProject}
                             currentPreviewTaskId={currentPreviewTaskId}
@@ -386,12 +391,22 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             </Dropdown>
                                         </Box>
                                     </Box>
-                                    <TaskTable
-                                        myself={myself}
-                                        projectTasks={projectTasks}
-                                        setIsTaskContentVisible={setIsTaskContentVisible}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                    />
+
+                                    {isDashboardVisible === true && (
+                                        <>
+                                            <TaskDashboard />
+                                        </>
+                                    )}
+                                    {isTaskTableVisible === true && (
+                                        <>
+                                            <TaskTable
+                                                myself={myself}
+                                                projectTasks={projectTasks}
+                                                setIsTaskContentVisible={setIsTaskContentVisible}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            />
+                                        </>
+                                    )}
                                 </Box>
                             </Panel>
 

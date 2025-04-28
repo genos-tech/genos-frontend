@@ -88,7 +88,7 @@ export const getTaskColumns = (props: getTaskColumns): GridColDef[] => {
             field: 'assignee',
             headerName: 'Assignee',
             headerClassName: 'task-col--header',
-            editable: false,
+            editable: true,
             sortable: false,
             width: 250,
             renderCell: (params) => {
@@ -102,7 +102,33 @@ export const getTaskColumns = (props: getTaskColumns): GridColDef[] => {
                         </div>
                     </Box>
                 )
-            }
+            },
+            renderEditCell: (params: GridRenderEditCellParams) => (
+                <Select
+                    value={params.value}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        params.api.setEditCellValue({
+                            id: params.id,
+                            field: params.field,
+                            value: value,
+                        }, event);
+
+                        // Exit edit mode after value is set
+                        params.api.stopCellEditMode({
+                            id: params.id,
+                            field: params.field,
+                        });
+                    }}
+                    fullWidth
+                >
+                    {props.teamMembers.map((option) => (
+                        <MenuItem key={option.userId} value={option.userEmail}>
+                            {option.userName} | {option.userEmail}
+                        </MenuItem>
+                    ))}
+                </Select>
+            )
         },
         {
             field: 'tags',

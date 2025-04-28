@@ -61,8 +61,12 @@ export const Sidebar = (props: SidebarProps) => {
     setOpeningService(1);
   };
 
-  const handleMoveToTask = (): void => {
+  const handleMoveToTasks = (): void => {
     setOpeningService(2);
+  };
+
+  const handleMoveToNote = (): void => {
+    setOpeningService(3);
   };
 
 
@@ -152,14 +156,14 @@ export const Sidebar = (props: SidebarProps) => {
             </ListItemButton>
           </ListItem>
           <ListItem>
-            <ListItemButton onClick={handleMoveToTask} title='Tasks'>
+            <ListItemButton onClick={handleMoveToTasks} title='Tasks'>
               <Box sx={{ display: 'flex', alignItems: 'center', p: '5px' }}>
                 <AssignmentRoundedIcon sx={{ fontSize: 20 }} />
               </Box>
             </ListItemButton>
           </ListItem>
           <ListItem>
-            <ListItemButton onClick={() => { console.log("Open Note") }} title='Notes'>
+            <ListItemButton onClick={handleMoveToNote} title='Notes'>
               <Box sx={{ display: 'flex', alignItems: 'center', p: '5px' }}>
                 <NoteAltIcon sx={{ fontSize: 20 }} />
               </Box>

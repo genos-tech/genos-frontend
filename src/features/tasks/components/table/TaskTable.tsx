@@ -129,7 +129,7 @@ type ProjectTaskTableProps = {
   setCurrentPreviewTaskId: (value: number) => void;
 };
 
-export default function TaskTable(props: ProjectTaskTableProps) {
+export const TaskTable = (props: ProjectTaskTableProps) => {
   const { myself, projectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props
   const { mode } = useColorScheme();
   const className = `task-datagrid-${mode}`

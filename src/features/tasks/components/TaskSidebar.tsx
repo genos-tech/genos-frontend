@@ -19,6 +19,8 @@ import FreeCancellationIcon from '@mui/icons-material/FreeCancellation';
 import BusinessIcon from '@mui/icons-material/Business';
 import WorkIcon from '@mui/icons-material/Work';
 import AddIcon from '@mui/icons-material/Add';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 import { loadTeamTaskList } from '../services/loadTaskSearchList';
@@ -67,6 +69,8 @@ function Toggler({
 type TaskSidebarProps = {
   myself: UserProps,
   setMyself: (value: UserProps) => void,
+  setIsDashboardVisible: (value: boolean) => void,
+  setTaskTableVisible: (value: boolean) => void,
   currentProject: ProjectProps | null,
   setCurrentProject: (value: ProjectProps) => void,
   currentPreviewTaskId: number,
@@ -78,6 +82,8 @@ type TaskSidebarProps = {
 export const TaskSidebar = (props: TaskSidebarProps) => {
   const { myself,
     setMyself,
+    setIsDashboardVisible,
+    setTaskTableVisible,
     currentProject,
     setCurrentProject,
     currentPreviewTaskId,
@@ -233,8 +239,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
       {/* ============================================================================ */}
 
-
-
       <Box
         sx={{
           minHeight: 0,
@@ -256,6 +260,30 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
           }}
         >
 
+          <ListItem>
+            <ListItemButton onClick={() => {
+              setTaskTableVisible(false);
+              setIsDashboardVisible(true);
+            }}>
+              <DashboardIcon />
+              <ListItemContent>
+                <Typography level="title-sm">Dashboard</Typography>
+              </ListItemContent>
+            </ListItemButton>
+          </ListItem>
+
+          <ListItem>
+            <ListItemButton onClick={() => {
+              setTaskTableVisible(true);
+              setIsDashboardVisible(false);
+            }}>
+              <TableChartIcon />
+              <ListItemContent>
+                <Typography level="title-sm">Task Table</Typography>
+              </ListItemContent>
+            </ListItemButton>
+          </ListItem>
+
           <ListItem nested>
             <Toggler
               defaultExpanded={false}
@@ -263,6 +291,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 <ListItemButton onClick={() => {
                   setOpen(!open);
                   updateRecentTasks();
+                  setIsDashboardVisible(false);
                 }}>
                   <AssignmentRoundedIcon />
                   <ListItemContent>
@@ -287,7 +316,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                   return (
                     <ListItem key={taskId}>
                       <ListItemButton
-                        onClick={() => { setCurrentPreviewTaskId(taskId) }}
+                        onClick={() => {
+                          setCurrentPreviewTaskId(taskId)
+                        }}
                         sx={{ overflow: 'hidden' }} // ensure children don't overflow
                       >
                         <Typography
@@ -531,7 +562,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
           </ListItem>
 
         </List>
-      </Box>
+      </Box >
       <Divider />
     </Sheet >
   );

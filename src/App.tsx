@@ -6,6 +6,7 @@ import CssBaseline from '@mui/joy/CssBaseline';
 import './App.css';
 import { ChatHome } from './features/chat/chatHome';
 import { TaskHome } from './features/tasks/taskHome';
+import { NoteHome } from './features/notes/NoteHome';
 import { Loading } from './services/loading'
 import { UserProps } from "./types/admin";
 import { ChatProps } from "./types/chat";
@@ -79,7 +80,7 @@ export const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
-  // {1: Chat, 2: Task}
+  // {1: Chat, 2: Tasks, 3: Notes}
   const [openingService, setOpeningService] = useState<number>(2);
 
   const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
@@ -102,6 +103,7 @@ export const App = () => {
 
         <CssVarsProvider disableTransitionOnChange>
           <CssBaseline />
+
           {openingService === 1 ? (
             <ChatHome
               socket={socketInstance}
@@ -121,6 +123,16 @@ export const App = () => {
               setOpeningService={setOpeningService}
             />
           ) : null}
+
+          {openingService === 3 ? (
+            <NoteHome
+              socket={socketInstance}
+              myself={myself}
+              setMyself={setMyself}
+              setOpeningService={setOpeningService}
+            />
+          ) : null}
+
         </CssVarsProvider>
       </div>
 
