@@ -355,7 +355,7 @@ export const getTaskColumns = (props: getTaskColumns): GridColDef[] => {
             width: 100,
             align: 'center',
             headerAlign: 'center',
-            valueFormatter: (params) => params,
+            valueFormatter: (params) => params ? dayjs(params).format("YYYY-MM-DD") : params,
         },
         {
             field: 'daysLeft',

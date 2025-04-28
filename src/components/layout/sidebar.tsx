@@ -95,9 +95,9 @@ export const Sidebar = (props: SidebarProps) => {
       <GlobalStyles
         styles={(theme) => ({
           ':root': {
-            '--Sidebar-width': '65px',
+            '--Sidebar-width': '60px',
             [theme.breakpoints.up('lg')]: {
-              '--Sidebar-width': '65px',
+              '--Sidebar-width': '60px',
             },
           },
         })}
@@ -184,31 +184,25 @@ export const Sidebar = (props: SidebarProps) => {
               <SettingsRoundedIcon sx={{ fontSize: 20 }} />
             </ListItemButton>
           </ListItem>
+
+          <ListItem sx={{ mt: 1 }}>
+            <ListItemButton
+              title='Sign out'
+              onClick={handleLogout}
+            >
+              <LogoutRoundedIcon sx={{ fontSize: 20 }} />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Box>
-
-      <IconButton
-        component='a'
-        onClick={handleLogout}
-        size="sm"
-        variant="plain"
-        color="neutral"
-        title='Sign out'
-      >
-        <LogoutRoundedIcon />
-      </IconButton>
-
 
       <Divider />
 
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <Avatar
-          variant="solid"
-          size="sm"
-        >
+        <Avatar variant="solid" size="sm">
           {myself.userName[0]}
         </Avatar>
       </Box>
-    </Sheet>
+    </Sheet >
   );
 }
