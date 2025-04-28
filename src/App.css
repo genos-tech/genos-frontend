@@ -83,127 +83,19 @@
 }
 
 
-.w-md-editor {
-  --md-editor-box-shadow-color: transparent;
-  --md-editor-background-color: transparent;
+.css-rxb3rp-MuiToolbar-root-MuiTablePagination-toolbar {
+  min-height: 52px;
+  padding-right: 2px;
+  padding-bottom: 15px;
 }
 
-/* Change background for inline <code> */
-.markdown-preview {
-  /* color: rgb(217, 217, 217); */
+.task-datagrid-dark .MuiIconButton-root.MuiIconButton-sizeSmall {
+  color: white !important;
 }
 
-/* Change background for inline <code> */
-.markdown-preview p {
-  padding-left: 5px;
+.task-datagrid-dark .MuiDataGrid-menuIconButton {
+  color: white !important;
 }
-
-.markdown-preview p a {
-  padding-left: 5px;
-  color: #3a58ff;
-}
-
-/* Change background for inline <code> */
-.markdown-preview code {
-  background-color: #656565 !important;
-  padding: 4px;
-  border-radius: 4px;
-  color: rgb(255, 255, 255);
-}
-
-/* Change background for code blocks */
-.markdown-preview pre code {
-  background-color: #292929 !important;
-  display: block;
-  padding: 8px;
-  border-radius: 4px;
-  color: rgb(255, 255, 255);
-}
-
-/* Change background for code blocks */
-.markdown-preview blockquote {
-  background-color: #6f6f6f !important;
-  color: rgb(255, 255, 255);
-  display: block;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-
-.w-md-editor-text {
-  height: 100%;
-}
-
-.markdown-editor-dark span {
-  color: rgb(217, 217, 217);
-}
-
-.markdown-editor-dark .w-md-editor-content .w-md-editor-preview {
-  background-color: #363636;
-}
-
-.markdown-editor-dark .w-md-editor-content .w-md-editor-preview .wmde-markdown {
-  background-color: #363636;
-  color: rgb(217, 217, 217);
-}
-
-.markdown-editor-dark .w-md-editor-content .w-md-editor-preview div * {
-  color: rgb(217, 217, 217);
-}
-
-.markdown-editor-dark .w-md-editor-content .w-md-editor-area {
-  background-color: #363636;
-  border-top-right-radius: 0px;
-  border-top-left-radius: 0px;
-}
-
-.markdown-editor-dark .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .punctuation {
-  color: rgb(217, 217, 217) !important;
-  font-weight: bold;
-}
-
-.markdown-editor-dark .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .token.code.keyword {
-  color: rgb(217, 217, 217) !important;
-  font-weight: bold;
-}
-
-
-.markdown-editor-light span {
-  color: rgb(13, 13, 13);
-}
-
-.markdown-editor-light .w-md-editor-content .w-md-editor-preview {
-  background-color: rgb(217, 217, 217);
-}
-
-.markdown-editor-light .w-md-editor-content .w-md-editor-preview .wmde-markdown {
-  background-color: rgb(217, 217, 217);
-}
-
-.markdown-editor-light .w-md-editor-content .w-md-editor-preview div * {
-  color: rgb(13, 13, 13);
-}
-
-.markdown-editor-light .w-md-editor-content .w-md-editor-area {
-  background-color: rgb(217, 217, 217);
-  border-top-right-radius: 0px;
-  border-top-left-radius: 0px;
-}
-
-.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text span * {
-  color: black;
-}
-
-.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .punctuation {
-  color: black !important;
-  font-weight: bold;
-}
-
-.markdown-editor-light .w-md-editor-content .w-md-editor-area .w-md-editor-text .wmde-markdown-color .w-md-editor-text-pre .token.code.keyword {
-  color: black !important;
-  font-weight: bold;
-}
-
 
 .task-datagrid-light .MuiDataGrid-columnHeader {
   background-color: #d9d9d9;
@@ -213,7 +105,6 @@
 
 .task-datagrid-light .MuiDataGrid-filler {
   background-color: #d9d9d9;
-  opacity: 0.8;
 }
 
 .task-datagrid-light .MuiDataGrid-scrollbarFiller {
@@ -222,18 +113,16 @@
 }
 
 .task-datagrid-dark .MuiDataGrid-columnHeader {
-  background-color: #a4a4a4;
-  color: rgb(0, 0, 0);
-  opacity: 0.8;
+  background-color: #161616;
+  color: rgb(255, 255, 255);
 }
 
 .task-datagrid-dark .MuiDataGrid-filler {
-  background-color: #a4a4a4;
-  opacity: 0.8;
+  background-color: #161616;
 }
 
 .task-datagrid-dark .MuiDataGrid-scrollbarFiller {
-  background-color: #a4a4a4;
+  background-color: #161616;
   opacity: 0.8;
 }
 
@@ -241,30 +130,243 @@
   color: rgb(255, 255, 255);
 }
 
+.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-pcashz-MuiInputBase-root-MuiInput-root {
+  color: white;
+}
+
+.task-datagrid-light .MuiDataGrid-toolbarContainer .css-pcashz-MuiInputBase-root-MuiInput-root {
+  color: black;
+}
+
 .task-datagrid-dark .MuiDataGrid-toolbarContainer {
-  background-color: #cbcbcb;
+  background-color: #161616;
   opacity: 0.8;
 }
 
 .task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-virtualScroller {
-  background-color: #363636;
+  background-color: #000000;
   opacity: 0.9;
 }
 
 .task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-scrollbar {
-  background-color: #363636;
+  background-color: #161616;
 }
 
 .task-datagrid-dark .MuiDataGrid-footerContainer {
-  background-color: #cbcbcb;
-  color: black;
+  background-color: #161616;
+  color: white;
+  font-weight: bold;
 }
 
 .task-datagrid-dark .MuiDataGrid-footerContainer .MuiTablePagination-root {
-  background-color: #cbcbcb;
-  color: black;
+  background-color: #161616;
+  color: white;
+  font-weight: bold;
 }
 
-.css-ww58ll-MuiButtonBase-root-MuiButton-root {
-  color: black !important;
+.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
+  color: white !important;
+  font-weight: bold;
+}
+
+.task-datagrid-light .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
+  color: rgb(55, 55, 55) !important;
+  font-weight: bold;
+}
+
+.css-nk6ga4-MuiDataGrid-root .MuiDataGrid-cell.MuiDataGrid-cell--editing {
+  background-color: transparent !important;
+}
+
+.task-datagrid-dark .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
+  background-color: #161616 !important;
+  color: rgb(255, 255, 255) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-light .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
+  background-color: transparent !important;
+  color: rgb(55, 55, 55) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-dark .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+  background-color: #161616 !important;
+  color: rgb(255, 255, 255) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-light .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+  background-color: #d9d9d9;
+  color: rgb(255, 255, 255) !important;
+  font-weight: bold;
+}
+
+.task-datagrid-dark .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
+  color: white !important;
+}
+
+.task-datagrid-light .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
+  color: rgb(55, 55, 55) !important;
+}
+
+.task-datagrid-light .css-157nff6-MuiButtonBase-root-MuiIconButton-root.Mui-disabled {
+  color: rgb(55, 55, 55) !important;
+}
+
+/* editor preview */
+.bn-preview-box-light .bn-editor {
+  background-color: transparent;
+  padding: 1px;
+  color: rgb(55, 55, 55);
+}
+
+.bn-preview-box-light-me .bn-editor {
+  background-color: transparent;
+  padding: 1px;
+  color: rgb(255, 255, 255);
+}
+
+
+.bn-preview-box-dark .bn-editor {
+  background-color: transparent;
+  padding: 1px;
+  /* color: black; */
+}
+
+.bn-preview-box-dark-me .bn-editor {
+  background-color: transparent;
+  padding: 1px;
+  color: rgb(13, 13, 13);
+}
+
+/* editor */
+.bn-editor code {
+  background-color: #474747 !important;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 4px;
+  color: rgb(255, 255, 255);
+}
+
+.bn-block-content[data-content-type=codeBlock] {
+  background-color: #474747 !important;
+}
+
+.bn-box-light .bn-editor {
+  background-color: rgb(159, 159, 159);
+}
+
+.bn-box-dark .bn-editor {
+  background-color: #1f1f1f;
+}
+
+.bn-box-light .bn-editor {
+  padding-top: 55px;
+  height: 200px;
+  overflow: scroll;
+  padding-left: 15px;
+}
+
+.bn-box-dark .bn-editor {
+  padding-top: 55px;
+  height: 200px;
+  overflow: scroll;
+  padding-left: 15px;
+}
+
+.bn-container {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+}
+
+.bn-formatting-toolbar {
+  margin-inline: auto;
+}
+
+.bn-chat-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bn-chat-editor::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.bn-chat-editor::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+.bn-chat-editor {
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: #888 transparent;
+}
+
+.bn-container[data-changing-font-demo] .bn-editor * {
+  font-family: "Comic Sans MS", sans-serif;
+}
+
+/* Change the SuggestionMenuController position */
+div[data-floating-ui-focusable] {
+  max-height: 300px !important;
+}
+
+
+.bn-task-box-light .bn-editor {
+  background-color: rgb(159, 159, 159);
+}
+
+.bn-task-box-dark .bn-editor {
+  background-color: #1f1f1f;
+}
+
+.bn-task-box-light .bn-editor {
+  padding-top: 20px;
+  height: 520px;
+}
+
+.bn-task-box-dark .bn-editor {
+  padding-top: 20px;
+  height: 520px;
+}
+
+
+.bn-task-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bn-task-editor::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.bn-task-editor::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+.bn-task-editor {
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: #888 transparent;
+}
+
+.task-comment-preview-light .bn-editor {
+  color: black;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.task-comment-preview-dark .bn-editor {
+  color: white;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.css-ljwjwd-JoyStack-root>:not(style)~:not(style) {
+  margin-top: 5px !important;
+  margin-left: 10px !important;
 }

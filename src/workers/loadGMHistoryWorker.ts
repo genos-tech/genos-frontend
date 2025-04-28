@@ -1,11 +1,8 @@
-import loadGMHistory from '../components/backendOperation/loadGMHistory';
-import { UserProps, ChatProps, MessageProps } from "../types";
-import { STORES } from "../components/indexedDBUtils/conf";
-import {
-    clearStore,
-    addData,
-    miniBatchInsertMessages,
-} from "../components/indexedDBUtils/crud";
+import { loadGMHistory } from '../features/chat/services/loadGMHistory';
+import { UserProps } from "../types/admin";
+import { ChatProps, MessageProps } from "../types/chat";
+import { STORES } from "../db/conf";
+import { clearStore, addData, miniBatchInsertMessages } from "../db/crud";
 
 
 const BATCH_SIZE = 100;
@@ -17,10 +14,7 @@ self.onmessage = async (event) => {
     await clearStore(STORES.GM_CHATS)
 
     // Load data from backend
-    const gmHistory: ChatProps[] = await loadGMHistory({
-        userId: myself.userId,
-        accessToken: accessToken
-    });
+    const gmHistory: ChatProps[] = await loadGMHistory(myself.userId, accessToken);
 
     for (let i = 0; i < gmHistory.length; i += 1) {
         const gmChat: ChatProps = gmHistory[i]
@@ -35,6 +29,7 @@ self.onmessage = async (event) => {
                 isDm: false,
                 dmPartnerUserId: null,
                 latestMessage: gmChat.latestMessage,
+                latestMessageText: gmChat.latestMessageText,
                 TSLastMessage: gmChat.TSLastMessage
             }
         })

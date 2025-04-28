@@ -1,4 +1,4 @@
-import { checkIsKnownDMChat, checkIsKnownGMChat } from "../components/indexedDBUtils/utils";
+import { checkIsKnownDMChat, checkIsKnownGMChat } from "../db/utils";
 
 self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;

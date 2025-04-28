@@ -4,8 +4,7 @@ import { Badge } from "@mui/joy";
 interface CircleIconProps {
     number: number;
 }
-
-const CircleIcon: React.FC<CircleIconProps> = ({ number }) => {
+export const CircleIcon: React.FC<CircleIconProps> = ({ number }) => {
     return (
         <Badge
             variant="solid"
@@ -24,5 +23,3 @@ const CircleIcon: React.FC<CircleIconProps> = ({ number }) => {
         />
     );
 };
-
-export default CircleIcon;
