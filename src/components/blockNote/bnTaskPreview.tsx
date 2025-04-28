@@ -206,10 +206,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                 />
 
                                 <ColorStyleButton key={"colorStyleButton"} />
-
-                                {/* <NestBlockButton key={"nestBlockButton"} />
-                            <UnnestBlockButton key={"unnestBlockButton"} /> */}
-
                                 <CreateLinkButton key={"createLinkButton"} />
 
                                 {/* Extra button to toggle blue text & background */}

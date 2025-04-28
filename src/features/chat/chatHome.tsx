@@ -113,12 +113,12 @@ export const ChatHome = (props: ChatHomeProps) => {
     useEffect(() => {
         if (currentPreviewTask?.project && currentPreviewTaskId !== -1) {
             (async () => {
-                const loadedTask: TaskProps[] = await loadSpecificTask({
-                    myself: myself,
-                    projectId: currentPreviewTask.project?.projectId || -1,
-                    taskId: currentPreviewTaskId,
-                    accessToken: accessToken || ""
-                });
+                const loadedTask: TaskProps[] = await loadSpecificTask(
+                    myself,
+                    currentPreviewTask.project?.projectId || -1,
+                    currentPreviewTaskId,
+                    accessToken
+                );
                 setCurrentPreviewTask(loadedTask[0])
                 setIsTaskContentVisible(true)
             })();

@@ -2,11 +2,7 @@ import { loadDMHistory } from '../features/chat/services/loadDMHistory';
 import { UserProps } from "../types/admin";
 import { ChatProps, MessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
-import {
-    clearStore,
-    addData,
-    miniBatchInsertMessages
-} from "../db/crud";
+import { clearStore, addData, miniBatchInsertMessages } from "../db/crud";
 
 const BATCH_SIZE = 100;
 

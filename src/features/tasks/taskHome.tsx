@@ -19,7 +19,7 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 
 import { TaskSidebar } from './components/TaskSidebar';
-import { TaskDashboard } from "./components/home/TaskDashboard";
+import { TaskDashboard } from "./components/dashboard//TaskDashboard";
 import { TaskPreview } from './components/contents/TaskPreview';
 import { TaskTable } from './components/table/TaskTable';
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
@@ -29,13 +29,13 @@ import { loadTeamTaskList } from './services/loadTaskSearchList';
 import { ModalCreateTag } from './components/modals/ModalCreateTag';
 import { ModalCreateProject } from './components/modals/ModalCreateProject';
 import { ModalCreateTeam } from '../admin/components/modals/ModalCreateTeam';
+import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from '../../components/layout/sidebar';
 import { UserProps } from '../../types/admin';
 import { SearchTeamTasksResponse } from '../../types/chat';
 import { ProjectProps, TaskTableProps, TaskProps } from "../../types/tasks";
-import FetchSpecificProjectTasksWorker from "../../workers/fetchSpecificProjectTasksWorker.ts?worker";
 import { useAuth } from "../../context/AuthContext";
-import LoadTeamTaskWorker from "../../workers/loadTeamTaskWorker.ts?worker";
+import { updateTeamTasks } from "./services/updateTeamTasks";
 
 type TaskHomeProps = {
     socket: Socket | null;
@@ -48,8 +48,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     const { socket, myself, setMyself, setOpeningService } = props
     const { accessToken } = useAuth();
 
-    const [isDashboardVisible, setIsDashboardVisible] = useState(true);
-    const [isTaskTableVisible, setTaskTableVisible] = useState(false);
+    const [isDashboardVisible, setIsDashboardVisible] = useState(false);
+    const [isTaskTableVisible, setTaskTableVisible] = useState(true);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
@@ -77,9 +77,9 @@ export const TaskHome = (props: TaskHomeProps) => {
         }
 
         (async () => {
-            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList({
-                myself: myself, accessToken: accessToken || ""
-            });
+            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+                myself, accessToken
+            );
 
             if (active) {
                 setTeamTaskOptions([...loadedTeamTasks]);
@@ -100,34 +100,33 @@ export const TaskHome = (props: TaskHomeProps) => {
     }
     // =======================================================================
 
-    const loadProjects = () => {
-        // Load the latest project as initial process
-        (async () => {
-            const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
-                myself: myself, accessToken: accessToken || ""
-            });
-            if (loadedTeamProjects.length > 0) {
-                setCurrentProject({
-                    projectId: loadedTeamProjects[0].projectId,
-                    projectName: loadedTeamProjects[0].projectName,
-                });
+    const fetchProjectTasks = async (projectId: number) => {
+        const fetchedTasks: TaskTableProps[] = await popSpecificProjectTasks(projectId)
+        if (fetchedTasks) {
+            setProjectTasks(fetchedTasks)
+        } else {
+            console.error("Failed to fetch thread DM fetchedTasks:", fetchedTasks)
+        }
+    };
 
-                const loadTeamTaskWorker = new LoadTeamTaskWorker();
-                loadTeamTaskWorker.postMessage({ myself: myself, accessToken: accessToken });
-                loadTeamTaskWorker.onmessage = (event) => {
-                    if (event.data === "done") {
-                        fetchProjectTasks(loadedTeamProjects[0].projectId);
-                    } else {
-                        console.error("Filed initial team task loading");
-                    }
-                };
-                return () => {
-                    loadTeamTaskWorker.terminate();
-                };
-            } else {
-                setCurrentProject(null)
-            }
-        })();
+    const loadProjects = async () => {
+        // Load the latest project as initial process
+        const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(
+            myself, accessToken
+        );
+
+        if (loadedTeamProjects.length > 0) {
+            setCurrentProject({
+                projectId: loadedTeamProjects[0].projectId,
+                projectName: loadedTeamProjects[0].projectName,
+            });
+
+            await updateTeamTasks(myself, accessToken)
+            await fetchProjectTasks(loadedTeamProjects[0].projectId);
+
+        } else {
+            setCurrentProject(null)
+        }
     };
 
     useEffect(() => {
@@ -138,37 +137,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         loadProjects();
     }, [myself, openCreateTeam, openCreateProject])
 
-    const fetchProjectTasks = async (projectId: number): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const loadTeamTaskWorker = new LoadTeamTaskWorker();
-            loadTeamTaskWorker.postMessage({ myself: myself, accessToken: accessToken });
-            loadTeamTaskWorker.onmessage = (event) => {
-                if (event.data === "done") {
-                    const fetchSpecificProjectTasksWorker = new FetchSpecificProjectTasksWorker();
-                    fetchSpecificProjectTasksWorker.postMessage({
-                        projectId: projectId,
-                    });
-                    fetchSpecificProjectTasksWorker.onmessage = (event) => {
-                        const fetchedTasks: TaskTableProps[] = event.data;
-                        if (fetchedTasks !== undefined) {
-                            setProjectTasks(fetchedTasks)
-                        } else {
-                            console.error("Failed to fetch project tasks:", fetchedTasks)
-                        }
-                        resolve(event.data);
-                        fetchSpecificProjectTasksWorker.terminate();
-                    };
-                    fetchSpecificProjectTasksWorker.onerror = (error) => {
-                        reject(error);
-                        fetchSpecificProjectTasksWorker.terminate();
-                    };
-                } else {
-                    console.error("Filed to load updated team tasks");
-                }
-            };
-        });
-    };
-
     useEffect(() => {
         if (currentProject) {
             fetchProjectTasks(currentProject.projectId);
@@ -178,12 +146,12 @@ export const TaskHome = (props: TaskHomeProps) => {
     useEffect(() => {
         if (currentProject && currentPreviewTaskId !== -1) {
             (async () => {
-                const loadedTask: TaskProps[] = await loadSpecificTask({
-                    myself: myself,
-                    projectId: currentProject.projectId,
-                    taskId: currentPreviewTaskId,
-                    accessToken: accessToken || ""
-                });
+                const loadedTask: TaskProps[] = await loadSpecificTask(
+                    myself,
+                    currentProject.projectId,
+                    currentPreviewTaskId,
+                    accessToken
+                );
 
                 setCurrentPreviewTask(loadedTask[0])
                 setIsTaskContentVisible(true)

@@ -69,7 +69,6 @@ export const Sidebar = (props: SidebarProps) => {
     setOpeningService(3);
   };
 
-
   return (
     <Sheet
       className="Sidebar"

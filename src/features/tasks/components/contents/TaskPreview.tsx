@@ -9,7 +9,7 @@ import { TaskMainBlock } from './base/TaskMainBlock';
 import { TaskBodyPreviewBlock } from './base/TaskBodyPreviewBlock';
 import { TaskPreviewCustomBar } from './base/TaskPreviewCustomBar';
 import { TaskCommentBlock } from './base/TaskCommentBlock'
-import { updateSpecificTask } from '../../services/updateSpecificTask';
+import { sendUpdatedSpecificTask } from '../../services/sendUpdatedSpecificTask';
 import { loadTaskComments } from '../../services/loadTaskComments';
 import { wsTaskHandleHook } from '../../hooks/WSTaskHooks';
 import {
@@ -101,11 +101,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             };
             (async () => {
                 setTmpCurrentTaskContent(newTaskContent)
-                await updateSpecificTask({
-                    myself: myself,
-                    updatedData: newTaskContent,
-                    accessToken: accessToken || ""
-                });
+                await sendUpdatedSpecificTask(
+                    myself,
+                    newTaskContent,
+                    accessToken
+                );
             })();
 
             setTaskUpdated(false)
@@ -135,14 +135,16 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [taskComments, setTaskComments] = useState<TaskCommentProps[]>([]);
     useEffect(() => {
         (async () => {
-            const loadedTaskComments: TaskCommentProps[] = await loadTaskComments({
-                taskId: Number(currentPreviewTask.id), accessToken: accessToken || ""
-            });
+            const loadedTaskComments: TaskCommentProps[] = await loadTaskComments(
+                Number(currentPreviewTask.id), accessToken
+            );
+
             if (loadedTaskComments.length > 0) {
                 setTaskComments(loadedTaskComments);
             } else {
                 setTaskComments([]);
             }
+
         })();
     }, [isCommentUpdated])
 

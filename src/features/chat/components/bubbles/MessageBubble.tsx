@@ -56,14 +56,16 @@ export const MessageBubble = (props: MessageBubbleProps) => {
   const loadTask = (threadId: number) => {
     (async () => {
       const chatType: string = (chat.isDm) ? "dm" : "gm"
-      const loadedTask: TaskProps[] = await loadSpecificTaskByThreadId({
-        myself: myself, chatType: chatType, chatId: chat.chatId, threadId: threadId, accessToken: accessToken || ""
-      });
+      const loadedTask: TaskProps[] = await loadSpecificTaskByThreadId(
+        myself, chatType, chat.chatId, threadId, accessToken
+      );
+
       if (loadedTask.length > 0) {
         setCurrentPreviewTask(loadedTask[0]);
       } else {
         setCurrentPreviewTask(undefined)
       }
+
     })();
   };
 

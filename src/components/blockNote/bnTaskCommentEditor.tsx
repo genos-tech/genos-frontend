@@ -162,6 +162,21 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         editor.replaceBlocks(editor.document, [])
     }, [taskId])
 
+    const sendComment = async () => {
+        if (socket) {
+            if (editor.document.length > 1) {
+                socket.emit("task_comment", {
+                    project_id: projectId,
+                    task_id: taskId,
+                    comment_body: editor.document
+                }, (ack: any) => {
+                    setIsCommentUpdated(true)
+                }
+                )
+            }
+        }
+    }
+
     return (
         <Box>
             <EmojiPicker
@@ -181,18 +196,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     onChange={() => (setEditorDocLength(editor.document.length))}
                     onKeyDown={(event) => {
                         if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                            if (socket) {
-                                if (editor.document.length > 1) {
-                                    socket.emit("task_comment", {
-                                        project_id: projectId,
-                                        task_id: taskId,
-                                        comment_body: editor.document
-                                    }, (ack: any) => {
-                                        setIsCommentUpdated(true)
-                                    }
-                                    )
-                                }
-                            }
+                            sendComment();
                         }
                     }}
                 >
@@ -224,20 +228,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             p: 0.7,
                         }}
                         disabled={editorDocLength < 2}
-                        onClick={() => {
-                            if (socket) {
-                                if (editor.document.length > 1) {
-                                    socket.emit("task_comment", {
-                                        project_id: projectId,
-                                        task_id: taskId,
-                                        comment_body: editor.document
-                                    }, (ack: any) => {
-                                        setIsCommentUpdated(true)
-                                    }
-                                    )
-                                }
-                            }
-                        }}
+                        onClick={sendComment}
                     >
                         <SendIcon />
                         Send
@@ -282,10 +273,6 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             />
 
                             <ColorStyleButton key={"colorStyleButton"} />
-
-                            {/* <NestBlockButton key={"nestBlockButton"} />
-                            <UnnestBlockButton key={"unnestBlockButton"} /> */}
-
                             <CreateLinkButton key={"createLinkButton"} />
 
                             {/* Extra button to toggle blue text & background */}

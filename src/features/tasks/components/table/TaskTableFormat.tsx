@@ -33,8 +33,8 @@ const statusOptions = [
         label: "WIP",
         value: "WIP",
         color: "#ffff23",
-        textColor: "black",
-        icon: <AutorenewIcon style={{ color: "black" }} />
+        textColor: "#6f6f6f",
+        icon: <AutorenewIcon style={{ color: "#6f6f6f" }} />
     },
     {
         label: "Pending",

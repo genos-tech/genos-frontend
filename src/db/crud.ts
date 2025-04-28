@@ -179,12 +179,23 @@ export const clearStore = async (storeName: string) => {
     await tx.done;
 };
 
-
 export const getLatestDMChat = async () => {
     const db = await openDB(DB_NAME, DB_VERSION);
     const tx = db.transaction(STORES.DM_CHATS, "readonly");
     const store = tx.objectStore(STORES.DM_CHATS);
     const index = store.index(INDEX.DM_CHATS);
+
+    // Use `openCursor()` and await the first result
+    const cursor = await index.openCursor(null, "prev"); // Get latest first
+
+    return cursor ? cursor.value : null; // Return the latest record
+}
+
+export const getLatestGMChat = async () => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const tx = db.transaction(STORES.GM_CHATS, "readonly");
+    const store = tx.objectStore(STORES.GM_CHATS);
+    const index = store.index(INDEX.GM_CHATS);
 
     // Use `openCursor()` and await the first result
     const cursor = await index.openCursor(null, "prev"); // Get latest first

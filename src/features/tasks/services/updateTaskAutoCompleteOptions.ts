@@ -27,9 +27,9 @@ type UpdateProjectOptions = {
 }
 export const updateProjectOptions = async (props: UpdateProjectOptions) => {
     const { myself, accessToken, setTeamProjects } = props;
-    const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
-        myself: myself, accessToken: accessToken || ""
-    });
+    const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(
+        myself, accessToken
+    );
     if (loadedTeamProjects.length > 0) {
         setTeamProjects(loadedTeamProjects);
     };
@@ -44,9 +44,9 @@ type UpdateTagOptions = {
 }
 export const updateTagOptions = async (props: UpdateTagOptions) => {
     const { myself, accessToken, projectId, setProjectTags } = props;
-    const loadedProjectTags: TagListProps[] = await loadProjectTags({
-        myself: myself, projectId: projectId || -1, accessToken: accessToken || ""
-    });
+    const loadedProjectTags: TagListProps[] = await loadProjectTags(
+        myself, projectId || -1, accessToken
+    );
     if (loadedProjectTags.length > 0) {
         setProjectTags(loadedProjectTags);
     }

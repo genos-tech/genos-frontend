@@ -85,7 +85,7 @@ type BnTaskEditorProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
 }
 
-export function BnTaskEditor(props: BnTaskEditorProps) {
+export const BnTaskEditor = (props: BnTaskEditorProps) => {
     const { setBody } = props;
 
     const { mode } = useColorScheme();
@@ -138,11 +138,6 @@ export function BnTaskEditor(props: BnTaskEditorProps) {
                     theme={mode === 'dark' ? 'dark' : 'light'}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                            if (editor.document.length > 1) { }
-                        }
-                    }}
                     onChange={() => { setBody(editor.document) }}
                 >
                     <FormattingToolbarController
@@ -189,10 +184,6 @@ export function BnTaskEditor(props: BnTaskEditorProps) {
                                 />
 
                                 <ColorStyleButton key={"colorStyleButton"} />
-
-                                {/* <NestBlockButton key={"nestBlockButton"} />
-                            <UnnestBlockButton key={"unnestBlockButton"} /> */}
-
                                 <CreateLinkButton key={"createLinkButton"} />
 
                                 {/* Extra button to toggle blue text & background */}
@@ -222,5 +213,3 @@ export function BnTaskEditor(props: BnTaskEditorProps) {
         </Box >
     );
 }
-
-export default BnTaskEditor;

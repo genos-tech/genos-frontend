@@ -34,63 +34,10 @@ import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { EmojiPicker } from '../emojiInput/EmojiPicker'
 import { getCurrentTimestamp } from "../utils/dateUtils";
 import { UserProps } from '../../types/admin';
-import { ChatProps, AllChatProps } from '../../types/chat'
-import InsertDMChatWorker from "../../workers/insertDMChatWorker.ts?worker";
-import InsertDMMessageWorker from "../../workers/insertDMMessageWorker.ts?worker";
-import InsertGMChatWorker from "../../workers/insertGMChatWorker.ts?worker";
-import InsertGMMessageWorker from "../../workers/insertGMMessageWorker.ts?worker";
+import { ChatProps, AllChatProps, MessageProps } from '../../types/chat'
+import { addChat } from '../../features/chat/services/addChat';
+import { addMessage } from '../../features/chat/services/addMessage';
 
-const insertDMChatAndMessage = async (newDMChat: AllChatProps): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const insertDMMessageWorker = new InsertDMMessageWorker();
-        insertDMMessageWorker.postMessage({ dmMessage: newDMChat.latestMessage });
-        insertDMMessageWorker.onmessage = (event) => {
-            resolve(event.data);
-            insertDMMessageWorker.terminate();
-        };
-        insertDMMessageWorker.onerror = (error) => {
-            reject(error);
-            insertDMMessageWorker.terminate();
-        };
-
-        const insertDMChatWorker = new InsertDMChatWorker();
-        insertDMChatWorker.postMessage({ dmChat: newDMChat });
-        insertDMChatWorker.onmessage = (event) => {
-            resolve(event.data);
-            insertDMChatWorker.terminate();
-        };
-        insertDMChatWorker.onerror = (error) => {
-            reject(error);
-            insertDMChatWorker.terminate();
-        };
-    });
-};
-
-const insertGMChatAndMessage = async (newGMChat: AllChatProps): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const insertGMMessageWorker = new InsertGMMessageWorker();
-        insertGMMessageWorker.postMessage({ gmMessage: newGMChat.latestMessage });
-        insertGMMessageWorker.onmessage = (event) => {
-            resolve(event.data);
-            insertGMMessageWorker.terminate();
-        };
-        insertGMMessageWorker.onerror = (error) => {
-            reject(error);
-            insertGMMessageWorker.terminate();
-        };
-
-        const insertGMChatWorker = new InsertGMChatWorker();
-        insertGMChatWorker.postMessage({ gmChat: newGMChat });
-        insertGMChatWorker.onmessage = (event) => {
-            resolve(event.data);
-            insertGMChatWorker.terminate();
-        };
-        insertGMChatWorker.onerror = (error) => {
-            reject(error);
-            insertGMChatWorker.terminate();
-        };
-    });
-};
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -155,7 +102,6 @@ export const BnEditor = (props: BnEditorProps) => {
 
     // We use the English, default dictionary
     const locale = en;
-
     const editor = useCreateBlockNote({
         schema,
         codeBlock,
@@ -182,7 +128,6 @@ export const BnEditor = (props: BnEditorProps) => {
         ]);
         setShowEmojiPicker(false);
     };
-
     useEffect(() => { if (selectedEmoji !== null) { insertEmoji(selectedEmoji) } }, [selectedEmoji])
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
@@ -190,6 +135,86 @@ export const BnEditor = (props: BnEditorProps) => {
     useEffect(() => {
         editor.replaceBlocks(editor.document, [])
     }, [chat])
+
+    const sendingMessage = async () => {
+        if (editor.document.length > 1 && socket !== null) {
+            // Set input text
+            const content: any[] | any = editor.document.slice(-2, -1)[0].content;
+            var contentText: string = "Something wrong...."
+            if (content.length > 0) {
+                contentText = content[0].text
+            }
+
+            socket.emit("message", {
+                message: editor.document,
+                destCGName: chat.chatName,
+                destCGId: chat.chatId,
+                isDm: chat.isDm,
+                dmPartnerUserId: chat.dmPartnerUserId,
+            }, async (ack: any) => {
+                const updatedChat: ChatProps = {
+                    chatId: chat.chatId,
+                    chatName: chat.chatName,
+                    isDm: chat.isDm,
+                    dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+                    unread: false,
+                    messages: [...chat.messages, {
+                        messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                        chatId: chat.chatId,
+                        messageId: Number(chat.latestMessage?.messageId) + 1,
+                        content: editor.document,
+                        contentText: contentText,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                        numReplies: 0,
+                    }],
+                    latestMessage: {
+                        messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                        chatId: chat.chatId,
+                        messageId: Number(chat.latestMessage?.messageId) + 1,
+                        content: editor.document,
+                        contentText: contentText,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                        numReplies: 0,
+                    },
+                    latestMessageText: contentText,
+                    TSLastMessage: getCurrentTimestamp(),
+                };
+                setCurrentChat(updatedChat);
+
+                const latestMessage: MessageProps = {
+                    messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
+                    chatId: chat.chatId,
+                    messageId: Number(chat.latestMessage?.messageId) + 1,
+                    content: editor.document,
+                    contentText: contentText,
+                    sender: myself,
+                    tsSent: getCurrentTimestamp(),
+                    numReplies: 0,
+                }
+                if (latestMessage) {
+                    const newChat: AllChatProps = {
+                        chatId: chat.chatId,
+                        chatName: chat.chatName,
+                        isDm: chat.isDm,
+                        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+                        unread: false,
+                        latestMessage: latestMessage,
+                        latestMessageText: contentText,
+                        TSLastMessage: getCurrentTimestamp(),
+                    };
+
+                    if (newChat) {
+                        await addMessage(latestMessage, newChat.isDm)
+                        await addChat(newChat, newChat.isDm)
+
+                        editor.replaceBlocks(editor.document, [])
+                    }
+                }
+            });
+        }
+    }
 
     return (
         <Box>
@@ -207,83 +232,9 @@ export const BnEditor = (props: BnEditorProps) => {
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
                     onChange={() => (setEditorDocLength(editor.document.length))}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && socket !== null) {
-                            if (editor.document.length > 1) {
-
-                                // Set input text
-                                const content: any[] | any = editor.document.slice(-2, -1)[0].content;
-                                var contentText: string = "Something wrong...."
-                                if (content.length > 0) {
-                                    contentText = content[0].text
-                                }
-
-                                socket.emit("message", {
-                                    message: editor.document,
-                                    destCGName: chat.chatName,
-                                    destCGId: chat.chatId,
-                                    isDm: chat.isDm,
-                                    dmPartnerUserId: chat.dmPartnerUserId,
-                                }, (ack: any) => {
-                                    const updatedChat: ChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
-                                        unread: false,
-                                        messages: [...chat.messages, {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        }],
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
-                                        TSLastMessage: getCurrentTimestamp(),
-                                    };
-                                    setCurrentChat(updatedChat);
-
-                                    const newChat: AllChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
-                                        unread: false,
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
-                                        TSLastMessage: getCurrentTimestamp(),
-                                    };
-
-                                    if (chat.isDm) {
-                                        insertDMChatAndMessage(newChat);
-                                    } else {
-                                        insertGMChatAndMessage(newChat);
-                                    }
-                                    editor.replaceBlocks(editor.document, [])
-                                });
-                            }
+                    onKeyDown={async (event) => {
+                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                            sendingMessage();
                         }
                     }}
                 >
@@ -315,83 +266,7 @@ export const BnEditor = (props: BnEditorProps) => {
                             p: 0.7,
                         }}
                         disabled={editorDocLength < 2}
-                        onClick={() => {
-                            if (editor.document.length > 1 && socket !== null) {
-
-                                // Set input text
-                                const content: any[] | any = editor.document.slice(-2, -1)[0].content;
-                                var contentText: string = "Something wrong...."
-                                if (content.length > 0) {
-                                    contentText = content[0].text
-                                }
-
-                                socket.emit("message", {
-                                    message: editor.document,
-                                    destCGName: chat.chatName,
-                                    destCGId: chat.chatId,
-                                    isDm: chat.isDm,
-                                    dmPartnerUserId: chat.dmPartnerUserId,
-                                }, (ack: any) => {
-
-                                    const updatedChat: ChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
-                                        unread: false,
-                                        messages: [...chat.messages, {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        }],
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
-                                        TSLastMessage: getCurrentTimestamp(),
-                                    };
-                                    setCurrentChat(updatedChat);
-
-                                    const newChat: AllChatProps = {
-                                        chatId: chat.chatId,
-                                        chatName: chat.chatName,
-                                        isDm: chat.isDm,
-                                        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
-                                        unread: false,
-                                        latestMessage: {
-                                            messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                                            chatId: chat.chatId,
-                                            messageId: Number(chat.latestMessage?.messageId) + 1,
-                                            content: editor.document,
-                                            contentText: contentText,
-                                            sender: myself,
-                                            tsSent: getCurrentTimestamp(),
-                                            numReplies: 0,
-                                        },
-                                        latestMessageText: contentText,
-                                        TSLastMessage: getCurrentTimestamp(),
-                                    };
-                                    if (chat.isDm) {
-                                        insertDMChatAndMessage(newChat);
-                                    } else {
-                                        insertGMChatAndMessage(newChat);
-                                    }
-                                    editor.replaceBlocks(editor.document, [])
-                                });
-                            }
-                        }}
+                        onClick={async () => sendingMessage()}
                     >
                         <SendIcon />
                         Send
@@ -435,24 +310,7 @@ export const BnEditor = (props: BnEditorProps) => {
                                 basicTextStyle={"code"}
                             />
 
-                            {/* <TextAlignButton
-                                textAlignment={"left"}
-                                key={"textAlignLeftButton"}
-                            />
-                            <TextAlignButton
-                                textAlignment={"center"}
-                                key={"textAlignCenterButton"}
-                            />
-                            <TextAlignButton
-                                textAlignment={"right"}
-                                key={"textAlignRightButton"}
-                            /> */}
-
                             <ColorStyleButton key={"colorStyleButton"} />
-
-                            {/* <NestBlockButton key={"nestBlockButton"} />
-                            <UnnestBlockButton key={"unnestBlockButton"} /> */}
-
                             <CreateLinkButton key={"createLinkButton"} />
 
                             {/* Extra button to toggle blue text & background */}
@@ -478,6 +336,6 @@ export const BnEditor = (props: BnEditorProps) => {
                     />
                 </BlockNoteView>
             </Box>
-        </Box>
+        </Box >
     );
 }

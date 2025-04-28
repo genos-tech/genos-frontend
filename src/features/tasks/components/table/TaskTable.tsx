@@ -172,9 +172,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
   // Get Project tags
   const updateTagOptions = () => {
     (async () => {
-      const loadedProjectTags: TagListProps[] = await loadProjectTags({
-        myself: myself, projectId: projectTasks[0].projectId || -1, accessToken: accessToken || ""
-      });
+      const loadedProjectTags: TagListProps[] = await loadProjectTags(myself, projectTasks[0].projectId || -1, accessToken);
       if (loadedProjectTags.length > 0) {
         const tagBasedFilters: FilterProps[] = loadedProjectTags.map(tag => ({
           label: tag.tagName,

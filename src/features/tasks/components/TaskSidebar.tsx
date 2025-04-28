@@ -105,9 +105,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     }
 
     (async () => {
-      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList({
-        myself: myself, accessToken: accessToken || ""
-      });
+      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+        myself, accessToken
+      );
 
       if (active) {
         setTeamTaskOptions([...loadedTeamTasks]);
@@ -131,9 +131,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
   const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
   const updateRecentTasks = () => {
     (async () => {
-      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList({
-        myself: myself, accessToken: accessToken || ""
-      });
+      const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+        myself, accessToken
+      );
       setRecentTasks([...loadedTeamTasks.slice(0, 10)]);
     })();
   };
@@ -145,9 +145,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
   const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
   const updateTeamProjects = () => {
     (async () => {
-      const loadedTeamProjects: ProjectProps[] = await loadTeamProjects({
-        myself: myself, accessToken: accessToken || ""
-      });
+      const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(
+        myself, accessToken
+      );
       setTeamProjects([...loadedTeamProjects]);
     })();
   }
@@ -312,12 +312,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
               )}
             >
               <List sx={{ gap: 0.5 }}>
-                {recentTasks.map(({ taskId, title }, index) => {
+                {recentTasks.map(({ projectId, projectName, taskId, title }, index) => {
                   return (
                     <ListItem key={taskId}>
                       <ListItemButton
                         onClick={() => {
-                          setCurrentPreviewTaskId(taskId)
+                          setCurrentProject({
+                            projectId: projectId,
+                            projectName: projectName,
+                          })
+                          setCurrentPreviewTaskId(taskId);
                         }}
                         sx={{ overflow: 'hidden' }} // ensure children don't overflow
                       >

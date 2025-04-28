@@ -7,7 +7,7 @@ import './App.css';
 import { ChatHome } from './features/chat/chatHome';
 import { TaskHome } from './features/tasks/taskHome';
 import { NoteHome } from './features/notes/NoteHome';
-import { Loading } from './services/loading'
+import { InitialLoad } from './components/utils/InitialLoad'
 import { UserProps } from "./types/admin";
 import { ChatProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
@@ -93,7 +93,7 @@ export const App = () => {
 
   return (
     isLoading || currentMainChat === undefined ? (
-      <Loading
+      <InitialLoad
         myself={myself}
         setIsLoading={setIsLoading}
         setCurrentMainChat={setCurrentMainChat}

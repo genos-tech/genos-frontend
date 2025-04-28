@@ -1,17 +1,17 @@
 import { CircularProgress, Typography, Box } from "@mui/joy";
 
-import { InitialLoad } from './initialLoad';
-import { UserProps } from "../types/admin";
-import { ChatProps } from "../types/chat";
-import { useAuth } from "../context/AuthContext";
+import { loadInitialData } from '../../services/loadInitialData';
+import { UserProps } from "../../types/admin";
+import { ChatProps } from "../../types/chat";
+import { useAuth } from "../../context/AuthContext";
 
-type LoadingProps = {
+type InitialLoadProps = {
     myself: UserProps;
     setIsLoading: (value: boolean) => void;
     setCurrentMainChat: (value: ChatProps) => void;
 }
 
-export const Loading = (props: LoadingProps) => {
+export const InitialLoad = (props: InitialLoadProps) => {
     const {
         myself,
         setIsLoading,
@@ -19,7 +19,7 @@ export const Loading = (props: LoadingProps) => {
     } = props
     const { accessToken } = useAuth();
 
-    InitialLoad(
+    loadInitialData(
         myself,
         accessToken,
         setIsLoading,

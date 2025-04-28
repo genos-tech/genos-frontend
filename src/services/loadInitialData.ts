@@ -2,18 +2,18 @@ import { useEffect, useState } from "react";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
-import GetLatestDMChatWorker from "../workers/getLatestDMChatWorker.ts?worker";
-import FetchSpecificDMChatWorker from "../workers/fetchSpecificDMChatWorker.ts?worker";
-import FetchSpecificDMMessagesWorker from "../workers/fetchSpecificDMMessagesWorker.ts?worker";
+import PopLatestChatWorker from "../workers/popLatestChatWorker.ts?worker";
+import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
+import PopSpecificMessagesWorker from "../workers/popSpecificMessagesWorker.ts?worker";
 import { UserProps } from "../types/admin";
 import { ChatProps, MessageProps } from "../types/chat";
 
-export function InitialLoad(
+export const loadInitialData = (
     myself: UserProps,
     accessToken: string | null,
     setIsLoading: (state: boolean) => void,
     setCurrentMainChat: (value: ChatProps) => void,
-) {
+) => {
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
     const [isTeamTasksLoaded, setIsTeamTasksLoaded] = useState<boolean | null>(false);
@@ -81,9 +81,9 @@ export function InitialLoad(
     // Fetch the latest DM Chat Id
     useEffect(() => {
         if (isDMHistoryLoaded) {
-            const getLatestDMChatWorker = new GetLatestDMChatWorker();
-            getLatestDMChatWorker.postMessage({});
-            getLatestDMChatWorker.onmessage = (event) => {
+            const popLatestDMChatWorker = new PopLatestChatWorker();
+            popLatestDMChatWorker.postMessage({ isDm: true });
+            popLatestDMChatWorker.onmessage = (event) => {
                 const latestDmChat: any = event.data;
                 if (latestDmChat === null) {
                     setLatestDmChatId(-1)
@@ -92,7 +92,7 @@ export function InitialLoad(
                 }
             };
             return () => {
-                getLatestDMChatWorker.terminate();
+                popLatestDMChatWorker.terminate();
             };
         }
     }, [isDMHistoryLoaded])
@@ -103,9 +103,9 @@ export function InitialLoad(
             if (latestDmChatId === -1) {
                 setInitialChatMessages([])
             } else {
-                const fetchSpecificDMMessagesWorker = new FetchSpecificDMMessagesWorker();
-                fetchSpecificDMMessagesWorker.postMessage({ chatId: latestDmChatId });
-                fetchSpecificDMMessagesWorker.onmessage = (event) => {
+                const popSpecificMessagesWorker = new PopSpecificMessagesWorker();
+                popSpecificMessagesWorker.postMessage({ chatId: latestDmChatId, isDm: true });
+                popSpecificMessagesWorker.onmessage = (event) => {
                     const fetchedMessages: MessageProps[] = event.data;
                     if (fetchedMessages !== undefined) {
                         setInitialChatMessages(fetchedMessages)
@@ -115,7 +115,7 @@ export function InitialLoad(
                     }
                 };
                 return () => {
-                    fetchSpecificDMMessagesWorker.terminate();
+                    popSpecificMessagesWorker.terminate();
                 };
             }
         }
@@ -125,9 +125,9 @@ export function InitialLoad(
     useEffect(() => {
         if (InitialChatMessages !== undefined) {
             if (InitialChatMessages.length > 0) {
-                const fetchSpecificDMChatWorker = new FetchSpecificDMChatWorker();
-                fetchSpecificDMChatWorker.postMessage({ chatId: latestDmChatId });
-                fetchSpecificDMChatWorker.onmessage = (event) => {
+                const popSpecificChatWorker = new PopSpecificChatWorker();
+                popSpecificChatWorker.postMessage({ chatId: latestDmChatId, isDm: true });
+                popSpecificChatWorker.onmessage = (event) => {
                     const fetchedChat: any = event.data;
                     if (fetchedChat !== undefined && fetchedChat !== null) {
                         const currentMainChat: ChatProps = {
@@ -148,7 +148,7 @@ export function InitialLoad(
                     }
                 };
                 return () => {
-                    fetchSpecificDMChatWorker.terminate();
+                    popSpecificChatWorker.terminate();
                 };
             } else {
                 const currentMainChat: ChatProps = {

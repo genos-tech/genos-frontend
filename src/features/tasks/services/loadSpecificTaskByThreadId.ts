@@ -1,49 +1,30 @@
-import { UserProps } from '../../../types/admin'
-import { TaskProps } from '../../../types/tasks';
+import axios from 'axios';
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
+import { authApi } from '../../../services/api';
+import { UserProps } from '../../../types/admin';
 
-type LoadTaskTableProps = {
-    myself: UserProps;
-    chatType: string;
-    chatId: number;
-    threadId: number;
-    accessToken: string;
-};
 
-export const loadSpecificTaskByThreadId = async (props: LoadTaskTableProps) => {
-    const { myself, chatType, chatId, threadId, accessToken } = props
-    if (!base_url) {
-        const errorMsg = "API base URL is not defined.";
-        console.error(errorMsg);
-        return [];
-    }
-
+export const loadSpecificTaskByThreadId = async (
+    myself: UserProps,
+    chatType: string,
+    chatId: number,
+    threadId: number,
+    accessToken: string | null,
+) => {
     try {
-        const response = await fetch(`${base_url}/task/getTaskByThreadId/?team_id=${myself.teamId}&chat_type=${chatType}&chat_id=${chatId}&thread_id=${threadId}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": `Bearer ${accessToken}`
-            },
-        });
-
-        const data: TaskProps[] = await response.json();
-
-        if (!response.ok) {
-            const errorMsg = "Failed to get a task";
-            throw new Error(errorMsg);
+        const api = authApi(accessToken);
+        if (api) {
+            const query: string = `team_id=${myself.teamId}&chat_type=${chatType}&chat_id=${chatId}&thread_id=${threadId}`
+            const res = await api.get(`/task/getTaskByThreadId/?${query}`);
+            return res.data
+        } else {
+            console.error('Unauthorized. Auth toke is not found.');
         }
-        return data || [];
-
-    } catch (error) {
-        const errorMsg =
-            error instanceof Error
-                ? error.message
-                : "An unknown error occurred during loading a task.";
-
-        console.error(errorMsg);
-        return [];
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            console.error('API error:', error.response?.status, error.response?.data);
+        } else {
+            console.error('Unexpected error:', error);
+        }
     }
-
 }

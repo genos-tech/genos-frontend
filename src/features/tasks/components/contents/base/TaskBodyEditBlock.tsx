@@ -1,7 +1,7 @@
 import { Box, Stack } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 
-import BnTaskEditor from '../../../../../components/blockNote/bnTaskEditor'
+import { BnTaskEditor } from '../../../../../components/blockNote/bnTaskEditor'
 
 type TaskBodyEditBlockProps = {
     setBody: (value: PartialBlock[]) => void;

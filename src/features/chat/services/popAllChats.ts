@@ -1,9 +1,9 @@
 import { AllChatProps } from '../../../types/chat';
-import FetchAllChatsWorker from "../../../workers/fetchAllChatsWorker.ts?worker";
+import PopAllChatsWorker from "../../../workers/popAllChatsWorker.ts?worker";
 
 export const popAllChats = (): Promise<AllChatProps[]> => {
     return new Promise((resolve, reject) => {
-        const popAllChatsWorker = new FetchAllChatsWorker();
+        const popAllChatsWorker = new PopAllChatsWorker();
 
         popAllChatsWorker.postMessage({});
 

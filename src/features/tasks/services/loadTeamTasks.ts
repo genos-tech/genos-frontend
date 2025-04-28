@@ -1,46 +1,26 @@
-import { UserProps } from '../../../types/admin'
-import { TaskTableProps } from '../../../types/tasks';
+import axios from 'axios';
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
+import { authApi } from '../../../services/api';
+import { UserProps } from '../../../types/admin';
 
-type LoadTaskTableProps = {
-    myself: UserProps;
-    accessToken: string;
-};
-
-export const loadTeamTasks = async (props: LoadTaskTableProps) => {
-    const { myself, accessToken } = props
-    if (!base_url) {
-        const errorMsg = "API base URL is not defined.";
-        console.error(errorMsg);
-        return [];
-    }
-
+export const loadTeamTasks = async (
+    myself: UserProps,
+    accessToken: string | null,
+) => {
     try {
-        const response = await fetch(`${base_url}/task/getTeamTasks/?team_id=${myself.teamId}`, {
-            method: "GET",
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": `Bearer ${accessToken}`
-            },
-        });
-
-        const data: TaskTableProps[] = await response.json();
-
-        if (!response.ok) {
-            const errorMsg = "Failed to get tasks";
-            throw new Error(errorMsg);
+        const api = authApi(accessToken);
+        if (api) {
+            const query: string = `team_id=${myself.teamId}`
+            const res = await api.get(`/task/getTeamTasks/?${query}`);
+            return res.data
+        } else {
+            console.error('Unauthorized. Auth toke is not found.');
         }
-        return data || [];
-
-    } catch (error) {
-        const errorMsg =
-            error instanceof Error
-                ? error.message
-                : "An unknown error occurred during loading task list.";
-
-        console.error(errorMsg);
-        return [];
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            console.error('API error:', error.response?.status, error.response?.data);
+        } else {
+            console.error('Unexpected error:', error);
+        }
     }
-
 }
