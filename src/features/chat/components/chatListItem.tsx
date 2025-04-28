@@ -19,7 +19,7 @@ import { AvatarWithStatus } from '../../../components/utils/avatarWithStatus';
 import { UserProps } from '../../../types/admin';
 import { AllChatProps, ChatProps } from '../../../types/chat';
 import { toggleMessagesPane } from '../../../utils';
-import { extractMMDDHHMM } from '../../../components/utils/dateUtils';
+import { extractMMDDHHMM } from '../../../utils/dateUtils';
 
 type ChatListItemProps = ListItemButtonProps & {
   chat: AllChatProps;

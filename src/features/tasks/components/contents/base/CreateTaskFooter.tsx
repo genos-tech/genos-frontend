@@ -15,7 +15,7 @@ type CreateTaskFooterProps = {
     setIsSubmitted: (value: boolean) => void,
     setTitleError: (value: string) => void,
     setTitleErrorOpen: (value: boolean) => void,
-    setIsCreatingTask: (value: boolean) => void,
+    setIsCreatingTask?: (value: boolean) => void,
     setCurrentPreviewTaskId: (value: number) => void,
 }
 export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
@@ -43,7 +43,7 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                 variant="outlined"
                 color="danger"
                 size='sm'
-                onClick={() => { setIsCreatingTask(false) }}>
+                onClick={() => { if (setIsCreatingTask) { setIsCreatingTask(false) } }}>
                 Cancel
             </Button>
             <Button

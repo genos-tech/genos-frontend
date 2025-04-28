@@ -111,16 +111,17 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [currentThreadChat]);
 
     useEffect(() => {
-        if (currentPreviewTask?.project && currentPreviewTaskId !== -1) {
+        if (currentProject && currentPreviewTaskId !== -1) {
             (async () => {
                 const loadedTask: TaskProps[] = await loadSpecificTask(
                     myself,
-                    currentPreviewTask.project?.projectId || -1,
+                    currentProject.projectId,
                     currentPreviewTaskId,
                     accessToken
                 );
                 setCurrentPreviewTask(loadedTask[0])
                 setIsTaskContentVisible(true)
+                setIsCreatingTask(false)
             })();
         }
     }, [currentPreviewTaskId])
@@ -130,7 +131,6 @@ export const ChatHome = (props: ChatHomeProps) => {
             setCurrentThreadChatId(Number(currentPreviewTask.id))
         }
     }, [currentPreviewTask])
-
 
     ////////////////////////////////////////////////////////////////////
     // useEffect(() => {
@@ -156,6 +156,10 @@ export const ChatHome = (props: ChatHomeProps) => {
     // useEffect(() => {
     //     console.log("currentThreadChat Updated:", currentThreadChat);
     // }, [currentThreadChat]);
+
+    // useEffect(() => {
+    //     console.log("currentProject Updated:", currentProject);
+    // }, [currentProject]);
     ////////////////////////////////////////////////////////////////////
 
 
@@ -192,7 +196,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         sx={{
                             height: '100%',
                             width: '100%',
-                            backgroundColor: 'grey',
+                            borderColor: mode === 'dark' ? 'black' : 'white',
                             borderRight: mode === 'dark'
                                 ? '2px black groove'
                                 : '2px white groove',
@@ -229,6 +233,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                 {isTaskContentVisible && currentThreadChat !== undefined && (<>
                     <PanelResizeHandle
                         style={{
+                            width: "1px",
+                            backgroundColor: mode === 'dark' ? "black" : "white",
                             transition: "all 0.3s ease-in-out",
                             cursor: "col-resize",
                         }}
@@ -240,6 +246,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             sx={{
                                 height: '100%',
                                 backgroundColor: 'black',
+                                borderColor: mode === 'dark' ? 'black' : 'white',
                                 borderLeft: mode === 'dark'
                                     ? '2px black groove'
                                     : '2px white groove',
@@ -264,13 +271,15 @@ export const ChatHome = (props: ChatHomeProps) => {
                         <>
                             <PanelResizeHandle
                                 style={{
+                                    width: "1px",
+                                    backgroundColor: mode === 'dark' ? "black" : "white",
                                     transition: "all 0.3s ease-in-out",
                                     cursor: "col-resize",
                                 }}
                                 className="chat-resize-handle"
                             />
 
-                            <Panel id={'3'} order={3} minSize={35} maxSize={70}>
+                            <Panel id={'3'} order={3} minSize={30} maxSize={70}>
                                 <Box
                                     sx={{
                                         px: { xs: 1, md: 2 },
@@ -287,7 +296,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         height: '100dvh',
                                         gap: 1,
                                         ml: '1px',
-                                        boxShadow: '0 0 0 1px grey'
+                                        boxShadow: '0 0 0 1px grey',
+                                        borderColor: mode === 'dark' ? 'black' : 'white',
                                     }}
                                 >
                                     <TaskPreview
@@ -310,13 +320,15 @@ export const ChatHome = (props: ChatHomeProps) => {
                         <>
                             <PanelResizeHandle
                                 style={{
+                                    width: "1px",
+                                    backgroundColor: mode === 'dark' ? "black" : "white",
                                     transition: "all 0.3s ease-in-out",
                                     cursor: "col-resize",
                                 }}
                                 className="chat-resize-handle"
                             />
 
-                            <Panel id={'4'} order={4} minSize={35} maxSize={70}>
+                            <Panel id={'4'} order={4} minSize={30} maxSize={70}>
                                 <Box
                                     sx={{
                                         px: { xs: 1, md: 2 },
@@ -333,7 +345,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         height: '100dvh',
                                         gap: 1,
                                         ml: '1px',
-                                        boxShadow: '0 0 0 1px grey'
+                                        boxShadow: '0 0 0 1px grey',
+                                        borderColor: mode === 'dark' ? 'black' : 'white',
                                     }}
                                 >
                                     <CreateTaskForm
@@ -342,7 +355,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         chatId={currentThreadChat.chatId}
                                         threadId={currentThreadChat.threadId}
                                         setIsTaskContentVisible={setIsTaskContentVisible}
-                                        setIsCreatingTask={setIsCreatingTask}
                                         setIsOpeningTask={setIsOpeningTask}
                                         setOpenCreateProject={setOpenCreateProject}
                                         setOpenCreateTag={setOpenCreateTag}
@@ -381,6 +393,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                     <>
                         <PanelResizeHandle
                             style={{
+                                width: "1px",
+                                backgroundColor: mode === 'dark' ? "black" : "white",
                                 transition: "all 0.3s ease-in-out",
                                 cursor: "col-resize",
                             }}
@@ -417,10 +431,13 @@ export const ChatHome = (props: ChatHomeProps) => {
 
                                         <PanelResizeHandle
                                             style={{
+                                                width: "1px",
+                                                backgroundColor: mode === 'dark' ? "black" : "white",
                                                 transition: "all 0.3s ease-in-out",
                                                 cursor: "col-resize",
                                             }}
-                                            className="chat-resize-handle-ver" />
+                                            className="chat-resize-handle-ver"
+                                        />
                                     </>
                                 )}
                                 <Panel
@@ -454,6 +471,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <>
                                 <PanelResizeHandle
                                     style={{
+                                        width: "1px",
+                                        backgroundColor: mode === 'dark' ? "black" : "white",
                                         transition: "all 0.3s ease-in-out",
                                         cursor: "col-resize",
                                     }}
@@ -464,7 +483,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     <Box
                                         sx={{
                                             height: '100%',
-                                            backgroundColor: 'black',
+                                            borderColor: mode === 'dark' ? 'black' : 'white',
                                             borderLeft: mode === 'dark'
                                                 ? '2px black groove'
                                                 : '2px white groove',

@@ -77,7 +77,6 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                             status: value.slice(-1)[0]
                         });
                         if (setTaskUpdated) {
-                            console.log("Task status updated");
                             setTaskUpdated(true);
                         }
                     })();

@@ -6,18 +6,30 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { AttachmentFileProps } from '../../../../../types/tasks';
 import { TaskProps } from '../../../../../types/tasks';
 
-type AttachmentBlockProps = {
+type Size = {
+    width: number;
+    height: number;
+};
+
+const resizeImageToFitBox = (imageSize: Size): Size => {
+    const scaleFactor = 100 / imageSize.height;
+
+    return {
+        width: Math.round(imageSize.width * scaleFactor),
+        height: Math.round(imageSize.height * scaleFactor),
+    };
+}
+
+type TaskAttachmentBlockProps = {
     uploadedFiles: AttachmentFileProps[],
-    setUploadedFiles: (value: AttachmentFileProps[]) => void,
     setTaskUpdated?: (value: boolean) => void,
     taskContents?: TaskProps,
     setTaskContents?: (value: TaskProps) => void,
 }
 
-export const AttachmentBlock = (props: AttachmentBlockProps) => {
+export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
     const {
         uploadedFiles,
-        setUploadedFiles,
         setTaskUpdated,
         taskContents,
         setTaskContents
@@ -28,6 +40,7 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([])
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [isUploadedFileExists, setIsUploadedFileExists] = useState<boolean>(false);
+    const [isAddedNewFile, setIsAddedNewFile] = useState<boolean>(false);
 
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -35,8 +48,8 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
         handleFiles(droppedFiles);
     }
 
-    const handleFiles = (selectedFiles: File[]) => {
-        selectedFiles.forEach((file) => {
+    const handleFiles = async (selectedFiles: File[]) => {
+        selectedFiles.forEach(async (file) => {
             const fileType = file.type;
 
             setUploadingFiles(prev => ([
@@ -50,13 +63,17 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                         const img = new Image();
                         img.src = e.target.result as string;
                         img.onload = () => {
+                            const size = resizeImageToFitBox({
+                                height: img.height,
+                                width: img.width
+                            })
                             setImages((prev) => [
                                 ...prev,
                                 {
                                     url: img.src,
                                     name: file.name,
-                                    width: Math.max(img.width * 0.03, 80),
-                                    height: Math.max(img.height * 0.03, 120)
+                                    width: size.width,
+                                    height: size.height
                                 },
                             ]);
                         };
@@ -69,6 +86,7 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
             }
         });
         setIsUploadedFileExists(true)
+        setIsAddedNewFile(true)
     };
 
     const handleDeleteImage = (url: string) => {
@@ -76,6 +94,7 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
     };
 
     const handleDeleteTextFile = (name: string) => {
+        console.log("Need to delete files from backend and storage !!!")
         setTextFiles((prev) => prev.filter((file) => file.name !== name));
     };
 
@@ -92,20 +111,30 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
     }, [images, textFiles])
 
     useEffect(() => {
-        if (uploadingFiles.length > 0 && uploadingFiles.length != uploadedFiles.length) {
-            setUploadedFiles(uploadingFiles)
+        if (isAddedNewFile && uploadingFiles.length > 0 && uploadingFiles.length != uploadedFiles.length) {
+            if (taskContents && setTaskContents) {
+                if (uploadingFiles) {
+                    Array.from(uploadingFiles).map((file, index) => {
+                        setTaskContents({
+                            ...taskContents,
+                            attachments: [{ file: file.file }]
+                        });
+                    })
+                }
+            }
             if (setTaskUpdated) {
                 setTaskUpdated(true)
             }
+            setIsAddedNewFile(false)
         }
     }, [uploadingFiles])
 
     useEffect(() => {
-        if (uploadedFiles.length === 0) {
-            setUploadingFiles([])
-            setImages([])
-            setTextFiles([])
-        } else {
+        setUploadingFiles([])
+        setImages([])
+        setTextFiles([])
+
+        if (uploadedFiles.length > 0) {
             setIsUploadedFileExists(true)
             uploadedFiles.map((attachmentFile, index) => {
                 if (attachmentFile.file_base64) {
@@ -123,13 +152,17 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                                 const img = new Image();
                                 img.src = e.target.result as string;
                                 img.onload = () => {
+                                    const size = resizeImageToFitBox({
+                                        height: img.height,
+                                        width: img.width
+                                    })
                                     setImages((prev) => [
                                         ...prev,
                                         {
                                             url: img.src,
                                             name: file.name,
-                                            width: Math.max(img.width * 0.03, 80),
-                                            height: Math.max(img.height * 0.03, 120)
+                                            width: size.width,
+                                            height: size.height
                                         },
                                     ]);
                                 };
@@ -148,24 +181,23 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
     // File upload manager via button (not drag and drop)
     const inputRef = useRef<HTMLInputElement | null>(null);
     const handleButtonClick = () => { inputRef.current?.click(); };
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files
         if (taskContents && setTaskContents) {
             if (files) {
-                // TODO: Need to add files to setUploadedFiles
-                console.log("Selected files:", Array.from(files));
                 Array.from(files).map((file, index) => {
                     setTaskContents({
                         ...taskContents,
                         attachments: [{ file: file }]
                     });
                 })
+                setIsAddedNewFile(true)
             }
         }
     };
 
     return (
-        <div>
+        <Box>
             <Stack direction="row" alignItems="center" sx={{ width: '100%' }}>
                 <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
                     Attachments
@@ -190,7 +222,8 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                 </Button>
             </Stack>
 
-            <div
+            <Box
+                className="custom-scrollbar"
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
                 style={{
@@ -199,20 +232,22 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                     border: "2px dashed #ccc",
                     display: "flex",
                     alignItems: "center",
+                    overflow: "scroll"
                 }}
+
             >
-                {!isUploadedFileExists && (
-                    <div
+                {uploadedFiles.length === 0 && (
+                    <Box
                         style={{
                             flex: 1,
                             textAlign: 'center',
                         }}
                     >
                         Drag & Drop your files here
-                    </div>
+                    </Box>
                 )}
 
-                <div style={{
+                <Box style={{
                     display: "flex",
                     flexWrap: "wrap",
                     marginLeft: '10px',
@@ -220,22 +255,29 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                     gap: "10px"
                 }}>
                     {textFiles.map((file) => (
-                        <div key={file.name} style={{ position: "relative", display: "inline-block", textAlign: "center" }}>
+                        <Box key={file.name} style={{ position: "relative", textAlign: "center" }}>
                             <IconButton
                                 onClick={() => handleDeleteTextFile(file.name)}
                                 size="sm"
-                                sx={{ position: "absolute", top: 0, right: 0, background: "white" }}
+                                sx={{ position: "absolute", top: 0, right: 0, background: "transparent" }}
                             >
                                 <CloseIcon />
                             </IconButton>
                             <a href={file.url} download={file.name} style={{ textDecoration: "none", color: "inherit" }}>
                                 <InsertDriveFileIcon sx={{ fontSize: 40, cursor: "pointer" }} />
                             </a>
-                            <div>{file.name}</div>
-                        </div>
+                            <Typography fontSize={'10px'} sx={{
+                                maxWidth: '80px', // Set the maximum width
+                                textOverflow: 'ellipsis', // Add "..." if the text overflows
+                                overflow: 'hidden', // Hide the overflowing text
+                                whiteSpace: 'nowrap', // Prevent text from wrapping to the next line
+                            }}>
+                                {file.name}
+                            </Typography>
+                        </Box>
                     ))}
-                </div>
-                <div style={{
+                </Box>
+                <Box style={{
                     display: "flex",
                     flexWrap: "wrap",
                     marginLeft: '10px',
@@ -243,7 +285,7 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                     gap: "10px"
                 }}>
                     {images.map((image) => (
-                        <div key={image.url} style={{ position: "relative", display: "inline-block" }}>
+                        <Box key={image.url} style={{ position: "relative", display: "inline-block" }}>
                             <IconButton
                                 onClick={() => handleDeleteImage(image.url)}
                                 size="sm"
@@ -257,12 +299,12 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                                 style={{ width: `${image.width}px`, height: `${image.height}px`, cursor: "pointer" }}
                                 onClick={() => setSelectedImage(image.url)}
                             />
-                        </div>
+                        </Box>
                     ))}
-                </div>
-            </div>
+                </Box>
+            </Box>
             {selectedImage && (
-                <div onClick={handleCloseModal} style={{
+                <Box onClick={handleCloseModal} style={{
                     position: "fixed",
                     top: 0,
                     left: 0,
@@ -279,8 +321,8 @@ export const AttachmentBlock = (props: AttachmentBlockProps) => {
                             <img src={selectedImage} alt="Full View" style={{ maxWidth: "100%", maxHeight: "80vh" }} />
                         </CardContent>
                     </Card>
-                </div>
+                </Box>
             )}
-        </div>
+        </Box>
     );
 };

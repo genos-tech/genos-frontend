@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input, Snackbar, Button, Stack, Typography, IconButton } from "@mui/joy";
 import EditIcon from '@mui/icons-material/Edit';
-import { CustomLinkIcon } from '../../../../../../assets/CustomLinkIcon';
+import LinkIcon from '@mui/icons-material/Link';
+
 import { TaskProps } from '../../../../../../types/tasks';
+import { getDomainFromUrl } from '../../../../../../utils/urlHandler';
 
 type GeneralURLManagerProps = {
     generalLink: { url: string, title: string },
     taskContents?: TaskProps,
     setTaskContents?: (value: TaskProps) => void,
     isPreviewMode: boolean,
+    setTaskUpdated?: (value: boolean) => void,
 }
 export const GeneralURLManager = (props: GeneralURLManagerProps) => {
-    const { generalLink, taskContents, setTaskContents, isPreviewMode } = props;
-
+    const { generalLink, taskContents, setTaskContents, isPreviewMode, setTaskUpdated } = props;
+    const [isEditing, setIsEditing] = useState(false);
     const [url, setUrl] = useState("");
     const [title, setTitle] = useState("");
     const [error, setError] = useState("");
@@ -24,19 +27,22 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
             return false;
         }
     };
-    const handleSave = () => {
+    const handleSave = async () => {
         if (taskContents && setTaskContents) {
-            if (!title.trim()) {
-                setErrorOpen(true);
-                setError("Title cannot be empty!");
-                return;
-            }
             if (isValidUrl(url)) {
+                if (title === "") {
+                    setTitle(getDomainFromUrl(url))
+                }
                 setTaskContents({
                     ...taskContents,
                     generalLink: { url: url, title: title }
                 });
+                setTitle(title);
                 setError("");
+                setIsEditing(false)
+                if (setTaskUpdated) {
+                    setTaskUpdated(true);
+                }
             } else {
                 setErrorOpen(true);
                 setError("Please enter a valid URL.");
@@ -45,19 +51,23 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
     };
     const [errorOpen, setErrorOpen] = useState(false);
 
+    useEffect(() => {
+        if (generalLink) {
+            if (generalLink.url === null || generalLink.url === "" || isEditing === true) {
+                setUrl("")
+                setTitle("")
+            } else {
+                setUrl(generalLink.url)
+                setTitle(generalLink.title)
+            }
+        }
+    }, [taskContents])
+
     return (
         <div>
-            {(!generalLink?.url || generalLink.url === "") && (
+            {(!generalLink?.url || generalLink.url === null || generalLink.url === "" || isEditing === true) && (
                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
-                    <CustomLinkIcon />
-                    <Input
-                        key={'title'}
-                        size='sm'
-                        placeholder="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        sx={{ width: '150px', height: '30px' }}
-                    />
+                    <LinkIcon />
                     <Input
                         key={'url'}
                         size='sm'
@@ -65,6 +75,14 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         type="url"
+                        sx={{ width: '150px', height: '30px' }}
+                    />
+                    <Input
+                        key={'title'}
+                        size='sm'
+                        placeholder="Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         sx={{ width: '150px', height: '30px' }}
                     />
                     {error && <Snackbar
@@ -93,32 +111,23 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                 </Stack>
             )}
 
-            {generalLink?.url && (
-                isPreviewMode
-                    ? <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
-                        <Typography>
-                            <a href={generalLink.url} target="_blank" rel="noopener noreferrer">
-                                {generalLink.title}
-                            </a>
-                        </Typography>
-                        <IconButton
-                            component='p'
-                            variant="outlined"
-                            color="neutral"
-                            size='sm'
-                            onClick={() => { console.log("Edit general link") }}
-                        >
-                            <EditIcon />
-                        </IconButton>
-                    </Stack>
-                    : <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
-                        <CustomLinkIcon />
-                        <Typography>
-                            <a href={generalLink.url} target="_blank" rel="noopener noreferrer">
-                                {generalLink.title}
-                            </a>
-                        </Typography>
-                    </Stack>
+            {isEditing === false && generalLink?.url && (
+                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                    <LinkIcon />
+                    <Typography >
+                        <a href={generalLink.url} target="_blank" rel="noopener noreferrer">
+                            {title}
+                        </a>
+                    </Typography>
+                    <IconButton
+                        component='p'
+                        color="neutral"
+                        size='sm'
+                        onClick={() => { setIsEditing(true) }}
+                    >
+                        <EditIcon />
+                    </IconButton>
+                </Stack>
             )}
         </div>
     )

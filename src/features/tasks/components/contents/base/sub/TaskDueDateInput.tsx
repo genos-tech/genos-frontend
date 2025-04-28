@@ -1,21 +1,22 @@
 import { Button, Stack, Typography, Input } from '@mui/joy';
 
-import { getFormattedDateStr, getFormattedTodayDateStr } from '../../../../../../components/utils/dateUtils';
+import { getFormattedDateStr, getFormattedTodayDateStr } from '../../../../../../utils/dateUtils';
 import { TaskProps } from '../../../../../../types/tasks';
 
 type TaskDueDateInputProps = {
     taskContents: TaskProps,
     setTaskContents: (value: TaskProps) => void,
+    setTaskUpdated?: (value: boolean) => void,
 }
 export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
     const {
         taskContents,
-        setTaskContents
+        setTaskContents,
+        setTaskUpdated
     } = props;
 
     return (
         <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
-            <Typography sx={{ minWidth: "100px" }}>Due Date:</Typography>
             <Input
                 type="date"
                 color="neutral"
@@ -27,6 +28,9 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
                         ...taskContents,
                         dueDate: getFormattedDateStr(new Date(e.target.value)),
                     });
+                    if (setTaskUpdated) {
+                        setTaskUpdated(true);
+                    }
                 }}
                 slotProps={{
                     input: {
@@ -44,6 +48,9 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
                         ...taskContents,
                         dueDate: ""
                     });
+                    if (setTaskUpdated) {
+                        setTaskUpdated(true);
+                    }
                 }}>
                 TBD
             </Button>

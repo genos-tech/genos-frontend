@@ -33,8 +33,8 @@ const statusOptions = [
         label: "WIP",
         value: "WIP",
         color: "#ffff23",
-        textColor: "#6f6f6f",
-        icon: <AutorenewIcon style={{ color: "#6f6f6f" }} />
+        textColor: "purple",
+        icon: <AutorenewIcon style={{ color: "purple" }} />
     },
     {
         label: "Pending",
@@ -355,7 +355,7 @@ export const getTaskColumns = (props: getTaskColumns): GridColDef[] => {
             width: 100,
             align: 'center',
             headerAlign: 'center',
-            valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
+            valueFormatter: (params) => params,
         },
         {
             field: 'daysLeft',

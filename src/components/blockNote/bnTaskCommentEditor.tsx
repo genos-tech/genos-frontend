@@ -34,7 +34,7 @@ import { Mention } from "./Mention";
 import { EmojiPicker } from '../emojiInput/EmojiPicker'
 import { UserProps } from '../../types/admin';
 import { TaskCommentProps } from '../../types/tasks'
-import { getCurrentTimestamp } from "../utils/dateUtils";
+import { getCurrentTimestamp } from "../../utils/dateUtils";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable

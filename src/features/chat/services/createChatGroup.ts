@@ -11,7 +11,7 @@ import {
     MessageProps
 } from '../../../types/chat';
 import { CreateGMResponse } from '../../../types/chat';
-import { getCurrentTimestamp } from '../../../components/utils/dateUtils';
+import { getCurrentTimestamp } from '../../../utils/dateUtils';
 
 const createGroupMessage = [
     { type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] },

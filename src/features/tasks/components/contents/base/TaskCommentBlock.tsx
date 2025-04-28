@@ -7,14 +7,13 @@ import { TaskCommentProps } from "../../../../../types/tasks";
 import { BnPreview } from '../../../../../components/blockNote/bnPreview';
 import { BnTaskCommentEditor } from '../../../../../components/blockNote/bnTaskCommentEditor';
 import { UserProps } from '../../../../../types/admin';
-import { extractMMDDHHMM } from '../../../../../components/utils/dateUtils';
+import { extractMMDDHHMM } from '../../../../../utils/dateUtils';
 
 type TaskCommentBlockProps = {
   myself: UserProps;
   socket: Socket | null;
   projectId: number;
   taskId: number;
-  setTaskUpdated?: (value: boolean) => void;
   taskComments: TaskCommentProps[];
   setTaskComments: (value: TaskCommentProps[]) => void;
   isCommentUpdated: boolean;
@@ -27,7 +26,6 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     socket,
     projectId,
     taskId,
-    setTaskUpdated,
     taskComments,
     setTaskComments,
     isCommentUpdated,
@@ -103,7 +101,6 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         socket={socket}
         projectId={projectId}
         taskId={taskId}
-        setTaskUpdated={setTaskUpdated}
         taskComments={taskComments}
         setTaskComments={setTaskComments}
         isCommentUpdated={isCommentUpdated}

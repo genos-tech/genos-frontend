@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Sheet from '@mui/joy/Sheet';
+import { useColorScheme } from '@mui/joy/styles';
 import { Socket } from "socket.io-client";
 
 import { ModalCreateGM } from './modals/ModalCreateGM';
@@ -33,7 +34,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     socket,
     isSubChatVisible,
     setIsSubChatVisible } = props;
-
+  const { mode } = useColorScheme();
   const [openSearchBox, setOpenSearchBox] = useState(false);
   const [openCreateGM, setOpenCreateGM] = useState(false);
 
@@ -44,7 +45,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         sx={{
           width: '100%',
           borderRight: '1px solid',
-          borderColor: 'divider',
+          borderColor: mode === 'dark' ? 'black' : 'white',
           overflowY: 'hidden',
           position: 'relative',
           transition: 'width 0.2s ease-in-out',

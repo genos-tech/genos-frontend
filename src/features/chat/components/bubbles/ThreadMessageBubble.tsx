@@ -2,11 +2,11 @@ import * as React from 'react';
 import { Box, Stack, Sheet } from '@mui/joy';
 
 import { BubbleAttachmentSheet } from './BubbleAttachmentSheet';
-import { BubbleLikeReactionButton } from "./BubbleLikeReactionButton";
+import { BubbleReactionButton } from "./BubbleReactionButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { ThreadMessageProps, ThreadProps } from '../../../../types/chat';
 import { AvatarWithStatus } from '../../../../components/utils/avatarWithStatus';
-import { extractHHMM } from '../../../../components/utils/dateUtils';
+import { extractHHMM } from '../../../../utils/dateUtils';
 import { BnPreview } from '../../../../components/blockNote/bnPreview';
 
 type threadMessageBubbleProps = ThreadMessageProps & {
@@ -91,7 +91,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                       isSent={isSent}
                       tsSent={_tsSent}
                     />
-                    <BubbleLikeReactionButton
+                    <BubbleReactionButton
                       isLiked={isLiked}
                       setIsLiked={setIsLiked}
                       isSent={isSent}

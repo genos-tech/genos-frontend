@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { Sheet, Divider } from '@mui/joy';
 import { PartialBlock } from "@blocknote/core";
 
-import { AttachmentBlock } from './base/AttachmentBlock';
+import { TaskAttachmentBlock } from './base/TaskAttachmentBlock';
 import { TaskTitleBlock } from './base/TaskTitleBlock';
 import { TaskMainBlock } from './base/TaskMainBlock';
 import { TaskBodyPreviewBlock } from './base/TaskBodyPreviewBlock';
@@ -86,9 +86,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     // Update task title/attachments when the visible task Id is changed
     useEffect(() => {
-        setTaskTitle(currentPreviewTask.title)
-        setInitTaskTitle(currentPreviewTask.title)
-        setUploadedFiles(currentPreviewTask.attachments)
+        setTaskTitle(currentPreviewTask.title);
+        setInitTaskTitle(currentPreviewTask.title);
+        setUploadedFiles(currentPreviewTask.attachments);
     }, [currentTaskId])
 
     // Send updated task to the backend when task is updated
@@ -146,7 +146,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             }
 
         })();
-    }, [isCommentUpdated])
+    }, [isCommentUpdated, currentTaskId])
 
     // Get team members
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
@@ -252,9 +252,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
             <Divider sx={{ mt: 2 }} />
 
-            <AttachmentBlock
+            <TaskAttachmentBlock
                 uploadedFiles={uploadedFiles}
-                setUploadedFiles={setUploadedFiles}
+                taskContents={tmpCurrentTaskContent}
+                setTaskContents={setTmpCurrentTaskContent}
                 setTaskUpdated={setTaskUpdated}
             />
 
@@ -265,7 +266,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 socket={socket}
                 projectId={tmpCurrentTaskContent.project?.projectId ? tmpCurrentTaskContent.project?.projectId : -1}
                 taskId={Number(tmpCurrentTaskContent.id)}
-                setTaskUpdated={setTaskUpdated}
                 taskComments={taskComments}
                 setTaskComments={setTaskComments}
                 isCommentUpdated={isCommentUpdated}

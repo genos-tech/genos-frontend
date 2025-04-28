@@ -4,6 +4,7 @@ import { authApi } from '../../../services/api';
 import { UserProps } from '../../../types/admin'
 import { TaskProps } from '../../../types/tasks';
 
+const base_url = import.meta.env.VITE_API_BASE_URL;
 
 export const sendUpdatedSpecificTask = async (
     myself: UserProps,
@@ -22,7 +23,7 @@ export const sendUpdatedSpecificTask = async (
         const api = authApi(accessToken);
 
         if (api) {
-            const res = await api.post("/task/updateTask/",
+            const res = await api.put("/task/updateTask/",
                 {
                     task_id: updatedData.id,
                     team: myself.teamId,
@@ -43,7 +44,32 @@ export const sendUpdatedSpecificTask = async (
                     general_url_title: (updatedData.generalLink.title !== "") ? updatedData.generalLink.title : null,
                     tags: updatedData.tags,
                 });
-            return res.data
+
+            if (res) {
+                for (const attachment of updatedData.attachments) {
+                    const formData = new FormData()
+                    formData.append("task", String(updatedData.id))
+                    formData.append("attached_file", attachment.file)
+                    formData.append("attached_type", attachment.file.type)
+
+                    const uploadAttachmentResponse = await fetch(`${base_url}/task/addTaskAttachment/`, {
+                        method: 'POST',
+                        headers: {
+                            "Authorization": `Bearer ${accessToken}`
+                        },
+                        body: formData,
+                    });
+
+                    const uploadAttachmentData = await uploadAttachmentResponse.json();
+                    console.log("uploadAttachmentData:", uploadAttachmentData)
+
+                    if (!uploadAttachmentResponse.ok) {
+                        throw new Error(uploadAttachmentData.message || 'Attachment Upload Failed');
+                    }
+                }
+
+                return res.data
+            }
         } else {
             console.error('Unauthorized. Auth toke is not found.');
             if (setErrorMessage) {

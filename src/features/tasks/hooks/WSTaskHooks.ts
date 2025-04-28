@@ -23,7 +23,7 @@ export const wsTaskHandleHook = (props: wsTaskHandleHookProps) => {
             console.error("Authentication Error:", data.message);
         });
         socket.on("message", (message) => {
-            console.log("task_comment:", message)
+            // console.log("task_comment:", message)
             setIsCommentUpdated(true)
         })
         return () => {

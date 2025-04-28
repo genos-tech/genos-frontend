@@ -32,7 +32,7 @@ import {
 import { Mention } from "./Mention";
 import { CustomEmojiToolbar } from './customEmojiToolbar';
 import { EmojiPicker } from '../emojiInput/EmojiPicker'
-import { getCurrentTimestamp } from "../utils/dateUtils";
+import { getCurrentTimestamp } from "../../utils/dateUtils";
 import { UserProps } from '../../types/admin';
 import { ChatProps, AllChatProps, MessageProps } from '../../types/chat'
 import { addChat } from '../../features/chat/services/addChat';

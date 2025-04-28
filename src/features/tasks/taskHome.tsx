@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
+import { useColorScheme } from '@mui/joy/styles';
 import {
     IconButton,
     CssBaseline,
@@ -47,6 +48,7 @@ type TaskHomeProps = {
 export const TaskHome = (props: TaskHomeProps) => {
     const { socket, myself, setMyself, setOpeningService } = props
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
 
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
@@ -247,7 +249,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     <PanelResizeHandle
                         style={{
                             width: "1px",
-                            backgroundColor: "#f0f0f0",
+                            backgroundColor: mode === 'dark' ? "grey" : "lightgrey",
                             transition: "all 0.3s ease-in-out",
                             cursor: "col-resize",
                         }}
@@ -384,7 +386,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     <PanelResizeHandle
                                         style={{
                                             width: "1px",
-                                            backgroundColor: "#f0f0f0",
+                                            backgroundColor: mode === 'dark' ? "grey" : "lightgrey",
                                             transition: "all 0.3s ease-in-out",
                                             cursor: "col-resize",
                                         }}
@@ -392,7 +394,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     />
 
                                     {/* right pane */}
-                                    <Panel id={'4'} order={4} minSize={40} maxSize={100}>
+                                    <Panel id={'4'} order={4} minSize={30} maxSize={100}>
                                         <Box
                                             sx={{
                                                 px: { xs: 1, md: 2 },
@@ -437,7 +439,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     <PanelResizeHandle
                                         style={{
                                             width: "1px",
-                                            backgroundColor: "#f0f0f0",
+                                            backgroundColor: mode === 'dark' ? "grey" : "lightgrey",
                                             transition: "all 0.3s ease-in-out",
                                             cursor: "col-resize",
                                         }}
@@ -445,7 +447,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     />
 
                                     {/* right pane */}
-                                    <Panel id={'3'} order={3} minSize={40} maxSize={100}>
+                                    <Panel id={'3'} order={3} minSize={30} maxSize={100}>
                                         <Box
                                             sx={{
                                                 px: { xs: 1, md: 2 },

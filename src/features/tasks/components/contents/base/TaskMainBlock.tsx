@@ -10,11 +10,7 @@ import { ACTeamProjects } from '../../autocompletes/ACTeamProjects';
 import { ACTaskPriority } from '../../autocompletes/ACTaskPriority';
 import { ACTaskEffortLevel } from '../../autocompletes/ACTaskEffortLevel';
 import { ACTaskStatus } from '../../autocompletes/ACTaskStatus';
-import {
-    TaskProps,
-    ProjectProps,
-    TagListProps,
-} from "../../../../../types/tasks";
+import { TaskProps, ProjectProps, TagListProps } from "../../../../../types/tasks";
 import { UserProps } from '../../../../../types/admin';
 
 type TaskMainBlockProps = {
@@ -183,9 +179,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     )}
 
                     <ListItem>
+                        <Typography sx={{ minWidth: "80px" }}>Due Date:</Typography>
                         <TaskDueDateInput
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
+                            setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
 
@@ -195,6 +193,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
                             isPreviewMode={isPreviewMode}
+                            setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
                     <ListItem>
@@ -203,6 +202,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
                             isPreviewMode={isPreviewMode}
+                            setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
                 </List>

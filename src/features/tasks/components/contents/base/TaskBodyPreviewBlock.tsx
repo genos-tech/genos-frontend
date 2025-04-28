@@ -12,7 +12,7 @@ export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
     const { body, setBody, setTaskUpdated } = props;
     return (
         <Stack direction={"column"} sx={{ width: '100%' }}>
-            <Box sx={{ mt: 2 }}>
+            <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
                     body={body || []}
                     setBody={setBody}

@@ -6,7 +6,7 @@ import { TaskTitleBlock } from './base/TaskTitleBlock';
 import { TaskMainBlock } from './base/TaskMainBlock';
 import { TaskBodyEditBlock } from './base/TaskBodyEditBlock'
 import { CreateTaskFooter } from './base/CreateTaskFooter';
-import { AttachmentBlock } from './base/AttachmentBlock'
+import { TaskAttachmentBlock } from './base/TaskAttachmentBlock'
 import {
     updateTaskTitle,
     updateTaskBody,
@@ -18,7 +18,7 @@ import {
     updateTagOptions
 } from '../../services/updateTaskAutoCompleteOptions'
 import { useAuth } from "../../../../context/AuthContext";
-import { getFormattedTodayDateStr } from '../../../../components/utils/dateUtils';
+import { getFormattedTodayDateStr } from '../../../../utils/dateUtils';
 import { UserProps } from '../../../../types/admin';
 import { AttachmentFileProps } from "../../../../types/tasks";
 import { TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
@@ -29,7 +29,7 @@ type CreateTaskProps = {
     chatId: number | null,
     threadId: number | null,
     setIsTaskContentVisible: (value: boolean) => void,
-    setIsCreatingTask: (value: boolean) => void,
+    setIsCreatingTask?: (value: boolean) => void,
     setIsOpeningTask?: (value: boolean) => void,
     setOpenCreateProject: (value: boolean) => void,
     setOpenCreateTag: (value: boolean) => void,
@@ -91,13 +91,18 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // Update status once task is created
     useEffect(() => {
         if (isSubmitted) {
-            setIsCreatingTask(false)
+            if (setIsCreatingTask) {
+                setIsCreatingTask(false)
+            }
+
             if (setIsOpeningTask) {
                 setIsOpeningTask(true)
             }
+
             if (setIsNewTaskCreated) {
                 setIsNewTaskCreated(true)
             }
+
         }
     }, [isSubmitted])
 
@@ -197,7 +202,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ m: 2 }} />
 
-            <AttachmentBlock
+            <TaskAttachmentBlock
                 uploadedFiles={uploadedFiles}
                 setUploadedFiles={setUploadedFiles}
                 taskContents={taskContents}

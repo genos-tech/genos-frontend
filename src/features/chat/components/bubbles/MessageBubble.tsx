@@ -4,12 +4,12 @@ import { Socket } from "socket.io-client";
 
 import { addThreadMessage } from "../../services/addThreadMessage";
 import { popSpecificThreadMessages } from "../../services/popSpecificThreadMessages";
-import { BubbleLikeReactionButton } from "./BubbleLikeReactionButton";
+import { BubbleReactionButton } from "./BubbleReactionButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleReplyButton } from "./BubbleReplyButton";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { loadSpecificTaskByThreadId } from '../../../tasks/services/loadSpecificTaskByThreadId';
-import { extractHHMM, getCurrentTimestamp } from "../../../../components/utils/dateUtils";
+import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
 import { UserProps } from '../../../../types/admin';
 import {
   ChatProps,
@@ -219,7 +219,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                       isSent={isSent}
                       tsSent={_tsSent}
                     />
-                    <BubbleLikeReactionButton
+                    <BubbleReactionButton
                       isLiked={isLiked}
                       setIsLiked={setIsLiked}
                       isSent={isSent}

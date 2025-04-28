@@ -9,7 +9,7 @@ import { checkKnownChat } from "../services/checkKnownChat";
 import { addChat } from '../services/addChat';
 import { addMessage } from '../services/addMessage';
 import { popSpecificMessages } from '../services/popSpecificMessages';
-import { getCurrentTimestamp } from '../../../components/utils/dateUtils';
+import { getCurrentTimestamp } from '../../../utils/dateUtils';
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from '../../../types/admin';
 import {

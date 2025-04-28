@@ -3,25 +3,27 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ReplyIcon from '@mui/icons-material/Reply';
 
-type BubbleLikeReactionButtonTypes = {
+type BubbleReactionButtonTypes = {
     isLiked: boolean,
     setIsLiked: (value: boolean) => void,
     isSent: boolean,
     replayHandler?: () => void,
 }
-export const BubbleLikeReactionButton = (props: BubbleLikeReactionButtonTypes) => {
+export const BubbleReactionButton = (props: BubbleReactionButtonTypes) => {
     const { isLiked, setIsLiked, isSent, replayHandler } = props
     return (
         <Box sx={{ textAlign: 'right' }}>
-            <Tooltip title="Reply" size='sm'>
-                <IconButton
-                    component='a'
-                    sx={{ '&:hover': { backgroundColor: 'transparent' } }}
-                    onClick={replayHandler}
-                >
-                    <ReplyIcon sx={{ fontSize: 20, color: isSent ? 'background.body' : 'neutral.plainColor' }} />
-                </IconButton>
-            </Tooltip>
+            {replayHandler && (<>
+                <Tooltip title="Reply" size='sm'>
+                    <IconButton
+                        component='a'
+                        sx={{ '&:hover': { backgroundColor: 'transparent' } }}
+                        onClick={replayHandler}
+                    >
+                        <ReplyIcon sx={{ fontSize: 20, color: isSent ? 'background.body' : 'neutral.plainColor' }} />
+                    </IconButton>
+                </Tooltip>
+            </>)}
             <IconButton
                 component='a'
                 size="sm"
