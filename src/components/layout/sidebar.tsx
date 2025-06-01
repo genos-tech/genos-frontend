@@ -1,10 +1,10 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   GlobalStyles,
   Avatar,
   Box,
   Divider,
-  IconButton,
   List,
   ListItem,
   Sheet,
@@ -21,6 +21,7 @@ import { useAuth } from "../../context/AuthContext";
 import { TeamDropdown } from '../../features/admin/components/teamDropdown';
 import { closeSidebar } from '../../utils';
 import { UserProps } from '../../types/admin';
+import { UserProfile } from '../../features/admin/components/modals/UserProfile';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -33,6 +34,8 @@ export const Sidebar = (props: SidebarProps) => {
   const { myself, setMyself, setOpeningService } = props
   const { setAccessToken } = useAuth();
   const navigate = useNavigate();
+
+  const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
   const handleLogout = async () => {
     try {
@@ -199,10 +202,13 @@ export const Sidebar = (props: SidebarProps) => {
       <Divider />
 
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <Avatar variant="solid" size="sm">
+        <Avatar variant="solid" size="sm" onClick={() => setOpenUserProfile(true)} src={myself.avatarImgPath || ""} >
           {myself.userName[0]}
         </Avatar>
       </Box>
+
+      <UserProfile myself={myself} openUserProfile={openUserProfile} setOpenUserProfile={setOpenUserProfile} />
+
     </Sheet >
   );
 }

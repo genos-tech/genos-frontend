@@ -68,13 +68,15 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         setAnchorEl(null);
     };
 
-    const handleClicked = (teamId: string) => {
+    const handleClicked = (teamId: string, teamName: string) => {
         // Change the team.
         // Re-load chats and tasks in the team.
         // For now, just update the current team variable
         localStorage.setItem("teamId", teamId)
+        localStorage.setItem("teamId", teamName)
         setMyself({
             teamId: teamId,
+            teamName: teamName,
             userId: myself.userId,
             userName: myself.userName,
             userEmail: myself.userEmail,
@@ -110,7 +112,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     onClose={handleClose}
                 >
                     {teams.map((team) => (
-                        <MenuItem key={team.teamName} onClick={() => { handleClicked(team.teamId); }}>
+                        <MenuItem key={team.teamName} onClick={() => { handleClicked(team.teamId, team.teamName); }}>
                             <AcUnitIcon />
                             {team.teamName}
                         </MenuItem>

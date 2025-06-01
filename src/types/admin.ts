@@ -1,6 +1,7 @@
 // User Props
 export type UserProps = {
     teamId: string;
+    teamName: string;
     userId: string;
     userName: string;
     userEmail: string;
@@ -36,6 +37,7 @@ export type MyTeamResponse = {
 
 export type JoinTeamResponse = {
     teamId: string;
+    teamName: string;
     detail: string | null;
     hint: string | null;
 };

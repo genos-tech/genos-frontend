@@ -41,10 +41,11 @@ const socket = (accessToken: string | null): Socket => {
 const useMyself = (): SetMyselfProps => {
   const [myself, setMyself] = useState<UserProps>({
     teamId: "",
+    teamName: "",
     userId: "",
     userName: "",
     userEmail: "",
-    avatarImgPath: "/path/to/user/Origin.jpg",
+    avatarImgPath: "myprofile.jpg", // TODO: need to refer to the correct one
     online: true,
   });
 
@@ -52,10 +53,11 @@ const useMyself = (): SetMyselfProps => {
     const fetchUserData = () => {
       setMyself({
         teamId: localStorage.getItem("teamId") || "",
+        teamName: localStorage.getItem("teamName") || "",
         userId: localStorage.getItem("userId") || "",
         userName: localStorage.getItem("userName") || "",
         userEmail: localStorage.getItem("userEmail") || "",
-        avatarImgPath: "/path/to/user/Origin.jpg",
+        avatarImgPath: "myprofile.jpg", // TODO: need to refer to the correct one
         online: true,
       });
     };
