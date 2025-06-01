@@ -188,7 +188,11 @@ export const ChatHome = (props: ChatHomeProps) => {
     return (
         <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
 
-            <Sidebar myself={myself} setMyself={setMyself} setOpeningService={setOpeningService} />
+            <Sidebar
+                myself={myself}
+                setMyself={setMyself}
+                setOpeningService={setOpeningService}
+            />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
                 <Panel id={'1'} order={1} minSize={10} maxSize={30}>

@@ -25,13 +25,15 @@ type UserProfileProps = {
     myself: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
+    setOpeningService: (value: number) => void;
 }
 
 export const UserProfile = (props: UserProfileProps) => {
     const {
         myself,
         openUserProfile,
-        setOpenUserProfile
+        setOpenUserProfile,
+        setOpeningService
     } = props
 
     return (
@@ -181,7 +183,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                     paddingY: '5px',
                                 }}
                                 onClick={() => {
-                                    console.log("Open DM");
+                                    setOpeningService(1);
+                                    setOpenUserProfile(false);
                                 }}
                             >
                                 <QuestionAnswerRoundedIcon />
@@ -198,7 +201,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                     ml: 1
                                 }}
                                 onClick={() => {
-                                    console.log("Open DM");
+                                    console.log("Calling...");
+                                    setOpenUserProfile(false);
                                 }}
                             >
                                 <PhoneInTalkRoundedIcon />

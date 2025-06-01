@@ -207,7 +207,12 @@ export const Sidebar = (props: SidebarProps) => {
         </Avatar>
       </Box>
 
-      <UserProfile myself={myself} openUserProfile={openUserProfile} setOpenUserProfile={setOpenUserProfile} />
+      <UserProfile
+        myself={myself}
+        openUserProfile={openUserProfile}
+        setOpenUserProfile={setOpenUserProfile}
+        setOpeningService={setOpeningService}
+      />
 
     </Sheet >
   );

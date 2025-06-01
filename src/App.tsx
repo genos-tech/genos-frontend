@@ -88,6 +88,12 @@ export const App = () => {
   const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
 
   useEffect(() => {
+    if (openingService === 1) {
+      console.log("Open Chat")
+    }
+  }, [openingService]);
+
+  useEffect(() => {
     if (accessToken) {
       setSocketInstance(socket(accessToken));
     }
