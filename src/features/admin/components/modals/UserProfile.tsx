@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import {
     Modal,
     ModalDialog,
@@ -18,23 +19,33 @@ import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
 import PhoneInTalkRoundedIcon from '@mui/icons-material/PhoneInTalkRounded';
 import QuestionAnswerRoundedIcon from '@mui/icons-material/QuestionAnswerRounded';
 
-import { UserProps } from '../../../../types/admin'
+import { moveToDMChat } from '../../../chat/services/moveToChat';
+import { loadDMIdByUserId } from '../../../chat/services/loadDMIdByUserId';
+import { UserProps } from '../../../../types/admin';
+import { ChatProps } from '../../../../types/chat';
 import { CountrySelector } from '../../../../components/utils/CountrySelector';
+import { useAuth } from "../../../../context/AuthContext";
 
 type UserProfileProps = {
+    socket: Socket | null;
     myself: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
 }
 
 export const UserProfile = (props: UserProfileProps) => {
     const {
+        socket,
         myself,
         openUserProfile,
         setOpenUserProfile,
+        setCurrentMainChat,
         setOpeningService
     } = props
+
+    const { accessToken } = useAuth();
 
     return (
         <>
@@ -60,16 +71,16 @@ export const UserProfile = (props: UserProfileProps) => {
                                     My profile
                                 </Typography>
                                 <IconButton
-                                    component="p"
+                                    component="button"
                                     variant="outlined"
                                     size="sm"
                                     sx={{
-                                        fontSize: '18px',
-                                        paddingX: '10px',
-                                        paddingY: '5px',
+                                        fontSize: '16px',
+                                        paddingX: '7px',
+                                        paddingY: '3px',
                                     }}
                                     onClick={() => {
-                                        console.log("Open DM");
+                                        setOpenUserProfile(false);
                                     }}
                                 >
                                     <EditIcon />
@@ -174,34 +185,46 @@ export const UserProfile = (props: UserProfileProps) => {
                             }}
                         >
                             <IconButton
-                                component="p"
+                                component="button"
                                 variant="outlined"
                                 size="sm"
                                 sx={{
-                                    fontSize: '18px',
-                                    paddingX: '10px',
-                                    paddingY: '5px',
+                                    fontSize: '16px',
+                                    paddingX: '7px',
+                                    paddingY: '3px',
                                 }}
                                 onClick={() => {
-                                    setOpeningService(1);
-                                    setOpenUserProfile(false);
+                                    (async () => {
+                                        const chatId: number = await loadDMIdByUserId(
+                                            myself,
+                                            myself.userId,
+                                            accessToken
+                                        );
+                                        await moveToDMChat(socket,
+                                            chatId,
+                                            myself.userName,
+                                            myself.userId,
+                                            setCurrentMainChat
+                                        )
+                                        setOpeningService(1);
+                                        setOpenUserProfile(false);
+                                    })();
                                 }}
                             >
                                 <QuestionAnswerRoundedIcon />
                                 &nbsp;DM
                             </IconButton>
                             <IconButton
-                                component="p"
+                                component="button"
                                 variant="outlined"
                                 size="sm"
                                 sx={{
-                                    fontSize: '18px',
-                                    paddingX: '10px',
-                                    paddingY: '5px',
+                                    fontSize: '16px',
+                                    paddingX: '7px',
+                                    paddingY: '3px',
                                     ml: 1
                                 }}
                                 onClick={() => {
-                                    console.log("Calling...");
                                     setOpenUserProfile(false);
                                 }}
                             >

@@ -112,6 +112,10 @@
   opacity: 0.8;
 }
 
+.task-datagrid-light .MuiDataGrid-footerContainer .MuiTablePagination-root {
+  overflow-y: hidden;
+}
+
 .task-datagrid-dark .MuiDataGrid-columnHeader {
   background-color: #161616;
   color: rgb(255, 255, 255);
@@ -162,6 +166,7 @@
   background-color: #161616;
   color: white;
   font-weight: bold;
+  overflow-y: hidden;
 }
 
 .task-datagrid-dark .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {

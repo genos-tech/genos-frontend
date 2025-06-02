@@ -189,9 +189,11 @@ export const ChatHome = (props: ChatHomeProps) => {
         <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
 
             <Sidebar
+                socket={socket}
                 myself={myself}
                 setMyself={setMyself}
                 setOpeningService={setOpeningService}
+                setCurrentMainChat={setCurrentMainChat}
             />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">

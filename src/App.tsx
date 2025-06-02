@@ -128,6 +128,7 @@ export const App = () => {
               socket={socketInstance}
               myself={myself}
               setMyself={setMyself}
+              setCurrentMainChat={setCurrentMainChat}
               setOpeningService={setOpeningService}
             />
           ) : null}

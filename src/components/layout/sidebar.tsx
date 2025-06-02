@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Socket } from "socket.io-client";
 import {
   GlobalStyles,
   Avatar,
@@ -21,17 +22,20 @@ import { useAuth } from "../../context/AuthContext";
 import { TeamDropdown } from '../../features/admin/components/teamDropdown';
 import { closeSidebar } from '../../utils';
 import { UserProps } from '../../types/admin';
+import { ChatProps } from "../../types/chat";
 import { UserProfile } from '../../features/admin/components/modals/UserProfile';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type SidebarProps = {
+  socket: Socket | null;
   myself: UserProps;
   setMyself: (me: UserProps) => void;
   setOpeningService: (service: number) => void;
+  setCurrentMainChat: (chat: ChatProps) => void;
 };
 export const Sidebar = (props: SidebarProps) => {
-  const { myself, setMyself, setOpeningService } = props
+  const { socket, myself, setMyself, setOpeningService, setCurrentMainChat } = props
   const { setAccessToken } = useAuth();
   const navigate = useNavigate();
 
@@ -208,9 +212,11 @@ export const Sidebar = (props: SidebarProps) => {
       </Box>
 
       <UserProfile
+        socket={socket}
         myself={myself}
         openUserProfile={openUserProfile}
         setOpenUserProfile={setOpenUserProfile}
+        setCurrentMainChat={setCurrentMainChat}
         setOpeningService={setOpeningService}
       />
 

@@ -33,7 +33,7 @@ import { ModalCreateTeam } from '../admin/components/modals/ModalCreateTeam';
 import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from '../../components/layout/sidebar';
 import { UserProps } from '../../types/admin';
-import { SearchTeamTasksResponse } from '../../types/chat';
+import { ChatProps, SearchTeamTasksResponse } from '../../types/chat';
 import { ProjectProps, TaskTableProps, TaskProps } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { updateTeamTasks } from "./services/updateTeamTasks";
@@ -42,11 +42,12 @@ type TaskHomeProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (service: number) => void;
 };
 
 export const TaskHome = (props: TaskHomeProps) => {
-    const { socket, myself, setMyself, setOpeningService } = props
+    const { socket, myself, setMyself, setCurrentMainChat, setOpeningService } = props
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
@@ -223,8 +224,10 @@ export const TaskHome = (props: TaskHomeProps) => {
 
             <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
                 <Sidebar
+                    socket={socket}
                     myself={myself}
                     setMyself={setMyself}
+                    setCurrentMainChat={setCurrentMainChat}
                     setOpeningService={setOpeningService}
                 />
 

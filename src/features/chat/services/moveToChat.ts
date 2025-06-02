@@ -14,7 +14,7 @@ import {
 } from "../../../types/chat";
 
 export const moveToDMChat = async (
-    socket: Socket,
+    socket: Socket | null,
     chatId: number,
     chatName: string,
     dmPartnerUserId: string,
