@@ -231,6 +231,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 socket={socket}
                                 isSubChatVisible={isSubChatVisible}
                                 setIsSubChatVisible={setIsSubChatVisible}
+                                setOpeningService={setOpeningService}
                             />
                         </Sheet>
                     </Box>
@@ -269,6 +270,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 setIsOpeningTask={setIsOpeningTask}
                                 setIsCreatingTask={setIsCreatingTask}
                                 currentPreviewTask={currentPreviewTask}
+                                setOpeningService={setOpeningService}
+                                setCurrentMainChat={setCurrentMainChat}
                             />
                         </Box>
                     </Panel>
@@ -432,6 +435,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setIsThreadVisible={setIsThreadVisible}
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
+                                                setOpeningService={setOpeningService}
                                             />
                                         </Panel>
 
@@ -468,6 +472,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setIsSubChatVisible={setIsSubChatVisible}
                                         currentMainChatId={currentMainChatId}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
+                                        setOpeningService={setOpeningService}
                                     />
                                 </Panel>
                             </PanelGroup>
@@ -506,6 +511,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setIsOpeningTask={setIsOpeningTask}
                                             setIsCreatingTask={setIsCreatingTask}
                                             currentPreviewTask={currentPreviewTask}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
                                         />
                                     </Box>
                                 </Panel>

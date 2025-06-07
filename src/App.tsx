@@ -83,7 +83,7 @@ export const App = () => {
   const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
   // {1: Chat, 2: Tasks, 3: Notes}
-  const [openingService, setOpeningService] = useState<number>(2);
+  const [openingService, setOpeningService] = useState<number>(1);
 
   const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
 

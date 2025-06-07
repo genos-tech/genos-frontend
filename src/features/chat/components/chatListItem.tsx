@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Socket } from 'socket.io-client';
 import {
   Avatar,
   Box,
@@ -22,6 +23,7 @@ import { toggleMessagesPane } from '../../../utils';
 import { extractMMDDHHMM } from '../../../utils/dateUtils';
 
 type ChatListItemProps = ListItemButtonProps & {
+  socket: Socket | null;
   chat: AllChatProps;
   myself: UserProps;
   currentMainChat: ChatProps;
@@ -30,10 +32,12 @@ type ChatListItemProps = ListItemButtonProps & {
   setCurrentSubChat: (chat: ChatProps) => void;
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
+  setOpeningService: (value: number) => void;
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
   const {
+    socket,
     chat,
     myself,
     currentMainChat,
@@ -41,7 +45,9 @@ export const ChatListItem = (props: ChatListItemProps) => {
     setCurrentMainChat,
     setCurrentSubChat,
     isSubChatVisible,
-    setIsSubChatVisible } = props;
+    setIsSubChatVisible,
+    setOpeningService
+  } = props;
 
   const selected = currentMainChat.chatName === chat.chatName || (isSubChatVisible && currentSubChat.chatName === chat.chatName);
   const isYou = myself.userId === chat.dmPartnerUserId;
@@ -119,10 +125,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 <div>
                   {chat.isDm ? (
                     <AvatarWithStatus
-                      size="sm"
-                      chatName={chat.chatName}
+                      myself={myself}
+                      socket={socket}
+                      chat={chat}
                       online={always_online}
-                      src=""
+                      setOpeningService={setOpeningService}
+                      setCurrentMainChat={setCurrentMainChat}
                     />
                   ) : (
                     <Avatar size="sm">

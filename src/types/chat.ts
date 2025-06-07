@@ -10,7 +10,7 @@ export type AllChatProps = {
     unread: boolean | true;
     latestMessage?: MessageProps;
     latestMessageText: string;
-    CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
+    CGAvatarImgPath?: string | 'myprofile.jpg';
     TSLastMessage: string;
 };
 
@@ -23,7 +23,7 @@ export type ChatProps = {
     messages: MessageProps[];
     latestMessage?: MessageProps;
     latestMessageText: string;
-    CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
+    CGAvatarImgPath?: string | 'myprofile.jpg';
     TSLastMessage: string;
 };
 
@@ -37,7 +37,7 @@ export type ThreadProps = {
     taskId: number | null;
     unread: boolean | true;
     messages: ThreadMessageProps[];
-    CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
+    CGAvatarImgPath?: string | 'myprofile.jpg';
     TSLastMessage: string;
 };
 

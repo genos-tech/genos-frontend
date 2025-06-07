@@ -30,6 +30,8 @@ type MessageBubbleProps = MessageProps & {
   setIsThreadVisible: (value: boolean) => void;
   setCurrentThreadChat: (value: ThreadProps) => void;
   setCurrentPreviewTask: (value: TaskProps | undefined) => void;
+  setOpeningService: (service: number) => void;
+  setCurrentMainChat: (chat: ChatProps) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -46,7 +48,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     numReplies,
     setIsThreadVisible,
     setCurrentThreadChat,
-    setCurrentPreviewTask } = props;
+    setCurrentPreviewTask,
+    setOpeningService,
+    setCurrentMainChat,
+  } = props;
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
   const _tsSent = extractHHMM(tsSent)
@@ -207,9 +212,12 @@ export const MessageBubble = (props: MessageBubbleProps) => {
               <Stack direction="row" spacing={1.5}>
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
-                    chatName={sender.userName}
+                    myself={myself}
+                    socket={socket}
+                    chat={chat}
                     online={sender.online}
-                    src={sender.avatarImgPath || ""}
+                    setOpeningService={setOpeningService}
+                    setCurrentMainChat={setCurrentMainChat}
                   />
                 </Box>
                 <Box sx={{ flex: 20 }}>

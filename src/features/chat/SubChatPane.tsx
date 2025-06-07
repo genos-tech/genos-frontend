@@ -30,6 +30,7 @@ type MessagesPaneProps = {
   setIsThreadVisible: (value: boolean) => void;
   currentSubChatId: number;
   setCurrentPreviewTask: (value: TaskProps | undefined) => void;
+  setOpeningService: (value: number) => void;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
@@ -46,7 +47,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     setIsSubChatVisible,
     setIsThreadVisible,
     currentSubChatId,
-    setCurrentPreviewTask } = props;
+    setCurrentPreviewTask,
+    setOpeningService,
+  } = props;
   const [chatMessages, setChatMessages] = useState(subChat.messages);
 
   useEffect(() => {
@@ -105,6 +108,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                       setIsThreadVisible={setIsThreadVisible}
                       setCurrentThreadChat={setCurrentThreadChat}
                       setCurrentPreviewTask={setCurrentPreviewTask}
+                      setOpeningService={setOpeningService}
+                      setCurrentMainChat={setCurrentMainChat}
                     />
                   </Stack>
                 </div>

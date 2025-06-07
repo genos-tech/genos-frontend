@@ -1,3 +1,4 @@
+import { Socket } from 'socket.io-client';
 import List from '@mui/joy/List';
 
 import { ChatListItem } from './chatListItem';
@@ -5,6 +6,7 @@ import { UserProps } from '../../../types/admin';
 import { ChatProps, AllChatProps } from '../../../types/chat';
 
 type ChatListProps = {
+    socket: Socket | null;
     myself: UserProps;
     isDm: boolean;
     allChats: AllChatProps[];
@@ -14,10 +16,12 @@ type ChatListProps = {
     currentSubChat: ChatProps;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
+    setOpeningService: (value: number) => void;
 }
 
 export const ChatList = (props: ChatListProps) => {
     const {
+        socket,
         myself,
         isDm,
         allChats,
@@ -27,6 +31,7 @@ export const ChatList = (props: ChatListProps) => {
         currentSubChat,
         isSubChatVisible,
         setIsSubChatVisible,
+        setOpeningService,
     } = props
 
     return (
@@ -52,6 +57,7 @@ export const ChatList = (props: ChatListProps) => {
                     chat.isDm === isDm && (
                         <ChatListItem
                             key={`${chat.chatId}-${chat.isDm}-${chat.chatName}`}
+                            socket={socket}
                             chat={chat}
                             myself={myself}
                             currentMainChat={currentMainChat}
@@ -60,6 +66,7 @@ export const ChatList = (props: ChatListProps) => {
                             setCurrentSubChat={setCurrentSubChat}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
+                            setOpeningService={setOpeningService}
                         />
                     )
                 )}

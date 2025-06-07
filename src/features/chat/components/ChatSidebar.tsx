@@ -21,6 +21,7 @@ type ChatSidebarProps = {
   socket: Socket | null;
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
+  setOpeningService: (value: number) => void;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -33,7 +34,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     currentSubChat,
     socket,
     isSubChatVisible,
-    setIsSubChatVisible } = props;
+    setIsSubChatVisible,
+    setOpeningService,
+  } = props;
   const { mode } = useColorScheme();
   const [openSearchBox, setOpenSearchBox] = useState(false);
   const [openCreateGM, setOpenCreateGM] = useState(false);
@@ -77,6 +80,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         />
 
         <ChatList
+          socket={socket}
           myself={myself}
           isDm={false}
           allChats={allChats}
@@ -86,11 +90,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
           setCurrentSubChat={setCurrentSubChat}
           isSubChatVisible={isSubChatVisible}
           setIsSubChatVisible={setIsSubChatVisible}
+          setOpeningService={setOpeningService}
         />
 
         <DMDivider />
 
         <ChatList
+          socket={socket}
           myself={myself}
           isDm={true}
           allChats={allChats}
@@ -100,6 +106,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
           setCurrentSubChat={setCurrentSubChat}
           isSubChatVisible={isSubChatVisible}
           setIsSubChatVisible={setIsSubChatVisible}
+          setOpeningService={setOpeningService}
         />
 
       </Sheet>
