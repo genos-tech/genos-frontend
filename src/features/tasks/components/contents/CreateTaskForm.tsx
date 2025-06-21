@@ -204,7 +204,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <TaskAttachmentBlock
                 uploadedFiles={uploadedFiles}
-                setUploadedFiles={setUploadedFiles}
                 taskContents={taskContents}
                 setTaskContents={setTaskContents}
             />

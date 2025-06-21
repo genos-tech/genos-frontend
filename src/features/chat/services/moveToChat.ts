@@ -1,5 +1,6 @@
 import { Socket } from 'socket.io-client';
 
+import { defaultDmPartner } from './constants';
 import { defineNewChat } from "../services/defineNewChat";
 import { checkKnownChat } from "../services/checkKnownChat";
 import { addChat } from '../services/addChat';
@@ -17,7 +18,7 @@ export const moveToDMChat = async (
     socket: Socket | null,
     chatId: number,
     chatName: string,
-    dmPartnerUserId: string,
+    dmPartnerUser: UserProps,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
     if (chatId === -1 && socket !== null) {
@@ -25,13 +26,13 @@ export const moveToDMChat = async (
             joiningCGId: -1, // dm_id or gm_id
             joiningCGName: chatName, // dm_name or gm_name
             isDm: true,
-            dmPartnerUserId: dmPartnerUserId,
+            dmPartnerUserId: dmPartnerUser.userId,
         })
     }
 
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, true)
     if (fetchedMessages) {
-        setCurrentMainChat(defineNewChat(chatId, chatName, true, dmPartnerUserId, fetchedMessages))
+        setCurrentMainChat(defineNewChat(chatId, chatName, true, dmPartnerUser, fetchedMessages))
     } else {
         console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages)
     }
@@ -44,7 +45,7 @@ export const moveToGMChat = async (
 ) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false)
     if (fetchedMessages) {
-        setCurrentMainChat(defineNewChat(chatId, chatName, false, null, fetchedMessages))
+        setCurrentMainChat(defineNewChat(chatId, chatName, false, defaultDmPartner, fetchedMessages))
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages)
     }
@@ -61,7 +62,7 @@ export const moveToSelectedChat = async (
     chatId: number,
     chatName: string,
     isDm: boolean,
-    dmPartnerUserId: string,
+    dmPartnerUser: UserProps,
     allChats: AllChatProps[],
     setCurrentMainChat: (value: ChatProps) => void,
     setAllChats: (value: AllChatProps[]) => void,
@@ -77,7 +78,7 @@ export const moveToSelectedChat = async (
                 destCGName: chatName,
                 destCGId: chatId,
                 isDm: isDm,
-                dmPartnerUserId: isDm ? dmPartnerUserId : null,
+                dmPartnerUserId: dmPartnerUser.userId,
             }, async (ack: any) => {
                 const message: MessageProps = {
                     messageIdWithChatId: `${chatId}-1`,
@@ -93,7 +94,7 @@ export const moveToSelectedChat = async (
                     chatId: chatId,
                     chatName: chatName,
                     isDm: isDm,
-                    dmPartnerUserId: isDm ? dmPartnerUserId : null,
+                    dmPartnerUser: dmPartnerUser,
                     unread: true,
                     latestMessage: message,
                     latestMessageText: "joined",
@@ -108,7 +109,7 @@ export const moveToSelectedChat = async (
             });
         } else {
             if (isDm) {
-                moveToDMChat(socket, chatId, chatName, dmPartnerUserId, setCurrentMainChat)
+                moveToDMChat(socket, chatId, chatName, dmPartnerUser, setCurrentMainChat)
             } else {
                 moveToGMChat(chatId, chatName, setCurrentMainChat)
             }

@@ -1,8 +1,10 @@
-import Autocomplete from '@mui/joy/Autocomplete';
-import AutocompleteOption from '@mui/joy/AutocompleteOption';
-import ListItemDecorator from '@mui/joy/ListItemDecorator';
-import ListItemContent from '@mui/joy/ListItemContent';
-import Typography from '@mui/joy/Typography';
+import {
+    ListItemContent,
+    ListItemDecorator,
+    AutocompleteOption,
+    Autocomplete,
+    Typography
+} from "@mui/joy";
 
 const defaultCountry = {
     code: 'JP',
@@ -18,6 +20,11 @@ export const CountrySelector = () => {
             slotProps={{
                 input: {
                     autoComplete: 'new-password', // disable autocomplete and autofill
+                },
+                listbox: {
+                    sx: {
+                        zIndex: 10001, // Put the autocomplete to the front
+                    },
                 },
             }}
             sx={{ width: 300 }}

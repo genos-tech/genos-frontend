@@ -45,7 +45,7 @@ const useMyself = (): SetMyselfProps => {
     userId: "",
     userName: "",
     userEmail: "",
-    avatarImgPath: "myprofile.jpg", // TODO: need to refer to the correct one
+    avatarImgPath: "",
     online: true,
   });
 
@@ -57,7 +57,7 @@ const useMyself = (): SetMyselfProps => {
         userId: localStorage.getItem("userId") || "",
         userName: localStorage.getItem("userName") || "",
         userEmail: localStorage.getItem("userEmail") || "",
-        avatarImgPath: "myprofile.jpg", // TODO: need to refer to the correct one
+        avatarImgPath: localStorage.getItem("avatarImgPath") || "",
         online: true,
       });
     };
@@ -89,7 +89,7 @@ export const App = () => {
 
   useEffect(() => {
     if (openingService === 1) {
-      console.log("Open Chat")
+      // console.log("Open Chat")
     }
   }, [openingService]);
 

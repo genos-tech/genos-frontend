@@ -50,7 +50,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
   } = props;
 
   const selected = currentMainChat.chatName === chat.chatName || (isSubChatVisible && currentSubChat.chatName === chat.chatName);
-  const isYou = myself.userId === chat.dmPartnerUserId;
+  const isYou = myself.userId === chat.dmPartnerUser?.userId;
 
   const always_online: boolean = true; // TODO: need to get status from WS
 
@@ -59,7 +59,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
       chatId: chat.chatId,
       chatName: chat.chatName,
       isDm: chat.isDm,
-      dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+      dmPartnerUser: chat.dmPartnerUser,
       unread: false,
       messages: messages,
       latestMessage: messages[messages.length - 1],
@@ -125,7 +125,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 <div>
                   {chat.isDm ? (
                     <AvatarWithStatus
-                      myself={myself}
+                      userProfile={chat.dmPartnerUser}
                       socket={socket}
                       chat={chat}
                       online={always_online}

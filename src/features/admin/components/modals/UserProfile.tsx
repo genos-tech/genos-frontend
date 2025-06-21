@@ -28,7 +28,7 @@ import { useAuth } from "../../../../context/AuthContext";
 
 type UserProfileProps = {
     socket: Socket | null;
-    myself: UserProps;
+    userProfile: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -38,7 +38,7 @@ type UserProfileProps = {
 export const UserProfile = (props: UserProfileProps) => {
     const {
         socket,
-        myself,
+        userProfile,
         openUserProfile,
         setOpenUserProfile,
         setCurrentMainChat,
@@ -49,7 +49,7 @@ export const UserProfile = (props: UserProfileProps) => {
 
     return (
         <>
-            <Modal open={openUserProfile} onClose={() => setOpenUserProfile(false)}>
+            <Modal open={openUserProfile} onClose={() => setOpenUserProfile(false)} sx={{ zIndex: 10001 }}>
                 <ModalDialog>
                     <Box sx={{ flex: 1, width: '900px' }}>
                         <Box
@@ -111,7 +111,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         sx={{ flex: 1, minWidth: 120, borderRadius: '100%' }}
                                     >
                                         <img
-                                            src="myprofile.jpg"
+                                            src={userProfile.avatarImgPath}
                                             loading="lazy"
                                             alt=""
                                         />
@@ -137,11 +137,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 </Chip>
                                             }
                                         >
-                                            {myself.userName}
+                                            {userProfile.userName}
                                         </Typography>
                                         <Stack direction={'row'} spacing={2}>
                                             <Typography startDecorator={<EmailRoundedIcon fontSize="small" />}>
-                                                {myself.userEmail}
+                                                {userProfile.userEmail}
                                             </Typography>
                                             <Typography startDecorator={<LocalPhoneIcon fontSize="small" />}>
                                                 +81 999-888-777
@@ -151,7 +151,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <FormControl>
                                                 <FormLabel>Team</FormLabel>
                                                 <Typography fontWeight={'bold'}>
-                                                    {myself.teamName}
+                                                    {userProfile.teamName}
                                                 </Typography>
                                             </FormControl>
                                             <FormControl>
@@ -196,14 +196,14 @@ export const UserProfile = (props: UserProfileProps) => {
                                 onClick={() => {
                                     (async () => {
                                         const chatId: number = await loadDMIdByUserId(
-                                            myself,
-                                            myself.userId,
+                                            userProfile,
+                                            userProfile.userId,
                                             accessToken
                                         );
                                         await moveToDMChat(socket,
                                             chatId,
-                                            myself.userName,
-                                            myself.userId,
+                                            userProfile.userName,
+                                            userProfile,
                                             setCurrentMainChat
                                         )
                                         setOpeningService(1);

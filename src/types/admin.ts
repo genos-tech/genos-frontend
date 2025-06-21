@@ -5,8 +5,8 @@ export type UserProps = {
     userId: string;
     userName: string;
     userEmail: string;
-    avatarImgPath: string | null;
-    online: boolean | false;
+    avatarImgPath: string;
+    online: boolean;
 };
 
 export type Team = {
@@ -22,6 +22,7 @@ export type SignInResponse = {
     email: string;
     access: string;
     message: string;
+    profile_image_url: string;
 };
 
 export type SignUpResponse = {

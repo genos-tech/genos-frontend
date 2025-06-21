@@ -26,7 +26,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     setCurrentSubChat,
     isSubChatVisible,
     setIsSubChatVisible } = props;
-  const isYou = myself.userId === chat.dmPartnerUserId;
+  const isYou = myself.userId === chat.dmPartnerUser.userId;
 
   const switchSubToMain = () => {
     setCurrentMainChat(subChat)

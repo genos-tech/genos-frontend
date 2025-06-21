@@ -1,17 +1,18 @@
+import { UserProps } from "../../../types/admin";
 import { MessageProps, ChatProps } from "../../../types/chat";
 
 export const defineNewChat = (
     chatId: number,
     chatName: string,
     isDm: boolean,
-    dmPartnerUserId: string | null,
+    dmPartnerUser: UserProps,
     messages: MessageProps[]
 ) => {
     const newChat: ChatProps = {
         chatId: chatId,
         chatName: chatName,
         isDm: isDm,
-        dmPartnerUserId: isDm ? dmPartnerUserId : null,
+        dmPartnerUser: dmPartnerUser,
         unread: false,
         messages: messages,
         latestMessage: messages[messages.length - 1],

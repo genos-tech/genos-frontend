@@ -150,13 +150,13 @@ export const BnEditor = (props: BnEditorProps) => {
                 destCGName: chat.chatName,
                 destCGId: chat.chatId,
                 isDm: chat.isDm,
-                dmPartnerUserId: chat.dmPartnerUserId,
+                dmPartnerUserId: chat.dmPartnerUser.userId,
             }, async (ack: any) => {
                 const updatedChat: ChatProps = {
                     chatId: chat.chatId,
                     chatName: chat.chatName,
                     isDm: chat.isDm,
-                    dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+                    dmPartnerUser: chat.dmPartnerUser,
                     unread: false,
                     messages: [...chat.messages, {
                         messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
@@ -198,7 +198,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         chatId: chat.chatId,
                         chatName: chat.chatName,
                         isDm: chat.isDm,
-                        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+                        dmPartnerUser: chat.dmPartnerUser,
                         unread: false,
                         latestMessage: latestMessage,
                         latestMessageText: contentText,

@@ -92,7 +92,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
               <Stack direction="row" spacing={1.5}>
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
-                    myself={myself}
+                    userProfile={thread.dmPartnerUser}
                     socket={socket}
                     thread={thread}
                     online={sender.online}

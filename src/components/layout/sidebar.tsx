@@ -54,6 +54,7 @@ export const Sidebar = (props: SidebarProps) => {
         localStorage.setItem("userEmail", "");
         localStorage.setItem("userName", "");
         localStorage.setItem("userId", "");
+        localStorage.setItem("avatarImgPath", "");
         setAccessToken(null);
         navigate("/");
       } else {
@@ -206,14 +207,14 @@ export const Sidebar = (props: SidebarProps) => {
       <Divider />
 
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <Avatar variant="solid" size="sm" onClick={() => setOpenUserProfile(true)} src={myself.avatarImgPath || ""} >
+        <Avatar variant="solid" size="sm" onClick={() => setOpenUserProfile(true)} src={myself.avatarImgPath} >
           {myself.userName[0]}
         </Avatar>
       </Box>
 
       <UserProfile
         socket={socket}
-        myself={myself}
+        userProfile={myself}
         openUserProfile={openUserProfile}
         setOpenUserProfile={setOpenUserProfile}
         setCurrentMainChat={setCurrentMainChat}

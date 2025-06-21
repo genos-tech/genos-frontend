@@ -8,7 +8,7 @@ import { UserProps, } from '../../types/admin';
 import { ThreadProps } from '../../types/chat';
 
 type AvatarWithStatusProps = {
-  myself: UserProps;
+  userProfile: UserProps;
   socket: Socket | null;
   chat?: AllChatProps;
   thread?: ThreadProps;
@@ -18,7 +18,7 @@ type AvatarWithStatusProps = {
 };
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
   const {
-    myself,
+    userProfile,
     socket,
     online = false,
     chat,
@@ -29,7 +29,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
   const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
   return (
-    (myself !== undefined && (chat !== undefined || thread !== undefined)) ?
+    (userProfile !== undefined && (chat !== undefined || thread !== undefined)) ?
       <div>
         <Badge
           color={online ? 'success' : 'neutral'}
@@ -38,14 +38,14 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           badgeInset="4px 4px"
         >
-          <Avatar size="sm" onClick={() => setOpenUserProfile(true)} src={"myprofile.jpg"} >
+          <Avatar size="sm" onClick={() => setOpenUserProfile(true)} src={userProfile.avatarImgPath} >
             {chat ? chat?.chatName[0] : thread?.chatName[0]}
           </Avatar>
         </Badge>
 
         <UserProfile
           socket={socket}
-          myself={myself}
+          userProfile={userProfile}
           openUserProfile={openUserProfile}
           setOpenUserProfile={setOpenUserProfile}
           setCurrentMainChat={setCurrentMainChat}

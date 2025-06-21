@@ -47,6 +47,7 @@ export const SignInForm = () => {
             localStorage.setItem("userName", signInRes.username);
             localStorage.setItem("userId", signInRes.user_id);
             localStorage.setItem("userEmail", signInRes.email);
+            localStorage.setItem("avatarImgPath", signInRes.profile_image_url);
 
             if (signInRes.user_id) {
                 navigate('/JoinTeam')

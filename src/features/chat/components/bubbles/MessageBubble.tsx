@@ -87,7 +87,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         threadId: messageId,
         threadMessage: content,
         isDm: chat.isDm,
-        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+        dmPartnerUserId: chat.dmPartnerUser.userId,
         senderId: myself.userId,
         senderName: myself.userName,
         destCGName: chat.chatName,
@@ -118,7 +118,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 chatName: chat.chatName,
                 threadId: newThreadMessage.threadId,
                 isDm: true,
-                dmPartnerUserId: chat.dmPartnerUserId,
+                dmPartnerUser: chat.dmPartnerUser,
                 taskId: null,
                 unread: false,
                 messages: threadMessages,
@@ -139,7 +139,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 chatName: chat.chatName,
                 threadId: newThreadMessage.threadId,
                 isDm: false,
-                dmPartnerUserId: null,
+                dmPartnerUser: chat.dmPartnerUser,
                 taskId: null,
                 unread: false,
                 messages: threadMessages,
@@ -212,7 +212,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
               <Stack direction="row" spacing={1.5}>
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
-                    myself={myself}
+                    userProfile={isSent ? myself : chat.dmPartnerUser}
                     socket={socket}
                     chat={chat}
                     online={sender.online}
