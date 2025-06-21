@@ -13,7 +13,8 @@ self.onmessage = async (event) => {
     await clearStore(STORES.DM_CHATS)
 
     // Load data from backend
-    const dmHistory: ChatProps[] | undefined = await loadDMHistory(myself.userId, accessToken);
+    const dmHistory: ChatProps[] | undefined = await loadDMHistory(
+        myself.teamId, myself.teamName, myself.userId, accessToken);
 
     if (dmHistory) {
         for (let i = 0; i < dmHistory.length; i += 1) {
@@ -27,7 +28,7 @@ self.onmessage = async (event) => {
                     chatName: dmChat.chatName,
                     unread: dmChat.unread,
                     isDm: true,
-                    dmPartnerUserId: dmChat.dmPartnerUserId,
+                    dmPartnerUser: dmChat.dmPartnerUser,
                     latestMessage: dmChat.latestMessage,
                     latestMessageText: dmChat.latestMessageText,
                     TSLastMessage: dmChat.TSLastMessage

@@ -49,7 +49,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
             chatId: newMessage.chatId,
             chatName: newMessage.chatName,
             isDm: newMessage.isDm ? true : false,
-            dmPartnerUserId: newMessage.isDm ? newMessage.dmPartnerUserId : null,
+            dmPartnerUser: newMessage.dmPartnerUser,
             unread: true,
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
@@ -106,7 +106,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         chatName: newMessage.chatName,
                         threadId: newThreadMessage.threadId,
                         isDm: newMessage.isDm,
-                        dmPartnerUserId: newMessage.isDm ? newMessage.dmPartnerUserId : null,
+                        dmPartnerUser: newMessage.dmPartnerUser,
                         taskId: newThreadMessage.taskId,
                         unread: false,
                         messages: currentThreadChat ? [...currentThreadChat.messages, newThreadMessage] : [newThreadMessage],
@@ -114,8 +114,8 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                     };
                     if (updatedThreadChat && newThreadMessage) {
                         if (message.isDm === true) {
-                            if (newMessage.dmPartnerUserId === myself.userId) {
-                                if (newMessage.dmPartnerUserId === newMessage.sender.userId) {
+                            if (newMessage.dmPartnerUser.userId === myself.userId) {
+                                if (newMessage.dmPartnerUser.userId === newMessage.sender.userId) {
                                     console.log("Personal DM thread")
                                     fromMe = true
                                     toMe = true
@@ -179,7 +179,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         chatId: newMessage.chatId,
                         chatName: newMessage.chatName,
                         isDm: newMessage.isDm,
-                        dmPartnerUserId: newMessage.isDm ? newMessage.dmPartnerUserId : null,
+                        dmPartnerUser: newMessage.dmPartnerUser,
                         unread: false,
                         messages: [...currentMainChat.messages, newMessage],
                         latestMessage: newMessage,
@@ -188,8 +188,8 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                     };
                     if (updatedChat && newChatMessage) {
                         if (message.isDm === true) {
-                            if (newMessage.dmPartnerUserId === myself.userId) {
-                                if (newMessage.dmPartnerUserId === newMessage.sender.userId) {
+                            if (newMessage.dmPartnerUser.userId === myself.userId) {
+                                if (newMessage.dmPartnerUser.userId === newMessage.sender.userId) {
                                     console.log("Personal DM")
                                     fromMe = true
                                     toMe = true

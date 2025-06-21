@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Socket } from "socket.io-client";
 import {
   GlobalStyles,
   Avatar,
   Box,
   Divider,
-  IconButton,
   List,
   ListItem,
   Sheet,
@@ -21,18 +22,24 @@ import { useAuth } from "../../context/AuthContext";
 import { TeamDropdown } from '../../features/admin/components/teamDropdown';
 import { closeSidebar } from '../../utils';
 import { UserProps } from '../../types/admin';
+import { ChatProps } from "../../types/chat";
+import { UserProfile } from '../../features/admin/components/modals/UserProfile';
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type SidebarProps = {
+  socket: Socket | null;
   myself: UserProps;
   setMyself: (me: UserProps) => void;
   setOpeningService: (service: number) => void;
+  setCurrentMainChat: (chat: ChatProps) => void;
 };
 export const Sidebar = (props: SidebarProps) => {
-  const { myself, setMyself, setOpeningService } = props
+  const { socket, myself, setMyself, setOpeningService, setCurrentMainChat } = props
   const { setAccessToken } = useAuth();
   const navigate = useNavigate();
+
+  const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
   const handleLogout = async () => {
     try {
@@ -47,6 +54,7 @@ export const Sidebar = (props: SidebarProps) => {
         localStorage.setItem("userEmail", "");
         localStorage.setItem("userName", "");
         localStorage.setItem("userId", "");
+        localStorage.setItem("avatarImgPath", "");
         setAccessToken(null);
         navigate("/");
       } else {
@@ -199,10 +207,20 @@ export const Sidebar = (props: SidebarProps) => {
       <Divider />
 
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <Avatar variant="solid" size="sm">
+        <Avatar variant="solid" size="sm" onClick={() => setOpenUserProfile(true)} src={myself.avatarImgPath} >
           {myself.userName[0]}
         </Avatar>
       </Box>
+
+      <UserProfile
+        socket={socket}
+        userProfile={myself}
+        openUserProfile={openUserProfile}
+        setOpenUserProfile={setOpenUserProfile}
+        setCurrentMainChat={setCurrentMainChat}
+        setOpeningService={setOpeningService}
+      />
+
     </Sheet >
   );
 }

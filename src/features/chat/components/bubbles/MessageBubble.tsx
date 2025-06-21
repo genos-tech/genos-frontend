@@ -30,6 +30,8 @@ type MessageBubbleProps = MessageProps & {
   setIsThreadVisible: (value: boolean) => void;
   setCurrentThreadChat: (value: ThreadProps) => void;
   setCurrentPreviewTask: (value: TaskProps | undefined) => void;
+  setOpeningService: (service: number) => void;
+  setCurrentMainChat: (chat: ChatProps) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -46,7 +48,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     numReplies,
     setIsThreadVisible,
     setCurrentThreadChat,
-    setCurrentPreviewTask } = props;
+    setCurrentPreviewTask,
+    setOpeningService,
+    setCurrentMainChat,
+  } = props;
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
   const _tsSent = extractHHMM(tsSent)
@@ -82,7 +87,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         threadId: messageId,
         threadMessage: content,
         isDm: chat.isDm,
-        dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+        dmPartnerUserId: chat.dmPartnerUser.userId,
         senderId: myself.userId,
         senderName: myself.userName,
         destCGName: chat.chatName,
@@ -113,7 +118,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 chatName: chat.chatName,
                 threadId: newThreadMessage.threadId,
                 isDm: true,
-                dmPartnerUserId: chat.dmPartnerUserId,
+                dmPartnerUser: chat.dmPartnerUser,
                 taskId: null,
                 unread: false,
                 messages: threadMessages,
@@ -134,7 +139,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 chatName: chat.chatName,
                 threadId: newThreadMessage.threadId,
                 isDm: false,
-                dmPartnerUserId: null,
+                dmPartnerUser: chat.dmPartnerUser,
                 taskId: null,
                 unread: false,
                 messages: threadMessages,
@@ -207,9 +212,12 @@ export const MessageBubble = (props: MessageBubbleProps) => {
               <Stack direction="row" spacing={1.5}>
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
-                    chatName={sender.userName}
+                    userProfile={isSent ? myself : chat.dmPartnerUser}
+                    socket={socket}
+                    chat={chat}
                     online={sender.online}
-                    src={sender.avatarImgPath || ""}
+                    setOpeningService={setOpeningService}
+                    setCurrentMainChat={setCurrentMainChat}
                   />
                 </Box>
                 <Box sx={{ flex: 20 }}>

@@ -6,11 +6,11 @@ export type AllChatProps = {
     chatId: number;
     chatName: string;
     isDm: boolean;
-    dmPartnerUserId: string | null;
+    dmPartnerUser: UserProps;
     unread: boolean | true;
     latestMessage?: MessageProps;
     latestMessageText: string;
-    CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
+    CGAvatarImgPath?: string;
     TSLastMessage: string;
 };
 
@@ -18,12 +18,12 @@ export type ChatProps = {
     chatId: number;
     chatName: string;
     isDm: boolean;
-    dmPartnerUserId: string | null;
+    dmPartnerUser: UserProps;
     unread: boolean | true;
     messages: MessageProps[];
     latestMessage?: MessageProps;
     latestMessageText: string;
-    CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
+    CGAvatarImgPath?: string;
     TSLastMessage: string;
 };
 
@@ -33,11 +33,11 @@ export type ThreadProps = {
     chatName: string;
     threadId: number;
     isDm: boolean;
-    dmPartnerUserId: string | null;
+    dmPartnerUser: UserProps;
     taskId: number | null;
     unread: boolean | true;
     messages: ThreadMessageProps[];
-    CGAvatarImgPath?: string | '/path/to/CGAvatarImgPath.jpg';
+    CGAvatarImgPath?: string;
     TSLastMessage: string;
 };
 
@@ -83,7 +83,7 @@ export type NewMessageProps = {
     messageId: number;
     chatName: string;
     isDm: boolean;
-    dmPartnerUserId: string | null;
+    dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;
@@ -104,7 +104,7 @@ export type NewThreadMessageProps = {
     messageId: number;
     chatName: string;
     isDm: boolean;
-    dmPartnerUserId: string | null;
+    dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;
@@ -125,7 +125,7 @@ export type SearchListProps = {
     type: string,
     name: string,
     email: string | null,
-    dmPartnerUserId: string | null,
+    dmPartnerUserId: string,
 }
 
 export type LoadSearchListResponse = {

@@ -1,4 +1,5 @@
-import { Box, Avatar, Grid, IconButton, ListItem, List, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
+import { Box, Grid, IconButton, ListItem, List, Typography } from "@mui/joy";
 import AddIcon from '@mui/icons-material/Add';
 
 import { TaskDueDateInput } from './sub/TaskDueDateInput';
@@ -11,19 +12,22 @@ import { ACTaskPriority } from '../../autocompletes/ACTaskPriority';
 import { ACTaskEffortLevel } from '../../autocompletes/ACTaskEffortLevel';
 import { ACTaskStatus } from '../../autocompletes/ACTaskStatus';
 import { TaskProps, ProjectProps, TagListProps } from "../../../../../types/tasks";
+import { ChatProps } from "../../../../../types/chat";
 import { UserProps } from '../../../../../types/admin';
+import { AvatarWithStatus } from '../../../../../components/utils/avatarWithStatus';
 
 type TaskMainBlockProps = {
+    socket: Socket | null,
     taskContents: TaskProps,
     setTaskContents: (value: TaskProps) => void,
     teamMembers: UserProps[],
     teamProjects: ProjectProps[],
     projectTags: TagListProps[],
     myself: UserProps,
-    assigneeName: string,
-    setAssigneeName: (value: string) => void,
-    reporterName: string,
-    setReporterName: (value: string) => void,
+    assignee: UserProps;
+    setAssignee: (value: UserProps) => void,
+    reporter: UserProps;
+    setReporter: (value: UserProps) => void,
     isOpenTeamMembersList: boolean,
     setIsOpenTeamMembersList: (value: boolean) => void,
     isOpenProjectList: boolean,
@@ -34,19 +38,22 @@ type TaskMainBlockProps = {
     setCurrentProject: (value: ProjectProps) => void,
     isPreviewMode: boolean,
     setTaskUpdated?: (value: boolean) => void,
+    setOpeningService: (service: number) => void,
+    setCurrentMainChat: (chat: ChatProps) => void,
 }
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
+        socket,
         taskContents,
         setTaskContents,
         teamMembers,
         teamProjects,
         projectTags,
         myself,
-        assigneeName,
-        setAssigneeName,
-        reporterName,
-        setReporterName,
+        assignee,
+        setAssignee,
+        reporter,
+        setReporter,
         isOpenTeamMembersList,
         setIsOpenTeamMembersList,
         isOpenProjectList,
@@ -56,7 +63,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setOpenCreateTag,
         setCurrentProject,
         isPreviewMode,
-        setTaskUpdated
+        setTaskUpdated,
+        setOpeningService,
+        setCurrentMainChat
     } = props
 
     return (
@@ -72,14 +81,20 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 <List aria-labelledby="decorated-list-demo">
                     <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
                         <Typography sx={{ minWidth: "80px" }}>Assignee:</Typography>
-                        <Avatar size="sm">{assigneeName !== "" ? assigneeName[0] : ""}</Avatar>
+                        <AvatarWithStatus
+                            userProfile={assignee}
+                            socket={socket}
+                            online={false}
+                            setOpeningService={setOpeningService}
+                            setCurrentMainChat={setCurrentMainChat}
+                        />
                         <ACTeamUsers
                             myself={myself}
                             initialUser={taskContents.assignee}
                             teamMembers={teamMembers}
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
-                            setUserName={setAssigneeName}
+                            setUser={setAssignee}
                             isOpenTeamMembersList={isOpenTeamMembersList}
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             isAssignee={true}
@@ -89,14 +104,20 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                     <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
                         <Typography sx={{ minWidth: "80px" }}>Reporter:</Typography>
-                        <Avatar size="sm">{reporterName !== "" ? reporterName[0] : ""}</Avatar>
+                        <AvatarWithStatus
+                            userProfile={reporter}
+                            socket={socket}
+                            online={false}
+                            setOpeningService={setOpeningService}
+                            setCurrentMainChat={setCurrentMainChat}
+                        />
                         <ACTeamUsers
                             myself={myself}
                             initialUser={taskContents.reporter}
                             teamMembers={teamMembers}
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
-                            setUserName={setReporterName}
+                            setUser={setReporter}
                             isOpenTeamMembersList={isOpenTeamMembersList}
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             isAssignee={false}

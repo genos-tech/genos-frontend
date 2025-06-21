@@ -1,3 +1,4 @@
+import { defaultDmPartner } from '../features/chat/services/constants';
 import { loadGMHistory } from '../features/chat/services/loadGMHistory';
 import { UserProps } from "../types/admin";
 import { ChatProps, MessageProps } from "../types/chat";
@@ -14,7 +15,8 @@ self.onmessage = async (event) => {
     await clearStore(STORES.GM_CHATS)
 
     // Load data from backend
-    const gmHistory: ChatProps[] = await loadGMHistory(myself.userId, accessToken);
+    const gmHistory: ChatProps[] = await loadGMHistory(
+        myself.teamId, myself.teamName, myself.userId, accessToken);
 
     for (let i = 0; i < gmHistory.length; i += 1) {
         const gmChat: ChatProps = gmHistory[i]
@@ -27,7 +29,7 @@ self.onmessage = async (event) => {
                 chatName: gmChat.chatName,
                 unread: gmChat.unread,
                 isDm: false,
-                dmPartnerUserId: null,
+                dmPartnerUser: defaultDmPartner,
                 latestMessage: gmChat.latestMessage,
                 latestMessageText: gmChat.latestMessageText,
                 TSLastMessage: gmChat.TSLastMessage

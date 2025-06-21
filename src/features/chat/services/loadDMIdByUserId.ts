@@ -1,19 +1,19 @@
 import axios from 'axios';
 
 import { authApi } from '../../../services/api';
+import { UserProps } from '../../../types/admin'
 
-export const loadGMHistory = async (
-    teamId: string,
-    teamName: string,
-    userId: string,
-    accessToken: string | null
+export const loadDMIdByUserId = async (
+    myself: UserProps,
+    dmPartnerUserId: string,
+    accessToken: string | null,
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${teamId}&team_name=${teamName}&user_id=${userId}`
-            const res = await api.get(`/gm/getHistory/?${query}`);
-            return res.data
+            const query: string = `user_1_id=${myself.userId}&user_2_id=${dmPartnerUserId}`
+            const res = await api.get(`/dm/getDMId/?${query}`);
+            return res.data.dm_id
         } else {
             console.error('Unauthorized. Auth toke is not found.');
         }
@@ -25,4 +25,3 @@ export const loadGMHistory = async (
         }
     }
 }
-

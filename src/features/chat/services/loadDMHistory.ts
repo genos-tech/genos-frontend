@@ -3,13 +3,15 @@ import axios from 'axios';
 import { authApi } from '../../../services/api';
 
 export const loadDMHistory = async (
+    teamId: string,
+    teamName: string,
     userId: string,
     accessToken: string | null
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `user_id=${userId}`
+            const query: string = `team_id=${teamId}&team_name=${teamName}&user_id=${userId}`
             const res = await api.get(`/dm/getHistory/?${query}`);
             return res.data
         } else {

@@ -1,11 +1,12 @@
 // User Props
 export type UserProps = {
     teamId: string;
+    teamName: string;
     userId: string;
     userName: string;
     userEmail: string;
-    avatarImgPath: string | null;
-    online: boolean | false;
+    avatarImgPath: string;
+    online: boolean;
 };
 
 export type Team = {
@@ -21,6 +22,7 @@ export type SignInResponse = {
     email: string;
     access: string;
     message: string;
+    profile_image_url: string;
 };
 
 export type SignUpResponse = {
@@ -36,6 +38,7 @@ export type MyTeamResponse = {
 
 export type JoinTeamResponse = {
     teamId: string;
+    teamName: string;
     detail: string | null;
     hint: string | null;
 };

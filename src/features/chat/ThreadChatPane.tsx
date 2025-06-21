@@ -13,7 +13,7 @@ import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import { BnThreadEditor } from '../../components/blockNote/bnThreadEditor'
 import { UserProps } from '../../types/admin';
-import { ThreadProps } from '../../types/chat';
+import { ThreadProps, ChatProps } from '../../types/chat';
 import { TaskProps } from '../../types/tasks';
 
 type MessagesPaneProps = {
@@ -27,6 +27,8 @@ type MessagesPaneProps = {
   setIsOpeningTask: (value: boolean) => void;
   setIsCreatingTask: (value: boolean) => void;
   currentPreviewTask?: TaskProps;
+  setOpeningService: (service: number) => void;
+  setCurrentMainChat: (chat: ChatProps) => void;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -39,7 +41,9 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     setIsTaskContentVisible,
     setIsOpeningTask,
     setIsCreatingTask,
-    currentPreviewTask
+    currentPreviewTask,
+    setOpeningService,
+    setCurrentMainChat,
   } = props;
 
   const [threadMessages, setThreadMessages] = useState(thread.messages || []);
@@ -121,9 +125,14 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                       sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
                     >
                       <ThreadMessageBubble
+                        myself={myself}
+                        socket={socket}
                         thread={thread}
                         variant={isYou ? 'sent' : 'received'}
-                        {...message} />
+                        {...message}
+                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
+                      />
                     </Stack>
                   </div>
                 );

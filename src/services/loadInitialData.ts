@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+
+import { defaultDmPartner } from '../features/chat/services/constants';
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
@@ -134,7 +136,7 @@ export const loadInitialData = (
                             chatId: fetchedChat.chatId,
                             chatName: fetchedChat.chatName,
                             isDm: true,
-                            dmPartnerUserId: fetchedChat.dmPartnerUserId,
+                            dmPartnerUser: fetchedChat.dmPartnerUser,
                             unread: (InitialChatMessages.length === 1) ? true : false,
                             messages: InitialChatMessages,
                             latestMessage: InitialChatMessages[InitialChatMessages.length - 1],
@@ -155,7 +157,7 @@ export const loadInitialData = (
                     chatId: -1,
                     chatName: "Origin",
                     isDm: true,
-                    dmPartnerUserId: null,
+                    dmPartnerUser: defaultDmPartner,
                     latestMessageText: "",
                     TSLastMessage: "",
                     unread: true,

@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { useState, useEffect } from "react";
 import { Sheet, Divider } from '@mui/joy';
 import { PartialBlock } from "@blocknote/core";
@@ -20,10 +21,11 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import { getFormattedTodayDateStr } from '../../../../utils/dateUtils';
 import { UserProps } from '../../../../types/admin';
-import { AttachmentFileProps } from "../../../../types/tasks";
-import { TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
+import { AttachmentFileProps, TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
+import { ChatProps } from "../../../../types/chat";
 
 type CreateTaskProps = {
+    socket: Socket | null,
     myself: UserProps,
     isDm: boolean | null,
     chatId: number | null,
@@ -39,10 +41,13 @@ type CreateTaskProps = {
     isNewProjectCreated: boolean,
     isNewTagCreated: boolean,
     setIsNewTaskCreated?: (value: boolean) => void,
+    setOpeningService: (service: number) => void,
+    setCurrentMainChat: (chat: ChatProps) => void,
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
     const {
+        socket,
         myself,
         isDm,
         chatId,
@@ -54,7 +59,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         currentProject,
         setCurrentProject,
         setCurrentPreviewTaskId,
-        setIsNewTaskCreated
+        setIsNewTaskCreated,
+        setOpeningService,
+        setCurrentMainChat
     } = props
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
@@ -80,8 +87,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     });
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>([]);
-    const [assigneeName, setAssigneeName] = useState<string>(myself.userName);
-    const [reporterName, setReporterName] = useState<string>(myself.userName);
+    const [assignee, setAssignee] = useState<UserProps>(myself);
+    const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
     updateTaskTitle({ taskTitle, taskContents, setTaskContents });
@@ -175,16 +182,17 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             <Divider sx={{ mt: 1, mb: 1 }} />
 
             <TaskMainBlock
+                socket={socket}
                 taskContents={taskContents}
                 setTaskContents={setTaskContents}
                 teamMembers={teamMembers}
                 teamProjects={teamProjects}
                 projectTags={projectTags}
                 myself={myself}
-                assigneeName={assigneeName}
-                setAssigneeName={setAssigneeName}
-                reporterName={reporterName}
-                setReporterName={setReporterName}
+                assignee={assignee}
+                setAssignee={setAssignee}
+                reporter={reporter}
+                setReporter={setReporter}
                 isOpenTeamMembersList={isOpenTeamMembersList}
                 setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                 isOpenProjectList={isOpenProjectList}
@@ -194,6 +202,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setOpenCreateTag={setOpenCreateTag}
                 setCurrentProject={setCurrentProject}
                 isPreviewMode={false}
+                setOpeningService={setOpeningService}
+                setCurrentMainChat={setCurrentMainChat}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />
@@ -204,7 +214,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <TaskAttachmentBlock
                 uploadedFiles={uploadedFiles}
-                setUploadedFiles={setUploadedFiles}
                 taskContents={taskContents}
                 setTaskContents={setTaskContents}
             />

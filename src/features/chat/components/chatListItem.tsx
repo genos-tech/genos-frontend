@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Socket } from 'socket.io-client';
 import {
   Avatar,
   Box,
@@ -22,6 +23,7 @@ import { toggleMessagesPane } from '../../../utils';
 import { extractMMDDHHMM } from '../../../utils/dateUtils';
 
 type ChatListItemProps = ListItemButtonProps & {
+  socket: Socket | null;
   chat: AllChatProps;
   myself: UserProps;
   currentMainChat: ChatProps;
@@ -30,10 +32,12 @@ type ChatListItemProps = ListItemButtonProps & {
   setCurrentSubChat: (chat: ChatProps) => void;
   isSubChatVisible: boolean;
   setIsSubChatVisible: (value: boolean) => void;
+  setOpeningService: (value: number) => void;
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
   const {
+    socket,
     chat,
     myself,
     currentMainChat,
@@ -41,10 +45,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
     setCurrentMainChat,
     setCurrentSubChat,
     isSubChatVisible,
-    setIsSubChatVisible } = props;
+    setIsSubChatVisible,
+    setOpeningService
+  } = props;
 
   const selected = currentMainChat.chatName === chat.chatName || (isSubChatVisible && currentSubChat.chatName === chat.chatName);
-  const isYou = myself.userId === chat.dmPartnerUserId;
+  const isYou = myself.userId === chat.dmPartnerUser?.userId;
 
   const always_online: boolean = true; // TODO: need to get status from WS
 
@@ -53,7 +59,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
       chatId: chat.chatId,
       chatName: chat.chatName,
       isDm: chat.isDm,
-      dmPartnerUserId: chat.isDm ? chat.dmPartnerUserId : null,
+      dmPartnerUser: chat.dmPartnerUser,
       unread: false,
       messages: messages,
       latestMessage: messages[messages.length - 1],
@@ -119,10 +125,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 <div>
                   {chat.isDm ? (
                     <AvatarWithStatus
-                      size="sm"
-                      chatName={chat.chatName}
+                      userProfile={chat.dmPartnerUser}
+                      socket={socket}
+                      chat={chat}
                       online={always_online}
-                      src=""
+                      setOpeningService={setOpeningService}
+                      setCurrentMainChat={setCurrentMainChat}
                     />
                   ) : (
                     <Avatar size="sm">

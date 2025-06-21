@@ -43,7 +43,7 @@ export const JoinTeam = () => {
     const { accessToken } = useAuth();
     const [teams, setTeams] = useState<Team[]>([]);
 
-    const moveToTeam = async (teamId: string) => {
+    const moveToTeam = async (teamId: string, teamName: string) => {
         const userId: string | null = localStorage.getItem("userId")
 
         if (userId) {
@@ -54,7 +54,8 @@ export const JoinTeam = () => {
                 setErrorMessage
             );
 
-            localStorage.setItem("teamId", joinTeamRes.team);
+            localStorage.setItem("teamId", teamId);
+            localStorage.setItem("teamName", teamName);
 
             if (joinTeamRes) {
                 const createDmRes: CreateDMResponse = await createDMChat(
@@ -101,7 +102,7 @@ export const JoinTeam = () => {
             )
             await sleepMilliSeconds(100);
             if (createTeamRes) {
-                moveToTeam(createTeamRes.teamId);
+                moveToTeam(createTeamRes.teamId, createTeamRes.teamName);
             } else {
                 navigate('/JoinTeam');
             }
@@ -216,7 +217,7 @@ export const JoinTeam = () => {
                             >
                                 {teams.map((team) => (
                                     <ListItemButton key={team.teamId} title={team.teamEmail} onClick={() => {
-                                        moveToTeam(team.teamId);
+                                        moveToTeam(team.teamId, team.teamName);
                                     }}>
                                         <ListItemDecorator>
                                             <AcUnitIcon />

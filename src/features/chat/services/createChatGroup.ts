@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { defaultDmPartner } from './constants';
 import { addChat } from "./addChat";
 import { addMessage } from "./addMessage";
 import { popSpecificMessages } from "./popSpecificMessages";
@@ -29,7 +30,7 @@ const moveToGMChat = async (
             chatId: chatId,
             chatName: chatName,
             isDm: false,
-            dmPartnerUserId: null,
+            dmPartnerUser: defaultDmPartner,
             unread: false,
             messages: fetchedMessages,
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
@@ -64,7 +65,7 @@ const addGMChatAndMessage = async (
         chatId: data.chatId,
         chatName: data.chatName,
         isDm: false,
-        dmPartnerUserId: null,
+        dmPartnerUser: defaultDmPartner,
         unread: false,
         latestMessage: newMessage,
         latestMessageText: "Created this group",
@@ -79,7 +80,7 @@ const addGMChatAndMessage = async (
         chatName: newChat.chatName,
         unread: false,
         isDm: false,
-        dmPartnerUserId: null,
+        dmPartnerUser: defaultDmPartner,
         latestMessage: newChat.latestMessage,
         latestMessageText: newChat.latestMessageText,
         TSLastMessage: getCurrentTimestamp()
@@ -110,14 +111,14 @@ export const createChatGroup = async (
             joiningCGId: data.chatId, // gm_id
             joiningCGName: data.chatName, // gm_name
             isDm: false,
-            dmPartnerUserId: null,
+            dmPartnerUser: null,
         }, (ack: any) => {
             socket.emit("message", {
                 message: createGroupMessage,
                 destCGName: chatName,
                 destCGId: data.chatId,
                 isDm: false,
-                dmPartnerUserId: null,
+                dmPartnerUser: null,
             });
         });
 

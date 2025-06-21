@@ -5,24 +5,15 @@ import CircularProgress from '@mui/joy/CircularProgress';
 import { Socket } from 'socket.io-client';
 
 import { loadSearchList } from '../services/loadChatSearchList';
-import { checkKnownChat } from "../services/checkKnownChat";
-import { addChat } from '../services/addChat';
-import { addMessage } from '../services/addMessage';
-import { popSpecificMessages } from '../services/popSpecificMessages';
-import { getCurrentTimestamp } from '../../../utils/dateUtils';
+import { moveToSelectedChat } from '../services/moveToChat';
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from '../../../types/admin';
 import {
     SearchListProps,
-    MessageProps,
     AllChatProps,
     ChatProps
 } from "../../../types/chat";
 
-const joinedMessage = [
-    { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },
-    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }
-]
 
 type ChatSearchProps = {
     myself: UserProps;
@@ -48,117 +39,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
     const [options, setOptions] = useState<SearchListProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
-    const defineNewChat = (
-        chatId: number,
-        chatName: string,
-        isDm: boolean,
-        dmPartnerUserId: string | null,
-        messages: MessageProps[]
-    ) => {
-        const newChat: ChatProps = {
-            chatId: chatId,
-            chatName: chatName,
-            isDm: isDm,
-            dmPartnerUserId: isDm ? dmPartnerUserId : null,
-            unread: false,
-            messages: messages,
-            latestMessage: messages[messages.length - 1],
-            latestMessageText: messages[messages.length - 1].contentText,
-            TSLastMessage: messages[messages.length - 1].tsSent,
-        };
-        return newChat
-    }
-
-    const moveToDMChat = async (
-        chatId: number,
-        chatName: string,
-        dmPartnerUserId: string,
-        setCurrentMainChat: (chat: ChatProps) => void
-    ) => {
-        if (chatId === -1 && socket !== null) {
-            socket.emit("join", {
-                joiningCGId: -1, // dm_id or gm_id
-                joiningCGName: chatName, // dm_name or gm_name
-                isDm: true,
-                dmPartnerUserId: dmPartnerUserId,
-            })
-        }
-
-        const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, true)
-        if (fetchedMessages) {
-            setCurrentMainChat(defineNewChat(chatId, chatName, true, dmPartnerUserId, fetchedMessages))
-        } else {
-            console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages)
-        }
-    };
-
-    const moveToGMChat = async (
-        chatId: number,
-        chatName: string,
-        setCurrentMainChat: (chat: ChatProps) => void
-    ) => {
-        const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false)
-        if (fetchedMessages) {
-            setCurrentMainChat(defineNewChat(chatId, chatName, false, null, fetchedMessages))
-        } else {
-            console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages)
-        }
-    };
-
-
-    const moveToSelectedChat = async (chatId: number, chatName: string, isDm: boolean, dmPartnerUserId: string) => {
-        try {
-            const isKnownChat: boolean = await checkKnownChat(chatId, isDm);
-            setOpenSearchBox(false);
-
-            if (!isKnownChat && socket !== null) {
-                socket.emit("message", {
-                    message: joinedMessage,
-                    destCGName: chatName,
-                    destCGId: chatId,
-                    isDm: isDm,
-                    dmPartnerUserId: isDm ? dmPartnerUserId : null,
-                }, async (ack: any) => {
-                    const message: MessageProps = {
-                        messageIdWithChatId: `${chatId}-1`,
-                        chatId: chatId,
-                        messageId: 1,
-                        content: joinedMessage,
-                        contentText: "joined",
-                        sender: myself,
-                        tsSent: getCurrentTimestamp(),
-                        numReplies: 0
-                    }
-                    const chat: AllChatProps = {
-                        chatId: chatId,
-                        chatName: chatName,
-                        isDm: isDm,
-                        dmPartnerUserId: isDm ? dmPartnerUserId : null,
-                        unread: true,
-                        latestMessage: message,
-                        latestMessageText: "joined",
-                        TSLastMessage: getCurrentTimestamp(),
-                    }
-
-                    await addChat(chat, chat.isDm)
-                    await addMessage(message, chat.isDm)
-
-                    setCurrentMainChat({ ...chat, messages: [message] })
-                    setAllChats([...allChats, chat]);
-                });
-            } else {
-                if (isDm) {
-                    moveToDMChat(chatId, chatName, dmPartnerUserId, setCurrentMainChat)
-                } else {
-                    moveToGMChat(chatId, chatName, setCurrentMainChat)
-                }
-            }
-
-        } catch (error) {
-            console.error("Worker error:", error);
-        }
-    };
-
     const onChangeHandler = async (value: any) => {
         if (value !== null && socket !== null) {
             var isDm: boolean = true
@@ -174,10 +54,16 @@ export const ChatSearch = (props: ChatSearchProps) => {
             }, (ack: any) => {
                 if (Number(value.id) !== -1)
                     moveToSelectedChat(
+                        myself,
+                        socket,
                         value.id,
                         value.name,
                         (value.type === "Group") ? Boolean(false) : Boolean(true),
-                        value.dmPartnerUserId
+                        value.dmPartnerUserId,
+                        allChats,
+                        setCurrentMainChat,
+                        setAllChats,
+                        setOpenSearchBox
                     )
             }
             );

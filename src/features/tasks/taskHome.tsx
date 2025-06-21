@@ -33,7 +33,7 @@ import { ModalCreateTeam } from '../admin/components/modals/ModalCreateTeam';
 import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from '../../components/layout/sidebar';
 import { UserProps } from '../../types/admin';
-import { SearchTeamTasksResponse } from '../../types/chat';
+import { ChatProps, SearchTeamTasksResponse } from '../../types/chat';
 import { ProjectProps, TaskTableProps, TaskProps } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { updateTeamTasks } from "./services/updateTeamTasks";
@@ -42,11 +42,12 @@ type TaskHomeProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (service: number) => void;
 };
 
 export const TaskHome = (props: TaskHomeProps) => {
-    const { socket, myself, setMyself, setOpeningService } = props
+    const { socket, myself, setMyself, setCurrentMainChat, setOpeningService } = props
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
@@ -171,6 +172,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         assigneeId: loadedTask[0].assignee.userId || null,
                         assigneeEmail: loadedTask[0].assignee.userEmail || null,
                         assigneeName: loadedTask[0].assignee.userName || null,
+                        assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
                         parentTaskId: loadedTask[0].parentTaskId || null,
                         threadId: loadedTask[0].threadId || null,
                         tags: loadedTask[0].tags || [],
@@ -202,6 +204,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             assigneeId: currentPreviewTask.assignee.userId || null,
                             assigneeEmail: currentPreviewTask.assignee.userEmail || null,
                             assigneeName: currentPreviewTask.assignee.userName || null,
+                            assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
                             parentTaskId: currentPreviewTask.parentTaskId || null,
                             threadId: currentPreviewTask.threadId || null,
                             tags: currentPreviewTask.tags || [],
@@ -223,8 +226,10 @@ export const TaskHome = (props: TaskHomeProps) => {
 
             <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
                 <Sidebar
+                    socket={socket}
                     myself={myself}
                     setMyself={setMyself}
+                    setCurrentMainChat={setCurrentMainChat}
                     setOpeningService={setOpeningService}
                 />
 
@@ -413,6 +418,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <CreateTaskForm
+                                                socket={socket}
                                                 myself={myself}
                                                 isDm={null}
                                                 chatId={null}
@@ -427,6 +433,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 isNewProjectCreated={isNewProjectCreated}
                                                 isNewTagCreated={isNewTagCreated}
                                                 setIsNewTaskCreated={setIsNewTaskCreated}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setOpeningService={setOpeningService}
                                             />
                                         </Box>
                                     </Panel>
@@ -477,6 +485,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setOpenCreateTag={setOpenCreateTag}
                                                 isTaskUpdated={isTaskUpdated}
                                                 setIsTaskUpdated={setIsTaskUpdated}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setOpeningService={setOpeningService}
                                             />
                                         </Box>
                                     </Panel>

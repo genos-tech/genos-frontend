@@ -188,7 +188,13 @@ export const ChatHome = (props: ChatHomeProps) => {
     return (
         <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100vw' }}>
 
-            <Sidebar myself={myself} setMyself={setMyself} setOpeningService={setOpeningService} />
+            <Sidebar
+                socket={socket}
+                myself={myself}
+                setMyself={setMyself}
+                setOpeningService={setOpeningService}
+                setCurrentMainChat={setCurrentMainChat}
+            />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
                 <Panel id={'1'} order={1} minSize={10} maxSize={30}>
@@ -225,6 +231,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 socket={socket}
                                 isSubChatVisible={isSubChatVisible}
                                 setIsSubChatVisible={setIsSubChatVisible}
+                                setOpeningService={setOpeningService}
                             />
                         </Sheet>
                     </Box>
@@ -263,6 +270,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 setIsOpeningTask={setIsOpeningTask}
                                 setIsCreatingTask={setIsCreatingTask}
                                 currentPreviewTask={currentPreviewTask}
+                                setOpeningService={setOpeningService}
+                                setCurrentMainChat={setCurrentMainChat}
                             />
                         </Box>
                     </Panel>
@@ -310,6 +319,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setCurrentPreviewTask={setCurrentPreviewTask}
                                         setOpenCreateProject={setOpenCreateProject}
                                         setOpenCreateTag={setOpenCreateTag}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setOpeningService={setOpeningService}
                                     />
                                 </Box>
                             </Panel>
@@ -350,6 +361,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     }}
                                 >
                                     <CreateTaskForm
+                                        socket={socket}
                                         myself={myself}
                                         isDm={currentThreadChat.isDm}
                                         chatId={currentThreadChat.chatId}
@@ -363,6 +375,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         isNewProjectCreated={isNewProjectCreated}
                                         isNewTagCreated={isNewTagCreated}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setOpeningService={setOpeningService}
                                     />
                                 </Box>
                             </Panel>
@@ -426,6 +440,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setIsThreadVisible={setIsThreadVisible}
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
+                                                setOpeningService={setOpeningService}
                                             />
                                         </Panel>
 
@@ -462,6 +477,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setIsSubChatVisible={setIsSubChatVisible}
                                         currentMainChatId={currentMainChatId}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
+                                        setOpeningService={setOpeningService}
                                     />
                                 </Panel>
                             </PanelGroup>
@@ -500,6 +516,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setIsOpeningTask={setIsOpeningTask}
                                             setIsCreatingTask={setIsCreatingTask}
                                             currentPreviewTask={currentPreviewTask}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
                                         />
                                     </Box>
                                 </Panel>

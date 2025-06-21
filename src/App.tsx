@@ -41,10 +41,11 @@ const socket = (accessToken: string | null): Socket => {
 const useMyself = (): SetMyselfProps => {
   const [myself, setMyself] = useState<UserProps>({
     teamId: "",
+    teamName: "",
     userId: "",
     userName: "",
     userEmail: "",
-    avatarImgPath: "/path/to/user/Origin.jpg",
+    avatarImgPath: "",
     online: true,
   });
 
@@ -52,10 +53,11 @@ const useMyself = (): SetMyselfProps => {
     const fetchUserData = () => {
       setMyself({
         teamId: localStorage.getItem("teamId") || "",
+        teamName: localStorage.getItem("teamName") || "",
         userId: localStorage.getItem("userId") || "",
         userName: localStorage.getItem("userName") || "",
         userEmail: localStorage.getItem("userEmail") || "",
-        avatarImgPath: "/path/to/user/Origin.jpg",
+        avatarImgPath: localStorage.getItem("avatarImgPath") || "",
         online: true,
       });
     };
@@ -81,9 +83,15 @@ export const App = () => {
   const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
   // {1: Chat, 2: Tasks, 3: Notes}
-  const [openingService, setOpeningService] = useState<number>(2);
+  const [openingService, setOpeningService] = useState<number>(1);
 
   const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+
+  useEffect(() => {
+    if (openingService === 1) {
+      // console.log("Open Chat")
+    }
+  }, [openingService]);
 
   useEffect(() => {
     if (accessToken) {
@@ -120,6 +128,7 @@ export const App = () => {
               socket={socketInstance}
               myself={myself}
               setMyself={setMyself}
+              setCurrentMainChat={setCurrentMainChat}
               setOpeningService={setOpeningService}
             />
           ) : null}

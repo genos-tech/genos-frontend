@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Box, Stack, Sheet } from '@mui/joy';
+import { Socket } from "socket.io-client";
 
 import { BubbleAttachmentSheet } from './BubbleAttachmentSheet';
 import { BubbleReactionButton } from "./BubbleReactionButton";
@@ -8,19 +9,31 @@ import { ThreadMessageProps, ThreadProps } from '../../../../types/chat';
 import { AvatarWithStatus } from '../../../../components/utils/avatarWithStatus';
 import { extractHHMM } from '../../../../utils/dateUtils';
 import { BnPreview } from '../../../../components/blockNote/bnPreview';
+import { UserProps } from '../../../../types/admin';
+import { ChatProps } from '../../../../types/chat';
 
 type threadMessageBubbleProps = ThreadMessageProps & {
+  myself: UserProps;
+  socket: Socket | null;
   thread: ThreadProps;
   variant: 'sent' | 'received';
+  setOpeningService: (service: number) => void;
+  setCurrentMainChat: (chat: ChatProps) => void;
 };
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
-  const { thread,
+  const {
+    myself,
+    socket,
+    thread,
     variant,
     content,
     tsSent,
     attachment = undefined,
-    sender } = props;
+    sender,
+    setOpeningService,
+    setCurrentMainChat,
+  } = props;
   const isSent = variant === 'sent';
   const [isLiked, setIsLiked] = React.useState<boolean>(false);
   const _tsSent = extractHHMM(tsSent)
@@ -79,9 +92,12 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
               <Stack direction="row" spacing={1.5}>
                 <Box sx={{ flex: 1 }}>
                   <AvatarWithStatus
-                    chatName={sender.userName}
+                    userProfile={thread.dmPartnerUser}
+                    socket={socket}
+                    thread={thread}
                     online={sender.online}
-                    src={sender.avatarImgPath || ""}
+                    setOpeningService={setOpeningService}
+                    setCurrentMainChat={setCurrentMainChat}
                   />
                 </Box>
                 <Box sx={{ flex: 20 }}>
