@@ -172,6 +172,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         assigneeId: loadedTask[0].assignee.userId || null,
                         assigneeEmail: loadedTask[0].assignee.userEmail || null,
                         assigneeName: loadedTask[0].assignee.userName || null,
+                        assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
                         parentTaskId: loadedTask[0].parentTaskId || null,
                         threadId: loadedTask[0].threadId || null,
                         tags: loadedTask[0].tags || [],
@@ -203,6 +204,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             assigneeId: currentPreviewTask.assignee.userId || null,
                             assigneeEmail: currentPreviewTask.assignee.userEmail || null,
                             assigneeName: currentPreviewTask.assignee.userName || null,
+                            assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
                             parentTaskId: currentPreviewTask.parentTaskId || null,
                             threadId: currentPreviewTask.threadId || null,
                             tags: currentPreviewTask.tags || [],
@@ -480,6 +482,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setOpenCreateTag={setOpenCreateTag}
                                                 isTaskUpdated={isTaskUpdated}
                                                 setIsTaskUpdated={setIsTaskUpdated}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setOpeningService={setOpeningService}
                                             />
                                         </Box>
                                     </Panel>

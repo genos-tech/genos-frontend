@@ -1,7 +1,6 @@
 import { alpha } from '@mui/system';
-import Box from '@mui/joy/Box';
-import Typography from '@mui/joy/Typography';
-import Avatar from '@mui/joy/Avatar';
+import { Box, Typography, Avatar } from '@mui/joy';
+import { useColorScheme } from '@mui/joy/styles';
 import { GridColDef, GridRenderCellParams, GridRenderEditCellParams } from '@mui/x-data-grid';
 import { Select, MenuItem, Chip } from "@mui/material";
 import dayjs from "dayjs";
@@ -9,7 +8,6 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import PendingIcon from '@mui/icons-material/Pending';
-import { useColorScheme } from '@mui/joy/styles';
 
 import { UserProps } from '../../../../types/admin';
 
@@ -96,7 +94,9 @@ export const getTaskColumns = (props: getTaskColumns): GridColDef[] => {
                     <Box
                         textAlign='left'
                         sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                        <Avatar size="sm">{params.row.assigneeName[0]}</Avatar>
+                        <Avatar size="sm" src={params.row.assigneeImgPath}>
+                            {params.row.assigneeName[0]}
+                        </Avatar>
                         <div>
                             <Typography level="body-xs">{params.row.assigneeName} | {params.row.assigneeEmail}</Typography>
                         </div>

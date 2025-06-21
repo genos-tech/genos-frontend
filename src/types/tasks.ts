@@ -111,6 +111,7 @@ export type TaskTableProps = {
     assigneeId: string | null,
     assigneeEmail: string | null,
     assigneeName: string | null,
+    assigneeImgPath: string | null,
     parentTaskId: number | null,
     threadId: number | null,
     tags: TagListProps[],

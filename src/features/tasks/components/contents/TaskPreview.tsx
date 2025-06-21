@@ -26,6 +26,7 @@ import {
     TagListProps,
     TaskCommentProps
 } from "../../../../types/tasks";
+import { ChatProps } from "../../../../types/chat";
 
 type TaskPreviewProps = {
     socket: Socket | null;
@@ -39,6 +40,8 @@ type TaskPreviewProps = {
     setOpenCreateTag: (value: boolean) => void;
     isTaskUpdated?: boolean;
     setIsTaskUpdated?: (value: boolean) => void;
+    setOpeningService: (service: number) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -53,7 +56,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setOpenCreateProject,
         setOpenCreateTag,
         isTaskUpdated,
-        setIsTaskUpdated
+        setIsTaskUpdated,
+        setOpeningService,
+        setCurrentMainChat
     } = props
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(currentPreviewTask.attachments);
@@ -61,8 +66,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [tmpCurrentTaskContent, setTmpCurrentTaskContent] = useState<TaskProps>(currentPreviewTask);
     const [taskTitle, setTaskTitle] = useState<string>(currentPreviewTask.title);
     const [body, setBody] = useState<PartialBlock[]>(currentPreviewTask.body);
-    const [assigneeName, setAssigneeName] = useState<string>(tmpCurrentTaskContent.assignee.userName);
-    const [reporterName, setReporterName] = useState<string>(tmpCurrentTaskContent.reporter.userName);
+    const [assignee, setAssignee] = useState<UserProps>(tmpCurrentTaskContent.assignee);
+    const [reporter, setReporter] = useState<UserProps>(tmpCurrentTaskContent.reporter);
     const [isCommentUpdated, setIsCommentUpdated] = useState(false);
     const [currentTaskId, setCurrentTaskId] = useState(tmpCurrentTaskContent.id);
 
@@ -120,6 +125,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     ...prevState,
                     attachments: uploadedFiles
                 }));
+                setAssignee(tmpCurrentTaskContent.assignee)
+                setReporter(tmpCurrentTaskContent.reporter)
             })();
         }
     }, [uploadedFiles])
@@ -128,6 +135,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         if (setIsTaskUpdated && isTaskUpdated === false) {
             setCurrentPreviewTask(tmpCurrentTaskContent)
             setIsTaskUpdated(true)
+            setAssignee(tmpCurrentTaskContent.assignee)
+            setReporter(tmpCurrentTaskContent.reporter)
         }
     }, [tmpCurrentTaskContent])
 
@@ -212,16 +221,17 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <Divider sx={{ mt: 1, mb: 1 }} />
 
             <TaskMainBlock
+                socket={socket}
                 taskContents={tmpCurrentTaskContent}
                 setTaskContents={setTmpCurrentTaskContent}
                 teamMembers={teamMembers}
                 teamProjects={teamProjects}
                 projectTags={projectTags}
                 myself={myself}
-                assigneeName={assigneeName}
-                setAssigneeName={setAssigneeName}
-                reporterName={reporterName}
-                setReporterName={setReporterName}
+                assignee={assignee}
+                setAssignee={setAssignee}
+                reporter={reporter}
+                setReporter={setReporter}
                 isOpenTeamMembersList={isOpenTeamMembersList}
                 setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                 isOpenProjectList={isOpenProjectList}
@@ -232,6 +242,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setCurrentProject={setCurrentProject}
                 isPreviewMode={true}
                 setTaskUpdated={setTaskUpdated}
+                setOpeningService={setOpeningService}
+                setCurrentMainChat={setCurrentMainChat}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

@@ -52,6 +52,18 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
           setOpeningService={setOpeningService}
         />
       </div >
-      : <></>
+      : <div>
+        <Avatar size="sm" onClick={() => setOpenUserProfile(true)} src={userProfile.avatarImgPath} >
+          {userProfile.userName[0]}
+        </Avatar>
+        <UserProfile
+          socket={socket}
+          userProfile={userProfile}
+          openUserProfile={openUserProfile}
+          setOpenUserProfile={setOpenUserProfile}
+          setCurrentMainChat={setCurrentMainChat}
+          setOpeningService={setOpeningService}
+        />
+      </div >
   );
 }

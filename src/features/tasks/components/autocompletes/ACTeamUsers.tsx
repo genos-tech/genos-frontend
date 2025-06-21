@@ -9,7 +9,7 @@ type ACTeamUsersProps = {
     teamMembers: UserProps[],
     taskContents: TaskProps,
     setTaskContents: (value: TaskProps) => void,
-    setUserName: (value: string) => void,
+    setUser: (value: UserProps) => void,
     isOpenTeamMembersList: boolean,
     setIsOpenTeamMembersList: (value: boolean) => void,
     isAssignee: boolean,
@@ -22,7 +22,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         teamMembers,
         taskContents,
         setTaskContents,
-        setUserName,
+        setUser,
         isOpenTeamMembersList,
         setIsOpenTeamMembersList,
         isAssignee,
@@ -55,7 +55,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                             setTaskUpdated(true);
                         }
                     }
-                    setUserName(value.userName)
+                    setUser(value)
                 }
             }}
             onOpen={() => setIsOpenTeamMembersList(!isOpenTeamMembersList)}
