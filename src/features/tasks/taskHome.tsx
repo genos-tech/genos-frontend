@@ -418,6 +418,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <CreateTaskForm
+                                                socket={socket}
                                                 myself={myself}
                                                 isDm={null}
                                                 chatId={null}
@@ -432,6 +433,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 isNewProjectCreated={isNewProjectCreated}
                                                 isNewTagCreated={isNewTagCreated}
                                                 setIsNewTaskCreated={setIsNewTaskCreated}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setOpeningService={setOpeningService}
                                             />
                                         </Box>
                                     </Panel>

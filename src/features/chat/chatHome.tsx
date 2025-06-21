@@ -319,6 +319,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setCurrentPreviewTask={setCurrentPreviewTask}
                                         setOpenCreateProject={setOpenCreateProject}
                                         setOpenCreateTag={setOpenCreateTag}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setOpeningService={setOpeningService}
                                     />
                                 </Box>
                             </Panel>
@@ -359,6 +361,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     }}
                                 >
                                     <CreateTaskForm
+                                        socket={socket}
                                         myself={myself}
                                         isDm={currentThreadChat.isDm}
                                         chatId={currentThreadChat.chatId}
@@ -372,6 +375,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         isNewProjectCreated={isNewProjectCreated}
                                         isNewTagCreated={isNewTagCreated}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setOpeningService={setOpeningService}
                                     />
                                 </Box>
                             </Panel>
