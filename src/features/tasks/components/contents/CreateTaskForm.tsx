@@ -1,48 +1,53 @@
 import { Socket } from "socket.io-client";
 import { useState, useEffect } from "react";
-import { Sheet, Divider } from '@mui/joy';
+import { Sheet, Divider } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 
-import { TaskTitleBlock } from './base/TaskTitleBlock';
-import { TaskMainBlock } from './base/TaskMainBlock';
-import { TaskBodyEditBlock } from './base/TaskBodyEditBlock'
-import { CreateTaskFooter } from './base/CreateTaskFooter';
-import { TaskAttachmentBlock } from './base/TaskAttachmentBlock'
+import { TaskTitleBlock } from "./base/TaskTitleBlock";
+import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskBodyEditBlock } from "./base/TaskBodyEditBlock";
+import { CreateTaskFooter } from "./base/CreateTaskFooter";
+import { TaskAttachmentBlock } from "./base/TaskAttachmentBlock";
 import {
     updateTaskTitle,
     updateTaskBody,
-    updateTaskAttachments
-} from '../../hooks/taskUpdateHooks';
+    updateTaskAttachments,
+} from "../../hooks/taskUpdateHooks";
 import {
     updateTeamMembersOptions,
     updateProjectOptions,
-    updateTagOptions
-} from '../../services/updateTaskAutoCompleteOptions'
+    updateTagOptions,
+} from "../../services/updateTaskAutoCompleteOptions";
 import { useAuth } from "../../../../context/AuthContext";
-import { getFormattedTodayDateStr } from '../../../../utils/dateUtils';
-import { UserProps } from '../../../../types/admin';
-import { AttachmentFileProps, TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
+import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
+import { UserProps } from "../../../../types/admin";
+import {
+    AttachmentFileProps,
+    TaskProps,
+    ProjectProps,
+    TagListProps,
+} from "../../../../types/tasks";
 import { ChatProps } from "../../../../types/chat";
 
 type CreateTaskProps = {
-    socket: Socket | null,
-    myself: UserProps,
-    isDm: boolean | null,
-    chatId: number | null,
-    threadId: number | null,
-    setIsTaskContentVisible: (value: boolean) => void,
-    setIsCreatingTask?: (value: boolean) => void,
-    setIsOpeningTask?: (value: boolean) => void,
-    setOpenCreateProject: (value: boolean) => void,
-    setOpenCreateTag: (value: boolean) => void,
-    currentProject: ProjectProps | null,
-    setCurrentProject: (value: ProjectProps) => void,
-    setCurrentPreviewTaskId: (value: number) => void,
-    isNewProjectCreated: boolean,
-    isNewTagCreated: boolean,
-    setIsNewTaskCreated?: (value: boolean) => void,
-    setOpeningService: (service: number) => void,
-    setCurrentMainChat: (chat: ChatProps) => void,
+    socket: Socket | null;
+    myself: UserProps;
+    isDm: boolean | null;
+    chatId: number | null;
+    threadId: number | null;
+    setIsTaskContentVisible: (value: boolean) => void;
+    setIsCreatingTask?: (value: boolean) => void;
+    setIsOpeningTask?: (value: boolean) => void;
+    setOpenCreateProject: (value: boolean) => void;
+    setOpenCreateTag: (value: boolean) => void;
+    currentProject: ProjectProps | null;
+    setCurrentProject: (value: ProjectProps) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
+    isNewProjectCreated: boolean;
+    isNewTagCreated: boolean;
+    setIsNewTaskCreated?: (value: boolean) => void;
+    setOpeningService: (service: number) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -61,8 +66,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setCurrentPreviewTaskId,
         setIsNewTaskCreated,
         setOpeningService,
-        setCurrentMainChat
-    } = props
+        setCurrentMainChat,
+    } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
 
@@ -73,23 +78,24 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         body: [],
         assignee: myself,
         reporter: myself,
-        chatType: (isDm === null || isDm === undefined) ? null : (isDm ? "dm" : "gm"),
+        chatType: isDm === null || isDm === undefined ? null : isDm ? "dm" : "gm",
         chatId: chatId,
         threadId: threadId,
         dueDate: getFormattedTodayDateStr(),
-        status: { code: 0, status: 'Open', color: '#0044c2', textColor: 'white' },
-        priority: { code: -1, priority: '', color: '', textColor: '' },
-        effortLevel: { code: -1, level: '', color: '', textColor: '' },
+        status: { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
+        priority: { code: -1, priority: "", color: "", textColor: "" },
+        effortLevel: { code: -1, level: "", color: "", textColor: "" },
         tags: [],
-        githubLink: { url: '', title: '' },
-        generalLink: { url: '', title: '' },
-        attachments: []
+        githubLink: { url: "", title: "" },
+        generalLink: { url: "", title: "" },
+        attachments: [],
     });
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>([]);
     const [assignee, setAssignee] = useState<UserProps>(myself);
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
 
     updateTaskTitle({ taskTitle, taskContents, setTaskContents });
     updateTaskBody({ body, taskContents, setTaskContents });
@@ -99,23 +105,21 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     useEffect(() => {
         if (isSubmitted) {
             if (setIsCreatingTask) {
-                setIsCreatingTask(false)
+                setIsCreatingTask(false);
             }
 
             if (setIsOpeningTask) {
-                setIsOpeningTask(true)
+                setIsOpeningTask(true);
             }
 
             if (setIsNewTaskCreated) {
-                setIsNewTaskCreated(true)
+                setIsNewTaskCreated(true);
             }
-
         }
-    }, [isSubmitted])
+    }, [isSubmitted]);
 
     const [titleErrorOpen, setTitleErrorOpen] = useState(false);
     const [titleError, setTitleError] = useState("");
-
 
     // Get team members
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
@@ -124,8 +128,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         updateTeamMembersOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamMembers: setTeamMembers
-        })
+            setTeamMembers: setTeamMembers,
+        });
     }, [isOpenTeamMembersList]);
 
     // Get team projects
@@ -135,10 +139,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         updateProjectOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamProjects: setTeamProjects
+            setTeamProjects: setTeamProjects,
         });
     }, [isOpenProjectList]);
-
 
     // Get Project tags
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
@@ -149,7 +152,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 myself: myself,
                 accessToken: accessToken,
                 projectId: currentProject.projectId,
-                setProjectTags: setProjectTags
+                setProjectTags: setProjectTags,
             });
         }
     }, [isOpenTagList]);
@@ -160,10 +163,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             variant="outlined"
             sx={{
                 minHeight: 500,
-                borderRadius: 'sm',
+                borderRadius: "sm",
                 p: 2,
-                overflowY: 'scroll',
-                overflowX: 'hidden'
+                overflowY: "scroll",
+                overflowX: "hidden",
             }}
         >
             <TaskTitleBlock
@@ -216,6 +219,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 uploadedFiles={uploadedFiles}
                 taskContents={taskContents}
                 setTaskContents={setTaskContents}
+                setIsAttachmentDeleted={setIsAttachmentDeleted}
             />
 
             <Divider sx={{ m: 2 }} />
@@ -234,7 +238,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsCreatingTask={setIsCreatingTask}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
             />
-
         </Sheet>
     );
-}
+};

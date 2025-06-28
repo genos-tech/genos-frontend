@@ -97,7 +97,7 @@ export const uploadTask = async (props: uploadTaskProps) => {
                         formData.append("attached_type", attachment.file.type);
 
                         const uploadAttachmentResponse = await fetch(
-                            `${base_url}/task/addTaskAttachment/`,
+                            `${base_url}/task/attachment/`,
                             {
                                 method: "POST",
                                 headers: {

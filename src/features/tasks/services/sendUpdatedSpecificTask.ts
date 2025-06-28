@@ -55,24 +55,22 @@ export const sendUpdatedSpecificTask = async (
                     formData.append("attached_file", attachment.file);
                     formData.append("attached_type", attachment.file.type);
 
-                    const uploadAttachmentResponse = await fetch(
-                        `${base_url}/task/addTaskAttachment/`,
-                        {
-                            method: "POST",
-                            headers: {
-                                Authorization: `Bearer ${accessToken}`,
-                            },
-                            body: formData,
-                        }
-                    );
+                    const uploadAttachmentResponse = await fetch(`${base_url}/task/attachment/`, {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: formData,
+                    });
 
                     const uploadAttachmentData = await uploadAttachmentResponse.json();
-                    console.log("uploadAttachmentData (update task):", uploadAttachmentData);
 
                     if (!uploadAttachmentResponse.ok) {
                         throw new Error(
                             uploadAttachmentData.message || "Attachment Upload Failed"
                         );
+                    } else {
+                        return uploadAttachmentData;
                     }
                 }
 
