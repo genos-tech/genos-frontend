@@ -236,7 +236,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                 }}
 
             >
-                {uploadedFiles.length === 0 && (
+                {uploadedFiles.length === 0 && uploadingFiles.length === 0 && (
                     <Box
                         style={{
                             flex: 1,

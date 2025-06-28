@@ -61,7 +61,7 @@ export const sendUpdatedSpecificTask = async (
                     });
 
                     const uploadAttachmentData = await uploadAttachmentResponse.json();
-                    console.log("uploadAttachmentData:", uploadAttachmentData)
+                    console.log("uploadAttachmentData (update task):", uploadAttachmentData)
 
                     if (!uploadAttachmentResponse.ok) {
                         throw new Error(uploadAttachmentData.message || 'Attachment Upload Failed');
