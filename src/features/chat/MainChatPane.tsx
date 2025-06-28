@@ -103,7 +103,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                   <Stack
                     direction="row"
                     spacing={2}
-                    sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 2, paddingX: 0.5 }}
+                    sx={{ flexDirection: isYou ? "row-reverse" : "row", paddingY: 1.8, paddingX: 1 }}
                   >
                     <MessageBubble
                       myself={myself}
