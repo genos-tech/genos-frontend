@@ -1,13 +1,13 @@
-import { Box, Button, Stack } from '@mui/joy';
-import CircleIcon from '@mui/icons-material/Circle';
+import { Box, Button, Stack } from "@mui/joy";
+import CircleIcon from "@mui/icons-material/Circle";
 
 type BubbleReplyButtonTypes = {
-    numReplies: number,
-    isSent: boolean,
-    replayHandler: () => void,
-}
+    numReplies: number;
+    isSent: boolean;
+    replayHandler: () => void;
+};
 export const BubbleReplyButton = (props: BubbleReplyButtonTypes) => {
-    const { numReplies, isSent, replayHandler } = props
+    const { numReplies, isSent, replayHandler } = props;
     return (
         <Stack
             direction="row"
@@ -15,13 +15,13 @@ export const BubbleReplyButton = (props: BubbleReplyButtonTypes) => {
                 justifyContent: isSent ? "flex-end" : "flex-start",
                 position: "absolute",
                 p: 0.5,
-                width: '100%',
+                width: "100%",
                 overflow: "hidden", // Prevents unwanted scrollbar
                 left: 0, // Ensures full-width alignment
             }}
         >
             <Button
-                component='a'
+                component="a"
                 size="sm"
                 variant="plain" // Removes background & border
                 onClick={replayHandler}
@@ -35,22 +35,21 @@ export const BubbleReplyButton = (props: BubbleReplyButtonTypes) => {
                     "&:hover": {
                         backgroundColor: "transparent",
                         color: "transparent",
-                        fontWeight: "bold"
+                        fontWeight: "bold",
                     },
                 }}
             >
                 {/* TODO: read/unread for thread replies */}
-                {(numReplies == 1)
-                    ? <Box sx={{ color: 'neutral.plainColor' }}>
+                {numReplies == 1 ? (
+                    <Box sx={{ color: "neutral.plainColor" }}>
                         <CircleIcon sx={{ fontSize: 10 }} color="primary" />
                         &nbsp;
                         {numReplies} reply
                     </Box>
-                    : <Box sx={{ color: 'neutral.plainColor' }}>
-                        {numReplies} replies
-                    </Box>
-                }
+                ) : (
+                    <Box sx={{ color: "neutral.plainColor" }}>{numReplies} replies</Box>
+                )}
             </Button>
         </Stack>
-    )
-}
+    );
+};

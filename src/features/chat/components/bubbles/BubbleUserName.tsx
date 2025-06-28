@@ -1,12 +1,12 @@
-import { Box, Typography, Stack } from '@mui/joy';
+import { Box, Typography, Stack } from "@mui/joy";
 
 type BubbleUserNameTypes = {
-    userName: string,
-    isSent: boolean,
-    tsSent: string,
-}
+    userName: string;
+    isSent: boolean;
+    tsSent: string;
+};
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
-    const { userName, isSent, tsSent } = props
+    const { userName, isSent, tsSent } = props;
     return (
         <Box sx={{ flex: 1 }}>
             <Stack
@@ -18,15 +18,15 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                     level="body-xs"
                     sx={[
                         {
-                            lineHeight: 1.5
+                            lineHeight: 1.5,
                         },
                         isSent
                             ? {
-                                color: 'background.body',
-                            }
+                                  color: "background.body",
+                              }
                             : {
-                                color: 'var(--joy-palette-text-primary)',
-                            },
+                                  color: "var(--joy-palette-text-primary)",
+                              },
                     ]}
                 >
                     {userName}
@@ -35,20 +35,20 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                     level="body-xs"
                     sx={[
                         {
-                            lineHeight: 1.5
+                            lineHeight: 1.5,
                         },
                         isSent
                             ? {
-                                color: 'background.body',
-                            }
+                                  color: "background.body",
+                              }
                             : {
-                                color: 'var(--joy-palette-text-primary)',
-                            },
+                                  color: "var(--joy-palette-text-primary)",
+                              },
                     ]}
                 >
                     {tsSent}
                 </Typography>
             </Stack>
         </Box>
-    )
-}
+    );
+};

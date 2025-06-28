@@ -11,7 +11,7 @@ self.onmessage = async (event) => {
             storeName: isDm ? STORES.DM_THREAD_MESSAGES : STORES.GM_THREAD_MESSAGES,
             chatId: chatId,
             threadId: threadId,
-        })
+        });
 
         // Sort messages by tsSent in ascending order
         const sortedMessages = [...dmThreadMessages].sort((a, b) => {
@@ -20,14 +20,13 @@ self.onmessage = async (event) => {
 
         self.postMessage(sortedMessages);
     } else {
-        console.error
-            ("Invalid parameters for popSpecificThreadMessagesWorker:", {
-                chatId: chatId,
-                threadId: threadId,
-                isDm: isDm,
-            });
+        console.error("Invalid parameters for popSpecificThreadMessagesWorker:", {
+            chatId: chatId,
+            threadId: threadId,
+            isDm: isDm,
+        });
         self.postMessage([]);
     }
 };
 
-export { };
+export {};

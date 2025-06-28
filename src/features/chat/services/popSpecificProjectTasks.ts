@@ -1,9 +1,7 @@
-import { TaskTableProps } from '../../../types/tasks';
+import { TaskTableProps } from "../../../types/tasks";
 import PopSpecificProjectTasksWorker from "../../../workers/popSpecificProjectTasksWorker.ts?worker";
 
-export const popSpecificProjectTasks = (
-    projectId: number
-): Promise<TaskTableProps[]> => {
+export const popSpecificProjectTasks = (projectId: number): Promise<TaskTableProps[]> => {
     return new Promise((resolve, reject) => {
         const popSpecificProjectTasksWorker = new PopSpecificProjectTasksWorker();
 

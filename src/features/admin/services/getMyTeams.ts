@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-import { authApi } from '../../../services/api';
+import { authApi } from "../../../services/api";
 
 export const getMyTeams = async (
     accessToken: string,
@@ -9,21 +9,21 @@ export const getMyTeams = async (
 ) => {
     try {
         const api = authApi(accessToken);
-        const query = `user_id=${userId}`
+        const query = `user_id=${userId}`;
         if (api) {
             const res = await api.get(`/team/getMyTeams/?${query}`);
-            return res.data
+            return res.data;
         } else {
-            console.error('Unauthorized. Auth toke is not found.');
+            console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage('Unauthorized. Auth toke is not found.')
+                setErrorMessage("Unauthorized. Auth toke is not found.");
             }
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-            console.error('API error:', error.response?.status, error.response?.data);
+            console.error("API error:", error.response?.status, error.response?.data);
         } else {
-            console.error('Unexpected error:', error);
+            console.error("Unexpected error:", error);
         }
     }
-}
+};

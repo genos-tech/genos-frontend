@@ -1,4 +1,4 @@
-import { UserProps } from "../../../types/admin"
+import { UserProps } from "../../../types/admin";
 
 export const defaultDmPartner: UserProps = {
     teamId: "",
@@ -7,5 +7,5 @@ export const defaultDmPartner: UserProps = {
     userId: "",
     userEmail: "",
     avatarImgPath: "",
-    online: false
-}
+    online: false,
+};

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import {
     Alert,
     Box,
@@ -11,15 +11,14 @@ import {
     Link,
     Input,
     Typography,
-    Stack
-} from '@mui/joy';
-import { CssVarsProvider } from '@mui/joy/styles';
+    Stack,
+} from "@mui/joy";
+import { CssVarsProvider } from "@mui/joy/styles";
 
-import { AdminBackground } from './Background';
+import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
 import { signUp } from "../services/signup";
-import { SignUpResponse } from "../../../types/admin"
-
+import { SignUpResponse } from "../../../types/admin";
 
 interface FormElements extends HTMLFormControlsCollection {
     userName: HTMLInputElement;
@@ -36,47 +35,47 @@ export const SignUpForm = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const _signup = async (username: string, email: string, password: string) => {
-        const signUpRes: SignUpResponse = await signUp(username, email, password, setErrorMessage)
+        const signUpRes: SignUpResponse = await signUp(username, email, password, setErrorMessage);
         if (signUpRes) {
-            navigate('/');
+            navigate("/");
         } else {
-            navigate('/SignUp');
+            navigate("/SignUp");
         }
-    }
+    };
 
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
             <GlobalStyles
                 styles={{
-                    ':root': {
-                        '--Form-maxWidth': '800px',
-                        '--Transition-duration': '0.4s',
+                    ":root": {
+                        "--Form-maxWidth": "800px",
+                        "--Transition-duration": "0.4s",
                     },
                 }}
             />
             <Box
                 sx={(theme) => ({
-                    width: { xs: '100%', md: '50vw' },
-                    transition: 'width var(--Transition-duration)',
-                    transitionDelay: 'calc(var(--Transition-duration) + 0.1s)',
-                    position: 'relative',
+                    width: { xs: "100%", md: "50vw" },
+                    transition: "width var(--Transition-duration)",
+                    transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
+                    position: "relative",
                     zIndex: 1,
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    backdropFilter: 'blur(12px)',
-                    backgroundColor: 'rgba(255 255 255 / 0.2)',
-                    [theme.getColorSchemeSelector('dark')]: {
-                        backgroundColor: 'rgba(19 19 24 / 0.4)',
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    backdropFilter: "blur(12px)",
+                    backgroundColor: "rgba(255 255 255 / 0.2)",
+                    [theme.getColorSchemeSelector("dark")]: {
+                        backgroundColor: "rgba(19 19 24 / 0.4)",
                     },
                 })}
             >
                 <Box
                     sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        minHeight: '100dvh',
-                        width: '100%',
+                        display: "flex",
+                        flexDirection: "column",
+                        minHeight: "100dvh",
+                        width: "100%",
                         px: 2,
                     }}
                 >
@@ -84,23 +83,23 @@ export const SignUpForm = () => {
                     <Box
                         component="main"
                         sx={{
-                            my: 'auto',
+                            my: "auto",
                             py: 2,
                             pb: 5,
-                            display: 'flex',
-                            flexDirection: 'column',
+                            display: "flex",
+                            flexDirection: "column",
                             gap: 2,
                             width: 400,
-                            maxWidth: '100%',
-                            mx: 'auto',
-                            borderRadius: 'sm',
-                            '& form': {
-                                display: 'flex',
-                                flexDirection: 'column',
+                            maxWidth: "100%",
+                            mx: "auto",
+                            borderRadius: "sm",
+                            "& form": {
+                                display: "flex",
+                                flexDirection: "column",
                                 gap: 2,
                             },
                             [`& .MuiFormLabel-asterisk`]: {
-                                visibility: 'hidden',
+                                visibility: "hidden",
                             },
                         }}
                     >
@@ -119,17 +118,16 @@ export const SignUpForm = () => {
                                     event.preventDefault(); // Needs for prevent reload page
 
                                     const formElements = event.currentTarget.elements;
-                                    const name = formElements.userName.value
-                                    const email = formElements.email.value
-                                    const password = formElements.password.value
-                                    const confirm_password = formElements.confirm_password.value
+                                    const name = formElements.userName.value;
+                                    const email = formElements.email.value;
+                                    const password = formElements.password.value;
+                                    const confirm_password = formElements.confirm_password.value;
 
                                     if (password !== confirm_password) {
-                                        setErrorMessage('Failed to confirm your password.');
+                                        setErrorMessage("Failed to confirm your password.");
                                     } else {
                                         _signup(name, email, password);
                                     }
-
                                 }}
                             >
                                 <FormControl required>
@@ -160,7 +158,7 @@ export const SignUpForm = () => {
                             </form>
                         </Stack>
 
-                        <Typography level="body-sm" textAlign={'right'}>
+                        <Typography level="body-sm" textAlign={"right"}>
                             <Link href="SignIn" level="title-sm">
                                 Back to Sign in
                             </Link>
@@ -168,14 +166,13 @@ export const SignUpForm = () => {
                     </Box>
 
                     <Box component="footer" sx={{ py: 3 }}>
-                        <Typography level="body-xs" sx={{ textAlign: 'center' }}>
+                        <Typography level="body-xs" sx={{ textAlign: "center" }}>
                             © Origin {new Date().getFullYear()}
                         </Typography>
                     </Box>
-
                 </Box>
             </Box>
             <AdminBackground />
         </CssVarsProvider>
     );
-}
+};

@@ -1,19 +1,15 @@
-import { Button, Stack, Typography, Input } from '@mui/joy';
+import { Button, Stack, Typography, Input } from "@mui/joy";
 
-import { getFormattedDateStr, getFormattedTodayDateStr } from '../../../../../../utils/dateUtils';
-import { TaskProps } from '../../../../../../types/tasks';
+import { getFormattedDateStr, getFormattedTodayDateStr } from "../../../../../../utils/dateUtils";
+import { TaskProps } from "../../../../../../types/tasks";
 
 type TaskDueDateInputProps = {
-    taskContents: TaskProps,
-    setTaskContents: (value: TaskProps) => void,
-    setTaskUpdated?: (value: boolean) => void,
-}
+    taskContents: TaskProps;
+    setTaskContents: (value: TaskProps) => void;
+    setTaskUpdated?: (value: boolean) => void;
+};
 export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
-    const {
-        taskContents,
-        setTaskContents,
-        setTaskUpdated
-    } = props;
+    const { taskContents, setTaskContents, setTaskUpdated } = props;
 
     return (
         <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
@@ -22,7 +18,7 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
                 color="neutral"
                 variant="outlined"
                 size="sm"
-                value={(taskContents.dueDate) ? taskContents.dueDate : ""}
+                value={taskContents.dueDate ? taskContents.dueDate : ""}
                 onChange={(e) => {
                     setTaskContents({
                         ...taskContents,
@@ -39,21 +35,22 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
                 }}
             />
             <Button
-                component='a'
+                component="a"
                 variant="outlined"
                 color="neutral"
-                size='sm'
+                size="sm"
                 onClick={() => {
                     setTaskContents({
                         ...taskContents,
-                        dueDate: ""
+                        dueDate: "",
                     });
                     if (setTaskUpdated) {
                         setTaskUpdated(true);
                     }
-                }}>
+                }}
+            >
                 TBD
             </Button>
         </Stack>
-    )
-}
+    );
+};

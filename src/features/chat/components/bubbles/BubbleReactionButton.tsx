@@ -1,31 +1,38 @@
-import { Tooltip, Box, IconButton } from '@mui/joy';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import ReplyIcon from '@mui/icons-material/Reply';
+import { Tooltip, Box, IconButton } from "@mui/joy";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import ReplyIcon from "@mui/icons-material/Reply";
 
 type BubbleReactionButtonTypes = {
-    isLiked: boolean,
-    setIsLiked: (value: boolean) => void,
-    isSent: boolean,
-    replayHandler?: () => void,
-}
+    isLiked: boolean;
+    setIsLiked: (value: boolean) => void;
+    isSent: boolean;
+    replayHandler?: () => void;
+};
 export const BubbleReactionButton = (props: BubbleReactionButtonTypes) => {
-    const { isLiked, setIsLiked, isSent, replayHandler } = props
+    const { isLiked, setIsLiked, isSent, replayHandler } = props;
     return (
-        <Box sx={{ textAlign: 'right' }}>
-            {replayHandler && (<>
-                <Tooltip title="Reply" size='sm'>
-                    <IconButton
-                        component='a'
-                        sx={{ '&:hover': { backgroundColor: 'transparent' } }}
-                        onClick={replayHandler}
-                    >
-                        <ReplyIcon sx={{ fontSize: 20, color: isSent ? 'background.body' : 'neutral.plainColor' }} />
-                    </IconButton>
-                </Tooltip>
-            </>)}
+        <Box sx={{ textAlign: "right" }}>
+            {replayHandler && (
+                <>
+                    <Tooltip title="Reply" size="sm">
+                        <IconButton
+                            component="a"
+                            sx={{ "&:hover": { backgroundColor: "transparent" } }}
+                            onClick={replayHandler}
+                        >
+                            <ReplyIcon
+                                sx={{
+                                    fontSize: 20,
+                                    color: isSent ? "background.body" : "neutral.plainColor",
+                                }}
+                            />
+                        </IconButton>
+                    </Tooltip>
+                </>
+            )}
             <IconButton
-                component='a'
+                component="a"
                 size="sm"
                 onClick={() => setIsLiked(!isLiked)}
                 sx={{
@@ -45,5 +52,5 @@ export const BubbleReactionButton = (props: BubbleReactionButtonTypes) => {
                 )}
             </IconButton>
         </Box>
-    )
-}
+    );
+};

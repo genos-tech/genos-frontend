@@ -3,13 +3,12 @@ import { getLatestDMChat, getLatestGMChat } from "../db/crud";
 self.onmessage = async (event) => {
     const isDm: boolean = event.data.isDm;
     if (isDm !== undefined && isDm !== null) {
-
-        var latestChat = null
+        var latestChat = null;
 
         if (isDm) {
-            latestChat = await getLatestDMChat()
+            latestChat = await getLatestDMChat();
         } else {
-            latestChat = await getLatestGMChat()
+            latestChat = await getLatestGMChat();
         }
 
         if (latestChat) {
@@ -17,10 +16,9 @@ self.onmessage = async (event) => {
         } else {
             self.postMessage(null);
         }
-
     } else {
         self.postMessage(null);
     }
 };
 
-export { };
+export {};

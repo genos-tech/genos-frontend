@@ -8,10 +8,10 @@ self.onmessage = async (event) => {
 
     await addData({
         storeName: isDm ? STORES.DM_CHATS : STORES.GM_CHATS,
-        data: chat
-    })
+        data: chat,
+    });
 
     self.postMessage("done");
 };
 
-export { };
+export {};

@@ -3,4 +3,4 @@ export const handleAtTop = (atTop: boolean) => {
     if (atTop) {
         // loadMore()
     }
-}
+};

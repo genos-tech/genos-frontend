@@ -1,15 +1,7 @@
-import React, { useState } from 'react';
-import {
-    Modal,
-    ModalDialog,
-    Alert,
-    Stack,
-    Button,
-    Input,
-    Typography,
-} from "@mui/joy";
+import React, { useState } from "react";
+import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
 
-import { UserProps } from '../../../../types/admin';
+import { UserProps } from "../../../../types/admin";
 import { useAuth } from "../../../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -25,42 +17,44 @@ export const ModalCreateTeam: React.FC<Props> = ({
     myself,
     setMyself,
     openCreateTeam,
-    setOpenCreateTeam
+    setOpenCreateTeam,
 }) => {
     const { accessToken } = useAuth();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [teamName, setTeamName] = useState("");
     const handleCreateTeam = () => {
-        if (teamName.trim()) { createTeam() }
+        if (teamName.trim()) {
+            createTeam();
+        }
     };
     async function createTeam(): Promise<void> {
         try {
             const createTeamResponse = await fetch(`${base_url}/team/create/`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    "Authorization": `Bearer ${accessToken}`
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
                     team_name: teamName,
                     team_email: `${teamName}@origin.tech`,
-                    owner_id: myself.userId
+                    owner_id: myself.userId,
                 }),
             });
 
             const createTeamData = await createTeamResponse.json();
 
             if (!createTeamResponse.ok) {
-                console.error(createTeamData)
-                throw new Error(createTeamData.hint || 'Team Creation Failed');
+                console.error(createTeamData);
+                throw new Error(createTeamData.hint || "Team Creation Failed");
             } else {
-                console.log("Task created:", createTeamData)
-                setMyself({ ...myself, teamId: createTeamData.teamId })
+                console.log("Task created:", createTeamData);
+                setMyself({ ...myself, teamId: createTeamData.teamId });
                 setOpenCreateTeam(false);
             }
         } catch (error) {
-            const err_msg = `${error}`
+            const err_msg = `${error}`;
             console.error(err_msg);
             setErrorMessage(err_msg);
         }
@@ -68,7 +62,11 @@ export const ModalCreateTeam: React.FC<Props> = ({
 
     return (
         <>
-            <Modal sx={{ zIndex: 10010 }} open={openCreateTeam} onClose={() => setOpenCreateTeam(false)}>
+            <Modal
+                sx={{ zIndex: 10010 }}
+                open={openCreateTeam}
+                onClose={() => setOpenCreateTeam(false)}
+            >
                 <ModalDialog>
                     <Typography level="h4">Create New Team</Typography>
                     <Input
@@ -86,10 +84,19 @@ export const ModalCreateTeam: React.FC<Props> = ({
                         <Alert color="danger">{errorMessage}</Alert>
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button component='a' color="danger" variant="outlined" onClick={() => setOpenCreateTeam(false)}>
+                        <Button
+                            component="a"
+                            color="danger"
+                            variant="outlined"
+                            onClick={() => setOpenCreateTeam(false)}
+                        >
                             Cancel
                         </Button>
-                        <Button component='a' onClick={handleCreateTeam} disabled={!teamName.trim()}>
+                        <Button
+                            component="a"
+                            onClick={handleCreateTeam}
+                            disabled={!teamName.trim()}
+                        >
                             Create
                         </Button>
                     </Stack>

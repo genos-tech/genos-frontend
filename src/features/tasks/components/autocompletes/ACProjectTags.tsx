@@ -1,19 +1,19 @@
-import { alpha } from '@mui/system';
-import { ListItemContent, Chip } from '@mui/joy';
-import Autocomplete from '@mui/joy/Autocomplete';
-import AutocompleteOption from '@mui/joy/AutocompleteOption';
-import { useColorScheme } from '@mui/joy/styles';
+import { alpha } from "@mui/system";
+import { ListItemContent, Chip } from "@mui/joy";
+import Autocomplete from "@mui/joy/Autocomplete";
+import AutocompleteOption from "@mui/joy/AutocompleteOption";
+import { useColorScheme } from "@mui/joy/styles";
 
-import { TagListProps, TaskProps } from '../../../../types/tasks';
+import { TagListProps, TaskProps } from "../../../../types/tasks";
 
 type ACProjectTagsProps = {
-    projectTags: TagListProps[],
-    taskContents: TaskProps,
-    setTaskContents: (value: TaskProps) => void,
-    isOpenTagList: boolean,
-    setIsOpenTagList: (value: boolean) => void,
-    setTaskUpdated?: (value: boolean) => void,
-}
+    projectTags: TagListProps[];
+    taskContents: TaskProps;
+    setTaskContents: (value: TaskProps) => void;
+    isOpenTagList: boolean;
+    setIsOpenTagList: (value: boolean) => void;
+    setTaskUpdated?: (value: boolean) => void;
+};
 export const ACProjectTags = (props: ACProjectTagsProps) => {
     const {
         projectTags,
@@ -21,7 +21,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
         setTaskContents,
         isOpenTagList,
         setIsOpenTagList,
-        setTaskUpdated
+        setTaskUpdated,
     } = props;
 
     const { mode } = useColorScheme();
@@ -44,12 +44,15 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                             key={key}
                             variant="soft"
                             sx={{
-                                backgroundColor: alpha(item.tagColor, mode === 'dark' ? 0.5 : 0.75),
+                                backgroundColor: alpha(
+                                    item.tagColor,
+                                    mode === "dark" ? 0.5 : 0.75
+                                ),
                                 color: item.tagTextColor,
-                                fontWeight: 'bold',
-                                borderRadius: '7px',
+                                fontWeight: "bold",
+                                borderRadius: "7px",
                             }}
-                            size='sm'
+                            size="sm"
                         >
                             {item.tagName}
                         </Chip>
@@ -58,17 +61,20 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
             }
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.tagName}>
-                    <ListItemContent sx={{ fontSize: 'sm' }}>
+                    <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.tagName}
                             variant="soft"
                             sx={{
-                                backgroundColor: alpha(option.tagColor, mode === 'dark' ? 0.5 : 0.75),
+                                backgroundColor: alpha(
+                                    option.tagColor,
+                                    mode === "dark" ? 0.5 : 0.75
+                                ),
                                 color: option.tagTextColor,
-                                fontWeight: 'bold',
-                                borderRadius: '7px',
+                                fontWeight: "bold",
+                                borderRadius: "7px",
                             }}
-                            size='sm'
+                            size="sm"
                         >
                             {option.tagName}
                         </Chip>
@@ -79,16 +85,18 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                 if (value !== null) {
                     setTaskContents({
                         ...taskContents,
-                        tags: value
+                        tags: value,
                     });
                     if (setTaskUpdated) {
                         setTaskUpdated(true);
                     }
                 }
             }}
-            onOpen={() => { setIsOpenTagList(!isOpenTagList) }}
+            onOpen={() => {
+                setIsOpenTagList(!isOpenTagList);
+            }}
             size="sm"
             sx={{ width: "100%" }}
         />
-    )
-}
+    );
+};

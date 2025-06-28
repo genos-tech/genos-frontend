@@ -13,8 +13,7 @@ export const handleFiles = (selectedFiles: File[]) => {
                 if (e.target?.result) {
                     const img = new Image();
                     img.src = e.target.result as string;
-                    img.onload = () => {
-                    }
+                    img.onload = () => {};
                 }
             };
             reader.readAsDataURL(file);

@@ -1,19 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Autocomplete, Box } from '@mui/joy';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import CircularProgress from '@mui/joy/CircularProgress';
-import { Socket } from 'socket.io-client';
+import { useState, useEffect } from "react";
+import { Autocomplete, Box } from "@mui/joy";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import CircularProgress from "@mui/joy/CircularProgress";
+import { Socket } from "socket.io-client";
 
-import { loadSearchList } from '../services/loadChatSearchList';
-import { moveToSelectedChat } from '../services/moveToChat';
+import { loadSearchList } from "../services/loadChatSearchList";
+import { moveToSelectedChat } from "../services/moveToChat";
 import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from '../../../types/admin';
-import {
-    SearchListProps,
-    AllChatProps,
-    ChatProps
-} from "../../../types/chat";
-
+import { UserProps } from "../../../types/admin";
+import { SearchListProps, AllChatProps, ChatProps } from "../../../types/chat";
 
 type ChatSearchProps = {
     myself: UserProps;
@@ -23,7 +18,7 @@ type ChatSearchProps = {
     setCurrentMainChat: (value: ChatProps) => void;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
-}
+};
 
 export const ChatSearch = (props: ChatSearchProps) => {
     const {
@@ -33,42 +28,45 @@ export const ChatSearch = (props: ChatSearchProps) => {
         setOpenSearchBox,
         setCurrentMainChat,
         allChats,
-        setAllChats
-    } = props
+        setAllChats,
+    } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<SearchListProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: any) => {
         if (value !== null && socket !== null) {
-            var isDm: boolean = true
+            var isDm: boolean = true;
             if (value.type === "Group") {
                 isDm = false;
             }
 
-            socket.emit("join", {
-                joiningCGId: value.id, // dm_id or gm_id
-                joiningCGName: value.name, // dm_name or gm_name
-                isDm: isDm,
-                dmPartnerUserId: value.dmPartnerUserId,
-            }, (ack: any) => {
-                if (Number(value.id) !== -1)
-                    moveToSelectedChat(
-                        myself,
-                        socket,
-                        value.id,
-                        value.name,
-                        (value.type === "Group") ? Boolean(false) : Boolean(true),
-                        value.dmPartnerUserId,
-                        allChats,
-                        setCurrentMainChat,
-                        setAllChats,
-                        setOpenSearchBox
-                    )
-            }
+            socket.emit(
+                "join",
+                {
+                    joiningCGId: value.id, // dm_id or gm_id
+                    joiningCGName: value.name, // dm_name or gm_name
+                    isDm: isDm,
+                    dmPartnerUserId: value.dmPartnerUserId,
+                },
+                (ack: any) => {
+                    if (Number(value.id) !== -1)
+                        moveToSelectedChat(
+                            myself,
+                            socket,
+                            value.id,
+                            value.name,
+                            value.type === "Group" ? Boolean(false) : Boolean(true),
+                            value.dmPartnerUserId,
+                            allChats,
+                            setCurrentMainChat,
+                            setAllChats,
+                            setOpenSearchBox
+                        );
+                }
             );
         }
-    }
+    };
 
     useEffect(() => {
         let active = true;
@@ -108,12 +106,14 @@ export const ChatSearch = (props: ChatSearchProps) => {
                     setOpenSearchBox(false);
                 }}
                 isOptionEqualToValue={(option, value) => option.name === value.name}
-                getOptionLabel={(option) => option.type === 'People' ? `${option.name} | ${option.email}` : option.name}
+                getOptionLabel={(option) =>
+                    option.type === "People" ? `${option.name} | ${option.email}` : option.name
+                }
                 options={options}
                 loading={loading}
                 endDecorator={
                     loading ? (
-                        <CircularProgress size="sm" sx={{ bgcolor: 'background.surface' }} />
+                        <CircularProgress size="sm" sx={{ bgcolor: "background.surface" }} />
                     ) : null
                 }
                 onChange={(event, value) => onChangeHandler(value)}
@@ -123,5 +123,5 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 groupBy={(option) => option.type}
             />
         </Box>
-    )
-}
+    );
+};

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { createChatGroup } from '../../services/createChatGroup';
+import { createChatGroup } from "../../services/createChatGroup";
 import { useAuth } from "../../../../context/AuthContext";
-import { UserProps } from '../../../../types/admin';
-import { AllChatProps, ChatProps } from '../../../../types/chat';
+import { UserProps } from "../../../../types/admin";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
 
 type Props = {
     socket: Socket | null;
@@ -24,7 +24,7 @@ export const ModalCreateGM: React.FC<Props> = ({
     setOpen,
     allChats,
     setAllChats,
-    setCurrentMainChat
+    setCurrentMainChat,
 }) => {
     const { accessToken } = useAuth();
 
@@ -43,7 +43,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                 setAllChats,
                 setCurrentMainChat,
                 accessToken ? accessToken : ""
-            )
+            );
         }
     };
 
@@ -67,10 +67,19 @@ export const ModalCreateGM: React.FC<Props> = ({
                         <Alert color="danger">{CreateCGErrorMessage}</Alert>
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button component='a' variant="outlined" color='danger' onClick={() => setOpen(false)}>
+                        <Button
+                            component="a"
+                            variant="outlined"
+                            color="danger"
+                            onClick={() => setOpen(false)}
+                        >
                             Cancel
                         </Button>
-                        <Button component='a' onClick={handleCreateGroup} disabled={!chatName.trim()}>
+                        <Button
+                            component="a"
+                            onClick={handleCreateGroup}
+                            disabled={!chatName.trim()}
+                        >
                             Create
                         </Button>
                     </Stack>
@@ -79,4 +88,3 @@ export const ModalCreateGM: React.FC<Props> = ({
         </>
     );
 };
-

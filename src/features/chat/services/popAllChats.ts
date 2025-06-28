@@ -1,4 +1,4 @@
-import { AllChatProps } from '../../../types/chat';
+import { AllChatProps } from "../../../types/chat";
 import PopAllChatsWorker from "../../../workers/popAllChatsWorker.ts?worker";
 
 export const popAllChats = (): Promise<AllChatProps[]> => {

@@ -1,17 +1,14 @@
-import { UserProps } from '../../../types/admin';
-import { ThreadMessageProps } from '../../../types/chat';
+import { UserProps } from "../../../types/admin";
+import { ThreadMessageProps } from "../../../types/chat";
 import LoadTeamTaskWorker from "../../../workers/loadTeamTaskWorker.ts?worker";
 
-export const updateTeamTasks = (
-    myself: UserProps,
-    accessToken: string | null
-) => {
+export const updateTeamTasks = (myself: UserProps, accessToken: string | null) => {
     return new Promise((resolve, reject) => {
         const popLoadTeamTaskWorker = new LoadTeamTaskWorker();
 
         popLoadTeamTaskWorker.postMessage({
             myself,
-            accessToken
+            accessToken,
         });
 
         popLoadTeamTaskWorker.onmessage = (event) => {

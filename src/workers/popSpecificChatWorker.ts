@@ -8,23 +8,21 @@ self.onmessage = async (event) => {
     if (chatId && isDm !== undefined) {
         const chat = await getSpecificDataWithIndex({
             storeName: isDm ? STORES.DM_CHATS : STORES.GM_CHATS,
-            chatId: chatId
-        })
+            chatId: chatId,
+        });
 
         if (chat) {
             self.postMessage(chat);
         } else {
             self.postMessage([]);
         }
-
     } else {
-        console.error
-            ("Invalid parameters for popSpecificChatWorker:", {
-                chatId: chatId,
-                isDm: isDm,
-            });
+        console.error("Invalid parameters for popSpecificChatWorker:", {
+            chatId: chatId,
+            isDm: isDm,
+        });
         self.postMessage([]);
     }
 };
 
-export { };
+export {};

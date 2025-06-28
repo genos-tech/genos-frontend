@@ -9,7 +9,7 @@ export const STORES = {
     GM_CHATS: "gmChats",
     GM_MESSAGES: "gmMessages",
     GM_THREAD_MESSAGES: "gmThreadMessages",
-    TASKS: "tasks"
+    TASKS: "tasks",
 };
 
 export const KEY_PATH = {
@@ -20,8 +20,8 @@ export const KEY_PATH = {
     GM_CHATS: "chatId",
     GM_MESSAGES: "messageIdWithChatId",
     GM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
-    TASKS: "id"
-}
+    TASKS: "id",
+};
 
 export const INDEX = {
     DM_CHATS: "DmTSLastMessageIndex",
@@ -34,8 +34,8 @@ export const INDEX = {
     GM_MESSAGES_COMPOUND: "GmMessagesCompoundIndex",
     GM_THREAD_MESSAGES: "GmThreadMessagesIndex",
     GM_THREAD_MESSAGES_COMPOUND: "GmThreadMessagesCompoundIndex",
-    TASKS: "TasksIndex"
-}
+    TASKS: "TasksIndex",
+};
 
 export const INDEX_KEY = {
     DM_CHATS: "TSLastMessage",
@@ -48,5 +48,5 @@ export const INDEX_KEY = {
     GM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
     GM_THREAD_MESSAGES: "chatId",
     GM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
-    TASKS: "projectId"
-}
+    TASKS: "projectId",
+};

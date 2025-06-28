@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { nonAuthApi } from '../../../services/api';
+import axios from "axios";
+import { nonAuthApi } from "../../../services/api";
 
 export const signUp = async (
     username: string,
@@ -9,20 +9,20 @@ export const signUp = async (
 ) => {
     try {
         const api = nonAuthApi();
-        const res = await api.post('/user/signup/', { username, email, password });
-        return res.data
+        const res = await api.post("/user/signup/", { username, email, password });
+        return res.data;
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
-                console.error('Please try with a different email.');
+                console.error("Please try with a different email.");
                 if (setErrorMessage) {
-                    setErrorMessage('Please try with a different email.')
+                    setErrorMessage("Please try with a different email.");
                 }
             } else {
-                console.error('API error:', error.response?.status, error.response?.data);
+                console.error("API error:", error.response?.status, error.response?.data);
             }
         } else {
-            console.error('Unexpected error:', error);
+            console.error("Unexpected error:", error);
         }
     }
-}
+};

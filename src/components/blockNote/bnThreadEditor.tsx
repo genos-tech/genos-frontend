@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
 import { Box, IconButton, Tooltip } from "@mui/joy";
-import { useColorScheme } from '@mui/joy/styles';
-import SendIcon from '@mui/icons-material/Send';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { useColorScheme } from "@mui/joy/styles";
+import SendIcon from "@mui/icons-material/Send";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { en } from "@blocknote/core/locales";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -26,17 +26,16 @@ import {
     BlockNoteSchema,
     defaultInlineContentSpecs,
     filterSuggestionItems,
-    defaultBlockSpecs
+    defaultBlockSpecs,
 } from "@blocknote/core";
 
-import { CustomEmojiToolbar } from './customEmojiToolbar';
+import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { Mention } from "./Mention";
-import { EmojiPicker } from '../emojiInput/EmojiPicker'
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { getCurrentTimestamp } from "../../utils/dateUtils";
-import { UserProps } from '../../types/admin';
-import { ThreadMessageProps, ThreadProps } from '../../types/chat'
-import { addThreadMessage } from '../../features/chat/services/addThreadMessage';
-
+import { UserProps } from "../../types/admin";
+import { ThreadMessageProps, ThreadProps } from "../../types/chat";
+import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -89,16 +88,12 @@ type BnThreadEditorProps = {
     socket: Socket | null;
     thread: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
-}
+};
 
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
-    const {
-        myself,
-        socket,
-        thread,
-        setCurrentThreadChat } = props;
+    const { myself, socket, thread, setCurrentThreadChat } = props;
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-box-${mode}`
+    const bnBoxClassName: string = `bn-box-${mode}`;
 
     // We use the English, default dictionary
     const locale = en;
@@ -118,59 +113,84 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 // We override the heading placeholder
                 heading: "Custom heading placeholder",
             },
-        }
+        },
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
-        editor.insertInlineContent([
-            { type: "text", text: emoji, styles: {} }
-        ]);
+        editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
         setShowEmojiPicker(false);
     };
 
-    useEffect(() => { if (selectedEmoji !== null) { insertEmoji(selectedEmoji) } }, [selectedEmoji])
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            insertEmoji(selectedEmoji);
+        }
+    }, [selectedEmoji]);
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
     useEffect(() => {
-        editor.replaceBlocks(editor.document, [])
-    }, [thread])
+        editor.replaceBlocks(editor.document, []);
+    }, [thread]);
 
     const sendingThreadMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
-
             // Set input text
             const content: any[] | any = editor.document.slice(-2, -1)[0].content;
-            var contentText: string = "Something wrong...."
+            var contentText: string = "Something wrong....";
             if (content.length > 0) {
-                contentText = content[0].text
+                contentText = content[0].text;
             }
 
-            socket.emit("thread_message", {
-                isInit: false,
-                rootMessageTSSent: "",
-                threadId: thread.threadId,
-                threadMessage: editor.document,
-                isDm: thread.isDm,
-                dmPartnerUserId: thread.dmPartnerUser.userId,
-                senderId: myself.userId,
-                senderName: myself.userName,
-                destCGName: thread.chatName,
-                destCGId: thread.chatId,
-                taskId: thread.taskId
-            }, (ack: any) => {
-
-                const updatedChat: ThreadProps = {
-                    chatId: thread.chatId,
-                    chatName: thread.chatName,
+            socket.emit(
+                "thread_message",
+                {
+                    isInit: false,
+                    rootMessageTSSent: "",
                     threadId: thread.threadId,
+                    threadMessage: editor.document,
                     isDm: thread.isDm,
-                    dmPartnerUser: thread.dmPartnerUser,
-                    taskId: null,
-                    unread: false,
-                    messages: [...thread.messages, {
-                        messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
+                    dmPartnerUserId: thread.dmPartnerUser.userId,
+                    senderId: myself.userId,
+                    senderName: myself.userName,
+                    destCGName: thread.chatName,
+                    destCGId: thread.chatId,
+                    taskId: thread.taskId,
+                },
+                (ack: any) => {
+                    const updatedChat: ThreadProps = {
+                        chatId: thread.chatId,
+                        chatName: thread.chatName,
+                        threadId: thread.threadId,
+                        isDm: thread.isDm,
+                        dmPartnerUser: thread.dmPartnerUser,
+                        taskId: null,
+                        unread: false,
+                        messages: [
+                            ...thread.messages,
+                            {
+                                messageIdWithChatIdAndThreadId: `${thread.chatId}-${
+                                    thread.threadId
+                                }-${String(Number(thread.messages.length) + 1)}`,
+                                chatId: thread.chatId,
+                                threadId: thread.threadId,
+                                messageId: Number(thread.messages.length) + 1,
+                                content: editor.document,
+                                contentText: contentText,
+                                sender: myself,
+                                tsSent: getCurrentTimestamp(),
+                                taskId: thread.taskId,
+                            },
+                        ],
+                        TSLastMessage: getCurrentTimestamp(),
+                    };
+                    setCurrentThreadChat(updatedChat);
+
+                    const newThreadMessage: ThreadMessageProps = {
+                        messageIdWithChatIdAndThreadId: `${thread.chatId}-${
+                            thread.threadId
+                        }-${String(Number(thread.messages.length) + 1)}`,
                         chatId: thread.chatId,
                         threadId: thread.threadId,
                         messageId: Number(thread.messages.length) + 1,
@@ -178,30 +198,16 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         contentText: contentText,
                         sender: myself,
                         tsSent: getCurrentTimestamp(),
-                        taskId: thread.taskId
-                    }],
-                    TSLastMessage: getCurrentTimestamp(),
-                };
-                setCurrentThreadChat(updatedChat);
+                        taskId: thread.taskId,
+                    };
 
-                const newThreadMessage: ThreadMessageProps = {
-                    messageIdWithChatIdAndThreadId: `${thread.chatId}-${thread.threadId}-${String(Number(thread.messages.length) + 1)}`,
-                    chatId: thread.chatId,
-                    threadId: thread.threadId,
-                    messageId: Number(thread.messages.length) + 1,
-                    content: editor.document,
-                    contentText: contentText,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    taskId: thread.taskId
-                };
+                    addThreadMessage(newThreadMessage, thread.isDm);
 
-                addThreadMessage(newThreadMessage, thread.isDm)
-
-                editor.replaceBlocks(editor.document, [])
-            });
+                    editor.replaceBlocks(editor.document, []);
+                }
+            );
         }
-    }
+    };
 
     return (
         <Box>
@@ -210,17 +216,17 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: 'relative' }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
                 <BlockNoteView
                     className="bn-chat-editor"
                     editor={editor}
                     sideMenu={false} // false for Chat/comment, true for Task content
-                    theme={mode === 'dark' ? 'dark' : 'light'}
+                    theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onChange={() => (setEditorDocLength(editor.document.length))}
+                    onChange={() => setEditorDocLength(editor.document.length)}
                     onKeyDown={(event) => {
-                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             sendingThreadMessage();
                         }
                     }}
@@ -231,12 +237,13 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             color="neutral"
                             variant="plain"
                             sx={{
-                                position: 'absolute',
-                                top: '5%',
-                                right: '1%',
+                                position: "absolute",
+                                top: "5%",
+                                right: "1%",
                                 zIndex: 1,
                                 p: 0.7,
-                            }}>
+                            }}
+                        >
                             <OpenInNewIcon />
                         </IconButton>
                     </Tooltip>
@@ -246,9 +253,9 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         color="success"
                         variant="solid"
                         sx={{
-                            position: 'absolute',
-                            bottom: '5%',
-                            right: '1%',
+                            position: "absolute",
+                            bottom: "5%",
+                            right: "1%",
                             zIndex: 1,
                             p: 0.7,
                         }}
@@ -262,9 +269,9 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     <Box
                         className="bn-editor-toolbar"
                         sx={{
-                            position: 'absolute',
-                            top: '1%',
-                            left: '0.5%',
+                            position: "absolute",
+                            top: "1%",
+                            left: "0.5%",
                             zIndex: 1,
                             p: 0.7,
                         }}
@@ -301,8 +308,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             <CreateLinkButton key={"createLinkButton"} />
 
                             {/* Extra button to toggle blue text & background */}
-                            <CustomEmojiToolbar key={"customButton"} setShowEmojiPicker={setShowEmojiPicker} />
-
+                            <CustomEmojiToolbar
+                                key={"customButton"}
+                                setShowEmojiPicker={setShowEmojiPicker}
+                            />
                         </FormattingToolbar>
                     </Box>
 
@@ -325,4 +334,4 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             </Box>
         </Box>
     );
-}
+};

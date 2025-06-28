@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-import { authApi } from '../../../services/api';
+import { authApi } from "../../../services/api";
 
 export const joinTeam = async (
     accessToken: string | null,
@@ -11,35 +11,34 @@ export const joinTeam = async (
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.post("/team/join/",
-                {
-                    team_id: teamId,
-                    attendee_id: attendeeId
-                });
-            return res.data
+            const res = await api.post("/team/join/", {
+                team_id: teamId,
+                attendee_id: attendeeId,
+            });
+            return res.data;
         } else {
-            console.error('Unauthorized. Auth toke is not found.');
+            console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage('Unauthorized. Auth toke is not found.')
+                setErrorMessage("Unauthorized. Auth toke is not found.");
             }
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
-                console.error('Team not found.');
+                console.error("Team not found.");
                 if (setErrorMessage) {
-                    setErrorMessage('Team not found.')
+                    setErrorMessage("Team not found.");
                 }
             } else if (error.response?.status === 401) {
-                console.error('Unauthorized. Please log in again.');
+                console.error("Unauthorized. Please log in again.");
                 if (setErrorMessage) {
-                    setErrorMessage('Unauthorized. Please log in again.')
+                    setErrorMessage("Unauthorized. Please log in again.");
                 }
             } else {
-                console.error('API error:', error.response?.status, error.response?.data);
+                console.error("API error:", error.response?.status, error.response?.data);
             }
         } else {
-            console.error('Unexpected error:', error);
+            console.error("Unexpected error:", error);
         }
     }
-}
+};

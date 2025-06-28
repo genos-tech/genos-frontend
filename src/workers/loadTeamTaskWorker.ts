@@ -1,4 +1,4 @@
-import { loadTeamTasks } from '../features/tasks/services/loadTeamTasks';
+import { loadTeamTasks } from "../features/tasks/services/loadTeamTasks";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
 import { STORES } from "../db/conf";
@@ -8,24 +8,21 @@ self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;
     const accessToken: string = event.data.accessToken;
 
-    await clearStore(STORES.TASKS)
+    await clearStore(STORES.TASKS);
 
     // Load data from backend
-    const taskList: TaskTableProps[] = await loadTeamTasks(
-        myself,
-        accessToken
-    );
+    const taskList: TaskTableProps[] = await loadTeamTasks(myself, accessToken);
 
     for (let i = 0; i < taskList.length; i += 1) {
-        const task: TaskTableProps = taskList[i]
+        const task: TaskTableProps = taskList[i];
         await addData({
             storeName: STORES.TASKS,
-            data: task
-        })
+            data: task,
+        });
     }
 
     // Send finish a message
     self.postMessage("done");
 };
 
-export { };
+export {};

@@ -1,19 +1,9 @@
-import React, { useState } from 'react';
-import {
-    Modal,
-    ModalDialog,
-    Alert,
-    Stack,
-    Button,
-    Input,
-    Box,
-    Chip,
-    Typography,
-} from "@mui/joy";
+import React, { useState } from "react";
+import { Modal, ModalDialog, Alert, Stack, Button, Input, Box, Chip, Typography } from "@mui/joy";
 
-import { ColorPickerMenu } from '../contents/base/sub/TagColorPickerMenu';
-import { UserProps } from '../../../../types/admin';
-import { ProjectProps } from '../../../../types/tasks';
+import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
+import { UserProps } from "../../../../types/admin";
+import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -26,15 +16,19 @@ type Props = {
     setIsNewTagCreated: (value: boolean) => void;
 };
 
-export const ModalCreateTag: React.FC<Props> = (
-    { myself, currentProject, openCreateTag, setOpenCreateTag, setIsNewTagCreated }
-) => {
+export const ModalCreateTag: React.FC<Props> = ({
+    myself,
+    currentProject,
+    openCreateTag,
+    setOpenCreateTag,
+    setIsNewTagCreated,
+}) => {
     const { accessToken } = useAuth();
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
     const [selectedColor, setSelectedColor] = useState({
         chipColor: "#ff2323",
-        textColor: "white"
+        textColor: "white",
     });
 
     const handleCreateTag = () => {
@@ -46,10 +40,10 @@ export const ModalCreateTag: React.FC<Props> = (
     async function createTag(): Promise<void> {
         try {
             const response = await fetch(`${base_url}/project/createProjectTag/`, {
-                method: 'POST',
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
                     team_id: myself.teamId,
@@ -64,7 +58,7 @@ export const ModalCreateTag: React.FC<Props> = (
 
             if (!response.ok) {
                 console.error(data);
-                throw new Error(data.hint || 'Tag Creation Failed');
+                throw new Error(data.hint || "Tag Creation Failed");
             } else {
                 setOpenCreateTag(false);
                 setTagName("");
@@ -79,13 +73,17 @@ export const ModalCreateTag: React.FC<Props> = (
 
     return (
         <>
-            <Modal sx={{ zIndex: 10010 }} open={openCreateTag} onClose={() => setOpenCreateTag(false)}>
+            <Modal
+                sx={{ zIndex: 10010 }}
+                open={openCreateTag}
+                onClose={() => setOpenCreateTag(false)}
+            >
                 <ModalDialog>
                     <Typography level="h4">Create New Tag</Typography>
                     {errorTagCreateMessage && errorTagCreateMessage !== "" && (
                         <Alert color="danger">{errorTagCreateMessage}</Alert>
                     )}
-                    <Stack direction={'row'}>
+                    <Stack direction={"row"}>
                         <Input
                             placeholder="Unique tag name"
                             value={tagName}
@@ -96,9 +94,14 @@ export const ModalCreateTag: React.FC<Props> = (
                                 }
                             }}
                         />
-                        <ColorPickerMenu onSelectColor={(color) => setSelectedColor({
-                            chipColor: color.value, textColor: color.textColor
-                        })} />
+                        <ColorPickerMenu
+                            onSelectColor={(color) =>
+                                setSelectedColor({
+                                    chipColor: color.value,
+                                    textColor: color.textColor,
+                                })
+                            }
+                        />
                     </Stack>
                     {selectedColor && tagName !== "" && (
                         <Box>
@@ -108,7 +111,7 @@ export const ModalCreateTag: React.FC<Props> = (
                                 sx={{
                                     backgroundColor: selectedColor.chipColor,
                                     color: selectedColor.textColor,
-                                    opacity: 0.8
+                                    opacity: 0.8,
                                 }}
                             >
                                 {tagName}
@@ -116,10 +119,15 @@ export const ModalCreateTag: React.FC<Props> = (
                         </Box>
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button component='a' variant="outlined" color='danger' onClick={() => setOpenCreateTag(false)}>
+                        <Button
+                            component="a"
+                            variant="outlined"
+                            color="danger"
+                            onClick={() => setOpenCreateTag(false)}
+                        >
                             Cancel
                         </Button>
-                        <Button component='a' onClick={handleCreateTag} disabled={!tagName.trim()}>
+                        <Button component="a" onClick={handleCreateTag} disabled={!tagName.trim()}>
                             Create
                         </Button>
                     </Stack>

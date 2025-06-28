@@ -1,15 +1,13 @@
-import { MessageProps } from '../../../types/chat';
+import { MessageProps } from "../../../types/chat";
 import PopSpecificMessagesWorker from "../../../workers/popSpecificMessagesWorker.ts?worker";
 
-export const popSpecificMessages = (
-    chatId: number,
-    isDm: boolean
-): Promise<MessageProps[]> => {
+export const popSpecificMessages = (chatId: number, isDm: boolean): Promise<MessageProps[]> => {
     return new Promise((resolve, reject) => {
         const popSpecificMessagesWorker = new PopSpecificMessagesWorker();
 
         popSpecificMessagesWorker.postMessage({
-            chatId, isDm
+            chatId,
+            isDm,
         });
 
         popSpecificMessagesWorker.onmessage = (event) => {

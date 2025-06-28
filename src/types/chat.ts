@@ -1,5 +1,5 @@
 import { PartialBlock } from "@blocknote/core";
-import { UserProps } from './admin';
+import { UserProps } from "./admin";
 
 // Chat Props
 export type AllChatProps = {
@@ -61,7 +61,7 @@ export type MessageProps = {
 };
 
 export type ThreadMessageProps = {
-    messageIdWithChatIdAndThreadId: string
+    messageIdWithChatIdAndThreadId: string;
     chatId: number;
     threadId: number;
     messageId: number;
@@ -121,38 +121,38 @@ export type NewThreadMessageProps = {
 
 // Other Props
 export type SearchListProps = {
-    id: number,
-    type: string,
-    name: string,
-    email: string | null,
-    dmPartnerUserId: string,
-}
+    id: number;
+    type: string;
+    name: string;
+    email: string | null;
+    dmPartnerUserId: string;
+};
 
 export type LoadSearchListResponse = {
-    searchList: SearchListProps[] | [],
-    message: string,
+    searchList: SearchListProps[] | [];
+    message: string;
 };
 
 export type LoadDMMessageHistoryResponse = {
-    messageHistory: ChatProps[] | [],
-    message: string,
+    messageHistory: ChatProps[] | [];
+    message: string;
 };
 
 export type LoadGMMessageHistoryResponse = {
-    messageHistory: ChatProps[] | [],
-    message: string,
+    messageHistory: ChatProps[] | [];
+    message: string;
 };
 
 export type SearchTeamTasksResponse = {
-    projectId: number,
-    projectName: string,
-    taskId: number,
-    title: string,
-    status: string,
-}
+    projectId: number;
+    projectName: string;
+    taskId: number;
+    title: string;
+    status: string;
+};
 
 export type CreateGMResponse = {
-    chatId: number,
-    chatName: string,
-    message: string,
+    chatId: number;
+    chatName: string;
+    message: string;
 };

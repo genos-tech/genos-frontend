@@ -1,1 +1,1 @@
-export const sleepMilliSeconds = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+export const sleepMilliSeconds = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

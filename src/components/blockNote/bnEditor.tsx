@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
 import { Box, IconButton, Tooltip } from "@mui/joy";
-import { useColorScheme } from '@mui/joy/styles';
-import SendIcon from '@mui/icons-material/Send';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { useColorScheme } from "@mui/joy/styles";
+import SendIcon from "@mui/icons-material/Send";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { codeBlock } from "@blocknote/code-block";
@@ -26,18 +26,17 @@ import {
     BlockNoteSchema,
     defaultInlineContentSpecs,
     filterSuggestionItems,
-    defaultBlockSpecs
+    defaultBlockSpecs,
 } from "@blocknote/core";
 
 import { Mention } from "./Mention";
-import { CustomEmojiToolbar } from './customEmojiToolbar';
-import { EmojiPicker } from '../emojiInput/EmojiPicker'
+import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { getCurrentTimestamp } from "../../utils/dateUtils";
-import { UserProps } from '../../types/admin';
-import { ChatProps, AllChatProps, MessageProps } from '../../types/chat'
-import { addChat } from '../../features/chat/services/addChat';
-import { addMessage } from '../../features/chat/services/addMessage';
-
+import { UserProps } from "../../types/admin";
+import { ChatProps, AllChatProps, MessageProps } from "../../types/chat";
+import { addChat } from "../../features/chat/services/addChat";
+import { addMessage } from "../../features/chat/services/addMessage";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -90,15 +89,11 @@ type BnEditorProps = {
     socket: Socket | null;
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
-}
+};
 export const BnEditor = (props: BnEditorProps) => {
-    const {
-        myself,
-        socket,
-        chat,
-        setCurrentChat } = props;
+    const { myself, socket, chat, setCurrentChat } = props;
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-box-${mode}`
+    const bnBoxClassName: string = `bn-box-${mode}`;
 
     // We use the English, default dictionary
     const locale = en;
@@ -117,104 +112,119 @@ export const BnEditor = (props: BnEditorProps) => {
                 // We override the heading placeholder
                 heading: "Custom heading placeholder",
             },
-        }
+        },
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
-        editor.insertInlineContent([
-            { type: "text", text: emoji, styles: {} }
-        ]);
+        editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
         setShowEmojiPicker(false);
     };
-    useEffect(() => { if (selectedEmoji !== null) { insertEmoji(selectedEmoji) } }, [selectedEmoji])
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            insertEmoji(selectedEmoji);
+        }
+    }, [selectedEmoji]);
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
     useEffect(() => {
-        editor.replaceBlocks(editor.document, [])
-    }, [chat])
+        editor.replaceBlocks(editor.document, []);
+    }, [chat]);
 
     const sendingMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
             // Set input text
             const content: any[] | any = editor.document.slice(-2, -1)[0].content;
-            var contentText: string = "Something wrong...."
+            var contentText: string = "Something wrong....";
             if (content.length > 0) {
-                contentText = content[0].text
+                contentText = content[0].text;
             }
 
-            socket.emit("message", {
-                message: editor.document,
-                destCGName: chat.chatName,
-                destCGId: chat.chatId,
-                isDm: chat.isDm,
-                dmPartnerUserId: chat.dmPartnerUser.userId,
-            }, async (ack: any) => {
-                const updatedChat: ChatProps = {
-                    chatId: chat.chatId,
-                    chatName: chat.chatName,
+            socket.emit(
+                "message",
+                {
+                    message: editor.document,
+                    destCGName: chat.chatName,
+                    destCGId: chat.chatId,
                     isDm: chat.isDm,
-                    dmPartnerUser: chat.dmPartnerUser,
-                    unread: false,
-                    messages: [...chat.messages, {
-                        messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                        chatId: chat.chatId,
-                        messageId: Number(chat.latestMessage?.messageId) + 1,
-                        content: editor.document,
-                        contentText: contentText,
-                        sender: myself,
-                        tsSent: getCurrentTimestamp(),
-                        numReplies: 0,
-                    }],
-                    latestMessage: {
-                        messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                        chatId: chat.chatId,
-                        messageId: Number(chat.latestMessage?.messageId) + 1,
-                        content: editor.document,
-                        contentText: contentText,
-                        sender: myself,
-                        tsSent: getCurrentTimestamp(),
-                        numReplies: 0,
-                    },
-                    latestMessageText: contentText,
-                    TSLastMessage: getCurrentTimestamp(),
-                };
-                setCurrentChat(updatedChat);
-
-                const latestMessage: MessageProps = {
-                    messageIdWithChatId: `${chat.chatId}-${String(Number(chat.latestMessage?.messageId) + 1)}`,
-                    chatId: chat.chatId,
-                    messageId: Number(chat.latestMessage?.messageId) + 1,
-                    content: editor.document,
-                    contentText: contentText,
-                    sender: myself,
-                    tsSent: getCurrentTimestamp(),
-                    numReplies: 0,
-                }
-                if (latestMessage) {
-                    const newChat: AllChatProps = {
+                    dmPartnerUserId: chat.dmPartnerUser.userId,
+                },
+                async (ack: any) => {
+                    const updatedChat: ChatProps = {
                         chatId: chat.chatId,
                         chatName: chat.chatName,
                         isDm: chat.isDm,
                         dmPartnerUser: chat.dmPartnerUser,
                         unread: false,
-                        latestMessage: latestMessage,
+                        messages: [
+                            ...chat.messages,
+                            {
+                                messageIdWithChatId: `${chat.chatId}-${String(
+                                    Number(chat.latestMessage?.messageId) + 1
+                                )}`,
+                                chatId: chat.chatId,
+                                messageId: Number(chat.latestMessage?.messageId) + 1,
+                                content: editor.document,
+                                contentText: contentText,
+                                sender: myself,
+                                tsSent: getCurrentTimestamp(),
+                                numReplies: 0,
+                            },
+                        ],
+                        latestMessage: {
+                            messageIdWithChatId: `${chat.chatId}-${String(
+                                Number(chat.latestMessage?.messageId) + 1
+                            )}`,
+                            chatId: chat.chatId,
+                            messageId: Number(chat.latestMessage?.messageId) + 1,
+                            content: editor.document,
+                            contentText: contentText,
+                            sender: myself,
+                            tsSent: getCurrentTimestamp(),
+                            numReplies: 0,
+                        },
                         latestMessageText: contentText,
                         TSLastMessage: getCurrentTimestamp(),
                     };
+                    setCurrentChat(updatedChat);
 
-                    if (newChat) {
-                        await addMessage(latestMessage, newChat.isDm)
-                        await addChat(newChat, newChat.isDm)
+                    const latestMessage: MessageProps = {
+                        messageIdWithChatId: `${chat.chatId}-${String(
+                            Number(chat.latestMessage?.messageId) + 1
+                        )}`,
+                        chatId: chat.chatId,
+                        messageId: Number(chat.latestMessage?.messageId) + 1,
+                        content: editor.document,
+                        contentText: contentText,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                        numReplies: 0,
+                    };
+                    if (latestMessage) {
+                        const newChat: AllChatProps = {
+                            chatId: chat.chatId,
+                            chatName: chat.chatName,
+                            isDm: chat.isDm,
+                            dmPartnerUser: chat.dmPartnerUser,
+                            unread: false,
+                            latestMessage: latestMessage,
+                            latestMessageText: contentText,
+                            TSLastMessage: getCurrentTimestamp(),
+                        };
 
-                        editor.replaceBlocks(editor.document, [])
+                        if (newChat) {
+                            await addMessage(latestMessage, newChat.isDm);
+                            await addChat(newChat, newChat.isDm);
+
+                            editor.replaceBlocks(editor.document, []);
+                        }
                     }
                 }
-            });
+            );
         }
-    }
+    };
 
     return (
         <Box>
@@ -223,17 +233,17 @@ export const BnEditor = (props: BnEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: 'relative' }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
                 <BlockNoteView
                     className="bn-chat-editor"
                     editor={editor}
                     sideMenu={false} // false for Chat/comment, true for Task content
-                    theme={mode === 'dark' ? 'dark' : 'light'}
+                    theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onChange={() => (setEditorDocLength(editor.document.length))}
+                    onChange={() => setEditorDocLength(editor.document.length)}
                     onKeyDown={async (event) => {
-                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             sendingMessage();
                         }
                     }}
@@ -244,12 +254,13 @@ export const BnEditor = (props: BnEditorProps) => {
                             color="neutral"
                             variant="plain"
                             sx={{
-                                position: 'absolute',
-                                top: '5%',
-                                right: '1%',
+                                position: "absolute",
+                                top: "5%",
+                                right: "1%",
                                 zIndex: 1,
                                 p: 0.7,
-                            }}>
+                            }}
+                        >
                             <OpenInNewIcon />
                         </IconButton>
                     </Tooltip>
@@ -259,9 +270,9 @@ export const BnEditor = (props: BnEditorProps) => {
                         color="success"
                         variant="solid"
                         sx={{
-                            position: 'absolute',
-                            bottom: '5%',
-                            right: '1%',
+                            position: "absolute",
+                            bottom: "5%",
+                            right: "1%",
                             zIndex: 1,
                             p: 0.7,
                         }}
@@ -275,9 +286,9 @@ export const BnEditor = (props: BnEditorProps) => {
                     <Box
                         className="bn-editor-toolbar"
                         sx={{
-                            position: 'absolute',
-                            top: '1%',
-                            left: '0.5%',
+                            position: "absolute",
+                            top: "1%",
+                            left: "0.5%",
                             zIndex: 1,
                             p: 0.7,
                         }}
@@ -314,8 +325,10 @@ export const BnEditor = (props: BnEditorProps) => {
                             <CreateLinkButton key={"createLinkButton"} />
 
                             {/* Extra button to toggle blue text & background */}
-                            <CustomEmojiToolbar key={"customButton"} setShowEmojiPicker={setShowEmojiPicker} />
-
+                            <CustomEmojiToolbar
+                                key={"customButton"}
+                                setShowEmojiPicker={setShowEmojiPicker}
+                            />
                         </FormattingToolbar>
                     </Box>
 
@@ -336,6 +349,6 @@ export const BnEditor = (props: BnEditorProps) => {
                     />
                 </BlockNoteView>
             </Box>
-        </Box >
+        </Box>
     );
-}
+};
