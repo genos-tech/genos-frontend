@@ -8,6 +8,7 @@ export type TagColorOption = {
 };
 
 export type AttachmentFileProps = {
+    attachment_id: number;
     file: File;
     file_base64?: string;
     name?: string;

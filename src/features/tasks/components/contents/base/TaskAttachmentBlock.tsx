@@ -5,6 +5,9 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 import { AttachmentFileProps } from "../../../../../types/tasks";
 import { TaskProps } from "../../../../../types/tasks";
+import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
+import { useAuth } from "../../../../../context/AuthContext";
+import { getCurrentTimestamp } from "../../../../../utils/dateUtils";
 
 type Size = {
     width: number;
@@ -25,18 +28,29 @@ type TaskAttachmentBlockProps = {
     setTaskUpdated?: (value: boolean) => void;
     taskContents?: TaskProps;
     setTaskContents?: (value: TaskProps) => void;
+    setIsAttachmentDeleted: (value: boolean) => void;
+    setDeletedAttachmentId: (value: number) => void;
 };
 
 export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
-    const { uploadedFiles, setTaskUpdated, taskContents, setTaskContents } = props;
+    const { accessToken } = useAuth();
+    const {
+        uploadedFiles,
+        setTaskUpdated,
+        taskContents,
+        setTaskContents,
+        setIsAttachmentDeleted,
+        setDeletedAttachmentId,
+    } = props;
 
     const [images, setImages] = useState<
-        { url: string; name: string; width: number; height: number }[]
+        { attachmentId: number; url: string; name: string; width: number; height: number }[]
     >([]);
-    const [textFiles, setTextFiles] = useState<{ name: string; url: string }[]>([]);
+    const [textFiles, setTextFiles] = useState<
+        { attachmentId: number; name: string; url: string }[]
+    >([]);
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [isUploadedFileExists, setIsUploadedFileExists] = useState<boolean>(false);
     const [isAddedNewFile, setIsAddedNewFile] = useState<boolean>(false);
 
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -47,50 +61,37 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
 
     const handleFiles = async (selectedFiles: File[]) => {
         selectedFiles.forEach(async (file) => {
-            const fileType = file.type;
-
-            setUploadingFiles((prev) => [...prev, { file: file }]);
-
-            if (fileType === "image/jpeg" || fileType === "image/png") {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    if (e.target?.result) {
-                        const img = new Image();
-                        img.src = e.target.result as string;
-                        img.onload = () => {
-                            const size = resizeImageToFitBox({
-                                height: img.height,
-                                width: img.width,
-                            });
-                            setImages((prev) => [
-                                ...prev,
-                                {
-                                    url: img.src,
-                                    name: file.name,
-                                    width: size.width,
-                                    height: size.height,
-                                },
-                            ]);
-                        };
-                    }
-                };
-                reader.readAsDataURL(file);
-            } else {
-                const fileURL = URL.createObjectURL(file);
-                setTextFiles((prev) => [...prev, { name: file.name, url: fileURL }]);
-            }
+            setUploadingFiles((prev) => [...prev, { attachment_id: -1, file: file }]);
         });
-        setIsUploadedFileExists(true);
         setIsAddedNewFile(true);
     };
 
-    const handleDeleteImage = (url: string) => {
+    const handleDeleteImage = async (
+        taskId: string | undefined,
+        attachmentId: number,
+        url: string
+    ) => {
         setImages((prev) => prev.filter((image) => image.url !== url));
+        if (taskId && attachmentId) {
+            const res = await deleteTaskAttachment(taskId, attachmentId, accessToken);
+            console.log("Image deleted:", res);
+            setIsAttachmentDeleted(true);
+            setDeletedAttachmentId(attachmentId);
+        }
     };
 
-    const handleDeleteTextFile = (name: string) => {
-        console.log("Need to delete files from backend and storage !!!");
-        setTextFiles((prev) => prev.filter((file) => file.name !== name));
+    const handleDeleteTextFile = async (
+        taskId: string | undefined,
+        attachmentId: number,
+        url: string
+    ) => {
+        setTextFiles((prev) => prev.filter((file) => file.url !== url));
+        if (taskId && attachmentId) {
+            const res = await deleteTaskAttachment(taskId, attachmentId, accessToken);
+            console.log("File deleted:", res);
+            setIsAttachmentDeleted(true);
+            setDeletedAttachmentId(attachmentId);
+        }
     };
 
     const handleCloseModal = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -98,12 +99,6 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
             setSelectedImage(null);
         }
     };
-
-    useEffect(() => {
-        if (images.length === 0 && textFiles.length === 0) {
-            setIsUploadedFileExists(false);
-        }
-    }, [images, textFiles]);
 
     useEffect(() => {
         if (
@@ -116,7 +111,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                     Array.from(uploadingFiles).map((file, index) => {
                         setTaskContents({
                             ...taskContents,
-                            attachments: [{ file: file.file }],
+                            attachments: [{ attachment_id: -1, file: file.file }],
                         });
                     });
                 }
@@ -134,7 +129,6 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
         setTextFiles([]);
 
         if (uploadedFiles.length > 0) {
-            setIsUploadedFileExists(true);
             uploadedFiles.map((attachmentFile, index) => {
                 if (attachmentFile.file_base64) {
                     const byteCharacters = atob(attachmentFile.file_base64);
@@ -146,7 +140,10 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                     const file = new File([blob], attachmentFile?.name || "attached_file", {
                         type: attachmentFile?.type,
                     });
-                    setUploadingFiles((prev) => [...prev, { file: file }]);
+                    setUploadingFiles((prev) => [
+                        ...prev,
+                        { attachment_id: attachmentFile.attachment_id, file: file },
+                    ]);
 
                     if (
                         attachmentFile?.type === "image/jpeg" ||
@@ -165,6 +162,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                                     setImages((prev) => [
                                         ...prev,
                                         {
+                                            attachmentId: attachmentFile.attachment_id,
                                             url: img.src,
                                             name: file.name,
                                             width: size.width,
@@ -177,7 +175,14 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                         reader.readAsDataURL(file);
                     } else {
                         const fileURL = URL.createObjectURL(file);
-                        setTextFiles((prev) => [...prev, { name: file.name, url: fileURL }]);
+                        setTextFiles((prev) => [
+                            ...prev,
+                            {
+                                attachmentId: attachmentFile.attachment_id,
+                                name: file.name,
+                                url: fileURL,
+                            },
+                        ]);
                     }
                 }
             });
@@ -196,7 +201,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                 Array.from(files).map((file, index) => {
                     setTaskContents({
                         ...taskContents,
-                        attachments: [{ file: file }],
+                        attachments: [{ attachment_id: -1, file: file }],
                     });
                 });
                 setIsAddedNewFile(true);
@@ -234,23 +239,26 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                 className="custom-scrollbar"
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
-                style={{
+                sx={{
                     width: "100%",
-                    height: "150px",
+                    minHeight: "150px",
+                    height: "100%",
                     border: "2px dashed #ccc",
                     display: "flex",
                     alignItems: "center",
-                    overflow: "scroll",
                 }}
             >
                 {uploadedFiles.length === 0 && uploadingFiles.length === 0 && (
                     <Box
-                        style={{
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
                             flex: 1,
                             textAlign: "center",
                         }}
                     >
-                        Drag & Drop your files here
+                        <Typography>Drag & Drop your files here</Typography>
                     </Box>
                 )}
 
@@ -264,9 +272,18 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                     }}
                 >
                     {textFiles.map((file) => (
-                        <Box key={file.name} style={{ position: "relative", textAlign: "center" }}>
+                        <Box
+                            key={`${file.name}-${file.attachmentId}`}
+                            style={{ position: "relative", textAlign: "center" }}
+                        >
                             <IconButton
-                                onClick={() => handleDeleteTextFile(file.name)}
+                                onClick={() => {
+                                    handleDeleteTextFile(
+                                        taskContents?.id,
+                                        file.attachmentId,
+                                        file.url
+                                    );
+                                }}
                                 size="sm"
                                 sx={{
                                     position: "absolute",
@@ -309,11 +326,17 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                 >
                     {images.map((image) => (
                         <Box
-                            key={image.url}
+                            key={`${image.name}-${image.attachmentId}`}
                             style={{ position: "relative", display: "inline-block" }}
                         >
                             <IconButton
-                                onClick={() => handleDeleteImage(image.url)}
+                                onClick={() => {
+                                    handleDeleteImage(
+                                        taskContents?.id,
+                                        image.attachmentId,
+                                        image.url
+                                    );
+                                }}
                                 size="sm"
                                 sx={{
                                     position: "absolute",
