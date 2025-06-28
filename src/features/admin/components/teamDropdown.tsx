@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Menu, MenuItem, IconButton, Dropdown } from "@mui/joy";
-import BusinessIcon from '@mui/icons-material/Business';
-import AcUnitIcon from '@mui/icons-material/AcUnit';
-import AddIcon from '@mui/icons-material/Add';
+import BusinessIcon from "@mui/icons-material/Business";
+import AcUnitIcon from "@mui/icons-material/AcUnit";
+import AddIcon from "@mui/icons-material/Add";
 
-import { loadAllTeams } from '../services/loadAllTeams';
+import { loadAllTeams } from "../services/loadAllTeams";
 import { joinTeam } from "../services/joinTeam";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sentDMMessage } from "../../chat/services/sendDMMessage";
@@ -25,11 +25,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const _joinTeam = async (teamId: string) => {
-        const joinTeamRes = await joinTeam(
-            accessToken,
-            teamId,
-            myself.userId
-        );
+        const joinTeamRes = await joinTeam(accessToken, teamId, myself.userId);
 
         if (joinTeamRes) {
             const createDmRes: CreateDMResponse = await createDMChat(
@@ -41,8 +37,8 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             if (createDmRes) {
                 const initMessageBody = [
                     { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },
-                    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }
-                ]
+                    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+                ];
 
                 await sentDMMessage(
                     accessToken,
@@ -53,12 +49,12 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                 );
             }
         }
-    }
+    };
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         (async () => {
             const loadedTeams: Team[] = await loadAllTeams(accessToken);
-            setTeams(loadedTeams)
+            setTeams(loadedTeams);
         })();
 
         setAnchorEl(event.currentTarget);
@@ -72,8 +68,8 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         // Change the team.
         // Re-load chats and tasks in the team.
         // For now, just update the current team variable
-        localStorage.setItem("teamId", teamId)
-        localStorage.setItem("teamId", teamName)
+        localStorage.setItem("teamId", teamId);
+        localStorage.setItem("teamId", teamName);
         setMyself({
             teamId: teamId,
             teamName: teamName,
@@ -81,9 +77,9 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             userName: myself.userName,
             userEmail: myself.userEmail,
             online: myself.online,
-            avatarImgPath: myself.avatarImgPath
-        })
-        _joinTeam(teamId)
+            avatarImgPath: myself.avatarImgPath,
+        });
+        _joinTeam(teamId);
         handleClose();
     };
 
@@ -102,26 +98,45 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <IconButton component='a' variant="outlined" color="neutral" size="sm" onClick={handleClick}>
+                <IconButton
+                    component="a"
+                    variant="outlined"
+                    color="neutral"
+                    size="sm"
+                    onClick={handleClick}
+                >
                     <BusinessIcon className="h-5 w-5" />
                 </IconButton>
-                <Menu size='sm' ref={dropdownRef}
+                <Menu
+                    size="sm"
+                    ref={dropdownRef}
                     sx={{ zIndex: 10001 }}
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
                     onClose={handleClose}
                 >
                     {teams.map((team) => (
-                        <MenuItem key={team.teamName} onClick={() => { handleClicked(team.teamId, team.teamName); }}>
+                        <MenuItem
+                            key={team.teamName}
+                            onClick={() => {
+                                handleClicked(team.teamId, team.teamName);
+                            }}
+                        >
                             <AcUnitIcon />
                             {team.teamName}
                         </MenuItem>
                     ))}
-                    <MenuItem key={"addTeam"} onClick={() => { console.log("create team via modal?"); }}>
-                        <AddIcon />New Team
+                    <MenuItem
+                        key={"addTeam"}
+                        onClick={() => {
+                            console.log("create team via modal?");
+                        }}
+                    >
+                        <AddIcon />
+                        New Team
                     </MenuItem>
                 </Menu>
             </Dropdown>
         </div>
     );
-}
+};

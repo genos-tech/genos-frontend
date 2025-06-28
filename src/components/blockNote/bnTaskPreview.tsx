@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Box } from "@mui/joy";
-import { useColorScheme } from '@mui/joy/styles';
+import { useColorScheme } from "@mui/joy/styles";
 import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import { codeBlock } from "@blocknote/code-block";
@@ -26,12 +26,12 @@ import {
     defaultInlineContentSpecs,
     filterSuggestionItems,
     defaultBlockSpecs,
-    PartialBlock
+    PartialBlock,
 } from "@blocknote/core";
 
 import { Mention } from "./Mention";
-import { CustomEmojiToolbar } from './customEmojiToolbar';
-import { EmojiPicker } from '../emojiInput/EmojiPicker'
+import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -83,62 +83,67 @@ type BnTaskPreviewProps = {
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setTaskUpdated?: (value: boolean) => void;
-}
+};
 
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const { body, setBody, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-task-box-${mode}`
+    const bnBoxClassName: string = `bn-task-box-${mode}`;
 
     // We use the English, default dictionary
     const locale = en;
 
-    const editor = (body.length > 0) ? useCreateBlockNote({
-        schema,
-        codeBlock,
-        // We override the `placeholders` in our dictionary
-        dictionary: {
-            ...locale,
-            placeholders: {
-                ...locale.placeholders,
-                // We override the empty document placeholder
-                emptyDocument: "Start typing...",
-                // We override the default placeholder
-                default: "Type something...",
-                // We override the heading placeholder
-                heading: "Custom heading placeholder",
-            },
-        },
-        initialContent: body
-    }) : useCreateBlockNote({
-        schema,
-        codeBlock,
-        // We override the `placeholders` in our dictionary
-        dictionary: {
-            ...locale,
-            placeholders: {
-                ...locale.placeholders,
-                // We override the empty document placeholder
-                emptyDocument: "Start typing...",
-                // We override the default placeholder
-                default: "Type something...",
-                // We override the heading placeholder
-                heading: "Custom heading placeholder",
-            },
-        }
-    });
+    const editor =
+        body.length > 0
+            ? useCreateBlockNote({
+                  schema,
+                  codeBlock,
+                  // We override the `placeholders` in our dictionary
+                  dictionary: {
+                      ...locale,
+                      placeholders: {
+                          ...locale.placeholders,
+                          // We override the empty document placeholder
+                          emptyDocument: "Start typing...",
+                          // We override the default placeholder
+                          default: "Type something...",
+                          // We override the heading placeholder
+                          heading: "Custom heading placeholder",
+                      },
+                  },
+                  initialContent: body,
+              })
+            : useCreateBlockNote({
+                  schema,
+                  codeBlock,
+                  // We override the `placeholders` in our dictionary
+                  dictionary: {
+                      ...locale,
+                      placeholders: {
+                          ...locale.placeholders,
+                          // We override the empty document placeholder
+                          emptyDocument: "Start typing...",
+                          // We override the default placeholder
+                          default: "Type something...",
+                          // We override the heading placeholder
+                          heading: "Custom heading placeholder",
+                      },
+                  },
+              });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
-        editor.insertInlineContent([
-            { type: "text", text: emoji, styles: {} }
-        ]);
+        editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
         setShowEmojiPicker(false);
     };
 
-    useEffect(() => { if (selectedEmoji !== null) { insertEmoji(selectedEmoji) } }, [selectedEmoji])
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            insertEmoji(selectedEmoji);
+        }
+    }, [selectedEmoji]);
 
     return (
         <Box>
@@ -147,20 +152,27 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: 'relative' }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
                 <BlockNoteView
                     editor={editor}
                     sideMenu={true} // false for Chat/comment, true for Task content
-                    theme={mode === 'dark' ? 'dark' : 'light'}
+                    theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onBlur={() => { if (setTaskUpdated) { setTaskUpdated(true) } }}
-                    onKeyDown={(event) => {
-                        if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                            if (editor.document.length > 1) { }
+                    onBlur={() => {
+                        if (setTaskUpdated) {
+                            setTaskUpdated(true);
                         }
                     }}
-                    onChange={() => { setBody(editor.document) }}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                            if (editor.document.length > 1) {
+                            }
+                        }
+                    }}
+                    onChange={() => {
+                        setBody(editor.document);
+                    }}
                 >
                     <FormattingToolbarController
                         formattingToolbar={() => (
@@ -209,8 +221,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                 <CreateLinkButton key={"createLinkButton"} />
 
                                 {/* Extra button to toggle blue text & background */}
-                                <CustomEmojiToolbar key={"customButton"} setShowEmojiPicker={setShowEmojiPicker} />
-
+                                <CustomEmojiToolbar
+                                    key={"customButton"}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                />
                             </FormattingToolbar>
                         )}
                     />
@@ -231,7 +245,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         }
                     />
                 </BlockNoteView>
-            </Box >
-        </Box >
+            </Box>
+        </Box>
     );
-}
+};

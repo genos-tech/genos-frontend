@@ -1,10 +1,7 @@
 import AddChatWorker from "../../../workers/addChatWorker.ts?worker";
 import { AllChatProps } from "../../../types/chat";
 
-export const addChat = (
-    chat: AllChatProps,
-    isDm: boolean
-): Promise<null> => {
+export const addChat = (chat: AllChatProps, isDm: boolean): Promise<null> => {
     return new Promise((resolve, reject) => {
         const addChatWorker = new AddChatWorker();
 

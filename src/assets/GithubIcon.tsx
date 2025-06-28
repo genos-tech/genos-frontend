@@ -1,4 +1,4 @@
-import SvgIcon, { SvgIconProps } from '@mui/joy/SvgIcon';
+import SvgIcon, { SvgIconProps } from "@mui/joy/SvgIcon";
 
 export const GitHubIcon = (props: SvgIconProps) => (
     <SvgIcon {...props} fontSize="xl">

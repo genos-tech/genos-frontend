@@ -1,23 +1,23 @@
 import { Button, Stack } from "@mui/joy";
 
-import { uploadTask } from '../../../services/uploadTask';
+import { uploadTask } from "../../../services/uploadTask";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 
 type CreateTaskFooterProps = {
-    myself: UserProps,
-    accessToken: string | null,
-    isDm: boolean | null,
-    chatId: number | null,
-    threadId: number | null,
-    taskContents: TaskProps,
-    taskTitle: string,
-    setIsSubmitted: (value: boolean) => void,
-    setTitleError: (value: string) => void,
-    setTitleErrorOpen: (value: boolean) => void,
-    setIsCreatingTask?: (value: boolean) => void,
-    setCurrentPreviewTaskId: (value: number) => void,
-}
+    myself: UserProps;
+    accessToken: string | null;
+    isDm: boolean | null;
+    chatId: number | null;
+    threadId: number | null;
+    taskContents: TaskProps;
+    taskTitle: string;
+    setIsSubmitted: (value: boolean) => void;
+    setTitleError: (value: string) => void;
+    setTitleErrorOpen: (value: boolean) => void;
+    setIsCreatingTask?: (value: boolean) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
+};
 export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
     const {
         myself,
@@ -34,20 +34,22 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
         setCurrentPreviewTaskId,
     } = props;
     return (
-        <Stack
-            direction="row"
-            sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}
-        >
+        <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
             <Button
-                component='button'
+                component="button"
                 variant="outlined"
                 color="danger"
-                size='sm'
-                onClick={() => { if (setIsCreatingTask) { setIsCreatingTask(false) } }}>
+                size="sm"
+                onClick={() => {
+                    if (setIsCreatingTask) {
+                        setIsCreatingTask(false);
+                    }
+                }}
+            >
                 Cancel
             </Button>
             <Button
-                component='button'
+                component="button"
                 type="submit"
                 variant="solid"
                 color="primary"
@@ -63,12 +65,12 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                         setTitleError: setTitleError,
                         setTitleErrorOpen: setTitleErrorOpen,
                         setCurrentPreviewTaskId: setCurrentPreviewTaskId,
-                    })
+                    });
                 }}
-                disabled={(taskTitle === "")}
+                disabled={taskTitle === ""}
             >
                 Create
             </Button>
         </Stack>
-    )
-}
+    );
+};

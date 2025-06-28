@@ -14,22 +14,21 @@ export const wsTaskHandleHook = (props: wsTaskHandleHookProps) => {
         if (!socket) return;
 
         socket.on("connect", () => {
-            console.log("WS connected from task home")
+            console.log("WS connected from task home");
         });
         socket.on("disconnect", () => {
-            console.log("WS dis-connected from task home")
+            console.log("WS dis-connected from task home");
         });
         socket.on("auth_error", (data) => {
             console.error("Authentication Error:", data.message);
         });
         socket.on("message", (message) => {
             // console.log("task_comment:", message)
-            setIsCommentUpdated(true)
-        })
+            setIsCommentUpdated(true);
+        });
         return () => {
             socket.off("message");
             socket.off("connect");
         };
-
     }, [socket]);
-}
+};

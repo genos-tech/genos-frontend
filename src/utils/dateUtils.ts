@@ -1,23 +1,25 @@
 export const getCurrentTimestamp = () => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    const seconds = String(now.getSeconds()).padStart(2, "0");
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
+};
 
 const formatDateLocal = (date: Date): string => {
-    const pad = (n: number) => n.toString().padStart(2, '0');
+    const pad = (n: number) => n.toString().padStart(2, "0");
 
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
-        `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-}
+    return (
+        `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+        `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    );
+};
 
 const convertAlmostIsoUtcToLocalFormatted = (utcTimestamp: string): string => {
-    const isoTimestamp = utcTimestamp.replace(' ', 'T');
+    const isoTimestamp = utcTimestamp.replace(" ", "T");
     const date = new Date(isoTimestamp);
 
     if (isNaN(date.getTime())) {
@@ -25,11 +27,13 @@ const convertAlmostIsoUtcToLocalFormatted = (utcTimestamp: string): string => {
     }
 
     return formatDateLocal(date);
-}
+};
 
-const checkTimestampDay = (utcTimestamp: string): "today" | "yesterday" | "withinAYear" | "other" => {
+const checkTimestampDay = (
+    utcTimestamp: string
+): "today" | "yesterday" | "withinAYear" | "other" => {
     // Replace space with 'T' to make ISO 8601
-    const isoTimestamp = utcTimestamp.replace(' ', 'T');
+    const isoTimestamp = utcTimestamp.replace(" ", "T");
     const date = new Date(isoTimestamp);
 
     if (isNaN(date.getTime())) {
@@ -55,8 +59,7 @@ const checkTimestampDay = (utcTimestamp: string): "today" | "yesterday" | "withi
     } else {
         return "other";
     }
-}
-
+};
 
 export const extractMMDDHHMM = (ts: string) => {
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
@@ -68,7 +71,7 @@ export const extractMMDDHHMM = (ts: string) => {
         return `Yesterday ${tsLocal.slice(11, 16)}`;
     }
     return `${tsLocal.slice(0, 10)} ${tsLocal.slice(11, 16)}`;
-}
+};
 
 export const extractHHMM = (ts: string) => {
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
@@ -82,7 +85,7 @@ export const extractHHMM = (ts: string) => {
         return `${tsLocal.slice(5, 10)} ${tsLocal.slice(11, 16)}`;
     }
     return tsLocal;
-}
+};
 
 export const getFormattedTodayDateStr = (): string => {
     let today = new Date();

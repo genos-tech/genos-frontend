@@ -1,7 +1,6 @@
 import { openDB } from "idb";
-import { initDB } from './schema';
-import { DB_NAME, DB_VERSION, STORES, INDEX } from './conf';
-
+import { initDB } from "./schema";
+import { DB_NAME, DB_VERSION, STORES, INDEX } from "./conf";
 
 const _messageIdWithChatId = {
     dmChats: async () => {
@@ -20,11 +19,12 @@ const _messageIdWithChatId = {
     },
     dmThreadMessages: async (chatId: string, threadId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
-        const dmThreadMessagesStore = db.transaction(STORES.DM_THREAD_MESSAGES).objectStore(
-            STORES.DM_THREAD_MESSAGES
-        );
-        const dmThreadMessages = await dmThreadMessagesStore.index(INDEX.DM_THREAD_MESSAGES_COMPOUND).getAll(
-            [chatId, threadId]);
+        const dmThreadMessagesStore = db
+            .transaction(STORES.DM_THREAD_MESSAGES)
+            .objectStore(STORES.DM_THREAD_MESSAGES);
+        const dmThreadMessages = await dmThreadMessagesStore
+            .index(INDEX.DM_THREAD_MESSAGES_COMPOUND)
+            .getAll([chatId, threadId]);
 
         return dmThreadMessages;
     },
@@ -44,16 +44,16 @@ const _messageIdWithChatId = {
     },
     gmThreadMessages: async (chatId: number, threadId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
-        const gmThreadMessagesStore = db.transaction(STORES.GM_THREAD_MESSAGES).objectStore(
-            STORES.GM_THREAD_MESSAGES
-        );
-        const gmThreadMessage = await gmThreadMessagesStore.index(INDEX.GM_THREAD_MESSAGES_COMPOUND).getAll(
-            [chatId, threadId]);
+        const gmThreadMessagesStore = db
+            .transaction(STORES.GM_THREAD_MESSAGES)
+            .objectStore(STORES.GM_THREAD_MESSAGES);
+        const gmThreadMessage = await gmThreadMessagesStore
+            .index(INDEX.GM_THREAD_MESSAGES_COMPOUND)
+            .getAll([chatId, threadId]);
 
         return gmThreadMessage;
-    }
-}
-
+    },
+};
 
 const _getDataWithIndex = {
     dmChats: async (chatId: number) => {
@@ -63,11 +63,10 @@ const _getDataWithIndex = {
     gmChats: async (chatId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
         return db.get(STORES.GM_CHATS, chatId);
-    }
-}
+    },
+};
 
 export const batchInsertMessages = async (props: any) => {
-
     const db = await openDB(DB_NAME, DB_VERSION);
     const tx = db.transaction(props.storeName, "readwrite");
     const store = tx.objectStore(props.storeName);
@@ -77,7 +76,7 @@ export const batchInsertMessages = async (props: any) => {
     });
 
     await tx.done;
-}
+};
 
 export const miniBatchInsertMessages = async (props: any) => {
     const db = await openDB(DB_NAME, DB_VERSION);
@@ -89,8 +88,7 @@ export const miniBatchInsertMessages = async (props: any) => {
     });
 
     await tx.done;
-}
-
+};
 
 export const addData = async (props: any) => {
     const db = await initDB();
@@ -106,43 +104,37 @@ export const getData = async (storeName: string, id: string) => {
 
 export const getSpecificDataWithIndex = async (props: any) => {
     if (props.storeName === STORES.DM_CHATS) {
-        const data = await _getDataWithIndex.dmChats(
-            props.chatId)
-        return data
+        const data = await _getDataWithIndex.dmChats(props.chatId);
+        return data;
     }
     if (props.storeName === STORES.GM_CHATS) {
-        const data = await _getDataWithIndex.gmChats(
-            props.chatId)
-        return data
+        const data = await _getDataWithIndex.gmChats(props.chatId);
+        return data;
     }
-}
+};
 
 export const messageIdWithChatId = async (props: any) => {
     if (props.storeName === STORES.DM_CHATS) {
-        const data = await _messageIdWithChatId.dmChats()
-        return data
+        const data = await _messageIdWithChatId.dmChats();
+        return data;
     } else if (props.storeName === STORES.DM_MESSAGES) {
-        const data = await _messageIdWithChatId.dmMessages(
-            props.chatId)
-        return data
+        const data = await _messageIdWithChatId.dmMessages(props.chatId);
+        return data;
     } else if (props.storeName === STORES.DM_THREAD_MESSAGES) {
-        const data = await _messageIdWithChatId.dmThreadMessages(
-            props.chatId, props.threadId)
-        return data
+        const data = await _messageIdWithChatId.dmThreadMessages(props.chatId, props.threadId);
+        return data;
     } else if (props.storeName === STORES.GM_CHATS) {
-        const data = await _messageIdWithChatId.gmChats()
-        return data
+        const data = await _messageIdWithChatId.gmChats();
+        return data;
     } else if (props.storeName === STORES.GM_MESSAGES) {
-        const data = await _messageIdWithChatId.gmMessages(
-            props.chatId)
-        return data
+        const data = await _messageIdWithChatId.gmMessages(props.chatId);
+        return data;
     } else if (props.storeName === STORES.GM_THREAD_MESSAGES) {
-        const data = await _messageIdWithChatId.gmThreadMessages(
-            props.chatId, props.threadId)
-        return data
+        const data = await _messageIdWithChatId.gmThreadMessages(props.chatId, props.threadId);
+        return data;
     } else {
-        console.error("Unexpected storeName:", props.storeName)
-        return []
+        console.error("Unexpected storeName:", props.storeName);
+        return [];
     }
 };
 
@@ -152,7 +144,7 @@ export const getProjectTasks = async (projectId: number) => {
     const tasks = await taskStore.index(INDEX.TASKS).getAll(projectId);
 
     return tasks;
-}
+};
 
 export const getAllData = async (storeName: string) => {
     const db = await initDB();
@@ -189,7 +181,7 @@ export const getLatestDMChat = async () => {
     const cursor = await index.openCursor(null, "prev"); // Get latest first
 
     return cursor ? cursor.value : null; // Return the latest record
-}
+};
 
 export const getLatestGMChat = async () => {
     const db = await openDB(DB_NAME, DB_VERSION);
@@ -201,4 +193,4 @@ export const getLatestGMChat = async () => {
     const cursor = await index.openCursor(null, "prev"); // Get latest first
 
     return cursor ? cursor.value : null; // Return the latest record
-}
+};

@@ -1,23 +1,19 @@
 import { Socket } from "socket.io-client";
 
-import { defaultDmPartner } from './constants';
+import { defaultDmPartner } from "./constants";
 import { addChat } from "./addChat";
 import { addMessage } from "./addMessage";
 import { popSpecificMessages } from "./popSpecificMessages";
 import { createGMChat } from "./createGMChat";
-import { UserProps } from '../../../types/admin';
-import {
-    AllChatProps,
-    ChatProps,
-    MessageProps
-} from '../../../types/chat';
-import { CreateGMResponse } from '../../../types/chat';
-import { getCurrentTimestamp } from '../../../utils/dateUtils';
+import { UserProps } from "../../../types/admin";
+import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
+import { CreateGMResponse } from "../../../types/chat";
+import { getCurrentTimestamp } from "../../../utils/dateUtils";
 
 const createGroupMessage = [
     { type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] },
-    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }
-]
+    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+];
 
 const moveToGMChat = async (
     chatId: number,
@@ -37,9 +33,9 @@ const moveToGMChat = async (
             latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
         };
-        setCurrentMainChat(newChat)
+        setCurrentMainChat(newChat);
     } else {
-        console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages)
+        console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
     }
 };
 
@@ -48,7 +44,7 @@ const addGMChatAndMessage = async (
     data: CreateGMResponse,
     allChats: AllChatProps[],
     setAllChats: (chat: AllChatProps[]) => void,
-    setCurrentMainChat: (chat: ChatProps) => void,
+    setCurrentMainChat: (chat: ChatProps) => void
 ) => {
     const newMessage: MessageProps = {
         messageIdWithChatId: `${data.chatId}-1`,
@@ -58,8 +54,8 @@ const addGMChatAndMessage = async (
         contentText: "Created this group",
         sender: myself,
         tsSent: getCurrentTimestamp(),
-        numReplies: 0
-    }
+        numReplies: 0,
+    };
 
     const newChat: AllChatProps = {
         chatId: data.chatId,
@@ -70,24 +66,26 @@ const addGMChatAndMessage = async (
         latestMessage: newMessage,
         latestMessageText: "Created this group",
         TSLastMessage: getCurrentTimestamp(),
-    }
+    };
 
     await addChat(newChat, false);
     await addMessage(newMessage, false);
 
-    setAllChats([...allChats, {
-        chatId: newChat.chatId,
-        chatName: newChat.chatName,
-        unread: false,
-        isDm: false,
-        dmPartnerUser: defaultDmPartner,
-        latestMessage: newChat.latestMessage,
-        latestMessageText: newChat.latestMessageText,
-        TSLastMessage: getCurrentTimestamp()
-    }]);
+    setAllChats([
+        ...allChats,
+        {
+            chatId: newChat.chatId,
+            chatName: newChat.chatName,
+            unread: false,
+            isDm: false,
+            dmPartnerUser: defaultDmPartner,
+            latestMessage: newChat.latestMessage,
+            latestMessageText: newChat.latestMessageText,
+            TSLastMessage: getCurrentTimestamp(),
+        },
+    ]);
 
     moveToGMChat(newChat.chatId, newChat.chatName, setCurrentMainChat);
-
 };
 
 export const createChatGroup = async (
@@ -100,33 +98,39 @@ export const createChatGroup = async (
     setGroupName: (e: string) => void,
     setAllChats: (chat: AllChatProps[]) => void,
     setCurrentMainChat: (chat: ChatProps) => void,
-    accessToken: string,
+    accessToken: string
 ) => {
     const data: CreateGMResponse = await createGMChat(
-        accessToken, myself, chatName, setCreateCGErrorMessage
+        accessToken,
+        myself,
+        chatName,
+        setCreateCGErrorMessage
     );
 
     if (data && socket !== null) {
-        socket.emit("join", {
-            joiningCGId: data.chatId, // gm_id
-            joiningCGName: data.chatName, // gm_name
-            isDm: false,
-            dmPartnerUser: null,
-        }, (ack: any) => {
-            socket.emit("message", {
-                message: createGroupMessage,
-                destCGName: chatName,
-                destCGId: data.chatId,
+        socket.emit(
+            "join",
+            {
+                joiningCGId: data.chatId, // gm_id
+                joiningCGName: data.chatName, // gm_name
                 isDm: false,
                 dmPartnerUser: null,
-            });
-        });
+            },
+            (ack: any) => {
+                socket.emit("message", {
+                    message: createGroupMessage,
+                    destCGName: chatName,
+                    destCGId: data.chatId,
+                    isDm: false,
+                    dmPartnerUser: null,
+                });
+            }
+        );
 
-        addGMChatAndMessage(myself, data, allChats, setAllChats, setCurrentMainChat)
+        addGMChatAndMessage(myself, data, allChats, setAllChats, setCurrentMainChat);
         setOpen(false);
         setCreateCGErrorMessage("");
         setGroupName("");
         return data;
     }
-}
-
+};

@@ -1,4 +1,4 @@
-import SvgIcon from '@mui/joy/SvgIcon';
+import SvgIcon from "@mui/joy/SvgIcon";
 
 export const GoogleIcon = () => {
     return (
@@ -23,4 +23,4 @@ export const GoogleIcon = () => {
             </g>
         </SvgIcon>
     );
-}
+};

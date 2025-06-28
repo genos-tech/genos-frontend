@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { useState, useEffect } from 'react';
+import * as React from "react";
+import { useState, useEffect } from "react";
 import {
     GlobalStyles,
     Box,
@@ -10,15 +10,15 @@ import {
     Typography,
     Sheet,
     Autocomplete,
-    CircularProgress
-} from '@mui/joy';
-import ListItemButton, { listItemButtonClasses } from '@mui/joy/ListItemButton';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+    CircularProgress,
+} from "@mui/joy";
+import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 
 import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from '../../../types/admin';
-import { SearchTeamTasksResponse } from '../../../types/chat'
+import { UserProps } from "../../../types/admin";
+import { SearchTeamTasksResponse } from "../../../types/chat";
 import { ProjectProps } from "../../../types/tasks";
 
 function Toggler({
@@ -40,13 +40,13 @@ function Toggler({
             <Box
                 sx={[
                     {
-                        display: 'grid',
-                        transition: '0.2s ease',
-                        '& > *': {
-                            overflow: 'hidden',
+                        display: "grid",
+                        transition: "0.2s ease",
+                        "& > *": {
+                            overflow: "hidden",
                         },
                     },
-                    open ? { gridTemplateRows: '1fr' } : { gridTemplateRows: '0fr' },
+                    open ? { gridTemplateRows: "1fr" } : { gridTemplateRows: "0fr" },
                 ]}
             >
                 {children}
@@ -56,11 +56,11 @@ function Toggler({
 }
 
 type TaskSidebarProps = {
-    myself: UserProps
-}
+    myself: UserProps;
+};
 
 export const NoteSidebar = (props: TaskSidebarProps) => {
-    const { myself } = props
+    const { myself } = props;
     const { accessToken } = useAuth();
 
     // // =======================================================================
@@ -90,7 +90,6 @@ export const NoteSidebar = (props: TaskSidebarProps) => {
     //     };
     // }, [loading]);
 
-
     // function onChangeHandler(value: any) {
     //     if (value !== null) {
     //         setOpenSearch(false);
@@ -99,35 +98,34 @@ export const NoteSidebar = (props: TaskSidebarProps) => {
     // }
     // // =======================================================================
 
-
     return (
         <Sheet
             className="TaskSidebar"
             sx={{
-                position: { xs: 'fixed', md: 'sticky' },
+                position: { xs: "fixed", md: "sticky" },
                 transform: {
-                    xs: 'translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))',
-                    md: 'none',
+                    xs: "translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))",
+                    md: "none",
                 },
-                transition: 'transform 0.4s, width 0.4s',
-                height: '100dvh',
-                width: '100%',
+                transition: "transform 0.4s, width 0.4s",
+                height: "100dvh",
+                width: "100%",
                 top: 0,
                 p: 2,
                 flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
+                display: "flex",
+                flexDirection: "column",
                 gap: 2,
-                borderRight: '1px solid',
-                borderColor: 'divider',
+                borderRight: "1px solid",
+                borderColor: "divider",
             }}
         >
             <GlobalStyles
                 styles={(theme) => ({
-                    ':root': {
-                        '--TaskSidebar-width': '220px',
-                        [theme.breakpoints.up('lg')]: {
-                            '--TaskSidebar-width': '240px',
+                    ":root": {
+                        "--TaskSidebar-width": "220px",
+                        [theme.breakpoints.up("lg")]: {
+                            "--TaskSidebar-width": "240px",
                         },
                     },
                 })}
@@ -174,10 +172,10 @@ export const NoteSidebar = (props: TaskSidebarProps) => {
             <Box
                 sx={{
                     minHeight: 0,
-                    overflow: 'hidden auto',
+                    overflow: "hidden auto",
                     flexGrow: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    display: "flex",
+                    flexDirection: "column",
                     [`& .${listItemButtonClasses.root}`]: {
                         gap: 1.5,
                     },
@@ -187,23 +185,21 @@ export const NoteSidebar = (props: TaskSidebarProps) => {
                     size="sm"
                     sx={{
                         gap: 1,
-                        '--List-nestedInsetStart': '30px',
-                        '--ListItem-radius': (theme) => theme.vars.radius.sm,
+                        "--List-nestedInsetStart": "30px",
+                        "--ListItem-radius": (theme) => theme.vars.radius.sm,
                     }}
                 >
-
                     <ListItem>
-                        <ListItemButton onClick={() => { }}>
+                        <ListItemButton onClick={() => {}}>
                             <DashboardIcon />
                             <ListItemContent>
                                 <Typography level="title-sm">My Notes</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
-
                 </List>
-            </Box >
+            </Box>
             <Divider />
-        </Sheet >
+        </Sheet>
     );
-}
+};

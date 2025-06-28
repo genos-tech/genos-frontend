@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import {
     Alert,
     Box,
@@ -12,11 +12,11 @@ import {
     Link,
     Input,
     Typography,
-    Stack
-} from '@mui/joy';
-import { CssVarsProvider } from '@mui/joy/styles';
+    Stack,
+} from "@mui/joy";
+import { CssVarsProvider } from "@mui/joy/styles";
 
-import { AdminBackground } from './Background';
+import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
 import { signIn } from "../services/signin";
 import { SignInResponse } from "../../../types/admin";
@@ -38,8 +38,7 @@ export const SignInForm = () => {
     const { setAccessToken } = useAuth();
 
     const _signin = async (email: string, password: string) => {
-
-        const signInRes: SignInResponse = await signIn(email, password, setErrorMessage)
+        const signInRes: SignInResponse = await signIn(email, password, setErrorMessage);
 
         if (signInRes) {
             setAccessToken(signInRes.access); // Store access token in memory
@@ -50,72 +49,71 @@ export const SignInForm = () => {
             localStorage.setItem("avatarImgPath", signInRes.profile_image_url);
 
             if (signInRes.user_id) {
-                navigate('/JoinTeam')
+                navigate("/JoinTeam");
             } else {
-                console.error("Failed to get userId from sign-in response:", signInRes)
+                console.error("Failed to get userId from sign-in response:", signInRes);
             }
         }
-    }
+    };
 
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
             <GlobalStyles
                 styles={{
-                    ':root': {
-                        '--Form-maxWidth': '800px',
-                        '--Transition-duration': '0.4s',
+                    ":root": {
+                        "--Form-maxWidth": "800px",
+                        "--Transition-duration": "0.4s",
                     },
                 }}
             />
             <Box
                 sx={(theme) => ({
-                    width: { xs: '100%', md: '50vw' },
-                    transition: 'width var(--Transition-duration)',
-                    transitionDelay: 'calc(var(--Transition-duration) + 0.1s)',
-                    position: 'relative',
+                    width: { xs: "100%", md: "50vw" },
+                    transition: "width var(--Transition-duration)",
+                    transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
+                    position: "relative",
                     zIndex: 1,
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    backdropFilter: 'blur(12px)',
-                    backgroundColor: 'rgba(255 255 255 / 0.2)',
-                    [theme.getColorSchemeSelector('dark')]: {
-                        backgroundColor: 'rgba(19 19 24 / 0.4)',
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    backdropFilter: "blur(12px)",
+                    backgroundColor: "rgba(255 255 255 / 0.2)",
+                    [theme.getColorSchemeSelector("dark")]: {
+                        backgroundColor: "rgba(19 19 24 / 0.4)",
                     },
                 })}
             >
                 <Box
                     sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        minHeight: '100dvh',
-                        width: '100%',
+                        display: "flex",
+                        flexDirection: "column",
+                        minHeight: "100dvh",
+                        width: "100%",
                         px: 2,
                     }}
                 >
-
                     <AdminHeader />
 
                     <Box
                         component="main"
                         sx={{
-                            my: 'auto',
+                            my: "auto",
                             py: 2,
                             pb: 5,
-                            display: 'flex',
-                            flexDirection: 'column',
+                            display: "flex",
+                            flexDirection: "column",
                             gap: 2,
                             width: 400,
-                            maxWidth: '100%',
-                            mx: 'auto',
-                            borderRadius: 'sm',
-                            '& form': {
-                                display: 'flex',
-                                flexDirection: 'column',
+                            maxWidth: "100%",
+                            mx: "auto",
+                            borderRadius: "sm",
+                            "& form": {
+                                display: "flex",
+                                flexDirection: "column",
                                 gap: 2,
                             },
                             [`& .MuiFormLabel-asterisk`]: {
-                                visibility: 'hidden',
+                                visibility: "hidden",
                             },
                         }}
                     >
@@ -125,7 +123,7 @@ export const SignInForm = () => {
                                     Sign in
                                 </Typography>
                                 <Typography level="body-sm">
-                                    New member?{' '}
+                                    New member?{" "}
                                     <Link href="SignUp" level="title-sm">
                                         Sign up!
                                     </Link>
@@ -133,7 +131,6 @@ export const SignInForm = () => {
                             </Stack>
 
                             {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
-
                         </Stack>
 
                         <Stack sx={{ gap: 4, mt: 2 }}>
@@ -142,28 +139,30 @@ export const SignInForm = () => {
                                     event.preventDefault();
 
                                     const formElements = event.currentTarget.elements;
-                                    const email = formElements.email.value
-                                    const password = formElements.password.value
+                                    const email = formElements.email.value;
+                                    const password = formElements.password.value;
 
                                     if (!email || !password) {
                                         return {
-                                            type: 'CredentialsSignin',
-                                            error: 'Email and password are required.',
+                                            type: "CredentialsSignin",
+                                            error: "Email and password are required.",
                                         };
                                     }
 
                                     _signin(email, password);
 
                                     if (rememberEmail) {
-                                        localStorage.setItem("signInEmail", email)
+                                        localStorage.setItem("signInEmail", email);
                                     }
-
                                 }}
                             >
-
                                 <FormControl required>
                                     <FormLabel>Email</FormLabel>
-                                    <Input type="email" name="email" defaultValue={localStorage.getItem("signInEmail") || ""} />
+                                    <Input
+                                        type="email"
+                                        name="email"
+                                        defaultValue={localStorage.getItem("signInEmail") || ""}
+                                    />
                                 </FormControl>
 
                                 <FormControl required>
@@ -174,19 +173,24 @@ export const SignInForm = () => {
                                 <Stack sx={{ gap: 4, mt: 2 }}>
                                     <Box
                                         sx={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center',
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
                                         }}
                                     >
-                                        <Checkbox size="sm" label="Remember me" name="persistent" onChange={(event) => {
-                                            if (event.target.checked) {
-                                                setRememberEmail(true)
-                                            } else {
-                                                setRememberEmail(false)
-                                                localStorage.setItem("signInEmail", "")
-                                            }
-                                        }} />
+                                        <Checkbox
+                                            size="sm"
+                                            label="Remember me"
+                                            name="persistent"
+                                            onChange={(event) => {
+                                                if (event.target.checked) {
+                                                    setRememberEmail(true);
+                                                } else {
+                                                    setRememberEmail(false);
+                                                    localStorage.setItem("signInEmail", "");
+                                                }
+                                            }}
+                                        />
                                         <Link level="title-sm" href="#replace-with-a-link">
                                             Forgot your password?
                                         </Link>
@@ -195,20 +199,18 @@ export const SignInForm = () => {
                                         Sign in
                                     </Button>
                                 </Stack>
-
                             </form>
                         </Stack>
                     </Box>
 
                     <Box component="footer" sx={{ py: 3 }}>
-                        <Typography level="body-xs" sx={{ textAlign: 'center' }}>
+                        <Typography level="body-xs" sx={{ textAlign: "center" }}>
                             © Origin {new Date().getFullYear()}
                         </Typography>
                     </Box>
-
                 </Box>
             </Box>
             <AdminBackground />
         </CssVarsProvider>
     );
-}
+};

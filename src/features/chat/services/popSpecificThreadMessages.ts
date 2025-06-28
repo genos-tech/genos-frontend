@@ -1,4 +1,4 @@
-import { ThreadMessageProps } from '../../../types/chat';
+import { ThreadMessageProps } from "../../../types/chat";
 import PopSpecificThreadMessagesWorker from "../../../workers/popSpecificThreadMessagesWorker.ts?worker";
 
 export const popSpecificThreadMessages = (
@@ -12,7 +12,7 @@ export const popSpecificThreadMessages = (
         popSpecificThreadMessagesWorker.postMessage({
             chatId,
             threadId,
-            isDm
+            isDm,
         });
 
         popSpecificThreadMessagesWorker.onmessage = (event) => {

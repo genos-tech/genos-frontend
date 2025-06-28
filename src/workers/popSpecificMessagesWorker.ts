@@ -8,8 +8,8 @@ self.onmessage = async (event) => {
     if (chatId && isDm !== undefined) {
         const messages = await messageIdWithChatId({
             storeName: isDm ? STORES.DM_MESSAGES : STORES.GM_MESSAGES,
-            chatId: chatId
-        })
+            chatId: chatId,
+        });
         // Sort messages by tsSent in ascending order
         const sortedMessages = [...messages].sort((a, b) => {
             return Number(a.messageId) - Number(b.messageId);
@@ -17,13 +17,12 @@ self.onmessage = async (event) => {
 
         self.postMessage(sortedMessages);
     } else {
-        console.error
-            ("Invalid parameters for popSpecificMessagesWorker:", {
-                chatId: chatId,
-                isDm: isDm,
-            });
+        console.error("Invalid parameters for popSpecificMessagesWorker:", {
+            chatId: chatId,
+            isDm: isDm,
+        });
         self.postMessage([]);
     }
 };
 
-export { };
+export {};

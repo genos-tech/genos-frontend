@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { defaultDmPartner } from '../features/chat/services/constants';
+import { defaultDmPartner } from "../features/chat/services/constants";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
@@ -14,7 +14,7 @@ export const loadInitialData = (
     myself: UserProps,
     accessToken: string | null,
     setIsLoading: (state: boolean) => void,
-    setCurrentMainChat: (value: ChatProps) => void,
+    setCurrentMainChat: (value: ChatProps) => void
 ) => {
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
@@ -35,7 +35,6 @@ export const loadInitialData = (
                     console.error("Filed initial DM history data loading");
                     console.error("event.data:", event.data);
                 }
-
             };
             return () => {
                 loadDMHistoryWorker.terminate();
@@ -88,32 +87,32 @@ export const loadInitialData = (
             popLatestDMChatWorker.onmessage = (event) => {
                 const latestDmChat: any = event.data;
                 if (latestDmChat === null) {
-                    setLatestDmChatId(-1)
+                    setLatestDmChatId(-1);
                 } else {
-                    setLatestDmChatId(latestDmChat.chatId)
+                    setLatestDmChatId(latestDmChat.chatId);
                 }
             };
             return () => {
                 popLatestDMChatWorker.terminate();
             };
         }
-    }, [isDMHistoryLoaded])
+    }, [isDMHistoryLoaded]);
 
     // Fetch initial DM chat messages info after the DM history is loaded
     useEffect(() => {
         if (latestDmChatId !== null) {
             if (latestDmChatId === -1) {
-                setInitialChatMessages([])
+                setInitialChatMessages([]);
             } else {
                 const popSpecificMessagesWorker = new PopSpecificMessagesWorker();
                 popSpecificMessagesWorker.postMessage({ chatId: latestDmChatId, isDm: true });
                 popSpecificMessagesWorker.onmessage = (event) => {
                     const fetchedMessages: MessageProps[] = event.data;
                     if (fetchedMessages !== undefined) {
-                        setInitialChatMessages(fetchedMessages)
+                        setInitialChatMessages(fetchedMessages);
                     } else {
-                        setInitialChatMessages([])
-                        console.error("Failed due to fetchedMessages:", fetchedMessages)
+                        setInitialChatMessages([]);
+                        console.error("Failed due to fetchedMessages:", fetchedMessages);
                     }
                 };
                 return () => {
@@ -121,7 +120,7 @@ export const loadInitialData = (
                 };
             }
         }
-    }, [latestDmChatId])
+    }, [latestDmChatId]);
 
     // Fetch initial DM chat info after the initial DM chat messages are loaded
     useEffect(() => {
@@ -137,16 +136,17 @@ export const loadInitialData = (
                             chatName: fetchedChat.chatName,
                             isDm: true,
                             dmPartnerUser: fetchedChat.dmPartnerUser,
-                            unread: (InitialChatMessages.length === 1) ? true : false,
+                            unread: InitialChatMessages.length === 1 ? true : false,
                             messages: InitialChatMessages,
                             latestMessage: InitialChatMessages[InitialChatMessages.length - 1],
-                            latestMessageText: InitialChatMessages[InitialChatMessages.length - 1].contentText,
+                            latestMessageText:
+                                InitialChatMessages[InitialChatMessages.length - 1].contentText,
                             TSLastMessage: fetchedChat.TSLastMessage,
-                        }
-                        setCurrentMainChat(currentMainChat)
-                        setIsInitialChatLoaded(true)
+                        };
+                        setCurrentMainChat(currentMainChat);
+                        setIsInitialChatLoaded(true);
                     } else {
-                        console.error("Failed due to fetchedChat is;", fetchedChat)
+                        console.error("Failed due to fetchedChat is;", fetchedChat);
                     }
                 };
                 return () => {
@@ -162,12 +162,12 @@ export const loadInitialData = (
                     TSLastMessage: "",
                     unread: true,
                     messages: [],
-                }
-                setCurrentMainChat(currentMainChat)
-                setIsInitialChatLoaded(true)
+                };
+                setCurrentMainChat(currentMainChat);
+                setIsInitialChatLoaded(true);
             }
         }
-    }, [InitialChatMessages])
+    }, [InitialChatMessages]);
 
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
@@ -175,4 +175,4 @@ export const loadInitialData = (
             setIsLoading(false);
         }
     }, [isDMHistoryLoaded, isGMHistoryLoaded, isTeamTasksLoaded, isInitialChatLoaded]);
-}
+};

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Box } from "@mui/joy";
-import { useColorScheme } from '@mui/joy/styles';
+import { useColorScheme } from "@mui/joy/styles";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { codeBlock } from "@blocknote/code-block";
@@ -26,14 +26,12 @@ import {
     defaultInlineContentSpecs,
     filterSuggestionItems,
     defaultBlockSpecs,
-    PartialBlock
+    PartialBlock,
 } from "@blocknote/core";
 
-import { CustomEmojiToolbar } from './customEmojiToolbar';
+import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { Mention } from "./Mention";
-import { EmojiPicker } from '../emojiInput/EmojiPicker'
-
-
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -83,13 +81,13 @@ const getCustomSlashMenuItems = (
 
 type BnTaskEditorProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
-}
+};
 
 export const BnTaskEditor = (props: BnTaskEditorProps) => {
     const { setBody } = props;
 
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-task-box-${mode}`
+    const bnBoxClassName: string = `bn-task-box-${mode}`;
 
     // We use the English, default dictionary
     const locale = en;
@@ -109,19 +107,21 @@ export const BnTaskEditor = (props: BnTaskEditorProps) => {
                 // We override the heading placeholder
                 heading: "Custom heading placeholder",
             },
-        }
+        },
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
-        editor.insertInlineContent([
-            { type: "text", text: emoji, styles: {} }
-        ]);
+        editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
         setShowEmojiPicker(false);
     };
 
-    useEffect(() => { if (selectedEmoji !== null) { insertEmoji(selectedEmoji) } }, [selectedEmoji])
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            insertEmoji(selectedEmoji);
+        }
+    }, [selectedEmoji]);
 
     return (
         <Box>
@@ -130,15 +130,17 @@ export const BnTaskEditor = (props: BnTaskEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: 'relative' }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
                 <BlockNoteView
                     className="bn-task-editor"
                     editor={editor}
                     sideMenu={true} // false for Chat/comment, true for Task content
-                    theme={mode === 'dark' ? 'dark' : 'light'}
+                    theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onChange={() => { setBody(editor.document) }}
+                    onChange={() => {
+                        setBody(editor.document);
+                    }}
                 >
                     <FormattingToolbarController
                         formattingToolbar={() => (
@@ -187,8 +189,10 @@ export const BnTaskEditor = (props: BnTaskEditorProps) => {
                                 <CreateLinkButton key={"createLinkButton"} />
 
                                 {/* Extra button to toggle blue text & background */}
-                                <CustomEmojiToolbar key={"customButton"} setShowEmojiPicker={setShowEmojiPicker} />
-
+                                <CustomEmojiToolbar
+                                    key={"customButton"}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                />
                             </FormattingToolbar>
                         )}
                     />
@@ -209,7 +213,7 @@ export const BnTaskEditor = (props: BnTaskEditorProps) => {
                         }
                     />
                 </BlockNoteView>
-            </Box >
-        </Box >
+            </Box>
+        </Box>
     );
-}
+};

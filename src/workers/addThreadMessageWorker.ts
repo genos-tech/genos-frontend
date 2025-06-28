@@ -8,10 +8,10 @@ self.onmessage = async (event) => {
 
     await addData({
         storeName: isDm ? STORES.DM_THREAD_MESSAGES : STORES.GM_THREAD_MESSAGES,
-        data: threadMessage
-    })
+        data: threadMessage,
+    });
 
     self.postMessage("done");
 };
 
-export { };
+export {};

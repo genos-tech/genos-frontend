@@ -13,22 +13,22 @@ import {
     ListItemButton,
     Input,
     Typography,
-    Stack
-} from '@mui/joy';
-import { useNavigate } from 'react-router-dom';
-import { CssVarsProvider } from '@mui/joy/styles';
-import AcUnitIcon from '@mui/icons-material/AcUnit';
+    Stack,
+} from "@mui/joy";
+import { useNavigate } from "react-router-dom";
+import { CssVarsProvider } from "@mui/joy/styles";
+import AcUnitIcon from "@mui/icons-material/AcUnit";
 
-import { AdminBackground } from './Background';
+import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
 import { createTeam } from "../services/createTeam";
 import { joinTeam } from "../services/joinTeam";
-import { loadAllTeams } from '../services/loadAllTeams';
+import { loadAllTeams } from "../services/loadAllTeams";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sentDMMessage } from "../../chat/services/sendDMMessage";
 import { sleepMilliSeconds } from "../../../utils/sleep";
 import { useAuth } from "../../../context/AuthContext";
-import { Team, CreateDMResponse, JoinTeamResponse } from '../../../types/admin';
+import { Team, CreateDMResponse, JoinTeamResponse } from "../../../types/admin";
 
 interface FormElements extends HTMLFormControlsCollection {
     teamName: HTMLInputElement;
@@ -44,15 +44,10 @@ export const JoinTeam = () => {
     const [teams, setTeams] = useState<Team[]>([]);
 
     const moveToTeam = async (teamId: string, teamName: string) => {
-        const userId: string | null = localStorage.getItem("userId")
+        const userId: string | null = localStorage.getItem("userId");
 
         if (userId) {
-            const joinTeamRes = await joinTeam(
-                accessToken,
-                teamId,
-                userId,
-                setErrorMessage
-            );
+            const joinTeamRes = await joinTeam(accessToken, teamId, userId, setErrorMessage);
 
             localStorage.setItem("teamId", teamId);
             localStorage.setItem("teamName", teamName);
@@ -67,9 +62,12 @@ export const JoinTeam = () => {
 
                 if (createDmRes) {
                     const initMessageBody = [
-                        { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },
-                        { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] }
-                    ]
+                        {
+                            type: "paragraph",
+                            content: [{ type: "text", text: "Joined", styles: {} }],
+                        },
+                        { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+                    ];
 
                     await sentDMMessage(
                         accessToken,
@@ -78,44 +76,44 @@ export const JoinTeam = () => {
                         createDmRes.user_2_id,
                         initMessageBody,
                         setErrorMessage,
-                        true,
+                        true
                     );
 
                     await sleepMilliSeconds(100);
 
-                    navigate('/App');
+                    navigate("/App");
                 } else {
-                    navigate('/App');
+                    navigate("/App");
                 }
             }
         }
-    }
+    };
 
     const _createTeam = async (teamName: string) => {
-        const userId: string | null = localStorage.getItem("userId")
+        const userId: string | null = localStorage.getItem("userId");
         if (userId) {
             const createTeamRes: JoinTeamResponse = await createTeam(
                 accessToken,
                 teamName,
                 userId,
                 setErrorMessage
-            )
+            );
             await sleepMilliSeconds(100);
             if (createTeamRes) {
                 moveToTeam(createTeamRes.teamId, createTeamRes.teamName);
             } else {
-                navigate('/JoinTeam');
+                navigate("/JoinTeam");
             }
         } else {
-            navigate('/JoinTeam');
+            navigate("/JoinTeam");
         }
-    }
+    };
 
     useEffect(() => {
         if (accessToken !== null) {
             (async () => {
                 const loadedTeams: Team[] = await loadAllTeams(accessToken);
-                setTeams(loadedTeams)
+                setTeams(loadedTeams);
             })();
         }
     }, [accessToken]);
@@ -125,34 +123,34 @@ export const JoinTeam = () => {
             <CssBaseline />
             <GlobalStyles
                 styles={{
-                    ':root': {
-                        '--Form-maxWidth': '800px',
-                        '--Transition-duration': '0.4s', // set to `none` to disable transition
+                    ":root": {
+                        "--Form-maxWidth": "800px",
+                        "--Transition-duration": "0.4s", // set to `none` to disable transition
                     },
                 }}
             />
             <Box
                 sx={(theme) => ({
-                    width: { xs: '100%', md: '50vw' },
-                    transition: 'width var(--Transition-duration)',
-                    transitionDelay: 'calc(var(--Transition-duration) + 0.1s)',
-                    position: 'relative',
+                    width: { xs: "100%", md: "50vw" },
+                    transition: "width var(--Transition-duration)",
+                    transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
+                    position: "relative",
                     zIndex: 1,
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    backdropFilter: 'blur(12px)',
-                    backgroundColor: 'rgba(255 255 255 / 0.2)',
-                    [theme.getColorSchemeSelector('dark')]: {
-                        backgroundColor: 'rgba(19 19 24 / 0.4)',
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    backdropFilter: "blur(12px)",
+                    backgroundColor: "rgba(255 255 255 / 0.2)",
+                    [theme.getColorSchemeSelector("dark")]: {
+                        backgroundColor: "rgba(19 19 24 / 0.4)",
                     },
                 })}
             >
                 <Box
                     sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        minHeight: '100dvh',
-                        width: '100%',
+                        display: "flex",
+                        flexDirection: "column",
+                        minHeight: "100dvh",
+                        width: "100%",
                         px: 2,
                     }}
                 >
@@ -161,74 +159,80 @@ export const JoinTeam = () => {
                     <Box
                         component="main"
                         sx={{
-                            my: 'auto',
+                            my: "auto",
                             py: 2,
                             pb: 5,
-                            display: 'flex',
-                            flexDirection: 'column',
+                            display: "flex",
+                            flexDirection: "column",
                             gap: 2,
                             width: 400,
-                            maxWidth: '100%',
-                            mx: 'auto',
-                            borderRadius: 'sm',
-                            '& form': {
-                                display: 'flex',
-                                flexDirection: 'column',
+                            maxWidth: "100%",
+                            mx: "auto",
+                            borderRadius: "sm",
+                            "& form": {
+                                display: "flex",
+                                flexDirection: "column",
                                 gap: 2,
                             },
                             [`& .MuiFormLabel-asterisk`]: {
-                                visibility: 'hidden',
+                                visibility: "hidden",
                             },
                         }}
                     >
-
-                        {teams.length > 0 && (<Box
-                            component="main"
-                            sx={{
-                                my: 'auto',
-                                py: 2,
-                                pb: 5,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 2,
-                                width: 400,
-                                maxWidth: '100%',
-                                mx: 'auto',
-                                borderRadius: 'sm',
-                                '& form': {
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 2,
-                                },
-                                [`& .MuiFormLabel-asterisk`]: {
-                                    visibility: 'hidden',
-                                },
-                            }}
-                        >
-                            <Typography component="h1" level="h3">
-                                Join Team
-                            </Typography>
-
-                            <List component="nav"
+                        {teams.length > 0 && (
+                            <Box
+                                component="main"
                                 sx={{
-                                    maxHeight: 300,
-                                    overflow: 'auto',
+                                    my: "auto",
+                                    py: 2,
+                                    pb: 5,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 2,
+                                    width: 400,
+                                    maxWidth: "100%",
+                                    mx: "auto",
+                                    borderRadius: "sm",
+                                    "& form": {
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 2,
+                                    },
+                                    [`& .MuiFormLabel-asterisk`]: {
+                                        visibility: "hidden",
+                                    },
                                 }}
                             >
-                                {teams.map((team) => (
-                                    <ListItemButton key={team.teamId} title={team.teamEmail} onClick={() => {
-                                        moveToTeam(team.teamId, team.teamName);
-                                    }}>
-                                        <ListItemDecorator>
-                                            <AcUnitIcon />
-                                        </ListItemDecorator>
-                                        <Typography component="h1" level="h4">
-                                            {team.teamName}
-                                        </Typography>
-                                    </ListItemButton>
-                                ))}
-                            </List>
-                        </Box>)}
+                                <Typography component="h1" level="h3">
+                                    Join Team
+                                </Typography>
+
+                                <List
+                                    component="nav"
+                                    sx={{
+                                        maxHeight: 300,
+                                        overflow: "auto",
+                                    }}
+                                >
+                                    {teams.map((team) => (
+                                        <ListItemButton
+                                            key={team.teamId}
+                                            title={team.teamEmail}
+                                            onClick={() => {
+                                                moveToTeam(team.teamId, team.teamName);
+                                            }}
+                                        >
+                                            <ListItemDecorator>
+                                                <AcUnitIcon />
+                                            </ListItemDecorator>
+                                            <Typography component="h1" level="h4">
+                                                {team.teamName}
+                                            </Typography>
+                                        </ListItemButton>
+                                    ))}
+                                </List>
+                            </Box>
+                        )}
 
                         <Stack sx={{ gap: 4, mb: 2 }}>
                             <Stack sx={{ gap: 1 }}>
@@ -243,7 +247,7 @@ export const JoinTeam = () => {
                                 onSubmit={(event: React.FormEvent<JoinTeamFormElement>) => {
                                     event.preventDefault(); // Needs for prevent reload page
                                     const formElements = event.currentTarget.elements;
-                                    const teamName = formElements.teamName.value
+                                    const teamName = formElements.teamName.value;
                                     _createTeam(teamName);
                                 }}
                             >
@@ -259,7 +263,7 @@ export const JoinTeam = () => {
                             </form>
                         </Stack>
 
-                        <Typography level="body-sm" textAlign={'right'}>
+                        <Typography level="body-sm" textAlign={"right"}>
                             <Link href="SignIn" level="title-sm">
                                 Back to Sign in
                             </Link>
@@ -267,7 +271,7 @@ export const JoinTeam = () => {
                     </Box>
 
                     <Box component="footer" sx={{ py: 3 }}>
-                        <Typography level="body-xs" sx={{ textAlign: 'center' }}>
+                        <Typography level="body-xs" sx={{ textAlign: "center" }}>
                             © Origin {new Date().getFullYear()}
                         </Typography>
                     </Box>
@@ -275,7 +279,6 @@ export const JoinTeam = () => {
             </Box>
 
             <AdminBackground />
-
         </CssVarsProvider>
     );
-}
+};

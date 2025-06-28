@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { Input, Snackbar, Button, Stack, Typography, IconButton } from "@mui/joy";
-import EditIcon from '@mui/icons-material/Edit';
-import LinkIcon from '@mui/icons-material/Link';
+import EditIcon from "@mui/icons-material/Edit";
+import LinkIcon from "@mui/icons-material/Link";
 
-import { TaskProps } from '../../../../../../types/tasks';
-import { getDomainFromUrl } from '../../../../../../utils/urlHandler';
+import { TaskProps } from "../../../../../../types/tasks";
+import { getDomainFromUrl } from "../../../../../../utils/urlHandler";
 
 type GeneralURLManagerProps = {
-    generalLink: { url: string, title: string },
-    taskContents?: TaskProps,
-    setTaskContents?: (value: TaskProps) => void,
-    isPreviewMode: boolean,
-    setTaskUpdated?: (value: boolean) => void,
-}
+    generalLink: { url: string; title: string };
+    taskContents?: TaskProps;
+    setTaskContents?: (value: TaskProps) => void;
+    isPreviewMode: boolean;
+    setTaskUpdated?: (value: boolean) => void;
+};
 export const GeneralURLManager = (props: GeneralURLManagerProps) => {
     const { generalLink, taskContents, setTaskContents, isPreviewMode, setTaskUpdated } = props;
     const [isEditing, setIsEditing] = useState(false);
@@ -31,15 +31,15 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
         if (taskContents && setTaskContents) {
             if (isValidUrl(url)) {
                 if (title === "") {
-                    setTitle(getDomainFromUrl(url))
+                    setTitle(getDomainFromUrl(url));
                 }
                 setTaskContents({
                     ...taskContents,
-                    generalLink: { url: url, title: title }
+                    generalLink: { url: url, title: title },
                 });
                 setTitle(title);
                 setError("");
-                setIsEditing(false)
+                setIsEditing(false);
                 if (setTaskUpdated) {
                     setTaskUpdated(true);
                 }
@@ -54,58 +54,64 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
     useEffect(() => {
         if (generalLink) {
             if (generalLink.url === null || generalLink.url === "" || isEditing === true) {
-                setUrl("")
-                setTitle("")
+                setUrl("");
+                setTitle("");
             } else {
-                setUrl(generalLink.url)
-                setTitle(generalLink.title)
+                setUrl(generalLink.url);
+                setTitle(generalLink.title);
             }
         }
-    }, [taskContents])
+    }, [taskContents]);
 
     return (
         <div>
-            {(!generalLink?.url || generalLink.url === null || generalLink.url === "" || isEditing === true) && (
+            {(!generalLink?.url ||
+                generalLink.url === null ||
+                generalLink.url === "" ||
+                isEditing === true) && (
                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
                     <LinkIcon />
                     <Input
-                        key={'url'}
-                        size='sm'
+                        key={"url"}
+                        size="sm"
                         placeholder="URL"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         type="url"
-                        sx={{ width: '150px', height: '30px' }}
+                        sx={{ width: "150px", height: "30px" }}
                     />
                     <Input
-                        key={'title'}
-                        size='sm'
+                        key={"title"}
+                        size="sm"
                         placeholder="Title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        sx={{ width: '150px', height: '30px' }}
+                        sx={{ width: "150px", height: "30px" }}
                     />
-                    {error && <Snackbar
-                        autoHideDuration={5000}
-                        open={errorOpen}
-                        variant='soft'
-                        color='danger'
-                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                        onClose={(event, reason) => {
-                            if (reason === 'clickaway') {
-                                return;
-                            }
-                            setErrorOpen(false);
-                        }}
-                    >
-                        {error}
-                    </Snackbar>}
+                    {error && (
+                        <Snackbar
+                            autoHideDuration={5000}
+                            open={errorOpen}
+                            variant="soft"
+                            color="danger"
+                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                            onClose={(event, reason) => {
+                                if (reason === "clickaway") {
+                                    return;
+                                }
+                                setErrorOpen(false);
+                            }}
+                        >
+                            {error}
+                        </Snackbar>
+                    )}
                     <Button
-                        component='a'
+                        component="a"
                         variant="outlined"
                         color="neutral"
-                        size='sm'
-                        onClick={handleSave}>
+                        size="sm"
+                        onClick={handleSave}
+                    >
                         Set
                     </Button>
                 </Stack>
@@ -114,21 +120,23 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
             {isEditing === false && generalLink?.url && (
                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
                     <LinkIcon />
-                    <Typography >
+                    <Typography>
                         <a href={generalLink.url} target="_blank" rel="noopener noreferrer">
                             {title}
                         </a>
                     </Typography>
                     <IconButton
-                        component='p'
+                        component="p"
                         color="neutral"
-                        size='sm'
-                        onClick={() => { setIsEditing(true) }}
+                        size="sm"
+                        onClick={() => {
+                            setIsEditing(true);
+                        }}
                     >
                         <EditIcon />
                     </IconButton>
                 </Stack>
             )}
         </div>
-    )
-}
+    );
+};

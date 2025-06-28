@@ -1,7 +1,7 @@
-import { useRef, useEffect } from 'react';
-import { useColorScheme } from '@mui/joy/styles';
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
+import { useRef, useEffect } from "react";
+import { useColorScheme } from "@mui/joy/styles";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 
 type EmojiPickerProps = {
     editorPos?: any;
@@ -12,7 +12,7 @@ type EmojiPickerProps = {
 export const EmojiPicker = ({
     showEmojiPicker,
     setShowEmojiPicker,
-    setSelectedEmoji
+    setSelectedEmoji,
 }: EmojiPickerProps) => {
     const { mode } = useColorScheme();
     const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -22,29 +22,26 @@ export const EmojiPicker = ({
 
         // Focus back to textarea after inserting emoji
         setTimeout(() => {
-            setSelectedEmoji(emojiSymbol)
-            setShowEmojiPicker(false)
+            setSelectedEmoji(emojiSymbol);
+            setShowEmojiPicker(false);
         }, 0);
     };
 
     // Close emoji picker when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (
-                emojiPickerRef.current &&
-                !emojiPickerRef.current.contains(event.target as Node)
-            ) {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
                 setSelectedEmoji(null);
                 setShowEmojiPicker(false);
             }
         };
 
         if (showEmojiPicker) {
-            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener("mousedown", handleClickOutside);
         }
 
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [showEmojiPicker]);
 
@@ -56,15 +53,15 @@ export const EmojiPicker = ({
                     className="absolute z-[9999] bg-white shadow-lg rounded"
                     style={{
                         bottom: 210,
-                        position: 'absolute',
+                        position: "absolute",
                         zIndex: 9999,
-                        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)',
+                        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
                     }}
                 >
                     <Picker
                         data={data}
                         onEmojiSelect={handleEmojiSelect}
-                        theme={mode === 'dark' ? 'dark' : 'light'}
+                        theme={mode === "dark" ? "dark" : "light"}
                     />
                 </div>
             )}

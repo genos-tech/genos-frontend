@@ -2,7 +2,7 @@ import { getProjectTasks } from "../db/crud";
 
 self.onmessage = async (event) => {
     const projectId: number = event.data.projectId;
-    const tasks = await getProjectTasks(projectId)
+    const tasks = await getProjectTasks(projectId);
     if (tasks) {
         self.postMessage(tasks);
     } else {
@@ -10,4 +10,4 @@ self.onmessage = async (event) => {
     }
 };
 
-export { };
+export {};

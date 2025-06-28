@@ -5,4 +5,4 @@ export const TaskDashboard = () => {
             {/* Add your dashboard components here */}
         </div>
     );
-}
+};

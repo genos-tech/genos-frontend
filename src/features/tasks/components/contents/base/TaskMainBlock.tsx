@@ -1,46 +1,46 @@
 import { Socket } from "socket.io-client";
 import { Box, Grid, IconButton, ListItem, List, Typography } from "@mui/joy";
-import AddIcon from '@mui/icons-material/Add';
+import AddIcon from "@mui/icons-material/Add";
 
-import { TaskDueDateInput } from './sub/TaskDueDateInput';
-import { GitHubURLManager } from './sub/GitHubURLManager';
-import { GeneralURLManager } from './sub/GeneralURLManager';
-import { ACProjectTags } from '../../autocompletes/ACProjectTags';
-import { ACTeamUsers } from '../../autocompletes/ACTeamUsers';
-import { ACTeamProjects } from '../../autocompletes/ACTeamProjects';
-import { ACTaskPriority } from '../../autocompletes/ACTaskPriority';
-import { ACTaskEffortLevel } from '../../autocompletes/ACTaskEffortLevel';
-import { ACTaskStatus } from '../../autocompletes/ACTaskStatus';
+import { TaskDueDateInput } from "./sub/TaskDueDateInput";
+import { GitHubURLManager } from "./sub/GitHubURLManager";
+import { GeneralURLManager } from "./sub/GeneralURLManager";
+import { ACProjectTags } from "../../autocompletes/ACProjectTags";
+import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
+import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
+import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
+import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
+import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
 import { TaskProps, ProjectProps, TagListProps } from "../../../../../types/tasks";
 import { ChatProps } from "../../../../../types/chat";
-import { UserProps } from '../../../../../types/admin';
-import { AvatarWithStatus } from '../../../../../components/utils/avatarWithStatus';
+import { UserProps } from "../../../../../types/admin";
+import { AvatarWithStatus } from "../../../../../components/utils/avatarWithStatus";
 
 type TaskMainBlockProps = {
-    socket: Socket | null,
-    taskContents: TaskProps,
-    setTaskContents: (value: TaskProps) => void,
-    teamMembers: UserProps[],
-    teamProjects: ProjectProps[],
-    projectTags: TagListProps[],
-    myself: UserProps,
+    socket: Socket | null;
+    taskContents: TaskProps;
+    setTaskContents: (value: TaskProps) => void;
+    teamMembers: UserProps[];
+    teamProjects: ProjectProps[];
+    projectTags: TagListProps[];
+    myself: UserProps;
     assignee: UserProps;
-    setAssignee: (value: UserProps) => void,
+    setAssignee: (value: UserProps) => void;
     reporter: UserProps;
-    setReporter: (value: UserProps) => void,
-    isOpenTeamMembersList: boolean,
-    setIsOpenTeamMembersList: (value: boolean) => void,
-    isOpenProjectList: boolean,
-    setIsOpenProjectList: (value: boolean) => void,
-    isOpenTagList: boolean,
-    setIsOpenTagList: (value: boolean) => void,
-    setOpenCreateTag: (value: boolean) => void,
-    setCurrentProject: (value: ProjectProps) => void,
-    isPreviewMode: boolean,
-    setTaskUpdated?: (value: boolean) => void,
-    setOpeningService: (service: number) => void,
-    setCurrentMainChat: (chat: ChatProps) => void,
-}
+    setReporter: (value: UserProps) => void;
+    isOpenTeamMembersList: boolean;
+    setIsOpenTeamMembersList: (value: boolean) => void;
+    isOpenProjectList: boolean;
+    setIsOpenProjectList: (value: boolean) => void;
+    isOpenTagList: boolean;
+    setIsOpenTagList: (value: boolean) => void;
+    setOpenCreateTag: (value: boolean) => void;
+    setCurrentProject: (value: ProjectProps) => void;
+    isPreviewMode: boolean;
+    setTaskUpdated?: (value: boolean) => void;
+    setOpeningService: (service: number) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
+};
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
         socket,
@@ -65,21 +65,21 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         isPreviewMode,
         setTaskUpdated,
         setOpeningService,
-        setCurrentMainChat
-    } = props
+        setCurrentMainChat,
+    } = props;
 
     return (
         <Box
             sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <List aria-labelledby="decorated-list-demo">
-                    <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
+                    <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Assignee:</Typography>
                         <AvatarWithStatus
                             userProfile={assignee}
@@ -102,7 +102,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         />
                     </ListItem>
 
-                    <ListItem sx={{ display: "flex", alignItems: "center", width: '65%' }}>
+                    <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Reporter:</Typography>
                         <AvatarWithStatus
                             userProfile={reporter}
@@ -155,7 +155,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     size="sm"
                                     variant="plain"
                                     color="neutral"
-                                    onClick={() => { setOpenCreateTag(true) }}
+                                    onClick={() => {
+                                        setOpenCreateTag(true);
+                                    }}
                                 >
                                     <AddIcon />
                                 </IconButton>
@@ -175,7 +177,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             </ListItem>
                         </Grid>
                         <Grid key={2} xs={6}>
-
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography sx={{ minWidth: "100px" }}>Effort Level:</Typography>
                                 <ACTaskEffortLevel
@@ -184,12 +185,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     setTaskUpdated={setTaskUpdated}
                                 />
                             </ListItem>
-
                         </Grid>
                     </Grid>
 
                     {isPreviewMode === true && (
-                        <ListItem sx={{ width: '49%' }}>
+                        <ListItem sx={{ width: "49%" }}>
                             <Typography sx={{ minWidth: "80px" }}>Status:</Typography>
                             <ACTaskStatus
                                 taskContents={taskContents}
@@ -229,5 +229,5 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 </List>
             </Box>
         </Box>
-    )
-}
+    );
+};

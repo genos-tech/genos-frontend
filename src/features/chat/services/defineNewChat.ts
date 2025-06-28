@@ -19,5 +19,5 @@ export const defineNewChat = (
         latestMessageText: messages[messages.length - 1].contentText,
         TSLastMessage: messages[messages.length - 1].tsSent,
     };
-    return newChat
-}
+    return newChat;
+};

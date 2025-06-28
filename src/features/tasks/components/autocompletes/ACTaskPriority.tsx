@@ -1,23 +1,19 @@
-import { alpha } from '@mui/system';
-import { ListItemContent, Chip } from '@mui/joy';
-import Autocomplete from '@mui/joy/Autocomplete';
-import AutocompleteOption from '@mui/joy/AutocompleteOption';
-import { useColorScheme } from '@mui/joy/styles';
+import { alpha } from "@mui/system";
+import { ListItemContent, Chip } from "@mui/joy";
+import Autocomplete from "@mui/joy/Autocomplete";
+import AutocompleteOption from "@mui/joy/AutocompleteOption";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { priorities } from "../../utils/taskMeta";
-import { TaskProps } from '../../../../types/tasks';
+import { TaskProps } from "../../../../types/tasks";
 
 type ACTaskPriorityProps = {
-    taskContents: TaskProps,
-    setTaskContents: (value: TaskProps) => void,
-    setTaskUpdated?: (value: boolean) => void,
-}
+    taskContents: TaskProps;
+    setTaskContents: (value: TaskProps) => void;
+    setTaskUpdated?: (value: boolean) => void;
+};
 export const ACTaskPriority = (props: ACTaskPriorityProps) => {
-    const {
-        taskContents,
-        setTaskContents,
-        setTaskUpdated
-    } = props;
+    const { taskContents, setTaskContents, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
 
@@ -29,7 +25,9 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
             options={priorities}
             getOptionLabel={(option) => option.priority || ""}
             value={
-                (taskContents && taskContents.priority.priority !== null && taskContents.priority.priority !== "")
+                taskContents &&
+                taskContents.priority.priority !== null &&
+                taskContents.priority.priority !== ""
                     ? [taskContents.priority]
                     : []
             }
@@ -42,12 +40,14 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                             key={key} // pass the key directly
                             variant="soft"
                             sx={{
-                                backgroundColor: item.color ? alpha(item.color, mode === 'dark' ? 0.5 : 0.75) : 'transparent',
+                                backgroundColor: item.color
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
+                                    : "transparent",
                                 color: item.textColor,
-                                fontWeight: 'bold',
-                                borderRadius: '7px',
+                                fontWeight: "bold",
+                                borderRadius: "7px",
                             }}
-                            size='sm'
+                            size="sm"
                         >
                             {item.priority}
                         </Chip>
@@ -56,17 +56,19 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
             }
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.priority}>
-                    <ListItemContent sx={{ fontSize: 'sm' }}>
+                    <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.priority} // pass the key directly
                             variant="soft"
                             sx={{
-                                backgroundColor: option.color ? alpha(option.color, mode === 'dark' ? 0.5 : 0.75) : 'transparent',
+                                backgroundColor: option.color
+                                    ? alpha(option.color, mode === "dark" ? 0.5 : 0.75)
+                                    : "transparent",
                                 color: option.textColor,
-                                fontWeight: 'bold',
-                                borderRadius: '7px',
+                                fontWeight: "bold",
+                                borderRadius: "7px",
                             }}
-                            size='sm'
+                            size="sm"
                         >
                             {option.priority}
                         </Chip>
@@ -79,7 +81,7 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                         (async () => {
                             setTaskContents({
                                 ...taskContents,
-                                priority: value.slice(-1)[0]
+                                priority: value.slice(-1)[0],
                             });
                             if (setTaskUpdated) {
                                 setTaskUpdated(true);
@@ -89,7 +91,12 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                         (async () => {
                             setTaskContents({
                                 ...taskContents,
-                                priority: { code: 0, priority: null, color: null, textColor: null }
+                                priority: {
+                                    code: 0,
+                                    priority: null,
+                                    color: null,
+                                    textColor: null,
+                                },
                             });
                             if (setTaskUpdated) {
                                 setTaskUpdated(true);
@@ -102,5 +109,5 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
             sx={{ width: "100%" }}
             openOnFocus={true}
         />
-    )
-}
+    );
+};

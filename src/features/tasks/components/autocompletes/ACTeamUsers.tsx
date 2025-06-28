@@ -1,20 +1,20 @@
-import Autocomplete from '@mui/joy/Autocomplete';
+import Autocomplete from "@mui/joy/Autocomplete";
 
-import { UserProps } from '../../../../types/admin';
-import { TaskProps } from '../../../../types/tasks';
+import { UserProps } from "../../../../types/admin";
+import { TaskProps } from "../../../../types/tasks";
 
 type ACTeamUsersProps = {
     myself: UserProps;
     initialUser: UserProps;
-    teamMembers: UserProps[],
-    taskContents: TaskProps,
-    setTaskContents: (value: TaskProps) => void,
-    setUser: (value: UserProps) => void,
-    isOpenTeamMembersList: boolean,
-    setIsOpenTeamMembersList: (value: boolean) => void,
-    isAssignee: boolean,
-    setTaskUpdated?: (value: boolean) => void,
-}
+    teamMembers: UserProps[];
+    taskContents: TaskProps;
+    setTaskContents: (value: TaskProps) => void;
+    setUser: (value: UserProps) => void;
+    isOpenTeamMembersList: boolean;
+    setIsOpenTeamMembersList: (value: boolean) => void;
+    isAssignee: boolean;
+    setTaskUpdated?: (value: boolean) => void;
+};
 export const ACTeamUsers = (props: ACTeamUsersProps) => {
     const {
         myself,
@@ -26,7 +26,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         isOpenTeamMembersList,
         setIsOpenTeamMembersList,
         isAssignee,
-        setTaskUpdated
+        setTaskUpdated,
     } = props;
 
     return (
@@ -41,7 +41,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                     if (isAssignee) {
                         setTaskContents({
                             ...taskContents,
-                            assignee: value
+                            assignee: value,
                         });
                         if (setTaskUpdated) {
                             setTaskUpdated(true);
@@ -49,18 +49,18 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                     } else {
                         setTaskContents({
                             ...taskContents,
-                            reporter: value
+                            reporter: value,
                         });
                         if (setTaskUpdated) {
                             setTaskUpdated(true);
                         }
                     }
-                    setUser(value)
+                    setUser(value);
                 }
             }}
             onOpen={() => setIsOpenTeamMembersList(!isOpenTeamMembersList)}
             size="sm"
-            sx={{ width: '100%' }}
+            sx={{ width: "100%" }}
         />
-    )
-}
+    );
+};

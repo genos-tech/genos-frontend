@@ -10,10 +10,10 @@ export type UserProps = {
 };
 
 export type Team = {
-    teamId: string,
-    teamName: string,
-    teamEmail: string,
-}
+    teamId: string;
+    teamName: string;
+    teamEmail: string;
+};
 
 // Response
 export type SignInResponse = {
@@ -34,7 +34,7 @@ export type SignUpResponse = {
 
 export type MyTeamResponse = {
     team_ids: number[];
-}
+};
 
 export type JoinTeamResponse = {
     teamId: string;

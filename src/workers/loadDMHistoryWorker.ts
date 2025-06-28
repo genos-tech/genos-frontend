@@ -1,4 +1,4 @@
-import { loadDMHistory } from '../features/chat/services/loadDMHistory';
+import { loadDMHistory } from "../features/chat/services/loadDMHistory";
 import { UserProps } from "../types/admin";
 import { ChatProps, MessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
@@ -10,17 +10,21 @@ self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;
     const accessToken: string = event.data.accessToken;
 
-    await clearStore(STORES.DM_CHATS)
+    await clearStore(STORES.DM_CHATS);
 
     // Load data from backend
     const dmHistory: ChatProps[] | undefined = await loadDMHistory(
-        myself.teamId, myself.teamName, myself.userId, accessToken);
+        myself.teamId,
+        myself.teamName,
+        myself.userId,
+        accessToken
+    );
 
     if (dmHistory) {
         for (let i = 0; i < dmHistory.length; i += 1) {
-            const dmChat: ChatProps = dmHistory[i]
+            const dmChat: ChatProps = dmHistory[i];
 
-            // Insert chat 
+            // Insert chat
             const newChatData = {
                 storeName: STORES.DM_CHATS,
                 data: {
@@ -31,17 +35,17 @@ self.onmessage = async (event) => {
                     dmPartnerUser: dmChat.dmPartnerUser,
                     latestMessage: dmChat.latestMessage,
                     latestMessageText: dmChat.latestMessageText,
-                    TSLastMessage: dmChat.TSLastMessage
-                }
-            }
-            await addData(newChatData)
+                    TSLastMessage: dmChat.TSLastMessage,
+                },
+            };
+            await addData(newChatData);
 
             // Insert messages by mini-batch
             for (let i = 0; i < dmChat.messages.length; i += BATCH_SIZE) {
                 const miniBatchMessages: MessageProps[] = dmChat.messages.slice(i, i + BATCH_SIZE);
                 await miniBatchInsertMessages({
                     storeName: STORES.DM_MESSAGES,
-                    miniBatchMessages: miniBatchMessages
+                    miniBatchMessages: miniBatchMessages,
                 });
             }
         }
@@ -50,7 +54,6 @@ self.onmessage = async (event) => {
     } else {
         self.postMessage("done");
     }
-
 };
 
-export { };
+export {};

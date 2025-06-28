@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { Socket } from "socket.io-client";
 
-import { addChat } from '../services/addChat';
+import { addChat } from "../services/addChat";
 import { addMessage } from "../services/addMessage";
 import { addThreadMessage } from "../services/addThreadMessage";
-import { UserProps } from '../../../types/admin';
+import { UserProps } from "../../../types/admin";
 import {
     AllChatProps,
     ChatProps,
@@ -12,7 +12,7 @@ import {
     ThreadMessageProps,
     NewMessageProps,
     NewThreadMessageProps,
-    ThreadProps
+    ThreadProps,
 } from "../../../types/chat";
 
 type wsMessageHandleHookProps = {
@@ -54,13 +54,12 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
             TSLastMessage: newChatMessage.tsSent,
-        }
+        };
         if (newChat) {
-            await addChat(newChat, newMessage.isDm)
-            setAllChats()
+            await addChat(newChat, newMessage.isDm);
+            setAllChats();
         }
-    }
-
+    };
 
     useEffect(() => {
         if (socket === null) {
@@ -85,8 +84,8 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
         socket.on("message", async (message) => {
             // console.log("message:", message)
             if (message.chatId !== null) {
-                var fromMe: boolean = false
-                var toMe: boolean = false
+                var fromMe: boolean = false;
+                var toMe: boolean = false;
 
                 if (message.isThread === true) {
                     const newMessage: NewThreadMessageProps = message;
@@ -100,7 +99,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         sender: newMessage.sender,
                         tsSent: newMessage.tsSent,
                         taskId: newMessage.taskId,
-                    }
+                    };
                     const updatedThreadChat: ThreadProps = {
                         chatId: newMessage.chatId,
                         chatName: newMessage.chatName,
@@ -109,54 +108,56 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         dmPartnerUser: newMessage.dmPartnerUser,
                         taskId: newThreadMessage.taskId,
                         unread: false,
-                        messages: currentThreadChat ? [...currentThreadChat.messages, newThreadMessage] : [newThreadMessage],
+                        messages: currentThreadChat
+                            ? [...currentThreadChat.messages, newThreadMessage]
+                            : [newThreadMessage],
                         TSLastMessage: newThreadMessage.tsSent,
                     };
                     if (updatedThreadChat && newThreadMessage) {
                         if (message.isDm === true) {
                             if (newMessage.dmPartnerUser.userId === myself.userId) {
                                 if (newMessage.dmPartnerUser.userId === newMessage.sender.userId) {
-                                    console.log("Personal DM thread")
-                                    fromMe = true
-                                    toMe = true
+                                    console.log("Personal DM thread");
+                                    fromMe = true;
+                                    toMe = true;
                                 } else {
-                                    console.log("DM thread from my friend")
-                                    toMe = true
+                                    console.log("DM thread from my friend");
+                                    toMe = true;
                                 }
                             } else {
                                 if (newMessage.sender.userId === myself.userId) {
-                                    console.log("DM thread from myself")
-                                    fromMe = true
-                                    toMe = true
+                                    console.log("DM thread from myself");
+                                    fromMe = true;
+                                    toMe = true;
                                 } else {
-                                    console.log("DM thread not for me")
+                                    console.log("DM thread not for me");
                                 }
                             }
 
                             if (fromMe === false && toMe === true) {
                                 addThreadMessage(newThreadMessage, newMessage.isDm);
                                 if (
-                                    currentThreadChat !== undefined
-                                    && newMessage.chatId === currentThreadChat.chatId
-                                    && newThreadMessage.threadId === currentThreadChat.threadId
+                                    currentThreadChat !== undefined &&
+                                    newMessage.chatId === currentThreadChat.chatId &&
+                                    newThreadMessage.threadId === currentThreadChat.threadId
                                 ) {
                                     setCurrentThreadChat(updatedThreadChat);
                                 }
                             }
                         } else {
                             if (newMessage.sender.userId === myself.userId) {
-                                console.log("GM thread from myself")
-                                fromMe = true
+                                console.log("GM thread from myself");
+                                fromMe = true;
                             } else {
-                                console.log("GM thread from someone")
+                                console.log("GM thread from someone");
                             }
 
                             if (fromMe === false) {
                                 addThreadMessage(newThreadMessage, newMessage.isDm);
                                 if (
-                                    currentThreadChat !== undefined
-                                    && newMessage.chatId === currentThreadChat.chatId
-                                    && newThreadMessage.threadId === currentThreadChat.threadId
+                                    currentThreadChat !== undefined &&
+                                    newMessage.chatId === currentThreadChat.chatId &&
+                                    newThreadMessage.threadId === currentThreadChat.threadId
                                 ) {
                                     setCurrentThreadChat(updatedThreadChat);
                                 }
@@ -174,7 +175,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         sender: newMessage.sender,
                         numReplies: newMessage.numReplies,
                         tsSent: newMessage.tsSent,
-                    }
+                    };
                     const updatedChat: ChatProps = {
                         chatId: newMessage.chatId,
                         chatName: newMessage.chatName,
@@ -190,77 +191,95 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         if (message.isDm === true) {
                             if (newMessage.dmPartnerUser.userId === myself.userId) {
                                 if (newMessage.dmPartnerUser.userId === newMessage.sender.userId) {
-                                    console.log("Personal DM")
-                                    fromMe = true
-                                    toMe = true
+                                    console.log("Personal DM");
+                                    fromMe = true;
+                                    toMe = true;
                                 } else {
-                                    console.log("DM from my friend")
-                                    toMe = true
+                                    console.log("DM from my friend");
+                                    toMe = true;
                                 }
                             } else {
                                 if (newMessage.sender.userId === myself.userId) {
-                                    console.log("DM from myself")
-                                    fromMe = true
-                                    toMe = true
+                                    console.log("DM from myself");
+                                    fromMe = true;
+                                    toMe = true;
                                 } else {
-                                    console.log("DM not for me")
+                                    console.log("DM not for me");
                                 }
                             }
 
                             if (fromMe === false && toMe === true) {
-                                await addMessage(newChatMessage, newMessage.isDm)
-                                await updateChat(newMessage, newChatMessage)
+                                await addMessage(newChatMessage, newMessage.isDm);
+                                await updateChat(newMessage, newChatMessage);
 
-                                if (newMessage.chatId === currentMainChat.chatId || currentMainChat.chatId === -1) {
+                                if (
+                                    newMessage.chatId === currentMainChat.chatId ||
+                                    currentMainChat.chatId === -1
+                                ) {
                                     setCurrentMainChat(updatedChat);
                                 } else if (newMessage.chatId === currentSubChat?.chatId) {
                                     setCurrentSubChat(updatedChat);
                                 } else {
-                                    console.log("Unexpected DM (newMessage.chatId):", newMessage.chatId)
-                                    console.log("Unexpected DM (currentMainChat.chatId):", currentMainChat.chatId)
-                                    console.log("Unexpected DM (currentSubChat.chatId):", currentSubChat?.chatId)
+                                    console.log(
+                                        "Unexpected DM (newMessage.chatId):",
+                                        newMessage.chatId
+                                    );
+                                    console.log(
+                                        "Unexpected DM (currentMainChat.chatId):",
+                                        currentMainChat.chatId
+                                    );
+                                    console.log(
+                                        "Unexpected DM (currentSubChat.chatId):",
+                                        currentSubChat?.chatId
+                                    );
                                 }
-
-                            }
-                            else if (fromMe === true && toMe === true) {
+                            } else if (fromMe === true && toMe === true) {
                                 // Only updating indexedDB for chat, not updating messaging pane
-                                await addMessage(newChatMessage, newMessage.isDm)
-                                await updateChat(newMessage, newChatMessage)
+                                await addMessage(newChatMessage, newMessage.isDm);
+                                await updateChat(newMessage, newChatMessage);
 
                                 // Insert the message when a user selects a new user
                                 // for DM from Search list in ChatPane
                                 if (newMessage.chatName !== newMessage.sender.userName) {
-                                    addMessage(newChatMessage, newMessage.isDm)
+                                    addMessage(newChatMessage, newMessage.isDm);
                                 }
                             }
                         } else {
                             if (newMessage.sender.userId === myself.userId) {
-                                console.log("GM from myself")
-                                fromMe = true
+                                console.log("GM from myself");
+                                fromMe = true;
                             } else {
-                                console.log("GM from someone")
+                                console.log("GM from someone");
                             }
 
                             if (fromMe === false) {
                                 if (allChats.length > 0) {
-                                    await addMessage(newChatMessage, newMessage.isDm)
-                                    await updateChat(newMessage, newChatMessage)
+                                    await addMessage(newChatMessage, newMessage.isDm);
+                                    await updateChat(newMessage, newChatMessage);
 
                                     if (newMessage.chatId === currentMainChat.chatId) {
                                         setCurrentMainChat(updatedChat);
                                     } else if (newMessage.chatId === currentSubChat?.chatId) {
                                         setCurrentSubChat(updatedChat);
                                     } else {
-                                        console.log("Unexpected GM (newMessage.chatId):", newMessage.chatId)
-                                        console.log("Unexpected GM (currentMainChat.chatId):", currentMainChat.chatId)
-                                        console.log("Unexpected GM (currentSubChat.chatId):", currentSubChat?.chatId)
+                                        console.log(
+                                            "Unexpected GM (newMessage.chatId):",
+                                            newMessage.chatId
+                                        );
+                                        console.log(
+                                            "Unexpected GM (currentMainChat.chatId):",
+                                            currentMainChat.chatId
+                                        );
+                                        console.log(
+                                            "Unexpected GM (currentSubChat.chatId):",
+                                            currentSubChat?.chatId
+                                        );
                                     }
                                 }
-                            }
-                            else if (fromMe) {
+                            } else if (fromMe) {
                                 // Only updating indexedDB for chat, not updating messaging pane
-                                await addMessage(newChatMessage, newMessage.isDm)
-                                await updateChat(newMessage, newChatMessage)
+                                await addMessage(newChatMessage, newMessage.isDm);
+                                await updateChat(newMessage, newChatMessage);
                             }
                         }
                     }
@@ -272,4 +291,4 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
             socket.off("connect");
         };
     }, [accessToken, allChats, currentMainChat, currentSubChat, currentThreadChat]);
-}
+};
