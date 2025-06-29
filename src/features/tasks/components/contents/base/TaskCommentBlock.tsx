@@ -57,7 +57,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                             ref={boxRef}
                             className="custom-scrollbar"
                             sx={{
-                                height: Math.min(taskComments.length * 120, 300),
+                                height: Math.min(taskComments.length * 150, 500),
                                 pb: "10px",
                                 overflowY: "scroll",
                                 overflowX: "hidden",

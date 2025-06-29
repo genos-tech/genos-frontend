@@ -311,6 +311,25 @@
   scrollbar-color: #888 transparent;
 }
 
+.bn-task-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bn-task-editor::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.bn-task-editor::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+.bn-task-editor {
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: #888 transparent;
+}
+
 .bn-container[data-changing-font-demo] .bn-editor * {
   font-family: "Comic Sans MS", sans-serif;
 }
@@ -331,12 +350,16 @@ div[data-floating-ui-focusable] {
 
 .bn-task-box-light .bn-editor {
   padding-top: 20px;
+  padding-bottom: 20px;
   height: 520px;
+  overflow-y: scroll;
 }
 
 .bn-task-box-dark .bn-editor {
   padding-top: 20px;
+  padding-bottom: 20px;
   height: 520px;
+  overflow-y: scroll;
 }
 
 
