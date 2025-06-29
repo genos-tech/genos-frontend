@@ -189,7 +189,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
         }
     }, [uploadedFiles]);
 
-    // File upload manager via button (not drag and drop)
+    // File upload manager via "Select File" button on the top right side (not drag and drop)
     const inputRef = useRef<HTMLInputElement | null>(null);
     const handleButtonClick = () => {
         inputRef.current?.click();
@@ -204,7 +204,9 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                         attachments: [{ attachment_id: -1, file: file }],
                     });
                 });
-                setIsAddedNewFile(true);
+                if (setTaskUpdated) {
+                    setTaskUpdated(true);
+                }
             }
         }
     };
