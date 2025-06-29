@@ -215,15 +215,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ m: 2 }} />
 
-            <TaskAttachmentBlock
-                uploadedFiles={uploadedFiles}
-                taskContents={taskContents}
-                setTaskContents={setTaskContents}
-                setIsAttachmentDeleted={setIsAttachmentDeleted}
-            />
-
-            <Divider sx={{ m: 2 }} />
-
             <CreateTaskFooter
                 myself={myself}
                 accessToken={accessToken}
