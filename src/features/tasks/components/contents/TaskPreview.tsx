@@ -28,7 +28,7 @@ type TaskPreviewProps = {
     myself: UserProps;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTask: TaskProps;
-    setIsCreatingTask: (value: boolean) => void;
+    setIsCreatingTask: (value: any) => void;
     setIsTaskContentVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps) => void;
     setOpenCreateProject: (value: boolean) => void;

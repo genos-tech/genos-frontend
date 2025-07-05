@@ -54,7 +54,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
-    const [isCreatingTask, setIsCreatingTask] = useState(false);
+    const [isCreatingTask, setIsCreatingTask] = useState({ flag: false, parentTaskId: null });
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
@@ -350,7 +350,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     paddingRight: "10px",
                                                 }}
                                                 onClick={() => {
-                                                    setIsCreatingTask(true);
+                                                    setIsCreatingTask({
+                                                        flag: true,
+                                                        parentTaskId: null,
+                                                    });
                                                 }}
                                             >
                                                 <AddIcon />
@@ -403,7 +406,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 </Box>
                             </Panel>
 
-                            {isCreatingTask && (
+                            {isCreatingTask.flag && (
                                 <>
                                     {/* Resizable Handle with MUI sx Styling */}
                                     <PanelResizeHandle
@@ -454,6 +457,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsNewTaskCreated={setIsNewTaskCreated}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
+                                                parentTaskId={isCreatingTask.parentTaskId}
                                             />
                                         </Box>
                                     </Panel>

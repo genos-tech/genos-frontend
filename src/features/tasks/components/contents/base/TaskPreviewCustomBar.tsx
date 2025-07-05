@@ -9,7 +9,7 @@ type TaskPreviewCustomBarProps = {
     currentTaskContent: TaskProps;
     setCurrentTaskContent: (value: TaskProps) => void;
     setTaskUpdated: (value: boolean) => void;
-    setIsCreatingTask: (value: boolean) => void;
+    setIsCreatingTask: (value: any) => void;
 };
 export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
     const { currentTaskContent, setCurrentTaskContent, setTaskUpdated, setIsCreatingTask } = props;
@@ -56,7 +56,14 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
                     marginLeft: "auto",
                 }}
                 onClick={() => {
-                    setIsCreatingTask(true);
+                    if (currentTaskContent.id !== undefined) {
+                        setIsCreatingTask({
+                            flag: true,
+                            parentTaskId: currentTaskContent.id,
+                        });
+                    } else {
+                        console.error("Task ID nod defined error.");
+                    }
                 }}
             >
                 <AddIcon />

@@ -36,7 +36,7 @@ type CreateTaskProps = {
     chatId: number | null;
     threadId: number | null;
     setIsTaskContentVisible: (value: boolean) => void;
-    setIsCreatingTask?: (value: boolean) => void;
+    setIsCreatingTask?: (value: any) => void;
     setIsOpeningTask?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
@@ -48,6 +48,7 @@ type CreateTaskProps = {
     setIsNewTaskCreated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    parentTaskId: number | null;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -67,6 +68,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setIsNewTaskCreated,
         setOpeningService,
         setCurrentMainChat,
+        parentTaskId,
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
@@ -89,6 +91,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         githubLink: { url: "", title: "" },
         generalLink: { url: "", title: "" },
         attachments: [],
+        parentTaskId: parentTaskId,
     });
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>([]);
@@ -105,7 +108,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     useEffect(() => {
         if (isSubmitted) {
             if (setIsCreatingTask) {
-                setIsCreatingTask(false);
+                setIsCreatingTask({
+                    flag: false,
+                    parentTaskId: null,
+                });
             }
 
             if (setIsOpeningTask) {

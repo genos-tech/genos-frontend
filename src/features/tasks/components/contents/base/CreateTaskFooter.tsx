@@ -15,7 +15,7 @@ type CreateTaskFooterProps = {
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
-    setIsCreatingTask?: (value: boolean) => void;
+    setIsCreatingTask?: (value: any) => void;
     setCurrentPreviewTaskId: (value: number) => void;
 };
 export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
@@ -42,7 +42,10 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                 size="sm"
                 onClick={() => {
                     if (setIsCreatingTask) {
-                        setIsCreatingTask(false);
+                        setIsCreatingTask({
+                            flag: false,
+                            parentTaskId: null,
+                        });
                     }
                 }}
             >

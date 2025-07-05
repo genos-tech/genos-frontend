@@ -24,7 +24,7 @@ type TaskTitleBlockProps = {
     taskContents: TaskProps;
     taskTitle: string;
     setTaskTitle: (value: string) => void;
-    setIsCreatingTask?: (value: boolean) => void;
+    setIsCreatingTask?: (value: any) => void;
     setIsTaskContentVisible?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
@@ -136,7 +136,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     color="neutral"
                     onClick={() => {
                         if (isPreviewMode === false && setIsCreatingTask) {
-                            setIsCreatingTask(false);
+                            setIsCreatingTask({
+                                flag: false,
+                                parentTaskId: null,
+                            });
                         }
                         if (isPreviewMode === true && setIsTaskContentVisible) {
                             setIsTaskContentVisible(false);

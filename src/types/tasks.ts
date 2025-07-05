@@ -97,7 +97,7 @@ export type TaskProps = {
         title: string;
     };
     attachments: AttachmentFileProps[];
-    parentTaskId?: number;
+    parentTaskId: number | null;
 };
 
 export type TaskTableProps = {
