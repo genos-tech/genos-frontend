@@ -54,7 +54,11 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
-    const [isCreatingTask, setIsCreatingTask] = useState({ flag: false, parentTaskId: null });
+    const [isCreatingTask, setIsCreatingTask] = useState({
+        flag: false,
+        parentTaskId: null,
+        rootTaskId: null,
+    });
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
@@ -353,6 +357,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     setIsCreatingTask({
                                                         flag: true,
                                                         parentTaskId: null,
+                                                        rootTaskId: null,
                                                     });
                                                 }}
                                             >
@@ -458,6 +463,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
                                                 parentTaskId={isCreatingTask.parentTaskId}
+                                                rootTaskId={isCreatingTask.rootTaskId}
                                             />
                                         </Box>
                                     </Panel>

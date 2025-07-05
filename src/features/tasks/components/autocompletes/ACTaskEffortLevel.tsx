@@ -77,7 +77,6 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
             )}
             onChange={(event, value) => {
                 if (value !== null) {
-                    console.log("setTaskUpdated:", setTaskUpdated);
                     if (value.length > 0) {
                         (async () => {
                             setTaskContents({

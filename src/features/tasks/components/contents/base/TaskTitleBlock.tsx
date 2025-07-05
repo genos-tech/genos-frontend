@@ -139,6 +139,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             setIsCreatingTask({
                                 flag: false,
                                 parentTaskId: null,
+                                rootTaskId: null,
                             });
                         }
                         if (isPreviewMode === true && setIsTaskContentVisible) {

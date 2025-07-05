@@ -97,7 +97,8 @@ export type TaskProps = {
         title: string;
     };
     attachments: AttachmentFileProps[];
-    parentTaskId: number | null;
+    parentTaskId: string | null;
+    rootTaskId: string | null;
 };
 
 export type TaskTableProps = {
@@ -113,7 +114,7 @@ export type TaskTableProps = {
     assigneeEmail: string | null;
     assigneeName: string | null;
     assigneeImgPath: string | null;
-    parentTaskId: number | null;
+    parentTaskId: string | null;
     threadId: number | null;
     tags: TagListProps[];
     concatTags: string | null;

@@ -45,6 +45,7 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                         setIsCreatingTask({
                             flag: false,
                             parentTaskId: null,
+                            rootTaskId: null,
                         });
                     }
                 }}

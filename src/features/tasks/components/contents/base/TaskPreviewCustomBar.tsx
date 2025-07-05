@@ -56,10 +56,14 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
                     marginLeft: "auto",
                 }}
                 onClick={() => {
-                    if (currentTaskContent.id !== undefined) {
+                    if (
+                        currentTaskContent.id !== undefined &&
+                        currentTaskContent.rootTaskId != null
+                    ) {
                         setIsCreatingTask({
                             flag: true,
                             parentTaskId: currentTaskContent.id,
+                            rootTaskId: currentTaskContent.rootTaskId,
                         });
                     } else {
                         console.error("Task ID nod defined error.");

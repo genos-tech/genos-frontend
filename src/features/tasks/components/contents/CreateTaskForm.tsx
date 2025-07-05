@@ -48,7 +48,8 @@ type CreateTaskProps = {
     setIsNewTaskCreated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    parentTaskId: number | null;
+    parentTaskId: string | null;
+    rootTaskId: string | null;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -69,6 +70,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setOpeningService,
         setCurrentMainChat,
         parentTaskId,
+        rootTaskId,
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
@@ -92,6 +94,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         generalLink: { url: "", title: "" },
         attachments: [],
         parentTaskId: parentTaskId,
+        rootTaskId: rootTaskId,
     });
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>([]);
@@ -111,6 +114,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsCreatingTask({
                     flag: false,
                     parentTaskId: null,
+                    rootTaskId: null,
                 });
             }
 

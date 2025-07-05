@@ -81,6 +81,7 @@ export const uploadTask = async (props: uploadTaskProps) => {
                         chat_id: chatId || null,
                         thread_id: threadId || null,
                         parent_task_id: taskContents.parentTaskId,
+                        root_task_id: taskContents.rootTaskId,
                     }),
                 });
 
