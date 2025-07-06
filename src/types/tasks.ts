@@ -71,7 +71,7 @@ export type TaskListByTagProps = {
 };
 
 export type TaskProps = {
-    id?: string;
+    id?: number;
     project: ProjectProps | null;
     title: string;
     body: PartialBlock[];
@@ -97,8 +97,8 @@ export type TaskProps = {
         title: string;
     };
     attachments: AttachmentFileProps[];
-    parentTaskId: string | null;
-    rootTaskId: string | null;
+    parentTaskId: number | null;
+    rootTaskId: number | null;
 };
 
 export type TaskTableProps = {

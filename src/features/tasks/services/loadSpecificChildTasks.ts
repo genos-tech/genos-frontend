@@ -1,18 +1,20 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { UserProps } from "../../../types/admin";
 
-export const deleteTaskAttachment = async (
-    taskId: number,
-    attachmentId: number,
+export const loadSpecificChildTasks = async (
+    myself: UserProps,
+    projectId: number,
+    currentTaskId: number,
     accessToken: string | null
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `task=${taskId}&attachment_id=${attachmentId}`;
-            const res = await api.delete(`/task/attachment/?${query}`);
-            return res;
+            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&current_task_id=${currentTaskId}`;
+            const res = await api.get(`/task/childTasks/?${query}`);
+            return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");
         }

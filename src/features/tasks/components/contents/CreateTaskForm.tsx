@@ -48,8 +48,8 @@ type CreateTaskProps = {
     setIsNewTaskCreated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    parentTaskId: string | null;
-    rootTaskId: string | null;
+    parentTaskId: number | null;
+    rootTaskId: number | null;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {

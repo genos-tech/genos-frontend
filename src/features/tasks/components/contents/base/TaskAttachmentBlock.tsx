@@ -67,7 +67,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
     };
 
     const handleDeleteImage = async (
-        taskId: string | undefined,
+        taskId: number | undefined,
         attachmentId: number,
         url: string
     ) => {
@@ -81,7 +81,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
     };
 
     const handleDeleteTextFile = async (
-        taskId: string | undefined,
+        taskId: number | undefined,
         attachmentId: number,
         url: string
     ) => {

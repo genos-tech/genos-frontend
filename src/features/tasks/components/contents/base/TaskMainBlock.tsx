@@ -1,6 +1,9 @@
+import { alpha } from "@mui/system";
+import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
-import { Box, Grid, IconButton, ListItem, List, Typography } from "@mui/joy";
+import { Box, Grid, IconButton, ListItem, List, Typography, Chip, Stack } from "@mui/joy";
 import AddIcon from "@mui/icons-material/Add";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 import { GitHubURLManager } from "./sub/GitHubURLManager";
@@ -11,10 +14,12 @@ import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
 import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
+import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { TaskProps, ProjectProps, TagListProps } from "../../../../../types/tasks";
 import { ChatProps } from "../../../../../types/chat";
 import { UserProps } from "../../../../../types/admin";
 import { AvatarWithStatus } from "../../../../../components/utils/avatarWithStatus";
+import { useAuth } from "../../../../../context/AuthContext";
 
 type TaskMainBlockProps = {
     socket: Socket | null;
@@ -40,6 +45,7 @@ type TaskMainBlockProps = {
     setTaskUpdated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
@@ -66,7 +72,31 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setTaskUpdated,
         setOpeningService,
         setCurrentMainChat,
+        setCurrentPreviewTaskId,
     } = props;
+    const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+
+    const [parentTask, setParentTask] = useState<TaskProps>();
+    useEffect(() => {
+        (async () => {
+            if (taskContents.project && taskContents.parentTaskId != null) {
+                const parentTask: TaskProps[] = await loadSpecificTask(
+                    myself,
+                    taskContents.project.projectId,
+                    taskContents.parentTaskId,
+                    accessToken
+                );
+                if (parentTask.length == 1) {
+                    setParentTask(parentTask[0]);
+                } else {
+                    setParentTask(undefined);
+                }
+            } else {
+                setParentTask(undefined);
+            }
+        })();
+    }, [taskContents]);
 
     return (
         <Box
@@ -80,7 +110,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <List aria-labelledby="decorated-list-demo">
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
-                        <Typography sx={{ minWidth: "80px" }}>Assignee:</Typography>
+                        <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
                             userProfile={assignee}
                             socket={socket}
@@ -101,9 +131,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
-
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
-                        <Typography sx={{ minWidth: "80px" }}>Reporter:</Typography>
+                        <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
                             userProfile={reporter}
                             socket={socket}
@@ -124,11 +153,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
-
                     <Grid container spacing={2}>
                         <Grid key={1} xs={6}>
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "80px" }}>Project:</Typography>
+                                <Typography sx={{ minWidth: "80px" }}>Project</Typography>
                                 <ACTeamProjects
                                     teamProjects={teamProjects}
                                     taskContents={taskContents}
@@ -142,7 +170,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         </Grid>
                         <Grid key={2} xs={6}>
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "40px" }}>Tags:</Typography>
+                                <Typography sx={{ minWidth: "40px" }}>Tags</Typography>
                                 <ACProjectTags
                                     projectTags={projectTags}
                                     taskContents={taskContents}
@@ -164,11 +192,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             </ListItem>
                         </Grid>
                     </Grid>
-
                     <Grid container spacing={2}>
                         <Grid key={1} xs={6}>
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "80px" }}>Priority:</Typography>
+                                <Typography sx={{ minWidth: "80px" }}>Priority</Typography>
                                 <ACTaskPriority
                                     taskContents={taskContents}
                                     setTaskContents={setTaskContents}
@@ -178,7 +205,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         </Grid>
                         <Grid key={2} xs={6}>
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "100px" }}>Effort Level:</Typography>
+                                <Typography sx={{ minWidth: "100px" }}>Effort Level</Typography>
                                 <ACTaskEffortLevel
                                     taskContents={taskContents}
                                     setTaskContents={setTaskContents}
@@ -187,10 +214,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             </ListItem>
                         </Grid>
                     </Grid>
-
                     {isPreviewMode === true && (
                         <ListItem sx={{ width: "49%" }}>
-                            <Typography sx={{ minWidth: "80px" }}>Status:</Typography>
+                            <Typography sx={{ minWidth: "80px" }}>Status</Typography>
                             <ACTaskStatus
                                 taskContents={taskContents}
                                 setTaskContents={setTaskContents}
@@ -198,16 +224,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             />
                         </ListItem>
                     )}
-
                     <ListItem>
-                        <Typography sx={{ minWidth: "80px" }}>Due Date:</Typography>
+                        <Typography sx={{ minWidth: "80px" }}>Due Date</Typography>
                         <TaskDueDateInput
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
-
                     <ListItem>
                         <GitHubURLManager
                             githubLink={taskContents.githubLink}
@@ -226,6 +250,68 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
+                    {parentTask !== undefined ? (
+                        <ListItem>
+                            <Stack
+                                direction="row"
+                                spacing={0.5}
+                                justifyContent="center"
+                                alignItems="center"
+                            >
+                                <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
+                                <AvatarWithStatus
+                                    userProfile={assignee}
+                                    socket={socket}
+                                    online={false}
+                                    setOpeningService={setOpeningService}
+                                    setCurrentMainChat={setCurrentMainChat}
+                                />
+                                <IconButton
+                                    onClick={() => {
+                                        if (parentTask.project && parentTask.id) {
+                                            setCurrentProject({
+                                                projectId: parentTask.project.projectId,
+                                                projectName: parentTask.project.projectName,
+                                            });
+                                            setCurrentPreviewTaskId(parentTask.id);
+                                        }
+                                    }}
+                                >
+                                    <Chip
+                                        variant="soft"
+                                        sx={{
+                                            backgroundColor: parentTask.status.color
+                                                ? alpha(
+                                                      parentTask.status.color,
+                                                      mode === "dark" ? 0.5 : 0.75
+                                                  )
+                                                : "transparent",
+                                            color: parentTask.status.textColor,
+                                            fontWeight: "bold",
+                                            borderRadius: "7px",
+                                        }}
+                                        size="md"
+                                    >
+                                        {`${parentTask.status.status}`}
+                                    </Chip>
+                                    <Typography
+                                        noWrap
+                                        sx={{
+                                            ml: "5px",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            width: "100%", // take full width of button
+                                        }}
+                                    >
+                                        {`${parentTask.title}`}
+                                    </Typography>
+                                </IconButton>
+                            </Stack>
+                        </ListItem>
+                    ) : (
+                        <div></div>
+                    )}
                 </List>
             </Box>
         </Box>
