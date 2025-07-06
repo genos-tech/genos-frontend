@@ -35,6 +35,7 @@ export const INDEX = {
     GM_THREAD_MESSAGES: "GmThreadMessagesIndex",
     GM_THREAD_MESSAGES_COMPOUND: "GmThreadMessagesCompoundIndex",
     TASKS: "TasksIndex",
+    TASKS_COMPOUND: "TasksCompoundIndex",
 };
 
 export const INDEX_KEY = {
@@ -49,4 +50,5 @@ export const INDEX_KEY = {
     GM_THREAD_MESSAGES: "chatId",
     GM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
     TASKS: "projectId",
+    TASKS_COMPOUND: ["projectId", "status"],
 };

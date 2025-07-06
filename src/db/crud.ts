@@ -146,6 +146,21 @@ export const getProjectTasks = async (projectId: number) => {
     return tasks;
 };
 
+const getTasksByStatus = async (projectId: number, status: string) => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const taskStore = db.transaction(STORES.TASKS, "readonly").objectStore(STORES.TASKS);
+    const tasks = await taskStore.index(INDEX.TASKS_COMPOUND).getAll([projectId, status]);
+
+    return tasks;
+};
+
+export const getTasksByMultipleStatus = async (projectId: number, statuses: string[]) => {
+    const results = await Promise.all(
+        statuses.map((status) => getTasksByStatus(projectId, status))
+    );
+    return results.flat();
+};
+
 export const getAllData = async (storeName: string) => {
     const db = await initDB();
     return db.getAll(storeName);

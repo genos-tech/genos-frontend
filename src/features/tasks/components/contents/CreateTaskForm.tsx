@@ -217,6 +217,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 isPreviewMode={false}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
+                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

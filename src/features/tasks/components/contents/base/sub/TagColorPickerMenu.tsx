@@ -4,16 +4,62 @@ import PaletteIcon from "@mui/icons-material/Palette";
 
 import { TagColorOption } from "../../../../../../types/tasks";
 
-const COLORS: TagColorOption[] = [
-    { name: "Red", value: "#ff2323", textColor: "white" },
-    { name: "Green", value: "#1dc200", textColor: "white" },
-    { name: "Blue", value: "#0044c2", textColor: "white" },
-    { name: "Yellow", value: "#ffff23", textColor: "black" },
-    { name: "Orange", value: "#ffa823", textColor: "black" },
-    { name: "Purple", value: "#8e23ff", textColor: "white" },
-    { name: "Pink", value: "#ff238a", textColor: "white" },
-    { name: "White", value: "#ffffff", textColor: "black" },
+const getContrastTextColor = (hex: string): "black" | "white" => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.6 ? "black" : "white";
+};
+
+const BASE_COLORS = [
+    { name: "Red", value: "#ff2323" },
+    { name: "Green", value: "#1dc200" },
+    { name: "Blue", value: "#0044c2" },
+    { name: "Yellow", value: "#ffff23" },
+    { name: "Orange", value: "#ffa823" },
+    { name: "Purple", value: "#8e23ff" },
+    { name: "Pink", value: "#ff238a" },
+    { name: "White", value: "#ffffff" },
+    { name: "Black", value: "#000000" },
+    { name: "Gray", value: "#808080" },
+    { name: "Light Gray", value: "#d3d3d3" },
+    { name: "Teal", value: "#008080" },
+    { name: "Cyan", value: "#00ffff" },
+    { name: "Indigo", value: "#4b0082" },
+    { name: "Lime", value: "#bfff00" },
+    { name: "Magenta", value: "#ff00ff" },
+    { name: "Brown", value: "#8b4513" },
+    { name: "Olive", value: "#808000" },
+    { name: "Navy", value: "#000080" },
+    { name: "Turquoise", value: "#40e0d0" },
+    { name: "Gold", value: "#ffd700" },
+    { name: "Crimson", value: "#dc143c" },
+    { name: "Salmon", value: "#fa8072" },
+    { name: "Tomato", value: "#ff6347" },
+    { name: "Coral", value: "#ff7f50" },
+    { name: "Dark Orange", value: "#ff8c00" },
+    { name: "Khaki", value: "#f0e68c" },
+    { name: "Beige", value: "#f5f5dc" },
+    { name: "Mint", value: "#98ff98" },
+    { name: "Sea Green", value: "#2e8b57" },
+    { name: "Forest Green", value: "#228b22" },
+    { name: "Light Sky Blue", value: "#87cefa" },
+    { name: "Steel Blue", value: "#4682b4" },
+    { name: "Royal Blue", value: "#4169e1" },
+    { name: "Slate Blue", value: "#6a5acd" },
+    { name: "Lavender", value: "#e6e6fa" },
+    { name: "Plum", value: "#dda0dd" },
+    { name: "Orchid", value: "#da70d6" },
+    { name: "Hot Pink", value: "#ff69b4" },
+    { name: "Deep Pink", value: "#ff1493" },
+    { name: "Chocolate", value: "#d2691e" },
 ];
+
+const COLORS: TagColorOption[] = BASE_COLORS.map((color) => ({
+    ...color,
+    textColor: getContrastTextColor(color.value),
+}));
 
 type ColorPickerMenuProps = {
     onSelectColor: (color: TagColorOption) => void;
@@ -48,12 +94,13 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor 
             </IconButton>
 
             <Menu
+                className="custom-scrollbar"
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
                 onBlur={handleClose}
                 placement="bottom-start"
-                sx={{ zIndex: 10010 }}
+                sx={{ zIndex: 10010, maxHeight: "300px", overflowY: "scroll" }}
             >
                 {COLORS.map((color) => (
                     <MenuItem key={color.value} onClick={() => handleSelect(color)}>
