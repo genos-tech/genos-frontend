@@ -17,34 +17,68 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
     return (
         <Stack direction="row" sx={{ width: "100%", alignItems: "center", gap: 1 }}>
             {/* Next Status IconButton */}
-            <IconButton
-                component="p"
-                variant="outlined"
-                color="success"
-                size="sm"
-                sx={{
-                    fontSize: "14px",
-                    paddingX: "7px",
-                }}
-                onClick={() => {
-                    (async () => {
-                        setCurrentTaskContent({
-                            ...currentTaskContent,
-                            status: {
-                                code: 0,
-                                status: "Closed",
-                                color: "#1dc200",
-                                textColor: "white",
-                            },
-                        });
-                    })();
-                    setTaskUpdated(true);
-                }}
-            >
-                <CheckCircleOutlineIcon sx={{ fontSize: "15px" }} />
-                Close
-            </IconButton>
-
+            {currentTaskContent.status.status === "Open" ? (
+                <IconButton
+                    component="p"
+                    variant="outlined"
+                    color="warning"
+                    size="sm"
+                    sx={{
+                        fontSize: "14px",
+                        paddingX: "7px",
+                    }}
+                    onClick={() => {
+                        (async () => {
+                            setCurrentTaskContent({
+                                ...currentTaskContent,
+                                status: {
+                                    code: 0,
+                                    status: "WIP",
+                                    color: "#ffff23",
+                                    textColor: "purple",
+                                },
+                            });
+                        })();
+                        setTaskUpdated(true);
+                    }}
+                >
+                    <CheckCircleOutlineIcon sx={{ fontSize: "15px" }} />
+                    Mark as WIP
+                </IconButton>
+            ) : (
+                <div></div>
+            )}
+            {currentTaskContent.status.status === "WIP" ? (
+                <IconButton
+                    component="p"
+                    variant="outlined"
+                    color="success"
+                    size="sm"
+                    sx={{
+                        fontSize: "14px",
+                        paddingX: "7px",
+                    }}
+                    onClick={() => {
+                        (async () => {
+                            setCurrentTaskContent({
+                                ...currentTaskContent,
+                                status: {
+                                    code: 0,
+                                    status: "Closed",
+                                    color: "#1dc200",
+                                    textColor: "white",
+                                },
+                            });
+                        })();
+                        setTaskUpdated(true);
+                    }}
+                >
+                    <CheckCircleOutlineIcon sx={{ fontSize: "15px" }} />
+                    Mark as Closed
+                </IconButton>
+            ) : (
+                <div></div>
+            )}
             {/* Sub Task IconButton aligned to the right */}
             <IconButton
                 component="p"
@@ -73,35 +107,38 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
                 <AddIcon />
                 Sub Task
             </IconButton>
-
             {/* Delete IconButton */}
-            <IconButton
-                component="p"
-                variant="outlined"
-                color="danger"
-                size="sm"
-                sx={{
-                    fontSize: "14px",
-                    paddingX: "7px",
-                }}
-                onClick={() => {
-                    (async () => {
-                        setCurrentTaskContent({
-                            ...currentTaskContent,
-                            status: {
-                                code: 0,
-                                status: "Deleted",
-                                color: "#ff2323",
-                                textColor: "white",
-                            },
-                        });
-                    })();
-                    setTaskUpdated(true);
-                }}
-            >
-                <DeleteIcon sx={{ fontSize: "15px" }} />
-                Delete
-            </IconButton>
+            {currentTaskContent.status.status !== "Closed" ? (
+                <IconButton
+                    component="p"
+                    variant="outlined"
+                    color="danger"
+                    size="sm"
+                    sx={{
+                        fontSize: "14px",
+                        paddingX: "7px",
+                    }}
+                    onClick={() => {
+                        (async () => {
+                            setCurrentTaskContent({
+                                ...currentTaskContent,
+                                status: {
+                                    code: 0,
+                                    status: "Deleted",
+                                    color: "#ff2323",
+                                    textColor: "white",
+                                },
+                            });
+                        })();
+                        setTaskUpdated(true);
+                    }}
+                >
+                    <DeleteIcon sx={{ fontSize: "15px" }} />
+                    Delete
+                </IconButton>
+            ) : (
+                <div></div>
+            )}
         </Stack>
     );
 };

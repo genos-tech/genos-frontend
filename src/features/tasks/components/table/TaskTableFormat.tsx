@@ -29,14 +29,14 @@ const statusOptions = [
     {
         label: "WIP",
         value: "WIP",
-        color: "#ffff23",
-        textColor: "purple",
-        icon: <AutorenewIcon style={{ color: "purple" }} />,
+        color: "#ecff00",
+        textColor: "midnightblue",
+        icon: <AutorenewIcon style={{ color: "midnightblue" }} />,
     },
     {
         label: "Pending",
         value: "Pending",
-        color: "#b900ff",
+        color: "#ff47ec",
         textColor: "white",
         icon: <PendingIcon style={{ color: "white" }} />,
     },

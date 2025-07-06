@@ -121,3 +121,15 @@ export type TaskTableProps = {
     teamId: string | null;
     projectId: number | null;
 };
+
+export type TaskType = {
+    id: number;
+    statuses: string[];
+    name: string;
+};
+
+export type TaskTypesProps = {
+    ongoing: TaskType;
+    closed: TaskType;
+    deleted: TaskType;
+};

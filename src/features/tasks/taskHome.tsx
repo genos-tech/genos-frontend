@@ -1,3 +1,4 @@
+import { alpha } from "@mui/system";
 import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 import { useColorScheme } from "@mui/joy/styles";
@@ -12,6 +13,7 @@ import {
     MenuItem,
     Autocomplete,
     CircularProgress,
+    Chip,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
 import AddIcon from "@mui/icons-material/Add";
@@ -34,9 +36,21 @@ import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTask
 import { Sidebar } from "../../components/layout/sidebar";
 import { UserProps } from "../../types/admin";
 import { ChatProps, SearchTeamTasksResponse } from "../../types/chat";
-import { ProjectProps, TaskTableProps, TaskProps } from "../../types/tasks";
+import {
+    ProjectProps,
+    TaskTableProps,
+    TaskProps,
+    TaskType,
+    TaskTypesProps,
+} from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { updateTeamTasks } from "./services/updateTeamTasks";
+
+const taskTypes: TaskTypesProps = {
+    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing Tasks" },
+    closed: { id: 2, statuses: ["Closed"], name: "Closed Tasks" },
+    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted Tasks" },
+};
 
 type TaskHomeProps = {
     socket: Socket | null;
@@ -45,7 +59,6 @@ type TaskHomeProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (service: number) => void;
 };
-
 export const TaskHome = (props: TaskHomeProps) => {
     const { socket, myself, setMyself, setCurrentMainChat, setOpeningService } = props;
     const { accessToken } = useAuth();
@@ -64,7 +77,10 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
-    const [projectTasks, setProjectTasks] = useState<TaskTableProps[]>([]);
+    const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
+    const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
+    const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
+    const [displayTaskType, setDisplayTaskType] = useState<TaskType>(taskTypes.ongoing);
 
     const [openCreateTeam, setOpenCreateTeam] = useState(false);
     const [openCreateProject, setOpenCreateProject] = useState(false);
@@ -108,12 +124,21 @@ export const TaskHome = (props: TaskHomeProps) => {
     // =======================================================================
 
     const fetchProjectTasks = async (projectId: number) => {
-        const fetchedTasks: TaskTableProps[] = await popSpecificProjectTasks(projectId);
-        if (fetchedTasks) {
-            setProjectTasks(fetchedTasks);
-        } else {
-            console.error("Failed to fetch thread DM fetchedTasks:", fetchedTasks);
-        }
+        const BaseTasks: TaskTableProps[] = await popSpecificProjectTasks(
+            projectId,
+            taskTypes.ongoing.statuses
+        );
+        const ClosedTasks: TaskTableProps[] = await popSpecificProjectTasks(
+            projectId,
+            taskTypes.closed.statuses
+        );
+        const DeletedTasks: TaskTableProps[] = await popSpecificProjectTasks(
+            projectId,
+            taskTypes.deleted.statuses
+        );
+        setOnGoingTasks(BaseTasks);
+        setClosedTasks(ClosedTasks);
+        setDeletedTasks(DeletedTasks);
     };
 
     const loadProjects = async () => {
@@ -161,7 +186,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 setIsTaskContentVisible(true);
 
                 if (isNewTaskCreated) {
-                    setProjectTasks((prev) => [
+                    setOnGoingTasks((prev) => [
                         ...prev,
                         {
                             id: String(loadedTask[0].id) || null,
@@ -192,7 +217,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     useEffect(() => {
         if (isTaskUpdated && currentPreviewTask) {
-            setProjectTasks((prevTasks) =>
+            setOnGoingTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === String(currentPreviewTask.id)
                         ? {
@@ -297,8 +322,93 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             justifyContent: "space-between",
                                         }}
                                     >
-                                        <Typography level="h2" component="h1">
+                                        <Typography
+                                            level="h2"
+                                            component="h1"
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center", // vertical centering
+                                                justifyContent: "center", // horizontal centering
+                                                gap: "8px", // space between text and dropdown (optional)
+                                            }}
+                                        >
                                             {currentProject.projectName}
+                                            <Dropdown>
+                                                <MenuButton
+                                                    slots={{ root: IconButton }}
+                                                    slotProps={{ root: { color: "neutral" } }}
+                                                >
+                                                    <Chip
+                                                        variant="soft"
+                                                        color={
+                                                            displayTaskType.id === 1
+                                                                ? "primary"
+                                                                : displayTaskType.id === 2
+                                                                ? "success"
+                                                                : displayTaskType.id === 3
+                                                                ? "danger"
+                                                                : "neutral"
+                                                        }
+                                                        sx={{
+                                                            fontWeight: "bold",
+                                                            borderRadius: "7px",
+                                                        }}
+                                                        size="lg"
+                                                    >
+                                                        {displayTaskType.name}
+                                                    </Chip>
+                                                </MenuButton>
+                                                <Menu size="sm">
+                                                    <MenuItem
+                                                        onClick={() => {
+                                                            setDisplayTaskType(taskTypes.ongoing);
+                                                        }}
+                                                    >
+                                                        <Chip
+                                                            variant="soft"
+                                                            color="primary"
+                                                            sx={{
+                                                                borderRadius: "7px",
+                                                            }}
+                                                            size="lg"
+                                                        >
+                                                            {taskTypes.ongoing.name}
+                                                        </Chip>
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        onClick={() => {
+                                                            setDisplayTaskType(taskTypes.closed);
+                                                        }}
+                                                    >
+                                                        <Chip
+                                                            variant="soft"
+                                                            color="success"
+                                                            sx={{
+                                                                borderRadius: "7px",
+                                                            }}
+                                                            size="lg"
+                                                        >
+                                                            {taskTypes.closed.name}
+                                                        </Chip>
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        onClick={() => {
+                                                            setDisplayTaskType(taskTypes.deleted);
+                                                        }}
+                                                    >
+                                                        <Chip
+                                                            variant="soft"
+                                                            color="danger"
+                                                            sx={{
+                                                                borderRadius: "7px",
+                                                            }}
+                                                            size="lg"
+                                                        >
+                                                            {taskTypes.deleted.name}
+                                                        </Chip>
+                                                    </MenuItem>
+                                                </Menu>
+                                            </Dropdown>
                                         </Typography>
 
                                         <Box sx={{ width: "50%" }}>
@@ -402,9 +512,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         <>
                                             <TaskTable
                                                 myself={myself}
-                                                projectTasks={projectTasks}
+                                                ongoingTasks={ongoingTasks}
+                                                closedTasks={closedTasks}
+                                                deletedTasks={deletedTasks}
                                                 setIsTaskContentVisible={setIsTaskContentVisible}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                displayTaskType={displayTaskType}
                                             />
                                         </>
                                     )}

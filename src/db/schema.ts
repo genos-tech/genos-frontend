@@ -95,6 +95,9 @@ export const initDB = async (): Promise<IDBPDatabase> => {
             if (!db.objectStoreNames.contains(STORES.TASKS)) {
                 const tasksStore = db.createObjectStore(STORES.TASKS, { keyPath: KEY_PATH.TASKS });
                 tasksStore.createIndex(INDEX.TASKS, INDEX_KEY.TASKS, { unique: false });
+                tasksStore.createIndex(INDEX.TASKS_COMPOUND, INDEX_KEY.TASKS_COMPOUND, {
+                    unique: false,
+                });
             }
         },
     });

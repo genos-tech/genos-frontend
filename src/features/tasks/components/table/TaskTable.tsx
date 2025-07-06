@@ -10,7 +10,7 @@ import { loadProjectTags } from "../../services/loadProjectTags";
 import { loadTeamMembers } from "../../../admin/services/loadTeamMembers";
 import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
-import { TaskTableProps, TagListProps } from "../../../../types/tasks";
+import { TaskTableProps, TagListProps, TaskType } from "../../../../types/tasks";
 
 const options = [
     { name: "Group By Status", filterId: 1 },
@@ -30,12 +30,6 @@ type FilterProps = {
 
 const predefinedStatusFilters: FilterProps[] = [
     {
-        label: "All",
-        filterModel: { items: [] },
-        lightModeColor: "black",
-        darkModeColor: "white",
-    },
-    {
         label: "Open",
         filterModel: { items: [{ field: "status", operator: "equals", value: "Open" }] },
         lightModeColor: "#002bff",
@@ -44,36 +38,18 @@ const predefinedStatusFilters: FilterProps[] = [
     {
         label: "WIP",
         filterModel: { items: [{ field: "status", operator: "equals", value: "WIP" }] },
-        lightModeColor: "#e58700",
-        darkModeColor: "#e58700",
-    },
-    {
-        label: "Closed",
-        filterModel: { items: [{ field: "status", operator: "equals", value: "Closed" }] },
-        lightModeColor: "#1ec800",
-        darkModeColor: "#0adc00",
+        lightModeColor: "#ff7000",
+        darkModeColor: "#fff700",
     },
     {
         label: "Pending",
         filterModel: { items: [{ field: "status", operator: "equals", value: "Pending" }] },
-        lightModeColor: "#b900ff",
-        darkModeColor: "#b900ff",
-    },
-    {
-        label: "Deleted",
-        filterModel: { items: [{ field: "status", operator: "equals", value: "Deleted" }] },
-        lightModeColor: "#c80000",
-        darkModeColor: "#ff2e2e",
+        lightModeColor: "#ff47ec",
+        darkModeColor: "#ff47ec",
     },
 ];
 
 const predefinedPriorityFilters: FilterProps[] = [
-    {
-        label: "All",
-        filterModel: { items: [] },
-        lightModeColor: "black",
-        darkModeColor: "white",
-    },
     {
         label: "Low",
         filterModel: { items: [{ field: "priority", operator: "equals", value: "Low" }] },
@@ -96,12 +72,6 @@ const predefinedPriorityFilters: FilterProps[] = [
 
 const predefinedEffortLevelFilters: FilterProps[] = [
     {
-        label: "All",
-        filterModel: { items: [] },
-        lightModeColor: "black",
-        darkModeColor: "white",
-    },
-    {
         label: "Low",
         filterModel: { items: [{ field: "effortLevel", operator: "equals", value: "Low" }] },
         lightModeColor: "#0044c2",
@@ -123,16 +93,29 @@ const predefinedEffortLevelFilters: FilterProps[] = [
 
 type ProjectTaskTableProps = {
     myself: UserProps;
-    projectTasks: TaskTableProps[];
+    ongoingTasks: TaskTableProps[];
+    closedTasks: TaskTableProps[];
+    deletedTasks: TaskTableProps[];
     setIsTaskContentVisible: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    displayTaskType: TaskType;
 };
 
 export const TaskTable = (props: ProjectTaskTableProps) => {
-    const { myself, projectTasks, setIsTaskContentVisible, setCurrentPreviewTaskId } = props;
+    const {
+        myself,
+        ongoingTasks,
+        closedTasks,
+        deletedTasks,
+        setIsTaskContentVisible,
+        setCurrentPreviewTaskId,
+        displayTaskType,
+    } = props;
     const { mode } = useColorScheme();
     const className = `task-datagrid-${mode}`;
     const apiRef = useGridApiRef();
+    const [currentDisplayingTasks, setCurrentDisplayingTasks] =
+        useState<TaskTableProps[]>(ongoingTasks);
     const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
     const [predefinedFilters, setPredefinedFilters] =
         useState<FilterProps[]>(predefinedStatusFilters);
@@ -174,7 +157,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags(
                 myself,
-                projectTasks[0].projectId || -1,
+                ongoingTasks[0].projectId || -1,
                 accessToken
             );
             if (loadedProjectTags.length > 0) {
@@ -186,15 +169,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                     lightModeColor: tag.tagColor,
                     darkModeColor: tag.tagColor,
                 }));
-                setPredefinedFilters([
-                    {
-                        label: "All",
-                        filterModel: { items: [] },
-                        lightModeColor: "black",
-                        darkModeColor: "white",
-                    },
-                    ...tagBasedFilters,
-                ]);
+                setPredefinedFilters(tagBasedFilters);
             }
         })();
     };
@@ -223,13 +198,25 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
 
     useEffect(() => {
         // Calculate the row count for predefined filters
-        if (projectTasks.length === 0) {
+        if (ongoingTasks.length === 0) {
             return;
         }
         setPredefinedFiltersRowCount(
             predefinedFilters.map(({ filterModel }) => getFilteredRowsCount(filterModel))
         );
-    }, [predefinedFilters, projectTasks]);
+    }, [predefinedFilters, ongoingTasks]);
+
+    useEffect(() => {
+        if (displayTaskType.id === 1) {
+            setCurrentDisplayingTasks(ongoingTasks);
+        } else if (displayTaskType.id === 2) {
+            setCurrentDisplayingTasks(closedTasks);
+            updateTagOptions();
+        } else if (displayTaskType.id === 3) {
+            setCurrentDisplayingTasks(deletedTasks);
+            updateTagOptions();
+        }
+    }, [displayTaskType, ongoingTasks, closedTasks, deletedTasks]);
 
     return (
         <ThemeProvider theme={theme}>
@@ -293,7 +280,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                             },
                         }}
                     >
-                        {options.map((option) => (
+                        {options.slice(displayTaskType.id - 1).map((option) => (
                             <MenuItem
                                 key={option.filterId}
                                 onClick={() => {
@@ -341,7 +328,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                             borderColor: "transparent",
                             fontWeight: "bold",
                         }}
-                        rows={projectTasks}
+                        rows={currentDisplayingTasks}
                         columns={getTaskColumns({
                             myself: myself,
                             accessToken: accessToken,
@@ -351,13 +338,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                             density: "compact",
                             filter: {
                                 filterModel: {
-                                    items: [
-                                        {
-                                            field: "status",
-                                            operator: "isAnyOf",
-                                            value: ["Open", "WIP"],
-                                        },
-                                    ],
+                                    items: [],
                                 },
                             },
                             sorting: {
@@ -380,7 +361,8 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                                     status: true,
                                     assigneeEmail: true,
                                     assigneeName: true,
-                                    parentTaskId: true,
+                                    threadId: false,
+                                    parentTaskId: false,
                                     concatTags: false,
                                 },
                             },
