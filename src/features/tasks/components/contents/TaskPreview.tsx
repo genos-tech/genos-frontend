@@ -63,6 +63,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         currentPreviewTask.attachments
     );
     const [taskUpdated, setTaskUpdated] = useState(false);
+    const [taskBodyUpdated, setTaskBodyUpdated] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
     const [uploadedSingleAttachment, setUploadedSingleAttachment] =
@@ -87,50 +88,67 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setTmpCurrentTaskContent(currentPreviewTask);
     }, []);
 
+    // Send updated task to the backend when task is updated
+    const sendUpdatedTask = async (taskChanged: boolean) => {
+        const newTaskContent: TaskProps = {
+            ...tmpCurrentTaskContent,
+            title: taskTitle === "" ? initTaskTitle : taskTitle,
+            body: body,
+        };
+
+        const uploadedAttachmentData = await sendUpdatedSpecificTask(
+            myself,
+            newTaskContent,
+            accessToken
+        );
+
+        if (uploadedAttachmentData.attachment_id > 0) {
+            setUploadedSingleAttachment({
+                attachment_id: uploadedAttachmentData.attachment_id,
+                file: uploadedAttachmentData.attached_file,
+                file_base64: uploadedAttachmentData.file_base64,
+                name: uploadedAttachmentData.name,
+                type: uploadedAttachmentData.attached_type,
+            });
+        } else {
+            setUploadedSingleAttachment(undefined);
+        }
+
+        if (taskChanged) {
+            setTmpCurrentTaskContent(currentPreviewTask);
+            setCurrentTaskId(currentPreviewTask.id);
+            setBody(currentPreviewTask.body || []);
+            setTaskBodyUpdated(false);
+        } else {
+            setTmpCurrentTaskContent(newTaskContent);
+        }
+
+        setTaskUpdated(false);
+    };
+    useEffect(() => {
+        if (taskUpdated === true) {
+            sendUpdatedTask(false);
+        }
+    }, [taskUpdated]);
+
     // Update variables when an user change the target task
     useEffect(() => {
-        setTmpCurrentTaskContent(currentPreviewTask);
-        setCurrentTaskId(currentPreviewTask.id);
-        setBody(currentPreviewTask.body || []);
+        if (taskBodyUpdated) {
+            sendUpdatedTask(true);
+        } else {
+            setTmpCurrentTaskContent(currentPreviewTask);
+            setCurrentTaskId(currentPreviewTask.id);
+            setBody(currentPreviewTask.body || []);
+        }
     }, [currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
+    // This runs after the above useEffect runs (i.e., after `setCurrentTaskId` executed)
     useEffect(() => {
         setTaskTitle(currentPreviewTask.title);
         setInitTaskTitle(currentPreviewTask.title);
         setUploadedFiles(currentPreviewTask.attachments);
     }, [currentTaskId]);
-
-    // Send updated task to the backend when task is updated
-    useEffect(() => {
-        if (taskUpdated === true) {
-            const newTaskContent: TaskProps = {
-                ...tmpCurrentTaskContent,
-                title: taskTitle === "" ? initTaskTitle : taskTitle,
-                body: body,
-            };
-            (async () => {
-                setTmpCurrentTaskContent(newTaskContent);
-                const uploadedAttachmentData = await sendUpdatedSpecificTask(
-                    myself,
-                    newTaskContent,
-                    accessToken
-                );
-                if (uploadedAttachmentData.attachment_id > 0) {
-                    setUploadedSingleAttachment({
-                        attachment_id: uploadedAttachmentData.attachment_id,
-                        file: uploadedAttachmentData.attached_file,
-                        file_base64: uploadedAttachmentData.file_base64,
-                        name: uploadedAttachmentData.name,
-                        type: uploadedAttachmentData.attached_type,
-                    });
-                } else {
-                    setUploadedSingleAttachment(undefined);
-                }
-            })();
-            setTaskUpdated(false);
-        }
-    }, [taskUpdated]);
 
     // Update attachments
     useEffect(() => {
@@ -293,7 +311,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 key={tmpCurrentTaskContent.id}
                 body={body}
                 setBody={setBody}
-                setTaskUpdated={setTaskUpdated}
+                setTaskBodyUpdated={setTaskBodyUpdated}
             />
 
             <Divider sx={{ mt: 2 }} />

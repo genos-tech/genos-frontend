@@ -82,11 +82,11 @@ const getCustomSlashMenuItems = (
 type BnTaskPreviewProps = {
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
-    setTaskUpdated?: (value: boolean) => void;
+    setTaskBodyUpdated?: (value: boolean) => void;
 };
 
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
-    const { body, setBody, setTaskUpdated } = props;
+    const { body, setBody, setTaskBodyUpdated } = props;
 
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-box-${mode}`;
@@ -160,11 +160,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onBlur={() => {
-                        if (setTaskUpdated) {
-                            setTaskUpdated(true);
-                        }
-                    }}
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             if (editor.document.length > 1) {
@@ -173,6 +168,9 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     }}
                     onChange={() => {
                         setBody(editor.document);
+                        if (setTaskBodyUpdated) {
+                            setTaskBodyUpdated(true);
+                        }
                     }}
                 >
                     <FormattingToolbarController

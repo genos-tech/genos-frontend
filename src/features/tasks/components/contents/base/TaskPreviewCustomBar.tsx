@@ -17,7 +17,8 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
     return (
         <Stack direction="row" sx={{ width: "100%", alignItems: "center", gap: 1 }}>
             {/* Next Status IconButton */}
-            {currentTaskContent.status.status === "Open" ? (
+            {currentTaskContent.status.status === "Open" ||
+            currentTaskContent.status.status === "Pending" ? (
                 <IconButton
                     component="p"
                     variant="outlined"
