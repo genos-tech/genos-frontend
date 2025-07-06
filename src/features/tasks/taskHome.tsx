@@ -54,7 +54,11 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
-    const [isCreatingTask, setIsCreatingTask] = useState(false);
+    const [isCreatingTask, setIsCreatingTask] = useState({
+        flag: false,
+        parentTaskId: null,
+        rootTaskId: null,
+    });
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
@@ -160,7 +164,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setProjectTasks((prev) => [
                         ...prev,
                         {
-                            id: loadedTask[0].id || null,
+                            id: String(loadedTask[0].id) || null,
                             title: loadedTask[0].title || "",
                             priority: loadedTask[0].priority.priority || null,
                             effortLevel: loadedTask[0].effortLevel.level || null,
@@ -172,7 +176,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             assigneeEmail: loadedTask[0].assignee.userEmail || null,
                             assigneeName: loadedTask[0].assignee.userName || null,
                             assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
-                            parentTaskId: loadedTask[0].parentTaskId || null,
+                            parentTaskId: String(loadedTask[0].parentTaskId) || null,
                             threadId: loadedTask[0].threadId || null,
                             tags: loadedTask[0].tags || [],
                             concatTags: loadedTask[0].concatTags || null,
@@ -190,9 +194,9 @@ export const TaskHome = (props: TaskHomeProps) => {
         if (isTaskUpdated && currentPreviewTask) {
             setProjectTasks((prevTasks) =>
                 prevTasks.map((task) =>
-                    task.id === currentPreviewTask.id
+                    task.id === String(currentPreviewTask.id)
                         ? {
-                              id: currentPreviewTask.id || null,
+                              id: String(currentPreviewTask.id) || null,
                               title: currentPreviewTask.title || null,
                               priority: currentPreviewTask.priority.priority || null,
                               effortLevel: currentPreviewTask.effortLevel.level || null,
@@ -204,7 +208,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                               assigneeEmail: currentPreviewTask.assignee.userEmail || null,
                               assigneeName: currentPreviewTask.assignee.userName || null,
                               assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
-                              parentTaskId: currentPreviewTask.parentTaskId || null,
+                              parentTaskId: String(currentPreviewTask.parentTaskId) || null,
                               threadId: currentPreviewTask.threadId || null,
                               tags: currentPreviewTask.tags || [],
                               concatTags: currentPreviewTask.concatTags || null,
@@ -350,7 +354,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     paddingRight: "10px",
                                                 }}
                                                 onClick={() => {
-                                                    setIsCreatingTask(true);
+                                                    setIsCreatingTask({
+                                                        flag: true,
+                                                        parentTaskId: null,
+                                                        rootTaskId: null,
+                                                    });
                                                 }}
                                             >
                                                 <AddIcon />
@@ -403,7 +411,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 </Box>
                             </Panel>
 
-                            {isCreatingTask && (
+                            {isCreatingTask.flag && (
                                 <>
                                     {/* Resizable Handle with MUI sx Styling */}
                                     <PanelResizeHandle
@@ -454,6 +462,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsNewTaskCreated={setIsNewTaskCreated}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
+                                                parentTaskId={isCreatingTask.parentTaskId}
+                                                rootTaskId={isCreatingTask.rootTaskId}
                                             />
                                         </Box>
                                     </Panel>
@@ -507,6 +517,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsTaskUpdated={setIsTaskUpdated}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                             />
                                         </Box>
                                     </Panel>

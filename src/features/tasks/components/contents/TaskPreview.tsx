@@ -9,6 +9,7 @@ import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskBodyPreviewBlock } from "./base/TaskBodyPreviewBlock";
 import { TaskPreviewCustomBar } from "./base/TaskPreviewCustomBar";
 import { TaskCommentBlock } from "./base/TaskCommentBlock";
+import { TaskRelatedTasksBlock } from "./base/TaskRelatedTasksBlock";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import { loadTaskComments } from "../../services/loadTaskComments";
 import { wsTaskHandleHook } from "../../hooks/WSTaskHooks";
@@ -28,7 +29,7 @@ type TaskPreviewProps = {
     myself: UserProps;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTask: TaskProps;
-    setIsCreatingTask: (value: boolean) => void;
+    setIsCreatingTask: (value: any) => void;
     setIsTaskContentVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps) => void;
     setOpenCreateProject: (value: boolean) => void;
@@ -37,6 +38,7 @@ type TaskPreviewProps = {
     setIsTaskUpdated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -54,6 +56,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsTaskUpdated,
         setOpeningService,
         setCurrentMainChat,
+        setCurrentPreviewTaskId,
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(
@@ -274,6 +277,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskUpdated={setTaskUpdated}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
+                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />
@@ -293,6 +297,16 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             />
 
             <Divider sx={{ mt: 2 }} />
+
+            <TaskRelatedTasksBlock
+                socket={socket}
+                myself={myself}
+                currentTaskContent={tmpCurrentTaskContent}
+                setCurrentProject={setCurrentProject}
+                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                setOpeningService={setOpeningService}
+                setCurrentMainChat={setCurrentMainChat}
+            />
 
             <TaskAttachmentBlock
                 uploadedFiles={uploadedFiles}

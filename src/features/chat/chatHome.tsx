@@ -308,6 +308,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setOpenCreateTag={setOpenCreateTag}
                                             setCurrentMainChat={setCurrentMainChat}
                                             setOpeningService={setOpeningService}
+                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         />
                                     </Box>
                                 </Panel>
@@ -364,6 +365,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             isNewTagCreated={isNewTagCreated}
                                             setCurrentMainChat={setCurrentMainChat}
                                             setOpeningService={setOpeningService}
+                                            parentTaskId={null}
+                                            rootTaskId={null}
                                         />
                                     </Box>
                                 </Panel>
