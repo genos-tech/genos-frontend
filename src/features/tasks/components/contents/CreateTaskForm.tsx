@@ -29,6 +29,78 @@ import {
 } from "../../../../types/tasks";
 import { ChatProps } from "../../../../types/chat";
 
+const taskContentTemplate: PartialBlock[] = [
+    {
+        type: "heading",
+        props: {
+            level: 3,
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [{ text: "🧾 Description", type: "text", styles: {} }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [{ text: "What needs to be done?", type: "text", styles: { code: true } }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [],
+        children: [],
+    },
+    {
+        type: "heading",
+        props: {
+            level: 3,
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [{ text: "🪜 Background / Context", type: "text", styles: {} }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [{ text: "Why is this task needed?", type: "text", styles: { code: true } }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [],
+        children: [],
+    },
+    {
+        type: "heading",
+        props: {
+            level: 3,
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [{ text: "🎯 Goals / Expected Outcome", type: "text", styles: {} }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [{ text: "What is the desired result?", type: "text", styles: { code: true } }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [],
+        children: [],
+    },
+];
+
 type CreateTaskProps = {
     socket: Socket | null;
     myself: UserProps;
@@ -97,7 +169,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         rootTaskId: rootTaskId,
     });
     const [taskTitle, setTaskTitle] = useState<string>("");
-    const [body, setBody] = useState<PartialBlock[]>([]);
+    const [body, setBody] = useState<PartialBlock[]>(taskContentTemplate);
     const [assignee, setAssignee] = useState<UserProps>(myself);
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -222,7 +294,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskBodyEditBlock setBody={setBody} />
+            <TaskBodyEditBlock body={body} setBody={setBody} />
 
             <Divider sx={{ m: 2 }} />
 

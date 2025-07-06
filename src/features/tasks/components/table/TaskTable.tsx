@@ -209,6 +209,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
     useEffect(() => {
         if (displayTaskType.id === 1) {
             setCurrentDisplayingTasks(ongoingTasks);
+            setPredefinedFilters(predefinedStatusFilters);
         } else if (displayTaskType.id === 2) {
             setCurrentDisplayingTasks(closedTasks);
             updateTagOptions();
