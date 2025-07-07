@@ -1,4 +1,3 @@
-import { alpha } from "@mui/system";
 import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 import { useColorScheme } from "@mui/joy/styles";

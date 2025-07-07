@@ -25,7 +25,7 @@ type TaskTitleBlockProps = {
     taskTitle: string;
     setTaskTitle: (value: string) => void;
     setIsCreatingTask?: (value: any) => void;
-    setIsTaskContentVisible?: (value: boolean) => void;
+    setTaskClosed?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
     titleError?: string;
@@ -40,7 +40,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         taskTitle,
         setTaskTitle,
         setIsCreatingTask,
-        setIsTaskContentVisible,
+        setTaskClosed,
         setOpenCreateProject,
         setOpenCreateTag,
         titleError,
@@ -142,8 +142,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 rootTaskId: null,
                             });
                         }
-                        if (isPreviewMode === true && setIsTaskContentVisible) {
-                            setIsTaskContentVisible(false);
+                        if (isPreviewMode === true && setTaskClosed) {
+                            setTaskClosed(true);
                         }
                     }}
                 >
