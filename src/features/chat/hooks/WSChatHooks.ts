@@ -49,6 +49,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
             chatId: newMessage.chatId,
             chatName: newMessage.chatName,
             isDm: newMessage.isDm ? true : false,
+            chatType: newMessage.chatType,
             dmPartnerUser: newMessage.dmPartnerUser,
             unread: true,
             latestMessage: newChatMessage,
@@ -56,7 +57,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
             TSLastMessage: newChatMessage.tsSent,
         };
         if (newChat) {
-            await addChat(newChat, newMessage.isDm);
+            await addChat(newChat, newMessage.isDm, newMessage.chatType);
             setAllChats();
         }
     };
@@ -105,6 +106,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         chatName: newMessage.chatName,
                         threadId: newThreadMessage.threadId,
                         isDm: newMessage.isDm,
+                        chatType: newMessage.chatType,
                         dmPartnerUser: newMessage.dmPartnerUser,
                         taskId: newThreadMessage.taskId,
                         unread: false,
@@ -135,7 +137,11 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                             }
 
                             if (fromMe === false && toMe === true) {
-                                addThreadMessage(newThreadMessage, newMessage.isDm);
+                                addThreadMessage(
+                                    newThreadMessage,
+                                    newMessage.isDm,
+                                    newMessage.chatType
+                                );
                                 if (
                                     currentThreadChat !== undefined &&
                                     newMessage.chatId === currentThreadChat.chatId &&
@@ -153,7 +159,11 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                             }
 
                             if (fromMe === false) {
-                                addThreadMessage(newThreadMessage, newMessage.isDm);
+                                addThreadMessage(
+                                    newThreadMessage,
+                                    newMessage.isDm,
+                                    newMessage.chatType
+                                );
                                 if (
                                     currentThreadChat !== undefined &&
                                     newMessage.chatId === currentThreadChat.chatId &&
@@ -180,6 +190,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                         chatId: newMessage.chatId,
                         chatName: newMessage.chatName,
                         isDm: newMessage.isDm,
+                        chatType: newMessage.chatType,
                         dmPartnerUser: newMessage.dmPartnerUser,
                         unread: false,
                         messages: [...currentMainChat.messages, newMessage],
@@ -209,7 +220,11 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                             }
 
                             if (fromMe === false && toMe === true) {
-                                await addMessage(newChatMessage, newMessage.isDm);
+                                await addMessage(
+                                    newChatMessage,
+                                    newMessage.isDm,
+                                    newMessage.chatType
+                                );
                                 await updateChat(newMessage, newChatMessage);
 
                                 if (
@@ -235,13 +250,21 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                                 }
                             } else if (fromMe === true && toMe === true) {
                                 // Only updating indexedDB for chat, not updating messaging pane
-                                await addMessage(newChatMessage, newMessage.isDm);
+                                await addMessage(
+                                    newChatMessage,
+                                    newMessage.isDm,
+                                    newMessage.chatType
+                                );
                                 await updateChat(newMessage, newChatMessage);
 
                                 // Insert the message when a user selects a new user
                                 // for DM from Search list in ChatPane
                                 if (newMessage.chatName !== newMessage.sender.userName) {
-                                    addMessage(newChatMessage, newMessage.isDm);
+                                    addMessage(
+                                        newChatMessage,
+                                        newMessage.isDm,
+                                        newMessage.chatType
+                                    );
                                 }
                             }
                         } else {
@@ -254,7 +277,11 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
 
                             if (fromMe === false) {
                                 if (allChats.length > 0) {
-                                    await addMessage(newChatMessage, newMessage.isDm);
+                                    await addMessage(
+                                        newChatMessage,
+                                        newMessage.isDm,
+                                        newMessage.chatType
+                                    );
                                     await updateChat(newMessage, newChatMessage);
 
                                     if (newMessage.chatId === currentMainChat.chatId) {
@@ -278,7 +305,11 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
                                 }
                             } else if (fromMe) {
                                 // Only updating indexedDB for chat, not updating messaging pane
-                                await addMessage(newChatMessage, newMessage.isDm);
+                                await addMessage(
+                                    newChatMessage,
+                                    newMessage.isDm,
+                                    newMessage.chatType
+                                );
                                 await updateChat(newMessage, newChatMessage);
                             }
                         }

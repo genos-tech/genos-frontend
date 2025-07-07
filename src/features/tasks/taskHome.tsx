@@ -560,6 +560,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 socket={socket}
                                                 myself={myself}
                                                 isDm={null}
+                                                chatType={null}
                                                 chatId={null}
                                                 threadId={null}
                                                 setIsTaskContentVisible={setIsTaskContentVisible}

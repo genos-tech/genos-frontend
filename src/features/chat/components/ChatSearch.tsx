@@ -57,6 +57,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             value.id,
                             value.name,
                             value.type === "Group" ? Boolean(false) : Boolean(true),
+                            value.type === "Group" ? 2 : 1,
                             value.dmPartnerUserId,
                             allChats,
                             setCurrentMainChat,

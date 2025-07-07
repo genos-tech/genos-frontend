@@ -83,7 +83,7 @@ export const loadInitialData = (
     useEffect(() => {
         if (isDMHistoryLoaded) {
             const popLatestDMChatWorker = new PopLatestChatWorker();
-            popLatestDMChatWorker.postMessage({ isDm: true });
+            popLatestDMChatWorker.postMessage({ isDm: true, chatType: 1 });
             popLatestDMChatWorker.onmessage = (event) => {
                 const latestDmChat: any = event.data;
                 if (latestDmChat === null) {
@@ -105,7 +105,11 @@ export const loadInitialData = (
                 setInitialChatMessages([]);
             } else {
                 const popSpecificMessagesWorker = new PopSpecificMessagesWorker();
-                popSpecificMessagesWorker.postMessage({ chatId: latestDmChatId, isDm: true });
+                popSpecificMessagesWorker.postMessage({
+                    chatId: latestDmChatId,
+                    isDm: true,
+                    chatType: 1,
+                });
                 popSpecificMessagesWorker.onmessage = (event) => {
                     const fetchedMessages: MessageProps[] = event.data;
                     if (fetchedMessages !== undefined) {
@@ -127,7 +131,11 @@ export const loadInitialData = (
         if (InitialChatMessages !== undefined) {
             if (InitialChatMessages.length > 0) {
                 const popSpecificChatWorker = new PopSpecificChatWorker();
-                popSpecificChatWorker.postMessage({ chatId: latestDmChatId, isDm: true });
+                popSpecificChatWorker.postMessage({
+                    chatId: latestDmChatId,
+                    isDm: true,
+                    chatType: 1,
+                });
                 popSpecificChatWorker.onmessage = (event) => {
                     const fetchedChat: any = event.data;
                     if (fetchedChat !== undefined && fetchedChat !== null) {
@@ -135,6 +143,7 @@ export const loadInitialData = (
                             chatId: fetchedChat.chatId,
                             chatName: fetchedChat.chatName,
                             isDm: true,
+                            chatType: 1,
                             dmPartnerUser: fetchedChat.dmPartnerUser,
                             unread: InitialChatMessages.length === 1 ? true : false,
                             messages: InitialChatMessages,
@@ -157,6 +166,7 @@ export const loadInitialData = (
                     chatId: -1,
                     chatName: "Origin",
                     isDm: true,
+                    chatType: 1,
                     dmPartnerUser: defaultDmPartner,
                     latestMessageText: "",
                     TSLastMessage: "",

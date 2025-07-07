@@ -5,6 +5,7 @@ import { AllChatProps } from "../types/chat";
 self.onmessage = async (event) => {
     const chat: AllChatProps = event.data.chat;
     const isDm: boolean = event.data.isDm;
+    const chatType: number = event.data.chatType;
 
     await addData({
         storeName: isDm ? STORES.DM_CHATS : STORES.GM_CHATS,

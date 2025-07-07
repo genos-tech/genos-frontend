@@ -2,6 +2,8 @@ import { getLatestDMChat, getLatestGMChat } from "../db/crud";
 
 self.onmessage = async (event) => {
     const isDm: boolean = event.data.isDm;
+    const chatType: number = event.data.chatType;
+
     if (isDm !== undefined && isDm !== null) {
         var latestChat = null;
 

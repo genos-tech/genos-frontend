@@ -82,6 +82,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     socket={socket}
                     myself={myself}
                     isDm={false}
+                    chatType={2}
                     allChats={allChats}
                     currentMainChat={currentMainChat}
                     currentSubChat={currentSubChat}
@@ -98,6 +99,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     socket={socket}
                     myself={myself}
                     isDm={true}
+                    chatType={1}
                     allChats={allChats}
                     currentMainChat={currentMainChat}
                     currentSubChat={currentSubChat}

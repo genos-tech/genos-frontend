@@ -5,6 +5,7 @@ export const defineNewChat = (
     chatId: number,
     chatName: string,
     isDm: boolean,
+    chatType: number,
     dmPartnerUser: UserProps,
     messages: MessageProps[]
 ) => {
@@ -12,6 +13,7 @@ export const defineNewChat = (
         chatId: chatId,
         chatName: chatName,
         isDm: isDm,
+        chatType: chatType,
         dmPartnerUser: dmPartnerUser,
         unread: false,
         messages: messages,

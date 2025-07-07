@@ -55,7 +55,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     // Load the thread task if exists
     const loadTask = (threadId: number) => {
         (async () => {
-            const chatType: string = chat.isDm ? "dm" : "gm";
+            const chatType: number = chat.isDm ? 1 : 2;
             const loadedTask: TaskProps[] = await loadSpecificTaskByThreadId(
                 myself,
                 chatType,
@@ -87,6 +87,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     threadId: messageId,
                     threadMessage: content,
                     isDm: chat.isDm,
+                    chatType: chat.chatType,
                     dmPartnerUserId: chat.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
@@ -108,12 +109,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                     if (newThreadMessage) {
                         if (chat.isDm) {
-                            await addThreadMessage(newThreadMessage, chat.isDm);
+                            await addThreadMessage(newThreadMessage, chat.isDm, chat.chatType);
                             const threadMessages: ThreadMessageProps[] =
                                 await popSpecificThreadMessages(
                                     newThreadMessage.chatId,
                                     newThreadMessage.threadId,
-                                    chat.isDm
+                                    chat.isDm,
+                                    chat.chatType
                                 );
                             if (threadMessages) {
                                 const newThread: ThreadProps = {
@@ -121,6 +123,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     chatName: chat.chatName,
                                     threadId: newThreadMessage.threadId,
                                     isDm: true,
+                                    chatType: chat.chatType,
                                     dmPartnerUser: chat.dmPartnerUser,
                                     taskId: null,
                                     unread: false,
@@ -132,12 +135,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 }
                             }
                         } else {
-                            await addThreadMessage(newThreadMessage, chat.isDm);
+                            await addThreadMessage(newThreadMessage, chat.isDm, chat.chatType);
                             const threadMessages: ThreadMessageProps[] =
                                 await popSpecificThreadMessages(
                                     newThreadMessage.chatId,
                                     newThreadMessage.threadId,
-                                    chat.isDm
+                                    chat.isDm,
+                                    chat.chatType
                                 );
                             if (threadMessages) {
                                 const newThread: ThreadProps = {
@@ -145,6 +149,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     chatName: chat.chatName,
                                     threadId: newThreadMessage.threadId,
                                     isDm: false,
+                                    chatType: chat.chatType,
                                     dmPartnerUser: chat.dmPartnerUser,
                                     taskId: null,
                                     unread: false,

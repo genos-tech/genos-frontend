@@ -9,6 +9,7 @@ type ChatListProps = {
     socket: Socket | null;
     myself: UserProps;
     isDm: boolean;
+    chatType: number;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
@@ -24,6 +25,7 @@ export const ChatList = (props: ChatListProps) => {
         socket,
         myself,
         isDm,
+        chatType,
         allChats,
         setCurrentMainChat,
         setCurrentSubChat,

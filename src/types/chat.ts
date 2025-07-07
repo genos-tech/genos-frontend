@@ -6,6 +6,7 @@ export type AllChatProps = {
     chatId: number;
     chatName: string;
     isDm: boolean;
+    chatType: number;
     dmPartnerUser: UserProps;
     unread: boolean | true;
     latestMessage?: MessageProps;
@@ -18,6 +19,7 @@ export type ChatProps = {
     chatId: number;
     chatName: string;
     isDm: boolean;
+    chatType: number;
     dmPartnerUser: UserProps;
     unread: boolean | true;
     messages: MessageProps[];
@@ -33,6 +35,7 @@ export type ThreadProps = {
     chatName: string;
     threadId: number;
     isDm: boolean;
+    chatType: number;
     dmPartnerUser: UserProps;
     taskId: number | null;
     unread: boolean | true;
@@ -83,6 +86,7 @@ export type NewMessageProps = {
     messageId: number;
     chatName: string;
     isDm: boolean;
+    chatType: number;
     dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];
@@ -104,6 +108,7 @@ export type NewThreadMessageProps = {
     messageId: number;
     chatName: string;
     isDm: boolean;
+    chatType: number;
     dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];

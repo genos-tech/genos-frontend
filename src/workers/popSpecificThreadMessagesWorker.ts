@@ -5,6 +5,7 @@ self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;
     const threadId: number = event.data.threadId;
     const isDm: boolean = event.data.isDm;
+    const chatType: number = event.data.chatType;
 
     if (chatId && threadId && isDm !== undefined) {
         const dmThreadMessages = await messageIdWithChatId({

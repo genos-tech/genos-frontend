@@ -8,6 +8,7 @@ type CreateTaskFooterProps = {
     myself: UserProps;
     accessToken: string | null;
     isDm: boolean | null;
+    chatType: number | null;
     chatId: number | null;
     threadId: number | null;
     taskContents: TaskProps;
@@ -23,6 +24,7 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
         myself,
         accessToken,
         isDm,
+        chatType,
         chatId,
         threadId,
         taskContents,
@@ -62,6 +64,7 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                         myself: myself,
                         taskContents: taskContents,
                         isDm: isDm,
+                        chatType: chatType,
                         chatId: chatId,
                         threadId: threadId,
                         accessToken: accessToken || "",

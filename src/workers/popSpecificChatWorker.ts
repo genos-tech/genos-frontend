@@ -4,6 +4,7 @@ import { getSpecificDataWithIndex } from "../db/crud";
 self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;
     const isDm: boolean = event.data.isDm;
+    const chatType: number = event.data.chatType;
 
     if (chatId && isDm !== undefined) {
         const chat = await getSpecificDataWithIndex({

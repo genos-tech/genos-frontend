@@ -77,7 +77,7 @@ export type TaskProps = {
     body: PartialBlock[];
     assignee: UserProps;
     reporter: UserProps;
-    chatType: string | null;
+    chatType: number | null;
     chatId: number | null;
     threadId: number | null;
     dueDate: string;

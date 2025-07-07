@@ -5,6 +5,7 @@ import { MessageProps } from "../types/chat";
 self.onmessage = async (event) => {
     const threadMessage: MessageProps = event.data.threadMessage;
     const isDm: boolean = event.data.isDm;
+    const chatType: number = event.data.chatType;
 
     await addData({
         storeName: isDm ? STORES.DM_THREAD_MESSAGES : STORES.GM_THREAD_MESSAGES,
