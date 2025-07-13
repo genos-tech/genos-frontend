@@ -5,11 +5,13 @@ export const signUp = async (
     username: string,
     email: string,
     password: string,
+    isSystemUser: boolean,
     setErrorMessage?: (value: string) => void
 ) => {
+    const is_system_user: boolean = isSystemUser;
     try {
         const api = nonAuthApi();
-        const res = await api.post("/user/signup/", { username, email, password });
+        const res = await api.post("/user/signup/", { username, email, password, is_system_user });
         return res.data;
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
