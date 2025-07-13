@@ -30,7 +30,7 @@ export default function TaskInit(props: TaskInitProps) {
 
     async function createProject(): Promise<void> {
         try {
-            const createProjectResponse = await fetch(`${base_url}/project/create/`, {
+            const createProjectResponse = await fetch(`${base_url}/project/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -48,7 +48,6 @@ export default function TaskInit(props: TaskInitProps) {
             if (!createProjectResponse.ok) {
                 throw new Error("Project Creation Failed");
             } else {
-                console.log("Task created:", createProjectData);
                 setCurrentProject({
                     projectId: createProjectData.project_id,
                     projectName: createProjectData.project_name,

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
 
+import { signUp } from "../../../admin/services/signup";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
+import { SignUpResponse } from "../../../../types/admin";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -33,33 +35,70 @@ export const ModalCreateProject: React.FC<Props> = ({
     };
     async function createProject(): Promise<void> {
         try {
-            const createProjectResponse = await fetch(`${base_url}/project/create/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    team: myself.teamId,
-                    project_name: projectName,
-                    owner: myself.userId,
-                }),
-            });
+            // Signup for a system user for the new project
+            const _signup = async (username: string, email: string, password: string) => {
+                const signUpRes: SignUpResponse = await signUp(
+                    username,
+                    email,
+                    password,
+                    true,
+                    setErrorMessage
+                );
+                if (signUpRes) {
+                    const createProjectResponse = await fetch(`${base_url}/project/`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify({
+                            team: myself.teamId,
+                            project_name: projectName,
+                            owner: myself.userId,
+                            project_system_user: signUpRes.user.id,
+                        }),
+                    });
 
-            const createProjectData = await createProjectResponse.json();
+                    const createProjectData = await createProjectResponse.json();
 
-            if (!createProjectResponse.ok) {
-                console.error(createProjectData);
-                throw new Error(createProjectData.hint || "Project Creation Failed");
-            } else {
-                console.log("Task created:", createProjectData);
-                setCurrentProject({
-                    projectId: createProjectData.project_id,
-                    projectName: createProjectData.project_name,
-                });
-                setOpenCreateProject(false);
-                setIsNewProjectCreated(true);
-            }
+                    if (!createProjectResponse.ok) {
+                        console.error(createProjectData);
+                        throw new Error(createProjectData.hint || "Project Creation Failed");
+                    } else {
+                        const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                            body: JSON.stringify({
+                                team_id: myself.teamId,
+                                project_id: createProjectData.project_id,
+                                attendee_id: myself.userId,
+                            }),
+                        });
+
+                        const joinProjectData = await joinProjectResponse.json();
+
+                        if (!joinProjectResponse.ok) {
+                            console.error(joinProjectData);
+                            throw new Error(
+                                joinProjectData.hint || "Failed to join the created project"
+                            );
+                        } else {
+                            setCurrentProject({
+                                projectId: createProjectData.project_id,
+                                projectName: createProjectData.project_name,
+                            });
+                            setOpenCreateProject(false);
+                            setIsNewProjectCreated(true);
+                        }
+                    }
+                } else {
+                    console.error("Failed to create system user for the project.");
+                }
+            };
+            _signup(projectName, `${projectName}-${myself.teamId}@origin.tech`, projectName);
         } catch (error) {
             const err_msg = `${error}`;
             console.error(err_msg);

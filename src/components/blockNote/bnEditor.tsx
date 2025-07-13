@@ -149,6 +149,7 @@ export const BnEditor = (props: BnEditorProps) => {
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
                     isDm: chat.isDm,
+                    chatType: chat.chatType,
                     dmPartnerUserId: chat.dmPartnerUser.userId,
                 },
                 async (ack: any) => {
@@ -156,6 +157,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         chatId: chat.chatId,
                         chatName: chat.chatName,
                         isDm: chat.isDm,
+                        chatType: chat.chatType,
                         dmPartnerUser: chat.dmPartnerUser,
                         unread: false,
                         messages: [
@@ -207,6 +209,7 @@ export const BnEditor = (props: BnEditorProps) => {
                             chatId: chat.chatId,
                             chatName: chat.chatName,
                             isDm: chat.isDm,
+                            chatType: chat.chatType,
                             dmPartnerUser: chat.dmPartnerUser,
                             unread: false,
                             latestMessage: latestMessage,
@@ -215,8 +218,8 @@ export const BnEditor = (props: BnEditorProps) => {
                         };
 
                         if (newChat) {
-                            await addMessage(latestMessage, newChat.isDm);
-                            await addChat(newChat, newChat.isDm);
+                            await addMessage(latestMessage, newChat.isDm, newChat.chatType);
+                            await addChat(newChat, newChat.isDm, newChat.chatType);
 
                             editor.replaceBlocks(editor.document, []);
                         }

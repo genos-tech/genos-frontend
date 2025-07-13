@@ -38,6 +38,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         chatName: thread.chatName,
         threadId: thread.threadId,
         isDm: thread.isDm,
+        chatType: thread.chatType,
         dmPartnerUser: thread.dmPartnerUser,
         taskId: thread.taskId,
         unread: false,
@@ -78,7 +79,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
                 {(currentPreviewTask === undefined ||
-                    (currentPreviewTask && currentPreviewTask.id === "null")) && (
+                    (currentPreviewTask && currentPreviewTask.id === undefined)) && (
                     <>
                         <Tooltip title="New Task" size="sm">
                             <IconButton
@@ -97,7 +98,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </>
                 )}
 
-                {currentPreviewTask && currentPreviewTask.id !== "null" && (
+                {currentPreviewTask && currentPreviewTask.id !== undefined && (
                     <>
                         <Tooltip title="Open Task" size="sm">
                             <IconButton

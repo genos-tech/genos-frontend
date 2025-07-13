@@ -3,12 +3,17 @@ import AddThreadMessageWorker from "../../../workers/addThreadMessageWorker.ts?w
 
 export const addThreadMessage = (
     threadMessage: ThreadMessageProps,
-    isDm: boolean
+    isDm: boolean,
+    chatType: number
 ): Promise<null> => {
     return new Promise((resolve, reject) => {
         const addThreadMessageWorker = new AddThreadMessageWorker();
 
-        addThreadMessageWorker.postMessage({ threadMessage: threadMessage, isDm: isDm });
+        addThreadMessageWorker.postMessage({
+            threadMessage: threadMessage,
+            isDm: isDm,
+            chatType: chatType,
+        });
 
         addThreadMessageWorker.onmessage = (event) => {
             addThreadMessageWorker.terminate();

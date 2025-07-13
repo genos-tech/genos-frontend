@@ -7,7 +7,7 @@ export const loadTeamProjects = async (myself: UserProps, accessToken: string | 
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${myself.teamId}`;
+            const query: string = `team_id=${myself.teamId}&attendee_id=${myself.userId}`;
             const res = await api.get(`/project/getTeamProjects/?${query}`);
             return res.data;
         } else {

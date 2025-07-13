@@ -59,10 +59,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setCurrentPreviewTaskId,
     } = props;
     const { accessToken } = useAuth();
+    const [taskClosed, setTaskClosed] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(
         currentPreviewTask.attachments
     );
     const [taskUpdated, setTaskUpdated] = useState(false);
+    const [taskBodyUpdated, setTaskBodyUpdated] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
     const [uploadedSingleAttachment, setUploadedSingleAttachment] =
@@ -74,7 +76,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [assignee, setAssignee] = useState<UserProps>(tmpCurrentTaskContent.assignee);
     const [reporter, setReporter] = useState<UserProps>(tmpCurrentTaskContent.reporter);
     const [isCommentUpdated, setIsCommentUpdated] = useState(false);
-    const [currentTaskId, setCurrentTaskId] = useState(tmpCurrentTaskContent.id);
+    const [currentTaskId, setCurrentTaskId] = useState<number | undefined>(
+        tmpCurrentTaskContent.id
+    );
 
     // Save initial task title to restore it when use input empty title
     const [initTaskTitle, setInitTaskTitle] = useState<string>(currentPreviewTask.title);
@@ -87,50 +91,88 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setTmpCurrentTaskContent(currentPreviewTask);
     }, []);
 
+    // Send updated task to the backend when task is updated
+    const sendUpdatedTask = async (taskChanged: boolean) => {
+        const newTaskContent: TaskProps = {
+            ...tmpCurrentTaskContent,
+            title: taskTitle === "" ? initTaskTitle : taskTitle,
+            body: body,
+        };
+
+        const uploadedAttachmentData = await sendUpdatedSpecificTask(
+            myself,
+            newTaskContent,
+            accessToken
+        );
+
+        if (uploadedAttachmentData.attachment_id > 0) {
+            setUploadedSingleAttachment({
+                attachment_id: uploadedAttachmentData.attachment_id,
+                file: uploadedAttachmentData.attached_file,
+                file_base64: uploadedAttachmentData.file_base64,
+                name: uploadedAttachmentData.name,
+                type: uploadedAttachmentData.attached_type,
+            });
+        } else {
+            setUploadedSingleAttachment(undefined);
+        }
+
+        if (taskChanged) {
+            // Initialize the following variable when use changes the previewing task
+            setTmpCurrentTaskContent(currentPreviewTask);
+            setCurrentPreviewTask(currentPreviewTask);
+            setCurrentTaskId(currentPreviewTask.id);
+            setBody(currentPreviewTask.body || []);
+            setTaskBodyUpdated(false);
+        } else {
+            // Update only the tmpCurrentTaskContent when use updated the task content
+            // (Not changed the previewing task)
+            setTmpCurrentTaskContent(newTaskContent);
+            setCurrentPreviewTask(newTaskContent);
+        }
+        setTaskUpdated(false);
+    };
+    useEffect(() => {
+        if (taskUpdated === true) {
+            sendUpdatedTask(false);
+        }
+    }, [taskUpdated]);
+
     // Update variables when an user change the target task
     useEffect(() => {
-        setTmpCurrentTaskContent(currentPreviewTask);
-        setCurrentTaskId(currentPreviewTask.id);
-        setBody(currentPreviewTask.body || []);
+        if (taskBodyUpdated) {
+            sendUpdatedTask(true);
+        } else {
+            setTmpCurrentTaskContent(currentPreviewTask);
+            setCurrentTaskId(currentPreviewTask.id);
+            setBody(currentPreviewTask.body || []);
+        }
     }, [currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
+    // This will be executed after the above useEffect is executed
+    //  (i.e., after `setCurrentTaskId` is executed)
     useEffect(() => {
-        setTaskTitle(currentPreviewTask.title);
-        setInitTaskTitle(currentPreviewTask.title);
-        setUploadedFiles(currentPreviewTask.attachments);
+        if (currentTaskId) {
+            setTaskTitle(currentPreviewTask.title);
+            setInitTaskTitle(currentPreviewTask.title);
+            setUploadedFiles(currentPreviewTask.attachments);
+        }
     }, [currentTaskId]);
 
-    // Send updated task to the backend when task is updated
     useEffect(() => {
-        if (taskUpdated === true) {
-            const newTaskContent: TaskProps = {
-                ...tmpCurrentTaskContent,
-                title: taskTitle === "" ? initTaskTitle : taskTitle,
-                body: body,
-            };
-            (async () => {
-                setTmpCurrentTaskContent(newTaskContent);
-                const uploadedAttachmentData = await sendUpdatedSpecificTask(
-                    myself,
-                    newTaskContent,
-                    accessToken
-                );
-                if (uploadedAttachmentData.attachment_id > 0) {
-                    setUploadedSingleAttachment({
-                        attachment_id: uploadedAttachmentData.attachment_id,
-                        file: uploadedAttachmentData.attached_file,
-                        file_base64: uploadedAttachmentData.file_base64,
-                        name: uploadedAttachmentData.name,
-                        type: uploadedAttachmentData.attached_type,
-                    });
-                } else {
-                    setUploadedSingleAttachment(undefined);
-                }
-            })();
-            setTaskUpdated(false);
-        }
-    }, [taskUpdated]);
+        // Save task before the opening task preview is closed.
+        if (taskClosed)
+            if (taskBodyUpdated) {
+                const execute = async () => {
+                    await sendUpdatedTask(false);
+                    setIsTaskContentVisible(false);
+                };
+                execute();
+            } else {
+                setIsTaskContentVisible(false);
+            }
+    }, [taskClosed]);
 
     // Update attachments
     useEffect(() => {
@@ -246,7 +288,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsCreatingTask={setIsCreatingTask}
                 setOpenCreateProject={setOpenCreateProject}
                 setOpenCreateTag={setOpenCreateTag}
-                setIsTaskContentVisible={setIsTaskContentVisible}
+                setTaskClosed={setTaskClosed}
                 setTaskUpdated={setTaskUpdated}
                 isPreviewMode={true}
             />
@@ -293,7 +335,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 key={tmpCurrentTaskContent.id}
                 body={body}
                 setBody={setBody}
-                setTaskUpdated={setTaskUpdated}
+                setTaskBodyUpdated={setTaskBodyUpdated}
             />
 
             <Divider sx={{ mt: 2 }} />

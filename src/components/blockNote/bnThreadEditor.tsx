@@ -151,6 +151,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     threadId: thread.threadId,
                     threadMessage: editor.document,
                     isDm: thread.isDm,
+                    chatType: thread.chatType,
                     dmPartnerUserId: thread.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
@@ -164,6 +165,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         chatName: thread.chatName,
                         threadId: thread.threadId,
                         isDm: thread.isDm,
+                        chatType: thread.chatType,
                         dmPartnerUser: thread.dmPartnerUser,
                         taskId: null,
                         unread: false,
@@ -201,7 +203,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         taskId: thread.taskId,
                     };
 
-                    addThreadMessage(newThreadMessage, thread.isDm);
+                    addThreadMessage(newThreadMessage, thread.isDm, thread.chatType);
 
                     editor.replaceBlocks(editor.document, []);
                 }

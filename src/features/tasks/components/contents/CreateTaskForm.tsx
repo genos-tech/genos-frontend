@@ -105,6 +105,7 @@ type CreateTaskProps = {
     socket: Socket | null;
     myself: UserProps;
     isDm: boolean | null;
+    chatType: number | null;
     chatId: number | null;
     threadId: number | null;
     setIsTaskContentVisible: (value: boolean) => void;
@@ -129,6 +130,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         socket,
         myself,
         isDm,
+        chatType,
         chatId,
         threadId,
         setIsOpeningTask,
@@ -154,7 +156,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         body: [],
         assignee: myself,
         reporter: myself,
-        chatType: isDm === null || isDm === undefined ? null : isDm ? "dm" : "gm",
+        chatType: isDm === null || isDm === undefined ? null : isDm ? 1 : 2,
         chatId: chatId,
         threadId: threadId,
         dueDate: getFormattedTodayDateStr(),
@@ -302,6 +304,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 myself={myself}
                 accessToken={accessToken}
                 isDm={isDm}
+                chatType={chatType}
                 chatId={chatId}
                 threadId={threadId}
                 taskContents={taskContents}

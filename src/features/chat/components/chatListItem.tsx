@@ -61,6 +61,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             chatId: chat.chatId,
             chatName: chat.chatName,
             isDm: chat.isDm,
+            chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
             unread: false,
             messages: messages,
@@ -80,13 +81,13 @@ export const ChatListItem = (props: ChatListItemProps) => {
             toggleMessagesPane();
             chat.unread = Boolean(false);
             if (chat.isDm) {
-                popSpecificMessages(chat.chatId, chat.isDm)
+                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
                     .then((messages) => {
                         setCurrentMainChat(defineNewMessages(messages));
                     })
                     .catch((error) => console.error(error));
             } else {
-                popSpecificMessages(chat.chatId, chat.isDm)
+                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
                     .then((messages) => {
                         setCurrentMainChat(defineNewMessages(messages));
                     })
@@ -102,13 +103,13 @@ export const ChatListItem = (props: ChatListItemProps) => {
         ) {
             toggleMessagesPane();
             if (chat.isDm) {
-                popSpecificMessages(chat.chatId, chat.isDm)
+                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
                     .then((messages) => {
                         setCurrentSubChat(defineNewMessages(messages));
                     })
                     .catch((error) => console.error(error));
             } else {
-                popSpecificMessages(chat.chatId, chat.isDm)
+                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
                     .then((messages) => {
                         setCurrentSubChat(defineNewMessages(messages));
                     })

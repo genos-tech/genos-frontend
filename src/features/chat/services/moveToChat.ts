@@ -22,13 +22,16 @@ export const moveToDMChat = async (
             joiningCGId: -1, // dm_id or gm_id
             joiningCGName: chatName, // dm_name or gm_name
             isDm: true,
+            chatType: 1,
             dmPartnerUserId: dmPartnerUser.userId,
         });
     }
 
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, true);
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, true, 1);
     if (fetchedMessages) {
-        setCurrentMainChat(defineNewChat(chatId, chatName, true, dmPartnerUser, fetchedMessages));
+        setCurrentMainChat(
+            defineNewChat(chatId, chatName, true, 1, dmPartnerUser, fetchedMessages)
+        );
     } else {
         console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages);
     }
@@ -39,10 +42,10 @@ export const moveToGMChat = async (
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false);
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false, 2);
     if (fetchedMessages) {
         setCurrentMainChat(
-            defineNewChat(chatId, chatName, false, defaultDmPartner, fetchedMessages)
+            defineNewChat(chatId, chatName, false, 2, defaultDmPartner, fetchedMessages)
         );
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
@@ -60,6 +63,7 @@ export const moveToSelectedChat = async (
     chatId: number,
     chatName: string,
     isDm: boolean,
+    chatType: number,
     dmPartnerUser: UserProps,
     allChats: AllChatProps[],
     setCurrentMainChat: (value: ChatProps) => void,
@@ -67,7 +71,7 @@ export const moveToSelectedChat = async (
     setOpenSearchBox: (value: boolean) => void
 ) => {
     try {
-        const isKnownChat: boolean = await checkKnownChat(chatId, isDm);
+        const isKnownChat: boolean = await checkKnownChat(chatId, isDm, chatType);
         setOpenSearchBox(false);
 
         if (!isKnownChat && socket !== null) {
@@ -78,6 +82,7 @@ export const moveToSelectedChat = async (
                     destCGName: chatName,
                     destCGId: chatId,
                     isDm: isDm,
+                    chatType: chatType,
                     dmPartnerUserId: dmPartnerUser.userId,
                 },
                 async (ack: any) => {
@@ -95,6 +100,7 @@ export const moveToSelectedChat = async (
                         chatId: chatId,
                         chatName: chatName,
                         isDm: isDm,
+                        chatType: chatType,
                         dmPartnerUser: dmPartnerUser,
                         unread: true,
                         latestMessage: message,
@@ -102,8 +108,8 @@ export const moveToSelectedChat = async (
                         TSLastMessage: getCurrentTimestamp(),
                     };
 
-                    await addChat(chat, chat.isDm);
-                    await addMessage(message, chat.isDm);
+                    await addChat(chat, chat.isDm, chat.chatType);
+                    await addMessage(message, chat.isDm, chat.chatType);
 
                     setCurrentMainChat({ ...chat, messages: [message] });
                     setAllChats([...allChats, chat]);

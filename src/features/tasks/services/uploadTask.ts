@@ -7,6 +7,7 @@ type uploadTaskProps = {
     myself: UserProps;
     taskContents: TaskProps;
     isDm: boolean | null;
+    chatType: number | null;
     chatId: number | null;
     threadId: number | null;
     accessToken: string;
@@ -21,6 +22,7 @@ export const uploadTask = async (props: uploadTaskProps) => {
         myself,
         taskContents,
         isDm,
+        chatType,
         chatId,
         threadId,
         accessToken,
@@ -77,7 +79,7 @@ export const uploadTask = async (props: uploadTaskProps) => {
                                 ? taskContents.generalLink.title
                                 : null,
                         tags: taskContents.tags,
-                        chat_type: isDm === null || isDm === undefined ? null : isDm ? "dm" : "gm",
+                        chat_type: isDm === null || isDm === undefined ? null : isDm ? 1 : 2,
                         chat_id: chatId || null,
                         thread_id: threadId || null,
                         parent_task_id: taskContents.parentTaskId,

@@ -20,12 +20,13 @@ const moveToGMChat = async (
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false);
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false, 2);
     if (fetchedMessages && fetchedMessages.length !== 0) {
         const newChat: ChatProps = {
             chatId: chatId,
             chatName: chatName,
             isDm: false,
+            chatType: 2,
             dmPartnerUser: defaultDmPartner,
             unread: false,
             messages: fetchedMessages,
@@ -61,6 +62,7 @@ const addGMChatAndMessage = async (
         chatId: data.chatId,
         chatName: data.chatName,
         isDm: false,
+        chatType: 2,
         dmPartnerUser: defaultDmPartner,
         unread: false,
         latestMessage: newMessage,
@@ -68,8 +70,8 @@ const addGMChatAndMessage = async (
         TSLastMessage: getCurrentTimestamp(),
     };
 
-    await addChat(newChat, false);
-    await addMessage(newMessage, false);
+    await addChat(newChat, false, 2);
+    await addMessage(newMessage, false, 2);
 
     setAllChats([
         ...allChats,
@@ -78,6 +80,7 @@ const addGMChatAndMessage = async (
             chatName: newChat.chatName,
             unread: false,
             isDm: false,
+            chatType: 2,
             dmPartnerUser: defaultDmPartner,
             latestMessage: newChat.latestMessage,
             latestMessageText: newChat.latestMessageText,
@@ -114,6 +117,7 @@ export const createChatGroup = async (
                 joiningCGId: data.chatId, // gm_id
                 joiningCGName: data.chatName, // gm_name
                 isDm: false,
+                chatType: 2,
                 dmPartnerUser: null,
             },
             (ack: any) => {
@@ -122,6 +126,7 @@ export const createChatGroup = async (
                     destCGName: chatName,
                     destCGId: data.chatId,
                     isDm: false,
+                    chatType: 2,
                     dmPartnerUser: null,
                 });
             }

@@ -77,6 +77,7 @@ type TaskSidebarProps = {
     setCurrentPreviewTaskId: (value: number) => void;
     setOpenCreateTeam: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
+    setOpenJoinProject: (value: { flag: boolean; projectId: number; projectName: string }) => void;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -91,6 +92,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setCurrentPreviewTaskId,
         setOpenCreateTeam,
         setOpenCreateProject,
+        setOpenJoinProject,
     } = props;
     const { accessToken } = useAuth();
 
@@ -404,43 +406,124 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         </Typography>
                                     </ListItemButton>
                                 </ListItem>
-                                {teamProjects.map(({ projectId, projectName }) => {
+                                {teamProjects.map(({ projectId, projectName, isJoined }) => {
                                     return (
-                                        <ListItem key={projectId}>
-                                            <ListItemButton
-                                                color={"neutral"}
-                                                variant={
-                                                    projectId === currentProject?.projectId
-                                                        ? "solid"
-                                                        : "plain"
-                                                }
-                                                onClick={() =>
-                                                    setCurrentProject({
-                                                        projectId: projectId,
-                                                        projectName: projectName,
-                                                    })
-                                                }
-                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                            >
-                                                <Typography
-                                                    noWrap
-                                                    sx={{
-                                                        color:
-                                                            projectId === currentProject?.projectId
-                                                                ? "white"
-                                                                : "neutral-500",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                        width: "100%", // take full width of button
-                                                    }}
+                                        isJoined === true && (
+                                            <ListItem key={projectId}>
+                                                <ListItemButton
+                                                    color={"neutral"}
+                                                    variant={
+                                                        projectId === currentProject?.projectId
+                                                            ? "solid"
+                                                            : "plain"
+                                                    }
+                                                    onClick={() =>
+                                                        setCurrentProject({
+                                                            projectId: projectId,
+                                                            projectName: projectName,
+                                                        })
+                                                    }
+                                                    sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 >
-                                                    {projectName}
-                                                </Typography>
-                                            </ListItemButton>
-                                        </ListItem>
+                                                    <Typography
+                                                        noWrap
+                                                        sx={{
+                                                            color:
+                                                                projectId ===
+                                                                currentProject?.projectId
+                                                                    ? "white"
+                                                                    : "neutral-500",
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            whiteSpace: "nowrap",
+                                                            width: "100%", // take full width of button
+                                                        }}
+                                                    >
+                                                        {projectName}
+                                                    </Typography>
+                                                </ListItemButton>
+                                            </ListItem>
+                                        )
                                     );
                                 })}
+                                <Toggler
+                                    defaultExpanded={false}
+                                    renderToggle={({ open, setOpen }) => (
+                                        <ListItemButton
+                                            onClick={() => {
+                                                setOpen(!open);
+                                                updateTeamProjects();
+                                            }}
+                                        >
+                                            <ListItemContent>
+                                                <Typography level="title-sm">
+                                                    Other Projects
+                                                </Typography>
+                                            </ListItemContent>
+                                            <KeyboardArrowDownIcon
+                                                sx={[
+                                                    open
+                                                        ? {
+                                                              transform: "rotate(180deg)",
+                                                          }
+                                                        : {
+                                                              transform: "none",
+                                                          },
+                                                ]}
+                                            />
+                                        </ListItemButton>
+                                    )}
+                                >
+                                    <List sx={{ gap: 0.5 }}>
+                                        {teamProjects.map(
+                                            ({ projectId, projectName, isJoined }) => {
+                                                return (
+                                                    isJoined === false && (
+                                                        <ListItem key={projectId}>
+                                                            <ListItemButton
+                                                                color={"neutral"}
+                                                                variant={
+                                                                    projectId ===
+                                                                    currentProject?.projectId
+                                                                        ? "solid"
+                                                                        : "plain"
+                                                                }
+                                                                onClick={() => {
+                                                                    setOpenJoinProject({
+                                                                        flag: true,
+                                                                        projectId: projectId,
+                                                                        projectName: projectName,
+                                                                    });
+                                                                }}
+                                                                sx={{
+                                                                    overflow: "hidden",
+                                                                }} // ensure children don't overflow
+                                                            >
+                                                                <Typography
+                                                                    noWrap
+                                                                    sx={{
+                                                                        color:
+                                                                            projectId ===
+                                                                            currentProject?.projectId
+                                                                                ? "white"
+                                                                                : "neutral-500",
+                                                                        overflow: "hidden",
+                                                                        textOverflow: "ellipsis",
+                                                                        whiteSpace: "nowrap",
+                                                                        width: "100%", // take full width of button
+                                                                        ml: "20px",
+                                                                    }}
+                                                                >
+                                                                    {projectName}
+                                                                </Typography>
+                                                            </ListItemButton>
+                                                        </ListItem>
+                                                    )
+                                                );
+                                            }
+                                        )}
+                                    </List>
+                                </Toggler>
                             </List>
                         </Toggler>
                     </ListItem>

@@ -35,7 +35,13 @@ export const SignUpForm = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const _signup = async (username: string, email: string, password: string) => {
-        const signUpRes: SignUpResponse = await signUp(username, email, password, setErrorMessage);
+        const signUpRes: SignUpResponse = await signUp(
+            username,
+            email,
+            password,
+            false,
+            setErrorMessage
+        );
         if (signUpRes) {
             navigate("/");
         } else {

@@ -352,6 +352,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             socket={socket}
                                             myself={myself}
                                             isDm={currentThreadChat.isDm}
+                                            chatType={currentThreadChat.chatType}
                                             chatId={currentThreadChat.chatId}
                                             threadId={currentThreadChat.threadId}
                                             setIsTaskContentVisible={setIsTaskContentVisible}

@@ -28,7 +28,11 @@ export type SignInResponse = {
 export type SignUpResponse = {
     access: string;
     refresh: string;
-    user: any;
+    user: {
+        username: string;
+        email: string;
+        id: string;
+    };
     message: string;
 };
 
