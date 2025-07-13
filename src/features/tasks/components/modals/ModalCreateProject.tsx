@@ -35,6 +35,7 @@ export const ModalCreateProject: React.FC<Props> = ({
     };
     async function createProject(): Promise<void> {
         try {
+            // Signup for a system user for the new project
             const _signup = async (username: string, email: string, password: string) => {
                 const signUpRes: SignUpResponse = await signUp(
                     username,
@@ -44,7 +45,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                     setErrorMessage
                 );
                 if (signUpRes) {
-                    const createProjectResponse = await fetch(`${base_url}/project/create/`, {
+                    const createProjectResponse = await fetch(`${base_url}/project/`, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
@@ -64,13 +65,34 @@ export const ModalCreateProject: React.FC<Props> = ({
                         console.error(createProjectData);
                         throw new Error(createProjectData.hint || "Project Creation Failed");
                     } else {
-                        console.log("Task created:", createProjectData);
-                        setCurrentProject({
-                            projectId: createProjectData.project_id,
-                            projectName: createProjectData.project_name,
+                        const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                            body: JSON.stringify({
+                                team_id: myself.teamId,
+                                project_id: createProjectData.project_id,
+                                attendee_id: myself.userId,
+                            }),
                         });
-                        setOpenCreateProject(false);
-                        setIsNewProjectCreated(true);
+
+                        const joinProjectData = await joinProjectResponse.json();
+
+                        if (!joinProjectResponse.ok) {
+                            console.error(joinProjectData);
+                            throw new Error(
+                                joinProjectData.hint || "Failed to join the created project"
+                            );
+                        } else {
+                            setCurrentProject({
+                                projectId: createProjectData.project_id,
+                                projectName: createProjectData.project_name,
+                            });
+                            setOpenCreateProject(false);
+                            setIsNewProjectCreated(true);
+                        }
                     }
                 } else {
                     console.error("Failed to create system user for the project.");

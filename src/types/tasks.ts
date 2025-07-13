@@ -24,6 +24,7 @@ export type TagListProps = {
 export type ProjectProps = {
     projectId: number;
     projectName: string;
+    isJoined?: boolean;
 };
 
 export type TaskPriorityProps = {

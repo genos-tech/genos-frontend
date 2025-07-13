@@ -49,7 +49,6 @@ export const ModalCreateTeam: React.FC<Props> = ({
                 console.error(createTeamData);
                 throw new Error(createTeamData.hint || "Team Creation Failed");
             } else {
-                console.log("Task created:", createTeamData);
                 setMyself({ ...myself, teamId: createTeamData.teamId });
                 setOpenCreateTeam(false);
             }

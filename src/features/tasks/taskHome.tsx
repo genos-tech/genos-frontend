@@ -16,6 +16,7 @@ import {
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -30,6 +31,8 @@ import { loadTeamProjects } from "./services/loadTeamProjects";
 import { loadTeamTaskList } from "./services/loadTaskSearchList";
 import { ModalCreateTag } from "./components/modals/ModalCreateTag";
 import { ModalCreateProject } from "./components/modals/ModalCreateProject";
+import { ModalJoinProject } from "./components/modals/ModalJoinProject";
+import { ModalDeleteProject } from "./components/modals/ModalDeleteProject";
 import { ModalCreateTeam } from "../admin/components/modals/ModalCreateTeam";
 import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from "../../components/layout/sidebar";
@@ -83,6 +86,16 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     const [openCreateTeam, setOpenCreateTeam] = useState(false);
     const [openCreateProject, setOpenCreateProject] = useState(false);
+    const [openJoinProject, setOpenJoinProject] = useState<{
+        flag: boolean;
+        projectId: number;
+        projectName: string;
+    }>({ flag: false, projectId: -1, projectName: "" });
+    const [openDeleteProject, setOpenDeleteProject] = useState<{
+        flag: boolean;
+        projectId: number;
+        projectName: string;
+    }>({ flag: false, projectId: -1, projectName: "" });
     const [openCreateTag, setOpenCreateTag] = useState(false);
     const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
@@ -144,14 +157,20 @@ export const TaskHome = (props: TaskHomeProps) => {
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
 
+        // Set the current project to one of the joining project.
+        // TODO: should set "last-opened-project" using cache(localstorage)
         if (loadedTeamProjects.length > 0) {
-            setCurrentProject({
-                projectId: loadedTeamProjects[0].projectId,
-                projectName: loadedTeamProjects[0].projectName,
-            });
-
-            await updateTeamTasks(myself, accessToken);
-            await fetchProjectTasks(loadedTeamProjects[0].projectId);
+            for (let i = 0; i < loadedTeamProjects.length; i++) {
+                if (loadedTeamProjects[i].isJoined === true) {
+                    setCurrentProject({
+                        projectId: loadedTeamProjects[i].projectId,
+                        projectName: loadedTeamProjects[i].projectName,
+                    });
+                    await updateTeamTasks(myself, accessToken);
+                    await fetchProjectTasks(loadedTeamProjects[i].projectId);
+                    break;
+                }
+            }
         } else {
             setCurrentProject(null);
         }
@@ -260,34 +279,35 @@ export const TaskHome = (props: TaskHomeProps) => {
                 />
 
                 <PanelGroup direction="horizontal">
-                    <Panel id={"1"} order={1} minSize={5} maxSize={20}>
-                        <TaskSidebar
-                            myself={myself}
-                            setMyself={setMyself}
-                            setIsDashboardVisible={setIsDashboardVisible}
-                            setTaskTableVisible={setTaskTableVisible}
-                            currentProject={currentProject}
-                            setCurrentProject={setCurrentProject}
-                            currentPreviewTaskId={currentPreviewTaskId}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setOpenCreateTeam={setOpenCreateTeam}
-                            setOpenCreateProject={setOpenCreateProject}
-                        />
-                    </Panel>
-
-                    {/* Resizable Handle with MUI sx Styling */}
-                    <PanelResizeHandle
-                        style={{
-                            width: "1px",
-                            backgroundColor: mode === "dark" ? "grey" : "lightgrey",
-                            transition: "all 0.3s ease-in-out",
-                            cursor: "col-resize",
-                        }}
-                        className="resize-handle"
-                    />
-
                     {currentProject && (
                         <>
+                            <Panel id={"1"} order={1} minSize={5} maxSize={20}>
+                                <TaskSidebar
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    setIsDashboardVisible={setIsDashboardVisible}
+                                    setTaskTableVisible={setTaskTableVisible}
+                                    currentProject={currentProject}
+                                    setCurrentProject={setCurrentProject}
+                                    currentPreviewTaskId={currentPreviewTaskId}
+                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                    setOpenCreateTeam={setOpenCreateTeam}
+                                    setOpenCreateProject={setOpenCreateProject}
+                                    setOpenJoinProject={setOpenJoinProject}
+                                />
+                            </Panel>
+
+                            {/* Resizable Handle with MUI sx Styling */}
+                            <PanelResizeHandle
+                                style={{
+                                    width: "1px",
+                                    backgroundColor: mode === "dark" ? "grey" : "lightgrey",
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
+                                }}
+                                className="resize-handle"
+                            />
+
                             {/* left pane */}
                             <Panel id={"2"} order={2} minSize={30} maxSize={100}>
                                 <Box
@@ -497,6 +517,20 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         <AddIcon />
                                                         New Tag
                                                     </MenuItem>
+                                                    <MenuItem
+                                                        onClick={() => {
+                                                            setOpenDeleteProject({
+                                                                flag: true,
+                                                                projectId:
+                                                                    currentProject.projectId,
+                                                                projectName:
+                                                                    currentProject.projectName,
+                                                            });
+                                                        }}
+                                                    >
+                                                        <DeleteIcon />
+                                                        Delete Project
+                                                    </MenuItem>
                                                 </Menu>
                                             </Dropdown>
                                         </Box>
@@ -641,7 +675,34 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                     {!currentProject && (
                         <>
-                            <Panel id={"5"} order={5} minSize={80} maxSize={100}>
+                            <Panel id={"5"} order={5} minSize={5} maxSize={20}>
+                                <TaskSidebar
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    setIsDashboardVisible={setIsDashboardVisible}
+                                    setTaskTableVisible={setTaskTableVisible}
+                                    currentProject={currentProject}
+                                    setCurrentProject={setCurrentProject}
+                                    currentPreviewTaskId={currentPreviewTaskId}
+                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                    setOpenCreateTeam={setOpenCreateTeam}
+                                    setOpenCreateProject={setOpenCreateProject}
+                                    setOpenJoinProject={setOpenJoinProject}
+                                />
+                            </Panel>
+
+                            {/* Resizable Handle with MUI sx Styling */}
+                            <PanelResizeHandle
+                                style={{
+                                    width: "1px",
+                                    backgroundColor: mode === "dark" ? "grey" : "lightgrey",
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
+                                }}
+                                className="resize-handle"
+                            />
+
+                            <Panel id={"6"} order={6} minSize={80} maxSize={100}>
                                 <Box
                                     sx={{
                                         height: "100%",
@@ -686,6 +747,22 @@ export const TaskHome = (props: TaskHomeProps) => {
                         setOpenCreateProject={setOpenCreateProject}
                         setCurrentProject={setCurrentProject}
                         setIsNewProjectCreated={setIsNewProjectCreated}
+                    />
+
+                    {/* Modal for creating a new project */}
+                    <ModalJoinProject
+                        myself={myself}
+                        openJoinProject={openJoinProject}
+                        setOpenJoinProject={setOpenJoinProject}
+                        setCurrentProject={setCurrentProject}
+                    />
+
+                    {/* Modal for deleting a project */}
+                    <ModalDeleteProject
+                        myself={myself}
+                        openDeleteProject={openDeleteProject}
+                        setOpenDeleteProject={setOpenDeleteProject}
+                        setCurrentProject={setCurrentProject}
                     />
 
                     {/* Modal for creating a new tag */}
