@@ -13,6 +13,7 @@ import { AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
 import { popAllChats } from "./features/chat/services/popAllChats";
+import { initDB } from "./db/schema";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -79,6 +80,9 @@ const useMyself = (): SetMyselfProps => {
 };
 
 export const App = () => {
+    // Need to run if you delete IndexedDB database
+    // initDB();
+
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
     const [isLoading, setIsLoading] = useState(true);

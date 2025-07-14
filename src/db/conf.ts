@@ -1,5 +1,5 @@
 export const DB_NAME = "originData";
-export const DB_VERSION = 2;
+export const DB_VERSION = 4;
 
 export const STORES = {
     USER_INFO: "users",
@@ -9,6 +9,9 @@ export const STORES = {
     GM_CHATS: "gmChats",
     GM_MESSAGES: "gmMessages",
     GM_THREAD_MESSAGES: "gmThreadMessages",
+    PM_CHATS: "pmChats",
+    PM_MESSAGES: "pmMessages",
+    PM_THREAD_MESSAGES: "pmThreadMessages",
     TASKS: "tasks",
 };
 
@@ -20,6 +23,9 @@ export const KEY_PATH = {
     GM_CHATS: "chatId",
     GM_MESSAGES: "messageIdWithChatId",
     GM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
+    PM_CHATS: "chatId",
+    PM_MESSAGES: "messageIdWithChatId",
+    PM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
     TASKS: "id",
 };
 
@@ -34,6 +40,11 @@ export const INDEX = {
     GM_MESSAGES_COMPOUND: "GmMessagesCompoundIndex",
     GM_THREAD_MESSAGES: "GmThreadMessagesIndex",
     GM_THREAD_MESSAGES_COMPOUND: "GmThreadMessagesCompoundIndex",
+    PM_CHATS: "PmTSLastMessageIndex",
+    PM_MESSAGES: "PmMessagesIndex",
+    PM_MESSAGES_COMPOUND: "PmMessagesCompoundIndex",
+    PM_THREAD_MESSAGES: "PmThreadMessagesIndex",
+    PM_THREAD_MESSAGES_COMPOUND: "PmThreadMessagesCompoundIndex",
     TASKS: "TasksIndex",
     TASKS_COMPOUND: "TasksCompoundIndex",
 };
@@ -49,6 +60,11 @@ export const INDEX_KEY = {
     GM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
     GM_THREAD_MESSAGES: "chatId",
     GM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
+    PM_CHATS: "TSLastMessage",
+    PM_MESSAGES: "chatId",
+    PM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
+    PM_THREAD_MESSAGES: "chatId",
+    PM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
     TASKS: "projectId",
     TASKS_COMPOUND: ["projectId", "status"],
 };

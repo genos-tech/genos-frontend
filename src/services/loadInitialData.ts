@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { defaultDmPartner } from "../features/chat/services/constants";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
+import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
 import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
 import PopLatestChatWorker from "../workers/popLatestChatWorker.ts?worker";
 import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
@@ -18,6 +19,7 @@ export const loadInitialData = (
 ) => {
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
+    const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
     const [isTeamTasksLoaded, setIsTeamTasksLoaded] = useState<boolean | null>(false);
     const [latestDmChatId, setLatestDmChatId] = useState<number | null>(null);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
@@ -57,6 +59,25 @@ export const loadInitialData = (
             };
             return () => {
                 loadGMHistoryWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
+
+    // Load PM history
+    useEffect(() => {
+        if (accessToken && myself.userId !== "" && myself.userName !== "") {
+            const loadPMHistoryWorker = new LoadPMHistoryWorker();
+            loadPMHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadPMHistoryWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    setIsPMHistoryLoaded(true);
+                } else {
+                    console.error("Filed initial PM history data loading");
+                    console.error("event.data:", event.data);
+                }
+            };
+            return () => {
+                loadPMHistoryWorker.terminate();
             };
         }
     }, [myself, accessToken]);
@@ -181,8 +202,20 @@ export const loadInitialData = (
 
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
-        if (isDMHistoryLoaded && isGMHistoryLoaded && isTeamTasksLoaded && isInitialChatLoaded) {
+        if (
+            isDMHistoryLoaded &&
+            isGMHistoryLoaded &&
+            isPMHistoryLoaded &&
+            isTeamTasksLoaded &&
+            isInitialChatLoaded
+        ) {
             setIsLoading(false);
         }
-    }, [isDMHistoryLoaded, isGMHistoryLoaded, isTeamTasksLoaded, isInitialChatLoaded]);
+    }, [
+        isDMHistoryLoaded,
+        isGMHistoryLoaded,
+        isPMHistoryLoaded,
+        isTeamTasksLoaded,
+        isInitialChatLoaded,
+    ]);
 };

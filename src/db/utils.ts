@@ -14,6 +14,12 @@ export async function checkIsKnownDMChat(chatId: number): Promise<boolean> {
 
 export async function checkIsKnownGMChat(chatId: number): Promise<boolean> {
     const db = await openDB(DB_NAME, DB_VERSION);
-    const gmChat = await db.get(STORES.DM_CHATS, chatId);
+    const gmChat = await db.get(STORES.GM_CHATS, chatId);
     return gmChat !== undefined;
+}
+
+export async function checkIsKnownPMChat(chatId: number): Promise<boolean> {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const pmChat = await db.get(STORES.PM_CHATS, chatId);
+    return pmChat !== undefined;
 }

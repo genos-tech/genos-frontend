@@ -1,0 +1,57 @@
+import { defaultDmPartner } from "../features/chat/services/constants";
+import { loadPMHistory } from "../features/chat/services/loadPMHistory";
+import { UserProps } from "../types/admin";
+import { ChatProps, MessageProps } from "../types/chat";
+import { STORES } from "../db/conf";
+import { clearStore, addData, miniBatchInsertMessages } from "../db/crud";
+
+const BATCH_SIZE = 100;
+
+self.onmessage = async (event) => {
+    const myself: UserProps = event.data.myself;
+    const accessToken: string = event.data.accessToken;
+
+    await clearStore(STORES.PM_CHATS);
+
+    // Load data from backend
+    const pmHistory: ChatProps[] = await loadPMHistory(
+        myself.teamId,
+        myself.teamName,
+        myself.userId,
+        accessToken
+    );
+
+    for (let i = 0; i < pmHistory.length; i += 1) {
+        const pmChat: ChatProps = pmHistory[i];
+
+        // Insert chat
+        await addData({
+            storeName: STORES.PM_CHATS,
+            data: {
+                chatId: pmChat.chatId,
+                chatName: pmChat.chatName,
+                unread: pmChat.unread,
+                isDm: false,
+                chatType: 2,
+                dmPartnerUser: defaultDmPartner,
+                latestMessage: pmChat.latestMessage,
+                latestMessageText: pmChat.latestMessageText,
+                TSLastMessage: pmChat.TSLastMessage,
+            },
+        });
+
+        // Insert messages by mini-batch
+        for (let i = 0; i < pmChat.messages.length; i += BATCH_SIZE) {
+            const miniBatchMessages: MessageProps[] = pmChat.messages.slice(i, i + BATCH_SIZE);
+            await miniBatchInsertMessages({
+                storeName: STORES.PM_MESSAGES,
+                miniBatchMessages: miniBatchMessages,
+            });
+        }
+    }
+
+    // Send finish a message
+    self.postMessage("done");
+};
+
+export {};
