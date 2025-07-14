@@ -81,11 +81,12 @@ const useMyself = (): SetMyselfProps => {
 
 export const App = () => {
     // Need to run if you delete IndexedDB database
-    // initDB();
+    initDB();
 
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
     const [isLoading, setIsLoading] = useState(true);
+    const [isWSConnected, setIsWSConnected] = useState(false);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
     // {1: Chat, 2: Tasks, 3: Notes}
@@ -116,27 +117,25 @@ export const App = () => {
     useEffect(() => {
         if (accessToken) {
             setSocketInstance(socket(accessToken));
+            console.log("WS connected");
         }
     }, [accessToken]);
 
-    useEffect(() => {
-        if (socketInstance && currentMainChat) {
-            wsHook({
-                socket: socketInstance,
-                accessToken: accessToken,
-                myself: myself,
-                allChats: allChats,
-                currentMainChat: currentMainChat,
-                currentSubChat: currentSubChat,
-                currentThreadChat: currentThreadChat,
-                setCurrentMainChat: setCurrentMainChat,
-                setCurrentSubChat: setCurrentSubChat,
-                setCurrentThreadChat: setCurrentThreadChat,
-                setAllChats: _setAllChats,
-                setIsTaskCommentUpdated: setIsTaskCommentUpdated,
-            });
-        }
-    }, [socketInstance]);
+    wsHook({
+        socket: socketInstance,
+        accessToken: accessToken,
+        myself: myself,
+        allChats: allChats,
+        currentMainChat: currentMainChat,
+        currentSubChat: currentSubChat,
+        currentThreadChat: currentThreadChat,
+        setCurrentMainChat: setCurrentMainChat,
+        setCurrentSubChat: setCurrentSubChat,
+        setCurrentThreadChat: setCurrentThreadChat,
+        setAllChats: _setAllChats,
+        setIsTaskCommentUpdated: setIsTaskCommentUpdated,
+        isLoading: isLoading,
+    });
 
     return isLoading || currentMainChat === undefined ? (
         <InitialLoad

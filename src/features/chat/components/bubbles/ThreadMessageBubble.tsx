@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Stack, Sheet } from "@mui/joy";
+import { Box, Stack, Sheet, Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
@@ -89,14 +89,19 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
                                 <Box sx={{ flex: 1 }}>
-                                    <AvatarWithStatus
-                                        userProfile={thread.dmPartnerUser}
-                                        socket={socket}
-                                        thread={thread}
-                                        online={sender.online}
-                                        setOpeningService={setOpeningService}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                    />
+                                    {thread.dmPartnerUser === null && (
+                                        <Avatar size="sm">{thread.chatName[0]}</Avatar>
+                                    )}
+                                    {thread.dmPartnerUser !== null && (
+                                        <AvatarWithStatus
+                                            userProfile={thread.dmPartnerUser}
+                                            socket={socket}
+                                            thread={thread}
+                                            online={sender.online}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                        />
+                                    )}
                                 </Box>
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={2}>

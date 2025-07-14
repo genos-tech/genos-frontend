@@ -20,7 +20,7 @@ const moveToGMChat = async (
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false, 2);
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages && fetchedMessages.length !== 0) {
         const newChat: ChatProps = {
             chatId: chatId,
@@ -48,6 +48,7 @@ const addGMChatAndMessage = async (
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
     const newMessage: MessageProps = {
+        chatType: 3,
         messageIdWithChatId: `${data.chatId}-1`,
         chatId: data.chatId,
         messageId: 1,
@@ -70,8 +71,8 @@ const addGMChatAndMessage = async (
         TSLastMessage: getCurrentTimestamp(),
     };
 
-    await addChat(newChat, false, 2);
-    await addMessage(newMessage, false, 2);
+    await addChat(newChat, 2);
+    await addMessage(newMessage, 2);
 
     setAllChats([
         ...allChats,

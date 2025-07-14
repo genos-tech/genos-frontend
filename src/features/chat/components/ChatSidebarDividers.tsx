@@ -77,3 +77,24 @@ export const DMDivider = () => {
         </Stack>
     );
 };
+
+export const PMDivider = () => {
+    const { mode } = useColorScheme();
+    return (
+        <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                alignItems: "center",
+                justifyContent: "space-between",
+                px: 2,
+                py: 1,
+            }}
+        >
+            <Typography component="h1" sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}>
+                Project Activity
+            </Typography>
+        </Stack>
+    );
+};

@@ -1,5 +1,5 @@
 export const DB_NAME = "originData";
-export const DB_VERSION = 4;
+export const DB_VERSION = 5;
 
 export const STORES = {
     USER_INFO: "users",

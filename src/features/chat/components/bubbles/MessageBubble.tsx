@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Stack, Sheet } from "@mui/joy";
+import { Box, Stack, Sheet, Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { addThreadMessage } from "../../services/addThreadMessage";
@@ -55,10 +55,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     // Load the thread task if exists
     const loadTask = (threadId: number) => {
         (async () => {
-            const chatType: number = chat.isDm ? 1 : 2;
             const loadedTask: TaskProps[] = await loadSpecificTaskByThreadId(
                 myself,
-                chatType,
+                chat.chatType,
                 chat.chatId,
                 threadId,
                 accessToken
@@ -88,7 +87,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     threadMessage: content,
                     isDm: chat.isDm,
                     chatType: chat.chatType,
-                    dmPartnerUserId: chat.dmPartnerUser.userId,
+                    dmPartnerUserId:
+                        chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
                     destCGName: chat.chatName,
@@ -96,6 +96,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
+                        chatType: chat.chatType,
                         messageIdWithChatIdAndThreadId: `${chat.chatId}-${messageId}-1`,
                         chatId: chat.chatId,
                         threadId: messageId,
@@ -219,7 +220,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             <Stack direction="row" spacing={1.5}>
                                 <Box sx={{ flex: 1 }}>
                                     <AvatarWithStatus
-                                        userProfile={isSent ? myself : chat.dmPartnerUser}
+                                        userProfile={isSent ? myself : sender}
                                         socket={socket}
                                         chat={chat}
                                         online={sender.online}

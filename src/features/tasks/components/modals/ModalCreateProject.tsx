@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
 
 import { signUp } from "../../../admin/services/signup";
-import { UserProps } from "../../../../types/admin";
+import { joinTeam } from "../../../admin/services/joinTeam";
+import { UserProps, SignUpResponse } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
-import { SignUpResponse } from "../../../../types/admin";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -86,12 +86,27 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 joinProjectData.hint || "Failed to join the created project"
                             );
                         } else {
-                            setCurrentProject({
-                                projectId: createProjectData.project_id,
-                                projectName: createProjectData.project_name,
-                            });
-                            setOpenCreateProject(false);
-                            setIsNewProjectCreated(true);
+                            const joinTeamRes = await joinTeam(
+                                accessToken,
+                                myself.teamId,
+                                signUpRes.user.id,
+                                setErrorMessage
+                            );
+                            const joinTeamData = await joinProjectResponse.json();
+
+                            if (!joinTeamRes.ok) {
+                                console.error(joinTeamData);
+                                throw new Error(
+                                    joinTeamData.hint || "Failed to add system_user to the team"
+                                );
+                            } else {
+                                setCurrentProject({
+                                    projectId: createProjectData.project_id,
+                                    projectName: createProjectData.project_name,
+                                });
+                                setOpenCreateProject(false);
+                                setIsNewProjectCreated(true);
+                            }
                         }
                     }
                 } else {

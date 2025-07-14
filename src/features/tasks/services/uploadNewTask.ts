@@ -175,6 +175,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         isDm: false,
                                         chatType: 3,
                                         dmPartnerUserId: null,
+                                        systemUserId: taskContents.project.projectUserId,
                                     });
                                 } else {
                                     console.error(

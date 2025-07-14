@@ -11,7 +11,11 @@ self.onmessage = async (event) => {
         storeName: STORES.GM_CHATS,
     });
 
-    self.postMessage([...dmChats, ...gmChats]);
+    const pmChats: AllChatProps[] = await messageIdWithChatId({
+        storeName: STORES.PM_CHATS,
+    });
+
+    self.postMessage([...dmChats, ...gmChats, ...pmChats]);
 };
 
 export {};

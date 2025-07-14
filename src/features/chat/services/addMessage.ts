@@ -3,13 +3,12 @@ import { MessageProps } from "../../../types/chat";
 
 export const addMessage = (
     message: MessageProps,
-    isDm: boolean,
     chatType: number
 ): Promise<null> => {
     return new Promise((resolve, reject) => {
         const addMessageWorker = new AddMessageWorker();
 
-        addMessageWorker.postMessage({ message: message, isDm: isDm, chatType: chatType });
+        addMessageWorker.postMessage({ message: message, chatType: chatType });
 
         addMessageWorker.onmessage = (event) => {
             addMessageWorker.terminate();

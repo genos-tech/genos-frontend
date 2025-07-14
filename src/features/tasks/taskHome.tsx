@@ -175,6 +175,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setCurrentProject({
                         projectId: loadedTeamProjects[i].projectId,
                         projectName: loadedTeamProjects[i].projectName,
+                        projectUserId: loadedTeamProjects[i].projectUserId,
                     });
                     await updateTeamTasks(myself, accessToken);
                     await fetchProjectTasks(loadedTeamProjects[i].projectId);

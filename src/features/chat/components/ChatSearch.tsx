@@ -40,13 +40,15 @@ export const ChatSearch = (props: ChatSearchProps) => {
             if (value.type === "Group") {
                 isDm = false;
             }
+            console.log("joinnhere", value);
             socket.emit(
                 "join",
                 {
                     joiningCGId: value.id, // dm_id or gm_id
                     joiningCGName: value.name, // dm_name or gm_name
                     isDm: isDm,
-                    dmPartnerUserId: value.dmPartnerUserId,
+                    chatType: isDm === true ? 1 : 2,
+                    dmPartnerUserId: value.dmPartnerUser.userId || null,
                 },
                 (ack: any) => {
                     if (Number(value.id) !== -1)
@@ -57,7 +59,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             value.name,
                             value.type === "Group" ? Boolean(false) : Boolean(true),
                             value.type === "Group" ? 2 : 1,
-                            value.dmPartnerUserId,
+                            value.dmPartnerUser,
                             allChats,
                             setCurrentMainChat,
                             setAllChats,
