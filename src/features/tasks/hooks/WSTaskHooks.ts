@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 
 type wsTaskHandleHookProps = {
     socket: Socket | null;
-    setIsCommentUpdated: (value: boolean) => void;
+    setIsCommentUpdated?: (value: boolean) => void;
 };
 
 export const wsTaskHandleHook = (props: wsTaskHandleHookProps) => {
@@ -23,8 +23,11 @@ export const wsTaskHandleHook = (props: wsTaskHandleHookProps) => {
             console.error("Authentication Error:", data.message);
         });
         socket.on("message", (message) => {
+            console.log("ws:task")
             // console.log("task_comment:", message)
-            setIsCommentUpdated(true);
+            if (setIsCommentUpdated) {
+                setIsCommentUpdated(true);
+            }
         });
         return () => {
             socket.off("message");

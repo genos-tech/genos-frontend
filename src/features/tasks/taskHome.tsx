@@ -60,9 +60,19 @@ type TaskHomeProps = {
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (service: number) => void;
+    isCommentUpdated: boolean;
+    setIsCommentUpdated: (value: boolean) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
-    const { socket, myself, setMyself, setCurrentMainChat, setOpeningService } = props;
+    const {
+        socket,
+        myself,
+        setMyself,
+        setCurrentMainChat,
+        setOpeningService,
+        isCommentUpdated,
+        setIsCommentUpdated,
+    } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
@@ -665,6 +675,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                isCommentUpdated={isCommentUpdated}
+                                                setIsCommentUpdated={setIsCommentUpdated}
                                             />
                                         </Box>
                                     </Panel>

@@ -13,6 +13,7 @@ import {
     updateTaskBody,
     updateTaskAttachments,
 } from "../../hooks/taskUpdateHooks";
+import { wsTaskHandleHook } from "../../hooks/WSTaskHooks";
 import {
     updateTeamMembersOptions,
     updateProjectOptions,
@@ -148,6 +149,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
+
+    // Web Socket handler
+    wsTaskHandleHook({ socket });
 
     // Init task contents
     const [taskContents, setTaskContents] = useState<TaskProps>({
@@ -301,6 +305,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             <Divider sx={{ m: 2 }} />
 
             <CreateTaskFooter
+                socket={socket}
                 myself={myself}
                 accessToken={accessToken}
                 isDm={isDm}

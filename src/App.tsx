@@ -9,8 +9,10 @@ import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
 import { UserProps } from "./types/admin";
-import { ChatProps } from "./types/chat";
+import { AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
+import { wsHook } from "./hooks/wsHook";
+import { popAllChats } from "./features/chat/services/popAllChats";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -86,6 +88,20 @@ export const App = () => {
     const [openingService, setOpeningService] = useState<number>(1);
 
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
+    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
+    const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState(false);
+    const [allChats, setAllChats] = useState<AllChatProps[]>([]);
+    const _setAllChats = async () => {
+        const allChats: AllChatProps[] = await popAllChats();
+        if (allChats) {
+            setAllChats(allChats);
+        }
+    };
+
+    useEffect(() => {
+        _setAllChats();
+    }, []);
 
     useEffect(() => {
         if (openingService === 1) {
@@ -98,6 +114,25 @@ export const App = () => {
             setSocketInstance(socket(accessToken));
         }
     }, [accessToken]);
+
+    useEffect(() => {
+        if (socketInstance && currentMainChat) {
+            wsHook({
+                socket: socketInstance,
+                accessToken: accessToken,
+                myself: myself,
+                allChats: allChats,
+                currentMainChat: currentMainChat,
+                currentSubChat: currentSubChat,
+                currentThreadChat: currentThreadChat,
+                setCurrentMainChat: setCurrentMainChat,
+                setCurrentSubChat: setCurrentSubChat,
+                setCurrentThreadChat: setCurrentThreadChat,
+                setAllChats: _setAllChats,
+                setIsTaskCommentUpdated: setIsTaskCommentUpdated,
+            });
+        }
+    }, [socketInstance]);
 
     return isLoading || currentMainChat === undefined ? (
         <InitialLoad
@@ -117,7 +152,15 @@ export const App = () => {
                         setMyself={setMyself}
                         currentMainChat={currentMainChat}
                         setCurrentMainChat={setCurrentMainChat}
+                        currentSubChat={currentSubChat}
+                        setCurrentSubChat={setCurrentSubChat}
+                        currentThreadChat={currentThreadChat}
+                        setCurrentThreadChat={setCurrentThreadChat}
                         setOpeningService={setOpeningService}
+                        allChats={allChats}
+                        setAllChats={_setAllChats}
+                        isCommentUpdated={isTaskCommentUpdated}
+                        setIsCommentUpdated={setIsTaskCommentUpdated}
                     />
                 ) : null}
 
@@ -128,6 +171,8 @@ export const App = () => {
                         setMyself={setMyself}
                         setCurrentMainChat={setCurrentMainChat}
                         setOpeningService={setOpeningService}
+                        isCommentUpdated={isTaskCommentUpdated}
+                        setIsCommentUpdated={setIsTaskCommentUpdated}
                     />
                 ) : null}
 

@@ -83,6 +83,7 @@ export const wsMessageHandleHook = (props: wsMessageHandleHookProps) => {
         });
 
         socket.on("message", async (message) => {
+            console.log("ws:chat");
             // console.log("message:", message)
             if (message.chatId !== null) {
                 var fromMe: boolean = false;

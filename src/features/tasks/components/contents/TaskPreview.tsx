@@ -12,7 +12,6 @@ import { TaskCommentBlock } from "./base/TaskCommentBlock";
 import { TaskRelatedTasksBlock } from "./base/TaskRelatedTasksBlock";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import { loadTaskComments } from "../../services/loadTaskComments";
-import { wsTaskHandleHook } from "../../hooks/WSTaskHooks";
 import {
     updateTeamMembersOptions,
     updateProjectOptions,
@@ -39,6 +38,8 @@ type TaskPreviewProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    isCommentUpdated: boolean;
+    setIsCommentUpdated: (value: boolean) => void;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -57,6 +58,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setOpeningService,
         setCurrentMainChat,
         setCurrentPreviewTaskId,
+        isCommentUpdated,
+        setIsCommentUpdated,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -75,16 +78,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [body, setBody] = useState<PartialBlock[]>(currentPreviewTask.body);
     const [assignee, setAssignee] = useState<UserProps>(tmpCurrentTaskContent.assignee);
     const [reporter, setReporter] = useState<UserProps>(tmpCurrentTaskContent.reporter);
-    const [isCommentUpdated, setIsCommentUpdated] = useState(false);
     const [currentTaskId, setCurrentTaskId] = useState<number | undefined>(
         tmpCurrentTaskContent.id
     );
 
     // Save initial task title to restore it when use input empty title
     const [initTaskTitle, setInitTaskTitle] = useState<string>(currentPreviewTask.title);
-
-    // Web Socket handler
-    wsTaskHandleHook({ socket, setIsCommentUpdated });
 
     // Set the current preview task when the component is mounted
     useEffect(() => {

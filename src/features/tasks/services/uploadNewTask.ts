@@ -1,9 +1,12 @@
+import { Socket } from "socket.io-client";
+
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type uploadTaskProps = {
+    socket: Socket | null;
     myself: UserProps;
     taskContents: TaskProps;
     isDm: boolean | null;
@@ -17,8 +20,9 @@ type uploadTaskProps = {
     setCurrentPreviewTaskId: (value: number) => void;
 };
 
-export const uploadTask = async (props: uploadTaskProps) => {
+export const uploadNewTask = async (props: uploadTaskProps) => {
     const {
+        socket,
         myself,
         taskContents,
         isDm,
@@ -120,6 +124,69 @@ export const uploadTask = async (props: uploadTaskProps) => {
                             );
                         }
                     }
+
+                    if (socket) {
+                        // 1. join "pm" chat group
+                        socket.emit(
+                            "join",
+                            {
+                                joiningCGId: taskContents.project.projectId,
+                                joiningCGName: taskContents.project.projectName,
+                                isDm: false,
+                                chatType: 3,
+                                dmPartnerUserId: null,
+                            },
+                            (ack: any) => {
+                                const createTaskMessage = [
+                                    {
+                                        type: "paragraph",
+                                        props: {
+                                            textColor: "default",
+                                            textAlignment: "left",
+                                            backgroundColor: "default",
+                                        },
+                                        content: [
+                                            { text: "Task ", type: "text", styles: {} },
+                                            {
+                                                text: taskContents.title,
+                                                type: "text",
+                                                styles: { code: true },
+                                            },
+                                            { text: " created", type: "text", styles: {} },
+                                        ],
+                                        children: [],
+                                    },
+                                    {
+                                        type: "paragraph",
+                                        props: {
+                                            textColor: "default",
+                                            textAlignment: "left",
+                                            backgroundColor: "default",
+                                        },
+                                        content: [],
+                                        children: [],
+                                    },
+                                ];
+                                if (taskContents.project !== null && createTaskMessage) {
+                                    socket.emit("message", {
+                                        message: createTaskMessage,
+                                        destCGName: taskContents.project.projectName,
+                                        destCGId: taskContents.project.projectId,
+                                        isDm: false,
+                                        chatType: 3,
+                                        dmPartnerUserId: null,
+                                    });
+                                } else {
+                                    console.error(
+                                        "Failed to send 'task created message' due to taskContents.project is NULL."
+                                    );
+                                }
+                            }
+                        );
+                    } else {
+                        console.error("socket not found");
+                    }
+                    // Send "task created" message
 
                     setIsSubmitted(true);
                 }
