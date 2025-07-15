@@ -207,7 +207,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         taskId: thread.taskId,
                     };
 
-                    addThreadMessage(newThreadMessage, thread.isDm, thread.chatType);
+                    addThreadMessage(newThreadMessage, thread.chatType);
 
                     editor.replaceBlocks(editor.document, []);
                 }

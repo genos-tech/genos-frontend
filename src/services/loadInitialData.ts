@@ -104,7 +104,7 @@ export const loadInitialData = (
     useEffect(() => {
         if (isDMHistoryLoaded) {
             const popLatestDMChatWorker = new PopLatestChatWorker();
-            popLatestDMChatWorker.postMessage({ isDm: true, chatType: 1 });
+            popLatestDMChatWorker.postMessage({ chatType: 1 });
             popLatestDMChatWorker.onmessage = (event) => {
                 const latestDmChat: any = event.data;
                 if (latestDmChat === null) {
@@ -154,7 +154,6 @@ export const loadInitialData = (
                 const popSpecificChatWorker = new PopSpecificChatWorker();
                 popSpecificChatWorker.postMessage({
                     chatId: latestDmChatId,
-                    isDm: true,
                     chatType: 1,
                 });
                 popSpecificChatWorker.onmessage = (event) => {

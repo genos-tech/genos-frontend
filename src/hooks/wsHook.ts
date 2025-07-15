@@ -153,7 +153,6 @@ export const wsHook = (props: wsHookProps) => {
                                 if (fromMe === false && toMe === true) {
                                     addThreadMessage(
                                         newThreadMessage,
-                                        newMessage.isDm,
                                         newMessage.chatType
                                     );
                                     if (
@@ -175,7 +174,6 @@ export const wsHook = (props: wsHookProps) => {
                                 if (fromMe === false) {
                                     addThreadMessage(
                                         newThreadMessage,
-                                        newMessage.isDm,
                                         newMessage.chatType
                                     );
                                     if (
@@ -197,7 +195,6 @@ export const wsHook = (props: wsHookProps) => {
                                 if (fromMe === false) {
                                     addThreadMessage(
                                         newThreadMessage,
-                                        newMessage.isDm,
                                         newMessage.chatType
                                     );
                                     if (
@@ -285,36 +282,11 @@ export const wsHook = (props: wsHookProps) => {
                                     } else if (newMessage.chatId === currentSubChat?.chatId) {
                                         setCurrentSubChat(updatedChat);
                                     }
-                                } else if (fromMe === true && toMe === true) {
-                                    // Only updating indexedDB for chat, not updating chat pane
-                                    await addMessage(newChatMessage, newMessage.chatType);
-                                    await updateChat(
-                                        myself.userName,
-                                        myself,
-                                        newMessage,
-                                        newChatMessage
-                                    );
-
-                                    // Insert the message when a user selects a new user
-                                    // for DM from Search list in ChatPane
-                                    if (newMessage.chatName !== newMessage.sender.userName) {
-                                        addMessage(newChatMessage, newMessage.chatType);
-                                    }
-                                } else if (fromMe === true && toMe === false) {
-                                    // DM to my friend
-                                    await addMessage(newChatMessage, newMessage.chatType);
-                                    await updateChat(
-                                        newMessage.dmPartnerUser.userName,
-                                        newMessage.dmPartnerUser,
-                                        newMessage,
-                                        newChatMessage
-                                    );
-
-                                    // Insert the message when a user selects a new user
-                                    // for DM from Search list in ChatPane
-                                    if (newMessage.chatName !== newMessage.sender.userName) {
-                                        addMessage(newChatMessage, newMessage.chatType);
-                                    }
+                                } else if (fromMe === true) {
+                                    // Do nothing cause adding the new message
+                                    // and updating chat are done by Editor component.
+                                } else {
+                                    // Do nothing cause it's DM for others.
                                 }
                             } else if (newMessage.chatType === 2) {
                                 if (newMessage.sender.userId === myself.userId) {
@@ -333,22 +305,15 @@ export const wsHook = (props: wsHookProps) => {
                                             newMessage,
                                             newChatMessage
                                         );
-
                                         if (newMessage.chatId === currentMainChat?.chatId) {
                                             setCurrentMainChat(updatedChat);
                                         } else if (newMessage.chatId === currentSubChat?.chatId) {
                                             setCurrentSubChat(updatedChat);
                                         }
                                     }
-                                } else if (fromMe) {
-                                    // Only updating indexedDB for chat, not updating messaging pane
-                                    await addMessage(newChatMessage, newMessage.chatType);
-                                    await updateChat(
-                                        newMessage.chatName,
-                                        null,
-                                        newMessage,
-                                        newChatMessage
-                                    );
+                                } else {
+                                    // Do nothing cause adding the new message
+                                    // and updating chat are done by Editor component.
                                 }
                             } else if (newMessage.chatType === 3) {
                                 if (newMessage.sender.userId === myself.userId) {
@@ -367,21 +332,15 @@ export const wsHook = (props: wsHookProps) => {
                                             newMessage,
                                             newChatMessage
                                         );
-
                                         if (newMessage.chatId === currentMainChat?.chatId) {
                                             setCurrentMainChat(updatedChat);
                                         } else if (newMessage.chatId === currentSubChat?.chatId) {
                                             setCurrentSubChat(updatedChat);
                                         }
                                     }
-                                } else if (fromMe) {
-                                    await addMessage(newChatMessage, newMessage.chatType);
-                                    await updateChat(
-                                        newMessage.chatName,
-                                        null,
-                                        newMessage,
-                                        newChatMessage
-                                    );
+                                } else {
+                                    // Do nothing cause adding the new message
+                                    // and updating chat are done by Editor component.
                                 }
                             } else {
                                 console.error("Unknown chatType:", newMessage.chatType);

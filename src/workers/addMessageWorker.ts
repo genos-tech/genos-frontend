@@ -3,9 +3,9 @@ import { addData } from "../db/crud";
 import { MessageProps } from "../types/chat";
 
 const storeNameLookup: { [key: number]: string } = {
-    1: STORES.DM_CHATS,
-    2: STORES.GM_CHATS,
-    3: STORES.PM_CHATS,
+    1: STORES.DM_MESSAGES,
+    2: STORES.GM_MESSAGES,
+    3: STORES.PM_MESSAGES,
 };
 
 self.onmessage = async (event) => {

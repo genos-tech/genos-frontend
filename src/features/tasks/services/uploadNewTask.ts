@@ -125,6 +125,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         }
                     }
 
+                    // Send "task created" message
                     if (socket) {
                         // 1. join "pm" chat group
                         socket.emit(
@@ -187,7 +188,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     } else {
                         console.error("socket not found");
                     }
-                    // Send "task created" message
 
                     setIsSubmitted(true);
                 }

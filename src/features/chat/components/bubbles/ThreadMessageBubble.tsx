@@ -89,19 +89,14 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
                                 <Box sx={{ flex: 1 }}>
-                                    {thread.dmPartnerUser === null && (
-                                        <Avatar size="sm">{thread.chatName[0]}</Avatar>
-                                    )}
-                                    {thread.dmPartnerUser !== null && (
-                                        <AvatarWithStatus
-                                            userProfile={thread.dmPartnerUser}
-                                            socket={socket}
-                                            thread={thread}
-                                            online={sender.online}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                        />
-                                    )}
+                                    <AvatarWithStatus
+                                        userProfile={isSent ? myself : sender}
+                                        socket={socket}
+                                        thread={thread}
+                                        online={sender.online}
+                                        setOpeningService={setOpeningService}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                    />
                                 </Box>
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={2}>

@@ -1,14 +1,19 @@
 import { STORES } from "../db/conf";
 import { getSpecificDataWithIndex } from "../db/crud";
 
+const storeNameLookup: { [key: number]: string } = {
+    1: STORES.DM_CHATS,
+    2: STORES.GM_CHATS,
+    3: STORES.PM_CHATS,
+};
+
 self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;
-    const isDm: boolean = event.data.isDm;
     const chatType: number = event.data.chatType;
 
-    if (chatId && isDm !== undefined) {
+    if (chatId && chatType !== undefined) {
         const chat = await getSpecificDataWithIndex({
-            storeName: isDm ? STORES.DM_CHATS : STORES.GM_CHATS,
+            storeName: storeNameLookup[chatType],
             chatId: chatId,
         });
 
@@ -20,7 +25,7 @@ self.onmessage = async (event) => {
     } else {
         console.error("Invalid parameters for popSpecificChatWorker:", {
             chatId: chatId,
-            isDm: isDm,
+            chatType: chatType,
         });
         self.postMessage([]);
     }

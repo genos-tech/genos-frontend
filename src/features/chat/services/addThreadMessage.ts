@@ -3,7 +3,6 @@ import AddThreadMessageWorker from "../../../workers/addThreadMessageWorker.ts?w
 
 export const addThreadMessage = (
     threadMessage: ThreadMessageProps,
-    isDm: boolean,
     chatType: number
 ): Promise<null> => {
     return new Promise((resolve, reject) => {
@@ -11,7 +10,6 @@ export const addThreadMessage = (
 
         addThreadMessageWorker.postMessage({
             threadMessage: threadMessage,
-            isDm: isDm,
             chatType: chatType,
         });
 

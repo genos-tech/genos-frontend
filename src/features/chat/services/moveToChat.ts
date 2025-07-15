@@ -29,6 +29,7 @@ export const moveToDMChat = async (
 
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 1);
     if (fetchedMessages) {
+        console.log("move to dm:", fetchedMessages[fetchedMessages.length - 1]);
         setCurrentMainChat(
             defineNewChat(chatId, chatName, true, 1, dmPartnerUser, fetchedMessages)
         );
@@ -44,6 +45,7 @@ export const moveToGMChat = async (
 ) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
+        console.log("move to gm:", fetchedMessages[fetchedMessages.length - 1]);
         setCurrentMainChat(
             defineNewChat(chatId, chatName, false, 2, defaultDmPartner, fetchedMessages)
         );
@@ -71,7 +73,7 @@ export const moveToSelectedChat = async (
     setOpenSearchBox: (value: boolean) => void
 ) => {
     try {
-        const isKnownChat: boolean = await checkKnownChat(chatId, isDm, chatType);
+        const isKnownChat: boolean = await checkKnownChat(chatId, chatType);
         setOpenSearchBox(false);
 
         if (!isKnownChat && socket !== null) {

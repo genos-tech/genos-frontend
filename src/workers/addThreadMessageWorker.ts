@@ -2,13 +2,18 @@ import { STORES } from "../db/conf";
 import { addData } from "../db/crud";
 import { MessageProps } from "../types/chat";
 
+const storeNameLookup: { [key: number]: string } = {
+    1: STORES.DM_THREAD_MESSAGES,
+    2: STORES.GM_THREAD_MESSAGES,
+    3: STORES.PM_THREAD_MESSAGES,
+};
+
 self.onmessage = async (event) => {
     const threadMessage: MessageProps = event.data.threadMessage;
-    const isDm: boolean = event.data.isDm;
     const chatType: number = event.data.chatType;
 
     await addData({
-        storeName: isDm ? STORES.DM_THREAD_MESSAGES : STORES.GM_THREAD_MESSAGES,
+        storeName: storeNameLookup[chatType],
         data: threadMessage,
     });
 

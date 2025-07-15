@@ -218,6 +218,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <ListItem sx={{ width: "49%" }}>
                             <Typography sx={{ minWidth: "80px" }}>Status</Typography>
                             <ACTaskStatus
+                                socket={socket}
                                 taskContents={taskContents}
                                 setTaskContents={setTaskContents}
                                 setTaskUpdated={setTaskUpdated}

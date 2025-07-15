@@ -429,6 +429,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpeningService={setOpeningService}
+                                                setAllChats={setAllChats}
                                             />
                                         </Panel>
 
@@ -467,6 +468,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         currentMainChatId={currentMainChatId}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
                                         setOpeningService={setOpeningService}
+                                        setAllChats={setAllChats}
                                     />
                                 </Panel>
                             </PanelGroup>

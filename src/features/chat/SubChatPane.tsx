@@ -31,6 +31,7 @@ type MessagesPaneProps = {
     currentSubChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
+    setAllChats: () => void;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
@@ -49,6 +50,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         currentSubChatId,
         setCurrentPreviewTask,
         setOpeningService,
+        setAllChats,
     } = props;
     const [chatMessages, setChatMessages] = useState(subChat.messages);
 
@@ -131,6 +133,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         socket={socket}
                         chat={subChat}
                         setCurrentChat={setCurrentSubChat}
+                        setAllChats={setAllChats}
                     />
                 </Box>
             </Sheet>

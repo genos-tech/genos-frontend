@@ -83,20 +83,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            chat.unread = Boolean(false);
-            if (chat.isDm) {
-                popSpecificMessages(chat.chatId, chat.chatType)
-                    .then((messages) => {
-                        setCurrentMainChat(defineNewMessages(messages));
-                    })
-                    .catch((error) => console.error(error));
-            } else {
-                popSpecificMessages(chat.chatId, chat.chatType)
-                    .then((messages) => {
-                        setCurrentMainChat(defineNewMessages(messages));
-                    })
-                    .catch((error) => console.error(error));
-            }
+            chat.unread = Boolean(false); // TODO: Fix
+            popSpecificMessages(chat.chatId, chat.chatType)
+                .then((messages) => {
+                    setCurrentMainChat(defineNewMessages(messages));
+                })
+                .catch((error) => console.error(error));
         }
     };
 

@@ -89,9 +89,10 @@ type BnEditorProps = {
     socket: Socket | null;
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
+    setAllChats: () => void;
 };
 export const BnEditor = (props: BnEditorProps) => {
-    const { myself, socket, chat, setCurrentChat } = props;
+    const { myself, socket, chat, setCurrentChat, setAllChats } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`;
 
@@ -228,6 +229,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         if (newChat) {
                             await addMessage(latestMessage, newChat.chatType);
                             await addChat(newChat, newChat.chatType);
+                            setAllChats();
 
                             editor.replaceBlocks(editor.document, []);
                         }
