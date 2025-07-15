@@ -2,7 +2,6 @@ import CheckKnownChatWorker from "../../../workers/checkKnownChatWorker.ts?worke
 
 export const checkKnownChat = (
     chatId: number,
-    isDm: boolean,
     chatType: number
 ): Promise<boolean> => {
     return new Promise((resolve, reject) => {
@@ -10,7 +9,6 @@ export const checkKnownChat = (
 
         checkKnownChatWorker.postMessage({
             chatId,
-            isDm,
             chatType,
         });
 

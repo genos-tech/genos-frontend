@@ -31,7 +31,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setIsCreatingTask,
         currentPreviewTask,
     } = props;
-    const isYou = myself.userId === thread.dmPartnerUser.userId;
+    let isYou: boolean = false;
+    if (thread.dmPartnerUser !== null) {
+        isYou = myself.userId === thread.dmPartnerUser.userId;
+    }
 
     const dummyThreadChat: ThreadProps = {
         chatId: thread.chatId,

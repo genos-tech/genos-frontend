@@ -20,7 +20,10 @@ type SubChatPaneHeaderProps = {
 export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
     const { myself, chat, subChat, setCurrentMainChat, setCurrentSubChat, setIsSubChatVisible } =
         props;
-    const isYou = myself.userId === subChat.dmPartnerUser.userId;
+    let isYou: boolean = false;
+    if (subChat.dmPartnerUser !== null) {
+        isYou = myself.userId === subChat.dmPartnerUser.userId;
+    }
 
     const swapChat = () => {
         setCurrentMainChat(subChat);

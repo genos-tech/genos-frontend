@@ -3,11 +3,12 @@ import { UserProps } from "./admin";
 
 // Chat Props
 export type AllChatProps = {
+    chatType: number;
     chatId: number;
     chatName: string;
+    systemUserId?: string;
     isDm: boolean;
-    chatType: number;
-    dmPartnerUser: UserProps;
+    dmPartnerUser: UserProps | null;
     unread: boolean | true;
     latestMessage?: MessageProps;
     latestMessageText: string;
@@ -16,11 +17,12 @@ export type AllChatProps = {
 };
 
 export type ChatProps = {
+    chatType: number;
     chatId: number;
     chatName: string;
+    systemUserId?: string;
     isDm: boolean;
-    chatType: number;
-    dmPartnerUser: UserProps;
+    dmPartnerUser: UserProps | null;
     unread: boolean | true;
     messages: MessageProps[];
     latestMessage?: MessageProps;
@@ -31,12 +33,13 @@ export type ChatProps = {
 
 // Thread Props
 export type ThreadProps = {
+    chatType: number;
     chatId: number;
     chatName: string;
+    systemUserId?: string;
     threadId: number;
     isDm: boolean;
-    chatType: number;
-    dmPartnerUser: UserProps;
+    dmPartnerUser: UserProps | null;
     taskId: number | null;
     unread: boolean | true;
     messages: ThreadMessageProps[];
@@ -46,8 +49,10 @@ export type ThreadProps = {
 
 // Message Props
 export type MessageProps = {
+    chatType: number;
     messageIdWithChatId?: string;
     chatId: number;
+    systemUserId?: string;
     messageId: number;
     content: PartialBlock[] | any[];
     contentText: string;
@@ -64,7 +69,9 @@ export type MessageProps = {
 };
 
 export type ThreadMessageProps = {
+    chatType: number;
     messageIdWithChatIdAndThreadId: string;
+    systemUserId?: string;
     chatId: number;
     threadId: number;
     messageId: number;
@@ -82,12 +89,13 @@ export type ThreadMessageProps = {
 };
 
 export type NewMessageProps = {
+    chatType: number;
     chatId: number;
+    systemUserId?: string;
     messageId: number;
     chatName: string;
     isDm: boolean;
-    chatType: number;
-    dmPartnerUser: UserProps;
+    dmPartnerUser: UserProps | null;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;
@@ -103,13 +111,14 @@ export type NewMessageProps = {
 };
 
 export type NewThreadMessageProps = {
+    chatType: number;
     chatId: number;
+    systemUserId?: string;
     threadId: number;
     messageId: number;
     chatName: string;
     isDm: boolean;
-    chatType: number;
-    dmPartnerUser: UserProps;
+    dmPartnerUser: UserProps | null;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;
@@ -151,6 +160,7 @@ export type LoadGMMessageHistoryResponse = {
 export type SearchTeamTasksResponse = {
     projectId: number;
     projectName: string;
+    projectUserId: string;
     taskId: number;
     title: string;
     status: string;

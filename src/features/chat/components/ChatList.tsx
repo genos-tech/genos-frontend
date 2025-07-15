@@ -58,7 +58,7 @@ export const ChatList = (props: ChatListProps) => {
                 ) // Convert "YYYY-MM-DD HH:mm:ss" to "YYYY-MM-DDTHH:mm:ss" for proper parsing
                 .map(
                     (chat) =>
-                        chat.isDm === isDm && (
+                        chat.chatType === chatType && (
                             <ChatListItem
                                 key={`${chat.chatId}-${chat.isDm}-${chat.chatName}`}
                                 socket={socket}
@@ -71,6 +71,7 @@ export const ChatList = (props: ChatListProps) => {
                                 isSubChatVisible={isSubChatVisible}
                                 setIsSubChatVisible={setIsSubChatVisible}
                                 setOpeningService={setOpeningService}
+                                chatType={chatType}
                             />
                         )
                 )}

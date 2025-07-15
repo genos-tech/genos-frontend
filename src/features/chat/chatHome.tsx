@@ -8,7 +8,6 @@ import { ThreadPane } from "./ThreadChatPane";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { MessagesPane } from "./MainChatPane";
 import { MessagesSubPane } from "./SubChatPane";
-import { popAllChats } from "./services/popAllChats";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
@@ -19,7 +18,6 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { wsMessageHandleHook } from "./hooks/WSChatHooks";
 
 type ChatHomeProps = {
     socket: Socket | null;
@@ -27,17 +25,37 @@ type ChatHomeProps = {
     setMyself: (me: UserProps) => void;
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
+    currentSubChat: ChatProps | undefined;
+    setCurrentSubChat: (chat: ChatProps) => void;
+    currentThreadChat: ThreadProps | undefined;
+    setCurrentThreadChat: (value: ThreadProps) => void;
     setOpeningService: (service: number) => void;
+    allChats: AllChatProps[];
+    setAllChats: () => void;
+    isCommentUpdated: boolean;
+    setIsCommentUpdated: (value: boolean) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
-    const { socket, myself, setMyself, currentMainChat, setCurrentMainChat, setOpeningService } =
-        props;
+    const {
+        socket,
+        myself,
+        setMyself,
+        currentMainChat,
+        setCurrentMainChat,
+        currentSubChat,
+        setCurrentSubChat,
+        currentThreadChat,
+        setCurrentThreadChat,
+        setOpeningService,
+        allChats,
+        setAllChats,
+        isCommentUpdated,
+        setIsCommentUpdated,
+    } = props;
+
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
-    const [allChats, setAllChats] = useState<AllChatProps[]>([]);
-    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
-    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
     const [isThreadVisible, setIsThreadVisible] = useState(false);
     const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
@@ -55,33 +73,6 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
     const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
     const [currentThreadChatId, setCurrentThreadChatId] = useState<number>(-1);
-
-    const _setAllChats = async () => {
-        const allChats: AllChatProps[] = await popAllChats();
-        if (allChats) {
-            setAllChats(allChats);
-        }
-    };
-
-    // Load initial Chats with latest one message
-    useEffect(() => {
-        _setAllChats();
-    }, []);
-
-    // Web Socket handler
-    wsMessageHandleHook({
-        socket: socket,
-        accessToken: accessToken,
-        myself: myself,
-        allChats: allChats,
-        currentMainChat: currentMainChat,
-        currentSubChat: currentSubChat,
-        currentThreadChat: currentThreadChat,
-        setCurrentMainChat: setCurrentMainChat,
-        setCurrentSubChat: setCurrentSubChat,
-        setCurrentThreadChat: setCurrentThreadChat,
-        setAllChats: _setAllChats,
-    });
 
     useEffect(() => {
         if (currentMainChatId !== currentMainChat.chatId) {
@@ -309,6 +300,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setCurrentMainChat={setCurrentMainChat}
                                             setOpeningService={setOpeningService}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            isCommentUpdated={isCommentUpdated}
+                                            setIsCommentUpdated={setIsCommentUpdated}
                                         />
                                     </Box>
                                 </Panel>
@@ -436,6 +429,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpeningService={setOpeningService}
+                                                setAllChats={setAllChats}
                                             />
                                         </Panel>
 
@@ -474,6 +468,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         currentMainChatId={currentMainChatId}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
                                         setOpeningService={setOpeningService}
+                                        setAllChats={setAllChats}
                                     />
                                 </Panel>
                             </PanelGroup>

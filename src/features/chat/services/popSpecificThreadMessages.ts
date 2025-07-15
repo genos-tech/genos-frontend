@@ -4,7 +4,6 @@ import PopSpecificThreadMessagesWorker from "../../../workers/popSpecificThreadM
 export const popSpecificThreadMessages = (
     chatId: number,
     threadId: number,
-    isDm: boolean,
     chatType: number
 ): Promise<ThreadMessageProps[]> => {
     return new Promise((resolve, reject) => {
@@ -13,7 +12,6 @@ export const popSpecificThreadMessages = (
         popSpecificThreadMessagesWorker.postMessage({
             chatId,
             threadId,
-            isDm,
             chatType,
         });
 

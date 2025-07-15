@@ -1,15 +1,20 @@
 import { STORES } from "../db/conf";
 import { messageIdWithChatId } from "../db/crud";
 
+const storeNameLookup: { [key: number]: string } = {
+    1: STORES.DM_THREAD_MESSAGES,
+    2: STORES.GM_THREAD_MESSAGES,
+    3: STORES.PM_THREAD_MESSAGES,
+};
+
 self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;
     const threadId: number = event.data.threadId;
-    const isDm: boolean = event.data.isDm;
     const chatType: number = event.data.chatType;
 
-    if (chatId && threadId && isDm !== undefined) {
+    if (chatId && threadId && chatType !== undefined) {
         const dmThreadMessages = await messageIdWithChatId({
-            storeName: isDm ? STORES.DM_THREAD_MESSAGES : STORES.GM_THREAD_MESSAGES,
+            storeName: storeNameLookup[chatType],
             chatId: chatId,
             threadId: threadId,
         });
@@ -24,7 +29,7 @@ self.onmessage = async (event) => {
         console.error("Invalid parameters for popSpecificThreadMessagesWorker:", {
             chatId: chatId,
             threadId: threadId,
-            isDm: isDm,
+            chatType: chatType,
         });
         self.postMessage([]);
     }

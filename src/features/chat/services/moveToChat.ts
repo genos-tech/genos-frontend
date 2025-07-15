@@ -27,8 +27,9 @@ export const moveToDMChat = async (
         });
     }
 
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, true, 1);
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 1);
     if (fetchedMessages) {
+        console.log("move to dm:", fetchedMessages[fetchedMessages.length - 1]);
         setCurrentMainChat(
             defineNewChat(chatId, chatName, true, 1, dmPartnerUser, fetchedMessages)
         );
@@ -42,8 +43,9 @@ export const moveToGMChat = async (
     chatName: string,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, false, 2);
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
+        console.log("move to gm:", fetchedMessages[fetchedMessages.length - 1]);
         setCurrentMainChat(
             defineNewChat(chatId, chatName, false, 2, defaultDmPartner, fetchedMessages)
         );
@@ -71,7 +73,7 @@ export const moveToSelectedChat = async (
     setOpenSearchBox: (value: boolean) => void
 ) => {
     try {
-        const isKnownChat: boolean = await checkKnownChat(chatId, isDm, chatType);
+        const isKnownChat: boolean = await checkKnownChat(chatId, chatType);
         setOpenSearchBox(false);
 
         if (!isKnownChat && socket !== null) {
@@ -83,10 +85,11 @@ export const moveToSelectedChat = async (
                     destCGId: chatId,
                     isDm: isDm,
                     chatType: chatType,
-                    dmPartnerUserId: dmPartnerUser.userId,
+                    dmPartnerUserId: isDm === true ? dmPartnerUser.userId : null,
                 },
                 async (ack: any) => {
                     const message: MessageProps = {
+                        chatType: chatType,
                         messageIdWithChatId: `${chatId}-1`,
                         chatId: chatId,
                         messageId: 1,
@@ -108,8 +111,8 @@ export const moveToSelectedChat = async (
                         TSLastMessage: getCurrentTimestamp(),
                     };
 
-                    await addChat(chat, chat.isDm, chat.chatType);
-                    await addMessage(message, chat.isDm, chat.chatType);
+                    await addChat(chat, chat.chatType);
+                    await addMessage(message, chat.chatType);
 
                     setCurrentMainChat({ ...chat, messages: [message] });
                     setAllChats([...allChats, chat]);

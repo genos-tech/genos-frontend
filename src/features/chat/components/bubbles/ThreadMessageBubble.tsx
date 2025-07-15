@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Stack, Sheet } from "@mui/joy";
+import { Box, Stack, Sheet, Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
@@ -90,7 +90,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             <Stack direction="row" spacing={1.5}>
                                 <Box sx={{ flex: 1 }}>
                                     <AvatarWithStatus
-                                        userProfile={thread.dmPartnerUser}
+                                        userProfile={isSent ? myself : sender}
                                         socket={socket}
                                         thread={thread}
                                         online={sender.online}

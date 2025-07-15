@@ -301,6 +301,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             <Divider sx={{ m: 2 }} />
 
             <CreateTaskFooter
+                socket={socket}
                 myself={myself}
                 accessToken={accessToken}
                 isDm={isDm}

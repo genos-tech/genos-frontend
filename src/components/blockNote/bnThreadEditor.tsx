@@ -152,12 +152,14 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     threadMessage: editor.document,
                     isDm: thread.isDm,
                     chatType: thread.chatType,
-                    dmPartnerUserId: thread.dmPartnerUser.userId,
+                    dmPartnerUserId:
+                        thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
                     destCGName: thread.chatName,
                     destCGId: thread.chatId,
                     taskId: thread.taskId,
+                    systemUserId: thread.systemUserId,
                 },
                 (ack: any) => {
                     const updatedChat: ThreadProps = {
@@ -172,6 +174,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         messages: [
                             ...thread.messages,
                             {
+                                chatType: thread.chatType,
                                 messageIdWithChatIdAndThreadId: `${thread.chatId}-${
                                     thread.threadId
                                 }-${String(Number(thread.messages.length) + 1)}`,
@@ -190,6 +193,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     setCurrentThreadChat(updatedChat);
 
                     const newThreadMessage: ThreadMessageProps = {
+                        chatType: thread.chatType,
                         messageIdWithChatIdAndThreadId: `${thread.chatId}-${
                             thread.threadId
                         }-${String(Number(thread.messages.length) + 1)}`,
@@ -203,7 +207,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         taskId: thread.taskId,
                     };
 
-                    addThreadMessage(newThreadMessage, thread.isDm, thread.chatType);
+                    addThreadMessage(newThreadMessage, thread.chatType);
 
                     editor.replaceBlocks(editor.document, []);
                 }

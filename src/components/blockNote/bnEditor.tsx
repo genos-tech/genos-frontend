@@ -89,9 +89,10 @@ type BnEditorProps = {
     socket: Socket | null;
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
+    setAllChats: () => void;
 };
 export const BnEditor = (props: BnEditorProps) => {
-    const { myself, socket, chat, setCurrentChat } = props;
+    const { myself, socket, chat, setCurrentChat, setAllChats } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`;
 
@@ -150,7 +151,8 @@ export const BnEditor = (props: BnEditorProps) => {
                     destCGId: chat.chatId,
                     isDm: chat.isDm,
                     chatType: chat.chatType,
-                    dmPartnerUserId: chat.dmPartnerUser.userId,
+                    dmPartnerUserId:
+                        chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
                 },
                 async (ack: any) => {
                     const updatedChat: ChatProps = {
@@ -158,11 +160,13 @@ export const BnEditor = (props: BnEditorProps) => {
                         chatName: chat.chatName,
                         isDm: chat.isDm,
                         chatType: chat.chatType,
+                        systemUserId: chat.systemUserId,
                         dmPartnerUser: chat.dmPartnerUser,
                         unread: false,
                         messages: [
                             ...chat.messages,
                             {
+                                chatType: chat.chatType,
                                 messageIdWithChatId: `${chat.chatId}-${String(
                                     Number(chat.latestMessage?.messageId) + 1
                                 )}`,
@@ -176,6 +180,8 @@ export const BnEditor = (props: BnEditorProps) => {
                             },
                         ],
                         latestMessage: {
+                            chatType: chat.chatType,
+                            systemUserId: chat.systemUserId,
                             messageIdWithChatId: `${chat.chatId}-${String(
                                 Number(chat.latestMessage?.messageId) + 1
                             )}`,
@@ -193,6 +199,8 @@ export const BnEditor = (props: BnEditorProps) => {
                     setCurrentChat(updatedChat);
 
                     const latestMessage: MessageProps = {
+                        chatType: chat.chatType,
+                        systemUserId: chat.systemUserId,
                         messageIdWithChatId: `${chat.chatId}-${String(
                             Number(chat.latestMessage?.messageId) + 1
                         )}`,
@@ -208,6 +216,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         const newChat: AllChatProps = {
                             chatId: chat.chatId,
                             chatName: chat.chatName,
+                            systemUserId: chat.systemUserId,
                             isDm: chat.isDm,
                             chatType: chat.chatType,
                             dmPartnerUser: chat.dmPartnerUser,
@@ -218,8 +227,9 @@ export const BnEditor = (props: BnEditorProps) => {
                         };
 
                         if (newChat) {
-                            await addMessage(latestMessage, newChat.isDm, newChat.chatType);
-                            await addChat(newChat, newChat.isDm, newChat.chatType);
+                            await addMessage(latestMessage, newChat.chatType);
+                            await addChat(newChat, newChat.chatType);
+                            setAllChats();
 
                             editor.replaceBlocks(editor.document, []);
                         }

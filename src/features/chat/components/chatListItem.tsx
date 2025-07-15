@@ -13,6 +13,7 @@ import {
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import CircleIcon from "@mui/icons-material/Circle";
 import GroupsIcon from "@mui/icons-material/Groups";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 import { popSpecificMessages } from "../services/popSpecificMessages";
@@ -33,6 +34,7 @@ type ChatListItemProps = ListItemButtonProps & {
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
+    chatType: number;
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
@@ -47,6 +49,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
         isSubChatVisible,
         setIsSubChatVisible,
         setOpeningService,
+        chatType,
     } = props;
 
     const selected =
@@ -68,6 +71,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
             TSLastMessage: chat.TSLastMessage,
+            systemUserId: chat.systemUserId,
         };
         return newMessages;
     };
@@ -79,20 +83,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            chat.unread = Boolean(false);
-            if (chat.isDm) {
-                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
-                    .then((messages) => {
-                        setCurrentMainChat(defineNewMessages(messages));
-                    })
-                    .catch((error) => console.error(error));
-            } else {
-                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
-                    .then((messages) => {
-                        setCurrentMainChat(defineNewMessages(messages));
-                    })
-                    .catch((error) => console.error(error));
-            }
+            chat.unread = Boolean(false); // TODO: Fix
+            popSpecificMessages(chat.chatId, chat.chatType)
+                .then((messages) => {
+                    setCurrentMainChat(defineNewMessages(messages));
+                })
+                .catch((error) => console.error(error));
         }
     };
 
@@ -103,13 +99,13 @@ export const ChatListItem = (props: ChatListItemProps) => {
         ) {
             toggleMessagesPane();
             if (chat.isDm) {
-                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
+                popSpecificMessages(chat.chatId, chat.chatType)
                     .then((messages) => {
                         setCurrentSubChat(defineNewMessages(messages));
                     })
                     .catch((error) => console.error(error));
             } else {
-                popSpecificMessages(chat.chatId, chat.isDm, chat.chatType)
+                popSpecificMessages(chat.chatId, chat.chatType)
                     .then((messages) => {
                         setCurrentSubChat(defineNewMessages(messages));
                     })
@@ -137,7 +133,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                         >
                             <Stack direction="row" spacing={1}>
                                 <div>
-                                    {chat.isDm ? (
+                                    {chatType === 1 && chat.dmPartnerUser !== null && (
                                         <AvatarWithStatus
                                             userProfile={chat.dmPartnerUser}
                                             socket={socket}
@@ -146,9 +142,18 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                         />
-                                    ) : (
+                                    )}
+                                    {chatType === 1 && chat.dmPartnerUser === null && (
+                                        <Avatar size="sm">{chat.chatName[0]}</Avatar>
+                                    )}
+                                    {chatType === 2 && (
                                         <Avatar size="sm">
                                             <GroupsIcon />
+                                        </Avatar>
+                                    )}
+                                    {chatType === 3 && (
+                                        <Avatar size="sm">
+                                            <AccountTreeIcon />
                                         </Avatar>
                                     )}
                                 </div>

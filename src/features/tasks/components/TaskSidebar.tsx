@@ -320,7 +320,10 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         >
                             <List sx={{ gap: 0.5 }}>
                                 {recentTasks.map(
-                                    ({ projectId, projectName, taskId, title }, index) => {
+                                    (
+                                        { projectId, projectName, projectUserId, taskId, title },
+                                        index
+                                    ) => {
                                         return (
                                             <ListItem key={taskId}>
                                                 <ListItemButton
@@ -328,6 +331,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                         setCurrentProject({
                                                             projectId: projectId,
                                                             projectName: projectName,
+                                                            projectUserId: projectUserId,
                                                         });
                                                         setCurrentPreviewTaskId(taskId);
                                                     }}

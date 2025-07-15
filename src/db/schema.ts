@@ -91,6 +91,45 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 );
             }
 
+            // For PM messages
+            // PM chats store, not including messages
+            if (!db.objectStoreNames.contains(STORES.PM_CHATS)) {
+                const pmChatsStore = db.createObjectStore(STORES.PM_CHATS, {
+                    keyPath: KEY_PATH.PM_CHATS,
+                });
+                pmChatsStore.createIndex(INDEX.PM_CHATS, INDEX_KEY.PM_CHATS, { unique: false });
+            }
+            if (!db.objectStoreNames.contains(STORES.PM_MESSAGES)) {
+                const pmMessagesStore = db.createObjectStore(STORES.PM_MESSAGES, {
+                    keyPath: KEY_PATH.PM_MESSAGES,
+                });
+                // Index
+                pmMessagesStore.createIndex(INDEX.PM_MESSAGES, INDEX_KEY.PM_MESSAGES, {
+                    unique: false,
+                });
+                pmMessagesStore.createIndex(
+                    INDEX.PM_MESSAGES_COMPOUND,
+                    INDEX_KEY.PM_MESSAGES_COMPOUND,
+                    { unique: true }
+                );
+            }
+            if (!db.objectStoreNames.contains(STORES.PM_THREAD_MESSAGES)) {
+                const pmThreadMessagesStore = db.createObjectStore(STORES.PM_THREAD_MESSAGES, {
+                    keyPath: KEY_PATH.PM_THREAD_MESSAGES,
+                });
+                // Index
+                pmThreadMessagesStore.createIndex(
+                    INDEX.PM_THREAD_MESSAGES,
+                    INDEX_KEY.PM_THREAD_MESSAGES,
+                    { unique: false }
+                );
+                pmThreadMessagesStore.createIndex(
+                    INDEX.PM_THREAD_MESSAGES_COMPOUND,
+                    INDEX_KEY.PM_THREAD_MESSAGES_COMPOUND,
+                    { unique: false }
+                );
+            }
+
             // For Tasks
             if (!db.objectStoreNames.contains(STORES.TASKS)) {
                 const tasksStore = db.createObjectStore(STORES.TASKS, { keyPath: KEY_PATH.TASKS });

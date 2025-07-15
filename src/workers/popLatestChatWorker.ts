@@ -1,16 +1,17 @@
-import { getLatestDMChat, getLatestGMChat } from "../db/crud";
+import { getLatestDMChat, getLatestGMChat, getLatestPMChat } from "../db/crud";
 
 self.onmessage = async (event) => {
-    const isDm: boolean = event.data.isDm;
     const chatType: number = event.data.chatType;
 
-    if (isDm !== undefined && isDm !== null) {
+    if (chatType !== undefined && chatType !== null) {
         var latestChat = null;
 
-        if (isDm) {
+        if (chatType === 1) {
             latestChat = await getLatestDMChat();
-        } else {
+        } else if (chatType === 2) {
             latestChat = await getLatestGMChat();
+        } else if (chatType === 3) {
+            latestChat = await getLatestPMChat();
         }
 
         if (latestChat) {

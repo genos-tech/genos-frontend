@@ -6,7 +6,7 @@ import { Socket } from "socket.io-client";
 import { ModalCreateGM } from "./modals/ModalCreateGM";
 import { ChatSearch } from "./ChatSearch";
 import { ChatList } from "./ChatList";
-import { DMDivider, GMDivider, PinnedDivider } from "./ChatSidebarDividers";
+import { DMDivider, GMDivider, PMDivider, PinnedDivider } from "./ChatSidebarDividers";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, AllChatProps } from "../../../types/chat";
 
@@ -100,6 +100,23 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     myself={myself}
                     isDm={true}
                     chatType={1}
+                    allChats={allChats}
+                    currentMainChat={currentMainChat}
+                    currentSubChat={currentSubChat}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setCurrentSubChat={setCurrentSubChat}
+                    isSubChatVisible={isSubChatVisible}
+                    setIsSubChatVisible={setIsSubChatVisible}
+                    setOpeningService={setOpeningService}
+                />
+
+                <PMDivider />
+
+                <ChatList
+                    socket={socket}
+                    myself={myself}
+                    isDm={true}
+                    chatType={3}
                     allChats={allChats}
                     currentMainChat={currentMainChat}
                     currentSubChat={currentSubChat}

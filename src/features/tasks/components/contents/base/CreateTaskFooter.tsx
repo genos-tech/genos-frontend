@@ -1,10 +1,12 @@
+import { Socket } from "socket.io-client";
 import { Button, Stack } from "@mui/joy";
 
-import { uploadTask } from "../../../services/uploadTask";
+import { uploadNewTask } from "../../../services/uploadNewTask";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 
 type CreateTaskFooterProps = {
+    socket: Socket | null;
     myself: UserProps;
     accessToken: string | null;
     isDm: boolean | null;
@@ -21,6 +23,7 @@ type CreateTaskFooterProps = {
 };
 export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
     const {
+        socket,
         myself,
         accessToken,
         isDm,
@@ -60,7 +63,8 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                 variant="solid"
                 color="primary"
                 onClick={() => {
-                    uploadTask({
+                    uploadNewTask({
+                        socket: socket,
                         myself: myself,
                         taskContents: taskContents,
                         isDm: isDm,

@@ -28,7 +28,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
-    return userProfile !== undefined && (chat !== undefined || thread !== undefined) ? (
+    return chat !== undefined || thread !== undefined ? (
         <div>
             <Badge
                 color={online ? "success" : "neutral"}

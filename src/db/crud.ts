@@ -53,6 +53,31 @@ const _messageIdWithChatId = {
 
         return gmThreadMessage;
     },
+    pmChats: async () => {
+        const db = await openDB(DB_NAME, DB_VERSION);
+        const pmChatsStore = db.transaction(STORES.PM_CHATS).objectStore(STORES.PM_CHATS);
+        const pmChat = await pmChatsStore.getAll();
+
+        return pmChat;
+    },
+    pmMessages: async (chatId: number) => {
+        const db = await openDB(DB_NAME, DB_VERSION);
+        const pmMessagesStore = db.transaction(STORES.PM_MESSAGES).objectStore(STORES.PM_MESSAGES);
+        const pmMessages = await pmMessagesStore.index(INDEX.PM_MESSAGES).getAll(chatId);
+
+        return pmMessages;
+    },
+    pmThreadMessages: async (chatId: number, threadId: number) => {
+        const db = await openDB(DB_NAME, DB_VERSION);
+        const pmThreadMessagesStore = db
+            .transaction(STORES.PM_THREAD_MESSAGES)
+            .objectStore(STORES.PM_THREAD_MESSAGES);
+        const pmThreadMessage = await pmThreadMessagesStore
+            .index(INDEX.PM_THREAD_MESSAGES_COMPOUND)
+            .getAll([chatId, threadId]);
+
+        return pmThreadMessage;
+    },
 };
 
 const _getDataWithIndex = {
@@ -63,6 +88,10 @@ const _getDataWithIndex = {
     gmChats: async (chatId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
         return db.get(STORES.GM_CHATS, chatId);
+    },
+    pmChats: async (chatId: number) => {
+        const db = await openDB(DB_NAME, DB_VERSION);
+        return db.get(STORES.PM_CHATS, chatId);
     },
 };
 
@@ -111,6 +140,10 @@ export const getSpecificDataWithIndex = async (props: any) => {
         const data = await _getDataWithIndex.gmChats(props.chatId);
         return data;
     }
+    if (props.storeName === STORES.PM_CHATS) {
+        const data = await _getDataWithIndex.gmChats(props.chatId);
+        return data;
+    }
 };
 
 export const messageIdWithChatId = async (props: any) => {
@@ -131,6 +164,15 @@ export const messageIdWithChatId = async (props: any) => {
         return data;
     } else if (props.storeName === STORES.GM_THREAD_MESSAGES) {
         const data = await _messageIdWithChatId.gmThreadMessages(props.chatId, props.threadId);
+        return data;
+    } else if (props.storeName === STORES.PM_CHATS) {
+        const data = await _messageIdWithChatId.pmChats();
+        return data;
+    } else if (props.storeName === STORES.PM_MESSAGES) {
+        const data = await _messageIdWithChatId.pmMessages(props.chatId);
+        return data;
+    } else if (props.storeName === STORES.PM_THREAD_MESSAGES) {
+        const data = await _messageIdWithChatId.pmThreadMessages(props.chatId, props.threadId);
         return data;
     } else {
         console.error("Unexpected storeName:", props.storeName);
@@ -203,6 +245,18 @@ export const getLatestGMChat = async () => {
     const tx = db.transaction(STORES.GM_CHATS, "readonly");
     const store = tx.objectStore(STORES.GM_CHATS);
     const index = store.index(INDEX.GM_CHATS);
+
+    // Use `openCursor()` and await the first result
+    const cursor = await index.openCursor(null, "prev"); // Get latest first
+
+    return cursor ? cursor.value : null; // Return the latest record
+};
+
+export const getLatestPMChat = async () => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const tx = db.transaction(STORES.PM_CHATS, "readonly");
+    const store = tx.objectStore(STORES.PM_CHATS);
+    const index = store.index(INDEX.PM_CHATS);
 
     // Use `openCursor()` and await the first result
     const cursor = await index.openCursor(null, "prev"); // Get latest first

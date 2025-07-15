@@ -9,8 +9,11 @@ import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
 import { UserProps } from "./types/admin";
-import { ChatProps } from "./types/chat";
+import { AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
+import { wsHook } from "./hooks/wsHook";
+import { popAllChats } from "./features/chat/services/popAllChats";
+import { initDB } from "./db/schema";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -77,15 +80,33 @@ const useMyself = (): SetMyselfProps => {
 };
 
 export const App = () => {
+    // Need to run if you delete IndexedDB database
+    initDB();
+
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
     const [isLoading, setIsLoading] = useState(true);
+    const [isWSConnected, setIsWSConnected] = useState(false);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
     // {1: Chat, 2: Tasks, 3: Notes}
     const [openingService, setOpeningService] = useState<number>(1);
 
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
+    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
+    const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState(false);
+    const [allChats, setAllChats] = useState<AllChatProps[]>([]);
+    const _setAllChats = async () => {
+        const allChats: AllChatProps[] = await popAllChats();
+        if (allChats) {
+            setAllChats(allChats);
+        }
+    };
+
+    useEffect(() => {
+        _setAllChats();
+    }, []);
 
     useEffect(() => {
         if (openingService === 1) {
@@ -96,8 +117,25 @@ export const App = () => {
     useEffect(() => {
         if (accessToken) {
             setSocketInstance(socket(accessToken));
+            console.log("WS connected");
         }
     }, [accessToken]);
+
+    wsHook({
+        socket: socketInstance,
+        accessToken: accessToken,
+        myself: myself,
+        allChats: allChats,
+        currentMainChat: currentMainChat,
+        currentSubChat: currentSubChat,
+        currentThreadChat: currentThreadChat,
+        setCurrentMainChat: setCurrentMainChat,
+        setCurrentSubChat: setCurrentSubChat,
+        setCurrentThreadChat: setCurrentThreadChat,
+        setAllChats: _setAllChats,
+        setIsTaskCommentUpdated: setIsTaskCommentUpdated,
+        isLoading: isLoading,
+    });
 
     return isLoading || currentMainChat === undefined ? (
         <InitialLoad
@@ -117,7 +155,15 @@ export const App = () => {
                         setMyself={setMyself}
                         currentMainChat={currentMainChat}
                         setCurrentMainChat={setCurrentMainChat}
+                        currentSubChat={currentSubChat}
+                        setCurrentSubChat={setCurrentSubChat}
+                        currentThreadChat={currentThreadChat}
+                        setCurrentThreadChat={setCurrentThreadChat}
                         setOpeningService={setOpeningService}
+                        allChats={allChats}
+                        setAllChats={_setAllChats}
+                        isCommentUpdated={isTaskCommentUpdated}
+                        setIsCommentUpdated={setIsTaskCommentUpdated}
                     />
                 ) : null}
 
@@ -128,6 +174,8 @@ export const App = () => {
                         setMyself={setMyself}
                         setCurrentMainChat={setCurrentMainChat}
                         setOpeningService={setOpeningService}
+                        isCommentUpdated={isTaskCommentUpdated}
+                        setIsCommentUpdated={setIsTaskCommentUpdated}
                     />
                 ) : null}
 
