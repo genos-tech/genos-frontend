@@ -11,7 +11,7 @@ export const loadDMIdByUserId = async (
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `user_1_id=${myself.userId}&user_2_id=${dmPartnerUserId}`;
+            const query: string = `team_id=${myself.teamId}&user_1_id=${myself.userId}&user_2_id=${dmPartnerUserId}`;
             const res = await api.get(`/dm/getDMId/?${query}`);
             return res.data.dm_id;
         } else {

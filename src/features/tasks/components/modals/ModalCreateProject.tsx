@@ -86,26 +86,29 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 joinProjectData.hint || "Failed to join the created project"
                             );
                         } else {
-                            const joinTeamRes = await joinTeam(
+                            const prjJoinTeamRes = await joinTeam(
                                 accessToken,
                                 myself.teamId,
                                 signUpRes.user.id,
                                 setErrorMessage
                             );
-                            const joinTeamData = await joinProjectResponse.json();
 
-                            if (!joinTeamRes.ok) {
-                                console.error(joinTeamData);
-                                throw new Error(
-                                    joinTeamData.hint || "Failed to add system_user to the team"
-                                );
-                            } else {
+                            const meJoinTeamRes = await joinTeam(
+                                accessToken,
+                                myself.teamId,
+                                myself.userId,
+                                setErrorMessage
+                            );
+
+                            if (prjJoinTeamRes && meJoinTeamRes) {
                                 setCurrentProject({
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,
                                 });
                                 setOpenCreateProject(false);
                                 setIsNewProjectCreated(true);
+                            } else {
+                                console.error("Failed to add me and/or system_user to the team");
                             }
                         }
                     }
@@ -113,7 +116,11 @@ export const ModalCreateProject: React.FC<Props> = ({
                     console.error("Failed to create system user for the project.");
                 }
             };
-            _signup(projectName, `${projectName}-${myself.teamId}@origin.tech`, projectName);
+            _signup(
+                projectName,
+                `${projectName}-${myself.teamId}@origin.tech`,
+                `${projectName}-Bad-Password-Need-Secure-One`
+            );
         } catch (error) {
             const err_msg = `${error}`;
             console.error(err_msg);

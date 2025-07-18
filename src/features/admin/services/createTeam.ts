@@ -26,12 +26,12 @@ export const createTeam = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
-                console.error("Please try with different team name.");
+                console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
                     setErrorMessage("Please try with different team name.");
                 }
             } else if (error.response?.status === 401) {
-                console.error("Unauthorized. Please log in again.");
+                console.error("HTTP 401 error:", error.response?.data);
                 if (setErrorMessage) {
                     setErrorMessage("Unauthorized. Please log in again.");
                 }

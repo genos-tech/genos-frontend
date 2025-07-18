@@ -30,11 +30,12 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         if (joinTeamRes) {
             const createDmRes: CreateDMResponse = await createDMChat(
                 accessToken,
+                myself.teamId,
                 myself.userId,
                 myself.userId
             );
 
-            if (createDmRes) {
+            if (createDmRes && createDmRes.dm_exists === false) {
                 const initMessageBody = [
                     { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },
                     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
@@ -69,7 +70,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         // Re-load chats and tasks in the team.
         // For now, just update the current team variable
         localStorage.setItem("teamId", teamId);
-        localStorage.setItem("teamId", teamName);
+        localStorage.setItem("teamName", teamName);
         setMyself({
             teamId: teamId,
             teamName: teamName,

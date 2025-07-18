@@ -16,7 +16,7 @@ export const signUp = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
-                console.error("Please try with a different email.");
+                console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
                     setErrorMessage("Please try with a different email.");
                 }

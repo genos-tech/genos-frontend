@@ -55,12 +55,13 @@ export const JoinTeam = () => {
             if (joinTeamRes) {
                 const createDmRes: CreateDMResponse = await createDMChat(
                     accessToken,
+                    teamId,
                     userId,
                     userId,
                     setErrorMessage
                 );
 
-                if (createDmRes) {
+                if (createDmRes && createDmRes.dm_exists === false) {
                     const initMessageBody = [
                         {
                             type: "paragraph",
