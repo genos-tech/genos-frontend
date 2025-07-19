@@ -16,6 +16,7 @@ type ThreadChatPaneHeaderProps = {
     setIsMainChatVisible: (chat: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
     setIsCreatingTask: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
@@ -29,6 +30,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setIsMainChatVisible,
         setIsThreadVisible,
         setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
         setIsOpeningTask,
         setIsCreatingTask,
         currentPreviewTask,
@@ -93,9 +95,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 variant="plain"
                                 color="neutral"
                                 onClick={() => {
-                                     // Left: thread, Right: task creation
                                     setIsMainChatVisible(false);
-                                    setIsTaskPreviewVisible(true);
+                                    setIsThreadVisible(true);
+                                    setIsTaskPreviewVisible(false);
+                                    setIsTaskCreationVisible(true);
 
                                     setIsCreatingTask(true);
                                 }}
@@ -115,7 +118,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 variant="soft"
                                 color="neutral"
                                 onClick={() => {
+                                    setIsMainChatVisible(false);
+                                    setIsThreadVisible(true);
                                     setIsTaskPreviewVisible(true);
+                                    setIsTaskCreationVisible(false);
+
                                     setIsOpeningTask(true);
                                 }}
                                 sx={{ pl: "3px", pr: "5px" }}
@@ -147,8 +154,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         variant="plain"
                         color="neutral"
                         onClick={() => {
+                            setIsMainChatVisible(true);
                             setIsThreadVisible(false);
-                            setIsTaskPreviewVisible(false);
+                            // setIsTaskPreviewVisible(); // Not update, keep as it is !!!
+                            // setIsTaskCreationVisible(); // Not update, keep as it is !!!
                             setCurrentThreadChat(dummyThreadChat);
                         }}
                     >

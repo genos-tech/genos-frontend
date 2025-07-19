@@ -1,8 +1,9 @@
-import { Button, IconButton, Stack } from "@mui/joy";
+import { Button, IconButton, Stack, Tooltip } from "@mui/joy";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
 import { HeaderUserName } from "./HeaderUserName";
 import { UserProps } from "../../../../types/admin";
@@ -15,7 +16,12 @@ type MainChatPaneHeaderProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     isSubChatVisible: boolean;
+    setIsMainChatVisible: (value: boolean) => void;
     setIsSubChatVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    setIsCreatingTask: (value: boolean) => void;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
@@ -27,6 +33,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setCurrentSubChat,
         isSubChatVisible,
         setIsSubChatVisible,
+        setIsMainChatVisible,
+        setIsThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        setIsCreatingTask,
     } = props;
 
     let isYou: boolean = false;
@@ -61,16 +72,38 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 <HeaderUserName chat={chat} isYou={isYou} />
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
-                <Button
-                    component="a"
-                    startDecorator={<PhoneInTalkRoundedIcon />}
-                    color="neutral"
-                    variant="outlined"
-                    size="sm"
-                    sx={{ display: { xs: "none", md: "inline-flex" } }}
-                >
-                    Call
-                </Button>
+                {chat.chatType === 3 && (
+                    <Tooltip title="New Task" size="sm">
+                        <IconButton
+                            component="a"
+                            size="md"
+                            variant="plain"
+                            color="neutral"
+                            onClick={() => {
+                                setIsMainChatVisible(true);
+                                setIsThreadVisible(false);
+                                setIsTaskPreviewVisible(false);
+                                setIsTaskCreationVisible(true);
+                                setIsCreatingTask(true);
+                            }}
+                        >
+                            <PlaylistAddIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
+                {chat.chatType !== 3 && (
+                    <Button
+                        component="a"
+                        startDecorator={<PhoneInTalkRoundedIcon />}
+                        color="neutral"
+                        variant="outlined"
+                        size="sm"
+                        sx={{ display: { xs: "none", md: "inline-flex" } }}
+                    >
+                        Call
+                    </Button>
+                )}
+
                 {isSubChatVisible ? (
                     <div>
                         <IconButton

@@ -108,6 +108,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsThreadVisible={setIsThreadVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        setIsTaskCreationVisible={setIsTaskCreationVisible}
                         setIsOpeningTask={setIsOpeningTask}
                         setIsCreatingTask={setIsCreatingTask}
                         currentPreviewTask={currentPreviewTask}

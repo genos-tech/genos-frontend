@@ -23,12 +23,14 @@ type MessageBubbleProps = MessageProps & {
     variant: "sent" | "received";
     chat: ChatProps;
     socket: Socket | null;
+    setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setCurrentThreadChat: (value: ThreadProps) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
 };
 
@@ -45,12 +47,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         sender,
         numReplies,
         taskId,
+        setIsMainChatVisible,
         setIsThreadVisible,
-        setCurrentThreadChat,
         setCurrentPreviewTask,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        setCurrentThreadChat,
         setOpeningService,
         setCurrentMainChat,
-        setIsTaskPreviewVisible,
         setIsOpeningTask,
     } = props;
     const isSent = variant === "sent";
@@ -81,7 +85,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         loadTask(messageId);
 
         // Show thread pane on the right side.
+        setIsMainChatVisible(true);
         setIsThreadVisible(true);
+        setIsTaskPreviewVisible(false);
+        setIsTaskCreationVisible(false);
 
         if (socket !== null) {
             socket.emit(
@@ -262,7 +269,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         {chat.chatType === 3 && sender.isSystemUser === true && (
                                             <BubbleOpenTaskButton
                                                 taskId={taskId}
+                                                setIsMainChatVisible={setIsMainChatVisible}
+                                                setIsThreadVisible={setIsThreadVisible}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                                setIsTaskCreationVisible={setIsTaskCreationVisible}
                                                 setIsOpeningTask={setIsOpeningTask}
                                             />
                                         )}

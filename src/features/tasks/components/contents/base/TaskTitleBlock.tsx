@@ -33,6 +33,10 @@ type TaskTitleBlockProps = {
     setTitleErrorOpen?: (value: boolean) => void;
     setTaskUpdated?: (value: boolean) => void;
     isPreviewMode: boolean;
+    setIsMainChatVisible?: (value: boolean) => void;
+    isThreadVisible?: boolean;
+    setIsTaskPreviewVisible?: (value: boolean) => void;
+    setIsTaskCreationVisible?: (value: boolean) => void;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -48,6 +52,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setTitleErrorOpen,
         setTaskUpdated,
         isPreviewMode,
+        setIsMainChatVisible,
+        isThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
     } = props;
 
     const { mode } = useColorScheme();
@@ -144,6 +152,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         }
                         if (isPreviewMode === true && setTaskClosed) {
                             setTaskClosed(true);
+                        }
+                        if (setIsMainChatVisible && isThreadVisible) {
+                            setIsMainChatVisible(true);
+                        }
+                        // setIsThreadVisible(); // Not update, keep as it is !!!
+                        if (setIsTaskPreviewVisible) {
+                            setIsTaskPreviewVisible(false);
+                        }
+                        if (setIsTaskCreationVisible) {
+                            setIsTaskCreationVisible(false);
                         }
                     }}
                 >

@@ -56,11 +56,11 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
-    const [isMainChatVisible, setIsMainChatVisible] = useState(true); // Main chat pane is visible or not
-    const [isSubChatVisible, setIsSubChatVisible] = useState(false); // Sub chat in the main chat pane is visible or not
-    const [isThreadVisible, setIsThreadVisible] = useState(false); // Thread pane is visible or not
-    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
-    const [isTaskCreationVisible, setIsTaskCreationVisible] = useState(false);
+    const [isMainChatVisible, setIsMainChatVisible] = useState(true); // Is Main chat pane visible or not
+    const [isSubChatVisible, setIsSubChatVisible] = useState(false); // Is Sub chat in the main chat pane visible or not
+    const [isThreadVisible, setIsThreadVisible] = useState(false); // Is Thread pane visible or not
+    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false); // Is task preview visible or not
+    const [isTaskCreationVisible, setIsTaskCreationVisible] = useState(false); // Is task creation form visible or not
 
     const [isOpeningTask, setIsOpeningTask] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -219,7 +219,20 @@ export const ChatHome = (props: ChatHomeProps) => {
                     </Box>
                 </Panel>
 
-                {isTaskPreviewVisible && currentThreadChat !== undefined && (
+                {/*
+                Visible Patterns (<Right-Left>):
+                    MainChat-ThreadChat
+                        when close right -> only MainChat
+                    MainChat-TaskPreview
+                        when close right -> only MainChat
+                    MainChat-TaskCreation
+                        when close right -> only MainChat
+                    ThreadChat-TaskPreview
+                        when close right -> MainChat-ThreadChat
+                    ThreadChat-TaskCreation
+                        when close right -> MainChat-ThreadChat
+                 */}
+                {isMainChatVisible && (
                     <>
                         <PanelResizeHandle
                             style={{
@@ -231,187 +244,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             className="chat-resize-handle"
                         />
 
-                        <Panel id={"2"} order={2} minSize={25} maxSize={70}>
-                            <Box
-                                sx={{
-                                    height: "100%",
-                                    backgroundColor: "black",
-                                    borderColor: mode === "dark" ? "black" : "white",
-                                    borderLeft:
-                                        mode === "dark" ? "2px black groove" : "2px white groove",
-                                }}
-                            >
-                                <ThreadPane
-                                    thread={currentThreadChat}
-                                    myself={myself}
-                                    socket={socket}
-                                    setCurrentThreadChat={setCurrentThreadChat}
-                                    setIsThreadVisible={setIsThreadVisible}
-                                    currentThreadChatId={currentThreadChatId}
-                                    setIsMainChatVisible={setIsMainChatVisible}
-                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                    setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                    setIsOpeningTask={setIsOpeningTask}
-                                    setIsCreatingTask={setIsCreatingTask}
-                                    currentPreviewTask={currentPreviewTask}
-                                    setOpeningService={setOpeningService}
-                                    setCurrentMainChat={setCurrentMainChat}
-                                />
-                            </Box>
-                        </Panel>
-
-                        {isOpeningTask && currentPreviewTask && (
-                            <>
-                                <PanelResizeHandle
-                                    style={{
-                                        width: "1px",
-                                        backgroundColor: mode === "dark" ? "black" : "white",
-                                        transition: "all 0.3s ease-in-out",
-                                        cursor: "col-resize",
-                                    }}
-                                    className="chat-resize-handle"
-                                />
-
-                                <Panel id={"3"} order={3} minSize={30} maxSize={70}>
-                                    <Box
-                                        sx={{
-                                            px: { xs: 1, md: 2 },
-                                            pt: {
-                                                xs: "calc(12px + var(--Header-height))",
-                                                sm: "calc(12px + var(--Header-height))",
-                                                md: 2,
-                                            },
-                                            pb: { xs: 2, sm: 2, md: 3 },
-                                            flex: 1,
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            minWidth: 0,
-                                            height: "100dvh",
-                                            gap: 1,
-                                            ml: "1px",
-                                            boxShadow: "0 0 0 1px grey",
-                                            borderColor: mode === "dark" ? "black" : "white",
-                                        }}
-                                    >
-                                        <TaskPreview
-                                            socket={socket}
-                                            myself={myself}
-                                            setCurrentProject={setCurrentProject}
-                                            currentPreviewTask={currentPreviewTask}
-                                            setIsMainChatVisible={setIsMainChatVisible}
-                                            setIsThreadVisible={setIsThreadVisible}
-                                            setIsCreatingTask={setIsCreatingTask}
-                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                            setCurrentPreviewTask={setCurrentPreviewTask}
-                                            setOpenCreateProject={setOpenCreateProject}
-                                            setOpenCreateTag={setOpenCreateTag}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                            isCommentUpdated={isCommentUpdated}
-                                            setIsCommentUpdated={setIsCommentUpdated}
-                                        />
-                                    </Box>
-                                </Panel>
-                            </>
-                        )}
-
-                        {isCreatingTask && (
-                            <>
-                                <PanelResizeHandle
-                                    style={{
-                                        width: "1px",
-                                        backgroundColor: mode === "dark" ? "black" : "white",
-                                        transition: "all 0.3s ease-in-out",
-                                        cursor: "col-resize",
-                                    }}
-                                    className="chat-resize-handle"
-                                />
-
-                                <Panel id={"4"} order={4} minSize={30} maxSize={70}>
-                                    <Box
-                                        sx={{
-                                            px: { xs: 1, md: 2 },
-                                            pt: {
-                                                xs: "calc(12px + var(--Header-height))",
-                                                sm: "calc(12px + var(--Header-height))",
-                                                md: 2,
-                                            },
-                                            pb: { xs: 2, sm: 2, md: 3 },
-                                            flex: 1,
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            minWidth: 0,
-                                            height: "100dvh",
-                                            gap: 1,
-                                            ml: "1px",
-                                            boxShadow: "0 0 0 1px grey",
-                                            borderColor: mode === "dark" ? "black" : "white",
-                                        }}
-                                    >
-                                        <CreateTaskForm
-                                            socket={socket}
-                                            myself={myself}
-                                            isDm={currentThreadChat.isDm}
-                                            chatType={currentThreadChat.chatType}
-                                            chatId={currentThreadChat.chatId}
-                                            threadId={currentThreadChat.threadId}
-                                            setIsMainChatVisible={setIsMainChatVisible}
-                                            setIsThreadVisible={setIsThreadVisible}
-                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                            setIsOpeningTask={setIsOpeningTask}
-                                            setOpenCreateProject={setOpenCreateProject}
-                                            setOpenCreateTag={setOpenCreateTag}
-                                            currentProject={currentProject}
-                                            setCurrentProject={setCurrentProject}
-                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                            isNewProjectCreated={isNewProjectCreated}
-                                            isNewTagCreated={isNewTagCreated}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            setOpeningService={setOpeningService}
-                                            parentTaskId={null}
-                                            rootTaskId={null}
-                                        />
-                                    </Box>
-                                </Panel>
-                            </>
-                        )}
-
-                        {/* Modal for creating a new project */}
-                        <ModalCreateProject
-                            myself={myself}
-                            openCreateProject={openCreateProject}
-                            setOpenCreateProject={setOpenCreateProject}
-                            setCurrentProject={setCurrentProject}
-                            setIsNewProjectCreated={setIsNewProjectCreated}
-                        />
-
-                        {/* Modal for creating a new tag */}
-                        <ModalCreateTag
-                            myself={myself}
-                            currentProject={currentProject}
-                            openCreateTag={openCreateTag}
-                            setOpenCreateTag={setOpenCreateTag}
-                            setIsNewTagCreated={setIsNewTagCreated}
-                        />
-                    </>
-                )}
-
-                {(!isTaskPreviewVisible || currentThreadChat === undefined) && (
-                    <>
-                        <PanelResizeHandle
-                            style={{
-                                width: "1px",
-                                backgroundColor: mode === "dark" ? "black" : "white",
-                                transition: "all 0.3s ease-in-out",
-                                cursor: "col-resize",
-                            }}
-                            className="chat-resize-handle"
-                        />
-
-                        <Panel id={"5"} order={5} minSize={25} maxSize={90}>
+                        <Panel id={"2"} order={2} minSize={25} maxSize={90}>
                             <PanelGroup autoSaveId="conditional" direction="vertical">
                                 {isSubChatVisible && (
                                     <>
@@ -482,6 +315,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setIsTaskCreationVisible={setIsTaskCreationVisible}
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                         setIsOpeningTask={setIsOpeningTask}
+                                        setIsCreatingTask={setIsCreatingTask}
                                         isSubChatVisible={isSubChatVisible}
                                         setIsSubChatVisible={setIsSubChatVisible}
                                         currentMainChatId={currentMainChatId}
@@ -493,7 +327,207 @@ export const ChatHome = (props: ChatHomeProps) => {
                             </PanelGroup>
                         </Panel>
 
-                        {isThreadVisible && currentThreadChat !== undefined && (
+                        {isThreadVisible && (
+                            <>
+                                {currentThreadChat && (
+                                    <>
+                                        <PanelResizeHandle
+                                            style={{
+                                                width: "1px",
+                                                backgroundColor:
+                                                    mode === "dark" ? "black" : "white",
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle"
+                                        />
+
+                                        <Panel id={"3"} order={3} minSize={25} maxSize={70}>
+                                            <Box
+                                                sx={{
+                                                    height: "100%",
+                                                    backgroundColor: "black",
+                                                    borderColor:
+                                                        mode === "dark" ? "black" : "white",
+                                                    borderLeft:
+                                                        mode === "dark"
+                                                            ? "2px black groove"
+                                                            : "2px white groove",
+                                                }}
+                                            >
+                                                <ThreadPane
+                                                    thread={currentThreadChat}
+                                                    myself={myself}
+                                                    socket={socket}
+                                                    setCurrentThreadChat={setCurrentThreadChat}
+                                                    setIsThreadVisible={setIsThreadVisible}
+                                                    currentThreadChatId={currentThreadChatId}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
+                                                    setIsTaskCreationVisible={
+                                                        setIsTaskCreationVisible
+                                                    }
+                                                    setIsOpeningTask={setIsOpeningTask}
+                                                    setIsCreatingTask={setIsCreatingTask}
+                                                    currentPreviewTask={currentPreviewTask}
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                />
+                                            </Box>
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
+                        {isTaskPreviewVisible && (
+                            <>
+                                {currentPreviewTask && (
+                                    <>
+                                        <PanelResizeHandle
+                                            style={{
+                                                width: "1px",
+                                                backgroundColor:
+                                                    mode === "dark" ? "black" : "white",
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle"
+                                        />
+
+                                        <Panel id={"4"} order={4} minSize={30} maxSize={70}>
+                                            <Box
+                                                sx={{
+                                                    px: { xs: 1, md: 2 },
+                                                    pt: {
+                                                        xs: "calc(12px + var(--Header-height))",
+                                                        sm: "calc(12px + var(--Header-height))",
+                                                        md: 2,
+                                                    },
+                                                    pb: { xs: 2, sm: 2, md: 3 },
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    minWidth: 0,
+                                                    height: "100dvh",
+                                                    gap: 1,
+                                                    ml: "1px",
+                                                    boxShadow: "0 0 0 1px grey",
+                                                    borderColor:
+                                                        mode === "dark" ? "black" : "white",
+                                                }}
+                                            >
+                                                <TaskPreview
+                                                    socket={socket}
+                                                    myself={myself}
+                                                    setCurrentProject={setCurrentProject}
+                                                    currentPreviewTask={currentPreviewTask}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsThreadVisible={setIsThreadVisible}
+                                                    setIsCreatingTask={setIsCreatingTask}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
+                                                    setIsTaskCreationVisible={
+                                                        setIsTaskCreationVisible
+                                                    }
+                                                    setCurrentPreviewTask={setCurrentPreviewTask}
+                                                    setOpenCreateProject={setOpenCreateProject}
+                                                    setOpenCreateTag={setOpenCreateTag}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentPreviewTaskId={
+                                                        setCurrentPreviewTaskId
+                                                    }
+                                                    isCommentUpdated={isCommentUpdated}
+                                                    setIsCommentUpdated={setIsCommentUpdated}
+                                                />
+                                            </Box>
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
+                        {isTaskCreationVisible && (
+                            <>
+                                {currentThreadChat && (
+                                    <>
+                                        <PanelResizeHandle
+                                            style={{
+                                                width: "1px",
+                                                backgroundColor:
+                                                    mode === "dark" ? "black" : "white",
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle"
+                                        />
+
+                                        <Panel id={"5"} order={5} minSize={30} maxSize={70}>
+                                            <Box
+                                                sx={{
+                                                    px: { xs: 1, md: 2 },
+                                                    pt: {
+                                                        xs: "calc(12px + var(--Header-height))",
+                                                        sm: "calc(12px + var(--Header-height))",
+                                                        md: 2,
+                                                    },
+                                                    pb: { xs: 2, sm: 2, md: 3 },
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    minWidth: 0,
+                                                    height: "100dvh",
+                                                    gap: 1,
+                                                    ml: "1px",
+                                                    boxShadow: "0 0 0 1px grey",
+                                                    borderColor:
+                                                        mode === "dark" ? "black" : "white",
+                                                }}
+                                            >
+                                                <CreateTaskForm
+                                                    socket={socket}
+                                                    myself={myself}
+                                                    isDm={currentThreadChat.isDm}
+                                                    chatType={currentThreadChat.chatType}
+                                                    chatId={currentThreadChat.chatId}
+                                                    threadId={currentThreadChat.threadId}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsThreadVisible={setIsThreadVisible}
+                                                    isThreadVisible={isThreadVisible}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
+                                                    setIsTaskCreationVisible={
+                                                        setIsTaskCreationVisible
+                                                    }
+                                                    setIsOpeningTask={setIsOpeningTask}
+                                                    setOpenCreateProject={setOpenCreateProject}
+                                                    setOpenCreateTag={setOpenCreateTag}
+                                                    currentProject={currentProject}
+                                                    setCurrentProject={setCurrentProject}
+                                                    setCurrentPreviewTaskId={
+                                                        setCurrentPreviewTaskId
+                                                    }
+                                                    isNewProjectCreated={isNewProjectCreated}
+                                                    isNewTagCreated={isNewTagCreated}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setOpeningService={setOpeningService}
+                                                    parentTaskId={null}
+                                                    rootTaskId={null}
+                                                />
+                                            </Box>
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </>
+                )}
+                {!isMainChatVisible && isThreadVisible && (
+                    <>
+                        {currentThreadChat && (
                             <>
                                 <PanelResizeHandle
                                     style={{
@@ -505,10 +539,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     className="chat-resize-handle"
                                 />
 
-                                <Panel id={"8"} order={8} minSize={25} maxSize={70}>
+                                <Panel id={"6"} order={6} minSize={25} maxSize={70}>
                                     <Box
                                         sx={{
                                             height: "100%",
+                                            backgroundColor: "black",
                                             borderColor: mode === "dark" ? "black" : "white",
                                             borderLeft:
                                                 mode === "dark"
@@ -536,8 +571,169 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 </Panel>
                             </>
                         )}
+
+                        {isTaskPreviewVisible && (
+                            <>
+                                {currentPreviewTask && (
+                                    <>
+                                        <PanelResizeHandle
+                                            style={{
+                                                width: "1px",
+                                                backgroundColor:
+                                                    mode === "dark" ? "black" : "white",
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle"
+                                        />
+
+                                        <Panel id={"7"} order={7} minSize={30} maxSize={70}>
+                                            <Box
+                                                sx={{
+                                                    px: { xs: 1, md: 2 },
+                                                    pt: {
+                                                        xs: "calc(12px + var(--Header-height))",
+                                                        sm: "calc(12px + var(--Header-height))",
+                                                        md: 2,
+                                                    },
+                                                    pb: { xs: 2, sm: 2, md: 3 },
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    minWidth: 0,
+                                                    height: "100dvh",
+                                                    gap: 1,
+                                                    ml: "1px",
+                                                    boxShadow: "0 0 0 1px grey",
+                                                    borderColor:
+                                                        mode === "dark" ? "black" : "white",
+                                                }}
+                                            >
+                                                <TaskPreview
+                                                    socket={socket}
+                                                    myself={myself}
+                                                    setCurrentProject={setCurrentProject}
+                                                    currentPreviewTask={currentPreviewTask}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsThreadVisible={setIsThreadVisible}
+                                                    setIsCreatingTask={setIsCreatingTask}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
+                                                    setIsTaskCreationVisible={
+                                                        setIsTaskCreationVisible
+                                                    }
+                                                    setCurrentPreviewTask={setCurrentPreviewTask}
+                                                    setOpenCreateProject={setOpenCreateProject}
+                                                    setOpenCreateTag={setOpenCreateTag}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentPreviewTaskId={
+                                                        setCurrentPreviewTaskId
+                                                    }
+                                                    isCommentUpdated={isCommentUpdated}
+                                                    setIsCommentUpdated={setIsCommentUpdated}
+                                                />
+                                            </Box>
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
+                        {isTaskCreationVisible && (
+                            <>
+                                {currentThreadChat && (
+                                    <>
+                                        <PanelResizeHandle
+                                            style={{
+                                                width: "1px",
+                                                backgroundColor:
+                                                    mode === "dark" ? "black" : "white",
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle"
+                                        />
+
+                                        <Panel id={"8"} order={8} minSize={30} maxSize={70}>
+                                            <Box
+                                                sx={{
+                                                    px: { xs: 1, md: 2 },
+                                                    pt: {
+                                                        xs: "calc(12px + var(--Header-height))",
+                                                        sm: "calc(12px + var(--Header-height))",
+                                                        md: 2,
+                                                    },
+                                                    pb: { xs: 2, sm: 2, md: 3 },
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    minWidth: 0,
+                                                    height: "100dvh",
+                                                    gap: 1,
+                                                    ml: "1px",
+                                                    boxShadow: "0 0 0 1px grey",
+                                                    borderColor:
+                                                        mode === "dark" ? "black" : "white",
+                                                }}
+                                            >
+                                                <CreateTaskForm
+                                                    socket={socket}
+                                                    myself={myself}
+                                                    isDm={currentThreadChat.isDm}
+                                                    chatType={currentThreadChat.chatType}
+                                                    chatId={currentThreadChat.chatId}
+                                                    threadId={currentThreadChat.threadId}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsThreadVisible={setIsThreadVisible}
+                                                    isThreadVisible={isThreadVisible}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
+                                                    setIsTaskCreationVisible={
+                                                        setIsTaskCreationVisible
+                                                    }
+                                                    setIsOpeningTask={setIsOpeningTask}
+                                                    setOpenCreateProject={setOpenCreateProject}
+                                                    setOpenCreateTag={setOpenCreateTag}
+                                                    currentProject={currentProject}
+                                                    setCurrentProject={setCurrentProject}
+                                                    setCurrentPreviewTaskId={
+                                                        setCurrentPreviewTaskId
+                                                    }
+                                                    isNewProjectCreated={isNewProjectCreated}
+                                                    isNewTagCreated={isNewTagCreated}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setOpeningService={setOpeningService}
+                                                    parentTaskId={null}
+                                                    rootTaskId={null}
+                                                />
+                                            </Box>
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </>
                 )}
+
+                {/* Modal for creating a new project */}
+                <ModalCreateProject
+                    myself={myself}
+                    openCreateProject={openCreateProject}
+                    setOpenCreateProject={setOpenCreateProject}
+                    setCurrentProject={setCurrentProject}
+                    setIsNewProjectCreated={setIsNewProjectCreated}
+                />
+
+                {/* Modal for creating a new tag */}
+                <ModalCreateTag
+                    myself={myself}
+                    currentProject={currentProject}
+                    openCreateTag={openCreateTag}
+                    setOpenCreateTag={setOpenCreateTag}
+                    setIsNewTagCreated={setIsNewTagCreated}
+                />
             </PanelGroup>
 
             {/* Hover Animation with CSS */}

@@ -31,6 +31,7 @@ type MessagesPaneProps = {
     setIsTaskCreationVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
+    setIsCreatingTask: (value: boolean) => void;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     currentMainChatId: number;
@@ -54,6 +55,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         setIsTaskCreationVisible,
         setIsTaskPreviewVisible,
         setIsOpeningTask,
+        setIsCreatingTask,
         setIsThreadVisible,
         isSubChatVisible,
         setIsSubChatVisible,
@@ -93,7 +95,12 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
                     isSubChatVisible={isSubChatVisible}
+                    setIsMainChatVisible={setIsMainChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
+                    setIsThreadVisible={setIsThreadVisible}
+                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    setIsCreatingTask={setIsCreatingTask}
                 />
                 <Box sx={{ px: 0.3, my: 0.2 }}>
                     <Virtuoso
@@ -129,12 +136,14 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             chat={chat}
                                             socket={socket}
                                             {...message}
+                                            setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
+                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
                                             setCurrentThreadChat={setCurrentThreadChat}
                                             setCurrentPreviewTask={setCurrentPreviewTask}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
-                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                             setIsOpeningTask={setIsOpeningTask}
                                         />
                                     </Stack>

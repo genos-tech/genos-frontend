@@ -3,11 +3,21 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 
 type BubbleReplyButtonTypes = {
     taskId: number | null;
+    setIsMainChatVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
 };
 export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
-    const { taskId, setIsTaskPreviewVisible, setIsOpeningTask } = props;
+    const {
+        taskId,
+        setIsMainChatVisible,
+        setIsThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        setIsOpeningTask,
+    } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
             <Tooltip title="Open Task" size="sm">
@@ -23,7 +33,11 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                     onClick={() => {
                         console.log("taskId:", taskId);
                         if (taskId !== null) {
+                            setIsMainChatVisible(true);
+                            setIsThreadVisible(false);
                             setIsTaskPreviewVisible(true);
+                            setIsTaskCreationVisible(false);
+
                             setIsOpeningTask(true);
                         }
                     }}
