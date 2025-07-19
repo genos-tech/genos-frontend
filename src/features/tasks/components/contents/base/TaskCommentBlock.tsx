@@ -89,7 +89,11 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                                         </Typography>
                                                         <Typography
                                                             level="body-sm"
-                                                            textColor="black"
+                                                            textColor={
+                                                                mode === "dark"
+                                                                    ? "lightgrey"
+                                                                    : "rgba(37, 37, 37, 1)"
+                                                            }
                                                             sx={{
                                                                 fontFamily: "monospace",
                                                                 opacity: 0.7,
