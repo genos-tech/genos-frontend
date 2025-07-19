@@ -28,6 +28,9 @@ type MessagesPaneProps = {
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setIsSubChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    setIsOpeningTask: (value: boolean) => void;
     currentSubChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
@@ -47,6 +50,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setCurrentThreadChat,
         setIsSubChatVisible,
         setIsThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        setIsOpeningTask,
         currentSubChatId,
         setCurrentPreviewTask,
         setOpeningService,
@@ -120,6 +126,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             setCurrentPreviewTask={setCurrentPreviewTask}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
+                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                            setIsOpeningTask={setIsOpeningTask}
                                         />
                                     </Stack>
                                 </div>

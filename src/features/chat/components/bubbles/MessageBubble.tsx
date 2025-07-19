@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 import { addThreadMessage } from "../../services/addThreadMessage";
 import { popSpecificThreadMessages } from "../../services/popSpecificThreadMessages";
 import { BubbleReactionButton } from "./BubbleReactionButton";
+import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleReplyButton } from "./BubbleReplyButton";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
@@ -27,6 +28,8 @@ type MessageBubbleProps = MessageProps & {
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsOpeningTask: (value: boolean) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -41,11 +44,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         attachment = undefined,
         sender,
         numReplies,
+        taskId,
         setIsThreadVisible,
         setCurrentThreadChat,
         setCurrentPreviewTask,
         setOpeningService,
         setCurrentMainChat,
+        setIsTaskPreviewVisible,
+        setIsOpeningTask,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
@@ -253,6 +259,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             isSent={isSent}
                                             replayHandler={replayHandler}
                                         />
+                                        {chat.chatType === 3 && sender.isSystemUser === true && (
+                                            <BubbleOpenTaskButton
+                                                taskId={taskId}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                                setIsOpeningTask={setIsOpeningTask}
+                                            />
+                                        )}
                                     </Stack>
                                 </Box>
                             </Stack>

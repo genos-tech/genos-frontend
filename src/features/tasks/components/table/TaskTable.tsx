@@ -96,7 +96,7 @@ type ProjectTaskTableProps = {
     ongoingTasks: TaskTableProps[];
     closedTasks: TaskTableProps[];
     deletedTasks: TaskTableProps[];
-    setIsTaskContentVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     displayTaskType: TaskType;
 };
@@ -107,7 +107,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
         ongoingTasks,
         closedTasks,
         deletedTasks,
-        setIsTaskContentVisible,
+        setIsTaskPreviewVisible,
         setCurrentPreviewTaskId,
         displayTaskType,
     } = props;
@@ -303,11 +303,11 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                     <DataGrid
                         onCellClick={(params) => {}}
                         onCellDoubleClick={(params) => {
-                            setIsTaskContentVisible(true);
+                            setIsTaskPreviewVisible(true);
                             setCurrentPreviewTaskId(Number(params.id));
                         }}
                         onRowClick={(params, event, detail) => {
-                            // setIsTaskContentVisible(true);
+                            // setIsTaskPreviewVisible(true);
                             // setCurrentPreviewTaskId(Number(params.id));
                         }}
                         className={className}

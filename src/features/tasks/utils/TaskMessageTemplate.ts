@@ -39,6 +39,12 @@ export const taskMessageTemplate = (task: TaskProps) => [
     {
         type: "paragraph",
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [{ text: `ID: ${task.id}`, type: "text", styles: {} }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
         content: [
             { text: "Status: ", type: "text", styles: {} },
             getStatusConfig(task.status.status || "default"),

@@ -20,17 +20,12 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
             >
                 <Typography
                     level="body-md"
+                    component="span"
                     sx={[
-                        {
-                            lineHeight: 1.5,
-                        },
+                        { lineHeight: 1.5 },
                         isSent
-                            ? {
-                                  color: "background.body",
-                              }
-                            : {
-                                  color: "var(--joy-palette-text-primary)",
-                              },
+                            ? { color: "background.body" }
+                            : { color: "var(--joy-palette-text-primary)" },
                     ]}
                 >
                     {chatType === 3 && sender.isSystemUser === true && (
@@ -48,6 +43,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                     )}
                     {userName}
                 </Typography>
+
                 <Typography
                     level="body-xs"
                     sx={[

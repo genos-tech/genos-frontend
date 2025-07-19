@@ -117,7 +117,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         );
 
                         const uploadAttachmentData = await uploadAttachmentResponse.json();
-                        console.log("uploadAttachmentData (task creation):", uploadAttachmentData);
 
                         if (!uploadAttachmentResponse.ok) {
                             throw new Error(
@@ -141,6 +140,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                             (ack: any) => {
                                 const createTaskMessage = taskMessageTemplate(taskContents);
                                 if (taskContents.project !== null && createTaskMessage) {
+                                    console.log("taskCreateData.task_id:",taskCreateData.task_id)
                                     socket.emit("message", {
                                         message: createTaskMessage,
                                         destCGName: taskContents.project.projectName,
@@ -148,6 +148,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         isDm: false,
                                         chatType: 3,
                                         dmPartnerUserId: null,
+                                        taskId: taskCreateData.task_id,
                                         systemUserId: taskContents.project.projectUserId,
                                     });
                                 } else {

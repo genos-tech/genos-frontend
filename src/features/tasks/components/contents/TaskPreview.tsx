@@ -28,8 +28,11 @@ type TaskPreviewProps = {
     myself: UserProps;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTask: TaskProps;
+    setIsMainChatVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
     setIsCreatingTask: (value: any) => void;
-    setIsTaskContentVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
@@ -49,7 +52,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setCurrentProject,
         currentPreviewTask,
         setIsCreatingTask,
-        setIsTaskContentVisible,
+        setIsMainChatVisible,
+        setIsThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
         setCurrentPreviewTask,
         setOpenCreateProject,
         setOpenCreateTag,
@@ -165,11 +171,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             if (taskBodyUpdated) {
                 const execute = async () => {
                     await sendUpdatedTask(false);
-                    setIsTaskContentVisible(false);
+                    setIsTaskPreviewVisible(false);
                 };
                 execute();
             } else {
-                setIsTaskContentVisible(false);
+                setIsTaskPreviewVisible(false);
             }
     }, [taskClosed]);
 
