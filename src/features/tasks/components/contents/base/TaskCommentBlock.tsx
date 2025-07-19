@@ -72,7 +72,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                                     sx={{
                                                         backgroundColor:
                                                             mode === "dark"
-                                                                ? "grey"
+                                                                ? "black"
                                                                 : "rgb(217, 217, 217)",
                                                     }}
                                                 >

@@ -40,7 +40,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
             if (value.type === "Group") {
                 isDm = false;
             }
-            console.log("joinnhere", value);
             socket.emit(
                 "join",
                 {

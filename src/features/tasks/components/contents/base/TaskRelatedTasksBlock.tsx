@@ -110,6 +110,19 @@ export const TaskRelatedTasksBlock = (props: TaskRelatedTasksBlockProps) => {
                                             <Chip
                                                 key={`${id}-${index}`} // pass the key directly
                                                 variant="soft"
+                                                color="neutral"
+                                                sx={{
+                                                    marginX: "5px",
+                                                    fontWeight: "bold",
+                                                    borderRadius: "7px",
+                                                }}
+                                                size="md"
+                                            >
+                                                {`${id}`}
+                                            </Chip>
+                                            <Chip
+                                                key={`${id}-${index}`} // pass the key directly
+                                                variant="soft"
                                                 sx={{
                                                     marginX: "5px",
                                                     backgroundColor: status.color

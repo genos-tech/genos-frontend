@@ -12,6 +12,8 @@ self.onmessage = async (event) => {
     const accessToken: string = event.data.accessToken;
 
     await clearStore(STORES.GM_CHATS);
+    await clearStore(STORES.GM_MESSAGES);
+    await clearStore(STORES.GM_THREAD_MESSAGES);
 
     // Load data from backend
     const gmHistory: ChatProps[] = await loadGMHistory(

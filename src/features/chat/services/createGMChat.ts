@@ -28,12 +28,12 @@ export const createGMChat = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
-                console.error("GM already exists.");
+                console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
                     setErrorMessage("GM already exists.");
                 }
             } else if (error.response?.status === 401) {
-                console.error("Unauthorized. Please log in again.");
+                console.error("HTTP 401 error:", error.response?.data);
                 if (setErrorMessage) {
                     setErrorMessage("Unauthorized. Please log in again.");
                 }

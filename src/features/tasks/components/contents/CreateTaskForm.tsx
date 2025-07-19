@@ -214,7 +214,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             accessToken: accessToken,
             setTeamMembers: setTeamMembers,
         });
-    }, [isOpenTeamMembersList]);
+    }, [myself, isOpenTeamMembersList]);
 
     // Get team projects
     const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);

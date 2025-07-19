@@ -109,6 +109,16 @@ export const App = () => {
     }, []);
 
     useEffect(() => {
+        setIsLoading(true);
+    }, [myself]);
+
+    useEffect(() => {
+        if (isLoading === false) {
+            _setAllChats();
+        }
+    }, [isLoading]);
+
+    useEffect(() => {
         if (openingService === 1) {
             // console.log("Open Chat")
         }
@@ -119,7 +129,7 @@ export const App = () => {
             setSocketInstance(socket(accessToken));
             console.log("WS connected");
         }
-    }, [accessToken]);
+    }, [myself, accessToken]);
 
     wsHook({
         socket: socketInstance,

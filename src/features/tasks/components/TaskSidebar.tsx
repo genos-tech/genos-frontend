@@ -649,7 +649,11 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                     teamId === myself.teamId ? "solid" : "plain"
                                                 }
                                                 onClick={() =>
-                                                    setMyself({ ...myself, teamId: teamId })
+                                                    setMyself({
+                                                        ...myself,
+                                                        teamId: teamId,
+                                                        teamName: teamName,
+                                                    })
                                                 }
                                                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >

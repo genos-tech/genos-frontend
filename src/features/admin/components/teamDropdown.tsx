@@ -30,11 +30,12 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         if (joinTeamRes) {
             const createDmRes: CreateDMResponse = await createDMChat(
                 accessToken,
+                myself.teamId,
                 myself.userId,
                 myself.userId
             );
 
-            if (createDmRes) {
+            if (createDmRes && createDmRes.dm_exists === false) {
                 const initMessageBody = [
                     { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },
                     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
@@ -69,7 +70,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         // Re-load chats and tasks in the team.
         // For now, just update the current team variable
         localStorage.setItem("teamId", teamId);
-        localStorage.setItem("teamId", teamName);
+        localStorage.setItem("teamName", teamName);
         setMyself({
             teamId: teamId,
             teamName: teamName,
@@ -108,9 +109,10 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     <BusinessIcon className="h-5 w-5" />
                 </IconButton>
                 <Menu
+                    className="custom-scrollbar"
                     size="sm"
                     ref={dropdownRef}
-                    sx={{ zIndex: 10001 }}
+                    sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
                     onClose={handleClose}
@@ -121,6 +123,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                             onClick={() => {
                                 handleClicked(team.teamId, team.teamName);
                             }}
+                            variant={team.teamId === myself.teamId ? "solid" : "plain"}
                         >
                             <AcUnitIcon />
                             {team.teamName}
