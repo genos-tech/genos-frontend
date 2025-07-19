@@ -279,6 +279,18 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     }}
                                 >
                                     <Chip
+                                        variant="outlined"
+                                        color="neutral"
+                                        sx={{
+                                            marginX: "5px",
+                                            fontWeight: "bold",
+                                            borderRadius: "7px",
+                                        }}
+                                        size="md"
+                                    >
+                                        {`${parentTask.id}`}
+                                    </Chip>
+                                    <Chip
                                         variant="soft"
                                         sx={{
                                             backgroundColor: parentTask.status.color

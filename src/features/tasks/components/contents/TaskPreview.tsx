@@ -9,7 +9,7 @@ import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskBodyPreviewBlock } from "./base/TaskBodyPreviewBlock";
 import { TaskPreviewCustomBar } from "./base/TaskPreviewCustomBar";
 import { TaskCommentBlock } from "./base/TaskCommentBlock";
-import { TaskRelatedTasksBlock } from "./base/TaskRelatedTasksBlock";
+import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import { loadTaskComments } from "../../services/loadTaskComments";
 import {
@@ -339,7 +339,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
             <Divider sx={{ mt: 2 }} />
 
-            <TaskRelatedTasksBlock
+            <TaskSubTasksBlock
                 socket={socket}
                 myself={myself}
                 currentTaskContent={tmpCurrentTaskContent}

@@ -13,7 +13,7 @@ import { TaskProps, ProjectProps } from "../../../../../types/tasks";
 import { ChatProps } from "../../../../../types/chat";
 import { AvatarWithStatus } from "../../../../../components/utils/avatarWithStatus";
 
-type TaskRelatedTasksBlockProps = {
+type TaskSubTasksBlockProps = {
     socket: Socket | null;
     myself: UserProps;
     currentTaskContent: TaskProps;
@@ -22,7 +22,7 @@ type TaskRelatedTasksBlockProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
 };
-export const TaskRelatedTasksBlock = (props: TaskRelatedTasksBlockProps) => {
+export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const {
         socket,
         myself,
@@ -79,7 +79,7 @@ export const TaskRelatedTasksBlock = (props: TaskRelatedTasksBlockProps) => {
                 direction="row"
                 sx={{
                     width: "100%",
-                    maxHeight: "100px",
+                    maxHeight: "200px",
                     overflowY: "scroll",
                 }}
             >
@@ -109,7 +109,7 @@ export const TaskRelatedTasksBlock = (props: TaskRelatedTasksBlockProps) => {
                                         >
                                             <Chip
                                                 key={`${id}-${index}`} // pass the key directly
-                                                variant="soft"
+                                                variant="outlined"
                                                 color="neutral"
                                                 sx={{
                                                     marginX: "5px",
