@@ -72,6 +72,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             latestMessageText: messages[messages.length - 1].contentText,
             TSLastMessage: chat.TSLastMessage,
             systemUserId: chat.systemUserId,
+            project: chat.project,
         };
         return newMessages;
     };

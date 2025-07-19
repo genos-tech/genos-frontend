@@ -1,5 +1,6 @@
 import { PartialBlock } from "@blocknote/core";
 import { UserProps } from "./admin";
+import { ProjectProps } from "./tasks";
 
 // Chat Props
 export type AllChatProps = {
@@ -14,6 +15,7 @@ export type AllChatProps = {
     latestMessageText: string;
     CGAvatarImgPath?: string;
     TSLastMessage: string;
+    project?: ProjectProps;
 };
 
 export type ChatProps = {
@@ -29,6 +31,7 @@ export type ChatProps = {
     latestMessageText: string;
     CGAvatarImgPath?: string;
     TSLastMessage: string;
+    project?: ProjectProps;
 };
 
 // Thread Props
@@ -110,6 +113,7 @@ export type NewMessageProps = {
         size: string;
     };
     taskId: number | null;
+    project?: ProjectProps;
 };
 
 export type NewThreadMessageProps = {
@@ -162,7 +166,7 @@ export type LoadGMMessageHistoryResponse = {
 export type SearchTeamTasksResponse = {
     projectId: number;
     projectName: string;
-    projectUserId: string;
+    systemUserId: string;
     taskId: number;
     title: string;
     status: string;

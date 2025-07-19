@@ -25,7 +25,7 @@ export type ProjectProps = {
     projectId: number;
     projectName: string;
     isJoined?: boolean;
-    projectUserId?: string;
+    systemUserId?: string;
 };
 
 export type TaskPriorityProps = {

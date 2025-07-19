@@ -33,7 +33,7 @@ export const taskMessageTemplate = (task: TaskProps) => [
             textAlignment: "left",
             backgroundColor: "default",
         },
-        content: [{ text: `🧾 Task: ${task.title}`, type: "text", styles: {} }],
+        content: [{ text: `🧾 Title: ${task.title}`, type: "text", styles: {} }],
         children: [],
     },
     {

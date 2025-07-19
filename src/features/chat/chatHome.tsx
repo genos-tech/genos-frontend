@@ -31,7 +31,8 @@ type ChatHomeProps = {
     setCurrentThreadChat: (value: ThreadProps) => void;
     setOpeningService: (service: number) => void;
     allChats: AllChatProps[];
-    setAllChats: () => void;
+    setAllChats: (chat: AllChatProps[]) => void;
+    funcSetAllChats: () => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
 };
@@ -50,6 +51,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         setOpeningService,
         allChats,
         setAllChats,
+        funcSetAllChats,
         isCommentUpdated,
         setIsCommentUpdated,
     } = props;
@@ -80,11 +82,17 @@ export const ChatHome = (props: ChatHomeProps) => {
         if (currentMainChatId !== currentMainChat.chatId) {
             setCurrentMainChatId(currentMainChat.chatId);
         }
+        if (currentMainChat.project) {
+            setCurrentProject(currentMainChat.project);
+        }
     }, [currentMainChat]);
 
     useEffect(() => {
         if (currentSubChat !== undefined && currentSubChatId !== currentSubChat.chatId) {
             setCurrentSubChatId(currentSubChat.chatId);
+        }
+        if (currentSubChat?.project) {
+            setCurrentProject(currentSubChat.project);
         }
     }, [currentSubChat]);
 
@@ -95,7 +103,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [currentThreadChat]);
 
     useEffect(() => {
-        if (currentProject && currentPreviewTaskId !== -1) {
+        if (currentProject && isTaskPreviewVisible && currentPreviewTaskId !== -1) {
             (async () => {
                 const loadedTask: TaskProps[] = await loadSpecificTask(
                     myself,
@@ -108,7 +116,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 setIsCreatingTask(false);
             })();
         }
-    }, [currentPreviewTaskId]);
+    }, [currentPreviewTaskId, isTaskPreviewVisible]);
 
     useEffect(() => {
         if (currentPreviewTask) {
@@ -221,17 +229,18 @@ export const ChatHome = (props: ChatHomeProps) => {
 
                 {/*
                 Visible Patterns (<Right-Left>):
-                    MainChat-ThreadChat
+                    MainChat-ThreadChat (p1)
                         when close right -> only MainChat
-                    MainChat-TaskPreview
+                    MainChat-TaskPreview (p2)
                         when close right -> only MainChat
-                    MainChat-TaskCreation
+                    MainChat-TaskCreation (p3)
                         when close right -> only MainChat
-                    ThreadChat-TaskPreview
+                    ThreadChat-TaskPreview (p4)
                         when close right -> MainChat-ThreadChat
-                    ThreadChat-TaskCreation
+                    ThreadChat-TaskCreation (p5)
                         when close right -> MainChat-ThreadChat
                  */}
+
                 {isMainChatVisible && (
                     <>
                         <PanelResizeHandle
@@ -269,6 +278,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setCurrentSubChat={setCurrentSubChat}
                                                 setCurrentThreadChat={setCurrentThreadChat}
+                                                setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsSubChatVisible={setIsSubChatVisible}
                                                 setIsThreadVisible={setIsThreadVisible}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
@@ -277,7 +287,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpeningService={setOpeningService}
-                                                setAllChats={setAllChats}
+                                                funcSetAllChats={funcSetAllChats}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                             />
                                         </Panel>
 
@@ -321,12 +332,14 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         currentMainChatId={currentMainChatId}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
                                         setOpeningService={setOpeningService}
-                                        setAllChats={setAllChats}
+                                        funcSetAllChats={funcSetAllChats}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     />
                                 </Panel>
                             </PanelGroup>
                         </Panel>
 
+                        {/* p1 */}
                         {isThreadVisible && (
                             <>
                                 {currentThreadChat && (
@@ -381,6 +394,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 )}
                             </>
                         )}
+
+                        {/* p2 */}
                         {isTaskPreviewVisible && (
                             <>
                                 {currentPreviewTask && (
@@ -449,6 +464,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 )}
                             </>
                         )}
+
+                        {/* p3 */}
                         {isTaskCreationVisible && (
                             <>
                                 {currentThreadChat && (
@@ -525,6 +542,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         )}
                     </>
                 )}
+
                 {!isMainChatVisible && isThreadVisible && (
                     <>
                         {currentThreadChat && (
@@ -572,6 +590,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             </>
                         )}
 
+                        {/* p4 */}
                         {isTaskPreviewVisible && (
                             <>
                                 {currentPreviewTask && (
@@ -640,6 +659,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 )}
                             </>
                         )}
+
+                        {/* p6 */}
                         {isTaskCreationVisible && (
                             <>
                                 {currentThreadChat && (

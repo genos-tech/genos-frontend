@@ -32,6 +32,7 @@ type MessageBubbleProps = MessageProps & {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsOpeningTask: (value: boolean) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -56,6 +57,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setOpeningService,
         setCurrentMainChat,
         setIsOpeningTask,
+        setCurrentPreviewTaskId,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
@@ -113,6 +115,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     senderName: myself.userName,
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
+                    systemUserId: null,
+                    taskId: null,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
@@ -241,16 +245,18 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     >
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
-                                <Box sx={{ flex: 1 }}>
-                                    <AvatarWithStatus
-                                        userProfile={isSent ? myself : sender}
-                                        socket={socket}
-                                        chat={chat}
-                                        online={sender.online}
-                                        setOpeningService={setOpeningService}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                    />
-                                </Box>
+                                {!(chat.chatType === 3 && sender.isSystemUser === true) && (
+                                    <Box sx={{ flex: 1 }}>
+                                        <AvatarWithStatus
+                                            userProfile={isSent ? myself : sender}
+                                            socket={socket}
+                                            chat={chat}
+                                            online={sender.online}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                        />
+                                    </Box>
+                                )}
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={1}>
                                         <BubbleUserName
@@ -261,6 +267,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             tsSent={_tsSent}
                                         />
                                         <BubbleReactionButton
+                                            sender={sender}
+                                            chatType={chat.chatType}
                                             isLiked={isLiked}
                                             setIsLiked={setIsLiked}
                                             isSent={isSent}
@@ -274,6 +282,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                                                 setIsOpeningTask={setIsOpeningTask}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                             />
                                         )}
                                     </Stack>

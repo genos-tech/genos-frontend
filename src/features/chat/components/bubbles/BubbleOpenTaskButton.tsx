@@ -8,6 +8,7 @@ type BubbleReplyButtonTypes = {
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsTaskCreationVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
     const {
@@ -17,6 +18,7 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,
         setIsOpeningTask,
+        setCurrentPreviewTaskId,
     } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
@@ -24,19 +26,19 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                 <IconButton
                     size="sm"
                     color="primary"
-                    variant="solid"
+                    variant="soft"
                     sx={{
                         top: "5%",
                         right: "5%",
                         p: 0.7,
                     }}
                     onClick={() => {
-                        console.log("taskId:", taskId);
                         if (taskId !== null) {
                             setIsMainChatVisible(true);
                             setIsThreadVisible(false);
                             setIsTaskPreviewVisible(true);
                             setIsTaskCreationVisible(false);
+                            setCurrentPreviewTaskId(taskId);
 
                             setIsOpeningTask(true);
                         }

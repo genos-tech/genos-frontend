@@ -86,6 +86,8 @@ export const moveToSelectedChat = async (
                     isDm: isDm,
                     chatType: chatType,
                     dmPartnerUserId: isDm === true ? dmPartnerUser.userId : null,
+                    taskId: null,
+                    systemUserId: null,
                 },
                 async (ack: any) => {
                     const message: MessageProps = {
@@ -98,6 +100,7 @@ export const moveToSelectedChat = async (
                         sender: myself,
                         tsSent: getCurrentTimestamp(),
                         numReplies: 0,
+                        taskId: null,
                     };
                     const chat: AllChatProps = {
                         chatId: chatId,

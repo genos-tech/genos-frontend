@@ -97,7 +97,7 @@ export const App = () => {
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState(false);
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
-    const _setAllChats = async () => {
+    const funcSetAllChats = async () => {
         const allChats: AllChatProps[] = await popAllChats();
         if (allChats) {
             setAllChats(allChats);
@@ -105,7 +105,7 @@ export const App = () => {
     };
 
     useEffect(() => {
-        _setAllChats();
+        funcSetAllChats();
     }, []);
 
     useEffect(() => {
@@ -114,7 +114,7 @@ export const App = () => {
 
     useEffect(() => {
         if (isLoading === false) {
-            _setAllChats();
+            funcSetAllChats();
         }
     }, [isLoading]);
 
@@ -142,7 +142,7 @@ export const App = () => {
         setCurrentMainChat: setCurrentMainChat,
         setCurrentSubChat: setCurrentSubChat,
         setCurrentThreadChat: setCurrentThreadChat,
-        setAllChats: _setAllChats,
+        funcSetAllChats: funcSetAllChats,
         setIsTaskCommentUpdated: setIsTaskCommentUpdated,
         isLoading: isLoading,
     });
@@ -171,7 +171,8 @@ export const App = () => {
                         setCurrentThreadChat={setCurrentThreadChat}
                         setOpeningService={setOpeningService}
                         allChats={allChats}
-                        setAllChats={_setAllChats}
+                        setAllChats={setAllChats}
+                        funcSetAllChats={funcSetAllChats}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                     />

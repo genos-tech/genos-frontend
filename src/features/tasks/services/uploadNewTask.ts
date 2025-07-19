@@ -140,7 +140,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                             (ack: any) => {
                                 const createTaskMessage = taskMessageTemplate(taskContents);
                                 if (taskContents.project !== null && createTaskMessage) {
-                                    console.log("taskCreateData.task_id:",taskCreateData.task_id)
+                                    console.log("taskCreateData.task_id:", taskCreateData.task_id);
                                     socket.emit("message", {
                                         message: createTaskMessage,
                                         destCGName: taskContents.project.projectName,
@@ -149,7 +149,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         chatType: 3,
                                         dmPartnerUserId: null,
                                         taskId: taskCreateData.task_id,
-                                        systemUserId: taskContents.project.projectUserId,
+                                        systemUserId: taskContents.project.systemUserId,
                                     });
                                 } else {
                                     console.error(

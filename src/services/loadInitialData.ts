@@ -171,6 +171,7 @@ export const loadInitialData = (
                             latestMessageText:
                                 InitialChatMessages[InitialChatMessages.length - 1].contentText,
                             TSLastMessage: fetchedChat.TSLastMessage,
+                            project: fetchedChat.project,
                         };
                         setCurrentMainChat(currentMainChat);
                         setIsInitialChatLoaded(true);

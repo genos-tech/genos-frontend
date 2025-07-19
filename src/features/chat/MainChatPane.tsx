@@ -37,7 +37,8 @@ type MessagesPaneProps = {
     currentMainChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
-    setAllChats: () => void;
+    funcSetAllChats: () => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -62,7 +63,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         currentMainChatId,
         setCurrentPreviewTask,
         setOpeningService,
-        setAllChats,
+        funcSetAllChats,
+        setCurrentPreviewTaskId,
     } = props;
     const [chatMessages, setChatMessages] = useState(chat.messages);
 
@@ -145,6 +147,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                             setIsOpeningTask={setIsOpeningTask}
+                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         />
                                     </Stack>
                                 </div>
@@ -158,7 +161,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         socket={socket}
                         chat={chat}
                         setCurrentChat={setCurrentMainChat}
-                        setAllChats={setAllChats}
+                        funcSetAllChats={funcSetAllChats}
                     />
                 </Box>
             </Sheet>

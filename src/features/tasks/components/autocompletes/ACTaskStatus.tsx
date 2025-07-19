@@ -124,7 +124,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                         isInit: false,
                                         rootMessageTSSent: "",
                                         threadId: null, // TODO: update here!!!
-                                        senderId: taskContents.project.projectUserId,
+                                        senderId: taskContents.project.systemUserId,
                                         senderName: taskContents.project.projectName,
                                         message: createTaskMessage,
                                         destCGName: taskContents.project.projectName,
@@ -132,7 +132,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                         isDm: false,
                                         chatType: 3,
                                         dmPartnerUserId: null,
-                                        systemUserId: taskContents.project.projectUserId,
+                                        systemUserId: taskContents.project.systemUserId,
                                         taskId: null,
                                     });
                                 } else {
