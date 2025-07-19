@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Box, Stack, Sheet, Avatar } from "@mui/joy";
+import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { addThreadMessage } from "../../services/addThreadMessage";
@@ -241,6 +241,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={1}>
                                         <BubbleUserName
+                                            sender={sender}
+                                            chatType={chat.chatType}
                                             userName={sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}

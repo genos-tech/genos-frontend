@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -138,36 +139,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                 dmPartnerUserId: null,
                             },
                             (ack: any) => {
-                                const createTaskMessage = [
-                                    {
-                                        type: "paragraph",
-                                        props: {
-                                            textColor: "default",
-                                            textAlignment: "left",
-                                            backgroundColor: "default",
-                                        },
-                                        content: [
-                                            { text: "Task ", type: "text", styles: {} },
-                                            {
-                                                text: taskContents.title,
-                                                type: "text",
-                                                styles: { code: true },
-                                            },
-                                            { text: " created", type: "text", styles: {} },
-                                        ],
-                                        children: [],
-                                    },
-                                    {
-                                        type: "paragraph",
-                                        props: {
-                                            textColor: "default",
-                                            textAlignment: "left",
-                                            backgroundColor: "default",
-                                        },
-                                        content: [],
-                                        children: [],
-                                    },
-                                ];
+                                const createTaskMessage = taskMessageTemplate(taskContents);
                                 if (taskContents.project !== null && createTaskMessage) {
                                     socket.emit("message", {
                                         message: createTaskMessage,
