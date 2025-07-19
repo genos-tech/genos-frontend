@@ -109,9 +109,10 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     <BusinessIcon className="h-5 w-5" />
                 </IconButton>
                 <Menu
+                    className="custom-scrollbar"
                     size="sm"
                     ref={dropdownRef}
-                    sx={{ zIndex: 10001 }}
+                    sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     anchorEl={anchorEl}
                     open={Boolean(anchorEl)}
                     onClose={handleClose}
@@ -122,6 +123,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                             onClick={() => {
                                 handleClicked(team.teamId, team.teamName);
                             }}
+                            variant={team.teamId === myself.teamId ? "solid" : "plain"}
                         >
                             <AcUnitIcon />
                             {team.teamName}
