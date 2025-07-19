@@ -40,6 +40,7 @@ self.onmessage = async (event) => {
                 latestMessage: pmChat.latestMessage,
                 latestMessageText: pmChat.latestMessageText,
                 TSLastMessage: pmChat.TSLastMessage,
+                project: pmChat.project,
             },
         });
 

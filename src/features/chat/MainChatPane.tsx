@@ -26,13 +26,19 @@ type MessagesPaneProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
+    setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsOpeningTask: (value: boolean) => void;
+    setIsCreatingTask: (value: boolean) => void;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     currentMainChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
-    setAllChats: () => void;
+    funcSetAllChats: () => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -46,13 +52,19 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         setCurrentMainChat,
         setCurrentSubChat,
         setCurrentThreadChat,
+        setIsMainChatVisible,
+        setIsTaskCreationVisible,
+        setIsTaskPreviewVisible,
+        setIsOpeningTask,
+        setIsCreatingTask,
         setIsThreadVisible,
         isSubChatVisible,
         setIsSubChatVisible,
         currentMainChatId,
         setCurrentPreviewTask,
         setOpeningService,
-        setAllChats,
+        funcSetAllChats,
+        setCurrentPreviewTaskId,
     } = props;
     const [chatMessages, setChatMessages] = useState(chat.messages);
 
@@ -85,7 +97,12 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
                     isSubChatVisible={isSubChatVisible}
+                    setIsMainChatVisible={setIsMainChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
+                    setIsThreadVisible={setIsThreadVisible}
+                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    setIsCreatingTask={setIsCreatingTask}
                 />
                 <Box sx={{ px: 0.3, my: 0.2 }}>
                     <Virtuoso
@@ -121,11 +138,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             chat={chat}
                                             socket={socket}
                                             {...message}
+                                            setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
+                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
                                             setCurrentThreadChat={setCurrentThreadChat}
                                             setCurrentPreviewTask={setCurrentPreviewTask}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
+                                            setIsOpeningTask={setIsOpeningTask}
+                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         />
                                     </Stack>
                                 </div>
@@ -139,7 +161,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         socket={socket}
                         chat={chat}
                         setCurrentChat={setCurrentMainChat}
-                        setAllChats={setAllChats}
+                        funcSetAllChats={funcSetAllChats}
                     />
                 </Box>
             </Sheet>

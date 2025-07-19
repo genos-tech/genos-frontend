@@ -19,8 +19,10 @@ type ChatSidebarProps = {
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     socket: Socket | null;
+    setIsMainChatVisible: (value: boolean) => void;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
 };
 
@@ -34,8 +36,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         currentMainChat,
         currentSubChat,
         socket,
+        setIsMainChatVisible,
         isSubChatVisible,
         setIsSubChatVisible,
+        setIsThreadVisible,
         setOpeningService,
     } = props;
     const { mode } = useColorScheme();

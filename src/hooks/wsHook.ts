@@ -26,7 +26,7 @@ type wsHookProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
-    setAllChats: () => void;
+    funcSetAllChats: () => void;
     setIsTaskCommentUpdated: (value: boolean) => void;
     isLoading: boolean;
 };
@@ -43,7 +43,7 @@ export const wsHook = (props: wsHookProps) => {
         setCurrentMainChat,
         setCurrentSubChat,
         setCurrentThreadChat,
-        setAllChats,
+        funcSetAllChats,
         setIsTaskCommentUpdated,
         isLoading,
     } = props;
@@ -68,7 +68,7 @@ export const wsHook = (props: wsHookProps) => {
         };
         if (newChat) {
             await addChat(newChat, newMessage.chatType);
-            setAllChats();
+            funcSetAllChats();
         }
     };
 
@@ -151,10 +151,7 @@ export const wsHook = (props: wsHookProps) => {
                                 }
 
                                 if (fromMe === false && toMe === true) {
-                                    addThreadMessage(
-                                        newThreadMessage,
-                                        newMessage.chatType
-                                    );
+                                    addThreadMessage(newThreadMessage, newMessage.chatType);
                                     if (
                                         currentThreadChat !== undefined &&
                                         newMessage.chatId === currentThreadChat.chatId &&
@@ -172,10 +169,7 @@ export const wsHook = (props: wsHookProps) => {
                                 }
 
                                 if (fromMe === false) {
-                                    addThreadMessage(
-                                        newThreadMessage,
-                                        newMessage.chatType
-                                    );
+                                    addThreadMessage(newThreadMessage, newMessage.chatType);
                                     if (
                                         currentThreadChat !== undefined &&
                                         newMessage.chatId === currentThreadChat.chatId &&
@@ -193,10 +187,7 @@ export const wsHook = (props: wsHookProps) => {
                                 }
 
                                 if (fromMe === false) {
-                                    addThreadMessage(
-                                        newThreadMessage,
-                                        newMessage.chatType
-                                    );
+                                    addThreadMessage(newThreadMessage, newMessage.chatType);
                                     if (
                                         currentThreadChat !== undefined &&
                                         newMessage.chatId === currentThreadChat.chatId &&
@@ -222,6 +213,7 @@ export const wsHook = (props: wsHookProps) => {
                             sender: newMessage.sender,
                             numReplies: newMessage.numReplies,
                             tsSent: newMessage.tsSent,
+                            taskId: newMessage.taskId,
                         };
                         const updatedChat: ChatProps = {
                             chatId: newMessage.chatId,
@@ -238,6 +230,7 @@ export const wsHook = (props: wsHookProps) => {
                             latestMessage: newMessage,
                             latestMessageText: newMessage.contentText,
                             TSLastMessage: newMessage.tsSent,
+                            project: newMessage.project,
                         };
                         if (updatedChat && newChatMessage) {
                             if (newMessage.chatType === 1 && newMessage.dmPartnerUser !== null) {

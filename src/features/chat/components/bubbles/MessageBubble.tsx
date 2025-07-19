@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Box, Stack, Sheet, Avatar } from "@mui/joy";
+import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { addThreadMessage } from "../../services/addThreadMessage";
 import { popSpecificThreadMessages } from "../../services/popSpecificThreadMessages";
 import { BubbleReactionButton } from "./BubbleReactionButton";
+import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleReplyButton } from "./BubbleReplyButton";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
@@ -22,11 +23,16 @@ type MessageBubbleProps = MessageProps & {
     variant: "sent" | "received";
     chat: ChatProps;
     socket: Socket | null;
+    setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setCurrentThreadChat: (value: ThreadProps) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    setIsOpeningTask: (value: boolean) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -41,11 +47,17 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         attachment = undefined,
         sender,
         numReplies,
+        taskId,
+        setIsMainChatVisible,
         setIsThreadVisible,
-        setCurrentThreadChat,
         setCurrentPreviewTask,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        setCurrentThreadChat,
         setOpeningService,
         setCurrentMainChat,
+        setIsOpeningTask,
+        setCurrentPreviewTaskId,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
@@ -75,7 +87,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         loadTask(messageId);
 
         // Show thread pane on the right side.
+        setIsMainChatVisible(true);
         setIsThreadVisible(true);
+        setIsTaskPreviewVisible(false);
+        setIsTaskCreationVisible(false);
 
         if (socket !== null) {
             socket.emit(
@@ -100,6 +115,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     senderName: myself.userName,
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
+                    systemUserId: null,
+                    taskId: null,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
@@ -228,29 +245,46 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     >
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
-                                <Box sx={{ flex: 1 }}>
-                                    <AvatarWithStatus
-                                        userProfile={isSent ? myself : sender}
-                                        socket={socket}
-                                        chat={chat}
-                                        online={sender.online}
-                                        setOpeningService={setOpeningService}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                    />
-                                </Box>
+                                {!(chat.chatType === 3 && sender.isSystemUser === true) && (
+                                    <Box sx={{ flex: 1 }}>
+                                        <AvatarWithStatus
+                                            userProfile={isSent ? myself : sender}
+                                            socket={socket}
+                                            chat={chat}
+                                            online={sender.online}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                        />
+                                    </Box>
+                                )}
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={1}>
                                         <BubbleUserName
+                                            sender={sender}
+                                            chatType={chat.chatType}
                                             userName={sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}
                                         />
                                         <BubbleReactionButton
+                                            sender={sender}
+                                            chatType={chat.chatType}
                                             isLiked={isLiked}
                                             setIsLiked={setIsLiked}
                                             isSent={isSent}
                                             replayHandler={replayHandler}
                                         />
+                                        {chat.chatType === 3 && sender.isSystemUser === true && (
+                                            <BubbleOpenTaskButton
+                                                taskId={taskId}
+                                                setIsMainChatVisible={setIsMainChatVisible}
+                                                setIsThreadVisible={setIsThreadVisible}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                                setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                                setIsOpeningTask={setIsOpeningTask}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            />
+                                        )}
                                     </Stack>
                                 </Box>
                             </Stack>

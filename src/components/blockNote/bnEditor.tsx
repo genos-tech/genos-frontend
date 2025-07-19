@@ -89,10 +89,10 @@ type BnEditorProps = {
     socket: Socket | null;
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
-    setAllChats: () => void;
+    funcSetAllChats: () => void;
 };
 export const BnEditor = (props: BnEditorProps) => {
-    const { myself, socket, chat, setCurrentChat, setAllChats } = props;
+    const { myself, socket, chat, setCurrentChat, funcSetAllChats } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`;
 
@@ -153,6 +153,8 @@ export const BnEditor = (props: BnEditorProps) => {
                     chatType: chat.chatType,
                     dmPartnerUserId:
                         chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
+                    taskId: null,
+                    systemUserId: null,
                 },
                 async (ack: any) => {
                     const updatedChat: ChatProps = {
@@ -177,6 +179,7 @@ export const BnEditor = (props: BnEditorProps) => {
                                 sender: myself,
                                 tsSent: getCurrentTimestamp(),
                                 numReplies: 0,
+                                taskId: null,
                             },
                         ],
                         latestMessage: {
@@ -192,6 +195,7 @@ export const BnEditor = (props: BnEditorProps) => {
                             sender: myself,
                             tsSent: getCurrentTimestamp(),
                             numReplies: 0,
+                            taskId: null,
                         },
                         latestMessageText: contentText,
                         TSLastMessage: getCurrentTimestamp(),
@@ -211,6 +215,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         sender: myself,
                         tsSent: getCurrentTimestamp(),
                         numReplies: 0,
+                        taskId: null,
                     };
                     if (latestMessage) {
                         const newChat: AllChatProps = {
@@ -229,7 +234,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         if (newChat) {
                             await addMessage(latestMessage, newChat.chatType);
                             await addChat(newChat, newChat.chatType);
-                            setAllChats();
+                            funcSetAllChats();
 
                             editor.replaceBlocks(editor.document, []);
                         }

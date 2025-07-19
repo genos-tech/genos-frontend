@@ -9,7 +9,7 @@ import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskBodyPreviewBlock } from "./base/TaskBodyPreviewBlock";
 import { TaskPreviewCustomBar } from "./base/TaskPreviewCustomBar";
 import { TaskCommentBlock } from "./base/TaskCommentBlock";
-import { TaskRelatedTasksBlock } from "./base/TaskRelatedTasksBlock";
+import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import { loadTaskComments } from "../../services/loadTaskComments";
 import {
@@ -28,8 +28,11 @@ type TaskPreviewProps = {
     myself: UserProps;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTask: TaskProps;
+    setIsMainChatVisible?: (value: boolean) => void;
+    setIsThreadVisible?: (value: boolean) => void;
     setIsCreatingTask: (value: any) => void;
-    setIsTaskContentVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible?: (value: boolean) => void;
+    setIsTaskCreationVisible?: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
@@ -49,7 +52,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setCurrentProject,
         currentPreviewTask,
         setIsCreatingTask,
-        setIsTaskContentVisible,
+        setIsMainChatVisible,
+        setIsThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
         setCurrentPreviewTask,
         setOpenCreateProject,
         setOpenCreateTag,
@@ -165,11 +171,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             if (taskBodyUpdated) {
                 const execute = async () => {
                     await sendUpdatedTask(false);
-                    setIsTaskContentVisible(false);
+                    if (setIsTaskPreviewVisible) {
+                        setIsTaskPreviewVisible(false);
+                    }
                 };
                 execute();
             } else {
-                setIsTaskContentVisible(false);
+                if (setIsTaskPreviewVisible) {
+                    setIsTaskPreviewVisible(false);
+                }
             }
     }, [taskClosed]);
 
@@ -339,7 +349,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
             <Divider sx={{ mt: 2 }} />
 
-            <TaskRelatedTasksBlock
+            <TaskSubTasksBlock
                 socket={socket}
                 myself={myself}
                 currentTaskContent={tmpCurrentTaskContent}

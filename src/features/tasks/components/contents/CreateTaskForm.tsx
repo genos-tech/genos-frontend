@@ -108,7 +108,11 @@ type CreateTaskProps = {
     chatType: number | null;
     chatId: number | null;
     threadId: number | null;
-    setIsTaskContentVisible: (value: boolean) => void;
+    setIsMainChatVisible?: (value: boolean) => void;
+    setIsThreadVisible?: (value: boolean) => void;
+    isThreadVisible?: boolean;
+    setIsTaskPreviewVisible?: (value: boolean) => void;
+    setIsTaskCreationVisible?: (value: boolean) => void;
     setIsCreatingTask?: (value: any) => void;
     setIsOpeningTask?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
@@ -133,6 +137,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         chatType,
         chatId,
         threadId,
+        setIsMainChatVisible,
+        setIsThreadVisible,
+        isThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
         setIsOpeningTask,
         setIsCreatingTask,
         setOpenCreateProject,
@@ -264,6 +273,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 titleErrorOpen={titleErrorOpen}
                 setTitleErrorOpen={setTitleErrorOpen}
                 isPreviewMode={false}
+                setIsMainChatVisible={setIsMainChatVisible}
+                isThreadVisible={isThreadVisible}
+                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                setIsTaskCreationVisible={setIsTaskCreationVisible}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

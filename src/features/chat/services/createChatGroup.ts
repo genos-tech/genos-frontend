@@ -57,6 +57,7 @@ const addGMChatAndMessage = async (
         sender: myself,
         tsSent: getCurrentTimestamp(),
         numReplies: 0,
+        taskId: null,
     };
 
     const newChat: AllChatProps = {
@@ -129,6 +130,8 @@ export const createChatGroup = async (
                     isDm: false,
                     chatType: 2,
                     dmPartnerUser: null,
+                    taskId: null,
+                    systemUserId: null,
                 });
             }
         );

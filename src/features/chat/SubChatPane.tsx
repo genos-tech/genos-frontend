@@ -26,12 +26,17 @@ type MessagesPaneProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
+    setIsMainChatVisible: (value: boolean) => void;
     setIsSubChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    setIsOpeningTask: (value: boolean) => void;
     currentSubChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
-    setAllChats: () => void;
+    funcSetAllChats: () => void;
+    setCurrentPreviewTaskId: (value: number) => void;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
@@ -45,12 +50,17 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setCurrentMainChat,
         setCurrentSubChat,
         setCurrentThreadChat,
+        setIsMainChatVisible,
         setIsSubChatVisible,
         setIsThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        setIsOpeningTask,
         currentSubChatId,
         setCurrentPreviewTask,
         setOpeningService,
-        setAllChats,
+        funcSetAllChats,
+        setCurrentPreviewTaskId,
     } = props;
     const [chatMessages, setChatMessages] = useState(subChat.messages);
 
@@ -115,11 +125,16 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             chat={subChat}
                                             socket={socket}
                                             {...message}
+                                            setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
+                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
                                             setCurrentThreadChat={setCurrentThreadChat}
                                             setCurrentPreviewTask={setCurrentPreviewTask}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
+                                            setIsOpeningTask={setIsOpeningTask}
+                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         />
                                     </Stack>
                                 </div>
@@ -133,7 +148,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         socket={socket}
                         chat={subChat}
                         setCurrentChat={setCurrentSubChat}
-                        setAllChats={setAllChats}
+                        funcSetAllChats={funcSetAllChats}
                     />
                 </Box>
             </Sheet>

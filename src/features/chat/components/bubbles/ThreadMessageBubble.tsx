@@ -101,6 +101,8 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={2}>
                                         <BubbleUserName
+                                            sender={sender}
+                                            chatType={thread.chatType}
                                             userName={sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}

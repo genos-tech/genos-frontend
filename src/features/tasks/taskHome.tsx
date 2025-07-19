@@ -78,7 +78,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
-    const [isTaskContentVisible, setIsTaskContentVisible] = useState(false);
+    const [isTaskContentVisible, setIsTaskPreviewVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState({
         flag: false,
         parentTaskId: null,
@@ -175,7 +175,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setCurrentProject({
                         projectId: loadedTeamProjects[i].projectId,
                         projectName: loadedTeamProjects[i].projectName,
-                        projectUserId: loadedTeamProjects[i].projectUserId,
+                        systemUserId: loadedTeamProjects[i].systemUserId,
                     });
                     await updateTeamTasks(myself, accessToken);
                     await fetchProjectTasks(loadedTeamProjects[i].projectId);
@@ -212,7 +212,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 );
 
                 setCurrentPreviewTask(loadedTask[0]);
-                setIsTaskContentVisible(true);
+                setIsTaskPreviewVisible(true);
 
                 if (isNewTaskCreated) {
                     setOnGoingTasks((prev) => [
@@ -559,7 +559,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 ongoingTasks={ongoingTasks}
                                                 closedTasks={closedTasks}
                                                 deletedTasks={deletedTasks}
-                                                setIsTaskContentVisible={setIsTaskContentVisible}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 displayTaskType={displayTaskType}
                                             />
@@ -608,7 +608,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 chatType={null}
                                                 chatId={null}
                                                 threadId={null}
-                                                setIsTaskContentVisible={setIsTaskContentVisible}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setOpenCreateProject={setOpenCreateProject}
                                                 setOpenCreateTag={setOpenCreateTag}
@@ -667,7 +667,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setCurrentProject={setCurrentProject}
                                                 currentPreviewTask={currentPreviewTask}
                                                 setIsCreatingTask={setIsCreatingTask}
-                                                setIsTaskContentVisible={setIsTaskContentVisible}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpenCreateProject={setOpenCreateProject}
                                                 setOpenCreateTag={setOpenCreateTag}

@@ -7,6 +7,7 @@ export type UserProps = {
     userEmail: string;
     avatarImgPath: string;
     online: boolean;
+    isSystemUser?: boolean;
 };
 
 export type Team = {
