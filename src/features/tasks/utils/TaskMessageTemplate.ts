@@ -21,7 +21,7 @@ const priorityLine = {
 };
 type PriorityKey = keyof typeof priorityLine;
 function getPriorityConfig(key: string): (typeof priorityLine)[PriorityKey] {
-    return key in priorityLine ? priorityLine[key as PriorityKey] : statusLine["default"];
+    return key in priorityLine ? priorityLine[key as PriorityKey] : priorityLine["default"];
 }
 
 export const taskMessageTemplate = (task: TaskProps) => [
@@ -56,7 +56,7 @@ export const taskMessageTemplate = (task: TaskProps) => [
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
         content: [
             { text: "Priority: ", type: "text", styles: {} },
-            getPriorityConfig(task.status.status || "default"),
+            getPriorityConfig(task.priority.priority || "default"),
         ],
         children: [],
     },

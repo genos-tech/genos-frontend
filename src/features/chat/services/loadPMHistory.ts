@@ -12,7 +12,7 @@ export const loadPMHistory = async (
         const api = authApi(accessToken);
         if (api) {
             const query: string = `team_id=${teamId}&team_name=${teamName}&user_id=${userId}`;
-            const res = await api.get(`/pm/getHistory/?${query}`);
+            const res = await api.get(`/pm/history/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

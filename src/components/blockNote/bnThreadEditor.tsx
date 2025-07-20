@@ -148,6 +148,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 {
                     isInit: false,
                     rootMessageTSSent: "",
+                    rootMessageSenderId: null,
+                    rootMessageReceiverId: null,
                     threadId: thread.threadId,
                     threadMessage: editor.document,
                     isDm: thread.isDm,

@@ -140,7 +140,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                             (ack: any) => {
                                 const createTaskMessage = taskMessageTemplate(taskContents);
                                 if (taskContents.project !== null && createTaskMessage) {
-                                    console.log("taskCreateData.task_id:", taskCreateData.task_id);
                                     socket.emit("message", {
                                         message: createTaskMessage,
                                         destCGName: taskContents.project.projectName,

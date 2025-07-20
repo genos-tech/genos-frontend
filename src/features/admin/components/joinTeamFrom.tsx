@@ -25,7 +25,7 @@ import { createTeam } from "../services/createTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadAllTeams } from "../services/loadAllTeams";
 import { createDMChat } from "../../chat/services/createDMChat";
-import { sentDMMessage } from "../../chat/services/sendDMMessage";
+import { sendDMMessage } from "../../chat/services/sendDMMessage";
 import { sleepMilliSeconds } from "../../../utils/sleep";
 import { useAuth } from "../../../context/AuthContext";
 import { Team, CreateDMResponse, JoinTeamResponse } from "../../../types/admin";
@@ -70,7 +70,7 @@ export const JoinTeam = () => {
                         { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
                     ];
 
-                    await sentDMMessage(
+                    await sendDMMessage(
                         accessToken,
                         createDmRes.dm_id,
                         createDmRes.user_1_id,
