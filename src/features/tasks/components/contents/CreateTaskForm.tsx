@@ -326,6 +326,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsSubmitted={setIsSubmitted}
                 setTitleError={setTitleError}
                 setTitleErrorOpen={setTitleErrorOpen}
+                setIsMainChatVisible={setIsMainChatVisible}
+                setIsThreadVisible={setIsThreadVisible}
+                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsCreatingTask={setIsCreatingTask}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
             />

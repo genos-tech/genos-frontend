@@ -468,7 +468,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         {/* p3 */}
                         {isTaskCreationVisible && (
                             <>
-                                {currentThreadChat && (
+                                {currentMainChat && (
                                     <>
                                         <PanelResizeHandle
                                             style={{
@@ -506,10 +506,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 <CreateTaskForm
                                                     socket={socket}
                                                     myself={myself}
-                                                    isDm={currentThreadChat.isDm}
-                                                    chatType={currentThreadChat.chatType}
-                                                    chatId={currentThreadChat.chatId}
-                                                    threadId={currentThreadChat.threadId}
+                                                    isDm={currentMainChat.isDm}
+                                                    chatType={currentMainChat.chatType}
+                                                    chatId={currentMainChat.chatId}
+                                                    threadId={null}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}
