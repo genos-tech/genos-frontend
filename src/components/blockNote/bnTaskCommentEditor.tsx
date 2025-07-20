@@ -173,6 +173,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 socket.emit(
                     "task_comment",
                     {
+                        method_type: "POST",
                         project_id: projectId,
                         task_id: taskId,
                         comment_body: editor.document,

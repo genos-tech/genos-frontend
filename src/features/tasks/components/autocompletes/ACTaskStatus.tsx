@@ -120,21 +120,23 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                 ];
                                 if (taskContents.project !== null && createTaskMessage) {
                                     console.log("taskContents:", taskContents);
-                                    socket.emit("thread_message", {
-                                        isInit: false,
-                                        rootMessageTSSent: "",
-                                        threadId: null, // TODO: update here!!!
-                                        senderId: taskContents.project.systemUserId,
-                                        senderName: taskContents.project.projectName,
-                                        message: createTaskMessage,
-                                        destCGName: taskContents.project.projectName,
-                                        destCGId: taskContents.project.projectId,
-                                        isDm: false,
-                                        chatType: 3,
-                                        dmPartnerUserId: null,
-                                        systemUserId: taskContents.project.systemUserId,
-                                        taskId: null,
-                                    });
+                                    // socket.emit("thread_message", {
+                                    //     isInit: false,
+                                    //     rootMessageTSSent: "",
+                                    //     rootMessageSenderId: null,
+                                    //     rootMessageReceiverId: null,
+                                    //     threadId: null, // TODO: update here!!!
+                                    //     senderId: taskContents.project.systemUserId,
+                                    //     senderName: taskContents.project.projectName,
+                                    //     message: createTaskMessage,
+                                    //     destCGName: taskContents.project.projectName,
+                                    //     destCGId: taskContents.project.projectId,
+                                    //     isDm: false,
+                                    //     chatType: 3,
+                                    //     dmPartnerUserId: null,
+                                    //     systemUserId: taskContents.project.systemUserId,
+                                    //     taskId: null,
+                                    // });
                                 } else {
                                     console.error(
                                         "Failed to send task update message due to taskContents.project is NULL."

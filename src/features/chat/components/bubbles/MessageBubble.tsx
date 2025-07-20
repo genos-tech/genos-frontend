@@ -48,6 +48,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         sender,
         numReplies,
         taskId,
+        taskStatus,
         setIsMainChatVisible,
         setIsThreadVisible,
         setCurrentPreviewTask,
@@ -96,6 +97,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             socket.emit(
                 "thread_message",
                 {
+                    methodType: "POST",
                     isInit: true,
                     rootMessageTSSent: tsSent,
                     rootMessageSenderId: sender.userId,
@@ -117,6 +119,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     destCGId: chat.chatId,
                     systemUserId: null,
                     taskId: null,
+                    messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
@@ -262,6 +265,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         <BubbleUserName
                                             sender={sender}
                                             chatType={chat.chatType}
+                                            taskId={taskId}
+                                            taskStatus={taskStatus}
                                             userName={sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}

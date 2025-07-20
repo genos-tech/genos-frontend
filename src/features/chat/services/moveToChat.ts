@@ -80,6 +80,7 @@ export const moveToSelectedChat = async (
             socket.emit(
                 "message",
                 {
+                    methodType: "POST",
                     message: joinedMessage,
                     destCGName: chatName,
                     destCGId: chatId,
@@ -88,6 +89,8 @@ export const moveToSelectedChat = async (
                     dmPartnerUserId: isDm === true ? dmPartnerUser.userId : null,
                     taskId: null,
                     systemUserId: null,
+                    taskStatus: null,
+                    messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const message: MessageProps = {
@@ -101,6 +104,7 @@ export const moveToSelectedChat = async (
                         tsSent: getCurrentTimestamp(),
                         numReplies: 0,
                         taskId: null,
+                        taskStatus: null,
                     };
                     const chat: AllChatProps = {
                         chatId: chatId,

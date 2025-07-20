@@ -1,5 +1,7 @@
+import { Socket } from "socket.io-client";
 import axios from "axios";
 
+import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
@@ -7,13 +9,14 @@ import { TaskProps } from "../../../types/tasks";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 export const sendUpdatedSpecificTask = async (
+    socket: Socket | null,
     myself: UserProps,
-    updatedData: TaskProps,
+    updatedTask: TaskProps,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
 ) => {
     try {
-        if (updatedData.project === null) {
+        if (updatedTask.project === null) {
             if (setErrorMessage) {
                 setErrorMessage("Project ID is not specified.");
             }
@@ -24,34 +27,51 @@ export const sendUpdatedSpecificTask = async (
 
         if (api) {
             const res = await api.put("/task/updateTask/", {
-                task_id: updatedData.id,
+                task_id: updatedTask.id,
                 team: myself.teamId,
-                project: updatedData.project.projectId,
-                thread_id: updatedData.threadId,
-                parent_task_id: updatedData.parentTaskId,
-                assignee: updatedData.assignee.userId,
-                reporter: updatedData.reporter.userId,
-                title: updatedData.title,
-                priority: updatedData.priority !== null ? updatedData.priority.priority : null,
+                project: updatedTask.project.projectId,
+                thread_id: updatedTask.threadId,
+                parent_task_id: updatedTask.parentTaskId,
+                assignee: updatedTask.assignee.userId,
+                reporter: updatedTask.reporter.userId,
+                title: updatedTask.title,
+                priority: updatedTask.priority !== null ? updatedTask.priority.priority : null,
                 effort_level:
-                    updatedData.effortLevel !== null ? updatedData.effortLevel.level : null,
-                status: updatedData.status.status !== null ? updatedData.status.status : null,
-                content: updatedData.body.length !== 0 ? updatedData.body : null,
-                due_date: updatedData.dueDate !== "" ? updatedData.dueDate : null,
-                github_url: updatedData.githubLink.url !== "" ? updatedData.githubLink.url : null,
+                    updatedTask.effortLevel !== null ? updatedTask.effortLevel.level : null,
+                status: updatedTask.status.status !== null ? updatedTask.status.status : null,
+                content: updatedTask.body.length !== 0 ? updatedTask.body : null,
+                due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
+                github_url: updatedTask.githubLink.url !== "" ? updatedTask.githubLink.url : null,
                 github_url_title:
-                    updatedData.githubLink.title !== "" ? updatedData.githubLink.title : null,
+                    updatedTask.githubLink.title !== "" ? updatedTask.githubLink.title : null,
                 general_url:
-                    updatedData.generalLink.url !== "" ? updatedData.generalLink.url : null,
+                    updatedTask.generalLink.url !== "" ? updatedTask.generalLink.url : null,
                 general_url_title:
-                    updatedData.generalLink.title !== "" ? updatedData.generalLink.title : null,
-                tags: updatedData.tags,
+                    updatedTask.generalLink.title !== "" ? updatedTask.generalLink.title : null,
+                tags: updatedTask.tags,
             });
 
             if (res) {
-                for (const attachment of updatedData.attachments) {
+                const createTaskMessage = taskMessageTemplate(updatedTask);
+                if (socket) {
+                    socket.emit("message", {
+                        methodType: "PUT",
+                        message: createTaskMessage,
+                        destCGName: updatedTask.project.projectName,
+                        destCGId: updatedTask.project.projectId,
+                        isDm: false,
+                        chatType: 3,
+                        dmPartnerUserId: null,
+                        taskId: updatedTask.id,
+                        taskStatus: updatedTask.status.status,
+                        systemUserId: updatedTask.project.systemUserId,
+                        messageIdForPut: null,
+                    });
+                }
+
+                for (const attachment of updatedTask.attachments) {
                     const formData = new FormData();
-                    formData.append("task", String(updatedData.id));
+                    formData.append("task", String(updatedTask.id));
                     formData.append("attached_file", attachment.file);
                     formData.append("attached_type", attachment.file.type);
 
