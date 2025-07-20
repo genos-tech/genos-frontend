@@ -119,6 +119,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     destCGId: chat.chatId,
                     systemUserId: null,
                     taskId: null,
+                    messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {

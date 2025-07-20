@@ -157,6 +157,7 @@ export const BnEditor = (props: BnEditorProps) => {
                     taskId: null,
                     taskStatus: null,
                     systemUserId: null,
+                    messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const updatedChat: ChatProps = {

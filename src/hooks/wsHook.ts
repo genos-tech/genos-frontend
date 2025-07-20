@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import { addChat } from "../features/chat/services/addChat";
 import { addMessage } from "../features/chat/services/addMessage";
 import { addThreadMessage } from "../features/chat/services/addThreadMessage";
+import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
 import { UserProps } from "../types/admin";
 import {
     AllChatProps,
@@ -29,6 +30,29 @@ type wsHookProps = {
     funcSetAllChats: () => void;
     setIsTaskCommentUpdated: (value: boolean) => void;
     isLoading: boolean;
+};
+
+const makeUpdatedChat = async (
+    currentMainChat: ChatProps | undefined,
+    newMessage: NewMessageProps
+): Promise<ChatProps> => {
+    return {
+        chatId: newMessage.chatId,
+        chatName: newMessage.chatName,
+        systemUserId: newMessage.systemUserId,
+        isDm: newMessage.isDm,
+        chatType: newMessage.chatType,
+        dmPartnerUser: newMessage.dmPartnerUser,
+        unread: false,
+        messages:
+            currentMainChat === undefined
+                ? []
+                : await popSpecificMessages(newMessage.chatId, newMessage.chatType),
+        latestMessage: newMessage,
+        latestMessageText: newMessage.contentText,
+        TSLastMessage: newMessage.tsSent,
+        project: newMessage.project,
+    };
 };
 
 export const wsHook = (props: wsHookProps) => {
@@ -216,24 +240,7 @@ export const wsHook = (props: wsHookProps) => {
                             taskId: newMessage.taskId,
                             taskStatus: newMessage.taskStatus,
                         };
-                        const updatedChat: ChatProps = {
-                            chatId: newMessage.chatId,
-                            chatName: newMessage.chatName,
-                            systemUserId: newMessage.systemUserId,
-                            isDm: newMessage.isDm,
-                            chatType: newMessage.chatType,
-                            dmPartnerUser: newMessage.dmPartnerUser,
-                            unread: false,
-                            messages:
-                                currentMainChat === undefined
-                                    ? []
-                                    : [...currentMainChat.messages, newMessage],
-                            latestMessage: newMessage,
-                            latestMessageText: newMessage.contentText,
-                            TSLastMessage: newMessage.tsSent,
-                            project: newMessage.project,
-                        };
-                        if (updatedChat && newChatMessage) {
+                        if (newChatMessage) {
                             if (newMessage.chatType === 1 && newMessage.dmPartnerUser !== null) {
                                 if (
                                     newMessage.dmPartnerUser !== null &&
@@ -268,6 +275,11 @@ export const wsHook = (props: wsHookProps) => {
                                         newChatMessage
                                     );
 
+                                    const updatedChat = await makeUpdatedChat(
+                                        currentMainChat,
+                                        newMessage
+                                    );
+
                                     if (
                                         newMessage.chatId === currentMainChat?.chatId ||
                                         currentMainChat?.chatId === -1
@@ -299,6 +311,12 @@ export const wsHook = (props: wsHookProps) => {
                                             newMessage,
                                             newChatMessage
                                         );
+
+                                        const updatedChat = await makeUpdatedChat(
+                                            currentMainChat,
+                                            newMessage
+                                        );
+
                                         if (newMessage.chatId === currentMainChat?.chatId) {
                                             setCurrentMainChat(updatedChat);
                                         } else if (newMessage.chatId === currentSubChat?.chatId) {
@@ -326,6 +344,12 @@ export const wsHook = (props: wsHookProps) => {
                                             newMessage,
                                             newChatMessage
                                         );
+
+                                        const updatedChat = await makeUpdatedChat(
+                                            currentMainChat,
+                                            newMessage
+                                        );
+
                                         if (newMessage.chatId === currentMainChat?.chatId) {
                                             setCurrentMainChat(updatedChat);
                                         } else if (newMessage.chatId === currentSubChat?.chatId) {

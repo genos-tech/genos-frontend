@@ -135,6 +135,7 @@ export const createChatGroup = async (
                     taskId: null,
                     taskStatus: null,
                     systemUserId: null,
+                    messageIdForPut: null,
                 });
             }
         );

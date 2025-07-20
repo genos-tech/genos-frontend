@@ -2,7 +2,6 @@ import { Socket } from "socket.io-client";
 import axios from "axios";
 
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
-import { updatePMMessage } from "../../chat/services/updatePMMessage";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
@@ -54,28 +53,21 @@ export const sendUpdatedSpecificTask = async (
 
             if (res) {
                 const createTaskMessage = taskMessageTemplate(updatedTask);
-                await updatePMMessage(
-                    accessToken,
-                    updatedTask.project.projectId,
-                    updatedTask.id || null,
-                    null,
-                    createTaskMessage
-                );
-
-                // HOT TO HANDLE PUT method on WS????
-                
-                // if (socket) {
-                //     socket.emit("message", {
-                //         message: createTaskMessage,
-                //         destCGName: updatedTask.project.projectName,
-                //         destCGId: updatedTask.project.projectId,
-                //         isDm: false,
-                //         chatType: 3,
-                //         dmPartnerUserId: null,
-                //         taskId: updatedTask.id,
-                //         systemUserId: updatedTask.project.systemUserId,
-                //     });
-                // }
+                if (socket) {
+                    socket.emit("message", {
+                        methodType: "PUT",
+                        message: createTaskMessage,
+                        destCGName: updatedTask.project.projectName,
+                        destCGId: updatedTask.project.projectId,
+                        isDm: false,
+                        chatType: 3,
+                        dmPartnerUserId: null,
+                        taskId: updatedTask.id,
+                        taskStatus: updatedTask.status.status,
+                        systemUserId: updatedTask.project.systemUserId,
+                        messageIdForPut: null,
+                    });
+                }
 
                 for (const attachment of updatedTask.attachments) {
                     const formData = new FormData();

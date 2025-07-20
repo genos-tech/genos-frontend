@@ -24,6 +24,19 @@ function getPriorityConfig(key: string): (typeof priorityLine)[PriorityKey] {
     return key in priorityLine ? priorityLine[key as PriorityKey] : priorityLine["default"];
 }
 
+const effortLevelLine = {
+    Low: { text: "LOW", type: "text", styles: { bold: true, textColor: "blue" } },
+    Medium: { text: "MEDIUM", type: "text", styles: { bold: true, textColor: "green" } },
+    High: { text: "HIGH", type: "text", styles: { bold: true, textColor: "red" } },
+    default: { text: "N/A", type: "text", styles: { bold: true, textColor: "gray" } },
+};
+type EffortLevelKey = keyof typeof effortLevelLine;
+function getEffortLevelConfig(key: string): (typeof effortLevelLine)[EffortLevelKey] {
+    return key in effortLevelLine
+        ? effortLevelLine[key as EffortLevelKey]
+        : effortLevelLine["default"];
+}
+
 export const taskMessageTemplate = (task: TaskProps) => [
     {
         type: "heading",
@@ -39,15 +52,9 @@ export const taskMessageTemplate = (task: TaskProps) => [
     {
         type: "paragraph",
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
-        content: [{ text: `ID: ${task.id}`, type: "text", styles: {} }],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
         content: [
-            { text: "Status: ", type: "text", styles: {} },
-            getStatusConfig(task.status.status || "default"),
+            { text: "Priority: ", type: "text", styles: {} },
+            getPriorityConfig(task.priority.priority || "default"),
         ],
         children: [],
     },
@@ -55,8 +62,8 @@ export const taskMessageTemplate = (task: TaskProps) => [
         type: "paragraph",
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
         content: [
-            { text: "Priority: ", type: "text", styles: {} },
-            getPriorityConfig(task.priority.priority || "default"),
+            { text: "Effort Level: ", type: "text", styles: {} },
+            getEffortLevelConfig(task.effortLevel.level || "default"),
         ],
         children: [],
     },
@@ -94,6 +101,12 @@ export const taskMessageTemplate = (task: TaskProps) => [
             },
             { text: " ", type: "text", styles: {} },
         ],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [{ text: `Due: ${task.dueDate}`, type: "text", styles: {} }],
         children: [],
     },
     {

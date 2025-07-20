@@ -151,6 +151,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         taskId: taskCreateData.task_id,
                                         taskStatus: taskCreateData.status,
                                         systemUserId: taskContents.project.systemUserId,
+                                        messageIdForPut: null,
                                     });
                                 } else {
                                     console.error(

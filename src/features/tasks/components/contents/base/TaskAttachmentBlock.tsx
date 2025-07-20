@@ -7,7 +7,6 @@ import { AttachmentFileProps } from "../../../../../types/tasks";
 import { TaskProps } from "../../../../../types/tasks";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
 import { useAuth } from "../../../../../context/AuthContext";
-import { getCurrentTimestamp } from "../../../../../utils/dateUtils";
 
 type Size = {
     width: number;

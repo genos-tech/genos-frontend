@@ -90,6 +90,7 @@ export const moveToSelectedChat = async (
                     taskId: null,
                     systemUserId: null,
                     taskStatus: null,
+                    messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const message: MessageProps = {
