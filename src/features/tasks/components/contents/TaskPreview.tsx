@@ -105,6 +105,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         };
 
         const uploadedAttachmentData = await sendUpdatedSpecificTask(
+            socket,
             myself,
             newTaskContent,
             accessToken

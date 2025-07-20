@@ -70,6 +70,7 @@ export type MessageProps = {
         size: string;
     };
     taskId: number | null;
+    taskStatus: string | null;
 };
 
 export type ThreadMessageProps = {
@@ -113,6 +114,7 @@ export type NewMessageProps = {
         size: string;
     };
     taskId: number | null;
+    taskStatus: string | null;
     project?: ProjectProps;
 };
 

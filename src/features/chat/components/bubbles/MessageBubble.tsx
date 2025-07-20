@@ -2,6 +2,7 @@ import * as React from "react";
 import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { addThreadMessage } from "../../services/addThreadMessage";
 import { popSpecificThreadMessages } from "../../services/popSpecificThreadMessages";
 import { BubbleReactionButton } from "./BubbleReactionButton";
@@ -48,6 +49,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         sender,
         numReplies,
         taskId,
+        taskStatus,
         setIsMainChatVisible,
         setIsThreadVisible,
         setCurrentPreviewTask,
@@ -74,11 +76,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 threadId,
                 accessToken
             );
-
             if (loadedTask.length > 0) {
                 setCurrentPreviewTask(loadedTask[0]);
-            } else {
-                setCurrentPreviewTask(undefined);
             }
         })();
     };
@@ -92,10 +91,15 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setIsTaskPreviewVisible(false);
         setIsTaskCreationVisible(false);
 
+        if (taskId) {
+            setCurrentPreviewTaskId(taskId);
+        }
+
         if (socket !== null) {
             socket.emit(
                 "thread_message",
                 {
+                    methodType: "POST",
                     isInit: true,
                     rootMessageTSSent: tsSent,
                     rootMessageSenderId: sender.userId,
@@ -116,7 +120,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
                     systemUserId: null,
-                    taskId: null,
+                    taskId: taskId || null,
+                    messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
@@ -133,60 +138,34 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     ? myself
                                     : chat.dmPartnerUser || myself
                                 : sender,
-                        taskId: null,
+                        taskId: taskId || null,
                         tsSent: tsSent,
                     };
 
                     if (newThreadMessage) {
-                        if (chat.isDm) {
-                            await addThreadMessage(newThreadMessage, chat.chatType);
-                            const threadMessages: ThreadMessageProps[] =
-                                await popSpecificThreadMessages(
-                                    newThreadMessage.chatId,
-                                    newThreadMessage.threadId,
-                                    chat.chatType
-                                );
-                            if (threadMessages) {
-                                const newThread: ThreadProps = {
-                                    chatId: newThreadMessage.chatId,
-                                    chatName: chat.chatName,
-                                    threadId: newThreadMessage.threadId,
-                                    isDm: true,
-                                    chatType: chat.chatType,
-                                    dmPartnerUser: chat.dmPartnerUser,
-                                    taskId: null,
-                                    unread: false,
-                                    messages: threadMessages,
-                                    TSLastMessage: getCurrentTimestamp(),
-                                };
-                                if (newThread) {
-                                    setCurrentThreadChat(newThread);
-                                }
-                            }
-                        } else {
-                            await addThreadMessage(newThreadMessage, chat.chatType);
-                            const threadMessages: ThreadMessageProps[] =
-                                await popSpecificThreadMessages(
-                                    newThreadMessage.chatId,
-                                    newThreadMessage.threadId,
-                                    chat.chatType
-                                );
-                            if (threadMessages) {
-                                const newThread: ThreadProps = {
-                                    chatId: newThreadMessage.chatId,
-                                    chatName: chat.chatName,
-                                    threadId: newThreadMessage.threadId,
-                                    isDm: false,
-                                    chatType: chat.chatType,
-                                    dmPartnerUser: chat.dmPartnerUser,
-                                    taskId: null,
-                                    unread: false,
-                                    messages: threadMessages,
-                                    TSLastMessage: getCurrentTimestamp(),
-                                };
-                                if (newThread) {
-                                    setCurrentThreadChat(newThread);
-                                }
+                        const threadMessages: ThreadMessageProps[] =
+                            await loadSpecificThreadMessages(
+                                myself,
+                                chat.chatType,
+                                newThreadMessage.chatId,
+                                newThreadMessage.threadId,
+                                accessToken
+                            );
+                        if (threadMessages) {
+                            const newThread: ThreadProps = {
+                                chatId: newThreadMessage.chatId,
+                                chatName: chat.chatName,
+                                threadId: newThreadMessage.threadId,
+                                isDm: chat.isDm,
+                                chatType: chat.chatType,
+                                dmPartnerUser: chat.dmPartnerUser,
+                                taskId: taskId || null,
+                                unread: false,
+                                messages: threadMessages,
+                                TSLastMessage: getCurrentTimestamp(),
+                            };
+                            if (newThread) {
+                                setCurrentThreadChat(newThread);
                             }
                         }
                     }
@@ -262,6 +241,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         <BubbleUserName
                                             sender={sender}
                                             chatType={chat.chatType}
+                                            taskId={taskId}
+                                            taskStatus={taskStatus}
                                             userName={sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}

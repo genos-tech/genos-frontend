@@ -73,11 +73,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
                 {chat.chatType === 3 && (
-                    <Tooltip title="New Task" size="sm">
+                    <Tooltip title="Create a new task" size="sm">
                         <IconButton
                             component="a"
                             size="md"
-                            variant="plain"
+                            variant="outlined"
                             color="neutral"
                             onClick={() => {
                                 setIsMainChatVisible(true);
@@ -88,6 +88,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             }}
                         >
                             <PlaylistAddIcon />
+                            New Task
                         </IconButton>
                     </Tooltip>
                 )}

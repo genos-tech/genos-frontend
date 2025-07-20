@@ -1,6 +1,9 @@
+import { alpha } from "@mui/system";
 import { Box, Typography, Stack, Chip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../../types/admin";
+import { statuses } from "../../../tasks/utils/taskMeta";
 
 type BubbleUserNameTypes = {
     sender: UserProps;
@@ -8,9 +11,15 @@ type BubbleUserNameTypes = {
     userName: string;
     isSent: boolean;
     tsSent: string;
+    taskId: number | null;
+    taskStatus: string | null;
+    isThread?: boolean;
 };
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
-    const { sender, chatType, userName, isSent, tsSent } = props;
+    const { sender, chatType, userName, isSent, tsSent, taskId, taskStatus, isThread } = props;
+    const { mode } = useColorScheme();
+    const taskStatusDetails = statuses.find((item) => item.status === taskStatus);
+
     return (
         <Box sx={{ flex: 1 }}>
             <Stack
@@ -25,6 +34,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                             component="span"
                             sx={[
                                 {
+                                    marginTop: "3px",
                                     marginLeft:
                                         chatType === 3 && sender.isSystemUser === true
                                             ? "5px"
@@ -39,19 +49,48 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                       },
                             ]}
                         >
-                            <Chip
-                                variant="outlined"
-                                color="neutral"
-                                sx={{
-                                    marginTop: "5px",
-                                    marginRight: "7px",
-                                    borderRadius: "7px",
-                                }}
-                                size="lg"
-                            >
-                                Task Status
-                            </Chip>
-                            {tsSent}
+                            {isThread === undefined && (
+                                <>
+                                    {" "}
+                                    <Chip
+                                        key={taskId}
+                                        variant="soft"
+                                        color="neutral"
+                                        sx={{
+                                            marginRight: taskStatusDetails ? "2px" : "7px",
+                                            borderRadius: "7px",
+                                            fontWeight: "bold",
+                                        }}
+                                        size="lg"
+                                    >
+                                        ID: {taskId || "N/A"}
+                                    </Chip>
+                                </>
+                            )}
+                            {taskStatusDetails && (
+                                <>
+                                    <Chip
+                                        key={taskStatus}
+                                        size="lg"
+                                        variant="soft"
+                                        sx={{
+                                            backgroundColor: taskStatusDetails.color
+                                                ? alpha(
+                                                      taskStatusDetails.color,
+                                                      mode === "dark" ? 0.5 : 0.75
+                                                  )
+                                                : "transparent",
+                                            color: taskStatusDetails.textColor,
+                                            marginRight: "7px",
+                                            fontWeight: "bold",
+                                            borderRadius: "7px",
+                                        }}
+                                    >
+                                        {taskStatus || "N/A"}
+                                    </Chip>
+                                </>
+                            )}
+                            Last Updated: {tsSent}
                         </Typography>
                     </>
                 )}

@@ -140,12 +140,13 @@ export const BnEditor = (props: BnEditorProps) => {
             const content: any[] | any = editor.document.slice(-2, -1)[0].content;
             var contentText: string = "Something wrong....";
             if (content.length > 0) {
-                contentText = content[0].text;
+                contentText = content.map((item: any) => item.text).join(" ");
             }
 
             socket.emit(
                 "message",
                 {
+                    methodType: "POST",
                     message: editor.document,
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
@@ -154,7 +155,9 @@ export const BnEditor = (props: BnEditorProps) => {
                     dmPartnerUserId:
                         chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
                     taskId: null,
+                    taskStatus: null,
                     systemUserId: null,
+                    messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const updatedChat: ChatProps = {
@@ -180,6 +183,7 @@ export const BnEditor = (props: BnEditorProps) => {
                                 tsSent: getCurrentTimestamp(),
                                 numReplies: 0,
                                 taskId: null,
+                                taskStatus: null,
                             },
                         ],
                         latestMessage: {
@@ -196,6 +200,7 @@ export const BnEditor = (props: BnEditorProps) => {
                             tsSent: getCurrentTimestamp(),
                             numReplies: 0,
                             taskId: null,
+                            taskStatus: null,
                         },
                         latestMessageText: contentText,
                         TSLastMessage: getCurrentTimestamp(),
@@ -216,6 +221,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         tsSent: getCurrentTimestamp(),
                         numReplies: 0,
                         taskId: null,
+                        taskStatus: null,
                     };
                     if (latestMessage) {
                         const newChat: AllChatProps = {

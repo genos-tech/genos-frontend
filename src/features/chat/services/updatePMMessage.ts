@@ -2,24 +2,22 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
-export const sendDMMessage = async (
+export const updatePMMessage = async (
     accessToken: string | null,
-    dmId: number,
-    senderId: string,
-    receiverId: string,
+    projectId: number,
+    taskId: number | null,
+    messageId: number | null,
     messageBody: any[],
-    setErrorMessage?: (value: string) => void,
-    isInit?: boolean
+    setErrorMessage?: (value: string) => void
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.post("/dm/addMessage/", {
-                dm_id: dmId,
-                sender_id: senderId,
-                receiver_id: receiverId,
+            const res = await api.put("/pm/singleMessage/", {
+                project_id: projectId,
+                task_id: taskId,
+                message_id: messageId,
                 message_body: messageBody,
-                is_init: true ? isInit : false,
             });
             return res.data;
         } else {
@@ -33,7 +31,7 @@ export const sendDMMessage = async (
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Message Id already exists.");
+                    setErrorMessage("Failed to update PM message.");
                 }
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);

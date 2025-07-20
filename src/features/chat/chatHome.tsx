@@ -103,7 +103,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [currentThreadChat]);
 
     useEffect(() => {
-        if (currentProject && isTaskPreviewVisible && currentPreviewTaskId !== -1) {
+        if (currentProject && currentPreviewTaskId !== -1) {
             (async () => {
                 const loadedTask: TaskProps[] = await loadSpecificTask(
                     myself,
@@ -112,8 +112,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                     accessToken
                 );
                 setCurrentPreviewTask(loadedTask[0]);
-                setIsTaskPreviewVisible(true);
-                setIsCreatingTask(false);
+                if (isTaskPreviewVisible) {
+                    setIsTaskPreviewVisible(true);
+                    setIsCreatingTask(false);
+                }
             })();
         }
     }, [currentPreviewTaskId, isTaskPreviewVisible]);
@@ -379,6 +381,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
                                                     }
+                                                    isTaskPreviewVisible={isTaskPreviewVisible}
                                                     setIsTaskCreationVisible={
                                                         setIsTaskCreationVisible
                                                     }
@@ -468,7 +471,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         {/* p3 */}
                         {isTaskCreationVisible && (
                             <>
-                                {currentThreadChat && (
+                                {currentMainChat && (
                                     <>
                                         <PanelResizeHandle
                                             style={{
@@ -506,10 +509,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 <CreateTaskForm
                                                     socket={socket}
                                                     myself={myself}
-                                                    isDm={currentThreadChat.isDm}
-                                                    chatType={currentThreadChat.chatType}
-                                                    chatId={currentThreadChat.chatId}
-                                                    threadId={currentThreadChat.threadId}
+                                                    isDm={currentMainChat.isDm}
+                                                    chatType={currentMainChat.chatType}
+                                                    chatId={currentMainChat.chatId}
+                                                    threadId={null}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}
@@ -578,6 +581,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             currentThreadChatId={currentThreadChatId}
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                            isTaskPreviewVisible={isTaskPreviewVisible}
                                             setIsTaskCreationVisible={setIsTaskCreationVisible}
                                             setIsOpeningTask={setIsOpeningTask}
                                             setIsCreatingTask={setIsCreatingTask}

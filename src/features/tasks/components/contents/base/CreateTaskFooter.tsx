@@ -18,6 +18,10 @@ type CreateTaskFooterProps = {
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
+    setIsMainChatVisible?: (value: boolean) => void;
+    setIsThreadVisible?: (value: boolean) => void;
+    setIsTaskPreviewVisible?: (value: boolean) => void;
+    setIsTaskCreationVisible?: (value: boolean) => void;
     setIsCreatingTask?: (value: any) => void;
     setCurrentPreviewTaskId: (value: number) => void;
 };
@@ -35,6 +39,10 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
         setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
+        setIsMainChatVisible,
+        setIsThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
         setIsCreatingTask,
         setCurrentPreviewTaskId,
     } = props;
@@ -62,8 +70,8 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                 type="submit"
                 variant="solid"
                 color="primary"
-                onClick={() => {
-                    uploadNewTask({
+                onClick={async () => {
+                    await uploadNewTask({
                         socket: socket,
                         myself: myself,
                         taskContents: taskContents,
@@ -77,6 +85,18 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                         setTitleErrorOpen: setTitleErrorOpen,
                         setCurrentPreviewTaskId: setCurrentPreviewTaskId,
                     });
+                    // if (setIsMainChatVisible) {
+                    //     setIsMainChatVisible(); // Keep as it is
+                    // }
+                    // if (setIsThreadVisible) {
+                    //     setIsThreadVisible(false); // Keep as it is
+                    // }
+                    if (setIsTaskPreviewVisible) {
+                        setIsTaskPreviewVisible(true);
+                    }
+                    if (setIsTaskCreationVisible) {
+                        setIsTaskCreationVisible(false);
+                    }
                 }}
                 disabled={taskTitle === ""}
             >

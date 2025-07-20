@@ -140,14 +140,17 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             const content: any[] | any = editor.document.slice(-2, -1)[0].content;
             var contentText: string = "Something wrong....";
             if (content.length > 0) {
-                contentText = content[0].text;
+                contentText = content.map((item: any) => item.text).join(" ");
             }
 
             socket.emit(
                 "thread_message",
                 {
+                    methodType: "POST",
                     isInit: false,
                     rootMessageTSSent: "",
+                    rootMessageSenderId: null,
+                    rootMessageReceiverId: null,
                     threadId: thread.threadId,
                     threadMessage: editor.document,
                     isDm: thread.isDm,
@@ -159,7 +162,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     destCGName: thread.chatName,
                     destCGId: thread.chatId,
                     taskId: thread.taskId,
-                    systemUserId: thread.systemUserId,
+                    systemUserId: thread.systemUserId || null,
+                    messageIdForPut: null,
                 },
                 (ack: any) => {
                     const updatedChat: ThreadProps = {

@@ -26,6 +26,7 @@ type MessagesPaneProps = {
     setIsMainChatVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsTaskCreationVisible: (value: boolean) => void;
+    isTaskPreviewVisible: boolean;
     setIsOpeningTask: (value: boolean) => void;
     setIsCreatingTask: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
@@ -43,6 +44,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         currentThreadChatId,
         setIsMainChatVisible,
         setIsTaskPreviewVisible,
+        isTaskPreviewVisible,
         setIsTaskCreationVisible,
         setIsOpeningTask,
         setIsCreatingTask,
@@ -108,6 +110,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsThreadVisible={setIsThreadVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        isTaskPreviewVisible={isTaskPreviewVisible}
                         setIsTaskCreationVisible={setIsTaskCreationVisible}
                         setIsOpeningTask={setIsOpeningTask}
                         setIsCreatingTask={setIsCreatingTask}
