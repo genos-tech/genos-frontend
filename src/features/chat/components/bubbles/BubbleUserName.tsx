@@ -13,9 +13,10 @@ type BubbleUserNameTypes = {
     tsSent: string;
     taskId: number | null;
     taskStatus: string | null;
+    isThread?: boolean;
 };
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
-    const { sender, chatType, userName, isSent, tsSent, taskId, taskStatus } = props;
+    const { sender, chatType, userName, isSent, tsSent, taskId, taskStatus, isThread } = props;
     const { mode } = useColorScheme();
     const taskStatusDetails = statuses.find((item) => item.status === taskStatus);
 
@@ -48,19 +49,24 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                       },
                             ]}
                         >
-                            <Chip
-                                key={taskId}
-                                variant="soft"
-                                color="neutral"
-                                sx={{
-                                    marginRight: taskStatusDetails ? "2px" : "7px",
-                                    borderRadius: "7px",
-                                    fontWeight: "bold",
-                                }}
-                                size="lg"
-                            >
-                                ID: {taskId || "N/A"}
-                            </Chip>
+                            {isThread === undefined && (
+                                <>
+                                    {" "}
+                                    <Chip
+                                        key={taskId}
+                                        variant="soft"
+                                        color="neutral"
+                                        sx={{
+                                            marginRight: taskStatusDetails ? "2px" : "7px",
+                                            borderRadius: "7px",
+                                            fontWeight: "bold",
+                                        }}
+                                        size="lg"
+                                    >
+                                        ID: {taskId || "N/A"}
+                                    </Chip>
+                                </>
+                            )}
                             {taskStatusDetails && (
                                 <>
                                     <Chip

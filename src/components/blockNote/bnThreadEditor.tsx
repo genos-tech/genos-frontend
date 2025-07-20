@@ -162,7 +162,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     destCGName: thread.chatName,
                     destCGId: thread.chatId,
                     taskId: thread.taskId,
-                    systemUserId: thread.systemUserId,
+                    systemUserId: thread.systemUserId || null,
                     messageIdForPut: null,
                 },
                 (ack: any) => {

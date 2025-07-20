@@ -4,6 +4,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import ReplyIcon from "@mui/icons-material/Reply";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
@@ -16,6 +17,7 @@ type ThreadChatPaneHeaderProps = {
     setIsMainChatVisible: (chat: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
+    isTaskPreviewVisible: boolean;
     setIsTaskCreationVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
     setIsCreatingTask: (value: boolean) => void;
@@ -30,11 +32,14 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setIsMainChatVisible,
         setIsThreadVisible,
         setIsTaskPreviewVisible,
+        isTaskPreviewVisible,
         setIsTaskCreationVisible,
         setIsOpeningTask,
         setIsCreatingTask,
         currentPreviewTask,
     } = props;
+    const { mode } = useColorScheme();
+
     let isYou: boolean = false;
     if (thread.dmPartnerUser !== null) {
         isYou = myself.userId === thread.dmPartnerUser.userId;
@@ -66,7 +71,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 height: "60px",
             }}
         >
-            <Stack direction="row" spacing={{ xs: 1, md: 1 }} sx={{ alignItems: "center" }}>
+            <Stack direction="row" spacing={{ xs: 0.5, md: 0.5 }} sx={{ alignItems: "center" }}>
                 <Chip
                     size="lg"
                     variant="solid"
@@ -77,76 +82,109 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     Thread
                 </Chip>
 
+                {thread.chatType === 3 && (
+                    <>
+                        <Chip
+                            key={thread.taskId}
+                            variant="soft"
+                            color="neutral"
+                            sx={{
+                                borderRadius: "7px",
+                                fontWeight: "bold",
+                            }}
+                            size="lg"
+                        >
+                            ID: {thread.taskId || "N/A"}
+                        </Chip>
+                        {currentPreviewTask && (
+                            <>
+                                <Chip
+                                    size="lg"
+                                    variant="soft"
+                                    sx={{
+                                        backgroundColor: currentPreviewTask.status.color
+                                            ? alpha(
+                                                  currentPreviewTask.status.color,
+                                                  mode === "dark" ? 0.5 : 0.75
+                                              )
+                                            : "transparent",
+                                        color: currentPreviewTask.status.textColor,
+                                        fontWeight: "bold",
+                                        borderRadius: "7px",
+                                    }}
+                                >
+                                    {currentPreviewTask.status.status || "N/A"}
+                                </Chip>
+                            </>
+                        )}
+                    </>
+                )}
+
                 <div>
-                    <Typography component="h2" noWrap sx={{ fontWeight: "lg", fontSize: "lg" }}>
+                    <Typography
+                        component="h2"
+                        noWrap
+                        sx={{ fontWeight: "lg", fontSize: "lg", pl: "5px" }}
+                    >
                         {isYou ? `${thread?.chatName} (you)` : thread?.chatName}
                     </Typography>
                 </div>
             </Stack>
 
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
-                {(currentPreviewTask === undefined ||
-                    (currentPreviewTask && currentPreviewTask.id === undefined)) && (
-                    <>
-                        <Tooltip title="New Task" size="sm">
-                            <IconButton
-                                component="a"
-                                size="md"
-                                variant="plain"
-                                color="neutral"
-                                onClick={() => {
-                                    setIsMainChatVisible(false);
-                                    setIsThreadVisible(true);
-                                    setIsTaskPreviewVisible(false);
-                                    setIsTaskCreationVisible(true);
+                {thread.chatType !== 3 &&
+                    (currentPreviewTask === undefined ||
+                        (currentPreviewTask && currentPreviewTask.id === undefined)) && (
+                        <>
+                            <Tooltip title="New Task" size="sm">
+                                <IconButton
+                                    component="a"
+                                    size="md"
+                                    variant="plain"
+                                    color="neutral"
+                                    onClick={() => {
+                                        setIsMainChatVisible(false);
+                                        setIsThreadVisible(true);
+                                        setIsTaskPreviewVisible(false);
+                                        setIsTaskCreationVisible(true);
 
-                                    setIsCreatingTask(true);
-                                }}
-                            >
-                                <PlaylistAddIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </>
-                )}
-
-                {currentPreviewTask && currentPreviewTask.id !== undefined && (
-                    <>
-                        <Tooltip title="Open Task" size="sm">
-                            <IconButton
-                                component="button"
-                                size="sm"
-                                variant="soft"
-                                color="neutral"
-                                onClick={() => {
-                                    setIsMainChatVisible(false);
-                                    setIsThreadVisible(true);
-                                    setIsTaskPreviewVisible(true);
-                                    setIsTaskCreationVisible(false);
-
-                                    setIsOpeningTask(true);
-                                }}
-                                sx={{ pl: "3px", pr: "5px" }}
-                            >
-                                <AssignmentRoundedIcon />
-                                <Chip
-                                    key={currentPreviewTask.status.status}
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        backgroundColor: currentPreviewTask.status.color
-                                            ? alpha(currentPreviewTask.status.color, 0.8)
-                                            : "transparent",
-                                        color: currentPreviewTask.status.textColor,
-                                        fontWeight: "bold",
-                                        ml: "5px",
+                                        setIsCreatingTask(true);
                                     }}
                                 >
-                                    {currentPreviewTask.status.status}
-                                </Chip>
-                            </IconButton>
-                        </Tooltip>
-                    </>
-                )}
+                                    <PlaylistAddIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
+
+                {isTaskPreviewVisible === false &&
+                    currentPreviewTask &&
+                    currentPreviewTask.id !== undefined && (
+                        <>
+                            <Tooltip title="Open Task" size="sm">
+                                <IconButton
+                                    component="button"
+                                    size="sm"
+                                    variant="soft"
+                                    color="primary"
+                                    onClick={() => {
+                                        setIsMainChatVisible(false);
+                                        setIsThreadVisible(true);
+                                        setIsTaskPreviewVisible(true);
+                                        setIsTaskCreationVisible(false);
+
+                                        setIsOpeningTask(true);
+                                    }}
+                                    sx={{ pl: "3px", pr: "5px" }}
+                                >
+                                    <AssignmentRoundedIcon />
+                                    <Typography sx={{ fontSize: "15px", fontWeight: "bold" }}>
+                                        Open
+                                    </Typography>
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
 
                 <Tooltip title="Close Thread" size="sm">
                     <IconButton

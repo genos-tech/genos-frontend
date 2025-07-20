@@ -116,3 +116,21 @@ export const taskMessageTemplate = (task: TaskProps) => [
         children: [],
     },
 ];
+
+export const taskThreadMessageTemplate = (task: TaskProps) => [
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [
+            { text: "Task marked as ", type: "text", styles: {} },
+            getStatusConfig(task.status.status || "default"),
+        ],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [],
+        children: [],
+    },
+];

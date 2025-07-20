@@ -88,26 +88,33 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                     >
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
-                                <Box sx={{ flex: 1 }}>
-                                    <AvatarWithStatus
-                                        userProfile={isSent ? myself : sender}
-                                        socket={socket}
-                                        thread={thread}
-                                        online={sender.online}
-                                        setOpeningService={setOpeningService}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                    />
-                                </Box>
+                                {!(thread.chatType === 3 && sender.isSystemUser === true) && (
+                                    <Box sx={{ flex: 1 }}>
+                                        <AvatarWithStatus
+                                            userProfile={isSent ? myself : sender}
+                                            socket={socket}
+                                            thread={thread}
+                                            online={sender.online}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                        />
+                                    </Box>
+                                )}
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={2}>
                                         <BubbleUserName
                                             sender={sender}
                                             chatType={thread.chatType}
+                                            taskId={thread.taskId}
+                                            taskStatus={null}
                                             userName={sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}
+                                            isThread={false}
                                         />
                                         <BubbleReactionButton
+                                            sender={sender}
+                                            chatType={thread.chatType}
                                             isLiked={isLiked}
                                             setIsLiked={setIsLiked}
                                             isSent={isSent}

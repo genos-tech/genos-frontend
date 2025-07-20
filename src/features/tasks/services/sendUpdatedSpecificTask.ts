@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import axios from "axios";
 
-import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
+import { taskMessageTemplate, taskThreadMessageTemplate } from "../utils/TaskMessageTemplate";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
@@ -52,16 +52,38 @@ export const sendUpdatedSpecificTask = async (
             });
 
             if (res) {
-                const createTaskMessage = taskMessageTemplate(updatedTask);
+                const updatedTaskMessage = taskMessageTemplate(updatedTask);
+                const updatedTaskThreadMessage = taskThreadMessageTemplate(updatedTask);
                 if (socket) {
                     socket.emit("message", {
                         methodType: "PUT",
-                        message: createTaskMessage,
+                        message: updatedTaskMessage,
                         destCGName: updatedTask.project.projectName,
                         destCGId: updatedTask.project.projectId,
                         isDm: false,
                         chatType: 3,
                         dmPartnerUserId: null,
+                        taskId: updatedTask.id,
+                        taskStatus: updatedTask.status.status,
+                        systemUserId: updatedTask.project.systemUserId,
+                        messageIdForPut: null,
+                    });
+
+                    socket.emit("thread_message", {
+                        methodType: "POST",
+                        isInit: false,
+                        rootMessageTSSent: "",
+                        rootMessageSenderId: null,
+                        rootMessageReceiverId: null,
+                        threadId: null,
+                        threadMessage: updatedTaskThreadMessage,
+                        isDm: false,
+                        chatType: 3,
+                        dmPartnerUserId: null,
+                        senderId: updatedTask.project.systemUserId,
+                        senderName: updatedTask.project.projectName,
+                        destCGName: updatedTask.project.projectName,
+                        destCGId: updatedTask.project.projectId,
                         taskId: updatedTask.id,
                         taskStatus: updatedTask.status.status,
                         systemUserId: updatedTask.project.systemUserId,
