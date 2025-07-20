@@ -80,6 +80,7 @@ export const moveToSelectedChat = async (
             socket.emit(
                 "message",
                 {
+                    methodType: "POST",
                     message: joinedMessage,
                     destCGName: chatName,
                     destCGId: chatId,

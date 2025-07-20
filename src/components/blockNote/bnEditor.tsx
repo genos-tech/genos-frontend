@@ -146,6 +146,7 @@ export const BnEditor = (props: BnEditorProps) => {
             socket.emit(
                 "message",
                 {
+                    methodType: "POST",
                     message: editor.document,
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,

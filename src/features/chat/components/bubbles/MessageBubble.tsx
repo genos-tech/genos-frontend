@@ -97,6 +97,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             socket.emit(
                 "thread_message",
                 {
+                    methodType: "POST",
                     isInit: true,
                     rootMessageTSSent: tsSent,
                     rootMessageSenderId: sender.userId,

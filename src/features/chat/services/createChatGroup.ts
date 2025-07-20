@@ -125,6 +125,7 @@ export const createChatGroup = async (
             },
             (ack: any) => {
                 socket.emit("message", {
+                    methodType: "POST",
                     message: createGroupMessage,
                     destCGName: chatName,
                     destCGId: data.chatId,

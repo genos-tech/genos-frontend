@@ -146,6 +146,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             socket.emit(
                 "thread_message",
                 {
+                    methodType: "POST",
                     isInit: false,
                     rootMessageTSSent: "",
                     rootMessageSenderId: null,
