@@ -214,6 +214,7 @@ export const wsHook = (props: wsHookProps) => {
                             numReplies: newMessage.numReplies,
                             tsSent: newMessage.tsSent,
                             taskId: newMessage.taskId,
+                            taskStatus: newMessage.taskStatus,
                         };
                         const updatedChat: ChatProps = {
                             chatId: newMessage.chatId,

@@ -148,6 +148,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         chatType: 3,
                                         dmPartnerUserId: null,
                                         taskId: taskCreateData.task_id,
+                                        taskStatus: taskCreateData.status,
                                         systemUserId: taskContents.project.systemUserId,
                                     });
                                 } else {

@@ -48,6 +48,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         sender,
         numReplies,
         taskId,
+        taskStatus,
         setIsMainChatVisible,
         setIsThreadVisible,
         setCurrentPreviewTask,
@@ -262,6 +263,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         <BubbleUserName
                                             sender={sender}
                                             chatType={chat.chatType}
+                                            taskId={taskId}
+                                            taskStatus={taskStatus}
                                             userName={sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}

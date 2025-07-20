@@ -154,6 +154,7 @@ export const BnEditor = (props: BnEditorProps) => {
                     dmPartnerUserId:
                         chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
                     taskId: null,
+                    taskStatus: null,
                     systemUserId: null,
                 },
                 async (ack: any) => {
@@ -180,6 +181,7 @@ export const BnEditor = (props: BnEditorProps) => {
                                 tsSent: getCurrentTimestamp(),
                                 numReplies: 0,
                                 taskId: null,
+                                taskStatus: null,
                             },
                         ],
                         latestMessage: {
@@ -196,6 +198,7 @@ export const BnEditor = (props: BnEditorProps) => {
                             tsSent: getCurrentTimestamp(),
                             numReplies: 0,
                             taskId: null,
+                            taskStatus: null,
                         },
                         latestMessageText: contentText,
                         TSLastMessage: getCurrentTimestamp(),
@@ -216,6 +219,7 @@ export const BnEditor = (props: BnEditorProps) => {
                         tsSent: getCurrentTimestamp(),
                         numReplies: 0,
                         taskId: null,
+                        taskStatus: null,
                     };
                     if (latestMessage) {
                         const newChat: AllChatProps = {
