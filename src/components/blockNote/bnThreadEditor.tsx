@@ -140,7 +140,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             const content: any[] | any = editor.document.slice(-2, -1)[0].content;
             var contentText: string = "Something wrong....";
             if (content.length > 0) {
-                contentText = content[0].text;
+                contentText = content.map((item: any) => item.text).join(" ");
             }
 
             socket.emit(
