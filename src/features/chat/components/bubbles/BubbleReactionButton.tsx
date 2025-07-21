@@ -19,23 +19,14 @@ export const BubbleReactionButton = (props: BubbleReactionButtonTypes) => {
             {replayHandler && (
                 <>
                     <Tooltip title="Reply" size="sm">
-                        <IconButton
-                            component="a"
-                            sx={{ "&:hover": { backgroundColor: "transparent" } }}
-                            onClick={replayHandler}
-                        >
-                            <ReplyIcon
-                                sx={{
-                                    fontSize: 20,
-                                    color: isSent ? "background.body" : "neutral.plainColor",
-                                }}
-                            />
+                        <IconButton size="sm" onClick={replayHandler} sx={{ ml: "30px" }}>
+                            <ReplyIcon />
                         </IconButton>
                     </Tooltip>
                 </>
             )}
 
-            {!(chatType === 3 && sender.isSystemUser === true) && (
+            {/* {!(chatType === 3 && sender.isSystemUser === true) && (
                 <>
                     <IconButton
                         component="a"
@@ -58,7 +49,7 @@ export const BubbleReactionButton = (props: BubbleReactionButtonTypes) => {
                         )}
                     </IconButton>
                 </>
-            )}
+            )} */}
         </Box>
     );
 };

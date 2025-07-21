@@ -20,9 +20,14 @@ type ChatSidebarProps = {
     currentSubChat: ChatProps;
     socket: Socket | null;
     setIsMainChatVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
+    isThreadVisible: boolean;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    isTaskPreviewVisible: boolean;
+    isTaskCreationVisible: boolean;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
 };
 
@@ -37,9 +42,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         currentSubChat,
         socket,
         setIsMainChatVisible,
+        setIsThreadVisible,
+        isThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        isTaskPreviewVisible,
+        isTaskCreationVisible,
         isSubChatVisible,
         setIsSubChatVisible,
-        setIsThreadVisible,
         setOpeningService,
     } = props;
     const { mode } = useColorScheme();
@@ -92,6 +102,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     currentSubChat={currentSubChat}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
+                    setIsMainChatVisible={setIsMainChatVisible}
+                    setIsThreadVisible={setIsThreadVisible}
+                    isThreadVisible={isThreadVisible}
+                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    isTaskPreviewVisible={isTaskPreviewVisible}
+                    isTaskCreationVisible={isTaskCreationVisible}
                     isSubChatVisible={isSubChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
                     setOpeningService={setOpeningService}
@@ -109,6 +126,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     currentSubChat={currentSubChat}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
+                    setIsMainChatVisible={setIsMainChatVisible}
+                    setIsThreadVisible={setIsThreadVisible}
+                    isThreadVisible={isThreadVisible}
+                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    isTaskPreviewVisible={isTaskPreviewVisible}
+                    isTaskCreationVisible={isTaskCreationVisible}
                     isSubChatVisible={isSubChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
                     setOpeningService={setOpeningService}
@@ -126,6 +150,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     currentSubChat={currentSubChat}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
+                    setIsMainChatVisible={setIsMainChatVisible}
+                    setIsThreadVisible={setIsThreadVisible}
+                    isThreadVisible={isThreadVisible}
+                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    isTaskPreviewVisible={isTaskPreviewVisible}
+                    isTaskCreationVisible={isTaskCreationVisible}
                     isSubChatVisible={isSubChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
                     setOpeningService={setOpeningService}

@@ -14,7 +14,7 @@ export const sendDMMessage = async (
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.post("/dm/addMessage/", {
+            const res = await api.post("/dm/message/", {
                 dm_id: dmId,
                 sender_id: senderId,
                 receiver_id: receiverId,

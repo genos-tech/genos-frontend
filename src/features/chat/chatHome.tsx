@@ -111,14 +111,19 @@ export const ChatHome = (props: ChatHomeProps) => {
                     currentPreviewTaskId,
                     accessToken
                 );
-                setCurrentPreviewTask(loadedTask[0]);
-                if (isTaskPreviewVisible) {
-                    setIsTaskPreviewVisible(true);
-                    setIsCreatingTask(false);
+                if (loadedTask.length > 0) {
+                    if (currentThreadChat) {
+                        setCurrentThreadChat({ ...currentThreadChat, taskExist: true });
+                    }
+                    setCurrentPreviewTask(loadedTask[0]);
+                    if (isTaskPreviewVisible) {
+                        setIsTaskPreviewVisible(true);
+                        setIsCreatingTask(false);
+                    }
                 }
             })();
         }
-    }, [currentPreviewTaskId, isTaskPreviewVisible]);
+    }, [isThreadVisible, currentPreviewTaskId, isTaskPreviewVisible, currentProject]);
 
     useEffect(() => {
         if (currentPreviewTask) {
@@ -223,6 +228,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 isSubChatVisible={isSubChatVisible}
                                 setIsSubChatVisible={setIsSubChatVisible}
                                 setIsThreadVisible={setIsThreadVisible}
+                                isThreadVisible={isThreadVisible}
+                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                isTaskPreviewVisible={isTaskPreviewVisible}
+                                isTaskCreationVisible={isTaskCreationVisible}
                                 setOpeningService={setOpeningService}
                             />
                         </Sheet>
@@ -286,11 +296,13 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                                                 setIsOpeningTask={setIsOpeningTask}
+                                                setIsCreatingTask={setIsCreatingTask}
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpeningService={setOpeningService}
                                                 funcSetAllChats={funcSetAllChats}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setCurrentProject={setCurrentProject}
                                             />
                                         </Panel>
 
@@ -336,6 +348,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setOpeningService={setOpeningService}
                                         funcSetAllChats={funcSetAllChats}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setCurrentProject={setCurrentProject}
                                     />
                                 </Panel>
                             </PanelGroup>
@@ -390,6 +403,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     currentPreviewTask={currentPreviewTask}
                                                     setOpeningService={setOpeningService}
                                                     setCurrentMainChat={setCurrentMainChat}
+                                                    currentPreviewTaskId={currentPreviewTaskId}
                                                 />
                                             </Box>
                                         </Panel>
@@ -443,6 +457,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     currentPreviewTask={currentPreviewTask}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
+                                                    isThreadVisible={isThreadVisible}
                                                     setIsCreatingTask={setIsCreatingTask}
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
@@ -509,10 +524,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 <CreateTaskForm
                                                     socket={socket}
                                                     myself={myself}
-                                                    isDm={currentMainChat.isDm}
-                                                    chatType={currentMainChat.chatType}
-                                                    chatId={currentMainChat.chatId}
-                                                    threadId={null}
+                                                    currentMainChat={currentMainChat}
+                                                    currentThreadChat={currentThreadChat}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}
@@ -588,6 +601,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             currentPreviewTask={currentPreviewTask}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
+                                            currentPreviewTaskId={currentPreviewTaskId}
                                         />
                                     </Box>
                                 </Panel>
@@ -639,6 +653,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     currentPreviewTask={currentPreviewTask}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
+                                                    isThreadVisible={isThreadVisible}
                                                     setIsCreatingTask={setIsCreatingTask}
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
@@ -705,10 +720,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 <CreateTaskForm
                                                     socket={socket}
                                                     myself={myself}
-                                                    isDm={currentThreadChat.isDm}
-                                                    chatType={currentThreadChat.chatType}
-                                                    chatId={currentThreadChat.chatId}
-                                                    threadId={currentThreadChat.threadId}
+                                                    currentMainChat={currentMainChat}
+                                                    currentThreadChat={currentThreadChat}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}

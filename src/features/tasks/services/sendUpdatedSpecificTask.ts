@@ -16,7 +16,7 @@ export const sendUpdatedSpecificTask = async (
     setErrorMessage?: (value: string) => void
 ) => {
     try {
-        if (updatedTask.project === null) {
+        if (!updatedTask.project?.projectName) {
             if (setErrorMessage) {
                 setErrorMessage("Project ID is not specified.");
             }
