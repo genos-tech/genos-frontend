@@ -32,6 +32,7 @@ type MessagesPaneProps = {
     currentPreviewTask?: TaskProps;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    currentPreviewTaskId: number;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -51,6 +52,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         currentPreviewTask,
         setOpeningService,
         setCurrentMainChat,
+        currentPreviewTaskId,
     } = props;
 
     const [threadMessages, setThreadMessages] = useState(thread.messages || []);
@@ -115,6 +117,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setIsOpeningTask={setIsOpeningTask}
                         setIsCreatingTask={setIsCreatingTask}
                         currentPreviewTask={currentPreviewTask}
+                        currentPreviewTaskId={currentPreviewTaskId}
                     />
 
                     <Box sx={{ px: 0.3, my: 0.2 }}>

@@ -27,7 +27,7 @@ export const loadSpecificThreadMessages = async (
             ];
             const query = queryParts.join("&");
             const res = await api.get(
-                `/${chatTypeNameLookup[chatType]}/getThreadMessagesById/?${query}`
+                `/${chatTypeNameLookup[chatType]}/threadMessagesById/?${query}`
             );
             return res.data;
         } else {

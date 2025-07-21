@@ -27,7 +27,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             key={taskContents.id}
             options={teamProjects}
             getOptionLabel={(option) => option.projectName}
-            value={taskContents.project || undefined}
+            value={taskContents.project}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
             onChange={(event, value) => {
                 if (value !== null) {
@@ -36,12 +36,14 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         project: {
                             projectId: value.projectId,
                             projectName: value.projectName,
+                            systemUserId: value.systemUserId,
                         },
                         tags: [],
                     });
                     setCurrentProject({
                         projectId: value.projectId,
                         projectName: value.projectName,
+                        systemUserId: value.systemUserId,
                     });
                     if (setTaskUpdated) {
                         setTaskUpdated(true);

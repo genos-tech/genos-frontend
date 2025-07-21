@@ -100,7 +100,8 @@ export const TaskHome = (props: TaskHomeProps) => {
         flag: boolean;
         projectId: number;
         projectName: string;
-    }>({ flag: false, projectId: -1, projectName: "" });
+        systemUserId: string;
+    }>({ flag: false, projectId: -1, projectName: "", systemUserId: "" });
     const [openDeleteProject, setOpenDeleteProject] = useState<{
         flag: boolean;
         projectId: number;
@@ -604,10 +605,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             <CreateTaskForm
                                                 socket={socket}
                                                 myself={myself}
-                                                isDm={null}
-                                                chatType={null}
-                                                chatId={null}
-                                                threadId={null}
+                                                currentMainChat={undefined}
+                                                currentThreadChat={undefined}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setOpenCreateProject={setOpenCreateProject}

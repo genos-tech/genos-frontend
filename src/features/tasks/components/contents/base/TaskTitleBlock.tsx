@@ -34,6 +34,7 @@ type TaskTitleBlockProps = {
     setTaskUpdated?: (value: boolean) => void;
     isPreviewMode: boolean;
     setIsMainChatVisible?: (value: boolean) => void;
+    setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
     setIsTaskCreationVisible?: (value: boolean) => void;
@@ -53,6 +54,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setTaskUpdated,
         isPreviewMode,
         setIsMainChatVisible,
+        setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,

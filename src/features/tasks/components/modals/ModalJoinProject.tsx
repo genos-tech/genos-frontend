@@ -6,12 +6,27 @@ import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
-const disableOpenJoinModalParams = { flag: false, projectId: -1, projectName: "" };
+const disableOpenJoinModalParams = {
+    flag: false,
+    projectId: -1,
+    projectName: "",
+    systemUserId: "",
+};
 
 type Props = {
     myself: UserProps;
-    openJoinProject: { flag: boolean; projectId: number; projectName: string };
-    setOpenJoinProject: (value: { flag: boolean; projectId: number; projectName: string }) => void;
+    openJoinProject: {
+        flag: boolean;
+        projectId: number;
+        projectName: string;
+        systemUserId: string;
+    };
+    setOpenJoinProject: (value: {
+        flag: boolean;
+        projectId: number;
+        projectName: string;
+        systemUserId: string;
+    }) => void;
     setCurrentProject: (value: ProjectProps) => void;
 };
 
@@ -52,6 +67,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                 setCurrentProject({
                     projectId: openJoinProject.projectId,
                     projectName: openJoinProject.projectName,
+                    systemUserId: openJoinProject.systemUserId,
                 });
                 setOpenJoinProject(disableOpenJoinModalParams);
             }

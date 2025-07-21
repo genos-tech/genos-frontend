@@ -88,7 +88,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                     >
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
-                                {!(thread.chatType === 3 && sender.isSystemUser === true) && (
+                                {sender.isSystemUser !== true && (
                                     <Box sx={{ flex: 1 }}>
                                         <AvatarWithStatus
                                             userProfile={isSent ? myself : sender}

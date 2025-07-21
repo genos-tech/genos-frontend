@@ -15,6 +15,13 @@ type ChatListProps = {
     setCurrentSubChat: (chat: ChatProps) => void;
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
+    setIsMainChatVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
+    isThreadVisible: boolean;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsTaskCreationVisible: (value: boolean) => void;
+    isTaskPreviewVisible: boolean;
+    isTaskCreationVisible: boolean;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
@@ -31,6 +38,13 @@ export const ChatList = (props: ChatListProps) => {
         setCurrentSubChat,
         currentMainChat,
         currentSubChat,
+        setIsMainChatVisible,
+        setIsThreadVisible,
+        isThreadVisible,
+        setIsTaskPreviewVisible,
+        setIsTaskCreationVisible,
+        isTaskPreviewVisible,
+        isTaskCreationVisible,
         isSubChatVisible,
         setIsSubChatVisible,
         setOpeningService,
@@ -68,6 +82,13 @@ export const ChatList = (props: ChatListProps) => {
                                 currentSubChat={currentSubChat}
                                 setCurrentMainChat={setCurrentMainChat}
                                 setCurrentSubChat={setCurrentSubChat}
+                                setIsMainChatVisible={setIsMainChatVisible}
+                                setIsThreadVisible={setIsThreadVisible}
+                                isThreadVisible={isThreadVisible}
+                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                isTaskPreviewVisible={isTaskPreviewVisible}
+                                isTaskCreationVisible={isTaskCreationVisible}
                                 isSubChatVisible={isSubChatVisible}
                                 setIsSubChatVisible={setIsSubChatVisible}
                                 setOpeningService={setOpeningService}

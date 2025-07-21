@@ -14,7 +14,7 @@ import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecific
 import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadProps, ThreadMessageProps } from "../../../../types/chat";
-import { TaskProps } from "../../../../types/tasks";
+import { TaskProps, ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 import { BnPreview } from "../../../../components/blockNote/bnPreview";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
@@ -34,6 +34,7 @@ type MessageBubbleProps = MessageProps & {
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsOpeningTask: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    setCurrentProject: (value: ProjectProps) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -49,6 +50,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         sender,
         numReplies,
         taskId,
+        project,
         taskStatus,
         setIsMainChatVisible,
         setIsThreadVisible,
@@ -60,6 +62,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setCurrentMainChat,
         setIsOpeningTask,
         setCurrentPreviewTaskId,
+        setCurrentProject,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
@@ -93,6 +96,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
         if (taskId) {
             setCurrentPreviewTaskId(taskId);
+        } else {
+            setCurrentPreviewTaskId(-1);
         }
 
         if (socket !== null) {
@@ -151,7 +156,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 newThreadMessage.threadId,
                                 accessToken
                             );
-                        if (threadMessages) {
+                        if (threadMessages && threadMessages.length > 0) {
                             const newThread: ThreadProps = {
                                 chatId: newThreadMessage.chatId,
                                 chatName: chat.chatName,
@@ -162,10 +167,18 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 taskId: taskId || null,
                                 unread: false,
                                 messages: threadMessages,
+                                project: project,
                                 TSLastMessage: getCurrentTimestamp(),
+                                taskExist: threadMessages[0].taskExist,
                             };
+                            if (project) {
+                                setCurrentProject(project);
+                            }
                             if (newThread) {
                                 setCurrentThreadChat(newThread);
+                                if (newThread.taskExist === true && threadMessages[0].taskId) {
+                                    setCurrentPreviewTaskId(threadMessages[0].taskId);
+                                }
                             }
                         }
                     }
@@ -192,8 +205,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             ) : (
                 <Box sx={{ position: "relative" }}>
                     <Sheet
-                        color={isSent ? "neutral" : "neutral"}
-                        variant={isSent ? "solid" : "soft"}
+                        color={"neutral"}
+                        variant={"soft"}
                         sx={[
                             {
                                 p: 1,

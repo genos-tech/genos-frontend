@@ -30,6 +30,7 @@ type TaskPreviewProps = {
     currentPreviewTask: TaskProps;
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
+    isThreadVisible?: boolean;
     setIsCreatingTask: (value: any) => void;
     setIsTaskPreviewVisible?: (value: boolean) => void;
     setIsTaskCreationVisible?: (value: boolean) => void;
@@ -54,6 +55,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsCreatingTask,
         setIsMainChatVisible,
         setIsThreadVisible,
+        isThreadVisible,
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,
         setCurrentPreviewTask,
@@ -301,6 +303,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskClosed={setTaskClosed}
                 setTaskUpdated={setTaskUpdated}
                 isPreviewMode={true}
+                setIsMainChatVisible={setIsMainChatVisible}
+                setIsThreadVisible={setIsThreadVisible}
+                isThreadVisible={isThreadVisible}
+                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                setIsTaskCreationVisible={setIsTaskCreationVisible}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

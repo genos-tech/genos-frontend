@@ -27,7 +27,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                 justifyContent={isSent ? "flex-end" : "flex-start"}
                 alignItems="left"
             >
-                {chatType === 3 && sender.isSystemUser === true && (
+                {/* Task update message bubble */}
+                {sender.isSystemUser === true && (
                     <>
                         <Typography
                             level="body-sm"
@@ -51,7 +52,6 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                         >
                             {isThread === undefined && (
                                 <>
-                                    {" "}
                                     <Chip
                                         key={taskId}
                                         variant="soft"
@@ -90,12 +90,14 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                     </Chip>
                                 </>
                             )}
-                            Last Updated: {tsSent}
+                            {chatType !== 3 && <>Created at: {tsSent}</>}
+                            {chatType === 3 && <>Last Updated: {tsSent}</>}
                         </Typography>
                     </>
                 )}
 
-                {!(chatType === 3 && sender.isSystemUser === true) && (
+                {/* Task update message bubble */}
+                {!sender.isSystemUser && (
                     <>
                         <Typography
                             level="body-md"
@@ -115,10 +117,6 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                             sx={[
                                 {
                                     lineHeight: 1.5,
-                                    marginLeft:
-                                        chatType === 3 && sender.isSystemUser === true
-                                            ? "5px"
-                                            : "0px",
                                 },
                                 isSent
                                     ? {

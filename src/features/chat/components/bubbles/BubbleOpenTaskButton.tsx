@@ -1,5 +1,5 @@
 import { Box, Tooltip, IconButton, Typography } from "@mui/joy";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 type BubbleReplyButtonTypes = {
     taskId: number | null;
@@ -25,8 +25,6 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
             <Tooltip title="Open Task" size="sm">
                 <IconButton
                     size="sm"
-                    color="primary"
-                    variant="soft"
                     sx={{
                         top: "5%",
                         right: "5%",
@@ -44,8 +42,7 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                         }
                     }}
                 >
-                    <AssignmentRoundedIcon />
-                    <Typography sx={{ fontSize: "15px", fontWeight: "bold" }}>Open</Typography>
+                    <OpenInNewIcon />
                 </IconButton>
             </Tooltip>
         </Box>

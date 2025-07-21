@@ -32,6 +32,7 @@ export type ChatProps = {
     CGAvatarImgPath?: string;
     TSLastMessage: string;
     project?: ProjectProps;
+    taskExist?: boolean;
 };
 
 // Thread Props
@@ -48,6 +49,8 @@ export type ThreadProps = {
     messages: ThreadMessageProps[];
     CGAvatarImgPath?: string;
     TSLastMessage: string;
+    project?: ProjectProps;
+    taskExist?: boolean;
 };
 
 // Message Props
@@ -69,8 +72,10 @@ export type MessageProps = {
         type: string;
         size: string;
     };
+    taskExist?: boolean;
     taskId: number | null;
     taskStatus: string | null;
+    project?: ProjectProps;
 };
 
 export type ThreadMessageProps = {
@@ -91,6 +96,8 @@ export type ThreadMessageProps = {
         type: string;
         size: string;
     };
+    project?: ProjectProps;
+    taskExist?: boolean;
 };
 
 export type NewMessageProps = {
@@ -139,6 +146,8 @@ export type NewThreadMessageProps = {
         type: string;
         size: string;
     };
+    project?: ProjectProps;
+    taskExist?: boolean;
 };
 
 // Other Props

@@ -3,16 +3,16 @@ import { Button, Stack } from "@mui/joy";
 
 import { uploadNewTask } from "../../../services/uploadNewTask";
 import { UserProps } from "../../../../../types/admin";
-import { TaskProps } from "../../../../../types/tasks";
+import { TaskProps, ProjectProps } from "../../../../../types/tasks";
+import { ChatProps, ThreadProps } from "../../../../../types/chat";
 
 type CreateTaskFooterProps = {
     socket: Socket | null;
     myself: UserProps;
     accessToken: string | null;
-    isDm: boolean | null;
-    chatType: number | null;
-    chatId: number | null;
-    threadId: number | null;
+    currentMainChat?: ChatProps;
+    currentThreadChat?: ThreadProps;
+    isThreadVisible?: boolean;
     taskContents: TaskProps;
     taskTitle: string;
     setIsSubmitted: (value: boolean) => void;
@@ -24,16 +24,16 @@ type CreateTaskFooterProps = {
     setIsTaskCreationVisible?: (value: boolean) => void;
     setIsCreatingTask?: (value: any) => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    setCurrentProject: (value: ProjectProps) => void;
 };
 export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
     const {
         socket,
         myself,
         accessToken,
-        isDm,
-        chatType,
-        chatId,
-        threadId,
+        currentMainChat,
+        currentThreadChat,
+        isThreadVisible,
         taskContents,
         taskTitle,
         setIsSubmitted,
@@ -45,6 +45,7 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
         setIsTaskCreationVisible,
         setIsCreatingTask,
         setCurrentPreviewTaskId,
+        setCurrentProject,
     } = props;
     return (
         <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
@@ -75,16 +76,20 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                         socket: socket,
                         myself: myself,
                         taskContents: taskContents,
-                        isDm: isDm,
-                        chatType: chatType,
-                        chatId: chatId,
-                        threadId: threadId,
+                        currentMainChat: currentMainChat,
+                        currentThreadChat: currentThreadChat,
+                        isThreadVisible: isThreadVisible,
                         accessToken: accessToken || "",
                         setIsSubmitted: setIsSubmitted,
                         setTitleError: setTitleError,
                         setTitleErrorOpen: setTitleErrorOpen,
                         setCurrentPreviewTaskId: setCurrentPreviewTaskId,
                     });
+
+                    if (taskContents.project) {
+                        setCurrentProject(taskContents.project);
+                    }
+
                     // if (setIsMainChatVisible) {
                     //     setIsMainChatVisible(); // Keep as it is
                     // }

@@ -14,7 +14,7 @@ import { handleAtTop } from "./services/handleBubblePositionAction";
 import { BnEditor } from "../../components/blockNote/bnEditor";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
-import { TaskProps } from "../../types/tasks";
+import { TaskProps, ProjectProps } from "../../types/tasks";
 
 type MessagesPaneProps = {
     currentWindowHeight: number;
@@ -32,11 +32,13 @@ type MessagesPaneProps = {
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsTaskCreationVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
+    setIsCreatingTask: (value: boolean) => void;
     currentSubChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
     funcSetAllChats: () => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    setCurrentProject: (value: ProjectProps) => void;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
@@ -56,11 +58,13 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,
         setIsOpeningTask,
+        setIsCreatingTask,
         currentSubChatId,
         setCurrentPreviewTask,
         setOpeningService,
         funcSetAllChats,
         setCurrentPreviewTaskId,
+        setCurrentProject,
     } = props;
     const [chatMessages, setChatMessages] = useState(subChat.messages);
 
@@ -92,7 +96,12 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     subChat={subChat}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
+                    setIsMainChatVisible={setIsMainChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
+                    setIsThreadVisible={setIsThreadVisible}
+                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    setIsCreatingTask={setIsCreatingTask}
                 />
 
                 <Box sx={{ px: 0.3, my: 0.2 }}>
@@ -135,6 +144,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             setCurrentMainChat={setCurrentMainChat}
                                             setIsOpeningTask={setIsOpeningTask}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            setCurrentProject={setCurrentProject}
                                         />
                                     </Stack>
                                 </div>

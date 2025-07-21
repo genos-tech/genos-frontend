@@ -12,7 +12,7 @@ export const loadDMHistory = async (
         const api = authApi(accessToken);
         if (api) {
             const query: string = `team_id=${teamId}&team_name=${teamName}&user_id=${userId}`;
-            const res = await api.get(`/dm/getHistory/?${query}`);
+            const res = await api.get(`/dm/history/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

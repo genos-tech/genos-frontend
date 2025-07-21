@@ -27,7 +27,7 @@ import {
     ProjectProps,
     TagListProps,
 } from "../../../../types/tasks";
-import { ChatProps } from "../../../../types/chat";
+import { ChatProps, ThreadProps } from "../../../../types/chat";
 
 const taskContentTemplate: PartialBlock[] = [
     {
@@ -104,10 +104,8 @@ const taskContentTemplate: PartialBlock[] = [
 type CreateTaskProps = {
     socket: Socket | null;
     myself: UserProps;
-    isDm: boolean | null;
-    chatType: number | null;
-    chatId: number | null;
-    threadId: number | null;
+    currentMainChat?: ChatProps;
+    currentThreadChat?: ThreadProps;
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
@@ -133,10 +131,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const {
         socket,
         myself,
-        isDm,
-        chatType,
-        chatId,
-        threadId,
+        currentMainChat,
+        currentThreadChat,
         setIsMainChatVisible,
         setIsThreadVisible,
         isThreadVisible,
@@ -165,9 +161,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         body: [],
         assignee: myself,
         reporter: myself,
-        chatType: isDm === null || isDm === undefined ? null : isDm ? 1 : 2,
-        chatId: chatId,
-        threadId: threadId,
+        chatType:
+            currentMainChat?.isDm === null || currentMainChat?.isDm === undefined
+                ? null
+                : currentMainChat.isDm
+                ? 1
+                : 2,
+        chatId: currentMainChat?.chatId || null,
+        threadId: currentThreadChat?.threadId || null,
         dueDate: getFormattedTodayDateStr(),
         status: { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
         priority: { code: -1, priority: "", color: "", textColor: "" },
@@ -317,10 +318,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 socket={socket}
                 myself={myself}
                 accessToken={accessToken}
-                isDm={isDm}
-                chatType={chatType}
-                chatId={chatId}
-                threadId={threadId}
+                currentMainChat={currentMainChat}
+                currentThreadChat={currentThreadChat}
+                isThreadVisible={isThreadVisible}
                 taskContents={taskContents}
                 taskTitle={taskTitle}
                 setIsSubmitted={setIsSubmitted}
@@ -332,6 +332,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsCreatingTask={setIsCreatingTask}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                setCurrentProject={setCurrentProject}
             />
         </Sheet>
     );

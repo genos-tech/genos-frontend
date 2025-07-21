@@ -88,7 +88,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                         {childTasks.map(
                             ({ assignee, project, id, title, status, tags }, index) => {
                                 return (
-                                    <ListItem key={`${id}-${index}`}>
+                                    <ListItem key={`listitem-${id}-${index}`}>
                                         <AvatarWithStatus
                                             userProfile={assignee}
                                             socket={socket}
@@ -102,13 +102,14 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     setCurrentProject({
                                                         projectId: project.projectId,
                                                         projectName: project.projectName,
+                                                        systemUserId: project.systemUserId,
                                                     });
                                                     setCurrentPreviewTaskId(id);
                                                 }
                                             }}
                                         >
                                             <Chip
-                                                key={`${id}-${index}`} // pass the key directly
+                                                key={`id-chip-${id}-${index}`} // pass the key directly
                                                 variant="outlined"
                                                 color="neutral"
                                                 sx={{
@@ -121,7 +122,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                 {`${id}`}
                                             </Chip>
                                             <Chip
-                                                key={`${id}-${index}`} // pass the key directly
+                                                key={`status-chip-${id}-${index}`} // pass the key directly
                                                 variant="soft"
                                                 sx={{
                                                     marginX: "5px",
@@ -163,7 +164,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         index
                                                     ) => (
                                                         <Chip
-                                                            key={`${id}-${index}`}
+                                                            key={`${id}-${index}-${tagName}`}
                                                             variant="soft"
                                                             sx={{
                                                                 marginX: "5px",

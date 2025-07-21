@@ -77,7 +77,12 @@ type TaskSidebarProps = {
     setCurrentPreviewTaskId: (value: number) => void;
     setOpenCreateTeam: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
-    setOpenJoinProject: (value: { flag: boolean; projectId: number; projectName: string }) => void;
+    setOpenJoinProject: (value: {
+        flag: boolean;
+        projectId: number;
+        projectName: string;
+        systemUserId: string;
+    }) => void;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -410,46 +415,49 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         </Typography>
                                     </ListItemButton>
                                 </ListItem>
-                                {teamProjects.map(({ projectId, projectName, isJoined }) => {
-                                    return (
-                                        isJoined === true && (
-                                            <ListItem key={projectId}>
-                                                <ListItemButton
-                                                    color={"neutral"}
-                                                    variant={
-                                                        projectId === currentProject?.projectId
-                                                            ? "solid"
-                                                            : "plain"
-                                                    }
-                                                    onClick={() =>
-                                                        setCurrentProject({
-                                                            projectId: projectId,
-                                                            projectName: projectName,
-                                                        })
-                                                    }
-                                                    sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                                >
-                                                    <Typography
-                                                        noWrap
-                                                        sx={{
-                                                            color:
-                                                                projectId ===
-                                                                currentProject?.projectId
-                                                                    ? "white"
-                                                                    : "neutral-500",
-                                                            overflow: "hidden",
-                                                            textOverflow: "ellipsis",
-                                                            whiteSpace: "nowrap",
-                                                            width: "100%", // take full width of button
-                                                        }}
+                                {teamProjects.map(
+                                    ({ projectId, projectName, systemUserId, isJoined }) => {
+                                        return (
+                                            isJoined === true && (
+                                                <ListItem key={projectId}>
+                                                    <ListItemButton
+                                                        color={"neutral"}
+                                                        variant={
+                                                            projectId === currentProject?.projectId
+                                                                ? "solid"
+                                                                : "plain"
+                                                        }
+                                                        onClick={() =>
+                                                            setCurrentProject({
+                                                                projectId: projectId,
+                                                                projectName: projectName,
+                                                                systemUserId: systemUserId,
+                                                            })
+                                                        }
+                                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                     >
-                                                        {projectName}
-                                                    </Typography>
-                                                </ListItemButton>
-                                            </ListItem>
-                                        )
-                                    );
-                                })}
+                                                        <Typography
+                                                            noWrap
+                                                            sx={{
+                                                                color:
+                                                                    projectId ===
+                                                                    currentProject?.projectId
+                                                                        ? "white"
+                                                                        : "neutral-500",
+                                                                overflow: "hidden",
+                                                                textOverflow: "ellipsis",
+                                                                whiteSpace: "nowrap",
+                                                                width: "100%", // take full width of button
+                                                            }}
+                                                        >
+                                                            {projectName}
+                                                        </Typography>
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            )
+                                        );
+                                    }
+                                )}
                                 <Toggler
                                     defaultExpanded={false}
                                     renderToggle={({ open, setOpen }) => (
@@ -480,7 +488,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 >
                                     <List sx={{ gap: 0.5 }}>
                                         {teamProjects.map(
-                                            ({ projectId, projectName, isJoined }) => {
+                                            ({
+                                                projectId,
+                                                projectName,
+                                                systemUserId,
+                                                isJoined,
+                                            }) => {
                                                 return (
                                                     isJoined === false && (
                                                         <ListItem key={projectId}>
@@ -497,6 +510,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                         flag: true,
                                                                         projectId: projectId,
                                                                         projectName: projectName,
+                                                                        systemUserId:
+                                                                            systemUserId || "",
                                                                     });
                                                                 }}
                                                                 sx={{

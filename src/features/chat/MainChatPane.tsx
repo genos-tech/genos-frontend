@@ -14,7 +14,7 @@ import { handleAtTop } from "./services/handleBubblePositionAction";
 import { BnEditor } from "../../components/blockNote/bnEditor";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
-import { TaskProps } from "../../types/tasks";
+import { TaskProps, ProjectProps } from "../../types/tasks";
 
 type MessagesPaneProps = {
     currentWindowHeight: number;
@@ -39,6 +39,7 @@ type MessagesPaneProps = {
     setOpeningService: (value: number) => void;
     funcSetAllChats: () => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    setCurrentProject: (value: ProjectProps) => void;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -65,6 +66,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         setOpeningService,
         funcSetAllChats,
         setCurrentPreviewTaskId,
+        setCurrentProject
     } = props;
     const [chatMessages, setChatMessages] = useState(chat.messages);
 
@@ -148,6 +150,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             setCurrentMainChat={setCurrentMainChat}
                                             setIsOpeningTask={setIsOpeningTask}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            setCurrentProject={setCurrentProject}
                                         />
                                     </Stack>
                                 </div>

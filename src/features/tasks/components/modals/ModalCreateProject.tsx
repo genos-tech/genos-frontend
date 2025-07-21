@@ -104,6 +104,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 setCurrentProject({
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,
+                                    systemUserId: createProjectData.project_system_user,
                                 });
                                 setOpenCreateProject(false);
                                 setIsNewProjectCreated(true);
