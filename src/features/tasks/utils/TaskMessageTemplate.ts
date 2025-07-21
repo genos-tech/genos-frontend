@@ -1,3 +1,4 @@
+import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 
 const statusLine = {
@@ -77,11 +78,17 @@ export const taskMessageTemplate = (task: TaskProps) => [
                 styles: {},
             },
             {
+                text: task.assignee.userName,
+                type: "text",
+                styles: { code: true },
+            },
+            { text: " (", type: "text", styles: {} },
+            {
                 href: task.assignee.userEmail,
                 type: "link",
                 content: [{ text: task.assignee.userEmail, type: "text", styles: {} }],
             },
-            { text: " ", type: "text", styles: {} },
+            { text: ") ", type: "text", styles: {} },
         ],
         children: [],
     },
@@ -95,11 +102,17 @@ export const taskMessageTemplate = (task: TaskProps) => [
                 styles: {},
             },
             {
+                text: task.reporter.userName,
+                type: "text",
+                styles: { code: true },
+            },
+            { text: " (", type: "text", styles: {} },
+            {
                 href: task.reporter.userEmail,
                 type: "link",
                 content: [{ text: task.reporter.userEmail, type: "text", styles: {} }],
             },
-            { text: " ", type: "text", styles: {} },
+            { text: ") ", type: "text", styles: {} },
         ],
         children: [],
     },
@@ -117,13 +130,26 @@ export const taskMessageTemplate = (task: TaskProps) => [
     },
 ];
 
-export const taskThreadMessageTemplate = (task: TaskProps) => [
+export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) => [
     {
         type: "paragraph",
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
         content: [
             { text: "Task marked as ", type: "text", styles: {} },
             getStatusConfig(task.status.status || "default"),
+            { text: " by ", type: "text", styles: {} },
+            {
+                text: myself.userName,
+                type: "text",
+                styles: { code: true },
+            },
+            { text: " (", type: "text", styles: {} },
+            {
+                href: myself.userEmail,
+                type: "link",
+                content: [{ text: myself.userEmail, type: "text", styles: {} }],
+            },
+            { text: ") ", type: "text", styles: {} },
         ],
         children: [],
     },
