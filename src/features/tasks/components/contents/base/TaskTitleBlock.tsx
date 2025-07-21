@@ -78,10 +78,26 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         width: "100%",
                         display: "flex",
                         alignItems: "center",
-                        gap: 2,
+                        gap: 0.3,
                         flexGrow: 1,
                     }}
                 >
+                    {isPreviewMode && (
+                        <Box>
+                            <Chip
+                                key={taskContents.id}
+                                variant="soft"
+                                color="neutral"
+                                sx={{
+                                    borderRadius: "7px",
+                                    fontWeight: "bold",
+                                }}
+                                size="lg"
+                            >
+                                ID: {taskContents.id || "N/A"}
+                            </Chip>
+                        </Box>
+                    )}
                     {isPreviewMode && (
                         <Chip
                             key={taskContents.status.status}
@@ -124,20 +140,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             }}
                         />
                     </FormControl>
-                    {isPreviewMode && (
-                        <Box>
-                            <Typography
-                                sx={{
-                                    ml: "10px",
-                                    fontSize: "20px",
-                                    fontWeight: "bold",
-                                    backgroundColor: "transparent",
-                                }}
-                            >
-                                ID:{taskContents.id}
-                            </Typography>
-                        </Box>
-                    )}
                 </Box>
 
                 <IconButton

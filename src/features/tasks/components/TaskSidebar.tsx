@@ -11,6 +11,7 @@ import {
     Sheet,
     Autocomplete,
     CircularProgress,
+    Chip,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -342,6 +343,18 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                     }}
                                                     sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 >
+                                                    <Chip
+                                                        key={taskId}
+                                                        variant="soft"
+                                                        color="neutral"
+                                                        sx={{
+                                                            borderRadius: "7px",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                        size="lg"
+                                                    >
+                                                        ID: {taskId || "N/A"}
+                                                    </Chip>
                                                     <Typography
                                                         noWrap
                                                         sx={{
@@ -351,7 +364,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             width: "100%", // take full width of button
                                                         }}
                                                     >
-                                                        {`${taskId} | ${title}`}
+                                                        {title}
                                                     </Typography>
                                                 </ListItemButton>
                                             </ListItem>

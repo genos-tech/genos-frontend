@@ -50,7 +50,6 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
             </Typography>
 
             <Box sx={{ mb: 1 }}>
-                {taskComments.length === 0 && <div>You can add your comments here !!!</div>}
                 {taskComments.length > 0 && (
                     <>
                         <Box

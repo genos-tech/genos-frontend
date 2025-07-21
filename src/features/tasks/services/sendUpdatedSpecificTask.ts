@@ -53,7 +53,7 @@ export const sendUpdatedSpecificTask = async (
 
             if (res) {
                 const updatedTaskMessage = taskMessageTemplate(updatedTask);
-                const updatedTaskThreadMessage = taskThreadMessageTemplate(myself,updatedTask);
+                const updatedTaskThreadMessage = taskThreadMessageTemplate(myself, updatedTask);
                 if (socket) {
                     socket.emit("message", {
                         methodType: "PUT",
