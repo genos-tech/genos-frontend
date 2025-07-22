@@ -1,11 +1,13 @@
 import { Socket } from "socket.io-client";
-import { useEffect, useRef } from "react";
-import { Box, Stack, Typography, Card, Avatar } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
+import { Box, Stack, Typography, Card, Avatar, Tooltip, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import EditIcon from "@mui/icons-material/Edit";
 
 import { TaskCommentProps } from "../../../../../types/tasks";
 import { BnPreview } from "../../../../../components/blockNote/bnPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
+import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
 import { extractMMDDHHMM } from "../../../../../utils/dateUtils";
 
@@ -31,8 +33,10 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         isCommentUpdated,
         setIsCommentUpdated,
     } = props;
-
     const { mode } = useColorScheme();
+    const [isInEdit, setIsInEdit] = useState<boolean>(false);
+    const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
+    const [targetCommentIndex, setTargetCommentIndex] = useState<number>(taskComments.length - 1);
 
     const boxRef = useRef<HTMLDivElement>(null);
 
@@ -66,7 +70,9 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                 {taskComments.map((comment, index) => {
                                     if (comment.commentBody[0].content.length > 0) {
                                         return (
-                                            <Box key={index}>
+                                            <Box
+                                                key={`${comment.commentId}-${comment.tsUpdated}-${index}`}
+                                            >
                                                 <Card
                                                     sx={{
                                                         backgroundColor:
@@ -99,12 +105,29 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                                                 pl: "5px",
                                                             }}
                                                         >
-                                                            {extractMMDDHHMM(comment.sentAt)}
+                                                            {extractMMDDHHMM(comment.tsSent)}
                                                         </Typography>
                                                     </Stack>
+                                                    <Tooltip title="Edit" size="sm">
+                                                        <IconButton
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setIsInEdit(true);
+                                                                setEditTargetComment(comment);
+                                                                setTargetCommentIndex(index);
+                                                            }}
+                                                            sx={{
+                                                                position: "absolute",
+                                                                top: 5,
+                                                                right: 5,
+                                                            }}
+                                                        >
+                                                            <EditIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                     <BnPreview
                                                         customClassName="task-comment-preview"
-                                                        key={`${taskComments[0].taskId}-${comment.commentId}-${comment.sentAt}`}
+                                                        key={`${taskComments[0].taskId}-${comment.commentId}-${comment.tsSent}`}
                                                         content={comment.commentBody}
                                                         isSent={true}
                                                     />
@@ -119,16 +142,33 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                 )}
             </Box>
 
-            <BnTaskCommentEditor
-                myself={myself}
-                socket={socket}
-                projectId={projectId}
-                taskId={taskId}
-                taskComments={taskComments}
-                setTaskComments={setTaskComments}
-                isCommentUpdated={isCommentUpdated}
-                setIsCommentUpdated={setIsCommentUpdated}
-            />
+            {isInEdit === true && editTargetComment && (
+                <BnUpdateTaskCommentEditor
+                    myself={myself}
+                    socket={socket}
+                    projectId={projectId}
+                    taskId={taskId}
+                    taskComments={taskComments}
+                    setTaskComments={setTaskComments}
+                    isCommentUpdated={isCommentUpdated}
+                    setIsCommentUpdated={setIsCommentUpdated}
+                    targetComment={editTargetComment}
+                    isInEdit={isInEdit}
+                    setIsInEdit={setIsInEdit}
+                />
+            )}
+            {isInEdit === false && (
+                <BnTaskCommentEditor
+                    myself={myself}
+                    socket={socket}
+                    projectId={projectId}
+                    taskId={taskId}
+                    taskComments={taskComments}
+                    setTaskComments={setTaskComments}
+                    isCommentUpdated={isCommentUpdated}
+                    setIsCommentUpdated={setIsCommentUpdated}
+                />
+            )}
         </Box>
     );
 };

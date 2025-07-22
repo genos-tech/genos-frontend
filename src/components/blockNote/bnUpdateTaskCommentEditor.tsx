@@ -82,7 +82,7 @@ const getCustomSlashMenuItems = (
     editor: typeof schema.BlockNoteEditor
 ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
-type BnTaskCommentEditorProps = {
+type BnUpdateTaskCommentEditorProps = {
     myself: UserProps;
     socket: Socket | null;
     projectId: number;
@@ -92,9 +92,12 @@ type BnTaskCommentEditorProps = {
     setTaskComments: (value: TaskCommentProps[]) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
+    targetComment: TaskCommentProps;
+    isInEdit: boolean;
+    setIsInEdit: (value: boolean) => void;
 };
 
-export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
+export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps) => {
     const {
         myself,
         socket,
@@ -105,13 +108,16 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setTaskComments,
         isCommentUpdated,
         setIsCommentUpdated,
+        targetComment,
+        isInEdit,
+        setIsInEdit,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`;
 
     // We use the English, default dictionary
     const locale = en;
-
+    const initialContent: any[] = targetComment.commentBody;
     const editor = useCreateBlockNote({
         schema,
         codeBlock,
@@ -128,6 +134,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 heading: "Custom heading placeholder",
             },
         },
+        initialContent: initialContent,
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -166,18 +173,21 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
     useEffect(() => {
-        editor.replaceBlocks(editor.document, []);
-    }, [taskId]);
+        if (isInEdit === false) {
+            editor.replaceBlocks(editor.document, []);
+        }
+    }, [isInEdit, taskId]);
 
-    const sendComment = async () => {
+    const updateComment = async () => {
         if (socket) {
             if (editor.document.length > 1) {
                 socket.emit(
                     "task_comment",
                     {
-                        method_type: "POST",
+                        method_type: "PUT",
                         project_id: projectId,
                         task_id: taskId,
+                        comment_id: targetComment.commentId,
                         comment_body: editor.document,
                     },
                     (ack: any) => {
@@ -211,7 +221,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     onChange={() => setEditorDocLength(editor.document.length)}
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            sendComment();
+                            updateComment();
+                            setIsInEdit(false);
                         }
                     }}
                 >
@@ -239,15 +250,34 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         sx={{
                             position: "absolute",
                             bottom: "5%",
-                            right: "1%",
+                            right: "75px",
                             zIndex: 1,
                             p: 0.7,
                         }}
                         disabled={editorDocLength < 2}
-                        onClick={sendComment}
+                        onClick={() => {
+                            updateComment();
+                            setIsInEdit(false);
+                        }}
                     >
                         <SendIcon />
                         Send
+                    </IconButton>
+
+                    <IconButton
+                        size="sm"
+                        color="danger"
+                        variant="outlined"
+                        sx={{
+                            position: "absolute",
+                            bottom: "5%",
+                            right: "10px",
+                            zIndex: 1,
+                            p: 0.7,
+                        }}
+                        onClick={async () => setIsInEdit(false)}
+                    >
+                        Cancel
                     </IconButton>
 
                     <Box
