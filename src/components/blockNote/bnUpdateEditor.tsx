@@ -204,7 +204,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         sx={{
                             position: "absolute",
                             bottom: "5%",
-                            right: "1%",
+                            right: "75px",
                             zIndex: 1,
                             p: 0.7,
                         }}
@@ -216,6 +216,22 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                     >
                         <SendIcon />
                         Send
+                    </IconButton>
+
+                    <IconButton
+                        size="sm"
+                        color="danger"
+                        variant="outlined"
+                        sx={{
+                            position: "absolute",
+                            bottom: "5%",
+                            right: "10px",
+                            zIndex: 1,
+                            p: 0.7,
+                        }}
+                        onClick={async () => setIsInEdit(false)}
+                    >
+                        Cancel
                     </IconButton>
 
                     <Box
