@@ -48,7 +48,8 @@ export type TaskCommentProps = {
     senderName: string;
     commentId: number;
     commentBody: PartialBlock[] | any[];
-    sentAt: string;
+    tsSent: string;
+    tsUpdated: string;
     isEdited: boolean;
 };
 
