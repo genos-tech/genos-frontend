@@ -17,6 +17,7 @@ export const loadSpecificThreadMessages = async (
     accessToken: string | null
 ) => {
     try {
+        // TODO: this should be done by worker.
         const api = authApi(accessToken);
         if (api) {
             const queryParts = [

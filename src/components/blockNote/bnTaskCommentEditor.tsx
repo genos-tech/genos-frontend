@@ -154,6 +154,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     commentId: taskComments.length + 1,
                     commentBody: editor.document,
                     sentAt: getCurrentTimestamp(),
+                    isEdited: false,
                 },
             ]);
             editor.replaceBlocks(editor.document, []);

@@ -12,8 +12,9 @@ import {
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import { BnThreadEditor } from "../../components/blockNote/bnThreadEditor";
+import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadEditor";
 import { UserProps } from "../../types/admin";
-import { ThreadProps, ChatProps } from "../../types/chat";
+import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
 
 type MessagesPaneProps = {
@@ -56,10 +57,12 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     } = props;
 
     const [threadMessages, setThreadMessages] = useState(thread.messages || []);
+    const [isInEdit, setIsInEdit] = useState<boolean>(false);
+    const [editTargetMessage, setEditTargetMessage] = useState<ThreadMessageProps>();
 
     useEffect(() => {
         setThreadMessages(thread.messages || []);
-    }, [thread.messages]);
+    }, [thread]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
@@ -149,9 +152,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 socket={socket}
                                                 thread={thread}
                                                 variant={isYou ? "sent" : "received"}
-                                                {...message}
+                                                message={message}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
+                                                setIsInEdit={setIsInEdit}
+                                                setEditTargetMessage={setEditTargetMessage}
                                             />
                                         </Stack>
                                     </div>
@@ -161,12 +166,23 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     </Box>
 
                     <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-                        <BnThreadEditor
-                            myself={myself}
-                            socket={socket}
-                            thread={thread}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                        />
+                        {isInEdit === true && editTargetMessage && (
+                            <BnUpdateThreadEditor
+                                socket={socket}
+                                thread={thread}
+                                message={editTargetMessage}
+                                isInEdit={isInEdit}
+                                setIsInEdit={setIsInEdit}
+                            />
+                        )}
+                        {isInEdit === false && (
+                            <BnThreadEditor
+                                myself={myself}
+                                socket={socket}
+                                thread={thread}
+                                setCurrentThreadChat={setCurrentThreadChat}
+                            />
+                        )}
                     </Box>
                 </Sheet>
             </div>

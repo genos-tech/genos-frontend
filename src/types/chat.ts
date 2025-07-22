@@ -123,6 +123,7 @@ export type NewMessageProps = {
     taskId: number | null;
     taskStatus: string | null;
     project?: ProjectProps;
+    isEdited: boolean;
 };
 
 export type NewThreadMessageProps = {
@@ -148,6 +149,7 @@ export type NewThreadMessageProps = {
     };
     project?: ProjectProps;
     taskExist?: boolean;
+    isEdited: boolean;
 };
 
 // Other Props

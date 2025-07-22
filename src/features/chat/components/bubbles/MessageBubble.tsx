@@ -3,9 +3,8 @@ import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
-import { addThreadMessage } from "../../services/addThreadMessage";
-import { popSpecificThreadMessages } from "../../services/popSpecificThreadMessages";
 import { BubbleReactionButton } from "./BubbleReactionButton";
+import { BubbleEditButton } from "./BubbleEditButton";
 import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleReplyButton } from "./BubbleReplyButton";
@@ -19,10 +18,11 @@ import { useAuth } from "../../../../context/AuthContext";
 import { BnPreview } from "../../../../components/blockNote/bnPreview";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
 
-type MessageBubbleProps = MessageProps & {
+type MessageBubbleProps = {
     myself: UserProps;
     variant: "sent" | "received";
     chat: ChatProps;
+    message: MessageProps;
     socket: Socket | null;
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
@@ -35,6 +35,8 @@ type MessageBubbleProps = MessageProps & {
     setIsOpeningTask: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    setIsInEdit: (value: boolean) => void;
+    setEditTargetMessage: (value: MessageProps) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -42,16 +44,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         myself,
         variant,
         chat,
+        message,
         socket,
-        content,
-        messageId,
-        tsSent,
-        attachment = undefined,
-        sender,
-        numReplies,
-        taskId,
-        project,
-        taskStatus,
         setIsMainChatVisible,
         setIsThreadVisible,
         setCurrentPreviewTask,
@@ -63,10 +57,12 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setIsOpeningTask,
         setCurrentPreviewTaskId,
         setCurrentProject,
+        setIsInEdit,
+        setEditTargetMessage,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
-    const _tsSent = extractHHMM(tsSent);
+    const _tsSent = extractHHMM(message.tsSent);
     const { accessToken } = useAuth();
 
     // Load the thread task if exists
@@ -86,7 +82,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     };
 
     const replayHandler = () => {
-        loadTask(messageId);
+        loadTask(message.messageId);
 
         // Show thread pane on the right side.
         setIsMainChatVisible(true);
@@ -94,8 +90,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setIsTaskPreviewVisible(false);
         setIsTaskCreationVisible(false);
 
-        if (taskId) {
-            setCurrentPreviewTaskId(taskId);
+        if (message.taskId) {
+            setCurrentPreviewTaskId(message.taskId);
         } else {
             setCurrentPreviewTaskId(-1);
         }
@@ -106,16 +102,16 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 {
                     methodType: "POST",
                     isInit: true,
-                    rootMessageTSSent: tsSent,
-                    rootMessageSenderId: sender.userId,
+                    rootMessageTSSent: message.tsSent,
+                    rootMessageSenderId: message.sender.userId,
                     rootMessageReceiverId:
-                        myself.userId === sender.userId
+                        myself.userId === message.sender.userId
                             ? chat.dmPartnerUser === null
                                 ? null
                                 : chat.dmPartnerUser.userId
                             : myself.userId,
-                    threadId: messageId,
-                    threadMessage: content,
+                    threadId: message.messageId,
+                    threadMessage: message.content,
                     isDm: chat.isDm,
                     chatType: chat.chatType,
                     dmPartnerUserId:
@@ -125,26 +121,26 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
                     systemUserId: null,
-                    taskId: taskId || null,
+                    taskId: message.taskId || null,
                     messageIdForPut: null,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
                         chatType: chat.chatType,
-                        messageIdWithChatIdAndThreadId: `${chat.chatId}-${messageId}-1`,
+                        messageIdWithChatIdAndThreadId: `${chat.chatId}-${message.messageId}-1`,
                         chatId: chat.chatId,
-                        threadId: messageId,
+                        threadId: message.messageId,
                         messageId: 1,
-                        content: content,
+                        content: message.content,
                         contentText: "Need to add",
                         sender:
                             chat.chatType === 1
-                                ? myself.userId === sender.userId
+                                ? myself.userId === message.sender.userId
                                     ? myself
                                     : chat.dmPartnerUser || myself
-                                : sender,
-                        taskId: taskId || null,
-                        tsSent: tsSent,
+                                : message.sender,
+                        taskId: message.taskId || null,
+                        tsSent: message.tsSent,
                     };
 
                     if (newThreadMessage) {
@@ -164,15 +160,15 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 isDm: chat.isDm,
                                 chatType: chat.chatType,
                                 dmPartnerUser: chat.dmPartnerUser,
-                                taskId: taskId || null,
+                                taskId: message.taskId || null,
                                 unread: false,
                                 messages: threadMessages,
-                                project: project,
+                                project: message.project,
                                 TSLastMessage: getCurrentTimestamp(),
                                 taskExist: threadMessages[0].taskExist,
                             };
-                            if (project) {
-                                setCurrentProject(project);
+                            if (message.project) {
+                                setCurrentProject(message.project);
                             }
                             if (newThread) {
                                 setCurrentThreadChat(newThread);
@@ -196,10 +192,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 wordBreak: "break-word",
             }}
         >
-            {attachment ? (
+            {message.attachment ? (
                 <BubbleAttachmentSheet
-                    fileName={attachment.fileName}
-                    fileSize={attachment.size}
+                    fileName={message.attachment.fileName}
+                    fileSize={message.attachment.size}
                     isSent={isSent}
                 />
             ) : (
@@ -237,13 +233,15 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     >
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
-                                {!(chat.chatType === 3 && sender.isSystemUser === true) && (
+                                {!(
+                                    chat.chatType === 3 && message.sender.isSystemUser === true
+                                ) && (
                                     <Box sx={{ flex: 1 }}>
                                         <AvatarWithStatus
-                                            userProfile={isSent ? myself : sender}
+                                            userProfile={isSent ? myself : message.sender}
                                             socket={socket}
                                             chat={chat}
-                                            online={sender.online}
+                                            online={message.sender.online}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                         />
@@ -252,49 +250,63 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={1}>
                                         <BubbleUserName
-                                            sender={sender}
+                                            sender={message.sender}
                                             chatType={chat.chatType}
-                                            taskId={taskId}
-                                            taskStatus={taskStatus}
-                                            userName={sender.userName}
+                                            taskId={message.taskId}
+                                            taskStatus={message.taskStatus}
+                                            userName={message.sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}
                                         />
                                         <BubbleReactionButton
-                                            sender={sender}
+                                            sender={message.sender}
                                             chatType={chat.chatType}
                                             isLiked={isLiked}
                                             setIsLiked={setIsLiked}
                                             isSent={isSent}
                                             replayHandler={replayHandler}
                                         />
-                                        {chat.chatType === 3 && sender.isSystemUser === true && (
-                                            <BubbleOpenTaskButton
-                                                taskId={taskId}
-                                                setIsMainChatVisible={setIsMainChatVisible}
-                                                setIsThreadVisible={setIsThreadVisible}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                                setIsOpeningTask={setIsOpeningTask}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        {message.sender.isSystemUser !== true && (
+                                            <BubbleEditButton
+                                                message={message}
+                                                setIsInEdit={setIsInEdit}
+                                                setEditTargetMessage={setEditTargetMessage}
                                             />
                                         )}
+                                        {chat.chatType === 3 &&
+                                            message.sender.isSystemUser === true && (
+                                                <BubbleOpenTaskButton
+                                                    taskId={message.taskId}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsThreadVisible={setIsThreadVisible}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
+                                                    setIsTaskCreationVisible={
+                                                        setIsTaskCreationVisible
+                                                    }
+                                                    setIsOpeningTask={setIsOpeningTask}
+                                                    setCurrentPreviewTaskId={
+                                                        setCurrentPreviewTaskId
+                                                    }
+                                                />
+                                            )}
                                     </Stack>
                                 </Box>
                             </Stack>
 
-                            {content.length > 0 && (
+                            {message.content.length > 0 && (
                                 <BnPreview
-                                    key={`${chat.chatId}-${messageId}-${chat.isDm}-${tsSent}`}
-                                    content={content}
+                                    key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsSent}`}
+                                    content={message.content}
                                     isSent={isSent}
                                 />
                             )}
                         </Stack>
 
-                        {numReplies > 0 ? (
+                        {message.numReplies > 0 ? (
                             <BubbleReplyButton
-                                numReplies={numReplies}
+                                numReplies={message.numReplies}
                                 isSent={isSent}
                                 replayHandler={replayHandler}
                             />

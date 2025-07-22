@@ -332,6 +332,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         subChat={currentSubChat ? currentSubChat : currentMainChat}
                                         myself={myself}
                                         socket={socket}
+                                        currentMainChat={currentMainChat}
                                         setCurrentMainChat={setCurrentMainChat}
                                         setCurrentSubChat={setCurrentSubChat}
                                         setCurrentThreadChat={setCurrentThreadChat}

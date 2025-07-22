@@ -1,10 +1,11 @@
 import * as React from "react";
-import { Box, Stack, Sheet, Avatar } from "@mui/joy";
+import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleReactionButton } from "./BubbleReactionButton";
 import { BubbleUserName } from "./BubbleUserName";
+import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
 import { extractHHMM } from "../../../../utils/dateUtils";
@@ -12,13 +13,16 @@ import { BnPreview } from "../../../../components/blockNote/bnPreview";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
-type threadMessageBubbleProps = ThreadMessageProps & {
+type threadMessageBubbleProps = {
     myself: UserProps;
     socket: Socket | null;
     thread: ThreadProps;
     variant: "sent" | "received";
+    message: ThreadMessageProps;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    setIsInEdit: (value: boolean) => void;
+    setEditTargetMessage: (value: ThreadMessageProps) => void;
 };
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
@@ -27,16 +31,15 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         socket,
         thread,
         variant,
-        content,
-        tsSent,
-        attachment = undefined,
-        sender,
+        message,
         setOpeningService,
         setCurrentMainChat,
+        setIsInEdit,
+        setEditTargetMessage,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
-    const _tsSent = extractHHMM(tsSent);
+    const _tsSent = extractHHMM(message.tsSent);
 
     return (
         <Box
@@ -47,10 +50,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                 wordBreak: "break-word",
             }}
         >
-            {attachment ? (
+            {message.attachment ? (
                 <BubbleAttachmentSheet
-                    fileName={attachment.fileName}
-                    fileSize={attachment.size}
+                    fileName={message.attachment.fileName}
+                    fileSize={message.attachment.size}
                     isSent={isSent}
                 />
             ) : (
@@ -88,13 +91,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                     >
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
-                                {sender.isSystemUser !== true && (
+                                {message.sender.isSystemUser !== true && (
                                     <Box sx={{ flex: 1 }}>
                                         <AvatarWithStatus
-                                            userProfile={isSent ? myself : sender}
+                                            userProfile={isSent ? myself : message.sender}
                                             socket={socket}
                                             thread={thread}
-                                            online={sender.online}
+                                            online={message.sender.online}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                         />
@@ -103,30 +106,37 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 <Box sx={{ flex: 20 }}>
                                     <Stack direction="row" spacing={2}>
                                         <BubbleUserName
-                                            sender={sender}
+                                            sender={message.sender}
                                             chatType={thread.chatType}
                                             taskId={thread.taskId}
                                             taskStatus={null}
-                                            userName={sender.userName}
+                                            userName={message.sender.userName}
                                             isSent={isSent}
                                             tsSent={_tsSent}
                                             isThread={false}
                                         />
                                         <BubbleReactionButton
-                                            sender={sender}
+                                            sender={message.sender}
                                             chatType={thread.chatType}
                                             isLiked={isLiked}
                                             setIsLiked={setIsLiked}
                                             isSent={isSent}
                                         />
+                                        {message.sender.isSystemUser !== true && (
+                                            <BubbleThreadEditButton
+                                                message={message}
+                                                setIsInEdit={setIsInEdit}
+                                                setEditTargetMessage={setEditTargetMessage}
+                                            />
+                                        )}
                                     </Stack>
                                 </Box>
                             </Stack>
 
-                            {content.length > 0 && (
+                            {message.content.length > 0 && (
                                 <BnPreview
-                                    key={`${thread.chatId}-${thread.threadId}-${thread.isDm}-${tsSent}`}
-                                    content={content}
+                                    key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsSent}`}
+                                    content={message.content}
                                     isSent={isSent}
                                 />
                             )}

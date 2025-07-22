@@ -49,6 +49,7 @@ export type TaskCommentProps = {
     commentId: number;
     commentBody: PartialBlock[] | any[];
     sentAt: string;
+    isEdited: boolean;
 };
 
 export type TaskStatusProps = {

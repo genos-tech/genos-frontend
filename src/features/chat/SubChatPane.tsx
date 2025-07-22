@@ -12,8 +12,9 @@ import {
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import { BnEditor } from "../../components/blockNote/bnEditor";
+import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps } from "../../types/chat";
+import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 
 type MessagesPaneProps = {
@@ -67,6 +68,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setCurrentProject,
     } = props;
     const [chatMessages, setChatMessages] = useState(subChat.messages);
+    const [isInEdit, setIsInEdit] = useState<boolean>(false);
+    const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
 
     useEffect(() => {
         setChatMessages(subChat.messages);
@@ -132,8 +135,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             myself={myself}
                                             variant={isYou ? "sent" : "received"}
                                             chat={subChat}
+                                            message={message}
                                             socket={socket}
-                                            {...message}
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
                                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
@@ -145,6 +148,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             setIsOpeningTask={setIsOpeningTask}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                             setCurrentProject={setCurrentProject}
+                                            setIsInEdit={setIsInEdit}
+                                            setEditTargetMessage={setEditTargetMessage}
                                         />
                                     </Stack>
                                 </div>
@@ -152,14 +157,25 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         }}
                     />
                 </Box>
-                <Box sx={{ paddingBottom: 1, paddingLeft: 1, paddingRight: 1 }}>
-                    <BnEditor
-                        myself={myself}
-                        socket={socket}
-                        chat={subChat}
-                        setCurrentChat={setCurrentSubChat}
-                        funcSetAllChats={funcSetAllChats}
-                    />
+                <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+                    {isInEdit === true && editTargetMessage && (
+                        <BnUpdateEditor
+                            socket={socket}
+                            chat={chat}
+                            message={editTargetMessage}
+                            isInEdit={isInEdit}
+                            setIsInEdit={setIsInEdit}
+                        />
+                    )}
+                    {isInEdit === false && (
+                        <BnEditor
+                            myself={myself}
+                            socket={socket}
+                            chat={chat}
+                            setCurrentChat={setCurrentMainChat}
+                            funcSetAllChats={funcSetAllChats}
+                        />
+                    )}
                 </Box>
             </Sheet>
         </div>
