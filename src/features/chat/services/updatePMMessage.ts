@@ -13,7 +13,7 @@ export const updatePMMessage = async (
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.put("/pm/singleMessage/", {
+            const res = await api.put("/pm/message/", {
                 project_id: projectId,
                 task_id: taskId,
                 message_id: messageId,

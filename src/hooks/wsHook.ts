@@ -5,6 +5,7 @@ import { addChat } from "../features/chat/services/addChat";
 import { addMessage } from "../features/chat/services/addMessage";
 import { addThreadMessage } from "../features/chat/services/addThreadMessage";
 import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
+import { loadSpecificThreadMessages } from "../features/chat/services/loadSpecificThreadMessages";
 import { UserProps } from "../types/admin";
 import {
     AllChatProps,
@@ -32,29 +33,6 @@ type wsHookProps = {
     isLoading: boolean;
 };
 
-const makeUpdatedChat = async (
-    currentMainChat: ChatProps | undefined,
-    newMessage: NewMessageProps
-): Promise<ChatProps> => {
-    return {
-        chatId: newMessage.chatId,
-        chatName: newMessage.chatName,
-        systemUserId: newMessage.systemUserId,
-        isDm: newMessage.isDm,
-        chatType: newMessage.chatType,
-        dmPartnerUser: newMessage.dmPartnerUser,
-        unread: false,
-        messages:
-            currentMainChat === undefined
-                ? []
-                : await popSpecificMessages(newMessage.chatId, newMessage.chatType),
-        latestMessage: newMessage,
-        latestMessageText: newMessage.contentText,
-        TSLastMessage: newMessage.tsSent,
-        project: newMessage.project,
-    };
-};
-
 export const wsHook = (props: wsHookProps) => {
     const {
         socket,
@@ -72,27 +50,134 @@ export const wsHook = (props: wsHookProps) => {
         isLoading,
     } = props;
 
-    const updateChat = async (
-        chatName: string,
-        dmPartnerUser: UserProps | null,
-        newMessage: NewMessageProps,
-        newChatMessage: MessageProps
-    ) => {
+    const updateAllChat = async (currentChat: ChatProps, newChatMessage: MessageProps) => {
         const newChat: AllChatProps = {
-            chatId: newMessage.chatId,
-            chatName: chatName,
-            isDm: newMessage.isDm ? true : false,
-            chatType: newMessage.chatType,
-            systemUserId: newMessage.systemUserId,
-            dmPartnerUser: dmPartnerUser,
+            chatId: currentChat.chatId,
+            chatName: currentChat.chatName,
+            isDm: currentChat.isDm ? true : false,
+            chatType: currentChat.chatType,
+            systemUserId: currentChat.systemUserId,
+            dmPartnerUser: currentChat.dmPartnerUser,
             unread: true,
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
             TSLastMessage: newChatMessage.tsSent,
         };
         if (newChat) {
-            await addChat(newChat, newMessage.chatType);
+            await addChat(newChat, currentChat.chatType);
             funcSetAllChats();
+        }
+    };
+
+    const makeUpdatedChat = async (
+        currentChat: ChatProps,
+        newMessage: NewMessageProps
+    ): Promise<ChatProps> => {
+        const updatedChat = await popSpecificMessages(currentChat.chatId, currentChat.chatType);
+        return {
+            chatId: currentChat.chatId,
+            chatName: currentChat.chatName,
+            systemUserId: currentChat.systemUserId,
+            isDm: currentChat.isDm,
+            chatType: currentChat.chatType,
+            dmPartnerUser: currentChat.dmPartnerUser,
+            unread: false,
+            messages: updatedChat,
+            latestMessage: newMessage,
+            latestMessageText: newMessage.contentText,
+            TSLastMessage: newMessage.tsSent,
+            project: currentChat.project,
+        };
+    };
+
+    const putMessageHandler = async (newMessage: NewMessageProps) => {
+        if (newMessage.isEdited === true) {
+            // console.log("newMessage:", newMessage);
+            // console.log("currentMainChat:", currentMainChat);
+            const newChatMessage: MessageProps = {
+                chatType: newMessage.chatType,
+                messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
+                chatId: newMessage.chatId,
+                messageId: newMessage.messageId,
+                content: newMessage.content,
+                contentText: newMessage.contentText,
+                sender: newMessage.sender,
+                tsSent: newMessage.tsSent,
+                numReplies: newMessage.numReplies,
+                taskId: newMessage.taskId,
+                taskStatus: newMessage.taskStatus,
+            };
+
+            await addMessage(newChatMessage, newChatMessage.chatType);
+
+            if (newMessage.chatId === currentMainChat?.chatId || currentMainChat?.chatId === -1) {
+                const updatedChat = await makeUpdatedChat(currentMainChat, newMessage);
+                setCurrentMainChat(updatedChat);
+                await updateAllChat(currentMainChat, newChatMessage);
+            } else if (newMessage.chatId === currentSubChat?.chatId) {
+                const updatedChat = await makeUpdatedChat(currentSubChat, newMessage);
+                setCurrentSubChat(updatedChat);
+                await updateAllChat(currentSubChat, newChatMessage);
+            }
+        }
+    };
+
+    const makeUpdatedThreadChat = async (
+        currentThread: ThreadProps,
+        newMessage: NewThreadMessageProps
+    ): Promise<ThreadProps> => {
+        const updatedMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
+            myself,
+            currentThread.chatType,
+            currentThread.chatId,
+            currentThread.threadId,
+            accessToken
+        );
+        return {
+            chatType: currentThread.chatType,
+            chatId: currentThread.chatId,
+            chatName: currentThread.chatName,
+            systemUserId: currentThread.systemUserId,
+            threadId: currentThread.threadId,
+            isDm: currentThread.isDm,
+            dmPartnerUser: currentThread.dmPartnerUser,
+            taskId: currentThread.taskId,
+            unread: false,
+            messages: updatedMessages,
+            TSLastMessage: newMessage.tsSent,
+            project: newMessage.project,
+            taskExist: currentThread.taskId ? true : false,
+        };
+    };
+
+    const putThreadMessageHandler = async (newThreadMessage: NewThreadMessageProps) => {
+        if (newThreadMessage.isEdited === true) {
+            const newChatMessage: ThreadMessageProps = {
+                chatType: newThreadMessage.chatType,
+                messageIdWithChatIdAndThreadId: `${newThreadMessage.chatId}-${newThreadMessage.threadId}-${newThreadMessage.messageId}`,
+                chatId: newThreadMessage.chatId,
+                threadId: newThreadMessage.threadId,
+                messageId: newThreadMessage.messageId,
+                content: newThreadMessage.content,
+                contentText: newThreadMessage.contentText,
+                sender: newThreadMessage.sender,
+                tsSent: newThreadMessage.tsSent,
+                taskId: newThreadMessage.taskId,
+            };
+
+            await addThreadMessage(newChatMessage, newChatMessage.chatType);
+
+            if (
+                currentThreadChat !== undefined &&
+                newThreadMessage.chatId === currentThreadChat.chatId &&
+                newThreadMessage.threadId === currentThreadChat.threadId
+            ) {
+                const updatedThreadChat = await makeUpdatedThreadChat(
+                    currentThreadChat,
+                    newThreadMessage
+                );
+                setCurrentThreadChat(updatedThreadChat);
+            }
         }
     };
 
@@ -174,14 +259,23 @@ export const wsHook = (props: wsHookProps) => {
                                     }
                                 }
 
-                                if (fromMe === false && toMe === true) {
-                                    addThreadMessage(newThreadMessage, newMessage.chatType);
-                                    if (
-                                        currentThreadChat !== undefined &&
-                                        newMessage.chatId === currentThreadChat.chatId &&
-                                        newThreadMessage.threadId === currentThreadChat.threadId
-                                    ) {
-                                        setCurrentThreadChat(updatedThreadChat);
+                                if (newMessage.isEdited === true) {
+                                    if (fromMe === false && toMe === false) {
+                                        // Do nothing because it's someones DM
+                                    } else {
+                                        await putThreadMessageHandler(newMessage);
+                                    }
+                                } else {
+                                    if (fromMe === false && toMe === true) {
+                                        addThreadMessage(newThreadMessage, newMessage.chatType);
+                                        if (
+                                            currentThreadChat !== undefined &&
+                                            newMessage.chatId === currentThreadChat.chatId &&
+                                            newThreadMessage.threadId ===
+                                                currentThreadChat.threadId
+                                        ) {
+                                            setCurrentThreadChat(updatedThreadChat);
+                                        }
                                     }
                                 }
                             } else if (message.chatType === 2) {
@@ -192,14 +286,19 @@ export const wsHook = (props: wsHookProps) => {
                                     console.log("GM thread from someone");
                                 }
 
-                                if (fromMe === false) {
-                                    addThreadMessage(newThreadMessage, newMessage.chatType);
-                                    if (
-                                        currentThreadChat !== undefined &&
-                                        newMessage.chatId === currentThreadChat.chatId &&
-                                        newThreadMessage.threadId === currentThreadChat.threadId
-                                    ) {
-                                        setCurrentThreadChat(updatedThreadChat);
+                                if (newMessage.isEdited === true) {
+                                    await putThreadMessageHandler(newMessage);
+                                } else {
+                                    if (fromMe === false) {
+                                        addThreadMessage(newThreadMessage, newMessage.chatType);
+                                        if (
+                                            currentThreadChat !== undefined &&
+                                            newMessage.chatId === currentThreadChat.chatId &&
+                                            newThreadMessage.threadId ===
+                                                currentThreadChat.threadId
+                                        ) {
+                                            setCurrentThreadChat(updatedThreadChat);
+                                        }
                                     }
                                 }
                             } else if (newMessage.chatType === 3) {
@@ -210,14 +309,19 @@ export const wsHook = (props: wsHookProps) => {
                                     console.log("PM thread from someone");
                                 }
 
-                                if (fromMe === false) {
-                                    addThreadMessage(newThreadMessage, newMessage.chatType);
-                                    if (
-                                        currentThreadChat !== undefined &&
-                                        newMessage.chatId === currentThreadChat.chatId &&
-                                        newThreadMessage.threadId === currentThreadChat.threadId
-                                    ) {
-                                        setCurrentThreadChat(updatedThreadChat);
+                                if (newMessage.isEdited === true) {
+                                    await putThreadMessageHandler(newMessage);
+                                } else {
+                                    if (fromMe === false) {
+                                        addThreadMessage(newThreadMessage, newMessage.chatType);
+                                        if (
+                                            currentThreadChat !== undefined &&
+                                            newMessage.chatId === currentThreadChat.chatId &&
+                                            newThreadMessage.threadId ===
+                                                currentThreadChat.threadId
+                                        ) {
+                                            setCurrentThreadChat(updatedThreadChat);
+                                        }
                                     }
                                 }
                             } else {
@@ -266,33 +370,40 @@ export const wsHook = (props: wsHookProps) => {
                                     }
                                 }
 
-                                if (fromMe === false && toMe === true) {
-                                    await addMessage(newChatMessage, newMessage.chatType);
-                                    await updateChat(
-                                        newMessage.sender.userName,
-                                        newMessage.sender,
-                                        newMessage,
-                                        newChatMessage
-                                    );
-
-                                    const updatedChat = await makeUpdatedChat(
-                                        currentMainChat,
-                                        newMessage
-                                    );
-
-                                    if (
-                                        newMessage.chatId === currentMainChat?.chatId ||
-                                        currentMainChat?.chatId === -1
-                                    ) {
-                                        setCurrentMainChat(updatedChat);
-                                    } else if (newMessage.chatId === currentSubChat?.chatId) {
-                                        setCurrentSubChat(updatedChat);
+                                if (newMessage.isEdited === true) {
+                                    if (fromMe === false && toMe === false) {
+                                        // Do nothing because it's someones DM
+                                    } else {
+                                        await putMessageHandler(newMessage);
                                     }
-                                } else if (fromMe === true) {
-                                    // Do nothing cause adding the new message
-                                    // and updating chat are done by Editor component.
                                 } else {
-                                    // Do nothing cause it's DM for others.
+                                    if (fromMe === false && toMe === true) {
+                                        await addMessage(newChatMessage, newMessage.chatType);
+
+                                        if (
+                                            newMessage.chatId === currentMainChat?.chatId ||
+                                            currentMainChat?.chatId === -1
+                                        ) {
+                                            const updatedChat = await makeUpdatedChat(
+                                                currentMainChat,
+                                                newMessage
+                                            );
+                                            setCurrentMainChat(updatedChat);
+                                            await updateAllChat(currentMainChat, newChatMessage);
+                                        } else if (newMessage.chatId === currentSubChat?.chatId) {
+                                            const updatedChat = await makeUpdatedChat(
+                                                currentSubChat,
+                                                newMessage
+                                            );
+                                            setCurrentSubChat(updatedChat);
+                                            await updateAllChat(currentSubChat, newChatMessage);
+                                        }
+                                    } else if (fromMe === true) {
+                                        // Do nothing cause adding the new message
+                                        // and updating chat are done by Editor component.
+                                    } else {
+                                        // Do nothing cause it's DM for others.
+                                    }
                                 }
                             } else if (newMessage.chatType === 2) {
                                 if (newMessage.sender.userId === myself.userId) {
@@ -302,30 +413,41 @@ export const wsHook = (props: wsHookProps) => {
                                     console.log("GM from someone");
                                 }
 
-                                if (fromMe === false) {
-                                    if (allChats.length > 0) {
-                                        await addMessage(newChatMessage, newMessage.chatType);
-                                        await updateChat(
-                                            newMessage.chatName,
-                                            null,
-                                            newMessage,
-                                            newChatMessage
-                                        );
-
-                                        const updatedChat = await makeUpdatedChat(
-                                            currentMainChat,
-                                            newMessage
-                                        );
-
-                                        if (newMessage.chatId === currentMainChat?.chatId) {
-                                            setCurrentMainChat(updatedChat);
-                                        } else if (newMessage.chatId === currentSubChat?.chatId) {
-                                            setCurrentSubChat(updatedChat);
-                                        }
-                                    }
+                                if (newMessage.isEdited === true) {
+                                    await putMessageHandler(newMessage);
                                 } else {
-                                    // Do nothing cause adding the new message
-                                    // and updating chat are done by Editor component.
+                                    if (fromMe === false) {
+                                        if (allChats.length > 0) {
+                                            await addMessage(newChatMessage, newMessage.chatType);
+
+                                            if (newMessage.chatId === currentMainChat?.chatId) {
+                                                const updatedChat = await makeUpdatedChat(
+                                                    currentMainChat,
+                                                    newMessage
+                                                );
+                                                setCurrentMainChat(updatedChat);
+                                                await updateAllChat(
+                                                    currentMainChat,
+                                                    newChatMessage
+                                                );
+                                            } else if (
+                                                newMessage.chatId === currentSubChat?.chatId
+                                            ) {
+                                                const updatedChat = await makeUpdatedChat(
+                                                    currentSubChat,
+                                                    newMessage
+                                                );
+                                                setCurrentSubChat(updatedChat);
+                                                await updateAllChat(
+                                                    currentSubChat,
+                                                    newChatMessage
+                                                );
+                                            }
+                                        }
+                                    } else {
+                                        // Do nothing cause adding the new message
+                                        // and updating chat are done by Editor component.
+                                    }
                                 }
                             } else if (newMessage.chatType === 3) {
                                 if (newMessage.sender.userId === myself.userId) {
@@ -335,30 +457,41 @@ export const wsHook = (props: wsHookProps) => {
                                     console.log("PM from someone");
                                 }
 
-                                if (fromMe === false) {
-                                    if (allChats.length > 0) {
-                                        await addMessage(newChatMessage, newMessage.chatType);
-                                        await updateChat(
-                                            newMessage.chatName,
-                                            null,
-                                            newMessage,
-                                            newChatMessage
-                                        );
-
-                                        const updatedChat = await makeUpdatedChat(
-                                            currentMainChat,
-                                            newMessage
-                                        );
-
-                                        if (newMessage.chatId === currentMainChat?.chatId) {
-                                            setCurrentMainChat(updatedChat);
-                                        } else if (newMessage.chatId === currentSubChat?.chatId) {
-                                            setCurrentSubChat(updatedChat);
-                                        }
-                                    }
+                                if (newMessage.isEdited === true) {
+                                    await putMessageHandler(newMessage);
                                 } else {
-                                    // Do nothing cause adding the new message
-                                    // and updating chat are done by Editor component.
+                                    if (fromMe === false) {
+                                        if (allChats.length > 0) {
+                                            await addMessage(newChatMessage, newMessage.chatType);
+
+                                            if (newMessage.chatId === currentMainChat?.chatId) {
+                                                const updatedChat = await makeUpdatedChat(
+                                                    currentMainChat,
+                                                    newMessage
+                                                );
+                                                setCurrentMainChat(updatedChat);
+                                                await updateAllChat(
+                                                    currentMainChat,
+                                                    newChatMessage
+                                                );
+                                            } else if (
+                                                newMessage.chatId === currentSubChat?.chatId
+                                            ) {
+                                                const updatedChat = await makeUpdatedChat(
+                                                    currentSubChat,
+                                                    newMessage
+                                                );
+                                                setCurrentSubChat(updatedChat);
+                                                await updateAllChat(
+                                                    currentSubChat,
+                                                    newChatMessage
+                                                );
+                                            }
+                                        }
+                                    } else {
+                                        // Do nothing cause adding the new message
+                                        // and updating chat are done by Editor component.
+                                    }
                                 }
                             } else {
                                 console.error("Unknown chatType:", newMessage.chatType);

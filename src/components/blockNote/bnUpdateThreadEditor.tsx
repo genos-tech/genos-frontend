@@ -4,11 +4,11 @@ import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import SendIcon from "@mui/icons-material/Send";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { en } from "@blocknote/core/locales";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { BlockNoteView } from "@blocknote/mantine";
 import { codeBlock } from "@blocknote/code-block";
+import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
@@ -29,13 +29,10 @@ import {
     defaultBlockSpecs,
 } from "@blocknote/core";
 
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { Mention } from "./Mention";
+import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
-import { UserProps } from "../../types/admin";
-import { ThreadMessageProps, ThreadProps } from "../../types/chat";
-import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
+import { ThreadProps, ThreadMessageProps } from "../../types/chat";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -83,21 +80,21 @@ const getCustomSlashMenuItems = (
     editor: typeof schema.BlockNoteEditor
 ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
-type BnThreadEditorProps = {
-    myself: UserProps;
+type BnUpdateThreadEditorProps = {
     socket: Socket | null;
     thread: ThreadProps;
-    setCurrentThreadChat: (chat: ThreadProps) => void;
+    message: ThreadMessageProps;
+    isInEdit: boolean;
+    setIsInEdit: (value: boolean) => void;
 };
-
-export const BnThreadEditor = (props: BnThreadEditorProps) => {
-    const { myself, socket, thread, setCurrentThreadChat } = props;
+export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
+    const { socket, thread, message, isInEdit, setIsInEdit } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`;
 
     // We use the English, default dictionary
     const locale = en;
-
+    const initialContent: any[] = message.content;
     const editor = useCreateBlockNote({
         schema,
         codeBlock,
@@ -114,6 +111,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 heading: "Custom heading placeholder",
             },
         },
+        initialContent: initialContent,
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -122,101 +120,47 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
         setShowEmojiPicker(false);
     };
-
     useEffect(() => {
         if (selectedEmoji !== null) {
             insertEmoji(selectedEmoji);
         }
     }, [selectedEmoji]);
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+
+    const [editorDocLength, setEditorDocLength] = useState<number>(message.content.length);
 
     useEffect(() => {
-        editor.replaceBlocks(editor.document, []);
-    }, [thread]);
+        if (isInEdit === false) {
+            editor.replaceBlocks(editor.document, []);
+        }
+    }, [isInEdit]);
 
-    const sendingThreadMessage = async () => {
+    useEffect(() => {
+        const newInitialContent: any[] = message.content;
+        editor.replaceBlocks(editor.document, newInitialContent);
+    }, [message]);
+
+    const sendUpdatedMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
-            // Set input text
-            const content: any[] | any = editor.document.slice(-2, -1)[0].content;
-            var contentText: string = "Something wrong....";
-            if (content.length > 0) {
-                contentText = content.map((item: any) => item.text).join(" ");
-            }
-
-            socket.emit(
-                "thread_message",
-                {
-                    methodType: "POST",
-                    isInit: false,
-                    rootMessageTSSent: "",
-                    rootMessageSenderId: null,
-                    rootMessageReceiverId: null,
-                    threadId: thread.threadId,
-                    threadMessage: editor.document,
-                    isDm: thread.isDm,
-                    chatType: thread.chatType,
-                    dmPartnerUserId:
-                        thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
-                    senderId: myself.userId,
-                    senderName: myself.userName,
-                    destCGName: thread.chatName,
-                    destCGId: thread.chatId,
-                    taskId: thread.taskId,
-                    systemUserId: thread.systemUserId || null,
-                    messageIdForPut: null,
-                },
-                (ack: any) => {
-                    const updatedChat: ThreadProps = {
-                        chatId: thread.chatId,
-                        chatName: thread.chatName,
-                        threadId: thread.threadId,
-                        isDm: thread.isDm,
-                        chatType: thread.chatType,
-                        dmPartnerUser: thread.dmPartnerUser,
-                        taskId: thread.taskId,
-                        unread: false,
-                        messages: [
-                            ...thread.messages,
-                            {
-                                chatType: thread.chatType,
-                                messageIdWithChatIdAndThreadId: `${thread.chatId}-${
-                                    thread.threadId
-                                }-${String(Number(thread.messages.length) + 1)}`,
-                                chatId: thread.chatId,
-                                threadId: thread.threadId,
-                                messageId: Number(thread.messages.length) + 1,
-                                content: editor.document,
-                                contentText: contentText,
-                                sender: myself,
-                                tsSent: getCurrentTimestamp(),
-                                taskId: thread.taskId,
-                            },
-                        ],
-                        TSLastMessage: getCurrentTimestamp(),
-                        taskExist: thread.taskId !== null ? true : false,
-                    };
-                    setCurrentThreadChat(updatedChat);
-
-                    const newThreadMessage: ThreadMessageProps = {
-                        chatType: thread.chatType,
-                        messageIdWithChatIdAndThreadId: `${thread.chatId}-${
-                            thread.threadId
-                        }-${String(Number(thread.messages.length) + 1)}`,
-                        chatId: thread.chatId,
-                        threadId: thread.threadId,
-                        messageId: Number(thread.messages.length) + 1,
-                        content: editor.document,
-                        contentText: contentText,
-                        sender: myself,
-                        tsSent: getCurrentTimestamp(),
-                        taskId: thread.taskId,
-                    };
-
-                    addThreadMessage(newThreadMessage, thread.chatType);
-
-                    editor.replaceBlocks(editor.document, []);
-                }
-            );
+            socket.emit("thread_message", {
+                methodType: "PUT",
+                isInit: false,
+                rootMessageTSSent: "",
+                rootMessageSenderId: null,
+                rootMessageReceiverId: null,
+                threadId: thread.threadId,
+                threadMessage: editor.document,
+                isDm: thread.isDm,
+                chatType: thread.chatType,
+                dmPartnerUserId:
+                    thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
+                senderId: message.sender.userId,
+                senderName: message.sender.userName,
+                destCGName: thread.chatName,
+                destCGId: thread.chatId,
+                taskId: thread.taskId,
+                systemUserId: null,
+                messageIdForPut: message.messageId,
+            });
         }
     };
 
@@ -236,9 +180,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
                     onChange={() => setEditorDocLength(editor.document.length)}
-                    onKeyDown={(event) => {
+                    onKeyDown={async (event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            sendingThreadMessage();
+                            sendUpdatedMessage();
+                            setIsInEdit(false);
                         }
                     }}
                 >
@@ -271,7 +216,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             p: 0.7,
                         }}
                         disabled={editorDocLength < 2}
-                        onClick={sendingThreadMessage}
+                        onClick={async () => {
+                            sendUpdatedMessage();
+                            setIsInEdit(false);
+                        }}
                     >
                         <SendIcon />
                         Send
