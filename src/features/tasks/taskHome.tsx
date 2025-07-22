@@ -293,7 +293,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 <PanelGroup direction="horizontal">
                     {currentProject && (
                         <>
-                            <Panel id={"1"} order={1} minSize={5} maxSize={20}>
+                            <Panel id={"1"} order={1} defaultSize={15} minSize={5} maxSize={20}>
                                 <TaskSidebar
                                     myself={myself}
                                     setMyself={setMyself}
@@ -642,7 +642,13 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     />
 
                                     {/* right pane */}
-                                    <Panel id={"3"} order={3} minSize={30} maxSize={100}>
+                                    <Panel
+                                        id={"3"}
+                                        order={3}
+                                        defaultSize={50}
+                                        minSize={30}
+                                        maxSize={100}
+                                    >
                                         <Box
                                             sx={{
                                                 px: { xs: 1, md: 2 },
