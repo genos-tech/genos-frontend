@@ -7,7 +7,7 @@ export const loadTaskComments = async (taskId: number, accessToken: string | nul
         const api = authApi(accessToken);
         if (api) {
             const query: string = `task_id=${taskId}`;
-            const res = await api.get(`/task/getComments/?${query}`);
+            const res = await api.get(`/task/comment/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");
