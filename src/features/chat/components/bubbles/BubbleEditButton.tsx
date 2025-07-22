@@ -6,9 +6,17 @@ type BubbleEditButtonTypes = {
     message: MessageProps;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: MessageProps) => void;
+    currentMessageIndex: number;
+    setTargetMessageIndex: (value: number) => void;
 };
 export const BubbleEditButton = (props: BubbleEditButtonTypes) => {
-    const { message, setIsInEdit, setEditTargetMessage } = props;
+    const {
+        message,
+        setIsInEdit,
+        setEditTargetMessage,
+        currentMessageIndex,
+        setTargetMessageIndex,
+    } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
             <>
@@ -18,6 +26,7 @@ export const BubbleEditButton = (props: BubbleEditButtonTypes) => {
                         onClick={() => {
                             setIsInEdit(true);
                             setEditTargetMessage(message);
+                            setTargetMessageIndex(currentMessageIndex);
                         }}
                         sx={{ ml: "0px" }}
                     >

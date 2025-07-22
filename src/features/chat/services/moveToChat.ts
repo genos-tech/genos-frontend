@@ -102,6 +102,7 @@ export const moveToSelectedChat = async (
                         contentText: "joined",
                         sender: myself,
                         tsSent: getCurrentTimestamp(),
+                        tsUpdated: getCurrentTimestamp(),
                         numReplies: 0,
                         taskId: null,
                         taskStatus: null,

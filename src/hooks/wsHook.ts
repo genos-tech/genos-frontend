@@ -103,6 +103,7 @@ export const wsHook = (props: wsHookProps) => {
                 contentText: newMessage.contentText,
                 sender: newMessage.sender,
                 tsSent: newMessage.tsSent,
+                tsUpdated: newMessage.tsUpdated,
                 numReplies: newMessage.numReplies,
                 taskId: newMessage.taskId,
                 taskStatus: newMessage.taskStatus,
@@ -162,6 +163,7 @@ export const wsHook = (props: wsHookProps) => {
                 contentText: newThreadMessage.contentText,
                 sender: newThreadMessage.sender,
                 tsSent: newThreadMessage.tsSent,
+                tsUpdated: newThreadMessage.tsUpdated,
                 taskId: newThreadMessage.taskId,
             };
 
@@ -215,6 +217,7 @@ export const wsHook = (props: wsHookProps) => {
                             contentText: newMessage.contentText,
                             sender: newMessage.sender,
                             tsSent: newMessage.tsSent,
+                            tsUpdated: newMessage.tsUpdated,
                             taskId: newMessage.taskId,
                         };
                         const updatedThreadChat: ThreadProps = {
@@ -341,6 +344,7 @@ export const wsHook = (props: wsHookProps) => {
                             sender: newMessage.sender,
                             numReplies: newMessage.numReplies,
                             tsSent: newMessage.tsSent,
+                            tsUpdated: newMessage.tsUpdated,
                             taskId: newMessage.taskId,
                             taskStatus: newMessage.taskStatus,
                         };

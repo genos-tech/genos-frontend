@@ -6,9 +6,17 @@ type BubbleThreadEditButtonTypes = {
     message: ThreadMessageProps;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: ThreadMessageProps) => void;
+    currentMessageIndex: number;
+    setTargetMessageIndex: (value: number) => void;
 };
 export const BubbleThreadEditButton = (props: BubbleThreadEditButtonTypes) => {
-    const { message, setIsInEdit, setEditTargetMessage } = props;
+    const {
+        message,
+        setIsInEdit,
+        setEditTargetMessage,
+        currentMessageIndex,
+        setTargetMessageIndex,
+    } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
             <>
@@ -18,6 +26,7 @@ export const BubbleThreadEditButton = (props: BubbleThreadEditButtonTypes) => {
                         onClick={() => {
                             setIsInEdit(true);
                             setEditTargetMessage(message);
+                            setTargetMessageIndex(currentMessageIndex);
                         }}
                         sx={{ ml: "0px" }}
                     >

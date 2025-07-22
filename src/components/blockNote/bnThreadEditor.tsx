@@ -189,6 +189,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                                 contentText: contentText,
                                 sender: myself,
                                 tsSent: getCurrentTimestamp(),
+                                tsUpdated: getCurrentTimestamp(),
                                 taskId: thread.taskId,
                             },
                         ],
@@ -209,6 +210,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         contentText: contentText,
                         sender: myself,
                         tsSent: getCurrentTimestamp(),
+                        tsUpdated: getCurrentTimestamp(),
                         taskId: thread.taskId,
                     };
 

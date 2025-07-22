@@ -64,6 +64,7 @@ export type MessageProps = {
     contentText: string;
     sender: UserProps;
     tsSent: string;
+    tsUpdated: string;
     isLiked?: boolean | false;
     numReplies: number;
     unreadThread?: boolean | true;
@@ -90,6 +91,7 @@ export type ThreadMessageProps = {
     sender: UserProps;
     taskId: number | null;
     tsSent: string;
+    tsUpdated: string;
     isLiked?: boolean | false;
     attachment?: {
         fileName: string;
@@ -113,6 +115,7 @@ export type NewMessageProps = {
     contentText: string;
     sender: UserProps;
     tsSent: string;
+    tsUpdated: string;
     isLiked?: boolean | false;
     numReplies: number;
     attachment?: {
@@ -141,6 +144,7 @@ export type NewThreadMessageProps = {
     sender: UserProps;
     taskId: number | null;
     tsSent: string;
+    tsUpdated: string;
     isLiked?: boolean | false;
     attachment?: {
         fileName: string;

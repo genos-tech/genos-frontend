@@ -70,6 +70,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const [chatMessages, setChatMessages] = useState(subChat.messages);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
+    const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
 
     useEffect(() => {
         setChatMessages(subChat.messages);
@@ -77,7 +78,11 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
-    useScrollToBottomOnNewMessage(virtuosoRef as React.RefObject<VirtuosoHandle>, subChat);
+    useScrollToBottomOnNewMessage(
+        virtuosoRef as React.RefObject<VirtuosoHandle>,
+        subChat,
+        targetMessageIndex
+    );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentSubChatId
@@ -150,6 +155,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             setCurrentProject={setCurrentProject}
                                             setIsInEdit={setIsInEdit}
                                             setEditTargetMessage={setEditTargetMessage}
+                                            currentMessageIndex={index}
+                                            setTargetMessageIndex={setTargetMessageIndex}
                                         />
                                     </Stack>
                                 </div>

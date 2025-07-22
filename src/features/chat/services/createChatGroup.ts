@@ -56,6 +56,7 @@ const addGMChatAndMessage = async (
         contentText: "Created this group",
         sender: myself,
         tsSent: getCurrentTimestamp(),
+        tsUpdated: getCurrentTimestamp(),
         numReplies: 0,
         taskId: null,
         taskStatus: null,

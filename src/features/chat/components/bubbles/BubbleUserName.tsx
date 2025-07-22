@@ -4,21 +4,36 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../../types/admin";
 import { statuses } from "../../../tasks/utils/taskMeta";
+import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
 
 type BubbleUserNameTypes = {
     sender: UserProps;
     chatType: number;
     userName: string;
     isSent: boolean;
+    dtSent: string;
     tsSent: string;
+    tsUpdated: string;
     taskId: number | null;
     taskStatus: string | null;
     isThread?: boolean;
 };
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
-    const { sender, chatType, userName, isSent, tsSent, taskId, taskStatus, isThread } = props;
+    const {
+        sender,
+        chatType,
+        userName,
+        isSent,
+        dtSent,
+        tsSent,
+        tsUpdated,
+        taskId,
+        taskStatus,
+        isThread,
+    } = props;
     const { mode } = useColorScheme();
     const taskStatusDetails = statuses.find((item) => item.status === taskStatus);
+    const isEdited = extractMMDDHHMMSSs(tsSent) === extractMMDDHHMMSSs(tsUpdated) ? false : true;
 
     return (
         <Box sx={{ flex: 1 }}>
@@ -90,8 +105,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                     </Chip>
                                 </>
                             )}
-                            {chatType !== 3 && <>Created at: {tsSent}</>}
-                            {chatType === 3 && <>Last Updated: {tsSent}</>}
+                            {isEdited === true && <>{dtSent} Edited</>}
+                            {isEdited === false && <>{dtSent}</>}
                         </Typography>
                     </>
                 )}
@@ -127,7 +142,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                       },
                             ]}
                         >
-                            {tsSent}
+                            {isEdited === true && <>{dtSent} Edited</>}
+                            {isEdited === false && <>{dtSent}</>}
                         </Typography>
                     </>
                 )}

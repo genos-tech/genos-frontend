@@ -23,6 +23,8 @@ type threadMessageBubbleProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: ThreadMessageProps) => void;
+    currentMessageIndex: number;
+    setTargetMessageIndex: (value: number) => void;
 };
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
@@ -36,10 +38,12 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         setCurrentMainChat,
         setIsInEdit,
         setEditTargetMessage,
+        currentMessageIndex,
+        setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
-    const _tsSent = extractHHMM(message.tsSent);
+    const dtSent = extractHHMM(message.tsSent);
 
     return (
         <Box
@@ -112,7 +116,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             taskStatus={null}
                                             userName={message.sender.userName}
                                             isSent={isSent}
-                                            tsSent={_tsSent}
+                                            dtSent={dtSent}
+                                            tsSent={message.tsSent}
+                                            tsUpdated={message.tsUpdated}
                                             isThread={false}
                                         />
                                         <BubbleReactionButton
@@ -122,11 +128,17 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             setIsLiked={setIsLiked}
                                             isSent={isSent}
                                         />
+                                        {/* 
+                                        TODO: How to edit the first message in the thread?
+                                        When we edit it, we also need to update the parent message.
+                                        */}
                                         {message.sender.isSystemUser !== true && (
                                             <BubbleThreadEditButton
                                                 message={message}
                                                 setIsInEdit={setIsInEdit}
                                                 setEditTargetMessage={setEditTargetMessage}
+                                                currentMessageIndex={currentMessageIndex}
+                                                setTargetMessageIndex={setTargetMessageIndex}
                                             />
                                         )}
                                     </Stack>
@@ -135,7 +147,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
                             {message.content.length > 0 && (
                                 <BnPreview
-                                    key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsSent}`}
+                                    key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                                     content={message.content}
                                     isSent={isSent}
                                 />

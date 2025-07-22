@@ -37,6 +37,8 @@ type MessageBubbleProps = {
     setCurrentProject: (value: ProjectProps) => void;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: MessageProps) => void;
+    currentMessageIndex: number;
+    setTargetMessageIndex: (value: number) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -59,10 +61,12 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setCurrentProject,
         setIsInEdit,
         setEditTargetMessage,
+        currentMessageIndex,
+        setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
     const [isLiked, setIsLiked] = React.useState<boolean>(false);
-    const _tsSent = extractHHMM(message.tsSent);
+    const dtSent = extractHHMM(message.tsSent);
     const { accessToken } = useAuth();
 
     // Load the thread task if exists
@@ -141,6 +145,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 : message.sender,
                         taskId: message.taskId || null,
                         tsSent: message.tsSent,
+                        tsUpdated: message.tsSent,
                     };
 
                     if (newThreadMessage) {
@@ -256,7 +261,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             taskStatus={message.taskStatus}
                                             userName={message.sender.userName}
                                             isSent={isSent}
-                                            tsSent={_tsSent}
+                                            dtSent={dtSent}
+                                            tsSent={message.tsSent}
+                                            tsUpdated={message.tsUpdated}
                                         />
                                         <BubbleReactionButton
                                             sender={message.sender}
@@ -271,6 +278,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 message={message}
                                                 setIsInEdit={setIsInEdit}
                                                 setEditTargetMessage={setEditTargetMessage}
+                                                currentMessageIndex={currentMessageIndex}
+                                                setTargetMessageIndex={setTargetMessageIndex}
                                             />
                                         )}
                                         {chat.chatType === 3 &&
@@ -297,7 +306,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                             {message.content.length > 0 && (
                                 <BnPreview
-                                    key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsSent}`}
+                                    key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
                                     content={message.content}
                                     isSent={isSent}
                                 />
