@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
-import { PartialBlock } from "@blocknote/core";
 
 import { MessageBubble } from "./components/bubbles/MessageBubble";
 import { MainChatPaneHeader } from "./components/headers/MainChatPaneHeader";
@@ -75,6 +74,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     const [chatMessages, setChatMessages] = useState(chat.messages);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
+    const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
 
     useEffect(() => {
         setChatMessages(chat.messages);
@@ -82,7 +82,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
-    useScrollToBottomOnNewMessage(virtuosoRef as React.RefObject<VirtuosoHandle>, chat);
+    useScrollToBottomOnNewMessage(
+        virtuosoRef as React.RefObject<VirtuosoHandle>,
+        chat,
+        targetMessageIndex
+    );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentMainChatId
@@ -159,6 +163,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             setCurrentProject={setCurrentProject}
                                             setIsInEdit={setIsInEdit}
                                             setEditTargetMessage={setEditTargetMessage}
+                                            currentMessageIndex={index}
+                                            setTargetMessageIndex={setTargetMessageIndex}
                                         />
                                     </Stack>
                                 </div>

@@ -3,7 +3,8 @@ import { VirtuosoHandle } from "react-virtuoso";
 
 export const useScrollToBottomOnNewMessage = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
-    chat: any
+    chat: any,
+    targetIndex: number
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
@@ -12,7 +13,7 @@ export const useScrollToBottomOnNewMessage = (
         } else {
             setTimeout(() => {
                 virtuoso.scrollToIndex({
-                    index: "LAST",
+                    index: targetIndex,
                     behavior: "smooth",
                 });
             }, 200); // wait 200ms

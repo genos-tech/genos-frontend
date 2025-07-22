@@ -59,6 +59,9 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     const [threadMessages, setThreadMessages] = useState(thread.messages || []);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<ThreadMessageProps>();
+    const [targetMessageIndex, setTargetMessageIndex] = useState<number>(
+        threadMessages.length - 1
+    );
 
     useEffect(() => {
         setThreadMessages(thread.messages || []);
@@ -66,7 +69,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
-    useScrollToBottomOnNewMessage(virtuosoRef as React.RefObject<VirtuosoHandle>, thread);
+    useScrollToBottomOnNewMessage(
+        virtuosoRef as React.RefObject<VirtuosoHandle>,
+        thread,
+        targetMessageIndex
+    );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentThreadChatId
@@ -157,6 +164,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setIsInEdit={setIsInEdit}
                                                 setEditTargetMessage={setEditTargetMessage}
+                                                currentMessageIndex={index}
+                                                setTargetMessageIndex={setTargetMessageIndex}
                                             />
                                         </Stack>
                                     </div>

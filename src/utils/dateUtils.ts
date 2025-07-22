@@ -61,6 +61,11 @@ const checkTimestampDay = (
     }
 };
 
+export const extractMMDDHHMMSSs = (ts: string) => {
+    const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
+    return tsLocal;
+};
+
 export const extractMMDDHHMM = (ts: string) => {
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
     const tsDay: string = checkTimestampDay(ts);

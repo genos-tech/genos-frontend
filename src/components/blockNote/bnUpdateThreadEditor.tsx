@@ -161,6 +161,22 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 systemUserId: null,
                 messageIdForPut: message.messageId,
             });
+            if (message.messageId === 1) {
+                socket.emit("message", {
+                    methodType: "PUT",
+                    message: editor.document,
+                    destCGName: thread.chatName,
+                    destCGId: thread.chatId,
+                    isDm: thread.isDm,
+                    chatType: thread.chatType,
+                    dmPartnerUserId:
+                        thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
+                    taskId: thread.taskId,
+                    taskStatus: null,
+                    systemUserId: null,
+                    messageIdForPut: thread.threadId,
+                });
+            }
         }
     };
 
