@@ -84,6 +84,7 @@ type TaskSidebarProps = {
         projectName: string;
         systemUserId: string;
     }) => void;
+    setIsTaskHomeVisible: (value: boolean) => void;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -99,6 +100,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setOpenCreateTeam,
         setOpenCreateProject,
         setOpenJoinProject,
+        setIsTaskHomeVisible,
     } = props;
     const { accessToken } = useAuth();
 
@@ -286,6 +288,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                             onClick={() => {
                                 setTaskTableVisible(true);
                                 setIsDashboardVisible(false);
+                                setIsTaskHomeVisible(true);
                             }}
                         >
                             <TableChartIcon />
@@ -440,13 +443,14 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                 ? "solid"
                                                                 : "plain"
                                                         }
-                                                        onClick={() =>
+                                                        onClick={() => {
+                                                            setIsTaskHomeVisible(true);
                                                             setCurrentProject({
                                                                 projectId: projectId,
                                                                 projectName: projectName,
                                                                 systemUserId: systemUserId,
-                                                            })
-                                                        }
+                                                            });
+                                                        }}
                                                         sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                     >
                                                         <Typography

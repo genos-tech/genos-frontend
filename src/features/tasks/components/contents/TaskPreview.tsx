@@ -44,6 +44,9 @@ type TaskPreviewProps = {
     setCurrentPreviewTaskId: (value: number) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
+    setIsTaskHomeVisible: (value: boolean) => void;
+    isTaskContentVisible: boolean;
+    isCreatingTask: boolean;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -68,6 +71,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setCurrentPreviewTaskId,
         isCommentUpdated,
         setIsCommentUpdated,
+        setIsTaskHomeVisible,
+        isTaskContentVisible,
+        isCreatingTask,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -308,6 +314,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 isThreadVisible={isThreadVisible}
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
+                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                isTaskContentVisible={isTaskContentVisible}
+                isCreatingTask={isCreatingTask}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

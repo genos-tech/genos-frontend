@@ -125,6 +125,9 @@ type CreateTaskProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     parentTaskId: number | null;
     rootTaskId: number | null;
+    setIsTaskHomeVisible: (value: boolean) => void;
+    isTaskContentVisible: boolean;
+    isCreatingTask: boolean;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -150,6 +153,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setCurrentMainChat,
         parentTaskId,
         rootTaskId,
+        setIsTaskHomeVisible,
+        isTaskContentVisible,
+        isCreatingTask,
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
@@ -278,6 +284,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 isThreadVisible={isThreadVisible}
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
+                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                isTaskContentVisible={isTaskContentVisible}
+                isCreatingTask={isCreatingTask}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

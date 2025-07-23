@@ -17,6 +17,7 @@ import {
 import { CssVarsProvider } from "@mui/joy/styles";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CancelIcon from "@mui/icons-material/Cancel";
 import MoreVert from "@mui/icons-material/MoreVert";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
@@ -76,6 +77,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
+    const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
     const [isTaskContentVisible, setIsTaskPreviewVisible] = useState(false);
@@ -306,6 +308,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOpenCreateTeam={setOpenCreateTeam}
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
+                                    setIsTaskHomeVisible={setIsTaskHomeVisible}
                                 />
                             </Panel>
 
@@ -320,254 +323,283 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 className="resize-handle"
                             />
 
-                            {/* left pane */}
-                            <Panel id={"2"} order={2} minSize={30} maxSize={100}>
-                                <Box
-                                    component="main"
-                                    className="MainContent"
-                                    sx={{
-                                        px: { xs: 1, md: 2 },
-                                        pt: {
-                                            xs: "calc(12px + var(--Header-height))",
-                                            sm: "calc(12px + var(--Header-height))",
-                                            md: 3,
-                                        },
-                                        pb: { xs: 2, sm: 2, md: 3 },
-                                        flex: 1,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        minWidth: 0,
-                                        height: "100dvh",
-                                        overflow: "hidden",
-                                        gap: 1,
-                                    }}
-                                >
+                            {/* left pane (task-home) */}
+                            {isTaskHomeVisible === true && (
+                                <Panel id={"2"} order={2} minSize={30} maxSize={100}>
                                     <Box
+                                        component="main"
+                                        className="MainContent"
                                         sx={{
+                                            px: { xs: 1, md: 2 },
+                                            pt: {
+                                                xs: "calc(12px + var(--Header-height))",
+                                                sm: "calc(12px + var(--Header-height))",
+                                                md: 3,
+                                            },
+                                            pb: { xs: 2, sm: 2, md: 3 },
+                                            flex: 1,
                                             display: "flex",
-                                            mb: 1,
+                                            flexDirection: "column",
+                                            minWidth: 0,
+                                            height: "100dvh",
+                                            overflow: "hidden",
                                             gap: 1,
-                                            flexDirection: { xs: "column", sm: "row" },
-                                            alignItems: { xs: "start", sm: "center" },
-                                            flexWrap: "wrap",
-                                            justifyContent: "space-between",
                                         }}
                                     >
-                                        <Typography
-                                            level="h2"
-                                            component="h1"
+                                        <Box
                                             sx={{
                                                 display: "flex",
-                                                alignItems: "center", // vertical centering
-                                                justifyContent: "center", // horizontal centering
-                                                gap: "8px", // space between text and dropdown (optional)
+                                                mb: 1,
+                                                gap: 1,
+                                                flexDirection: { xs: "column", sm: "row" },
+                                                alignItems: { xs: "start", sm: "center" },
+                                                flexWrap: "wrap",
+                                                justifyContent: "space-between",
                                             }}
                                         >
-                                            {currentProject.projectName}
-                                            <Dropdown>
-                                                <MenuButton
-                                                    slots={{ root: IconButton }}
-                                                    slotProps={{ root: { color: "neutral" } }}
-                                                >
-                                                    <Chip
-                                                        variant="soft"
-                                                        color={
-                                                            displayTaskType.id === 1
-                                                                ? "primary"
-                                                                : displayTaskType.id === 2
-                                                                ? "success"
-                                                                : displayTaskType.id === 3
-                                                                ? "danger"
-                                                                : "neutral"
-                                                        }
-                                                        sx={{
-                                                            fontWeight: "bold",
-                                                            borderRadius: "7px",
-                                                        }}
-                                                        size="lg"
-                                                    >
-                                                        {displayTaskType.name}
-                                                    </Chip>
-                                                </MenuButton>
-                                                <Menu size="sm">
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            setDisplayTaskType(taskTypes.ongoing);
-                                                        }}
-                                                    >
-                                                        <Chip
-                                                            variant="soft"
-                                                            color="primary"
-                                                            sx={{
-                                                                borderRadius: "7px",
-                                                            }}
-                                                            size="lg"
-                                                        >
-                                                            {taskTypes.ongoing.name}
-                                                        </Chip>
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            setDisplayTaskType(taskTypes.closed);
-                                                        }}
-                                                    >
-                                                        <Chip
-                                                            variant="soft"
-                                                            color="success"
-                                                            sx={{
-                                                                borderRadius: "7px",
-                                                            }}
-                                                            size="lg"
-                                                        >
-                                                            {taskTypes.closed.name}
-                                                        </Chip>
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            setDisplayTaskType(taskTypes.deleted);
-                                                        }}
-                                                    >
-                                                        <Chip
-                                                            variant="soft"
-                                                            color="danger"
-                                                            sx={{
-                                                                borderRadius: "7px",
-                                                            }}
-                                                            size="lg"
-                                                        >
-                                                            {taskTypes.deleted.name}
-                                                        </Chip>
-                                                    </MenuItem>
-                                                </Menu>
-                                            </Dropdown>
-                                        </Typography>
-
-                                        <Box sx={{ width: "50%" }}>
-                                            <Autocomplete
-                                                sx={{ width: "100%" }}
-                                                placeholder={"Search"}
-                                                variant="soft"
-                                                open={openSearch}
-                                                onOpen={() => {
-                                                    setOpenSearch(true);
-                                                }}
-                                                onClose={() => {
-                                                    setOpenSearch(false);
-                                                }}
-                                                isOptionEqualToValue={(option, value) =>
-                                                    option.projectId === value.projectId
-                                                }
-                                                getOptionLabel={(option) =>
-                                                    `${option.taskId} | ${option.title}`
-                                                }
-                                                options={teamTaskOptions}
-                                                loading={loading}
-                                                endDecorator={
-                                                    loading ? (
-                                                        <CircularProgress
-                                                            size="sm"
-                                                            sx={{ bgcolor: "background.surface" }}
-                                                        />
-                                                    ) : null
-                                                }
-                                                slotProps={{
-                                                    listbox: {
-                                                        sx: {
-                                                            zIndex: 10020,
-                                                        },
-                                                    },
-                                                }}
-                                                onChange={(event, value) => onChangeHandler(value)}
-                                                size="sm"
-                                                startDecorator={<SearchRoundedIcon />}
-                                                aria-label="Search"
-                                                groupBy={(option) => option.projectName}
-                                            />
-                                        </Box>
-
-                                        <Box>
-                                            <IconButton
-                                                component="p"
-                                                variant="outlined"
-                                                size="sm"
+                                            <Typography
+                                                level="h2"
+                                                component="h1"
                                                 sx={{
-                                                    fontSize: "15px",
-                                                    paddingRight: "10px",
-                                                }}
-                                                onClick={() => {
-                                                    setIsCreatingTask({
-                                                        flag: true,
-                                                        parentTaskId: null,
-                                                        rootTaskId: null,
-                                                    });
+                                                    display: "flex",
+                                                    alignItems: "center", // vertical centering
+                                                    justifyContent: "center", // horizontal centering
+                                                    gap: "8px", // space between text and dropdown (optional)
                                                 }}
                                             >
-                                                <AddIcon />
-                                                Task
-                                            </IconButton>
-                                            <Dropdown>
-                                                <MenuButton
-                                                    slots={{ root: IconButton }}
-                                                    slotProps={{ root: { color: "neutral" } }}
-                                                >
-                                                    <MoreVert />
-                                                </MenuButton>
-                                                <Menu size="sm">
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            setOpenCreateProject(true);
-                                                        }}
+                                                {currentProject.projectName}
+                                                <Dropdown>
+                                                    <MenuButton
+                                                        slots={{ root: IconButton }}
+                                                        slotProps={{ root: { color: "neutral" } }}
                                                     >
-                                                        <AddIcon />
-                                                        New Project
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            setOpenCreateTag(true);
-                                                        }}
-                                                    >
-                                                        <AddIcon />
-                                                        New Tag
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            setOpenDeleteProject({
-                                                                flag: true,
-                                                                projectId:
-                                                                    currentProject.projectId,
-                                                                projectName:
-                                                                    currentProject.projectName,
-                                                            });
-                                                        }}
-                                                    >
-                                                        <DeleteIcon />
-                                                        Delete Project
-                                                    </MenuItem>
-                                                </Menu>
-                                            </Dropdown>
-                                        </Box>
-                                    </Box>
+                                                        <Chip
+                                                            variant="soft"
+                                                            color={
+                                                                displayTaskType.id === 1
+                                                                    ? "primary"
+                                                                    : displayTaskType.id === 2
+                                                                    ? "success"
+                                                                    : displayTaskType.id === 3
+                                                                    ? "danger"
+                                                                    : "neutral"
+                                                            }
+                                                            sx={{
+                                                                fontWeight: "bold",
+                                                                borderRadius: "7px",
+                                                            }}
+                                                            size="lg"
+                                                        >
+                                                            {displayTaskType.name}
+                                                        </Chip>
+                                                    </MenuButton>
+                                                    <Menu size="sm">
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                setDisplayTaskType(
+                                                                    taskTypes.ongoing
+                                                                );
+                                                            }}
+                                                        >
+                                                            <Chip
+                                                                variant="soft"
+                                                                color="primary"
+                                                                sx={{
+                                                                    borderRadius: "7px",
+                                                                }}
+                                                                size="lg"
+                                                            >
+                                                                {taskTypes.ongoing.name}
+                                                            </Chip>
+                                                        </MenuItem>
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                setDisplayTaskType(
+                                                                    taskTypes.closed
+                                                                );
+                                                            }}
+                                                        >
+                                                            <Chip
+                                                                variant="soft"
+                                                                color="success"
+                                                                sx={{
+                                                                    borderRadius: "7px",
+                                                                }}
+                                                                size="lg"
+                                                            >
+                                                                {taskTypes.closed.name}
+                                                            </Chip>
+                                                        </MenuItem>
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                setDisplayTaskType(
+                                                                    taskTypes.deleted
+                                                                );
+                                                            }}
+                                                        >
+                                                            <Chip
+                                                                variant="soft"
+                                                                color="danger"
+                                                                sx={{
+                                                                    borderRadius: "7px",
+                                                                }}
+                                                                size="lg"
+                                                            >
+                                                                {taskTypes.deleted.name}
+                                                            </Chip>
+                                                        </MenuItem>
+                                                    </Menu>
+                                                </Dropdown>
+                                            </Typography>
 
-                                    {isDashboardVisible === true && (
-                                        <>
-                                            <TaskDashboard />
-                                        </>
-                                    )}
-                                    {isTaskTableVisible === true && (
-                                        <>
-                                            <TaskTable
-                                                myself={myself}
-                                                ongoingTasks={ongoingTasks}
-                                                closedTasks={closedTasks}
-                                                deletedTasks={deletedTasks}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                displayTaskType={displayTaskType}
-                                            />
-                                        </>
-                                    )}
-                                </Box>
-                            </Panel>
+                                            <Box sx={{ width: "50%" }}>
+                                                <Autocomplete
+                                                    sx={{ width: "100%" }}
+                                                    placeholder={"Search"}
+                                                    variant="soft"
+                                                    open={openSearch}
+                                                    onOpen={() => {
+                                                        setOpenSearch(true);
+                                                    }}
+                                                    onClose={() => {
+                                                        setOpenSearch(false);
+                                                    }}
+                                                    isOptionEqualToValue={(option, value) =>
+                                                        option.projectId === value.projectId
+                                                    }
+                                                    getOptionLabel={(option) =>
+                                                        `${option.taskId} | ${option.title}`
+                                                    }
+                                                    options={teamTaskOptions}
+                                                    loading={loading}
+                                                    endDecorator={
+                                                        loading ? (
+                                                            <CircularProgress
+                                                                size="sm"
+                                                                sx={{
+                                                                    bgcolor: "background.surface",
+                                                                }}
+                                                            />
+                                                        ) : null
+                                                    }
+                                                    slotProps={{
+                                                        listbox: {
+                                                            sx: {
+                                                                zIndex: 10020,
+                                                            },
+                                                        },
+                                                    }}
+                                                    onChange={(event, value) =>
+                                                        onChangeHandler(value)
+                                                    }
+                                                    size="sm"
+                                                    startDecorator={<SearchRoundedIcon />}
+                                                    aria-label="Search"
+                                                    groupBy={(option) => option.projectName}
+                                                />
+                                            </Box>
+
+                                            <Box>
+                                                <IconButton
+                                                    component="p"
+                                                    variant="outlined"
+                                                    size="sm"
+                                                    sx={{
+                                                        fontSize: "15px",
+                                                        paddingRight: "10px",
+                                                    }}
+                                                    onClick={() => {
+                                                        setIsCreatingTask({
+                                                            flag: true,
+                                                            parentTaskId: null,
+                                                            rootTaskId: null,
+                                                        });
+                                                    }}
+                                                >
+                                                    <AddIcon />
+                                                    Task
+                                                </IconButton>
+                                                {(isTaskContentVisible === true ||
+                                                    isCreatingTask.flag === true) && (
+                                                    <IconButton
+                                                        size="sm"
+                                                        variant="plain"
+                                                        color="neutral"
+                                                        onClick={() => {
+                                                            setIsTaskHomeVisible(false);
+                                                        }}
+                                                    >
+                                                        <CancelIcon />
+                                                    </IconButton>
+                                                )}
+                                                <Dropdown>
+                                                    <MenuButton
+                                                        slots={{ root: IconButton }}
+                                                        slotProps={{ root: { color: "neutral" } }}
+                                                    >
+                                                        <MoreVert />
+                                                    </MenuButton>
+                                                    <Menu size="sm">
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                setOpenCreateProject(true);
+                                                            }}
+                                                        >
+                                                            <AddIcon />
+                                                            New Project
+                                                        </MenuItem>
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                setOpenCreateTag(true);
+                                                            }}
+                                                        >
+                                                            <AddIcon />
+                                                            New Tag
+                                                        </MenuItem>
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                setOpenDeleteProject({
+                                                                    flag: true,
+                                                                    projectId:
+                                                                        currentProject.projectId,
+                                                                    projectName:
+                                                                        currentProject.projectName,
+                                                                });
+                                                            }}
+                                                        >
+                                                            <DeleteIcon />
+                                                            Delete Project
+                                                        </MenuItem>
+                                                    </Menu>
+                                                </Dropdown>
+                                            </Box>
+                                        </Box>
+
+                                        {isDashboardVisible === true && (
+                                            <>
+                                                <TaskDashboard />
+                                            </>
+                                        )}
+                                        {isTaskTableVisible === true && (
+                                            <>
+                                                <TaskTable
+                                                    myself={myself}
+                                                    ongoingTasks={ongoingTasks}
+                                                    closedTasks={closedTasks}
+                                                    deletedTasks={deletedTasks}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
+                                                    setCurrentPreviewTaskId={
+                                                        setCurrentPreviewTaskId
+                                                    }
+                                                    displayTaskType={displayTaskType}
+                                                />
+                                            </>
+                                        )}
+                                    </Box>
+                                </Panel>
+                            )}
 
                             {isCreatingTask.flag && (
                                 <>
@@ -621,6 +653,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setOpeningService={setOpeningService}
                                                 parentTaskId={isCreatingTask.parentTaskId}
                                                 rootTaskId={isCreatingTask.rootTaskId}
+                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                isTaskContentVisible={isTaskContentVisible}
+                                                isCreatingTask={isCreatingTask.flag}
                                             />
                                         </Box>
                                     </Panel>
@@ -683,6 +718,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 isCommentUpdated={isCommentUpdated}
                                                 setIsCommentUpdated={setIsCommentUpdated}
+                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                isTaskContentVisible={isTaskContentVisible}
+                                                isCreatingTask={isCreatingTask.flag}
                                             />
                                         </Box>
                                     </Panel>
@@ -706,6 +744,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOpenCreateTeam={setOpenCreateTeam}
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
+                                    setIsTaskHomeVisible={setIsTaskHomeVisible}
                                 />
                             </Panel>
 
