@@ -61,7 +61,7 @@ const taskContentTemplate: PartialBlock[] = [
             textAlignment: "left",
             backgroundColor: "default",
         },
-        content: [{ text: "🪜 Background / Context", type: "text", styles: {} }],
+        content: [{ text: "🪜 Motivation", type: "text", styles: {} }],
         children: [],
     },
     {
@@ -84,13 +84,13 @@ const taskContentTemplate: PartialBlock[] = [
             textAlignment: "left",
             backgroundColor: "default",
         },
-        content: [{ text: "🎯 Goals / Expected Outcome", type: "text", styles: {} }],
+        content: [{ text: "🎯 Further Context", type: "text", styles: {} }],
         children: [],
     },
     {
         type: "paragraph",
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
-        content: [{ text: "What is the desired result?", type: "text", styles: { code: true } }],
+        content: [{ text: "Any other sharing?", type: "text", styles: { code: true } }],
         children: [],
     },
     {
