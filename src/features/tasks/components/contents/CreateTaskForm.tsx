@@ -125,9 +125,9 @@ type CreateTaskProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     parentTaskId: number | null;
     rootTaskId: number | null;
-    setIsTaskHomeVisible: (value: boolean) => void;
-    isTaskContentVisible: boolean;
-    isCreatingTask: boolean;
+    setIsTaskHomeVisible?: (value: boolean) => void;
+    isTaskContentVisible?: boolean;
+    isCreatingTask?: boolean;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {

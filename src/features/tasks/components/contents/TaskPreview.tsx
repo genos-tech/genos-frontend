@@ -44,9 +44,9 @@ type TaskPreviewProps = {
     setCurrentPreviewTaskId: (value: number) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
-    setIsTaskHomeVisible: (value: boolean) => void;
-    isTaskContentVisible: boolean;
-    isCreatingTask: boolean;
+    setIsTaskHomeVisible?: (value: boolean) => void;
+    isTaskContentVisible?: boolean;
+    isCreatingTask?: boolean;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {

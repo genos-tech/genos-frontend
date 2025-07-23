@@ -37,9 +37,9 @@ type TaskTitleBlockProps = {
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
     setIsTaskCreationVisible?: (value: boolean) => void;
-    setIsTaskHomeVisible: (value: boolean) => void;
-    isTaskContentVisible: boolean;
-    isCreatingTask: boolean;
+    setIsTaskHomeVisible?: (value: boolean) => void;
+    isTaskContentVisible?: boolean;
+    isCreatingTask?: boolean;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -169,7 +169,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         if (setIsTaskPreviewVisible) {
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (isCreatingTask === false) {
-                                setIsTaskHomeVisible(true);
+                                if (setIsTaskHomeVisible) {
+                                    setIsTaskHomeVisible(true);
+                                }
                                 setIsTaskPreviewVisible(false);
                             }
                         }
@@ -177,7 +179,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             setIsTaskCreationVisible(false);
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (isTaskContentVisible === false) {
-                                setIsTaskHomeVisible(true);
+                                if (setIsTaskHomeVisible) {
+                                    setIsTaskHomeVisible(true);
+                                }
                             }
                         }
                     }}

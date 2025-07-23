@@ -47,6 +47,11 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         }
     }, [taskComments]); // Re-scroll on content change
 
+    const totalComments = taskComments.reduce(
+        (sum, taskComment) => sum + (taskComment.commentBody?.length ?? 0),
+        0
+    );
+
     return (
         <Box sx={{ mt: 2 }}>
             <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
@@ -60,7 +65,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                             ref={boxRef}
                             className="custom-scrollbar"
                             sx={{
-                                height: Math.min(taskComments.length * 150, 500),
+                                height: Math.min(100 + totalComments * 50, 700),
                                 pb: "10px",
                                 overflowY: "scroll",
                                 overflowX: "hidden",
