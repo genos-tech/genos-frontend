@@ -11,7 +11,6 @@ import {
     MenuButton,
     Menu,
     MenuItem,
-    Typography,
 } from "@mui/joy";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -38,6 +37,9 @@ type TaskTitleBlockProps = {
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
     setIsTaskCreationVisible?: (value: boolean) => void;
+    setIsTaskHomeVisible: (value: boolean) => void;
+    isTaskContentVisible: boolean;
+    isCreatingTask: boolean;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -58,6 +60,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         isThreadVisible,
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,
+        setIsTaskHomeVisible,
+        isTaskContentVisible,
+        isCreatingTask,
     } = props;
 
     const { mode } = useColorScheme();
@@ -162,10 +167,18 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         }
                         // setIsThreadVisible(); // Not update, keep as it is !!!
                         if (setIsTaskPreviewVisible) {
-                            setIsTaskPreviewVisible(false);
+                            // Open task-home when both task-preview and task-create-form are closed.
+                            if (isCreatingTask === false) {
+                                setIsTaskHomeVisible(true);
+                                setIsTaskPreviewVisible(false);
+                            }
                         }
                         if (setIsTaskCreationVisible) {
                             setIsTaskCreationVisible(false);
+                            // Open task-home when both task-preview and task-create-form are closed.
+                            if (isTaskContentVisible === false) {
+                                setIsTaskHomeVisible(true);
+                            }
                         }
                     }}
                 >

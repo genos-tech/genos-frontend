@@ -61,7 +61,7 @@ const taskContentTemplate: PartialBlock[] = [
             textAlignment: "left",
             backgroundColor: "default",
         },
-        content: [{ text: "🪜 Background / Context", type: "text", styles: {} }],
+        content: [{ text: "🪜 Motivation", type: "text", styles: {} }],
         children: [],
     },
     {
@@ -84,13 +84,13 @@ const taskContentTemplate: PartialBlock[] = [
             textAlignment: "left",
             backgroundColor: "default",
         },
-        content: [{ text: "🎯 Goals / Expected Outcome", type: "text", styles: {} }],
+        content: [{ text: "🎯 Further Context", type: "text", styles: {} }],
         children: [],
     },
     {
         type: "paragraph",
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
-        content: [{ text: "What is the desired result?", type: "text", styles: { code: true } }],
+        content: [{ text: "Any other sharing?", type: "text", styles: { code: true } }],
         children: [],
     },
     {
@@ -125,6 +125,9 @@ type CreateTaskProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     parentTaskId: number | null;
     rootTaskId: number | null;
+    setIsTaskHomeVisible: (value: boolean) => void;
+    isTaskContentVisible: boolean;
+    isCreatingTask: boolean;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -150,6 +153,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setCurrentMainChat,
         parentTaskId,
         rootTaskId,
+        setIsTaskHomeVisible,
+        isTaskContentVisible,
+        isCreatingTask,
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
@@ -278,6 +284,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 isThreadVisible={isThreadVisible}
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
+                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                isTaskContentVisible={isTaskContentVisible}
+                isCreatingTask={isCreatingTask}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />
