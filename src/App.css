@@ -351,14 +351,14 @@ div[data-floating-ui-focusable] {
 .bn-task-box-light .bn-editor {
   padding-top: 20px;
   padding-bottom: 20px;
-  height: 520px;
+  height: 600px;
   overflow-y: scroll;
 }
 
 .bn-task-box-dark .bn-editor {
   padding-top: 20px;
   padding-bottom: 20px;
-  height: 520px;
+  height: 600px;
   overflow-y: scroll;
 }
 
