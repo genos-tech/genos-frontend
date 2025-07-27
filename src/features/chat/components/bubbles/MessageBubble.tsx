@@ -264,6 +264,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             dtSent={dtSent}
                                             tsSent={message.tsSent}
                                             tsUpdated={message.tsUpdated}
+                                            isThread={false}
                                         />
                                         <BubbleReactionButton
                                             sender={message.sender}

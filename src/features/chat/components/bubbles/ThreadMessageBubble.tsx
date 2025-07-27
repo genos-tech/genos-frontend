@@ -119,7 +119,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             dtSent={dtSent}
                                             tsSent={message.tsSent}
                                             tsUpdated={message.tsUpdated}
-                                            isThread={false}
+                                            isThread={true}
                                         />
                                         <BubbleReactionButton
                                             sender={message.sender}

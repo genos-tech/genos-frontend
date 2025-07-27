@@ -16,7 +16,7 @@ type BubbleUserNameTypes = {
     tsUpdated: string;
     taskId: number | null;
     taskStatus: string | null;
-    isThread?: boolean;
+    isThread: boolean;
 };
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
     const {
@@ -65,7 +65,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                       },
                             ]}
                         >
-                            {isThread === undefined && (
+                            {isThread === false && (
                                 <>
                                     <Chip
                                         key={taskId}
@@ -105,13 +105,23 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                     </Chip>
                                 </>
                             )}
-                            {isEdited === true && <>{dtSent} Edited</>}
+                            {isEdited === true && (
+                                <>
+                                    {sender.isSystemUser === true && (
+                                        <>
+                                            {isThread === true && <>{dtSent}</>}
+                                            {isThread === false && <>{dtSent} Updated</>}
+                                        </>
+                                    )}
+                                    {sender.isSystemUser !== true && <>{dtSent} Edited</>}
+                                </>
+                            )}
                             {isEdited === false && <>{dtSent}</>}
                         </Typography>
                     </>
                 )}
 
-                {/* Task update message bubble */}
+                {/* Message bubble for normal users (not system users)*/}
                 {!sender.isSystemUser && (
                     <>
                         <Typography
