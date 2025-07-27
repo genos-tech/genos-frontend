@@ -25,7 +25,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { TaskSidebar } from "./components/TaskSidebar";
 import { TaskDashboard } from "./components/dashboard//TaskDashboard";
 import { TaskPreview } from "./components/contents/TaskPreview";
-import { TaskTable } from "./components/table/TaskTable";
+import { ProjectTaskTable } from "./components/table/TaskTable";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { loadSpecificTask } from "./services/loadSpecificTask";
 import { loadTeamProjects } from "./services/loadTeamProjects";
@@ -38,13 +38,14 @@ import { ModalCreateTeam } from "../admin/components/modals/ModalCreateTeam";
 import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from "../../components/layout/sidebar";
 import { UserProps } from "../../types/admin";
-import { ChatProps, SearchTeamTasksResponse } from "../../types/chat";
+import { ChatProps } from "../../types/chat";
 import {
     ProjectProps,
     TaskTableProps,
     TaskProps,
     TaskType,
     TaskTypesProps,
+    SearchTeamTasksResponse,
 } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { updateTeamTasks } from "./services/updateTeamTasks";
@@ -89,6 +90,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
+    const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
+    const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
     const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
@@ -127,6 +130,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                -1,
                 accessToken
             );
 
@@ -178,6 +182,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setCurrentProject({
                         projectId: loadedTeamProjects[i].projectId,
                         projectName: loadedTeamProjects[i].projectName,
+                        projectTags: loadedTeamProjects[i].projectTags,
                         systemUserId: loadedTeamProjects[i].systemUserId,
                     });
                     await updateTeamTasks(myself, accessToken);
@@ -202,7 +207,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         if (currentProject) {
             fetchProjectTasks(currentProject.projectId);
         }
-    }, [currentProject]);
+    }, [currentProject, isTaskUpdated]);
 
     useEffect(() => {
         if (currentProject && currentPreviewTaskId !== -1) {
@@ -226,6 +231,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             priority: loadedTask[0].priority.priority || null,
                             effortLevel: loadedTask[0].effortLevel.level || null,
                             createdDate: loadedTask[0].createdDate || null,
+                            updatedAt: loadedTask[0].updatedAt || null,
                             dueDate: loadedTask[0].dueDate || null,
                             daysLeft: loadedTask[0].daysLeft || null,
                             status: loadedTask[0].status.status || null,
@@ -258,6 +264,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                               priority: currentPreviewTask.priority.priority || null,
                               effortLevel: currentPreviewTask.effortLevel.level || null,
                               createdDate: currentPreviewTask.createdDate || null,
+                              updatedAt: currentPreviewTask.updatedAt || null,
                               dueDate: currentPreviewTask.dueDate || null,
                               daysLeft: currentPreviewTask.daysLeft || null,
                               status: currentPreviewTask.status.status || null,
@@ -309,6 +316,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                    setFilterBy={setFilterBy}
+                                    setSelectedTagForFiltering={setSelectedTagForFiltering}
                                 />
                             </Panel>
 
@@ -582,7 +591,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         )}
                                         {isTaskTableVisible === true && (
                                             <>
-                                                <TaskTable
+                                                <ProjectTaskTable
                                                     myself={myself}
                                                     ongoingTasks={ongoingTasks}
                                                     closedTasks={closedTasks}
@@ -594,6 +603,14 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         setCurrentPreviewTaskId
                                                     }
                                                     displayTaskType={displayTaskType}
+                                                    setFilterBy={setFilterBy}
+                                                    filterBy={filterBy}
+                                                    setSelectedTagForFiltering={
+                                                        setSelectedTagForFiltering
+                                                    }
+                                                    selectedTagForFiltering={
+                                                        selectedTagForFiltering
+                                                    }
                                                 />
                                             </>
                                         )}
@@ -745,6 +762,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                    setFilterBy={setFilterBy}
+                                    setSelectedTagForFiltering={setSelectedTagForFiltering}
                                 />
                             </Panel>
 

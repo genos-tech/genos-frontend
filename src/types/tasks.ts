@@ -24,6 +24,7 @@ export type TagListProps = {
 export type ProjectProps = {
     projectId: number;
     projectName: string;
+    projectTags: TagListProps[];
     isJoined?: boolean;
     systemUserId?: string;
 };
@@ -87,6 +88,7 @@ export type TaskProps = {
     dueDate: string;
     daysLeft?: number;
     createdDate?: string;
+    updatedAt?: string;
     status: TaskStatusProps;
     priority: TaskPriorityProps;
     effortLevel: TaskEffortLevelProps;
@@ -111,6 +113,7 @@ export type TaskTableProps = {
     priority: string | null;
     effortLevel: string | null;
     createdDate: string | null;
+    updatedAt: string | null;
     dueDate: string | null;
     daysLeft: number | null;
     status: string | null;
@@ -136,4 +139,14 @@ export type TaskTypesProps = {
     ongoing: TaskType;
     closed: TaskType;
     deleted: TaskType;
+};
+
+export type SearchTeamTasksResponse = {
+    projectId: number;
+    projectName: string;
+    projectTags: TagListProps[];
+    systemUserId: string;
+    taskId: number;
+    title: string;
+    status: string;
 };

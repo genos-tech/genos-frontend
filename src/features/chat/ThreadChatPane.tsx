@@ -96,6 +96,10 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         return () => window.removeEventListener("resize", updateHeight);
     }, [thread]);
 
+    useEffect(() => {
+        setTargetMessageIndex(threadMessages.length - 1);
+    }, [threadMessages]);
+
     return (
         <>
             <div

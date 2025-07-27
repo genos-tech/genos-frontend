@@ -5,6 +5,7 @@ import { taskMessageTemplate, taskThreadMessageTemplate } from "../utils/TaskMes
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { addTask } from "./addTask";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -90,9 +91,34 @@ export const sendUpdatedSpecificTask = async (
                     });
                 }
 
+                if (updatedTask) {
+                    addTask({
+                        id: String(updatedTask.id),
+                        title: updatedTask.title,
+                        priority: updatedTask.priority.priority,
+                        effortLevel: updatedTask.effortLevel.level,
+                        createdDate: updatedTask.createdDate || null,
+                        updatedAt: updatedTask.updatedAt || null,
+                        dueDate: updatedTask.dueDate,
+                        daysLeft: updatedTask.daysLeft || null,
+                        status: updatedTask.status.status,
+                        assigneeId: updatedTask.assignee.userId,
+                        assigneeEmail: updatedTask.assignee.userEmail,
+                        assigneeName: updatedTask.assignee.userName,
+                        assigneeImgPath: updatedTask.assignee.avatarImgPath,
+                        parentTaskId: String(updatedTask.parentTaskId),
+                        threadId: updatedTask.threadId,
+                        tags: updatedTask.tags,
+                        concatTags: updatedTask.concatTags || null,
+                        teamId: myself.teamId,
+                        projectId: updatedTask.project.projectId,
+                    });
+                }
+
                 for (const attachment of updatedTask.attachments) {
                     const formData = new FormData();
                     formData.append("task", String(updatedTask.id));
+                    formData.append("attachment_id", String(attachment.attachment_id));
                     formData.append("attached_file", attachment.file);
                     formData.append("attached_type", attachment.file.type);
 

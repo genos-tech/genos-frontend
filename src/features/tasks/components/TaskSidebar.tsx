@@ -1,3 +1,4 @@
+import { alpha } from "@mui/system";
 import * as React from "react";
 import { useState, useEffect } from "react";
 import {
@@ -23,13 +24,14 @@ import AddIcon from "@mui/icons-material/Add";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { loadTeamTaskList } from "../services/loadTaskSearchList";
 import { loadTeamProjects } from "../services/loadTeamProjects";
+import { loadProjectTags } from "../services/loadProjectTags";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { SearchTeamTasksResponse } from "../../../types/chat";
-import { ProjectProps } from "../../../types/tasks";
+import { ProjectProps, TagListProps, SearchTeamTasksResponse } from "../../../types/tasks";
 import { loadAllTeams } from "../../admin/services/loadAllTeams";
 import { Team } from "../../../types/admin";
 
@@ -85,6 +87,8 @@ type TaskSidebarProps = {
         systemUserId: string;
     }) => void;
     setIsTaskHomeVisible: (value: boolean) => void;
+    setFilterBy: (value: number) => void;
+    setSelectedTagForFiltering: (value: string) => void;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -101,8 +105,11 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setOpenCreateProject,
         setOpenJoinProject,
         setIsTaskHomeVisible,
+        setFilterBy,
+        setSelectedTagForFiltering,
     } = props;
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -118,6 +125,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                -1,
                 accessToken
             );
 
@@ -139,11 +147,23 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     }
     // =======================================================================
 
+    const updateProjectTags = async () => {
+        if (currentProject) {
+            const loadedProjectTags: TagListProps[] = await loadProjectTags(
+                myself,
+                currentProject.projectId,
+                accessToken
+            );
+            setCurrentProject({ ...currentProject, projectTags: loadedProjectTags });
+        }
+    };
+
     const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
     const updateRecentTasks = () => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                10,
                 accessToken
             );
             setRecentTasks([...loadedTeamTasks.slice(0, 10)]);
@@ -176,7 +196,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     useEffect(() => {
         loadTeams();
+        updateProjectTags();
     }, [myself]);
+
+    useEffect(() => {
+        updateProjectTags();
+    }, []);
 
     return (
         <Sheet
@@ -334,12 +359,13 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         index
                                     ) => {
                                         return (
-                                            <ListItem key={taskId}>
+                                            <ListItem key={`recent-task-${taskId}`}>
                                                 <ListItemButton
                                                     onClick={() => {
                                                         setCurrentProject({
                                                             projectId: projectId,
                                                             projectName: projectName,
+                                                            projectTags: [],
                                                             systemUserId: systemUserId,
                                                         });
                                                         setCurrentPreviewTaskId(taskId);
@@ -347,7 +373,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                     sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 >
                                                     <Chip
-                                                        key={taskId}
+                                                        key={`recent-task-chip-${taskId}`}
                                                         variant="soft"
                                                         color="neutral"
                                                         sx={{
@@ -407,7 +433,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                             )}
                         >
                             <List sx={{ gap: 0.5 }}>
-                                <ListItem key={"createProject"}>
+                                <ListItem key={"listitem-createProject"}>
                                     <ListItemButton
                                         color="neutral"
                                         variant="soft"
@@ -435,47 +461,123 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                     ({ projectId, projectName, systemUserId, isJoined }) => {
                                         return (
                                             isJoined === true && (
-                                                <ListItem key={projectId}>
-                                                    <ListItemButton
-                                                        color={"neutral"}
-                                                        variant={
-                                                            projectId === currentProject?.projectId
-                                                                ? "solid"
-                                                                : "plain"
-                                                        }
-                                                        onClick={() => {
-                                                            setIsTaskHomeVisible(true);
-                                                            setCurrentProject({
-                                                                projectId: projectId,
-                                                                projectName: projectName,
-                                                                systemUserId: systemUserId,
-                                                            });
-                                                        }}
-                                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                                    >
-                                                        <Typography
-                                                            noWrap
-                                                            sx={{
-                                                                color:
-                                                                    projectId ===
-                                                                    currentProject?.projectId
-                                                                        ? "white"
-                                                                        : "neutral-500",
-                                                                overflow: "hidden",
-                                                                textOverflow: "ellipsis",
-                                                                whiteSpace: "nowrap",
-                                                                width: "100%", // take full width of button
+                                                <Toggler
+                                                    key="toggler-TeamProjects"
+                                                    defaultExpanded={false}
+                                                    renderToggle={({ open, setOpen }) => (
+                                                        <ListItemButton
+                                                            color={"neutral"}
+                                                            variant={
+                                                                projectId ===
+                                                                currentProject?.projectId
+                                                                    ? "solid"
+                                                                    : "plain"
+                                                            }
+                                                            onClick={() => {
+                                                                setOpen(!open);
+                                                                setIsTaskHomeVisible(true);
                                                             }}
+                                                            sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                         >
-                                                            {projectName}
-                                                        </Typography>
-                                                    </ListItemButton>
-                                                </ListItem>
+                                                            <Typography
+                                                                noWrap
+                                                                sx={{
+                                                                    color:
+                                                                        projectId ===
+                                                                        currentProject?.projectId
+                                                                            ? "white"
+                                                                            : "neutral-500",
+                                                                    overflow: "hidden",
+                                                                    textOverflow: "ellipsis",
+                                                                    whiteSpace: "nowrap",
+                                                                    width: "100%", // take full width of button
+                                                                }}
+                                                            >
+                                                                {projectName}
+                                                            </Typography>
+                                                            <KeyboardArrowDownIcon
+                                                                sx={[
+                                                                    open
+                                                                        ? {
+                                                                              transform:
+                                                                                  "rotate(180deg)",
+                                                                          }
+                                                                        : {
+                                                                              transform: "none",
+                                                                          },
+                                                                ]}
+                                                            />
+                                                        </ListItemButton>
+                                                    )}
+                                                >
+                                                    <List sx={{ gap: 0.5 }}>
+                                                        {currentProject !== null &&
+                                                            currentProject.projectTags.map(
+                                                                (
+                                                                    {
+                                                                        tagName,
+                                                                        tagColor,
+                                                                        tagTextColor,
+                                                                    },
+                                                                    index
+                                                                ) => {
+                                                                    return (
+                                                                        <ListItem
+                                                                            key={`listitem-${tagName}-${index}`}
+                                                                        >
+                                                                            <ListItemButton
+                                                                                color={"neutral"}
+                                                                                onClick={() => {
+                                                                                    setSelectedTagForFiltering(
+                                                                                        `/${tagName}/`
+                                                                                    );
+                                                                                    setFilterBy(2);
+                                                                                }}
+                                                                                sx={{
+                                                                                    overflow:
+                                                                                        "hidden",
+                                                                                }}
+                                                                            >
+                                                                                <Chip
+                                                                                    key={`chip-${tagName}-${index}`}
+                                                                                    variant="soft"
+                                                                                    sx={{
+                                                                                        backgroundColor:
+                                                                                            alpha(
+                                                                                                tagColor,
+                                                                                                mode ===
+                                                                                                    "dark"
+                                                                                                    ? 0.5
+                                                                                                    : 0.75
+                                                                                            ),
+                                                                                        color: tagTextColor,
+                                                                                        fontWeight:
+                                                                                            "bold",
+                                                                                        borderRadius:
+                                                                                            "7px",
+                                                                                        overflow:
+                                                                                            "hidden",
+                                                                                        textOverflow:
+                                                                                            "ellipsis",
+                                                                                        ml: "20px",
+                                                                                    }}
+                                                                                    size="md"
+                                                                                >
+                                                                                    {tagName}
+                                                                                </Chip>
+                                                                            </ListItemButton>
+                                                                        </ListItem>
+                                                                    );
+                                                                }
+                                                            )}
+                                                    </List>
+                                                </Toggler>
                                             )
                                         );
                                     }
                                 )}
                                 <Toggler
+                                    key="toggler-OtherProjects"
                                     defaultExpanded={false}
                                     renderToggle={({ open, setOpen }) => (
                                         <ListItemButton
@@ -513,7 +615,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                             }) => {
                                                 return (
                                                     isJoined === false && (
-                                                        <ListItem key={projectId}>
+                                                        <ListItem
+                                                            key={`listitem-team-project-${projectId}`}
+                                                        >
                                                             <ListItemButton
                                                                 color={"neutral"}
                                                                 variant={
@@ -593,7 +697,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                             )}
                         >
                             <List sx={{ gap: 0.5 }}>
-                                <ListItem key={"createTeam"}>
+                                <ListItem key={"createTeam-listitem-todo"}>
                                     <ListItemButton
                                         color="neutral"
                                         variant="soft"
@@ -648,7 +752,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                             )}
                         >
                             <List sx={{ gap: 0.5 }}>
-                                <ListItem key={"createTeam"}>
+                                <ListItem key={"listitem-createTeam"}>
                                     <ListItemButton
                                         color="neutral"
                                         variant="soft"
@@ -674,7 +778,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 </ListItem>
                                 {teams.map(({ teamId, teamName }) => {
                                     return (
-                                        <ListItem key={teamId}>
+                                        <ListItem key={`team-${teamId}`}>
                                             <ListItemButton
                                                 color={"neutral"}
                                                 variant={

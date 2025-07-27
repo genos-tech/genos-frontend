@@ -67,6 +67,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                 setCurrentProject({
                     projectId: openJoinProject.projectId,
                     projectName: openJoinProject.projectName,
+                    projectTags: [],
                     systemUserId: openJoinProject.systemUserId,
                 });
                 setOpenJoinProject(disableOpenJoinModalParams);

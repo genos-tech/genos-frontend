@@ -12,7 +12,7 @@ export const loadProjectTags = async (
         const api = authApi(accessToken);
         if (api) {
             const query: string = `team_id=${myself.teamId}&project_id=${projectId}`;
-            const res = await api.get(`/project/getProjectTags/?${query}`);
+            const res = await api.get(`/project/tag/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

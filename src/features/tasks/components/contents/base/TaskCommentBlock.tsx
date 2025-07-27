@@ -9,7 +9,7 @@ import { BnPreview } from "../../../../../components/blockNote/bnPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
-import { extractMMDDHHMM } from "../../../../../utils/dateUtils";
+import { extractMMDDHHMM, extractMMDDHHMMSSs } from "../../../../../utils/dateUtils";
 
 type TaskCommentBlockProps = {
     myself: UserProps;
@@ -73,6 +73,11 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                         >
                             <Stack spacing={1}>
                                 {taskComments.map((comment, index) => {
+                                    const isEdited =
+                                        extractMMDDHHMMSSs(comment.tsSent) ===
+                                        extractMMDDHHMMSSs(comment.tsUpdated)
+                                            ? false
+                                            : true;
                                     if (comment.commentBody[0].content.length > 0) {
                                         return (
                                             <Box
@@ -110,7 +115,21 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                                                 pl: "5px",
                                                             }}
                                                         >
-                                                            {extractMMDDHHMM(comment.tsSent)}
+                                                            {isEdited === true && (
+                                                                <>
+                                                                    {extractMMDDHHMM(
+                                                                        comment.tsSent
+                                                                    )}{" "}
+                                                                    Edited
+                                                                </>
+                                                            )}
+                                                            {isEdited === false && (
+                                                                <>
+                                                                    {extractMMDDHHMM(
+                                                                        comment.tsSent
+                                                                    )}
+                                                                </>
+                                                            )}
                                                         </Typography>
                                                     </Stack>
                                                     <Tooltip title="Edit" size="sm">

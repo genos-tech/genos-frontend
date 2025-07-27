@@ -4,7 +4,7 @@ import { defaultDmPartner } from "../features/chat/services/constants";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
-import LoadTeamTaskWorker from "../workers/loadTeamTaskWorker.ts?worker";
+import LoadTeamTaskWorker from "../workers/loadTeamTasksWorker.ts?worker";
 import PopLatestChatWorker from "../workers/popLatestChatWorker.ts?worker";
 import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
 import PopSpecificMessagesWorker from "../workers/popSpecificMessagesWorker.ts?worker";
@@ -85,9 +85,9 @@ export const loadInitialData = (
     // Load Team tasks
     useEffect(() => {
         if (accessToken && myself.userId !== "" && myself.userName !== "") {
-            const loadTeamTaskWorker = new LoadTeamTaskWorker();
-            loadTeamTaskWorker.postMessage({ myself: myself, accessToken: accessToken });
-            loadTeamTaskWorker.onmessage = (event) => {
+            const loadTeamTasksWorker = new LoadTeamTaskWorker();
+            loadTeamTasksWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadTeamTasksWorker.onmessage = (event) => {
                 if (event.data === "done") {
                     setIsTeamTasksLoaded(true);
                 } else {
@@ -95,7 +95,7 @@ export const loadInitialData = (
                 }
             };
             return () => {
-                loadTeamTaskWorker.terminate();
+                loadTeamTasksWorker.terminate();
             };
         }
     }, [myself, accessToken]);

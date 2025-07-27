@@ -99,9 +99,13 @@ type ProjectTaskTableProps = {
     setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     displayTaskType: TaskType;
+    setFilterBy: (value: number) => void;
+    filterBy: number;
+    setSelectedTagForFiltering: (value: string | undefined) => void;
+    selectedTagForFiltering: string | undefined;
 };
 
-export const TaskTable = (props: ProjectTaskTableProps) => {
+export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const {
         myself,
         ongoingTasks,
@@ -110,13 +114,16 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
         setIsTaskPreviewVisible,
         setCurrentPreviewTaskId,
         displayTaskType,
+        setFilterBy,
+        filterBy,
+        setSelectedTagForFiltering,
+        selectedTagForFiltering,
     } = props;
     const { mode } = useColorScheme();
     const className = `task-datagrid-${mode}`;
     const apiRef = useGridApiRef();
     const [currentDisplayingTasks, setCurrentDisplayingTasks] =
         useState<TaskTableProps[]>(ongoingTasks);
-    const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
     const [predefinedFilters, setPredefinedFilters] =
         useState<FilterProps[]>(predefinedStatusFilters);
     const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);
@@ -164,7 +171,13 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                 const tagBasedFilters: FilterProps[] = loadedProjectTags.map((tag) => ({
                     label: tag.tagName,
                     filterModel: {
-                        items: [{ field: "concatTags", operator: "contains", value: tag.tagName }],
+                        items: [
+                            {
+                                field: "concatTags",
+                                operator: "contains",
+                                value: `/${tag.tagName}/`,
+                            },
+                        ],
                     },
                     lightModeColor: tag.tagColor,
                     darkModeColor: tag.tagColor,
@@ -188,13 +201,25 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
             setPredefinedFilters(predefinedStatusFilters);
         } else if (filterBy === 2) {
             updateTagOptions();
+            if (selectedTagForFiltering) {
+                apiRef.current.setFilterModel({
+                    items: [
+                        {
+                            field: "concatTags",
+                            operator: "contains",
+                            value: selectedTagForFiltering,
+                        },
+                    ],
+                });
+                setSelectedTagForFiltering(undefined);
+            }
         } else if (filterBy === 3) {
             setPredefinedFilters(predefinedPriorityFilters);
         } else if (filterBy === 4) {
             setPredefinedFilters(predefinedEffortLevelFilters);
         }
         setAnchorEl(null);
-    }, [filterBy]);
+    }, [filterBy, selectedTagForFiltering]);
 
     useEffect(() => {
         // Calculate the row count for predefined filters
@@ -218,6 +243,11 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
             updateTagOptions();
         }
     }, [displayTaskType, ongoingTasks, closedTasks, deletedTasks]);
+
+    // Reset filter
+    useEffect(() => {
+        apiRef.current.setFilterModel({ items: [] });
+    }, [displayTaskType]);
 
     return (
         <ThemeProvider theme={theme}>
@@ -343,7 +373,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                                 },
                             },
                             sorting: {
-                                sortModel: [{ field: "id", sort: "desc" }],
+                                sortModel: [{ field: "updatedAt", sort: "desc" }],
                             },
                             pagination: {
                                 paginationModel: {
@@ -357,6 +387,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                                     priority: true,
                                     effortLevel: true,
                                     createdDate: true,
+                                    updatedAt: false,
                                     dueDate: true,
                                     daysLeft: true,
                                     status: true,

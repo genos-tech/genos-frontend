@@ -8,7 +8,7 @@ export const loadTeamProjects = async (myself: UserProps, accessToken: string | 
         const api = authApi(accessToken);
         if (api) {
             const query: string = `team_id=${myself.teamId}&attendee_id=${myself.userId}`;
-            const res = await api.get(`/project/getTeamProjects/?${query}`);
+            const res = await api.get(`/project/projects/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

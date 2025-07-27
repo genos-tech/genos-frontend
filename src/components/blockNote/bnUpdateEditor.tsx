@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import SendIcon from "@mui/icons-material/Send";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -214,8 +213,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                             setIsInEdit(false);
                         }}
                     >
-                        <SendIcon />
-                        Send
+                        Save
                     </IconButton>
 
                     <IconButton

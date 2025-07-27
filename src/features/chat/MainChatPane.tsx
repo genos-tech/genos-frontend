@@ -92,6 +92,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         currentMainChatId
     );
 
+    useEffect(() => {
+        setTargetMessageIndex(chatMessages.length - 1);
+    }, [chatMessages]);
+
     return (
         <div
             onDrop={handleFileDrop}

@@ -102,6 +102,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     setCurrentProject({
                                                         projectId: project.projectId,
                                                         projectName: project.projectName,
+                                                        projectTags: project.projectTags || [],
                                                         systemUserId: project.systemUserId,
                                                     });
                                                     setCurrentPreviewTaskId(id);
