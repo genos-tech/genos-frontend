@@ -51,6 +51,7 @@ export default function TaskInit(props: TaskInitProps) {
                 setCurrentProject({
                     projectId: createProjectData.project_id,
                     projectName: createProjectData.project_name,
+                    projectTags: [],
                     systemUserId: createProjectData.project_system_user,
                 });
             }

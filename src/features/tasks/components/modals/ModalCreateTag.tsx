@@ -39,7 +39,7 @@ export const ModalCreateTag: React.FC<Props> = ({
 
     async function createTag(): Promise<void> {
         try {
-            const response = await fetch(`${base_url}/project/createProjectTag/`, {
+            const response = await fetch(`${base_url}/project/tag/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

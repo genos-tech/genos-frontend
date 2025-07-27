@@ -1,6 +1,6 @@
 import { UserProps } from "../../../types/admin";
 import { ThreadMessageProps } from "../../../types/chat";
-import LoadTeamTaskWorker from "../../../workers/loadTeamTaskWorker.ts?worker";
+import LoadTeamTaskWorker from "../../../workers/loadTeamTasksWorker.ts?worker";
 
 export const updateTeamTasks = (myself: UserProps, accessToken: string | null) => {
     return new Promise((resolve, reject) => {

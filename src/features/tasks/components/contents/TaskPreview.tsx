@@ -119,7 +119,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             accessToken
         );
 
-        if (uploadedAttachmentData.attachment_id > 0) {
+        if (uploadedAttachmentData && uploadedAttachmentData.attachment_id > 0) {
             setUploadedSingleAttachment({
                 attachment_id: uploadedAttachmentData.attachment_id,
                 file: uploadedAttachmentData.attached_file,

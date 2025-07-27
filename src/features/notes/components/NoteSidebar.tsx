@@ -18,7 +18,7 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { SearchTeamTasksResponse } from "../../../types/chat";
+import { SearchTeamTasksResponse } from "../../../types/tasks";
 import { ProjectProps } from "../../../types/tasks";
 
 function Toggler({

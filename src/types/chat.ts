@@ -1,6 +1,6 @@
 import { PartialBlock } from "@blocknote/core";
 import { UserProps } from "./admin";
-import { ProjectProps } from "./tasks";
+import { ProjectProps, TagListProps } from "./tasks";
 
 // Chat Props
 export type AllChatProps = {
@@ -178,15 +178,6 @@ export type LoadDMMessageHistoryResponse = {
 export type LoadGMMessageHistoryResponse = {
     messageHistory: ChatProps[] | [];
     message: string;
-};
-
-export type SearchTeamTasksResponse = {
-    projectId: number;
-    projectName: string;
-    systemUserId: string;
-    taskId: number;
-    title: string;
-    status: string;
 };
 
 export type CreateGMResponse = {

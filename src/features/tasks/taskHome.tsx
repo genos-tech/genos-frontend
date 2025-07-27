@@ -38,13 +38,14 @@ import { ModalCreateTeam } from "../admin/components/modals/ModalCreateTeam";
 import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from "../../components/layout/sidebar";
 import { UserProps } from "../../types/admin";
-import { ChatProps, SearchTeamTasksResponse } from "../../types/chat";
+import { ChatProps } from "../../types/chat";
 import {
     ProjectProps,
     TaskTableProps,
     TaskProps,
     TaskType,
     TaskTypesProps,
+    SearchTeamTasksResponse,
 } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { updateTeamTasks } from "./services/updateTeamTasks";
@@ -89,6 +90,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
+    const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
+    const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
     const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
@@ -179,6 +182,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setCurrentProject({
                         projectId: loadedTeamProjects[i].projectId,
                         projectName: loadedTeamProjects[i].projectName,
+                        projectTags: loadedTeamProjects[i].projectTags,
                         systemUserId: loadedTeamProjects[i].systemUserId,
                     });
                     await updateTeamTasks(myself, accessToken);
@@ -203,7 +207,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         if (currentProject) {
             fetchProjectTasks(currentProject.projectId);
         }
-    }, [currentProject]);
+    }, [currentProject, isTaskUpdated]);
 
     useEffect(() => {
         if (currentProject && currentPreviewTaskId !== -1) {
@@ -312,6 +316,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                    setFilterBy={setFilterBy}
+                                    setSelectedTagForFiltering={setSelectedTagForFiltering}
                                 />
                             </Panel>
 
@@ -597,6 +603,14 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         setCurrentPreviewTaskId
                                                     }
                                                     displayTaskType={displayTaskType}
+                                                    setFilterBy={setFilterBy}
+                                                    filterBy={filterBy}
+                                                    setSelectedTagForFiltering={
+                                                        setSelectedTagForFiltering
+                                                    }
+                                                    selectedTagForFiltering={
+                                                        selectedTagForFiltering
+                                                    }
                                                 />
                                             </>
                                         )}
@@ -748,6 +762,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                    setFilterBy={setFilterBy}
+                                    setSelectedTagForFiltering={setSelectedTagForFiltering}
                                 />
                             </Panel>
 

@@ -24,6 +24,7 @@ export type TagListProps = {
 export type ProjectProps = {
     projectId: number;
     projectName: string;
+    projectTags: TagListProps[];
     isJoined?: boolean;
     systemUserId?: string;
 };
@@ -138,4 +139,14 @@ export type TaskTypesProps = {
     ongoing: TaskType;
     closed: TaskType;
     deleted: TaskType;
+};
+
+export type SearchTeamTasksResponse = {
+    projectId: number;
+    projectName: string;
+    projectTags: TagListProps[];
+    systemUserId: string;
+    taskId: number;
+    title: string;
+    status: string;
 };

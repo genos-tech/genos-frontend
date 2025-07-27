@@ -36,6 +36,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         project: {
                             projectId: value.projectId,
                             projectName: value.projectName,
+                            projectTags: [],
                             systemUserId: value.systemUserId,
                         },
                         tags: [],
@@ -43,6 +44,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                     setCurrentProject({
                         projectId: value.projectId,
                         projectName: value.projectName,
+                        projectTags: [],
                         systemUserId: value.systemUserId,
                     });
                     if (setTaskUpdated) {
