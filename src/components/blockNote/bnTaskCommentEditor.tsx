@@ -33,8 +33,9 @@ import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { Mention } from "./Mention";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { UserProps } from "../../types/admin";
-import { TaskCommentProps } from "../../types/tasks";
+import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 
 // Disable the Audio and Image blocks from the built-in schema
 // This is done by picking out the blocks you want to disable
@@ -85,8 +86,7 @@ const getCustomSlashMenuItems = (
 type BnTaskCommentEditorProps = {
     myself: UserProps;
     socket: Socket | null;
-    projectId: number;
-    taskId: number;
+    task: TaskProps;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
@@ -98,8 +98,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const {
         myself,
         socket,
-        projectId,
-        taskId,
+        task,
         setTaskUpdated,
         taskComments,
         setTaskComments,
@@ -144,11 +143,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (isCommentUpdated) {
+        if (isCommentUpdated && task.id) {
             setTaskComments([
                 ...taskComments,
                 {
-                    taskId: taskId,
+                    taskId: task.id,
                     senderId: myself.userId,
                     senderName: myself.userName,
                     commentId: taskComments.length + 1,
@@ -167,7 +166,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     useEffect(() => {
         editor.replaceBlocks(editor.document, []);
-    }, [taskId]);
+    }, [task]);
 
     const sendComment = async () => {
         if (socket) {
@@ -176,14 +175,38 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     "task_comment",
                     {
                         method_type: "POST",
-                        project_id: projectId,
-                        task_id: taskId,
+                        project_id: task.project?.projectId,
+                        task_id: task.id,
                         comment_body: editor.document,
                     },
                     (ack: any) => {
                         setIsCommentUpdated(true);
                     }
                 );
+
+                if (task.project && task.id) {
+                    const updatedTaskThreadMessage =
+                        taskThreadMessageForCommentAddedTemplate(myself);
+                    socket.emit("thread_message", {
+                        methodType: "POST",
+                        isInit: false,
+                        rootMessageTSSent: "",
+                        rootMessageSenderId: null,
+                        rootMessageReceiverId: null,
+                        threadId: null,
+                        threadMessage: updatedTaskThreadMessage,
+                        isDm: false,
+                        chatType: 3,
+                        dmPartnerUserId: null,
+                        senderId: task.project.systemUserId,
+                        senderName: task.project.projectName,
+                        destCGName: task.project.projectName,
+                        destCGId: task.project.projectId,
+                        taskId: task.id,
+                        systemUserId: task.project.systemUserId,
+                        messageIdForPut: null,
+                    });
+                }
             }
         }
     };

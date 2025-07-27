@@ -3,7 +3,10 @@ import { Socket } from "socket.io-client";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { ChatProps, ThreadProps } from "../../../types/chat";
-import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
+import {
+    taskMessageTemplate,
+    taskCreatedThreadMessageTemplate,
+} from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -165,20 +168,49 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                             const createTaskMessage = taskMessageTemplate(taskContents);
                             if (taskContents.project !== null && createTaskMessage) {
                                 // Send "task created" message to PM
-                                socket.emit("message", {
-                                    methodType: "POST",
-                                    message: createTaskMessage,
-                                    destCGName: taskContents.project.projectName,
-                                    destCGId: taskContents.project.projectId,
-                                    isDm: false,
-                                    chatType: 3,
-                                    dmPartnerUserId: null,
-                                    taskId: taskCreateData.task_id,
-                                    taskStatus: taskCreateData.status,
-                                    systemUserId: taskContents.project.systemUserId,
-                                    messageIdForPut: null,
-                                });
+                                socket.emit(
+                                    "message",
+                                    {
+                                        methodType: "POST",
+                                        message: createTaskMessage,
+                                        destCGName: taskContents.project.projectName,
+                                        destCGId: taskContents.project.projectId,
+                                        isDm: false,
+                                        chatType: 3,
+                                        dmPartnerUserId: null,
+                                        taskId: taskCreateData.task_id,
+                                        taskStatus: taskCreateData.status,
+                                        systemUserId: taskContents.project.systemUserId,
+                                        messageIdForPut: null,
+                                    },
+                                    (ack: any) => {
+                                        if (taskCreateData.task_id && taskContents.project) {
+                                            const newTaskCreatedThreadMessage =
+                                                taskCreatedThreadMessageTemplate(myself);
+                                            socket.emit("thread_message", {
+                                                methodType: "POST",
+                                                isInit: false,
+                                                rootMessageTSSent: "",
+                                                rootMessageSenderId: null,
+                                                rootMessageReceiverId: null,
+                                                threadId: null,
+                                                threadMessage: newTaskCreatedThreadMessage,
+                                                isDm: false,
+                                                chatType: 3,
+                                                dmPartnerUserId: null,
+                                                senderId: taskContents.project.systemUserId,
+                                                senderName: taskContents.project.projectName,
+                                                destCGName: taskContents.project.projectName,
+                                                destCGId: taskContents.project.projectId,
+                                                taskId: taskCreateData.task_id,
+                                                systemUserId: taskContents.project.systemUserId,
+                                                messageIdForPut: null,
+                                            });
+                                        }
+                                    }
+                                );
 
+                                // Messaging for a new task from a thread chat
                                 if (
                                     isThreadVisible === true &&
                                     currentMainChat &&
@@ -188,9 +220,11 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                     currentThreadChat.threadId !== null &&
                                     currentThreadChat.threadId !== -1
                                 ) {
+                                    console.log("here");
+                                    // Not update message_body, just update task_id here.
                                     socket.emit("message", {
                                         methodType: "PUT",
-                                        message: null, // Not update message_body, just update task_id here.
+                                        message: null,
                                         destCGName: currentMainChat.chatName,
                                         destCGId: currentMainChat.chatId,
                                         isDm: currentMainChat.chatType === 1 ? true : false,
@@ -224,7 +258,9 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                     });
                                 }
                             } else {
-                                console.error("Failed to send 'task created message'.");
+                                console.error(
+                                    "Failed to send 'task created message from a thread chat'."
+                                );
                             }
                         }
                     );

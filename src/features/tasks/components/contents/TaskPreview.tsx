@@ -393,12 +393,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <TaskCommentBlock
                 myself={myself}
                 socket={socket}
-                projectId={
-                    tmpCurrentTaskContent.project?.projectId
-                        ? tmpCurrentTaskContent.project?.projectId
-                        : -1
-                }
-                taskId={Number(tmpCurrentTaskContent.id)}
+                task={tmpCurrentTaskContent}
                 taskComments={taskComments}
                 setTaskComments={setTaskComments}
                 isCommentUpdated={isCommentUpdated}

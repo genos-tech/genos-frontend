@@ -84,8 +84,8 @@ const getCustomSlashMenuItems = (
 type BnUpdateTaskCommentEditorProps = {
     myself: UserProps;
     socket: Socket | null;
-    projectId: number;
-    taskId: number;
+    projectId?: number;
+    taskId?: number;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
@@ -150,7 +150,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (isCommentUpdated) {
+        if (isCommentUpdated && taskId) {
             setTaskComments([
                 ...taskComments,
                 {

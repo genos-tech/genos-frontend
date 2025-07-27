@@ -130,14 +130,72 @@ export const taskMessageTemplate = (task: TaskProps) => [
     },
 ];
 
+export const taskCreatedThreadMessageTemplate = (myself: UserProps) => [
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [
+            { text: "A new task has been created by ", type: "text", styles: {} },
+            {
+                text: myself.userName,
+                type: "text",
+                styles: { code: true },
+            },
+            { text: " (", type: "text", styles: {} },
+            {
+                href: myself.userEmail,
+                type: "link",
+                content: [{ text: myself.userEmail, type: "text", styles: {} }],
+            },
+            { text: ") ", type: "text", styles: {} },
+        ],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [],
+        children: [],
+    },
+];
+
 export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) => [
     {
         type: "paragraph",
         props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
         content: [
-            { text: "Task marked as ", type: "text", styles: {} },
+            { text: "The task marked as ", type: "text", styles: {} },
             getStatusConfig(task.status.status || "default"),
             { text: " by ", type: "text", styles: {} },
+            {
+                text: myself.userName,
+                type: "text",
+                styles: { code: true },
+            },
+            { text: " (", type: "text", styles: {} },
+            {
+                href: myself.userEmail,
+                type: "link",
+                content: [{ text: myself.userEmail, type: "text", styles: {} }],
+            },
+            { text: ") ", type: "text", styles: {} },
+        ],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [],
+        children: [],
+    },
+];
+
+export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => [
+    {
+        type: "paragraph",
+        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        content: [
+            { text: "A new comment posted by ", type: "text", styles: {} },
             {
                 text: myself.userName,
                 type: "text",

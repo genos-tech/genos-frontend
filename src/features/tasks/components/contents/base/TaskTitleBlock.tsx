@@ -167,12 +167,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         }
                         // setIsThreadVisible(); // Not update, keep as it is !!!
                         if (setIsTaskPreviewVisible) {
+                            setIsTaskPreviewVisible(false);
+
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (isCreatingTask === false) {
                                 if (setIsTaskHomeVisible) {
                                     setIsTaskHomeVisible(true);
                                 }
-                                setIsTaskPreviewVisible(false);
                             }
                         }
                         if (setIsTaskCreationVisible) {
