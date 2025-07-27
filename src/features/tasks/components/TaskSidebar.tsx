@@ -526,7 +526,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                     )}
                                                 >
                                                     <List sx={{ gap: 0.5 }}>
-                                                        {currentProject?.projectId === projectId &&  currentProject !== null &&
+                                                        {currentProject?.projectId === projectId &&
+                                                            currentProject !== null &&
                                                             currentProject.projectTags.map(
                                                                 (
                                                                     {

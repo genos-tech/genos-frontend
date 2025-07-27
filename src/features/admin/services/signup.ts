@@ -18,7 +18,11 @@ export const signUp = async (
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Please try with a different email.");
+                    if (isSystemUser) {
+                        setErrorMessage("Please try with a different name.");
+                    } else {
+                        setErrorMessage("Please try with a different email.");
+                    }
                 }
             } else {
                 console.error("API error:", error.response?.status, error.response?.data);

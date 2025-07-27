@@ -4,6 +4,7 @@ import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { ChatProps, ThreadProps } from "../../../types/chat";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
+import { addTask } from "./addTask";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -105,6 +106,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                 for (const attachment of taskContents.attachments) {
                     const formData = new FormData();
                     formData.append("task", taskCreateData.task_id);
+                    formData.append("attachment_id", String(attachment.attachment_id));
                     formData.append("attached_file", attachment.file);
                     formData.append("attached_type", attachment.file.type);
 
@@ -124,6 +126,28 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         );
                     }
                 }
+
+                addTask({
+                    id: String(taskCreateData.task_id),
+                    title: taskContents.title,
+                    priority: taskContents.priority.priority,
+                    effortLevel: taskContents.effortLevel.level,
+                    createdDate: taskContents.createdDate || null,
+                    updatedAt: taskCreateData.updatedAt || null,
+                    dueDate: taskContents.dueDate,
+                    daysLeft: taskContents.daysLeft || null,
+                    status: taskContents.status.status,
+                    assigneeId: taskContents.assignee.userId,
+                    assigneeEmail: taskContents.assignee.userEmail,
+                    assigneeName: taskContents.assignee.userName,
+                    assigneeImgPath: taskContents.assignee.avatarImgPath,
+                    parentTaskId: String(taskContents.parentTaskId),
+                    threadId: taskContents.threadId,
+                    tags: taskContents.tags,
+                    concatTags: taskContents.concatTags || null,
+                    teamId: myself.teamId,
+                    projectId: taskContents.project.projectId,
+                });
 
                 // Send "task created" message
                 if (socket) {

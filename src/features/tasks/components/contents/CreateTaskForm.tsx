@@ -191,7 +191,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [assignee, setAssignee] = useState<UserProps>(myself);
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
-    const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
 
     updateTaskTitle({ taskTitle, taskContents, setTaskContents });
     updateTaskBody({ body, taskContents, setTaskContents });
@@ -320,6 +319,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             <Divider sx={{ mt: 1, mb: 1 }} />
 
             <TaskBodyEditBlock body={body} setBody={setBody} />
+
+            <Divider sx={{ m: 2 }} />
+
+            <TaskAttachmentBlock
+                uploadedFiles={uploadedFiles}
+                taskContents={taskContents}
+                setTaskContents={setTaskContents}
+                isCreatingNewTask={true}
+            />
 
             <Divider sx={{ m: 2 }} />
 

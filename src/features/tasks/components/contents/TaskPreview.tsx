@@ -146,6 +146,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
         setTaskUpdated(false);
     };
+
     useEffect(() => {
         if (taskUpdated === true) {
             sendUpdatedTask(false);
@@ -161,6 +162,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setCurrentTaskId(currentPreviewTask.id);
             setBody(currentPreviewTask.body || []);
         }
+        setUploadedFiles(currentPreviewTask.attachments);
     }, [currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
@@ -383,6 +385,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskUpdated={setTaskUpdated}
                 setIsAttachmentDeleted={setIsAttachmentDeleted}
                 setDeletedAttachmentId={setDeletedAttachmentId}
+                isCreatingNewTask={false}
             />
 
             <Divider sx={{ m: 2 }} />
