@@ -593,6 +593,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             <>
                                                 <ProjectTaskTable
                                                     myself={myself}
+                                                    currentProject={currentProject}
                                                     ongoingTasks={ongoingTasks}
                                                     closedTasks={closedTasks}
                                                     deletedTasks={deletedTasks}

@@ -458,11 +458,20 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                     </ListItemButton>
                                 </ListItem>
                                 {teamProjects.map(
-                                    ({ projectId, projectName, systemUserId, isJoined }) => {
+                                    (
+                                        {
+                                            projectId,
+                                            projectName,
+                                            projectTags,
+                                            systemUserId,
+                                            isJoined,
+                                        },
+                                        index
+                                    ) => {
                                         return (
                                             isJoined === true && (
                                                 <Toggler
-                                                    key="toggler-TeamProjects"
+                                                    key={`toggler-TeamProjects-${index}`}
                                                     defaultExpanded={false}
                                                     renderToggle={({ open, setOpen }) => (
                                                         <ListItemButton
@@ -476,6 +485,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             onClick={() => {
                                                                 setOpen(!open);
                                                                 setIsTaskHomeVisible(true);
+                                                                setCurrentProject({
+                                                                    projectId: projectId,
+                                                                    projectName: projectName,
+                                                                    projectTags: projectTags,
+                                                                    systemUserId: systemUserId,
+                                                                });
                                                             }}
                                                             sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                         >
@@ -511,7 +526,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                     )}
                                                 >
                                                     <List sx={{ gap: 0.5 }}>
-                                                        {currentProject !== null &&
+                                                        {currentProject?.projectId === projectId &&  currentProject !== null &&
                                                             currentProject.projectTags.map(
                                                                 (
                                                                     {

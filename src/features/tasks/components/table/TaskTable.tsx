@@ -10,7 +10,7 @@ import { loadProjectTags } from "../../services/loadProjectTags";
 import { loadTeamMembers } from "../../../admin/services/loadTeamMembers";
 import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
-import { TaskTableProps, TagListProps, TaskType } from "../../../../types/tasks";
+import { TaskTableProps, TagListProps, TaskType, ProjectProps } from "../../../../types/tasks";
 
 const options = [
     { name: "Group By Status", filterId: 1 },
@@ -93,6 +93,7 @@ const predefinedEffortLevelFilters: FilterProps[] = [
 
 type ProjectTaskTableProps = {
     myself: UserProps;
+    currentProject: ProjectProps | null;
     ongoingTasks: TaskTableProps[];
     closedTasks: TaskTableProps[];
     deletedTasks: TaskTableProps[];
@@ -108,6 +109,7 @@ type ProjectTaskTableProps = {
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const {
         myself,
+        currentProject,
         ongoingTasks,
         closedTasks,
         deletedTasks,
@@ -223,13 +225,12 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
 
     useEffect(() => {
         // Calculate the row count for predefined filters
-        if (ongoingTasks.length === 0) {
-            return;
-        }
         setPredefinedFiltersRowCount(
-            predefinedFilters.map(({ filterModel }) => getFilteredRowsCount(filterModel))
+            predefinedFilters.map(({ filterModel }) => {
+                return getFilteredRowsCount(filterModel);
+            })
         );
-    }, [predefinedFilters, ongoingTasks]);
+    }, [predefinedFilters, currentDisplayingTasks]);
 
     useEffect(() => {
         if (displayTaskType.id === 1) {
@@ -242,12 +243,12 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
             setCurrentDisplayingTasks(deletedTasks);
             updateTagOptions();
         }
-    }, [displayTaskType, ongoingTasks, closedTasks, deletedTasks]);
+    }, [displayTaskType, currentProject, ongoingTasks, closedTasks, deletedTasks]);
 
     // Reset filter
     useEffect(() => {
         apiRef.current.setFilterModel({ items: [] });
-    }, [displayTaskType]);
+    }, [displayTaskType, predefinedFilters]);
 
     return (
         <ThemeProvider theme={theme}>
@@ -264,7 +265,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                             const count = predefinedFiltersRowCount[index];
                             return (
                                 <Button
-                                    key={label}
+                                    key={`${label}-${count}`}
                                     onClick={() => apiRef.current?.setFilterModel(filterModel)}
                                     variant="outlined"
                                     sx={{
