@@ -4,7 +4,7 @@ import { Box, Stack, Typography, Card, Avatar, Tooltip, IconButton } from "@mui/
 import { useColorScheme } from "@mui/joy/styles";
 import EditIcon from "@mui/icons-material/Edit";
 
-import { TaskCommentProps } from "../../../../../types/tasks";
+import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
 import { BnPreview } from "../../../../../components/blockNote/bnPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
@@ -14,8 +14,7 @@ import { extractMMDDHHMM, extractMMDDHHMMSSs } from "../../../../../utils/dateUt
 type TaskCommentBlockProps = {
     myself: UserProps;
     socket: Socket | null;
-    projectId: number;
-    taskId: number;
+    task: TaskProps;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
     isCommentUpdated: boolean;
@@ -26,8 +25,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     const {
         myself,
         socket,
-        projectId,
-        taskId,
+        task,
         taskComments,
         setTaskComments,
         isCommentUpdated,
@@ -170,8 +168,8 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                 <BnUpdateTaskCommentEditor
                     myself={myself}
                     socket={socket}
-                    projectId={projectId}
-                    taskId={taskId}
+                    projectId={task.project?.projectId}
+                    taskId={task.id}
                     taskComments={taskComments}
                     setTaskComments={setTaskComments}
                     isCommentUpdated={isCommentUpdated}
@@ -185,8 +183,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                 <BnTaskCommentEditor
                     myself={myself}
                     socket={socket}
-                    projectId={projectId}
-                    taskId={taskId}
+                    task={task}
                     taskComments={taskComments}
                     setTaskComments={setTaskComments}
                     isCommentUpdated={isCommentUpdated}

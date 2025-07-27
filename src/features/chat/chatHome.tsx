@@ -247,9 +247,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                         when close right -> only MainChat
                     MainChat-TaskCreation (p3)
                         when close right -> only MainChat
-                    ThreadChat-TaskPreview (p4)
+                    MainChat-ThreadChat-TaskPreview (p4)
                         when close right -> MainChat-ThreadChat
-                    ThreadChat-TaskCreation (p5)
+                    MainChat-ThreadChat-TaskCreation (p5)
                         when close right -> MainChat-ThreadChat
                  */}
 
