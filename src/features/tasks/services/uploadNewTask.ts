@@ -106,6 +106,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                 for (const attachment of taskContents.attachments) {
                     const formData = new FormData();
                     formData.append("task", taskCreateData.task_id);
+                    formData.append("attachment_id", String(attachment.attachment_id));
                     formData.append("attached_file", attachment.file);
                     formData.append("attached_type", attachment.file.type);
 

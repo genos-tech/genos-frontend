@@ -14,8 +14,8 @@ import { TaskTableProps, TagListProps, TaskType, ProjectProps } from "../../../.
 
 const options = [
     { name: "Group By Status", filterId: 1 },
-    { name: "Group By Tag", filterId: 2 },
     { name: "Group By Priority", filterId: 3 },
+    { name: "Group By Tag", filterId: 2 },
     { name: "Group By Effort Level", filterId: 4 },
 ];
 

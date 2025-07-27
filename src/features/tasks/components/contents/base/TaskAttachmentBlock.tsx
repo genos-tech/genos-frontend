@@ -27,8 +27,9 @@ type TaskAttachmentBlockProps = {
     setTaskUpdated?: (value: boolean) => void;
     taskContents?: TaskProps;
     setTaskContents?: (value: TaskProps) => void;
-    setIsAttachmentDeleted: (value: boolean) => void;
-    setDeletedAttachmentId: (value: number) => void;
+    setIsAttachmentDeleted?: (value: boolean) => void;
+    setDeletedAttachmentId?: (value: number) => void;
+    isCreatingNewTask: boolean;
 };
 
 export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
@@ -40,6 +41,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
         setTaskContents,
         setIsAttachmentDeleted,
         setDeletedAttachmentId,
+        isCreatingNewTask,
     } = props;
 
     const [images, setImages] = useState<
@@ -63,19 +65,64 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
             setUploadingFiles((prev) => [...prev, { attachment_id: -1, file: file }]);
         });
         setIsAddedNewFile(true);
+
+        if (isCreatingNewTask) {
+            selectedFiles.map((file) => {
+                if (file.type === "image/jpeg" || file.type === "image/png") {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if (e.target?.result) {
+                            const img = new Image();
+                            img.src = e.target.result as string;
+                            img.onload = () => {
+                                const size = resizeImageToFitBox({
+                                    height: img.height,
+                                    width: img.width,
+                                });
+                                setImages((prev) => [
+                                    ...prev,
+                                    {
+                                        attachmentId: -1,
+                                        url: img.src,
+                                        name: file.name,
+                                        width: size.width,
+                                        height: size.height,
+                                    },
+                                ]);
+                            };
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    const fileURL = URL.createObjectURL(file);
+                    setTextFiles((prev) => [
+                        ...prev,
+                        {
+                            attachmentId: -1,
+                            name: file.name,
+                            url: fileURL,
+                        },
+                    ]);
+                }
+            });
+        }
     };
 
     const handleDeleteImage = async (
         taskId: number | undefined,
         attachmentId: number,
-        url: string
+        name: string
     ) => {
-        setImages((prev) => prev.filter((image) => image.url !== url));
+        setImages((prev) => prev.filter((image) => image.name !== name));
         if (taskId && attachmentId) {
             const res = await deleteTaskAttachment(taskId, attachmentId, accessToken);
             console.log("Image deleted:", res);
-            setIsAttachmentDeleted(true);
-            setDeletedAttachmentId(attachmentId);
+            if (setIsAttachmentDeleted) {
+                setIsAttachmentDeleted(true);
+            }
+            if (setDeletedAttachmentId) {
+                setDeletedAttachmentId(attachmentId);
+            }
         }
     };
 
@@ -88,8 +135,12 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
         if (taskId && attachmentId) {
             const res = await deleteTaskAttachment(taskId, attachmentId, accessToken);
             console.log("File deleted:", res);
-            setIsAttachmentDeleted(true);
-            setDeletedAttachmentId(attachmentId);
+            if (setIsAttachmentDeleted) {
+                setIsAttachmentDeleted(true);
+            }
+            if (setDeletedAttachmentId) {
+                setDeletedAttachmentId(attachmentId);
+            }
         }
     };
 
@@ -102,18 +153,15 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
     useEffect(() => {
         if (
             isAddedNewFile &&
+            uploadingFiles &&
             uploadingFiles.length > 0 &&
             uploadingFiles.length != uploadedFiles.length
         ) {
             if (taskContents && setTaskContents) {
-                if (uploadingFiles) {
-                    Array.from(uploadingFiles).map((file, index) => {
-                        setTaskContents({
-                            ...taskContents,
-                            attachments: [{ attachment_id: -1, file: file.file }],
-                        });
-                    });
-                }
+                setTaskContents({
+                    ...taskContents,
+                    attachments: uploadingFiles,
+                });
             }
             if (setTaskUpdated) {
                 setTaskUpdated(true);
@@ -197,12 +245,56 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
         const files = event.target.files;
         if (taskContents && setTaskContents) {
             if (files) {
+                let attachments: any[] = [];
                 Array.from(files).map((file, index) => {
-                    setTaskContents({
-                        ...taskContents,
-                        attachments: [{ attachment_id: -1, file: file }],
-                    });
+                    attachments = [...attachments, { attachment_id: -1, file: file }];
+                    setUploadingFiles((prev) => [...prev, { attachment_id: -1, file: file }]);
+
+                    if (isCreatingNewTask) {
+                        if (file.type === "image/jpeg" || file.type === "image/png") {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                if (e.target?.result) {
+                                    const img = new Image();
+                                    img.src = e.target.result as string;
+                                    img.onload = () => {
+                                        const size = resizeImageToFitBox({
+                                            height: img.height,
+                                            width: img.width,
+                                        });
+                                        setImages((prev) => [
+                                            ...prev,
+                                            {
+                                                attachmentId: -1,
+                                                url: img.src,
+                                                name: file.name,
+                                                width: size.width,
+                                                height: size.height,
+                                            },
+                                        ]);
+                                    };
+                                }
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            const fileURL = URL.createObjectURL(file);
+                            setTextFiles((prev) => [
+                                ...prev,
+                                {
+                                    attachmentId: -1,
+                                    name: file.name,
+                                    url: fileURL,
+                                },
+                            ]);
+                        }
+                    }
                 });
+
+                setTaskContents({
+                    ...taskContents,
+                    attachments: [...taskContents.attachments, ...attachments],
+                });
+
                 if (setTaskUpdated) {
                     setTaskUpdated(true);
                 }
@@ -335,7 +427,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
                                     handleDeleteImage(
                                         taskContents?.id,
                                         image.attachmentId,
-                                        image.url
+                                        image.name
                                     );
                                 }}
                                 size="sm"
