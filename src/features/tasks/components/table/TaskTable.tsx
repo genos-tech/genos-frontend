@@ -248,7 +248,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     // Reset filter
     useEffect(() => {
         apiRef.current.setFilterModel({ items: [] });
-    }, [displayTaskType, predefinedFilters]);
+    }, [displayTaskType, currentProject]);
 
     return (
         <ThemeProvider theme={theme}>
