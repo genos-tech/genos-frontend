@@ -101,7 +101,7 @@ type ProjectTaskTableProps = {
     displayTaskType: TaskType;
 };
 
-export const TaskTable = (props: ProjectTaskTableProps) => {
+export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const {
         myself,
         ongoingTasks,
@@ -218,6 +218,11 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
             updateTagOptions();
         }
     }, [displayTaskType, ongoingTasks, closedTasks, deletedTasks]);
+
+    // Reset filter
+    useEffect(() => {
+        apiRef.current.setFilterModel({ items: [] });
+    }, [displayTaskType]);
 
     return (
         <ThemeProvider theme={theme}>
@@ -343,7 +348,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                                 },
                             },
                             sorting: {
-                                sortModel: [{ field: "id", sort: "desc" }],
+                                sortModel: [{ field: "updatedAt", sort: "desc" }],
                             },
                             pagination: {
                                 paginationModel: {
@@ -357,6 +362,7 @@ export const TaskTable = (props: ProjectTaskTableProps) => {
                                     priority: true,
                                     effortLevel: true,
                                     createdDate: true,
+                                    updatedAt: false,
                                     dueDate: true,
                                     daysLeft: true,
                                     status: true,

@@ -25,7 +25,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { TaskSidebar } from "./components/TaskSidebar";
 import { TaskDashboard } from "./components/dashboard//TaskDashboard";
 import { TaskPreview } from "./components/contents/TaskPreview";
-import { TaskTable } from "./components/table/TaskTable";
+import { ProjectTaskTable } from "./components/table/TaskTable";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { loadSpecificTask } from "./services/loadSpecificTask";
 import { loadTeamProjects } from "./services/loadTeamProjects";
@@ -127,6 +127,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                -1,
                 accessToken
             );
 
@@ -226,6 +227,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             priority: loadedTask[0].priority.priority || null,
                             effortLevel: loadedTask[0].effortLevel.level || null,
                             createdDate: loadedTask[0].createdDate || null,
+                            updatedAt: loadedTask[0].updatedAt || null,
                             dueDate: loadedTask[0].dueDate || null,
                             daysLeft: loadedTask[0].daysLeft || null,
                             status: loadedTask[0].status.status || null,
@@ -258,6 +260,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                               priority: currentPreviewTask.priority.priority || null,
                               effortLevel: currentPreviewTask.effortLevel.level || null,
                               createdDate: currentPreviewTask.createdDate || null,
+                              updatedAt: currentPreviewTask.updatedAt || null,
                               dueDate: currentPreviewTask.dueDate || null,
                               daysLeft: currentPreviewTask.daysLeft || null,
                               status: currentPreviewTask.status.status || null,
@@ -582,7 +585,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         )}
                                         {isTaskTableVisible === true && (
                                             <>
-                                                <TaskTable
+                                                <ProjectTaskTable
                                                     myself={myself}
                                                     ongoingTasks={ongoingTasks}
                                                     closedTasks={closedTasks}

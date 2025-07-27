@@ -118,6 +118,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                -1,
                 accessToken
             );
 
@@ -144,6 +145,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                10,
                 accessToken
             );
             setRecentTasks([...loadedTeamTasks.slice(0, 10)]);

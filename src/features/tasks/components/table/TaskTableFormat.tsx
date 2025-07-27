@@ -57,13 +57,13 @@ const statusOptions = [
 ];
 const getStatusOption = (value: string) => statusOptions.find((option) => option.value === value);
 
-type getTaskColumns = {
+type getTaskColumnsProps = {
     myself: UserProps;
     accessToken: string | null;
     teamMembers: UserProps[];
 };
 
-export const getTaskColumns = (props: getTaskColumns): GridColDef[] => {
+export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
     const { mode } = useColorScheme();
 
     return [
@@ -442,6 +442,16 @@ export const getTaskColumns = (props: getTaskColumns): GridColDef[] => {
             align: "left",
             headerAlign: "left",
             valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
+        },
+        {
+            field: "updatedAt",
+            headerName: "Updated at",
+            headerClassName: "task-col--header",
+            type: "dateTime",
+            width: 150,
+            align: "left",
+            headerAlign: "left",
+            valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD HH:mm:ss"),
         },
         {
             field: "concatTags",

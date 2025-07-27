@@ -87,6 +87,7 @@ export type TaskProps = {
     dueDate: string;
     daysLeft?: number;
     createdDate?: string;
+    updatedAt?: string;
     status: TaskStatusProps;
     priority: TaskPriorityProps;
     effortLevel: TaskEffortLevelProps;
@@ -111,6 +112,7 @@ export type TaskTableProps = {
     priority: string | null;
     effortLevel: string | null;
     createdDate: string | null;
+    updatedAt: string | null;
     dueDate: string | null;
     daysLeft: number | null;
     status: string | null;
