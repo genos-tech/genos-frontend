@@ -201,7 +201,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     useEffect(() => {
         loadProjects();
-    }, [myself, openCreateTeam, openCreateProject]);
+    }, [myself, openCreateTeam, openCreateProject, isNewTaskCreated]);
 
     useEffect(() => {
         if (currentProject) {
@@ -736,6 +736,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsTaskUpdated={setIsTaskUpdated}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
+                                                currentPreviewTaskId={currentPreviewTaskId}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 isCommentUpdated={isCommentUpdated}
                                                 setIsCommentUpdated={setIsCommentUpdated}

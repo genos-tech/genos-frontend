@@ -7,7 +7,7 @@ import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskBodyEditBlock } from "./base/TaskBodyEditBlock";
 import { CreateTaskFooter } from "./base/CreateTaskFooter";
-import { TaskAttachmentBlock } from "./base/TaskAttachmentBlock";
+import { CreateTaskAttachmentBlock } from "./base/CreateTaskAttachmentBlock";
 import {
     updateTaskTitle,
     updateTaskBody,
@@ -322,11 +322,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ m: 2 }} />
 
-            <TaskAttachmentBlock
-                uploadedFiles={uploadedFiles}
+            <CreateTaskAttachmentBlock
                 taskContents={taskContents}
                 setTaskContents={setTaskContents}
-                isCreatingNewTask={true}
             />
 
             <Divider sx={{ m: 2 }} />

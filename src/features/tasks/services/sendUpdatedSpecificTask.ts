@@ -117,28 +117,33 @@ export const sendUpdatedSpecificTask = async (
 
                 let uploadAttachments: any[] = [];
                 for (const attachment of updatedTask.attachments) {
-                    const formData = new FormData();
-                    formData.append("task", String(updatedTask.id));
-                    formData.append("attachment_id", String(attachment.attachment_id));
-                    formData.append("attached_file", attachment.file);
-                    formData.append("attached_type", attachment.file.type);
+                    if (attachment.attachment_id < 0) {
+                        const formData = new FormData();
+                        formData.append("task", String(updatedTask.id));
+                        formData.append("attachment_id", "-1");
+                        formData.append("attached_file", attachment.file);
+                        formData.append("attached_type", attachment.file.type);
 
-                    const uploadAttachmentResponse = await fetch(`${base_url}/task/attachment/`, {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                        body: formData,
-                    });
-
-                    const uploadAttachmentData = await uploadAttachmentResponse.json();
-
-                    if (!uploadAttachmentResponse.ok) {
-                        throw new Error(
-                            uploadAttachmentData.message || "Attachment Upload Failed"
+                        const uploadAttachmentResponse = await fetch(
+                            `${base_url}/task/attachment/`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    Authorization: `Bearer ${accessToken}`,
+                                },
+                                body: formData,
+                            }
                         );
-                    } else if (uploadAttachmentData) {
-                        uploadAttachments = [...uploadAttachments, uploadAttachmentData];
+
+                        const uploadAttachmentData = await uploadAttachmentResponse.json();
+
+                        if (!uploadAttachmentResponse.ok) {
+                            throw new Error(
+                                uploadAttachmentData.message || "Attachment Upload Failed"
+                            );
+                        } else if (uploadAttachmentData) {
+                            uploadAttachments = [...uploadAttachments, uploadAttachmentData];
+                        }
                     }
                 }
 

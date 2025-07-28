@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { Sheet, Divider } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 
-import { TaskAttachmentBlock } from "./base/TaskAttachmentBlock";
+import { PreviewTaskAttachmentBlock } from "./base/PreviewTaskAttachmentBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskBodyPreviewBlock } from "./base/TaskBodyPreviewBlock";
@@ -41,6 +41,7 @@ type TaskPreviewProps = {
     setIsTaskUpdated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
@@ -68,6 +69,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsTaskUpdated,
         setOpeningService,
         setCurrentMainChat,
+        currentPreviewTaskId,
         setCurrentPreviewTaskId,
         isCommentUpdated,
         setIsCommentUpdated,
@@ -168,7 +170,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setBody(currentPreviewTask.body || []);
         }
 
-        setUploadedFiles(currentPreviewTask.attachments);
+        // setUploadedFiles(currentPreviewTask.attachments);
     }, [currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
@@ -378,14 +380,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setCurrentMainChat={setCurrentMainChat}
             />
 
-            <TaskAttachmentBlock
+            <PreviewTaskAttachmentBlock
                 uploadedFiles={uploadedFiles}
+                setUploadedFiles={setUploadedFiles}
+                currentPreviewTaskId={currentPreviewTaskId}
                 taskContents={tmpCurrentTaskContent}
                 setTaskContents={setTmpCurrentTaskContent}
                 setTaskUpdated={setTaskUpdated}
                 setIsAttachmentDeleted={setIsAttachmentDeleted}
                 setDeletedAttachmentId={setDeletedAttachmentId}
-                isCreatingNewTask={false}
             />
 
             <Divider sx={{ m: 2 }} />
