@@ -219,10 +219,13 @@ export const TaskHome = (props: TaskHomeProps) => {
                     accessToken
                 );
 
-                setCurrentPreviewTask(loadedTask[0]);
-                setIsTaskPreviewVisible(true);
+                // Avoid double update it
+                if (isNewTagCreated === false) {
+                    setCurrentPreviewTask(loadedTask[0]);
+                }
 
                 if (isNewTaskCreated) {
+                    setIsTaskPreviewVisible(true);
                     setOnGoingTasks((prev) => [
                         ...prev,
                         {

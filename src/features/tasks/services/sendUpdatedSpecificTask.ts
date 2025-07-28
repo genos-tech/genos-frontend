@@ -115,6 +115,7 @@ export const sendUpdatedSpecificTask = async (
                     });
                 }
 
+                let uploadAttachments: any[] = [];
                 for (const attachment of updatedTask.attachments) {
                     const formData = new FormData();
                     formData.append("task", String(updatedTask.id));
@@ -136,12 +137,12 @@ export const sendUpdatedSpecificTask = async (
                         throw new Error(
                             uploadAttachmentData.message || "Attachment Upload Failed"
                         );
-                    } else {
-                        return uploadAttachmentData;
+                    } else if (uploadAttachmentData) {
+                        uploadAttachments = [...uploadAttachments, uploadAttachmentData];
                     }
                 }
 
-                return res.data;
+                return uploadAttachments;
             }
         } else {
             console.error("Unauthorized. Auth toke is not found.");

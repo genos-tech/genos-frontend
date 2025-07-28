@@ -61,6 +61,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
     };
 
     const handleFiles = async (selectedFiles: File[]) => {
+        console.log("selectedFiles:", selectedFiles);
         selectedFiles.forEach(async (file) => {
             setUploadingFiles((prev) => [...prev, { attachment_id: -1, file: file }]);
         });
@@ -151,13 +152,9 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
     };
 
     useEffect(() => {
-        if (
-            isAddedNewFile &&
-            uploadingFiles &&
-            uploadingFiles.length > 0 &&
-            uploadingFiles.length != uploadedFiles.length
-        ) {
+        if (isAddedNewFile && uploadingFiles && uploadingFiles.length > 0) {
             if (taskContents && setTaskContents) {
+                console.log("uploadingFiles to task Content:", uploadingFiles);
                 setTaskContents({
                     ...taskContents,
                     attachments: uploadingFiles,
@@ -174,6 +171,7 @@ export const TaskAttachmentBlock = (props: TaskAttachmentBlockProps) => {
         setUploadingFiles([]);
         setImages([]);
         setTextFiles([]);
+        console.log("uploadedFiles in block:", uploadedFiles);
 
         if (uploadedFiles.length > 0) {
             uploadedFiles.map((attachmentFile, index) => {

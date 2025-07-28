@@ -380,7 +380,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             borderRadius: "7px",
                                                             fontWeight: "bold",
                                                         }}
-                                                        size="lg"
+                                                        size="md"
                                                     >
                                                         ID: {taskId || "N/A"}
                                                     </Chip>
