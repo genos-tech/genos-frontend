@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { Sheet, Divider } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 
-import { TaskAttachmentBlock } from "./base/TaskAttachmentBlock";
+import { PreviewTaskAttachmentBlock } from "./base/PreviewTaskAttachmentBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskBodyPreviewBlock } from "./base/TaskBodyPreviewBlock";
@@ -28,19 +28,20 @@ type TaskPreviewProps = {
     myself: UserProps;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTask: TaskProps;
+    setCurrentPreviewTask: (value: TaskProps) => void;
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
     setIsCreatingTask: (value: any) => void;
     setIsTaskPreviewVisible?: (value: boolean) => void;
     setIsTaskCreationVisible?: (value: boolean) => void;
-    setCurrentPreviewTask: (value: TaskProps) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
     isTaskUpdated?: boolean;
     setIsTaskUpdated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
@@ -68,6 +69,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsTaskUpdated,
         setOpeningService,
         setCurrentMainChat,
+        currentPreviewTaskId,
         setCurrentPreviewTaskId,
         isCommentUpdated,
         setIsCommentUpdated,
@@ -84,8 +86,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [taskBodyUpdated, setTaskBodyUpdated] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
-    const [uploadedSingleAttachment, setUploadedSingleAttachment] =
-        useState<AttachmentFileProps>();
     const [tmpCurrentTaskContent, setTmpCurrentTaskContent] =
         useState<TaskProps>(currentPreviewTask);
     const [taskTitle, setTaskTitle] = useState<string>(currentPreviewTask.title);
@@ -105,42 +105,49 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     }, []);
 
     // Send updated task to the backend when task is updated
-    const sendUpdatedTask = async (taskChanged: boolean) => {
+    const sendUpdatedTask = async (taskSwitched: boolean) => {
         const newTaskContent: TaskProps = {
             ...tmpCurrentTaskContent,
             title: taskTitle === "" ? initTaskTitle : taskTitle,
             body: body,
         };
 
-        const uploadedAttachmentData = await sendUpdatedSpecificTask(
+        const uploadAttachments = await sendUpdatedSpecificTask(
             socket,
             myself,
             newTaskContent,
             accessToken
         );
 
-        if (uploadedAttachmentData && uploadedAttachmentData.attachment_id > 0) {
-            setUploadedSingleAttachment({
-                attachment_id: uploadedAttachmentData.attachment_id,
-                file: uploadedAttachmentData.attached_file,
-                file_base64: uploadedAttachmentData.file_base64,
-                name: uploadedAttachmentData.name,
-                type: uploadedAttachmentData.attached_type,
+        if (uploadAttachments && uploadAttachments.length > 0) {
+            let uploadedAttachments: AttachmentFileProps[] = [];
+            uploadAttachments.map((attachment: any) => {
+                if (attachment.attachment_id) {
+                    uploadedAttachments = [
+                        ...uploadedAttachments,
+                        {
+                            attachment_id: attachment.attachment_id,
+                            file: attachment.attached_file,
+                            file_base64: attachment.file_base64,
+                            name: attachment.name,
+                            type: attachment.attached_type,
+                        },
+                    ];
+                }
             });
-        } else {
-            setUploadedSingleAttachment(undefined);
+            setUploadedFiles([...uploadedFiles, ...uploadedAttachments]);
         }
 
-        if (taskChanged) {
-            // Initialize the following variable when use changes the previewing task
+        if (taskSwitched) {
+            // Initialize the following variable when user switches the previewing task
             setTmpCurrentTaskContent(currentPreviewTask);
             setCurrentPreviewTask(currentPreviewTask);
             setCurrentTaskId(currentPreviewTask.id);
             setBody(currentPreviewTask.body || []);
             setTaskBodyUpdated(false);
         } else {
-            // Update only the tmpCurrentTaskContent when use updated the task content
-            // (Not changed the previewing task)
+            // Update only the tmpCurrentTaskContent when user updated the task content
+            // (Not switched the previewing task)
             setTmpCurrentTaskContent(newTaskContent);
             setCurrentPreviewTask(newTaskContent);
         }
@@ -162,7 +169,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setCurrentTaskId(currentPreviewTask.id);
             setBody(currentPreviewTask.body || []);
         }
-        setUploadedFiles(currentPreviewTask.attachments);
+
+        // setUploadedFiles(currentPreviewTask.attachments);
     }, [currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
@@ -211,12 +219,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             })();
         }
     }, [uploadedFiles]);
-
-    useEffect(() => {
-        if (uploadedSingleAttachment !== undefined) {
-            setUploadedFiles([...uploadedFiles, uploadedSingleAttachment]);
-        }
-    }, [uploadedSingleAttachment]);
 
     useEffect(() => {
         if (setIsTaskUpdated && isTaskUpdated === false) {
@@ -378,14 +380,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setCurrentMainChat={setCurrentMainChat}
             />
 
-            <TaskAttachmentBlock
+            <PreviewTaskAttachmentBlock
                 uploadedFiles={uploadedFiles}
+                setUploadedFiles={setUploadedFiles}
+                currentPreviewTaskId={currentPreviewTaskId}
                 taskContents={tmpCurrentTaskContent}
                 setTaskContents={setTmpCurrentTaskContent}
                 setTaskUpdated={setTaskUpdated}
                 setIsAttachmentDeleted={setIsAttachmentDeleted}
                 setDeletedAttachmentId={setDeletedAttachmentId}
-                isCreatingNewTask={false}
             />
 
             <Divider sx={{ m: 2 }} />

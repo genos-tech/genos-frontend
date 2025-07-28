@@ -150,3 +150,16 @@ export type SearchTeamTasksResponse = {
     title: string;
     status: string;
 };
+
+export type FileProps = {
+    attachmentId: number;
+    url: string;
+    name: string;
+    width: number;
+    height: number;
+};
+
+export type ImageSizeProps = {
+    width: number;
+    height: number;
+};

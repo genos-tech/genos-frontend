@@ -201,7 +201,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     useEffect(() => {
         loadProjects();
-    }, [myself, openCreateTeam, openCreateProject]);
+    }, [myself, openCreateTeam, openCreateProject, isNewTaskCreated]);
 
     useEffect(() => {
         if (currentProject) {
@@ -219,10 +219,13 @@ export const TaskHome = (props: TaskHomeProps) => {
                     accessToken
                 );
 
-                setCurrentPreviewTask(loadedTask[0]);
-                setIsTaskPreviewVisible(true);
+                // Avoid double update it
+                if (isNewTagCreated === false) {
+                    setCurrentPreviewTask(loadedTask[0]);
+                }
 
                 if (isNewTaskCreated) {
+                    setIsTaskPreviewVisible(true);
                     setOnGoingTasks((prev) => [
                         ...prev,
                         {
@@ -733,6 +736,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsTaskUpdated={setIsTaskUpdated}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
+                                                currentPreviewTaskId={currentPreviewTaskId}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 isCommentUpdated={isCommentUpdated}
                                                 setIsCommentUpdated={setIsCommentUpdated}
