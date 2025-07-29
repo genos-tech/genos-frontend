@@ -155,10 +155,23 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     };
 
     useEffect(() => {
+        // Save updated task (title, assignee, status, ..., but not task body)
         if (taskUpdated === true) {
             sendUpdatedTask(false);
         }
     }, [taskUpdated]);
+
+    // Auto save task body every Nms if needed
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (taskBodyUpdated === true) {
+                sendUpdatedTask(false);
+            }
+        }, 3000); // 3000ms
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, [taskBodyUpdated]);
 
     // Update variables when an user change the target task
     useEffect(() => {

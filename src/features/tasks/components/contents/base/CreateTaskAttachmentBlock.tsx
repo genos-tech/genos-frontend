@@ -7,7 +7,13 @@ import { AttachmentFileProps } from "../../../../../types/tasks";
 import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
-    const scaleFactor = 100 / imageSize.height;
+    const maxWidth = 300;
+    const maxHeight = 300;
+
+    const widthRatio = maxWidth / imageSize.width;
+    const heightRatio = maxHeight / imageSize.height;
+    const scaleFactor = Math.min(widthRatio, heightRatio);
+
     return {
         width: Math.round(imageSize.width * scaleFactor),
         height: Math.round(imageSize.height * scaleFactor),
