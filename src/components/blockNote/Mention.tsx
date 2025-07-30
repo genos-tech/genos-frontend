@@ -19,7 +19,25 @@ export const CreateMentionSpec = (
         {
             type: "mention",
             propSchema: {
-                user: {
+                userName: {
+                    default: "Unknown",
+                },
+                userEmail: {
+                    default: "Unknown",
+                },
+                userId: {
+                    default: "Unknown",
+                },
+                teamId: {
+                    default: "Unknown",
+                },
+                teamName: {
+                    default: "Unknown",
+                },
+                avatarImgPath: {
+                    default: "Unknown",
+                },
+                customStatus: {
                     default: "Unknown",
                 },
                 online: {
@@ -30,18 +48,29 @@ export const CreateMentionSpec = (
         },
         {
             render: (props) => {
-                const user = props.inlineContent.props.user;
+                const userName = props.inlineContent.props.userName;
+                const userEmail = props.inlineContent.props.userEmail;
+                const userId = props.inlineContent.props.userId;
+                const teamId = props.inlineContent.props.teamId;
+                const teamName = props.inlineContent.props.teamName;
+                const avatarImgPath = props.inlineContent.props.avatarImgPath;
+                const customStatus = props.inlineContent.props.customStatus;
                 const online = props.inlineContent.props.online;
+
                 const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
+
                 return (
                     <>
                         <Box
-                            onClick={() => setOpenUserProfile(true)}
+                            onClick={() => {
+                                setOpenUserProfile(true);
+                            }}
                             sx={{
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: 0.5,
-                                backgroundColor: "#fffb0033",
+                                backgroundColor:
+                                    myself.userId === userId ? "#ff77002f" : "#7700ff2f",
                                 borderRadius: "12px",
                                 px: 1,
                                 py: 0.5,
@@ -50,15 +79,30 @@ export const CreateMentionSpec = (
                                 fontSize: "0.875rem",
                             }}
                         >
-                            <Typography level="body-sm" fontWeight={"bold"} color="primary">
-                                @{user}
+                            <Typography
+                                level="body-sm"
+                                fontWeight={"bold"}
+                                sx={{
+                                    color: myself.userId === userId ? "#ff7700ff" : "#7700ffff",
+                                }}
+                            >
+                                @{userName}
                             </Typography>
                             <PulseDot color={online ? "#4caf50" : "#999"} />
                         </Box>
 
                         <UserProfile
                             socket={socket}
-                            userProfile={myself}
+                            userProfile={{
+                                userName: userName,
+                                userEmail: userEmail,
+                                userId: userId,
+                                teamId: teamId,
+                                teamName: teamName,
+                                avatarImgPath: avatarImgPath,
+                                customStatus: customStatus,
+                                online: online,
+                            }}
                             openUserProfile={openUserProfile}
                             setOpenUserProfile={setOpenUserProfile}
                             setCurrentMainChat={setCurrentMainChat}
@@ -84,7 +128,13 @@ export const MentionMenuItems = (
                 {
                     type: "mention",
                     props: {
-                        user: user.userName,
+                        userName: user.userName,
+                        userEmail: user.userEmail,
+                        userId: user.userId,
+                        teamId: user.teamId,
+                        teamName: user.teamName,
+                        avatarImgPath: user.avatarImgPath,
+                        customStatus: user.customStatus,
                         online: user.online,
                     },
                 },

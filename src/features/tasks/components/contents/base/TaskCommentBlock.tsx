@@ -156,9 +156,13 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                                     </Tooltip>
                                                     <BnPreview
                                                         customClassName="task-comment-preview"
+                                                        myself={myself}
+                                                        socket={socket}
                                                         key={`${taskComments[0].taskId}-${comment.commentId}-${comment.tsSent}`}
                                                         content={comment.commentBody}
                                                         isSent={true}
+                                                        setCurrentChat={setCurrentChat}
+                                                        setOpeningService={setOpeningService}
                                                     />
                                                 </Card>
                                             </Box>

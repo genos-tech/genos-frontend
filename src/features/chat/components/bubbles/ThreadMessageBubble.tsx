@@ -147,9 +147,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
                             {message.content.length > 0 && (
                                 <BnPreview
+                                    myself={myself}
+                                    socket={socket}
                                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                                     content={message.content}
                                     isSent={isSent}
+                                    setCurrentChat={setCurrentMainChat}
+                                    setOpeningService={setOpeningService}
                                 />
                             )}
                         </Stack>
