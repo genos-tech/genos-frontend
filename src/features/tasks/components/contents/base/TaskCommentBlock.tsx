@@ -9,27 +9,34 @@ import { BnPreview } from "../../../../../components/blockNote/bnPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
+import { ChatProps } from "../../../../../types/chat";
 import { extractMMDDHHMM, extractMMDDHHMMSSs } from "../../../../../utils/dateUtils";
 
 type TaskCommentBlockProps = {
     myself: UserProps;
     socket: Socket | null;
+    teamMembers: UserProps[];
     task: TaskProps;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
+    setCurrentChat: (chat: ChatProps) => void;
+    setOpeningService: (value: number) => void;
 };
 
 export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     const {
         myself,
         socket,
+        teamMembers,
         task,
         taskComments,
         setTaskComments,
         isCommentUpdated,
         setIsCommentUpdated,
+        setCurrentChat,
+        setOpeningService,
     } = props;
     const { mode } = useColorScheme();
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
@@ -168,6 +175,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                 <BnUpdateTaskCommentEditor
                     myself={myself}
                     socket={socket}
+                    teamMembers={teamMembers}
                     projectId={task.project?.projectId}
                     taskId={task.id}
                     taskComments={taskComments}
@@ -177,17 +185,22 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                     targetComment={editTargetComment}
                     isInEdit={isInEdit}
                     setIsInEdit={setIsInEdit}
+                    setCurrentChat={setCurrentChat}
+                    setOpeningService={setOpeningService}
                 />
             )}
             {isInEdit === false && (
                 <BnTaskCommentEditor
                     myself={myself}
                     socket={socket}
+                    teamMembers={teamMembers}
                     task={task}
                     taskComments={taskComments}
                     setTaskComments={setTaskComments}
                     isCommentUpdated={isCommentUpdated}
                     setIsCommentUpdated={setIsCommentUpdated}
+                    setCurrentChat={setCurrentChat}
+                    setOpeningService={setOpeningService}
                 />
             )}
         </Box>

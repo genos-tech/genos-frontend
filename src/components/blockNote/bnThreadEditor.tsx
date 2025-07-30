@@ -30,70 +30,59 @@ import {
 } from "@blocknote/core";
 
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { Mention } from "./Mention";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { getCurrentTimestamp } from "../../utils/dateUtils";
 import { UserProps } from "../../types/admin";
+import { ChatProps } from "../../types/chat";
 import { ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
-
-// Disable the Audio and Image blocks from the built-in schema
-// This is done by picking out the blocks you want to disable
-const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
-
-// Our schema with inline content specs, which contain the configs and
-// implementations for inline content  that we want our editor to use.
-const schema = BlockNoteSchema.create({
-    inlineContentSpecs: {
-        // Adds all default inline content.
-        ...defaultInlineContentSpecs,
-        // Adds the mention tag.
-        mention: Mention,
-    },
-    blockSpecs: {
-        // remainingBlockSpecs contains all the other blocks
-        ...remainingBlockSpecs,
-    },
-});
-
-// Function which gets all users for the mentions menu.
-const getMentionMenuItems = (
-    editor: typeof schema.BlockNoteEditor
-): DefaultReactSuggestionItem[] => {
-    const users = ["Steve", "Bob", "Joe", "Mike"];
-
-    return users.map((user) => ({
-        title: user,
-        onItemClick: () => {
-            editor.insertInlineContent([
-                {
-                    type: "mention",
-                    props: {
-                        user,
-                    },
-                },
-                " ", // add a space after the mention
-            ]);
-        },
-    }));
-};
-
-// List containing all default Slash Menu Items, as well as our custom one.
-const getCustomSlashMenuItems = (
-    editor: typeof schema.BlockNoteEditor
-): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
 type BnThreadEditorProps = {
     myself: UserProps;
     socket: Socket | null;
+    teamMembers: UserProps[];
     thread: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
+    setCurrentChat: (chat: ChatProps) => void;
+    setOpeningService: (value: number) => void;
 };
-
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
-    const { myself, socket, thread, setCurrentThreadChat } = props;
+    const {
+        myself,
+        socket,
+        teamMembers,
+        thread,
+        setCurrentThreadChat,
+        setCurrentChat,
+        setOpeningService,
+    } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`;
+
+    // Disable the Audio and Image blocks from the built-in schema
+    // This is done by picking out the blocks you want to disable
+    const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
+
+    // Our schema with inline content specs, which contain the configs and
+    // implementations for inline content  that we want our editor to use.
+    const schema = BlockNoteSchema.create({
+        inlineContentSpecs: {
+            // Adds all default inline content.
+            ...defaultInlineContentSpecs,
+            // Adds the mention tag.
+            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+        },
+        blockSpecs: {
+            // remainingBlockSpecs contains all the other blocks
+            ...remainingBlockSpecs,
+        },
+    });
+
+    // List containing all default Slash Menu Items, as well as our custom one.
+    const getCustomSlashMenuItems = (
+        editor: typeof schema.BlockNoteEditor
+    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
     // We use the English, default dictionary
     const locale = en;
@@ -333,7 +322,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(getMentionMenuItems(editor), query)
+                            filterSuggestionItems(MentionMenuItems(editor, teamMembers), query)
                         }
                     />
                     <SuggestionMenuController

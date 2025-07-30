@@ -13,6 +13,7 @@ import { AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
 import { popAllChats } from "./features/chat/services/popAllChats";
+import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 
 type SetMyselfProps = {
@@ -85,6 +86,7 @@ export const App = () => {
 
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
+    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isWSConnected, setIsWSConnected] = useState(false);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
@@ -103,6 +105,12 @@ export const App = () => {
             setAllChats(allChats);
         }
     };
+    const funcSetTeamMembers = async () => {
+        const teamMembers: UserProps[] = await popTeamMembers(myself);
+        if (teamMembers) {
+            setTeamMembers(teamMembers);
+        }
+    };
 
     useEffect(() => {
         funcSetAllChats();
@@ -115,6 +123,9 @@ export const App = () => {
     useEffect(() => {
         if (isLoading === false) {
             funcSetAllChats();
+
+            // Load all team users
+            funcSetTeamMembers();
         }
     }, [isLoading]);
 
@@ -163,6 +174,7 @@ export const App = () => {
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
+                        teamMembers={teamMembers}
                         currentMainChat={currentMainChat}
                         setCurrentMainChat={setCurrentMainChat}
                         currentSubChat={currentSubChat}

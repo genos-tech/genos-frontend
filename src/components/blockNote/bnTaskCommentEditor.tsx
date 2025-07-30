@@ -30,83 +30,68 @@ import {
 } from "@blocknote/core";
 
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { Mention } from "./Mention";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
+import { ChatProps } from "../../types/chat";
 import { getCurrentTimestamp } from "../../utils/dateUtils";
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
-
-// Disable the Audio and Image blocks from the built-in schema
-// This is done by picking out the blocks you want to disable
-const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
-
-// Our schema with inline content specs, which contain the configs and
-// implementations for inline content  that we want our editor to use.
-const schema = BlockNoteSchema.create({
-    inlineContentSpecs: {
-        // Adds all default inline content.
-        ...defaultInlineContentSpecs,
-        // Adds the mention tag.
-        mention: Mention,
-    },
-    blockSpecs: {
-        // remainingBlockSpecs contains all the other blocks
-        ...remainingBlockSpecs,
-    },
-});
-
-// Function which gets all users for the mentions menu.
-const getMentionMenuItems = (
-    editor: typeof schema.BlockNoteEditor
-): DefaultReactSuggestionItem[] => {
-    const users = ["Steve", "Bob", "Joe", "Mike"];
-
-    return users.map((user) => ({
-        title: user,
-        onItemClick: () => {
-            editor.insertInlineContent([
-                {
-                    type: "mention",
-                    props: {
-                        user,
-                    },
-                },
-                " ", // add a space after the mention
-            ]);
-        },
-    }));
-};
-
-// List containing all default Slash Menu Items, as well as our custom one.
-const getCustomSlashMenuItems = (
-    editor: typeof schema.BlockNoteEditor
-): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
 type BnTaskCommentEditorProps = {
     myself: UserProps;
     socket: Socket | null;
+    teamMembers: UserProps[];
     task: TaskProps;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
+    setCurrentChat: (chat: ChatProps) => void;
+    setOpeningService: (value: number) => void;
 };
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const {
         myself,
         socket,
+        teamMembers,
         task,
         setTaskUpdated,
         taskComments,
         setTaskComments,
         isCommentUpdated,
         setIsCommentUpdated,
+        setCurrentChat,
+        setOpeningService,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-box-${mode}`;
+
+    // Disable the Audio and Image blocks from the built-in schema
+    // This is done by picking out the blocks you want to disable
+    const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
+
+    // Our schema with inline content specs, which contain the configs and
+    // implementations for inline content  that we want our editor to use.
+    const schema = BlockNoteSchema.create({
+        inlineContentSpecs: {
+            // Adds all default inline content.
+            ...defaultInlineContentSpecs,
+            // Adds the mention tag.
+            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+        },
+        blockSpecs: {
+            // remainingBlockSpecs contains all the other blocks
+            ...remainingBlockSpecs,
+        },
+    });
+
+    // List containing all default Slash Menu Items, as well as our custom one.
+    const getCustomSlashMenuItems = (
+        editor: typeof schema.BlockNoteEditor
+    ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
     // We use the English, default dictionary
     const locale = en;
@@ -327,7 +312,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(getMentionMenuItems(editor), query)
+                            filterSuggestionItems(MentionMenuItems(editor, teamMembers), query)
                         }
                     />
                     <SuggestionMenuController

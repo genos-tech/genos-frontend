@@ -230,6 +230,13 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             setTeamMembers: setTeamMembers,
         });
     }, [myself, isOpenTeamMembersList]);
+    useEffect(() => {
+        updateTeamMembersOptions({
+            myself: myself,
+            accessToken: accessToken,
+            setTeamMembers: setTeamMembers,
+        });
+    }, []);
 
     // Get team projects
     const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
@@ -318,7 +325,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskBodyEditBlock body={body} setBody={setBody} />
+            <TaskBodyEditBlock
+                myself={myself}
+                socket={socket}
+                teamMembers={teamMembers}
+                body={body}
+                setBody={setBody}
+                setCurrentChat={setCurrentMainChat}
+                setOpeningService={setOpeningService}
+            />
 
             <Divider sx={{ m: 2 }} />
 

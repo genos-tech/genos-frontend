@@ -23,6 +23,7 @@ type MessagesPaneProps = {
     chat: ChatProps;
     subChat: ChatProps;
     myself: UserProps;
+    teamMembers: UserProps[];
     socket: Socket | null;
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -51,6 +52,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         chat,
         subChat,
         myself,
+        teamMembers,
         socket,
         currentMainChat,
         setCurrentMainChat,
@@ -179,20 +181,26 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                     {isInEdit === true && editTargetMessage && (
                         <BnUpdateEditor
+                            myself={myself}
                             socket={socket}
+                            teamMembers={teamMembers}
                             chat={chat}
                             message={editTargetMessage}
                             isInEdit={isInEdit}
                             setIsInEdit={setIsInEdit}
+                            setCurrentChat={setCurrentMainChat}
+                            setOpeningService={setOpeningService}
                         />
                     )}
                     {isInEdit === false && (
                         <BnEditor
                             myself={myself}
                             socket={socket}
+                            teamMembers={teamMembers}
                             chat={chat}
                             setCurrentChat={setCurrentMainChat}
                             funcSetAllChats={funcSetAllChats}
+                            setOpeningService={setOpeningService}
                         />
                     )}
                 </Box>

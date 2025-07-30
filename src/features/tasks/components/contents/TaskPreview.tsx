@@ -278,6 +278,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setTeamMembers: setTeamMembers,
         });
     }, [isOpenTeamMembersList]);
+    useEffect(() => {
+        updateTeamMembersOptions({
+            myself: myself,
+            accessToken: accessToken,
+            setTeamMembers: setTeamMembers,
+        });
+    }, []);
 
     // Get team projects
     const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
@@ -375,10 +382,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             />
 
             <TaskBodyPreviewBlock
+                socket={socket}
+                myself={myself}
+                teamMembers={teamMembers}
                 key={tmpCurrentTaskContent.id}
                 body={body}
                 setBody={setBody}
                 setTaskBodyUpdated={setTaskBodyUpdated}
+                setCurrentChat={setCurrentMainChat}
+                setOpeningService={setOpeningService}
             />
 
             <Divider sx={{ mt: 2 }} />
@@ -409,11 +421,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <TaskCommentBlock
                 myself={myself}
                 socket={socket}
+                teamMembers={teamMembers}
                 task={tmpCurrentTaskContent}
                 taskComments={taskComments}
                 setTaskComments={setTaskComments}
                 isCommentUpdated={isCommentUpdated}
                 setIsCommentUpdated={setIsCommentUpdated}
+                setCurrentChat={setCurrentMainChat}
+                setOpeningService={setOpeningService}
             />
         </Sheet>
     );

@@ -21,6 +21,7 @@ type MessagesPaneProps = {
     currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
+    teamMembers: UserProps[];
     chat: ChatProps;
     subChat: ChatProps;
     socket: Socket | null;
@@ -47,6 +48,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         currentWindowHeight,
         paneSizePCT,
         myself,
+        teamMembers,
         chat,
         subChat,
         socket,
@@ -171,20 +173,26 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                     {isInEdit === true && editTargetMessage && (
                         <BnUpdateEditor
+                            myself={myself}
                             socket={socket}
+                            teamMembers={teamMembers}
                             chat={chat}
                             message={editTargetMessage}
                             isInEdit={isInEdit}
                             setIsInEdit={setIsInEdit}
+                            setCurrentChat={setCurrentSubChat}
+                            setOpeningService={setOpeningService}
                         />
                     )}
                     {isInEdit === false && (
                         <BnEditor
                             myself={myself}
                             socket={socket}
+                            teamMembers={teamMembers}
                             chat={chat}
-                            setCurrentChat={setCurrentMainChat}
+                            setCurrentChat={setCurrentSubChat}
                             funcSetAllChats={funcSetAllChats}
+                            setOpeningService={setOpeningService}
                         />
                     )}
                 </Box>

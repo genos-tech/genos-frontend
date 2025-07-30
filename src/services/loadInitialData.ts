@@ -4,6 +4,7 @@ import { defaultDmPartner } from "../features/chat/services/constants";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
+import LoadTeamMemberWorker from "../workers/loadTeamMembersWorker.ts?worker";
 import LoadTeamTaskWorker from "../workers/loadTeamTasksWorker.ts?worker";
 import PopLatestChatWorker from "../workers/popLatestChatWorker.ts?worker";
 import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
@@ -20,6 +21,7 @@ export const loadInitialData = (
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
     const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
+    const [isTeamMembersLoaded, setIsTeamMembersLoaded] = useState<boolean | null>(false);
     const [isTeamTasksLoaded, setIsTeamTasksLoaded] = useState<boolean | null>(false);
     const [latestDmChatId, setLatestDmChatId] = useState<number | null>(null);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
@@ -34,7 +36,7 @@ export const loadInitialData = (
                 if (event.data === "done") {
                     setIsDMHistoryLoaded(true);
                 } else {
-                    console.error("Filed initial DM history data loading");
+                    console.error("Failed initial DM history data loading");
                     console.error("event.data:", event.data);
                 }
             };
@@ -53,7 +55,7 @@ export const loadInitialData = (
                 if (event.data === "done") {
                     setIsGMHistoryLoaded(true);
                 } else {
-                    console.error("Filed initial GM history data loading");
+                    console.error("Failed initial GM history data loading");
                     console.error("event.data:", event.data);
                 }
             };
@@ -72,12 +74,30 @@ export const loadInitialData = (
                 if (event.data === "done") {
                     setIsPMHistoryLoaded(true);
                 } else {
-                    console.error("Filed initial PM history data loading");
+                    console.error("Failed initial PM history data loading");
                     console.error("event.data:", event.data);
                 }
             };
             return () => {
                 loadPMHistoryWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
+
+    // Load Team Users
+    useEffect(() => {
+        if (accessToken && myself.userId !== "" && myself.userName !== "") {
+            const loadTeamMembersWorker = new LoadTeamMemberWorker();
+            loadTeamMembersWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadTeamMembersWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    setIsTeamMembersLoaded(true);
+                } else {
+                    console.error("Failed initial team member loading");
+                }
+            };
+            return () => {
+                loadTeamMembersWorker.terminate();
             };
         }
     }, [myself, accessToken]);
@@ -91,7 +111,7 @@ export const loadInitialData = (
                 if (event.data === "done") {
                     setIsTeamTasksLoaded(true);
                 } else {
-                    console.error("Filed initial team task loading");
+                    console.error("Failed initial team task loading");
                 }
             };
             return () => {
@@ -207,6 +227,7 @@ export const loadInitialData = (
             isGMHistoryLoaded &&
             isPMHistoryLoaded &&
             isTeamTasksLoaded &&
+            isTeamMembersLoaded &&
             isInitialChatLoaded
         ) {
             setIsLoading(false);
@@ -216,6 +237,7 @@ export const loadInitialData = (
         isGMHistoryLoaded,
         isPMHistoryLoaded,
         isTeamTasksLoaded,
+        isTeamMembersLoaded,
         isInitialChatLoaded,
     ]);
 };
