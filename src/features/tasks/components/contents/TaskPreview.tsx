@@ -167,7 +167,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             if (taskBodyUpdated === true) {
                 sendUpdatedTask(false);
             }
-        }, 3000); // 3000ms
+        }, 5000);
 
         // Clean up the interval when the component unmounts
         return () => clearInterval(intervalId);
