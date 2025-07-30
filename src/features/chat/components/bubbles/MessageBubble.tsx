@@ -307,9 +307,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                             {message.content.length > 0 && (
                                 <BnPreview
+                                    myself={myself}
+                                    socket={socket}
                                     key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
                                     content={message.content}
                                     isSent={isSent}
+                                    setCurrentChat={setCurrentMainChat}
+                                    setOpeningService={setOpeningService}
                                 />
                             )}
                         </Stack>

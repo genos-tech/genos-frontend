@@ -81,6 +81,11 @@ const _messageIdWithChatId = {
 };
 
 const _getDataWithIndex = {
+    teamMembers: async (teamId: string) => {
+        const db = await openDB(DB_NAME, DB_VERSION);
+        console.log("teamId:", teamId);
+        return db.get(STORES.USER_INFO, teamId);
+    },
     dmChats: async (chatId: number) => {
         const db = await openDB(DB_NAME, DB_VERSION);
         return db.get(STORES.DM_CHATS, chatId);
@@ -178,6 +183,14 @@ export const messageIdWithChatId = async (props: any) => {
         console.error("Unexpected storeName:", props.storeName);
         return [];
     }
+};
+
+export const getTeamMembers = async (teamId: string) => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const userInfoStore = db.transaction(STORES.USER_INFO).objectStore(STORES.USER_INFO);
+    const teamMembers = await userInfoStore.index(INDEX.USER_INFO).getAll(teamId);
+
+    return teamMembers;
 };
 
 export const getProjectTasks = async (projectId: number) => {

@@ -20,6 +20,7 @@ import { TaskProps } from "../../types/tasks";
 type MessagesPaneProps = {
     thread: ThreadProps;
     myself: UserProps;
+    teamMembers: UserProps[];
     socket: Socket | null;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setIsThreadVisible: (value: boolean) => void;
@@ -40,6 +41,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     const {
         thread,
         myself,
+        teamMembers,
         socket,
         setCurrentThreadChat,
         setIsThreadVisible,
@@ -181,19 +183,26 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                         {isInEdit === true && editTargetMessage && (
                             <BnUpdateThreadEditor
+                                myself={myself}
                                 socket={socket}
+                                teamMembers={teamMembers}
                                 thread={thread}
                                 message={editTargetMessage}
                                 isInEdit={isInEdit}
                                 setIsInEdit={setIsInEdit}
+                                setCurrentChat={setCurrentMainChat}
+                                setOpeningService={setOpeningService}
                             />
                         )}
                         {isInEdit === false && (
                             <BnThreadEditor
                                 myself={myself}
                                 socket={socket}
+                                teamMembers={teamMembers}
                                 thread={thread}
+                                setCurrentChat={setCurrentMainChat}
                                 setCurrentThreadChat={setCurrentThreadChat}
+                                setOpeningService={setOpeningService}
                             />
                         )}
                     </Box>

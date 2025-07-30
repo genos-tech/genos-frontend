@@ -23,6 +23,7 @@ type ChatHomeProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
+    teamMembers: UserProps[];
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     currentSubChat: ChatProps | undefined;
@@ -42,6 +43,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         socket,
         myself,
         setMyself,
+        teamMembers,
         currentMainChat,
         setCurrentMainChat,
         currentSubChat,
@@ -280,6 +282,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 currentWindowHeight={height}
                                                 paneSizePCT={subChatPanelSize}
                                                 myself={myself}
+                                                teamMembers={teamMembers}
                                                 chat={currentMainChat}
                                                 subChat={
                                                     currentSubChat
@@ -331,6 +334,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         chat={currentMainChat}
                                         subChat={currentSubChat ? currentSubChat : currentMainChat}
                                         myself={myself}
+                                        teamMembers={teamMembers}
                                         socket={socket}
                                         currentMainChat={currentMainChat}
                                         setCurrentMainChat={setCurrentMainChat}
@@ -388,6 +392,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     thread={currentThreadChat}
                                                     myself={myself}
                                                     socket={socket}
+                                                    teamMembers={teamMembers}
                                                     setCurrentThreadChat={setCurrentThreadChat}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     currentThreadChatId={currentThreadChatId}
@@ -471,6 +476,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setOpenCreateTag={setOpenCreateTag}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
+                                                    currentPreviewTaskId={currentPreviewTaskId}
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }
@@ -590,6 +596,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             thread={currentThreadChat}
                                             myself={myself}
                                             socket={socket}
+                                            teamMembers={teamMembers}
                                             setCurrentThreadChat={setCurrentThreadChat}
                                             setIsThreadVisible={setIsThreadVisible}
                                             currentThreadChatId={currentThreadChatId}
@@ -667,6 +674,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setOpenCreateTag={setOpenCreateTag}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
+                                                    currentPreviewTaskId={currentPreviewTaskId}
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }

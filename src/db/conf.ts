@@ -1,5 +1,5 @@
 export const DB_NAME = "originData";
-export const DB_VERSION = 5;
+export const DB_VERSION = 8;
 
 export const STORES = {
     USER_INFO: "users",
@@ -16,7 +16,7 @@ export const STORES = {
 };
 
 export const KEY_PATH = {
-    USER_INFO: "userName",
+    USER_INFO: "userId",
     DM_CHATS: "chatId",
     DM_MESSAGES: "messageIdWithChatId",
     DM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
@@ -30,6 +30,7 @@ export const KEY_PATH = {
 };
 
 export const INDEX = {
+    USER_INFO: "UserInfoIndex",
     DM_CHATS: "DmTSLastMessageIndex",
     DM_MESSAGES: "DmMessagesIndex",
     DM_MESSAGES_COMPOUND: "DmMessagesCompoundIndex",
@@ -50,6 +51,7 @@ export const INDEX = {
 };
 
 export const INDEX_KEY = {
+    USER_INFO: "teamId",
     DM_CHATS: "TSLastMessage",
     DM_MESSAGES: "chatId",
     DM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],

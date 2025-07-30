@@ -9,7 +9,13 @@ import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
 import { useAuth } from "../../../../../context/AuthContext";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
-    const scaleFactor = 100 / imageSize.height;
+    const maxWidth = 300;
+    const maxHeight = 300;
+
+    const widthRatio = maxWidth / imageSize.width;
+    const heightRatio = maxHeight / imageSize.height;
+    const scaleFactor = Math.min(widthRatio, heightRatio);
+
     return {
         width: Math.round(imageSize.width * scaleFactor),
         height: Math.round(imageSize.height * scaleFactor),
@@ -121,7 +127,9 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
     const handleDroppedFiles = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
 
-        const droppedFiles = Array.from(event.dataTransfer.files);
+        const droppedFiles = Array.from(
+            new Map(Array.from(event.dataTransfer.files).map((file) => [file.name, file])).values()
+        );
 
         droppedFiles.map((file, index) => {
             const attachmentId: number = -numOfUploadingFiles - index - 1;
