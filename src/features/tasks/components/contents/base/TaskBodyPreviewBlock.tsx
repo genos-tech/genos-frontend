@@ -13,6 +13,7 @@ type TaskBodyPreviewBlockProps = {
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
     setTaskBodyUpdated: (value: boolean) => void;
+    setTaskBodySaved: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
 };
@@ -24,6 +25,7 @@ export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
         body,
         setBody,
         setTaskBodyUpdated,
+        setTaskBodySaved,
         setCurrentChat,
         setOpeningService,
     } = props;
@@ -37,6 +39,7 @@ export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
                     body={body || []}
                     setBody={setBody}
                     setTaskBodyUpdated={setTaskBodyUpdated}
+                    setTaskBodySaved={setTaskBodySaved}
                     setCurrentChat={setCurrentChat}
                     setOpeningService={setOpeningService}
                 />

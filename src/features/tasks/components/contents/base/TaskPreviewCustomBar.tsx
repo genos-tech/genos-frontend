@@ -2,6 +2,7 @@ import { Stack, IconButton } from "@mui/joy";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CheckIcon from "@mui/icons-material/Check";
 
 import { TaskProps } from "../../../../../types/tasks";
 
@@ -10,9 +11,16 @@ type TaskPreviewCustomBarProps = {
     setCurrentTaskContent: (value: TaskProps) => void;
     setTaskUpdated: (value: boolean) => void;
     setIsCreatingTask: (value: any) => void;
+    taskBodySaved: boolean;
 };
 export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
-    const { currentTaskContent, setCurrentTaskContent, setTaskUpdated, setIsCreatingTask } = props;
+    const {
+        currentTaskContent,
+        setCurrentTaskContent,
+        setTaskUpdated,
+        setIsCreatingTask,
+        taskBodySaved,
+    } = props;
 
     return (
         <Stack direction="row" sx={{ width: "100%", alignItems: "center", gap: 1 }}>
@@ -80,6 +88,23 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
             ) : (
                 <div></div>
             )}
+
+            {taskBodySaved === true && (
+                <IconButton
+                    component="p"
+                    variant="plain"
+                    color="neutral"
+                    size="sm"
+                    sx={{
+                        fontSize: "14px",
+                        paddingX: "5px",
+                    }}
+                >
+                    <CheckIcon sx={{ fontSize: "15px" }} />
+                    Saved
+                </IconButton>
+            )}
+
             {/* Sub Task IconButton aligned to the right */}
             <IconButton
                 component="p"

@@ -84,6 +84,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     );
     const [taskUpdated, setTaskUpdated] = useState(false);
     const [taskBodyUpdated, setTaskBodyUpdated] = useState(false);
+    const [taskBodySaved, setTaskBodySaved] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
     const [tmpCurrentTaskContent, setTmpCurrentTaskContent] =
@@ -116,6 +117,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             socket,
             myself,
             newTaskContent,
+            taskBodyUpdated,
             accessToken
         );
 
@@ -166,8 +168,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         const intervalId = setInterval(() => {
             if (taskBodyUpdated === true) {
                 sendUpdatedTask(false);
+                setTaskBodySaved(true);
             }
-        }, 5000);
+        }, 3000);
 
         // Clean up the interval when the component unmounts
         return () => clearInterval(intervalId);
@@ -379,6 +382,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setCurrentTaskContent={setTmpCurrentTaskContent}
                 setTaskUpdated={setTaskUpdated}
                 setIsCreatingTask={setIsCreatingTask}
+                taskBodySaved={taskBodySaved}
             />
 
             <TaskBodyPreviewBlock
@@ -389,6 +393,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 body={body}
                 setBody={setBody}
                 setTaskBodyUpdated={setTaskBodyUpdated}
+                setTaskBodySaved={setTaskBodySaved}
                 setCurrentChat={setCurrentMainChat}
                 setOpeningService={setOpeningService}
             />
