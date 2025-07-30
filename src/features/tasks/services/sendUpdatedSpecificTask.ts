@@ -13,6 +13,7 @@ export const sendUpdatedSpecificTask = async (
     socket: Socket | null,
     myself: UserProps,
     updatedTask: TaskProps,
+    taskBodyUpdated: boolean,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
 ) => {
@@ -52,7 +53,8 @@ export const sendUpdatedSpecificTask = async (
                 tags: updatedTask.tags,
             });
 
-            if (res) {
+            // Send ws message only when task metadata is update, not task body.
+            if (res && taskBodyUpdated === false) {
                 const updatedTaskMessage = taskMessageTemplate(updatedTask);
                 const updatedTaskThreadMessage = taskThreadMessageTemplate(myself, updatedTask);
                 if (socket) {

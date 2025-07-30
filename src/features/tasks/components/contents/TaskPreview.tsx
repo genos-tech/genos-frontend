@@ -117,6 +117,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             socket,
             myself,
             newTaskContent,
+            taskBodyUpdated,
             accessToken
         );
 
