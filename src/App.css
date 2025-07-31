@@ -264,7 +264,7 @@
 .bn-chat-editor-box-light .bn-editor {
   background-color: rgb(159, 159, 159);
   padding-top: 55px;
-  height: 200px;
+  height: var(--chat-editor-height, 200px);
   overflow: scroll;
   padding-left: 15px;
 }
@@ -272,7 +272,7 @@
 .bn-chat-editor-box-dark .bn-editor {
   background-color: #1f1f1f;
   padding-top: 55px;
-  height: 200px;
+  height: var(--chat-editor-height, 200px);
   overflow: scroll;
   padding-left: 15px;
 }

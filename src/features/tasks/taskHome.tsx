@@ -302,7 +302,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setOpeningService={setOpeningService}
                 />
 
-                <PanelGroup direction="horizontal">
+                <PanelGroup autoSaveId="conditional" direction="horizontal">
                     {currentProject && (
                         <>
                             <Panel id={"1"} order={1} defaultSize={15} minSize={5} maxSize={20}>

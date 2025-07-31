@@ -9,7 +9,7 @@ import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
 import { extractHHMM } from "../../../../utils/dateUtils";
-import { BnPreview } from "../../../../components/blockNote/bnPreview";
+import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
@@ -146,7 +146,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             </Stack>
 
                             {message.content.length > 0 && (
-                                <BnPreview
+                                <BnChatPreview
                                     myself={myself}
                                     socket={socket}
                                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}

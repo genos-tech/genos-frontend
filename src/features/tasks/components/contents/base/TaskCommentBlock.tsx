@@ -5,7 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import EditIcon from "@mui/icons-material/Edit";
 
 import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
-import { BnPreview } from "../../../../../components/blockNote/bnPreview";
+import { BnChatPreview } from "../../../../../components/blockNote/bnChatPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
@@ -165,7 +165,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                                             <EditIcon />
                                                         </IconButton>
                                                     </Tooltip>
-                                                    <BnPreview
+                                                    <BnChatPreview
                                                         customClassName="task-comment-preview"
                                                         myself={myself}
                                                         socket={socket}

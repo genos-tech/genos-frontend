@@ -11,7 +11,11 @@ import {
 } from "./hooks/messageBubbleHooks";
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
-import { BnEditor } from "../../components/blockNote/bnEditor";
+import {
+    calculateVirtuosoHight,
+    calculateVirtuosoSubHight,
+} from "./services/calculateVirtuosoHight";
+import { BnChatEditor } from "../../components/blockNote/bnChatEditor";
 import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
@@ -77,6 +81,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
     const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
+    const [numEditorLines, setNumEditorLines] = useState<number>(1);
 
     useEffect(() => {
         setChatMessages(chat.messages);
@@ -128,8 +133,12 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         className="custom-scrollbar"
                         style={{
                             height: isSubChatVisible
-                                ? currentWindowHeight * paneSizePCT * 0.01 - 270
-                                : currentWindowHeight - 270,
+                                ? calculateVirtuosoSubHight(
+                                      currentWindowHeight,
+                                      paneSizePCT,
+                                      numEditorLines
+                                  )
+                                : calculateVirtuosoHight(currentWindowHeight, numEditorLines),
                         }}
                         totalCount={chatMessages.length}
                         initialTopMostItemIndex={chatMessages.length - 1}
@@ -193,14 +202,17 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         />
                     )}
                     {isInEdit === false && (
-                        <BnEditor
+                        <BnChatEditor
                             myself={myself}
                             socket={socket}
                             teamMembers={teamMembers}
                             chat={chat}
                             setCurrentChat={setCurrentMainChat}
                             funcSetAllChats={funcSetAllChats}
+                            isSubChatVisible={isSubChatVisible}
                             setOpeningService={setOpeningService}
+                            numEditorLines={numEditorLines}
+                            setNumEditorLines={setNumEditorLines}
                         />
                     )}
                 </Box>

@@ -17,7 +17,7 @@ import { CreateMentionSpec } from "./Mention";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 
-type BnPreviewProps = {
+type BnChatPreviewProps = {
     myself: UserProps;
     socket: Socket | null;
     content: PartialBlock[] | any[];
@@ -26,7 +26,7 @@ type BnPreviewProps = {
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
 };
-export const BnPreview = (props: BnPreviewProps) => {
+export const BnChatPreview = (props: BnChatPreviewProps) => {
     const { myself, socket, content, isSent, customClassName, setCurrentChat, setOpeningService } =
         props;
     const { mode } = useColorScheme();

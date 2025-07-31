@@ -15,7 +15,7 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskProps, ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
-import { BnPreview } from "../../../../components/blockNote/bnPreview";
+import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
 
 type MessageBubbleProps = {
@@ -306,7 +306,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             </Stack>
 
                             {message.content.length > 0 && (
-                                <BnPreview
+                                <BnChatPreview
                                     myself={myself}
                                     socket={socket}
                                     key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}

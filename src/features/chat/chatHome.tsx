@@ -389,6 +389,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 }}
                                             >
                                                 <ThreadPane
+                                                    currentWindowHeight={height}
                                                     thread={currentThreadChat}
                                                     myself={myself}
                                                     socket={socket}
@@ -593,6 +594,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         }}
                                     >
                                         <ThreadPane
+                                            currentWindowHeight={height}
                                             thread={currentThreadChat}
                                             myself={myself}
                                             socket={socket}

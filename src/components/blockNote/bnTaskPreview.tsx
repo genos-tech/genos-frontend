@@ -147,23 +147,23 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         return count;
     };
 
-    const [editorNumLines, setEditorNumLines] = useState<number>(0);
+    const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     const editorRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(editorNumLines - 5, 0) * 30 + 300,
+                Math.max(numEditorLines - 5, 0) * 30 + 300,
                 800
             );
             editorRef.current.style.setProperty("--task-body-editor-height", `${dynamicHeight}px`);
         }
-    }, [editorNumLines]);
+    }, [numEditorLines]);
 
     // initial height setup
     useEffect(() => {
         const comments: any[] = editor.document;
-        setEditorNumLines(countLines(comments));
+        setNumEditorLines(countLines(comments));
     }, []);
 
     useEffect(() => {
@@ -195,7 +195,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     }}
                     onChange={() => {
                         const comments: any[] = editor.document;
-                        setEditorNumLines(countLines(comments));
+                        setNumEditorLines(countLines(comments));
                         setBody(editor.document);
                         if (setTaskBodyUpdated) {
                             setTaskBodyUpdated(true);

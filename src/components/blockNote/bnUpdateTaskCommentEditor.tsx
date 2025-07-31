@@ -141,13 +141,13 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     };
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
-    const [editorNumLines, setEditorNumLines] = useState<number>(0);
+    const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     const editorRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(editorNumLines - 5, 0) * 30 + 200,
+                Math.max(numEditorLines - 5, 0) * 30 + 200,
                 500
             );
             editorRef.current.style.setProperty(
@@ -155,12 +155,12 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 `${dynamicHeight}px`
             );
         }
-    }, [editorNumLines]);
+    }, [numEditorLines]);
 
     // Initial num of lines
     useEffect(() => {
         const comments: any[] = editor.document;
-        setEditorNumLines(countLines(comments));
+        setNumEditorLines(countLines(comments));
     }, []);
 
     useEffect(() => {
@@ -237,7 +237,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     }}
                     onChange={() => {
                         const comments: any[] = editor.document;
-                        setEditorNumLines(countLines(comments));
+                        setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
                     }}
                     onKeyDown={(event) => {

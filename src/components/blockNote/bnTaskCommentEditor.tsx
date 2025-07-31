@@ -134,13 +134,13 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     };
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
-    const [editorNumLines, setEditorNumLines] = useState<number>(0);
+    const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     const editorRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(editorNumLines - 5, 0) * 30 + 200,
+                Math.max(numEditorLines - 5, 0) * 30 + 200,
                 500
             );
             editorRef.current.style.setProperty(
@@ -148,7 +148,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 `${dynamicHeight}px`
             );
         }
-    }, [editorNumLines]);
+    }, [numEditorLines]);
 
     useEffect(() => {
         if (selectedEmoji !== null) {
@@ -245,7 +245,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     }}
                     onChange={() => {
                         const comments: any[] = editor.document;
-                        setEditorNumLines(countLines(comments));
+                        setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
                     }}
                     onKeyDown={(event) => {
