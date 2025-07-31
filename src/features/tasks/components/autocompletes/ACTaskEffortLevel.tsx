@@ -19,7 +19,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
 
     return (
         <Autocomplete
-            key={taskContents.id}
+            key={`ac-project-effort-level-${taskContents.id}`}
             placeholder="Effort Level"
             multiple
             options={effortLevels}
@@ -37,7 +37,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                     const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
                     return (
                         <Chip
-                            key={key} // pass the key directly
+                            key={`ac-project-effort-level-${key}`}
                             variant="soft"
                             sx={{
                                 backgroundColor: item.color

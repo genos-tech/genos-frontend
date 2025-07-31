@@ -220,26 +220,26 @@
 }
 
 /* editor preview */
-.bn-preview-box-light .bn-editor {
+.bn-message-bubble-box-light .bn-editor {
   background-color: transparent;
   padding: 1px;
   color: rgb(55, 55, 55);
 }
 
-.bn-preview-box-light-me .bn-editor {
+.bn-message-bubble-box-light-me .bn-editor {
   background-color: transparent;
   padding: 1px;
   color: rgb(255, 255, 255);
 }
 
 
-.bn-preview-box-dark .bn-editor {
+.bn-message-bubble-box-dark .bn-editor {
   background-color: transparent;
   padding: 1px;
   /* color: black; */
 }
 
-.bn-preview-box-dark-me .bn-editor {
+.bn-message-bubble-box-dark-me .bn-editor {
   background-color: transparent;
   padding: 1px;
   color: rgb(13, 13, 13);
@@ -260,26 +260,53 @@
   background-color: #474747 !important;
 }
 
-.bn-box-light .bn-editor {
+
+.bn-chat-editor-box-light .bn-editor {
   background-color: rgb(159, 159, 159);
+  padding-top: 55px;
+  height: 200px;
+  overflow: scroll;
+  padding-left: 15px;
 }
 
-.bn-box-dark .bn-editor {
+.bn-chat-editor-box-dark .bn-editor {
   background-color: #1f1f1f;
-}
-
-.bn-box-light .bn-editor {
   padding-top: 55px;
   height: 200px;
   overflow: scroll;
   padding-left: 15px;
 }
 
-.bn-box-dark .bn-editor {
+.bn-task-comment-box-light .bn-editor {
+  background-color: rgb(159, 159, 159);
   padding-top: 55px;
-  height: 200px;
+  height: var(--task-comment-editor-height, 200px);
   overflow: scroll;
   padding-left: 15px;
+}
+
+.bn-task-comment-box-dark .bn-editor {
+  background-color: #1f1f1f;
+  padding-top: 55px;
+  height: var(--task-comment-editor-height, 200px);
+  overflow: scroll;
+  padding-left: 15px;
+}
+
+.bn-task-body-box-light .bn-editor {
+  background-color: rgb(159, 159, 159);
+  padding-top: 20px;
+  padding-bottom: 20px;
+  height: var(--task-body-editor-height, 500px);
+  overflow-y: scroll;
+}
+
+.bn-task-body-box-dark .bn-editor {
+  background-color: #1f1f1f;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  height: var(--task-body-editor-height, 500px);
+  overflow-y: scroll;
 }
 
 .bn-container {
@@ -337,29 +364,6 @@
 /* Change the SuggestionMenuController position */
 div[data-floating-ui-focusable] {
   max-height: 300px !important;
-}
-
-
-.bn-task-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
-}
-
-.bn-task-box-dark .bn-editor {
-  background-color: #1f1f1f;
-}
-
-.bn-task-box-light .bn-editor {
-  padding-top: 20px;
-  padding-bottom: 20px;
-  height: 600px;
-  overflow-y: scroll;
-}
-
-.bn-task-box-dark .bn-editor {
-  padding-top: 20px;
-  padding-bottom: 20px;
-  height: 600px;
-  overflow-y: scroll;
 }
 
 

@@ -386,10 +386,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             />
 
             <TaskBodyPreviewBlock
+                key={`TaskBodyPreviewBlock-${tmpCurrentTaskContent.id}`}
                 socket={socket}
                 myself={myself}
                 teamMembers={teamMembers}
-                key={tmpCurrentTaskContent.id}
                 body={body}
                 setBody={setBody}
                 setTaskBodyUpdated={setTaskBodyUpdated}

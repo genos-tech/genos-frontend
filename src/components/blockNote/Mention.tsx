@@ -70,7 +70,7 @@ export const CreateMentionSpec = (
                                 alignItems: "center",
                                 gap: 0.5,
                                 backgroundColor:
-                                    myself.userId === userId ? "#ff77002f" : "#7700ff2f",
+                                    myself.userId === userId ? "#ff77002f" : "rgba(255, 0, 238, 0.15)",
                                 borderRadius: "12px",
                                 px: 1,
                                 py: 0.5,
@@ -83,7 +83,7 @@ export const CreateMentionSpec = (
                                 level="body-sm"
                                 fontWeight={"bold"}
                                 sx={{
-                                    color: myself.userId === userId ? "#ff7700ff" : "#7700ffff",
+                                    color: myself.userId === userId ? "#ff7700ff" : "#ff00a6fd",
                                 }}
                             >
                                 @{userName}

@@ -90,7 +90,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     {isPreviewMode && (
                         <Box>
                             <Chip
-                                key={taskContents.id}
+                                key={`task-title-block-${taskContents.id}`}
                                 variant="soft"
                                 color="neutral"
                                 sx={{
@@ -105,7 +105,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     )}
                     {isPreviewMode && (
                         <Chip
-                            key={taskContents.status.status}
+                            key={`task-title-block-status-${taskContents.status.status}`}
                             size="lg"
                             variant="soft"
                             sx={{

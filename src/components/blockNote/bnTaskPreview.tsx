@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { en } from "@blocknote/core/locales";
@@ -35,6 +35,7 @@ import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
+import "../../App.css";
 
 type BnTaskPreviewProps = {
     myself: UserProps;
@@ -61,7 +62,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     } = props;
 
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-task-box-${mode}`;
+    const bnBoxClassName: string = `bn-task-body-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -135,6 +136,36 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         setShowEmojiPicker(false);
     };
 
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+        }
+        return count;
+    };
+
+    const [editorNumLines, setEditorNumLines] = useState<number>(0);
+
+    const editorRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (editorRef.current) {
+            const dynamicHeight: number = Math.min(
+                Math.max(editorNumLines - 5, 0) * 30 + 300,
+                800
+            );
+            editorRef.current.style.setProperty("--task-body-editor-height", `${dynamicHeight}px`);
+        }
+    }, [editorNumLines]);
+
+    // initial height setup
+    useEffect(() => {
+        const comments: any[] = editor.document;
+        setEditorNumLines(countLines(comments));
+    }, []);
+
     useEffect(() => {
         if (selectedEmoji !== null) {
             insertEmoji(selectedEmoji);
@@ -148,7 +179,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
                     className="bn-task-editor"
                     editor={editor}
@@ -163,6 +194,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         }
                     }}
                     onChange={() => {
+                        const comments: any[] = editor.document;
+                        setEditorNumLines(countLines(comments));
                         setBody(editor.document);
                         if (setTaskBodyUpdated) {
                             setTaskBodyUpdated(true);

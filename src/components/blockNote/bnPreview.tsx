@@ -31,8 +31,8 @@ export const BnPreview = (props: BnPreviewProps) => {
         props;
     const { mode } = useColorScheme();
     const _bnBoxClassName: string = isSent
-        ? `bn-preview-box-${mode}-me`
-        : `bn-preview-box-${mode}`;
+        ? `bn-message-bubble-box-${mode}-me`
+        : `bn-message-bubble-box-${mode}`;
     const bnBoxClassName = customClassName ? `${customClassName}-${mode}` : _bnBoxClassName;
 
     // Disable the Audio and Image blocks from the built-in schema

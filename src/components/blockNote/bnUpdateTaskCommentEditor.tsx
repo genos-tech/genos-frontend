@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -35,6 +35,7 @@ import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
 import { getCurrentTimestamp } from "../../utils/dateUtils";
+import "../../App.css";
 
 type BnUpdateTaskCommentEditorProps = {
     myself: UserProps;
@@ -73,7 +74,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         setOpeningService,
     } = props;
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-box-${mode}`;
+    const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -128,6 +129,40 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         setShowEmojiPicker(false);
     };
 
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+        }
+        return count;
+    };
+
+    const [editorDocLength, setEditorDocLength] = useState<number>(0);
+    const [editorNumLines, setEditorNumLines] = useState<number>(0);
+
+    const editorRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (editorRef.current) {
+            const dynamicHeight: number = Math.min(
+                Math.max(editorNumLines - 5, 0) * 30 + 200,
+                500
+            );
+            editorRef.current.style.setProperty(
+                "--task-comment-editor-height",
+                `${dynamicHeight}px`
+            );
+        }
+    }, [editorNumLines]);
+
+    // Initial num of lines
+    useEffect(() => {
+        const comments: any[] = editor.document;
+        setEditorNumLines(countLines(comments));
+    }, []);
+
     useEffect(() => {
         if (selectedEmoji !== null) {
             insertEmoji(selectedEmoji);
@@ -153,8 +188,6 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             setIsCommentUpdated(false);
         }
     }, [isCommentUpdated, taskComments]);
-
-    const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
     useEffect(() => {
         if (isInEdit === false) {
@@ -189,7 +222,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
                     className="bn-chat-editor"
                     editor={editor}
@@ -202,7 +235,11 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                             setTaskUpdated(true);
                         }
                     }}
-                    onChange={() => setEditorDocLength(editor.document.length)}
+                    onChange={() => {
+                        const comments: any[] = editor.document;
+                        setEditorNumLines(countLines(comments));
+                        setEditorDocLength(editor.document.length);
+                    }}
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             updateComment();
