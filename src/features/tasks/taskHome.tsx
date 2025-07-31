@@ -148,6 +148,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         if (value !== null) {
             setOpenSearch(false);
             setCurrentPreviewTaskId(value.taskId);
+            setIsTaskPreviewVisible(true);
         }
     }
     // =======================================================================
@@ -311,6 +312,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setMyself={setMyself}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
+                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     currentProject={currentProject}
                                     setCurrentProject={setCurrentProject}
                                     currentPreviewTaskId={currentPreviewTaskId}
@@ -759,6 +761,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setMyself={setMyself}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
+                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     currentProject={currentProject}
                                     setCurrentProject={setCurrentProject}
                                     currentPreviewTaskId={currentPreviewTaskId}

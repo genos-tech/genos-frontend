@@ -3,11 +3,11 @@ import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
-import { BubbleReactionButton } from "./BubbleReactionButton";
 import { BubbleEditButton } from "./BubbleEditButton";
 import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleReplyButton } from "./BubbleReplyButton";
+import { BubbleReplyCounterButton } from "./BubbleReplyCounterButton";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
@@ -266,14 +266,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             tsUpdated={message.tsUpdated}
                                             isThread={false}
                                         />
-                                        <BubbleReactionButton
-                                            sender={message.sender}
-                                            chatType={chat.chatType}
-                                            isLiked={isLiked}
-                                            setIsLiked={setIsLiked}
-                                            isSent={isSent}
-                                            replayHandler={replayHandler}
-                                        />
+                                        <BubbleReplyButton replayHandler={replayHandler} />
                                         {message.sender.isSystemUser !== true && (
                                             <BubbleEditButton
                                                 message={message}
@@ -319,7 +312,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         </Stack>
 
                         {message.numReplies > 0 ? (
-                            <BubbleReplyButton
+                            <BubbleReplyCounterButton
                                 numReplies={message.numReplies}
                                 isSent={isSent}
                                 replayHandler={replayHandler}

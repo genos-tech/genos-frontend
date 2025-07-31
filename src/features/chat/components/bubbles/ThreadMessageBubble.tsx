@@ -3,7 +3,6 @@ import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { BubbleReactionButton } from "./BubbleReactionButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -120,13 +119,6 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             tsSent={message.tsSent}
                                             tsUpdated={message.tsUpdated}
                                             isThread={true}
-                                        />
-                                        <BubbleReactionButton
-                                            sender={message.sender}
-                                            chatType={thread.chatType}
-                                            isLiked={isLiked}
-                                            setIsLiked={setIsLiked}
-                                            isSent={isSent}
                                         />
                                         {/* 
                                         TODO: How to edit the first message in the thread?
