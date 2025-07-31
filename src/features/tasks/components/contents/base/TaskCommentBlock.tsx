@@ -5,7 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import EditIcon from "@mui/icons-material/Edit";
 
 import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
-import { BnPreview } from "../../../../../components/blockNote/bnPreview";
+import { BnChatPreview } from "../../../../../components/blockNote/bnChatPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
@@ -45,6 +45,17 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
 
     const boxRef = useRef<HTMLDivElement>(null);
 
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+        }
+        return count;
+    };
+
     useEffect(() => {
         const box = boxRef.current;
         if (box) {
@@ -53,7 +64,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     }, [taskComments]); // Re-scroll on content change
 
     const totalComments = taskComments.reduce(
-        (sum, taskComment) => sum + (taskComment.commentBody?.length ?? 0),
+        (sum, taskComment) => sum + (countLines(taskComment.commentBody) ?? 0),
         0
     );
 
@@ -70,7 +81,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                             ref={boxRef}
                             className="custom-scrollbar"
                             sx={{
-                                height: Math.min(100 + totalComments * 50, 900),
+                                height: Math.min(100 + totalComments * 30, 800),
                                 pb: "10px",
                                 overflowY: "scroll",
                                 overflowX: "hidden",
@@ -154,7 +165,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                                             <EditIcon />
                                                         </IconButton>
                                                     </Tooltip>
-                                                    <BnPreview
+                                                    <BnChatPreview
                                                         customClassName="task-comment-preview"
                                                         myself={myself}
                                                         socket={socket}

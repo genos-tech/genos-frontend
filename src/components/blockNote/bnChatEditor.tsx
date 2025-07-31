@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -29,6 +29,7 @@ import {
     defaultBlockSpecs,
 } from "@blocknote/core";
 
+import { countBnLines } from "./services/countBnLines";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -38,27 +39,33 @@ import { ChatProps, AllChatProps, MessageProps } from "../../types/chat";
 import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 
-type BnEditorProps = {
+type BnChatEditorProps = {
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
+    isSubChatVisible: boolean;
     funcSetAllChats: () => void;
     setOpeningService: (value: number) => void;
+    numEditorLines: number;
+    setNumEditorLines: (value: number) => void;
 };
-export const BnEditor = (props: BnEditorProps) => {
+export const BnChatEditor = (props: BnChatEditorProps) => {
     const {
         myself,
         socket,
         teamMembers,
         chat,
         setCurrentChat,
+        isSubChatVisible,
         funcSetAllChats,
         setOpeningService,
+        numEditorLines,
+        setNumEditorLines,
     } = props;
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-box-${mode}`;
+    const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -117,6 +124,17 @@ export const BnEditor = (props: BnEditorProps) => {
     }, [selectedEmoji]);
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
+
+    const editorRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (editorRef.current) {
+            const dynamicHeight: number = Math.min(
+                Math.max(numEditorLines - 4, 0) * 30 + 200,
+                isSubChatVisible === true ? 290 : 500
+            );
+            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
+        }
+    }, [numEditorLines]);
 
     useEffect(() => {
         editor.replaceBlocks(editor.document, []);
@@ -248,7 +266,7 @@ export const BnEditor = (props: BnEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
                     className="bn-chat-editor"
                     editor={editor}
@@ -256,7 +274,11 @@ export const BnEditor = (props: BnEditorProps) => {
                     theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onChange={() => setEditorDocLength(editor.document.length)}
+                    onChange={() => {
+                        const comments: any[] = editor.document;
+                        setNumEditorLines(Math.max(countBnLines(comments), 1));
+                        setEditorDocLength(editor.document.length);
+                    }}
                     onKeyDown={async (event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             sendingMessage();

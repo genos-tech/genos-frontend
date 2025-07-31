@@ -11,6 +11,7 @@ import {
 } from "./hooks/messageBubbleHooks";
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
+import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
 import { BnThreadEditor } from "../../components/blockNote/bnThreadEditor";
 import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadEditor";
 import { UserProps } from "../../types/admin";
@@ -18,6 +19,7 @@ import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
 
 type MessagesPaneProps = {
+    currentWindowHeight: number;
     thread: ThreadProps;
     myself: UserProps;
     teamMembers: UserProps[];
@@ -39,6 +41,7 @@ type MessagesPaneProps = {
 
 export const ThreadPane = (props: MessagesPaneProps) => {
     const {
+        currentWindowHeight,
         thread,
         myself,
         teamMembers,
@@ -64,6 +67,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     const [targetMessageIndex, setTargetMessageIndex] = useState<number>(
         threadMessages.length - 1
     );
+    const [numEditorLines, setNumEditorLines] = useState<number>(1);
 
     useEffect(() => {
         setThreadMessages(thread.messages || []);
@@ -81,23 +85,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         currentThreadChatId
     );
 
-    // Calculate thread pane height dynamically
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [listHeight, setListHeight] = useState(window.innerHeight - 270);
-    useEffect(() => {
-        const updateHeight = () => {
-            if (containerRef.current) {
-                // This is very very important to set the height of the message bubble !!!!!!!
-                const currentHeight: number = containerRef.current.clientHeight;
-                setListHeight(currentHeight - 270);
-            }
-        };
-
-        updateHeight(); // Initial height
-        window.addEventListener("resize", updateHeight);
-        return () => window.removeEventListener("resize", updateHeight);
-    }, [thread]);
-
     useEffect(() => {
         setTargetMessageIndex(threadMessages.length - 1);
     }, [threadMessages]);
@@ -113,7 +100,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                 }}
             >
                 <Sheet
-                    ref={containerRef}
                     sx={{
                         height: { xs: "calc(100dvh - var(--Header-height))", md: "100dvh" },
                         display: "flex",
@@ -140,7 +126,12 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         <Virtuoso
                             ref={virtuosoRef}
                             className="custom-scrollbar"
-                            style={{ height: listHeight }}
+                            style={{
+                                height: calculateVirtuosoHight(
+                                    currentWindowHeight,
+                                    numEditorLines
+                                ),
+                            }}
                             totalCount={threadMessages.length}
                             initialTopMostItemIndex={threadMessages.length - 1}
                             atTopThreshold={64}
@@ -203,6 +194,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                 setCurrentChat={setCurrentMainChat}
                                 setCurrentThreadChat={setCurrentThreadChat}
                                 setOpeningService={setOpeningService}
+                                numEditorLines={numEditorLines}
+                                setNumEditorLines={setNumEditorLines}
                             />
                         )}
                     </Box>

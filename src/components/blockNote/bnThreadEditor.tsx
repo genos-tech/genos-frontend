@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -29,6 +29,7 @@ import {
     defaultBlockSpecs,
 } from "@blocknote/core";
 
+import { countBnLines } from "./services/countBnLines";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -46,6 +47,8 @@ type BnThreadEditorProps = {
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
+    numEditorLines: number;
+    setNumEditorLines: (value: number) => void;
 };
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
@@ -56,9 +59,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         setCurrentThreadChat,
         setCurrentChat,
         setOpeningService,
+        numEditorLines,
+        setNumEditorLines,
     } = props;
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-box-${mode}`;
+    const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -117,7 +122,19 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             insertEmoji(selectedEmoji);
         }
     }, [selectedEmoji]);
+
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
+
+    const editorRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (editorRef.current) {
+            const dynamicHeight: number = Math.min(
+                Math.max(numEditorLines - 4, 0) * 30 + 200,
+                500
+            );
+            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
+        }
+    }, [numEditorLines]);
 
     useEffect(() => {
         editor.replaceBlocks(editor.document, []);
@@ -218,7 +235,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
                     className="bn-chat-editor"
                     editor={editor}
@@ -226,7 +243,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onChange={() => setEditorDocLength(editor.document.length)}
+                    onChange={() => {
+                        const comments: any[] = editor.document;
+                        setNumEditorLines(Math.max(countBnLines(comments), 1));
+                        setEditorDocLength(editor.document.length);
+                    }}
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             sendingThreadMessage();

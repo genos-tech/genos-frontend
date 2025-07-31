@@ -11,7 +11,8 @@ import {
 } from "./hooks/messageBubbleHooks";
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
-import { BnEditor } from "../../components/blockNote/bnEditor";
+import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
+import { BnChatEditor } from "../../components/blockNote/bnChatEditor";
 import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
@@ -73,6 +74,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
     const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
+    const [numEditorLines, setNumEditorLines] = useState<number>(1);
 
     useEffect(() => {
         setChatMessages(subChat.messages);
@@ -122,7 +124,13 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     <Virtuoso
                         ref={virtuosoRef}
                         className="custom-scrollbar"
-                        style={{ height: currentWindowHeight * paneSizePCT * 0.01 - 270 }}
+                        style={{
+                            height: calculateVirtuosoSubHight(
+                                currentWindowHeight,
+                                paneSizePCT,
+                                numEditorLines
+                            ),
+                        }}
                         totalCount={chatMessages.length}
                         initialTopMostItemIndex={chatMessages.length - 1}
                         atTopThreshold={64}
@@ -185,14 +193,17 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         />
                     )}
                     {isInEdit === false && (
-                        <BnEditor
+                        <BnChatEditor
                             myself={myself}
                             socket={socket}
                             teamMembers={teamMembers}
                             chat={chat}
                             setCurrentChat={setCurrentSubChat}
                             funcSetAllChats={funcSetAllChats}
+                            isSubChatVisible={true}
                             setOpeningService={setOpeningService}
+                            numEditorLines={numEditorLines}
+                            setNumEditorLines={setNumEditorLines}
                         />
                     )}
                 </Box>

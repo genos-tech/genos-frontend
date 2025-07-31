@@ -28,7 +28,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
 
     return (
         <Autocomplete
-            key={taskContents.id}
+            key={`ac-project-tags-${taskContents.id}`}
             placeholder="Tags"
             multiple
             options={projectTags}
@@ -41,7 +41,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                     const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
                     return (
                         <Chip
-                            key={key}
+                            key={`ac-project-tags-chip-${key}`}
                             variant="soft"
                             sx={{
                                 backgroundColor: alpha(
@@ -60,10 +60,10 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                 })
             }
             renderOption={(props, option) => (
-                <AutocompleteOption {...props} key={option.tagName}>
+                <AutocompleteOption {...props} key={`ac-project-tags-name-${option.tagName}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
-                            key={option.tagName}
+                            key={`ac-project-tags-name-chip-${option.tagName}`}
                             variant="soft"
                             sx={{
                                 backgroundColor: alpha(

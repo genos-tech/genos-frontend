@@ -58,7 +58,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         setOpeningService,
     } = props;
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-box-${mode}`;
+    const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
