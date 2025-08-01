@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Box, Button, Chip, IconButton, Tooltip } from "@mui/joy";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 
-import { ReactionProps } from "../../types/common";
+import { GroupedReactionProps } from "../../types/common";
 
-export const groupEmojis = (emojis: string[]): ReactionProps[] => {
+export const groupEmojis = (emojis: string[]): GroupedReactionProps[] => {
     const map = new Map<string, number>();
     emojis.forEach((emoji) => {
         map.set(emoji, (map.get(emoji) || 0) + 1);
@@ -25,7 +25,7 @@ type ReactionEmojiProps = {
 export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
     const { messageId, showUnderBarOption, reactions, setReactions, setShowEmojiPicker } = props;
     const defaultEmojiList: string[] = ["👍", "✅", "👀"];
-    const [groupedReactions, setGroupedReactions] = useState<ReactionProps[]>([]);
+    const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>([]);
     const displayed = groupedReactions.slice(0, 3);
     const hidden = groupedReactions.slice(3);
 
@@ -47,12 +47,14 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                 >
                     <Chip
                         key={`emoji-chip-${emoji}`}
-                        variant="plain"
+                        variant="outlined"
+                        color="primary"
                         size="sm"
                         sx={{ fontSize: "1rem", cursor: "pointer", px: 0.5, py: 0.5 }}
                         onClick={() => handleReact(emoji)}
                     >
-                        {emoji} {count}
+                        {emoji}
+                        {count}
                     </Chip>
                 </Tooltip>
             ))}
