@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -7,7 +7,7 @@ import { BubbleEditButton } from "./BubbleEditButton";
 import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleReplyButton } from "./BubbleReplyButton";
-import { BubbleReplyCounterButton } from "./BubbleReplyCounterButton";
+import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
@@ -17,6 +17,7 @@ import { TaskProps, ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
+import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 
 type MessageBubbleProps = {
     myself: UserProps;
@@ -65,7 +66,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
-    const [isLiked, setIsLiked] = React.useState<boolean>(false);
     const dtSent = extractHHMM(message.tsSent);
     const { accessToken } = useAuth();
 
@@ -188,11 +188,22 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         }
     };
 
+    // Reaction handling
+    const [showUnderBarOption, setShowUnderBarOption] = useState(false);
+    const [reactions, setReactions] = useState<string[]>([]);
+    const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            setReactions([...reactions, selectedEmoji]);
+        }
+    }, [selectedEmoji]);
+
     return (
         <Box
             sx={{
                 maxWidth: "90%",
-                minWidth: "auto",
+                minWidth: "330px",
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}
@@ -205,9 +216,18 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 />
             ) : (
                 <Box sx={{ position: "relative" }}>
+                    <EmojiPicker
+                        showEmojiPicker={showEmojiPicker}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        setSelectedEmoji={setSelectedEmoji}
+                        pickerBottomPosition={10}
+                        pickerRightPosition={0}
+                    />
                     <Sheet
                         color={"neutral"}
                         variant={"soft"}
+                        onMouseEnter={() => setShowUnderBarOption(true)}
+                        onMouseLeave={() => setShowUnderBarOption(false)}
                         sx={[
                             {
                                 p: 1,
@@ -311,15 +331,16 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             )}
                         </Stack>
 
-                        {message.numReplies > 0 ? (
-                            <BubbleReplyCounterButton
-                                numReplies={message.numReplies}
-                                isSent={isSent}
-                                replayHandler={replayHandler}
-                            />
-                        ) : (
-                            ""
-                        )}
+                        <BubbleUnderBar
+                            messageId={message.messageId}
+                            numReplies={message.numReplies}
+                            isSent={isSent}
+                            showUnderBarOption={showUnderBarOption}
+                            reactions={reactions}
+                            setReactions={setReactions}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            replayHandler={replayHandler}
+                        />
                     </Sheet>
                 </Box>
             )}

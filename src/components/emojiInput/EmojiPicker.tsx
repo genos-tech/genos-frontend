@@ -8,11 +8,15 @@ type EmojiPickerProps = {
     showEmojiPicker: boolean;
     setShowEmojiPicker: (value: boolean) => void;
     setSelectedEmoji: (emoji: any) => void;
+    pickerBottomPosition?: number;
+    pickerRightPosition?: number | string;
 };
 export const EmojiPicker = ({
     showEmojiPicker,
     setShowEmojiPicker,
     setSelectedEmoji,
+    pickerBottomPosition = 210,
+    pickerRightPosition = "auto",
 }: EmojiPickerProps) => {
     const { mode } = useColorScheme();
     const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -52,7 +56,8 @@ export const EmojiPicker = ({
                     ref={emojiPickerRef}
                     className="absolute z-[9999] bg-white shadow-lg rounded"
                     style={{
-                        bottom: 210,
+                        bottom: pickerBottomPosition,
+                        right: pickerRightPosition,
                         position: "absolute",
                         zIndex: 9999,
                         boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",

@@ -1,7 +1,8 @@
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
@@ -11,6 +12,7 @@ import { extractHHMM } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
+import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 
 type threadMessageBubbleProps = {
     myself: UserProps;
@@ -41,14 +43,24 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
-    const [isLiked, setIsLiked] = React.useState<boolean>(false);
     const dtSent = extractHHMM(message.tsSent);
+
+    // Reaction handling
+    const [showUnderBarOption, setShowUnderBarOption] = useState(false);
+    const [reactions, setReactions] = useState<string[]>([]);
+    const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            setReactions([...reactions, selectedEmoji]);
+        }
+    }, [selectedEmoji]);
 
     return (
         <Box
             sx={{
                 maxWidth: "90%",
-                minWidth: "auto",
+                minWidth: "330px",
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}
@@ -61,9 +73,18 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                 />
             ) : (
                 <Box sx={{ position: "relative" }}>
+                    <EmojiPicker
+                        showEmojiPicker={showEmojiPicker}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        setSelectedEmoji={setSelectedEmoji}
+                        pickerBottomPosition={10}
+                        pickerRightPosition={0}
+                    />
                     <Sheet
                         color={isSent ? "primary" : "neutral"}
                         variant={isSent ? "solid" : "soft"}
+                        onMouseEnter={() => setShowUnderBarOption(true)}
+                        onMouseLeave={() => setShowUnderBarOption(false)}
                         sx={[
                             {
                                 p: 1,
@@ -149,6 +170,17 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 />
                             )}
                         </Stack>
+
+                        <BubbleUnderBar
+                            messageId={message.messageId}
+                            numReplies={-1}
+                            isSent={isSent}
+                            showUnderBarOption={showUnderBarOption}
+                            reactions={reactions}
+                            setReactions={setReactions}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            isThread={true}
+                        />
                     </Sheet>
                 </Box>
             )}
