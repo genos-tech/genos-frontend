@@ -159,8 +159,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     // }, [currentThreadChat]);
 
     // useEffect(() => {
-    //     console.log("currentProject Updated:", currentProject);
-    // }, [currentProject]);
+    //     console.log("currentMainChat Updated:", currentMainChat);
+    // }, [currentMainChat]);
     ////////////////////////////////////////////////////////////////////
 
     /////////////////// NEED FOR MAIN/SUB Chat Pane height ////////////////////

@@ -11,6 +11,7 @@ import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus"
 import { extractHHMM } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";
+import { ReactionProps } from "../../../../types/common";
 import { ChatProps } from "../../../../types/chat";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 
@@ -47,12 +48,26 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
     // Reaction handling
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
-    const [reactions, setReactions] = useState<string[]>([]);
+    const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
+    useEffect(() => {
+        if (message.reactions) {
+            setReactions(message.reactions.allReactions);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (message.reactions) {
+            setReactions(message.reactions.allReactions);
+        }
+    }, [message]);
+
     useEffect(() => {
         if (selectedEmoji !== null) {
             setReactions([...reactions, selectedEmoji]);
+            setSelectedEmoji(null);
         }
     }, [selectedEmoji]);
 
@@ -60,7 +75,8 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         <Box
             sx={{
                 maxWidth: "90%",
-                minWidth: "330px",
+                minWidth:
+                    200 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}
@@ -145,7 +161,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                         TODO: How to edit the first message in the thread?
                                         When we edit it, we also need to update the parent message.
                                         */}
-                                        {message.sender.isSystemUser !== true && (
+                                        {message.sender.userId === myself.userId && (
                                             <BubbleThreadEditButton
                                                 message={message}
                                                 setIsInEdit={setIsInEdit}
@@ -172,14 +188,20 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         </Stack>
 
                         <BubbleUnderBar
-                            messageId={message.messageId}
-                            numReplies={-1}
+                            socket={socket}
+                            myself={myself}
+                            chatType={thread.chatType}
+                            chatName={thread.chatName}
+                            dmPartnerUser={thread.dmPartnerUser}
+                            message={message}
+                            numReplies={0}
+                            isThread={true}
                             isSent={isSent}
                             showUnderBarOption={showUnderBarOption}
                             reactions={reactions}
                             setReactions={setReactions}
+                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                             setShowEmojiPicker={setShowEmojiPicker}
-                            isThread={true}
                         />
                     </Sheet>
                 </Box>

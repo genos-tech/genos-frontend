@@ -1,26 +1,43 @@
+import { Socket } from "socket.io-client";
 import { Box, Button, Stack } from "@mui/joy";
 import CircleIcon from "@mui/icons-material/Circle";
+
 import { ReactionEmojiDisplay } from "../../../../components/emojiInput/ReactionEmojiDisplay";
+import { UserProps } from "../../../../types/admin";
+import { ReactionProps } from "../../../../types/common";
+import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 
 type BubbleUnderBarTypes = {
-    messageId: number;
+    socket: Socket | null;
+    myself: UserProps;
+    chatType: number;
+    chatName: string;
+    dmPartnerUser: UserProps | null;
+    message: MessageProps | ThreadMessageProps;
     numReplies: number;
     isSent: boolean;
     showUnderBarOption: boolean;
-    reactions: string[];
-    setReactions: (value: string[]) => void;
+    reactions: ReactionProps[];
+    setReactions: (value: ReactionProps[]) => void;
+    setUniqueReactionEmojiCount: (value: number) => void;
     setShowEmojiPicker: (value: boolean) => void;
     replayHandler?: () => void;
     isThread?: boolean;
 };
 export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
     const {
-        messageId,
+        socket,
+        myself,
+        chatType,
+        chatName,
+        dmPartnerUser,
+        message,
         numReplies,
         isSent,
         showUnderBarOption,
         reactions,
         setReactions,
+        setUniqueReactionEmojiCount,
         setShowEmojiPicker,
         replayHandler,
         isThread = false,
@@ -41,11 +58,19 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
             >
                 <Box>
                     <ReactionEmojiDisplay
-                        messageId={messageId}
+                        socket={socket}
+                        myself={myself}
+                        chatType={chatType}
+                        chatName={chatName}
+                        dmPartnerUser={dmPartnerUser}
+                        message={message}
+                        isThread={isThread}
+                        numReplies={numReplies}
                         showUnderBarOption={showUnderBarOption}
                         reactions={reactions}
                         setReactions={setReactions}
                         setShowEmojiPicker={setShowEmojiPicker}
+                        setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                     />
                 </Box>
 

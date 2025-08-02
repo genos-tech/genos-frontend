@@ -14,6 +14,7 @@ import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskProps, ProjectProps } from "../../../../types/tasks";
+import { ReactionProps } from "../../../../types/common";
 import { useAuth } from "../../../../context/AuthContext";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
@@ -143,6 +144,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     ? myself
                                     : chat.dmPartnerUser || myself
                                 : message.sender,
+                        reactions: message.reactions,
                         taskId: message.taskId || null,
                         tsSent: message.tsSent,
                         tsUpdated: message.tsSent,
@@ -190,12 +192,153 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
     // Reaction handling
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
-    const [reactions, setReactions] = useState<string[]>([]);
+    const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
+    useEffect(() => {
+        if (message.reactions) {
+            setReactions(message.reactions.allReactions);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (message.reactions) {
+            setReactions(message.reactions.allReactions);
+        }
+    }, [message]);
+
     useEffect(() => {
         if (selectedEmoji !== null) {
-            setReactions([...reactions, selectedEmoji]);
+            const existingIndex = reactions.findIndex(
+                (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
+            );
+            if (existingIndex !== -1) {
+                // Emoji already exists, remove it
+                const updatedReactions = reactions.filter((_, idx) => idx !== existingIndex);
+                setReactions(updatedReactions);
+                if (socket) {
+                    socket.emit("reaction", {
+                        method_type: "DELETE",
+                        team_id: myself.teamId,
+                        chat_type: chat.chatType,
+                        chat_name: chat.chatName,
+                        chat_id: message.chatId,
+                        thread_id: message.threadId,
+                        message_id: message.messageId,
+                        dm_partner_user_id:
+                            message.sender.userId === myself.userId
+                                ? chat.dmPartnerUser?.userId
+                                : myself.userId,
+                        is_thread_binary: 0,
+                        reaction_emoji: selectedEmoji,
+                    });
+
+                    // If the reaction is for the first message in the thread,
+                    // delete the reaction from the parent message as well
+                    if (message.messageId === 1) {
+                        socket.emit("reaction", {
+                            method_type: "DELETE",
+                            team_id: myself.teamId,
+                            chat_type: chat.chatType,
+                            chat_name: chat.chatName,
+                            chat_id: message.chatId,
+                            message_id: message.threadId,
+                            dm_partner_user_id:
+                                message.sender.userId === myself.userId
+                                    ? chat.dmPartnerUser?.userId
+                                    : myself.userId,
+                            is_thread_binary: 0,
+                            reaction_emoji: selectedEmoji,
+                        });
+                    }
+
+                    // Update the first thread message as well
+                    if (message.numReplies > 0) {
+                        socket.emit("reaction", {
+                            method_type: "DELETE",
+                            team_id: myself.teamId,
+                            chat_type: chat.chatType,
+                            chat_name: chat.chatName,
+                            chat_id: message.chatId,
+                            thread_id: message.messageId,
+                            message_id: 1,
+                            dm_partner_user_id:
+                                message.sender.userId === myself.userId
+                                    ? chat.dmPartnerUser?.userId
+                                    : myself.userId,
+                            is_thread_binary: 1,
+                            reaction_emoji: selectedEmoji,
+                        });
+                    }
+                }
+            } else {
+                // Emoji not in reactions, add it
+                setReactions([
+                    ...reactions,
+                    {
+                        id: -1,
+                        emoji: selectedEmoji,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                    },
+                ]);
+                if (socket) {
+                    socket.emit("reaction", {
+                        method_type: "POST",
+                        team_id: myself.teamId,
+                        chat_type: chat.chatType,
+                        chat_name: chat.chatName,
+                        chat_id: message.chatId,
+                        thread_id: message.threadId,
+                        message_id: message.messageId,
+                        dm_partner_user_id:
+                            message.sender.userId === myself.userId
+                                ? chat.dmPartnerUser?.userId
+                                : myself.userId,
+                        is_thread_binary: 0,
+                        reaction_emoji: selectedEmoji,
+                    });
+
+                    // Update the parent message as well if it's the first thread message
+                    if (message.messageId === 1) {
+                        socket.emit("reaction", {
+                            method_type: "POST",
+                            team_id: myself.teamId,
+                            chat_type: chat.chatType,
+                            chat_name: chat.chatName,
+                            chat_id: message.chatId,
+                            message_id: message.threadId,
+                            dm_partner_user_id:
+                                message.sender.userId === myself.userId
+                                    ? chat.dmPartnerUser?.userId
+                                    : myself.userId,
+                            is_thread_binary: 0,
+                            reaction_emoji: selectedEmoji,
+                        });
+                    }
+
+                    // Update the first thread message as well
+                    if (message.numReplies > 0) {
+                        socket.emit("reaction", {
+                            method_type: "POST",
+                            team_id: myself.teamId,
+                            chat_type: chat.chatType,
+                            chat_name: chat.chatName,
+                            chat_id: message.chatId,
+                            thread_id: message.messageId,
+                            message_id: 1,
+                            dm_partner_user_id:
+                                message.sender.userId === myself.userId
+                                    ? chat.dmPartnerUser?.userId
+                                    : myself.userId,
+                            is_thread_binary: 1,
+                            reaction_emoji: selectedEmoji,
+                        });
+                    }
+                }
+            }
+            setSelectedEmoji(null);
         }
     }, [selectedEmoji]);
 
@@ -203,7 +346,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         <Box
             sx={{
                 maxWidth: "90%",
-                minWidth: "330px",
+                minWidth:
+                    200 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}
@@ -287,7 +431,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             isThread={false}
                                         />
                                         <BubbleReplyButton replayHandler={replayHandler} />
-                                        {message.sender.isSystemUser !== true && (
+                                        {message.sender.userId === myself.userId && (
                                             <BubbleEditButton
                                                 message={message}
                                                 setIsInEdit={setIsInEdit}
@@ -332,12 +476,19 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         </Stack>
 
                         <BubbleUnderBar
-                            messageId={message.messageId}
+                            socket={socket}
+                            myself={myself}
+                            chatType={chat.chatType}
+                            chatName={chat.chatName}
+                            dmPartnerUser={chat.dmPartnerUser}
+                            message={message}
                             numReplies={message.numReplies}
+                            isThread={false}
                             isSent={isSent}
                             showUnderBarOption={showUnderBarOption}
                             reactions={reactions}
                             setReactions={setReactions}
+                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                             setShowEmojiPicker={setShowEmojiPicker}
                             replayHandler={replayHandler}
                         />

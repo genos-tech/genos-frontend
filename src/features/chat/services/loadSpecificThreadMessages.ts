@@ -23,6 +23,7 @@ export const loadSpecificThreadMessages = async (
             const queryParts = [
                 `team_id=${myself.teamId}`,
                 `team_name=${myself.teamName}`,
+                `user_id=${myself.userId}`,
                 `${chatTypeNameLookup[chatType]}_id=${chatId}`,
                 `thread_id=${theadId}`,
             ];

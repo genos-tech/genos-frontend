@@ -89,11 +89,12 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
-    useScrollToBottomOnNewMessage(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        chat,
-        targetMessageIndex
-    );
+    // [Abolished] Move to the bottom of the chat we an user receive a new message
+    // useScrollToBottomOnNewMessage(
+    //     virtuosoRef as React.RefObject<VirtuosoHandle>,
+    //     chat,
+    //     targetMessageIndex
+    // );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentMainChatId
