@@ -30,6 +30,7 @@ type ChatHomeProps = {
     setCurrentSubChat: (chat: ChatProps) => void;
     currentThreadChat: ThreadProps | undefined;
     setCurrentThreadChat: (value: ThreadProps) => void;
+    openingService: number;
     setOpeningService: (service: number) => void;
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
@@ -50,6 +51,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         setCurrentSubChat,
         currentThreadChat,
         setCurrentThreadChat,
+        openingService,
         setOpeningService,
         allChats,
         setAllChats,
@@ -191,6 +193,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
+                openingService={openingService}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
             />

@@ -33,6 +33,7 @@ export const useScrollToBottomOnChatChange = (
             setTimeout(() => {
                 virtuoso.scrollToIndex({
                     index: "LAST",
+                    behavior: "smooth",
                 });
             }, 300); // wait 300ms
         }

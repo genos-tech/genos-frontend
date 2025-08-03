@@ -6,25 +6,32 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
+import { ChatProps } from "../../types/chat";
 
 type NoteHomeProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
+    openingService: number;
     setOpeningService: (service: number) => void;
+    setCurrentMainChat: (value: ChatProps) => void;
 };
 
 export const NoteHome = (props: NoteHomeProps) => {
-    const { socket, myself, setMyself, setOpeningService } = props;
+    const { socket, myself, setMyself, openingService, setOpeningService, setCurrentMainChat } =
+        props;
 
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
+                    socket={socket}
                     myself={myself}
                     setMyself={setMyself}
+                    openingService={openingService}
                     setOpeningService={setOpeningService}
+                    setCurrentMainChat={setCurrentMainChat}
                 />
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} order={1} minSize={5} maxSize={20}>

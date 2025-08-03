@@ -61,6 +61,7 @@ type TaskHomeProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    openingService: number;
     setOpeningService: (service: number) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
@@ -71,6 +72,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         myself,
         setMyself,
         setCurrentMainChat,
+        openingService,
         setOpeningService,
         isCommentUpdated,
         setIsCommentUpdated,
@@ -299,6 +301,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
+                    openingService={openingService}
                     setCurrentMainChat={setCurrentMainChat}
                     setOpeningService={setOpeningService}
                 />

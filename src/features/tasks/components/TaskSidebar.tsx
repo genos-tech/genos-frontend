@@ -803,13 +803,15 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                 variant={
                                                     teamId === myself.teamId ? "solid" : "plain"
                                                 }
-                                                onClick={() =>
+                                                onClick={() => {
+                                                    localStorage.setItem("teamId", teamId);
+                                                    localStorage.setItem("teamName", teamName);
                                                     setMyself({
                                                         ...myself,
                                                         teamId: teamId,
                                                         teamName: teamName,
-                                                    })
-                                                }
+                                                    });
+                                                }}
                                                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >
                                                 <Typography

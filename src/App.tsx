@@ -92,7 +92,9 @@ export const App = () => {
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
     // {1: Chat, 2: Tasks, 3: Notes}
-    const [openingService, setOpeningService] = useState<number>(1);
+    const [openingService, setOpeningService] = useState<number>(
+        Number(localStorage.getItem("openingService") || "1")
+    );
 
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
@@ -181,6 +183,7 @@ export const App = () => {
                         setCurrentSubChat={setCurrentSubChat}
                         currentThreadChat={currentThreadChat}
                         setCurrentThreadChat={setCurrentThreadChat}
+                        openingService={openingService}
                         setOpeningService={setOpeningService}
                         allChats={allChats}
                         setAllChats={setAllChats}
@@ -196,6 +199,7 @@ export const App = () => {
                         myself={myself}
                         setMyself={setMyself}
                         setCurrentMainChat={setCurrentMainChat}
+                        openingService={openingService}
                         setOpeningService={setOpeningService}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
@@ -207,7 +211,9 @@ export const App = () => {
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
+                        openingService={openingService}
                         setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
                     />
                 ) : null}
             </CssVarsProvider>
