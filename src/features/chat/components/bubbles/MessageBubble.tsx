@@ -218,7 +218,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 const updatedReactions = reactions.filter((_, idx) => idx !== existingIndex);
                 setReactions(updatedReactions);
                 if (socket) {
-                    socket.emit("reaction", {
+                    socket.emit("message_reaction", {
                         method_type: "DELETE",
                         team_id: myself.teamId,
                         chat_type: chat.chatType,
@@ -237,7 +237,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     // If the reaction is for the first message in the thread,
                     // delete the reaction from the parent message as well
                     if (message.messageId === 1) {
-                        socket.emit("reaction", {
+                        socket.emit("message_reaction", {
                             method_type: "DELETE",
                             team_id: myself.teamId,
                             chat_type: chat.chatType,
@@ -255,7 +255,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                     // Update the first thread message as well
                     if (message.numReplies > 0) {
-                        socket.emit("reaction", {
+                        socket.emit("message_reaction", {
                             method_type: "DELETE",
                             team_id: myself.teamId,
                             chat_type: chat.chatType,
@@ -284,7 +284,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     },
                 ]);
                 if (socket) {
-                    socket.emit("reaction", {
+                    socket.emit("message_reaction", {
                         method_type: "POST",
                         team_id: myself.teamId,
                         chat_type: chat.chatType,
@@ -302,7 +302,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                     // Update the parent message as well if it's the first thread message
                     if (message.messageId === 1) {
-                        socket.emit("reaction", {
+                        socket.emit("message_reaction", {
                             method_type: "POST",
                             team_id: myself.teamId,
                             chat_type: chat.chatType,
@@ -320,7 +320,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                     // Update the first thread message as well
                     if (message.numReplies > 0) {
-                        socket.emit("reaction", {
+                        socket.emit("message_reaction", {
                             method_type: "POST",
                             team_id: myself.teamId,
                             chat_type: chat.chatType,
@@ -347,7 +347,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             sx={{
                 maxWidth: "90%",
                 minWidth:
-                    200 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
+                    250 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}

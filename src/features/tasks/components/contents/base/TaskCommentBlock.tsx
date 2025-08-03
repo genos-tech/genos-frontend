@@ -1,16 +1,13 @@
 import { Socket } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
-import { Box, Stack, Typography, Card, Avatar, Tooltip, IconButton } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import EditIcon from "@mui/icons-material/Edit";
+import { Box, Stack, Typography } from "@mui/joy";
 
 import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
-import { BnChatPreview } from "../../../../../components/blockNote/bnChatPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
-import { extractMMDDHHMM, extractMMDDHHMMSSs } from "../../../../../utils/dateUtils";
+import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 
 type TaskCommentBlockProps = {
     myself: UserProps;
@@ -38,10 +35,8 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         setCurrentChat,
         setOpeningService,
     } = props;
-    const { mode } = useColorScheme();
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
-    const [targetCommentIndex, setTargetCommentIndex] = useState<number>(taskComments.length - 1);
 
     const boxRef = useRef<HTMLDivElement>(null);
 
@@ -88,98 +83,19 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                             }}
                         >
                             <Stack spacing={1}>
-                                {taskComments.map((comment, index) => {
-                                    const isEdited =
-                                        extractMMDDHHMMSSs(comment.tsSent) ===
-                                        extractMMDDHHMMSSs(comment.tsUpdated)
-                                            ? false
-                                            : true;
-                                    if (comment.commentBody[0].content.length > 0) {
-                                        return (
-                                            <Box
-                                                key={`${comment.commentId}-${comment.tsUpdated}-${index}`}
-                                            >
-                                                <Card
-                                                    sx={{
-                                                        backgroundColor:
-                                                            mode === "dark"
-                                                                ? "black"
-                                                                : "rgb(217, 217, 217)",
-                                                    }}
-                                                >
-                                                    <Stack
-                                                        direction="row"
-                                                        spacing={1}
-                                                        alignItems="center"
-                                                    >
-                                                        <Avatar size="sm">
-                                                            {comment.senderName[0]}
-                                                        </Avatar>
-                                                        <Typography level="title-md">
-                                                            {comment.senderName}
-                                                        </Typography>
-                                                        <Typography
-                                                            level="body-sm"
-                                                            textColor={
-                                                                mode === "dark"
-                                                                    ? "lightgrey"
-                                                                    : "rgba(37, 37, 37, 1)"
-                                                            }
-                                                            sx={{
-                                                                fontFamily: "monospace",
-                                                                opacity: 0.7,
-                                                                pl: "5px",
-                                                            }}
-                                                        >
-                                                            {isEdited === true && (
-                                                                <>
-                                                                    {extractMMDDHHMM(
-                                                                        comment.tsSent
-                                                                    )}{" "}
-                                                                    Edited
-                                                                </>
-                                                            )}
-                                                            {isEdited === false && (
-                                                                <>
-                                                                    {extractMMDDHHMM(
-                                                                        comment.tsSent
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </Typography>
-                                                    </Stack>
-                                                    <Tooltip title="Edit" size="sm">
-                                                        <IconButton
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setIsInEdit(true);
-                                                                setEditTargetComment(comment);
-                                                                setTargetCommentIndex(index);
-                                                            }}
-                                                            sx={{
-                                                                position: "absolute",
-                                                                top: 5,
-                                                                right: 5,
-                                                            }}
-                                                        >
-                                                            <EditIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <BnChatPreview
-                                                        customClassName="task-comment-preview"
-                                                        myself={myself}
-                                                        socket={socket}
-                                                        key={`${taskComments[0].taskId}-${comment.commentId}-${comment.tsSent}`}
-                                                        content={comment.commentBody}
-                                                        isSent={true}
-                                                        setCurrentChat={setCurrentChat}
-                                                        setOpeningService={setOpeningService}
-                                                    />
-                                                </Card>
-                                            </Box>
-                                        );
-                                    }
-                                })}
+                                {taskComments.map((comment, index) => (
+                                    <TaskCommentBubble
+                                        key={`task-comment-${comment.commentId}`}
+                                        socket={socket}
+                                        myself={myself}
+                                        comment={comment}
+                                        currentProjectId={task.project?.projectId}
+                                        setIsInEdit={setIsInEdit}
+                                        setEditTargetComment={setEditTargetComment}
+                                        setCurrentChat={setCurrentChat}
+                                        setOpeningService={setOpeningService}
+                                    />
+                                ))}
                             </Stack>
                         </Box>
                     </>

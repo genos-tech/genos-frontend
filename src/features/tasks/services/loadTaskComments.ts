@@ -1,12 +1,17 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { UserProps } from "../../../types/admin";
 
-export const loadTaskComments = async (taskId: number, accessToken: string | null) => {
+export const loadTaskComments = async (
+    myself: UserProps,
+    taskId: number,
+    accessToken: string | null
+) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `task_id=${taskId}`;
+            const query: string = `user_id=${myself.userId}&task_id=${taskId}`;
             const res = await api.get(`/task/comment/?${query}`);
             return res.data;
         } else {

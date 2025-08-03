@@ -6,7 +6,7 @@ import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt
 import { UserProps } from "../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../types/common";
 import { getCurrentTimestamp } from "../../utils/dateUtils";
-import { MessageProps, ThreadMessageProps } from "../../types/chat";
+import { TaskCommentProps } from "../../types/tasks";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -33,33 +33,23 @@ export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] 
 type ReactionEmojiProps = {
     socket: Socket | null;
     myself: UserProps;
-    chatType: number;
-    chatName: string;
-    isThread: boolean;
-    numReplies: number;
-    dmPartnerUser: UserProps | null;
-    message: MessageProps | ThreadMessageProps;
+    comment: TaskCommentProps;
+    projectId?: number;
     showUnderBarOption: boolean;
     reactions: ReactionProps[];
     setReactions: (value: ReactionProps[]) => void;
     setShowEmojiPicker: (value: boolean) => void;
-    setUniqueReactionEmojiCount: (value: number) => void;
 };
-export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
+export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
     const {
         socket,
         myself,
-        chatType,
-        chatName,
-        isThread,
-        numReplies,
-        dmPartnerUser,
-        message,
+        comment,
+        projectId,
         showUnderBarOption,
         reactions,
         setReactions,
         setShowEmojiPicker,
-        setUniqueReactionEmojiCount,
     } = props;
     const defaultEmojiList: string[] = ["👀", "👍", "✅"];
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
@@ -70,12 +60,6 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
 
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);
-        setUniqueReactionEmojiCount(_groupedReactions.length);
-    }, []);
-
-    useEffect(() => {
-        const _groupedReactions = groupEmojis(reactions);
-        setUniqueReactionEmojiCount(_groupedReactions.length);
         setGroupedReactions(_groupedReactions);
     }, [reactions]);
 
@@ -88,119 +72,36 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
             const updatedReactions = reactions.filter((_, idx) => idx !== existingIndex);
             setReactions(updatedReactions);
             if (socket) {
-                socket.emit("message_reaction", {
+                socket.emit("task_comment_reaction", {
                     method_type: "DELETE",
                     team_id: myself.teamId,
-                    chat_type: chatType,
-                    chat_name: chatName,
-                    chat_id: message.chatId,
-                    thread_id: message.threadId,
-                    message_id: message.messageId,
-                    dm_partner_user_id:
-                        message.sender.userId === myself.userId
-                            ? dmPartnerUser?.userId
-                            : myself.userId,
-                    is_thread_binary: isThread === true ? 1 : 0,
+                    project_id: projectId,
+                    task_id: comment.taskId,
+                    comment_id: comment.commentId,
                     reaction_emoji: selectedEmoji,
                 });
-
-                // If the reaction is for the first message in the thread,
-                // delete the reaction from the parent message as well
-                if (isThread === true && message.messageId === 1) {
-                    socket.emit("message_reaction", {
-                        method_type: "DELETE",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        message_id: message.threadId,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
-                                : myself.userId,
-                        is_thread_binary: 0,
-                        reaction_emoji: selectedEmoji,
-                    });
-                }
-
-                // Update the first thread message as well
-                if (isThread === false && numReplies > 0) {
-                    socket.emit("message_reaction", {
-                        method_type: "DELETE",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        thread_id: message.messageId,
-                        message_id: 1,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
-                                : myself.userId,
-                        is_thread_binary: 1,
-                        reaction_emoji: selectedEmoji,
-                    });
-                }
             }
         } else {
             // Emoji not in reactions, add it
             setReactions([
                 ...reactions,
-                { id: -1, emoji: selectedEmoji, sender: myself, tsSent: getCurrentTimestamp() },
+                {
+                    id: -1,
+                    emoji: selectedEmoji,
+                    sender: myself,
+                    tsSent: getCurrentTimestamp(),
+                },
             ]);
             if (socket) {
-                socket.emit("message_reaction", {
+                // add emoji
+                socket.emit("task_comment_reaction", {
                     method_type: "POST",
                     team_id: myself.teamId,
-                    chat_type: chatType,
-                    chat_name: chatName,
-                    chat_id: message.chatId,
-                    thread_id: message.threadId,
-                    message_id: message.messageId,
-                    dm_partner_user_id:
-                        message.sender.userId === myself.userId
-                            ? dmPartnerUser?.userId
-                            : myself.userId,
-                    is_thread_binary: isThread === true ? 1 : 0,
+                    project_id: projectId,
+                    task_id: comment.taskId,
+                    comment_id: comment.commentId,
                     reaction_emoji: selectedEmoji,
                 });
-
-                // Update the parent message as well if it's the first thread message
-                if (isThread === true && message.messageId === 1) {
-                    socket.emit("message_reaction", {
-                        method_type: "POST",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        message_id: message.threadId,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
-                                : myself.userId,
-                        is_thread_binary: 0,
-                        reaction_emoji: selectedEmoji,
-                    });
-                }
-
-                // Update the first thread message as well
-                if (isThread === false && numReplies > 0) {
-                    socket.emit("message_reaction", {
-                        method_type: "POST",
-                        team_id: myself.teamId,
-                        chat_type: chatType,
-                        chat_name: chatName,
-                        chat_id: message.chatId,
-                        thread_id: message.messageId,
-                        message_id: 1,
-                        dm_partner_user_id:
-                            message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
-                                : myself.userId,
-                        is_thread_binary: 1,
-                        reaction_emoji: selectedEmoji,
-                    });
-                }
             }
         }
     };
@@ -266,7 +167,7 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         </>
                     )}
                     <IconButton
-                        key={`emoji-icon-${message.messageId}`}
+                        key={`emoji-icon-${comment.commentId}`}
                         onClick={() => {
                             setShowEmojiPicker(true);
                         }}

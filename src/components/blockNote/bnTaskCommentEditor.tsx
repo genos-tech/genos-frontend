@@ -229,6 +229,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 showEmojiPicker={showEmojiPicker}
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
+                pickerBottomPosition={-400}
             />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView

@@ -76,7 +76,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
             sx={{
                 maxWidth: "90%",
                 minWidth:
-                    200 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
+                    250 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}

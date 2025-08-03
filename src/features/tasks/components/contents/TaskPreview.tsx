@@ -260,6 +260,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     useEffect(() => {
         (async () => {
             const loadedTaskComments: TaskCommentProps[] = await loadTaskComments(
+                myself,
                 Number(currentPreviewTask.id),
                 accessToken
             );
