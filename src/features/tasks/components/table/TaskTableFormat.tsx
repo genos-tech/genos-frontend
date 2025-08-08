@@ -77,7 +77,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             field: "title",
             headerName: "Title",
             headerClassName: "task-col--header",
-            width: 200,
+            width: 350,
             editable: true,
             headerAlign: "left",
         },
