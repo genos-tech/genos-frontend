@@ -112,11 +112,15 @@ export const wsHook = (props: wsHookProps) => {
         if (newMessage.chatId === currentMainChat?.chatId || currentMainChat?.chatId === -1) {
             const updatedChat = await makeUpdatedChat(currentMainChat, newMessage);
             setCurrentMainChat(updatedChat);
-            await updateAllChat(currentMainChat, newChatMessage);
+            if (newMessage.isReactionUpdated === false) {
+                await updateAllChat(currentMainChat, newChatMessage);
+            }
         } else if (newMessage.chatId === currentSubChat?.chatId) {
             const updatedChat = await makeUpdatedChat(currentSubChat, newMessage);
             setCurrentSubChat(updatedChat);
-            await updateAllChat(currentSubChat, newChatMessage);
+            if (newMessage.isReactionUpdated === false) {
+                await updateAllChat(currentSubChat, newChatMessage);
+            }
         }
     };
 
@@ -393,14 +397,24 @@ export const wsHook = (props: wsHookProps) => {
                                                 newMessage
                                             );
                                             setCurrentMainChat(updatedChat);
-                                            await updateAllChat(currentMainChat, newChatMessage);
+                                            if (newMessage.isReactionUpdated === false) {
+                                                await updateAllChat(
+                                                    currentMainChat,
+                                                    newChatMessage
+                                                );
+                                            }
                                         } else if (newMessage.chatId === currentSubChat?.chatId) {
                                             const updatedChat = await makeUpdatedChat(
                                                 currentSubChat,
                                                 newMessage
                                             );
                                             setCurrentSubChat(updatedChat);
-                                            await updateAllChat(currentSubChat, newChatMessage);
+                                            if (newMessage.isReactionUpdated === false) {
+                                                await updateAllChat(
+                                                    currentSubChat,
+                                                    newChatMessage
+                                                );
+                                            }
                                         }
                                     } else if (fromMe === true) {
                                         // Do nothing cause adding the new message
@@ -430,10 +444,12 @@ export const wsHook = (props: wsHookProps) => {
                                                     newMessage
                                                 );
                                                 setCurrentMainChat(updatedChat);
-                                                await updateAllChat(
-                                                    currentMainChat,
-                                                    newChatMessage
-                                                );
+                                                if (newMessage.isReactionUpdated === false) {
+                                                    await updateAllChat(
+                                                        currentMainChat,
+                                                        newChatMessage
+                                                    );
+                                                }
                                             } else if (
                                                 newMessage.chatId === currentSubChat?.chatId
                                             ) {
@@ -442,10 +458,12 @@ export const wsHook = (props: wsHookProps) => {
                                                     newMessage
                                                 );
                                                 setCurrentSubChat(updatedChat);
-                                                await updateAllChat(
-                                                    currentSubChat,
-                                                    newChatMessage
-                                                );
+                                                if (newMessage.isReactionUpdated === false) {
+                                                    await updateAllChat(
+                                                        currentSubChat,
+                                                        newChatMessage
+                                                    );
+                                                }
                                             }
                                         }
                                     } else {
@@ -474,10 +492,12 @@ export const wsHook = (props: wsHookProps) => {
                                                     newMessage
                                                 );
                                                 setCurrentMainChat(updatedChat);
-                                                await updateAllChat(
-                                                    currentMainChat,
-                                                    newChatMessage
-                                                );
+                                                if (newMessage.isReactionUpdated === false) {
+                                                    await updateAllChat(
+                                                        currentMainChat,
+                                                        newChatMessage
+                                                    );
+                                                }
                                             } else if (
                                                 newMessage.chatId === currentSubChat?.chatId
                                             ) {
@@ -486,10 +506,12 @@ export const wsHook = (props: wsHookProps) => {
                                                     newMessage
                                                 );
                                                 setCurrentSubChat(updatedChat);
-                                                await updateAllChat(
-                                                    currentSubChat,
-                                                    newChatMessage
-                                                );
+                                                if (newMessage.isReactionUpdated === false) {
+                                                    await updateAllChat(
+                                                        currentSubChat,
+                                                        newChatMessage
+                                                    );
+                                                }
                                             }
                                         }
                                     } else {

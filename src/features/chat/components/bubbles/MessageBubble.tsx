@@ -365,7 +365,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         setShowEmojiPicker={setShowEmojiPicker}
                         setSelectedEmoji={setSelectedEmoji}
                         pickerBottomPosition={10}
-                        pickerRightPosition={0}
+                        pickerRightPosition={isSent ? 0 : -40}
                     />
                     <Sheet
                         color={"neutral"}

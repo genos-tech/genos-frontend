@@ -153,7 +153,7 @@ export type SearchTeamTasksResponse = {
     systemUserId: string;
     taskId: number;
     title: string;
-    status: string;
+    status: TaskStatusProps;
 };
 
 export type FileProps = {

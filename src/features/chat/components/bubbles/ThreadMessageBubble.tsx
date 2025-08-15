@@ -94,7 +94,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         setShowEmojiPicker={setShowEmojiPicker}
                         setSelectedEmoji={setSelectedEmoji}
                         pickerBottomPosition={10}
-                        pickerRightPosition={0}
+                        pickerRightPosition={isSent ? 0 : -40}
                     />
                     <Sheet
                         color={isSent ? "primary" : "neutral"}

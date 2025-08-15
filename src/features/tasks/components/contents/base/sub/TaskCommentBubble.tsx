@@ -113,8 +113,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 showEmojiPicker={showEmojiPicker}
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
-                pickerBottomPosition={-250}
-                pickerRightPosition={0}
+                pickerBottomPosition={-500}
+                pickerRightPosition={230}
             />
 
             {comment.commentBody[0].content.length > 0 && (

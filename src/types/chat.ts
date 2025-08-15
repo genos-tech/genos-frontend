@@ -113,6 +113,8 @@ export type ThreadMessageProps = {
 };
 
 export type NewMessageProps = {
+    wsType: string;
+    isReactionUpdated: boolean;
     chatType: number;
     chatId: number;
     systemUserId?: string;
@@ -144,6 +146,8 @@ export type NewMessageProps = {
 };
 
 export type NewThreadMessageProps = {
+    wsType: string;
+    isReactionUpdated: boolean;
     chatType: number;
     chatId: number;
     systemUserId?: string;
