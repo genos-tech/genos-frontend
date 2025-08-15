@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Box, Stack, Typography, Card, Avatar, Tooltip, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import EditIcon from "@mui/icons-material/Edit";
@@ -107,14 +107,25 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         }
     }, [selectedEmoji]);
 
+    const boxRef = useRef<HTMLDivElement>(null);
+    const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(0);
+    const [pickerRightPosition, setPickerRightPosition] = useState<number>(0);
+    useEffect(() => {
+        if (boxRef.current) {
+            const rect = boxRef.current.getBoundingClientRect();
+            setPickerBottomPosition(rect.bottom - 1350);
+            setPickerRightPosition(rect.left - 800);
+        }
+    }, [showEmojiPicker]);
+
     return (
-        <>
+        <Box ref={boxRef}>
             <EmojiPicker
                 showEmojiPicker={showEmojiPicker}
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
-                pickerBottomPosition={-500}
-                pickerRightPosition={230}
+                pickerBottomPosition={pickerBottomPosition}
+                pickerRightPosition={pickerRightPosition}
             />
 
             {comment.commentBody[0].content.length > 0 && (
@@ -193,6 +204,6 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     </Card>
                 </Box>
             )}
-        </>
+        </Box>
     );
 };

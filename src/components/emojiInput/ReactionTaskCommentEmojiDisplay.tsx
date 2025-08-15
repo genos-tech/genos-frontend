@@ -127,7 +127,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         }
                         color="neutral"
                         size="sm"
-                        sx={{ fontSize: "1rem", cursor: "pointer", px: 0.5, py: 0.5 }}
+                        sx={{ fontSize: "1rem", cursor: "pointer", px: 0.5, py: 0.5, mb: 1 }}
                         onClick={() => handleAddReaction(emoji)}
                     >
                         {emoji}
@@ -157,7 +157,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                                     sx={{
                                         minWidth: "auto",
                                         paddingX: "4px",
-                                        paddingY: "0",
+                                        marginBottom: 0.5,
                                         fontSize: "20px",
                                     }}
                                 >
@@ -177,7 +177,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         sx={{
                             minWidth: "auto",
                             paddingX: "4px",
-                            paddingY: "0",
+                            marginBottom: 0.5,
                             fontSize: "20px",
                         }}
                     >
