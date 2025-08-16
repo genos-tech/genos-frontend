@@ -23,7 +23,9 @@ export const useScrollToBottomOnNewMessage = (
 
 export const useScrollToBottomOnChatChange = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
-    currentMainChatId: number
+    currentMainChatId: number,
+    indexMap?: { [k: string]: any },
+    moveToSpecificIndex?: string
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
@@ -31,11 +33,17 @@ export const useScrollToBottomOnChatChange = (
             return;
         } else {
             setTimeout(() => {
-                virtuoso.scrollToIndex({
-                    index: "LAST",
-                    behavior: "auto",
-                });
+                if (indexMap && moveToSpecificIndex) {
+                    virtuoso.scrollToIndex({
+                        index: indexMap[moveToSpecificIndex],
+                    });
+                } else {
+                    virtuoso.scrollToIndex({
+                        index: "LAST",
+                        behavior: "auto",
+                    });
+                }
             }, 300); // wait 300ms
         }
-    }, [currentMainChatId]);
+    }, [currentMainChatId, indexMap]);
 };

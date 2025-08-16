@@ -28,6 +28,7 @@ type MessagesPaneProps = {
     socket: Socket | null;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
+    currentSubChat?: ChatProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setIsMainChatVisible: (value: boolean) => void;
     setIsSubChatVisible: (value: boolean) => void;
@@ -55,6 +56,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         socket,
         setCurrentMainChat,
         setCurrentSubChat,
+        currentSubChat,
         setCurrentThreadChat,
         setIsMainChatVisible,
         setIsSubChatVisible,
@@ -75,6 +77,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
     const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
+    const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
 
     useEffect(() => {
         setChatMessages(subChat.messages);
@@ -89,12 +92,29 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
-        currentSubChatId
+        currentSubChatId,
+        indexMap,
+        currentSubChat?.moveToSpecificIndex
     );
 
     useEffect(() => {
         setTargetMessageIndex(chatMessages.length - 1);
+        setIndexMap(
+            Object.fromEntries(
+                chatMessages.map((message, idx) => [message.messageIdWithChatId, idx])
+            )
+        );
     }, [chatMessages]);
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (indexMap && currentSubChat && currentSubChat.moveToSpecificIndex) {
+                virtuosoRef.current?.scrollToIndex({
+                    index: indexMap[currentSubChat.moveToSpecificIndex],
+                });
+            }
+        }, 300); // wait N ms
+    }, [currentSubChat]);
 
     return (
         <div
@@ -139,6 +159,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         itemContent={(index) => {
                             const message = chatMessages[index];
                             const isYou = myself.userId === message.sender.userId;
+                            const isFocused =
+                                message.messageIdWithChatId ===
+                                currentSubChat?.moveToSpecificIndex;
                             return (
                                 <div>
                                     <Stack
@@ -155,6 +178,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             variant={isYou ? "sent" : "received"}
                                             chat={subChat}
                                             message={message}
+                                            isFocused={isFocused}
                                             socket={socket}
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}

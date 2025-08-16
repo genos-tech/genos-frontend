@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { defaultDmPartner } from "../features/chat/services/constants";
+import LoadActivityHistoryWorker from "../workers/loadActivityHistoryWorker.ts?worker";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
@@ -18,6 +19,7 @@ export const loadInitialData = (
     setIsLoading: (state: boolean) => void,
     setCurrentMainChat: (value: ChatProps) => void
 ) => {
+    const [isActivityHistoryLoaded, setIsActivityHistoryLoaded] = useState<boolean | null>(false);
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
     const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
@@ -26,6 +28,25 @@ export const loadInitialData = (
     const [latestDmChatId, setLatestDmChatId] = useState<number | null>(null);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
     const [InitialChatMessages, setInitialChatMessages] = useState<MessageProps[]>();
+
+    // Load Activity history
+    useEffect(() => {
+        if (accessToken && myself.userId !== "" && myself.userName !== "") {
+            const loadActivityHistoryWorker = new LoadActivityHistoryWorker();
+            loadActivityHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadActivityHistoryWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    setIsActivityHistoryLoaded(true);
+                } else {
+                    console.error("Failed initial Activity history data loading");
+                    console.error("event.data:", event.data);
+                }
+            };
+            return () => {
+                loadActivityHistoryWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
 
     // Load DM history
     useEffect(() => {
@@ -223,6 +244,7 @@ export const loadInitialData = (
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
         if (
+            isActivityHistoryLoaded &&
             isDMHistoryLoaded &&
             isGMHistoryLoaded &&
             isPMHistoryLoaded &&
@@ -233,6 +255,7 @@ export const loadInitialData = (
             setIsLoading(false);
         }
     }, [
+        isActivityHistoryLoaded,
         isDMHistoryLoaded,
         isGMHistoryLoaded,
         isPMHistoryLoaded,

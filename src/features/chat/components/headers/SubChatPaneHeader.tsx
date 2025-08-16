@@ -64,7 +64,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 <HeaderUserName chat={subChat} isYou={isYou} />
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
-                {subChat.chatType === 3 && (
+                {(subChat.chatType === 3 || subChat.chatType === 4) && (
                     <Tooltip title="Create a new task" size="sm">
                         <IconButton
                             component="a"
@@ -84,7 +84,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         </IconButton>
                     </Tooltip>
                 )}
-                {subChat.chatType !== 3 && (
+                {subChat.chatType !== 3 && subChat.chatType !== 4 && (
                     <Button
                         component="a"
                         startDecorator={<PhoneInTalkRoundedIcon />}

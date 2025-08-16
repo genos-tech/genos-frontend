@@ -21,6 +21,7 @@ type threadMessageBubbleProps = {
     thread: ThreadProps;
     variant: "sent" | "received";
     message: ThreadMessageProps;
+    isFocused: boolean;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsInEdit: (value: boolean) => void;
@@ -36,6 +37,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         thread,
         variant,
         message,
+        isFocused,
         setOpeningService,
         setCurrentMainChat,
         setIsInEdit,
@@ -126,6 +128,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                   }
                                 : {
                                       backgroundColor: "neutral.outlinedBorder",
+                                  },
+                            isFocused
+                                ? {
+                                      background: "#1cb15dff",
+                                  }
+                                : {
+                                      background: "",
                                   },
                         ]}
                     >

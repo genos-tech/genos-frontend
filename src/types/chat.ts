@@ -1,6 +1,6 @@
 import { PartialBlock } from "@blocknote/core";
 import { UserProps } from "./admin";
-import { ReactionProps, GroupedReactionProps } from "./common";
+import { ReactionProps } from "./common";
 import { ProjectProps } from "./tasks";
 
 // Chat Props
@@ -34,6 +34,7 @@ export type ChatProps = {
     TSLastMessage: string;
     project?: ProjectProps;
     taskExist?: boolean;
+    moveToSpecificIndex?: string;
 };
 
 // Thread Props
@@ -52,9 +53,38 @@ export type ThreadProps = {
     TSLastMessage: string;
     project?: ProjectProps;
     taskExist?: boolean;
+    moveToSpecificIndex?: string;
 };
 
 // Message Props
+export type ActivityMessageProps = {
+    activityId: string;
+    activityType: number;
+    chatType: number;
+    chatId: number;
+    chatName: string;
+    dmPartnerUser: UserProps | null;
+    isThread: boolean;
+    threadId: number;
+    messageId: number;
+    messageUniqueKey: string;
+    threadMessageUniqueKey: string;
+    taskId: number;
+    project?: ProjectProps;
+    firstLineContent: string;
+    latestReaction: {
+        emoji: string;
+        senderName: string;
+        tsSent: string;
+    };
+    sender: UserProps;
+    reactions: {
+        myReactions: ReactionProps[];
+        allReactions: ReactionProps[];
+    };
+    tsSent: string;
+};
+
 export type MessageProps = {
     chatType: number;
     messageIdWithChatId?: string;

@@ -25,6 +25,7 @@ type MessageBubbleProps = {
     variant: "sent" | "received";
     chat: ChatProps;
     message: MessageProps;
+    isFocused: boolean;
     socket: Socket | null;
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
@@ -49,6 +50,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         variant,
         chat,
         message,
+        isFocused,
         socket,
         setIsMainChatVisible,
         setIsThreadVisible,
@@ -398,12 +400,20 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 : {
                                       backgroundColor: "neutral.outlinedBorder",
                                   },
+                            isFocused
+                                ? {
+                                      background: "#1cb15dff",
+                                  }
+                                : {
+                                      background: "",
+                                  },
                         ]}
                     >
                         <Stack direction="column" spacing={1.5}>
                             <Stack direction="row" spacing={1.5}>
                                 {!(
-                                    chat.chatType === 3 && message.sender.isSystemUser === true
+                                    (chat.chatType === 3 || chat.chatType === 4) &&
+                                    message.sender.isSystemUser === true
                                 ) && (
                                     <Box sx={{ flex: 1 }}>
                                         <AvatarWithStatus
@@ -440,7 +450,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 setTargetMessageIndex={setTargetMessageIndex}
                                             />
                                         )}
-                                        {chat.chatType === 3 &&
+                                        {(chat.chatType === 3 || chat.chatType === 4) &&
                                             message.sender.isSystemUser === true && (
                                                 <BubbleOpenTaskButton
                                                     taskId={message.taskId}
@@ -462,7 +472,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 </Box>
                             </Stack>
 
-                            {message.content.length > 0 && (
+                            {message.content && message.content.length > 0 && (
                                 <BnChatPreview
                                     myself={myself}
                                     socket={socket}
