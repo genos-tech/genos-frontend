@@ -358,7 +358,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             {" "}
                                             <Chip
                                                 size="sm"
-                                                variant="outlined"
+                                                variant="soft"
                                                 color="primary"
                                                 sx={{
                                                     fontSize: "12px",
@@ -370,7 +370,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             </Chip>
                                             <Chip
                                                 size="sm"
-                                                variant="outlined"
+                                                variant="soft"
                                                 sx={{
                                                     fontSize: "12px",
                                                     borderRadius: "4px",
@@ -380,6 +380,35 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                                 ID:{activity.taskId}
                                             </Chip>
                                         </>
+                                    )}
+
+                                    {activity.activityType === 2 && (
+                                        <Chip
+                                            size="sm"
+                                            variant="outlined"
+                                            color="warning"
+                                            sx={{
+                                                fontSize: "12px",
+                                                borderRadius: "4px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Reaction
+                                        </Chip>
+                                    )}
+                                    {activity.activityType === 3 && (
+                                        <Chip
+                                            size="sm"
+                                            variant="outlined"
+                                            color="danger"
+                                            sx={{
+                                                fontSize: "12px",
+                                                borderRadius: "4px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Mentioned
+                                        </Chip>
                                     )}
 
                                     <Chip
@@ -406,20 +435,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             }}
                                         >
                                             Thread
-                                        </Chip>
-                                    )}
-                                    {activity.activityType === 2 && (
-                                        <Chip
-                                            size="sm"
-                                            variant="outlined"
-                                            color="neutral"
-                                            sx={{
-                                                fontSize: "12px",
-                                                borderRadius: "4px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Reaction
                                         </Chip>
                                     )}
                                 </Box>
