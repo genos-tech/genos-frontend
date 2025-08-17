@@ -54,9 +54,9 @@ import { useAuth } from "../../context/AuthContext";
 import { updateTeamTasks } from "./services/updateTeamTasks";
 
 const taskTypes: TaskTypesProps = {
-    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing Tasks" },
-    closed: { id: 2, statuses: ["Closed"], name: "Closed Tasks" },
-    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted Tasks" },
+    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
+    closed: { id: 2, statuses: ["Closed"], name: "Closed" },
+    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
 };
 
 type TaskHomeProps = {
@@ -394,7 +394,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         slotProps={{ root: { color: "neutral" } }}
                                                     >
                                                         <Chip
-                                                            variant="soft"
+                                                            variant="outlined"
                                                             color={
                                                                 displayTaskType.id === 1
                                                                     ? "primary"
@@ -422,7 +422,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             }}
                                                         >
                                                             <Chip
-                                                                variant="soft"
+                                                                variant="outlined"
                                                                 color="primary"
                                                                 sx={{
                                                                     borderRadius: "7px",
@@ -440,7 +440,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             }}
                                                         >
                                                             <Chip
-                                                                variant="soft"
+                                                                variant="outlined"
                                                                 color="success"
                                                                 sx={{
                                                                     borderRadius: "7px",
@@ -458,7 +458,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             }}
                                                         >
                                                             <Chip
-                                                                variant="soft"
+                                                                variant="outlined"
                                                                 color="danger"
                                                                 sx={{
                                                                     borderRadius: "7px",

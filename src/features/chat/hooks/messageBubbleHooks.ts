@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
+import { ActivityMessageProps, AllChatProps } from "../../../types/chat";
 
 export const useScrollToBottomOnNewMessage = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
@@ -46,4 +47,42 @@ export const useScrollToBottomOnChatChange = (
             }, 300); // wait 300ms
         }
     }, [currentMainChatId, indexMap]);
+};
+
+export const useScrollToBottomOnChatPaneChange = (
+    virtuosoRef: React.RefObject<VirtuosoHandle>,
+    allChats: AllChatProps[]
+) => {
+    useEffect(() => {
+        const virtuoso = virtuosoRef.current;
+        if (virtuoso === null) {
+            return;
+        } else {
+            setTimeout(() => {
+                virtuoso.scrollToIndex({
+                    index: 0,
+                    behavior: "auto",
+                });
+            }, 300); // wait 300ms
+        }
+    }, [allChats]);
+};
+
+export const useScrollToBottomOnNewActivity = (
+    virtuosoRef: React.RefObject<VirtuosoHandle>,
+    activityMessages: ActivityMessageProps[]
+) => {
+    useEffect(() => {
+        const virtuoso = virtuosoRef.current;
+        if (virtuoso === null) {
+            return;
+        } else {
+            setTimeout(() => {
+                virtuoso.scrollToIndex({
+                    index: 0,
+                    behavior: "auto",
+                });
+            }, 300); // wait 300ms
+        }
+    }, [activityMessages]);
 };

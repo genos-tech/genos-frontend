@@ -1,8 +1,9 @@
 import { Socket } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
-import { Box, Stack, Typography, List, Sheet } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
+import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
 import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
@@ -65,6 +66,10 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     );
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    useScrollToBottomOnNewTaskComment(
+        virtuosoRef as React.RefObject<VirtuosoHandle>,
+        taskComments
+    );
 
     return (
         <Box sx={{ mt: 2 }}>
@@ -86,7 +91,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                             const comment = taskComments[index];
                             return (
                                 <TaskCommentBubble
-                                    key={`task-comment-${comment.commentId}`}
+                                    key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
                                     socket={socket}
                                     myself={myself}
                                     comment={comment}

@@ -1,8 +1,12 @@
 import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
-import { List, Sheet, Stack } from "@mui/joy";
+import { useRef } from "react";
+import { List, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
+import {
+    useScrollToBottomOnChatPaneChange,
+    useScrollToBottomOnNewActivity,
+} from "../hooks/messageBubbleHooks";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForActivity } from "./chatListItemForActivity";
 import { UserProps } from "../../../types/admin";
@@ -61,7 +65,24 @@ export const ChatList = (props: ChatListProps) => {
         setCurrentPreviewTaskId,
         setCurrentProject,
     } = props;
-    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoPMRef = useRef<VirtuosoHandle | null>(null);
+
+    const chatTypeLookup: { [key: number]: any } = {
+        1: virtuosoDMRef,
+        2: virtuosoGMRef,
+        3: virtuosoPMRef,
+    };
+    useScrollToBottomOnChatPaneChange(virtuosoDMRef as React.RefObject<VirtuosoHandle>, allChats);
+    useScrollToBottomOnChatPaneChange(virtuosoGMRef as React.RefObject<VirtuosoHandle>, allChats);
+    useScrollToBottomOnChatPaneChange(virtuosoPMRef as React.RefObject<VirtuosoHandle>, allChats);
+
+    const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
+    useScrollToBottomOnNewActivity(
+        virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
+        activityMessages
+    );
 
     return (
         <List
@@ -77,7 +98,7 @@ export const ChatList = (props: ChatListProps) => {
             className="custom-scrollbar"
         >
             <Virtuoso
-                ref={virtuosoRef}
+                ref={chatTypeLookup[chatType]}
                 className="custom-scrollbar"
                 style={{ height: Math.min(300, 80 * allChats.length) }}
                 totalCount={allChats.length}
@@ -117,7 +138,7 @@ export const ChatList = (props: ChatListProps) => {
             />
 
             <Virtuoso
-                ref={virtuosoRef}
+                ref={virtuosoActivityRef}
                 className="custom-scrollbar"
                 style={{ height: Math.min(800, 80 * activityMessages.length) }}
                 totalCount={activityMessages.length}
