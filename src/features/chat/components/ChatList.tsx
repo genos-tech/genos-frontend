@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { List, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -17,6 +17,7 @@ type ChatListProps = {
     socket: Socket | null;
     myself: UserProps;
     chatType: number;
+    currentActivityMessageType: number;
     activityMessages: ActivityMessageProps[];
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -45,6 +46,7 @@ export const ChatList = (props: ChatListProps) => {
         chatType,
         activityMessages,
         allChats,
+        currentActivityMessageType,
         setCurrentMainChat,
         setCurrentSubChat,
         setCurrentThreadChat,
@@ -81,6 +83,32 @@ export const ChatList = (props: ChatListProps) => {
         virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
         activityMessages
     );
+
+    const [tmpActivityMessages, setTmpActivityMessages] =
+        useState<ActivityMessageProps[]>(activityMessages);
+
+    useEffect(() => {
+        // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
+        if (currentActivityMessageType === 0) {
+            setTmpActivityMessages(activityMessages);
+        }
+        if (currentActivityMessageType === 1) {
+            setTmpActivityMessages(
+                activityMessages.filter((item) => item.activityType === 1 && item.chatType !== 4)
+            );
+        }
+        if (currentActivityMessageType === 2) {
+            setTmpActivityMessages(
+                activityMessages.filter((item) => item.activityType === 1 && item.chatType === 4)
+            );
+        }
+        if (currentActivityMessageType === 3) {
+            setTmpActivityMessages(activityMessages.filter((item) => item.activityType === 3));
+        }
+        if (currentActivityMessageType === 4) {
+            setTmpActivityMessages(activityMessages.filter((item) => item.activityType === 2));
+        }
+    }, [activityMessages, currentActivityMessageType]);
 
     return (
         <List
@@ -136,17 +164,17 @@ export const ChatList = (props: ChatListProps) => {
                 />
             )}
 
-            {activityMessages.length > 0 && (
+            {tmpActivityMessages.length > 0 && (
                 <Virtuoso
                     ref={virtuosoActivityRef}
                     className="custom-scrollbar"
                     style={{ height: "89dvh" }}
-                    totalCount={activityMessages.length}
+                    totalCount={tmpActivityMessages.length}
                     initialTopMostItemIndex={0}
                     atTopThreshold={64}
                     atBottomThreshold={128}
                     itemContent={(index) => {
-                        const activityMessage = activityMessages[index];
+                        const activityMessage = tmpActivityMessages[index];
                         return (
                             <div>
                                 <Stack direction="row">

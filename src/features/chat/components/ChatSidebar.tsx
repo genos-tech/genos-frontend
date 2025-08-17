@@ -80,6 +80,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openCreateGM, setOpenCreateGM] = useState(false);
 
+    // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
+    const [currentActivityMessageType, setCurrentActivityMessageType] = useState<number>(0);
+
     return (
         <div style={{ display: "flex", height: "100dvh" }}>
             <Sheet
@@ -110,6 +113,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             size="sm"
                             onClick={() => {
                                 setCurrentChatPaneType(1);
+                                localStorage.setItem("currentChatPaneType", "1");
                             }}
                         >
                             <PersonIcon />
@@ -122,6 +126,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             size="sm"
                             onClick={() => {
                                 setCurrentChatPaneType(2);
+                                localStorage.setItem("currentChatPaneType", "2");
                             }}
                         >
                             <GroupsIcon />
@@ -134,6 +139,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             size="sm"
                             onClick={() => {
                                 setCurrentChatPaneType(3);
+                                localStorage.setItem("currentChatPaneType", "3");
                             }}
                         >
                             <AccountTreeIcon />
@@ -146,6 +152,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             size="sm"
                             onClick={() => {
                                 setCurrentChatPaneType(4);
+                                localStorage.setItem("currentChatPaneType", "4");
                             }}
                         >
                             <PushPinIcon />
@@ -158,6 +165,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             size="sm"
                             onClick={() => {
                                 setCurrentChatPaneType(5);
+                                localStorage.setItem("currentChatPaneType", "5");
                             }}
                         >
                             <NotificationsActiveIcon />
@@ -174,6 +182,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={1}
                             activityMessages={[]}
                             allChats={allChats.filter((chat) => chat.chatType === 1)}
+                            currentActivityMessageType={-1}
                             currentMainChat={currentMainChat}
                             currentSubChat={currentSubChat}
                             setCurrentMainChat={setCurrentMainChat}
@@ -203,6 +212,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={2}
                             activityMessages={[]}
                             allChats={allChats.filter((chat) => chat.chatType === 2)}
+                            currentActivityMessageType={-1}
                             currentMainChat={currentMainChat}
                             currentSubChat={currentSubChat}
                             setCurrentMainChat={setCurrentMainChat}
@@ -234,7 +244,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 )}
                 {currentChatPaneType === 3 && (
                     <>
-                        {" "}
                         <PMDivider />
                         <ChatList
                             socket={socket}
@@ -242,6 +251,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={3}
                             activityMessages={[]}
                             allChats={allChats.filter((chat) => chat.chatType === 3)}
+                            currentActivityMessageType={-1}
                             currentMainChat={currentMainChat}
                             currentSubChat={currentSubChat}
                             setCurrentMainChat={setCurrentMainChat}
@@ -269,14 +279,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 )}
                 {currentChatPaneType === 5 && (
                     <>
-                        {" "}
-                        <ActivityDivider />
+                        <ActivityDivider
+                            currentActivityMessageType={currentActivityMessageType}
+                            setCurrentActivityMessageType={setCurrentActivityMessageType}
+                        />
                         <ChatList
                             socket={socket}
                             myself={myself}
                             chatType={-1}
                             activityMessages={activityMessages}
                             allChats={[]}
+                            currentActivityMessageType={currentActivityMessageType}
                             currentMainChat={currentMainChat}
                             currentSubChat={currentSubChat}
                             setCurrentMainChat={setCurrentMainChat}
