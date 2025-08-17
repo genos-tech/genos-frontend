@@ -312,7 +312,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
                     {currentProject && (
                         <>
-                            <Panel id={"1"} order={1} defaultSize={15} minSize={5} maxSize={20}>
+                            <Panel id={"1"} order={1} defaultSize={15} minSize={5} maxSize={30}>
                                 <TaskSidebar
                                     myself={myself}
                                     setMyself={setMyself}
@@ -838,7 +838,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                     {!currentProject && (
                         <>
-                            <Panel id={"5"} order={5} minSize={5} maxSize={20}>
+                            <Panel id={"5"} order={5} minSize={5} maxSize={30}>
                                 <TaskSidebar
                                     myself={myself}
                                     setMyself={setMyself}

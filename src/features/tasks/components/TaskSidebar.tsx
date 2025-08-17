@@ -166,10 +166,10 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
-                10,
+                100,
                 accessToken
             );
-            setRecentTasks([...loadedTeamTasks.slice(0, 10)]);
+            setRecentTasks([...loadedTeamTasks.slice(0, 20)]);
         })();
     };
 
@@ -278,6 +278,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             {/* ============================================================================ */}
 
             <Box
+                className="custom-scrollbar"
                 sx={{
                     minHeight: 0,
                     overflow: "hidden auto",
@@ -355,10 +356,17 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 </ListItemButton>
                             )}
                         >
-                            <List sx={{ gap: 0.5 }}>
+                            <List>
                                 {recentTasks.map(
                                     (
-                                        { projectId, projectName, systemUserId, taskId, title },
+                                        {
+                                            projectId,
+                                            projectName,
+                                            systemUserId,
+                                            taskId,
+                                            title,
+                                            status,
+                                        },
                                         index
                                     ) => {
                                         return (
@@ -383,9 +391,28 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             borderRadius: "7px",
                                                             fontWeight: "bold",
                                                         }}
-                                                        size="md"
+                                                        size="sm"
                                                     >
                                                         ID: {taskId || "N/A"}
+                                                    </Chip>
+                                                    <Chip
+                                                        key={`status-chip-${taskId}-${index}`} // pass the key directly
+                                                        variant="soft"
+                                                        sx={{
+                                                            backgroundColor: status.color
+                                                                ? alpha(
+                                                                      status.color,
+                                                                      mode === "dark" ? 0.5 : 0.75
+                                                                  )
+                                                                : "transparent",
+                                                            color: status.textColor,
+                                                            fontWeight: "bold",
+                                                            borderRadius: "7px",
+                                                            marginX: "-5px",
+                                                        }}
+                                                        size="sm"
+                                                    >
+                                                        {`${status.status}`}
                                                     </Chip>
                                                     <Typography
                                                         noWrap
@@ -394,6 +421,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             textOverflow: "ellipsis",
                                                             whiteSpace: "nowrap",
                                                             width: "100%", // take full width of button
+                                                            fontSize: "15px",
                                                         }}
                                                     >
                                                         {title}
@@ -528,7 +556,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                         </ListItemButton>
                                                     )}
                                                 >
-                                                    <List sx={{ gap: 0.5 }}>
+                                                    <List>
                                                         {currentProject?.projectId === projectId &&
                                                             currentProject !== null &&
                                                             currentProject.projectTags.map(
@@ -578,9 +606,11 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                                             "hidden",
                                                                                         textOverflow:
                                                                                             "ellipsis",
-                                                                                        ml: "20px",
+                                                                                        padding:
+                                                                                            "4px",
+                                                                                        ml: "10px",
                                                                                     }}
-                                                                                    size="md"
+                                                                                    size="sm"
                                                                                 >
                                                                                     {tagName}
                                                                                 </Chip>
