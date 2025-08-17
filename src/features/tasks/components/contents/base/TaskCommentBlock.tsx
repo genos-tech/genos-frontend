@@ -96,6 +96,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                     myself={myself}
                                     comment={comment}
                                     currentProjectId={task.project?.projectId}
+                                    currentProjectName={task.project?.projectName}
                                     setIsInEdit={setIsInEdit}
                                     setEditTargetComment={setEditTargetComment}
                                     setCurrentChat={setCurrentChat}
@@ -113,6 +114,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                     socket={socket}
                     teamMembers={teamMembers}
                     projectId={task.project?.projectId}
+                    projectName={task.project?.projectName}
                     taskId={task.id}
                     taskComments={taskComments}
                     setTaskComments={setTaskComments}

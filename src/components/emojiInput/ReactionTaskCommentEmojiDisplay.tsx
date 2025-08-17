@@ -35,6 +35,7 @@ type ReactionEmojiProps = {
     myself: UserProps;
     comment: TaskCommentProps;
     projectId?: number;
+    projectName?: string;
     showUnderBarOption: boolean;
     reactions: ReactionProps[];
     setReactions: (value: ReactionProps[]) => void;
@@ -46,17 +47,23 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
         myself,
         comment,
         projectId,
+        projectName,
         showUnderBarOption,
         reactions,
         setReactions,
         setShowEmojiPicker,
     } = props;
-    const defaultEmojiList: string[] = ["👀", "👍", "✅"];
+    const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👀", "👍", "✅"]);
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
+
+    useEffect(() => {
+        const groupedReactionEmojis: string[] = groupedReactions.map((item) => item.emoji);
+        setBaseEmojiList(baseEmojiList.filter((emoji) => !groupedReactionEmojis.includes(emoji)));
+    }, [groupedReactions]);
 
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);
@@ -76,8 +83,10 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     method_type: "DELETE",
                     team_id: myself.teamId,
                     project_id: projectId,
+                    project_name: projectName,
                     task_id: comment.taskId,
                     comment_id: comment.commentId,
+                    comment_body: comment.commentBody,
                     reaction_emoji: selectedEmoji,
                 });
             }
@@ -98,8 +107,10 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     method_type: "POST",
                     team_id: myself.teamId,
                     project_id: projectId,
+                    project_name: projectName,
                     task_id: comment.taskId,
                     comment_id: comment.commentId,
+                    comment_body: comment.commentBody,
                     reaction_emoji: selectedEmoji,
                 });
             }
@@ -148,7 +159,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                 <>
                     {groupedReactions.length < 3 && (
                         <>
-                            {defaultEmojiList.map((emoji, index) => (
+                            {baseEmojiList.map((emoji, index) => (
                                 <Button
                                     key={`default-emoji-${index}`}
                                     onClick={() => handleAddReaction(emoji)}

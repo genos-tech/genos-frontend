@@ -97,87 +97,91 @@ export const ChatList = (props: ChatListProps) => {
             }}
             className="custom-scrollbar"
         >
-            <Virtuoso
-                ref={chatTypeLookup[chatType]}
-                className="custom-scrollbar"
-                style={{ height: Math.min(300, 80 * allChats.length) }}
-                totalCount={allChats.length}
-                initialTopMostItemIndex={0}
-                atTopThreshold={64}
-                atBottomThreshold={128}
-                itemContent={(index) => {
-                    const chat = allChats[index];
-                    return (
-                        <div>
-                            <Stack direction="row">
-                                <ChatListItem
-                                    key={`${chat.chatId}-${chat.isDm}-${chat.chatName}`}
-                                    socket={socket}
-                                    chat={chat}
-                                    myself={myself}
-                                    currentMainChat={currentMainChat}
-                                    currentSubChat={currentSubChat}
-                                    setCurrentMainChat={setCurrentMainChat}
-                                    setCurrentSubChat={setCurrentSubChat}
-                                    setIsMainChatVisible={setIsMainChatVisible}
-                                    setIsThreadVisible={setIsThreadVisible}
-                                    isThreadVisible={isThreadVisible}
-                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                    setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                    isTaskPreviewVisible={isTaskPreviewVisible}
-                                    isTaskCreationVisible={isTaskCreationVisible}
-                                    isSubChatVisible={isSubChatVisible}
-                                    setIsSubChatVisible={setIsSubChatVisible}
-                                    setOpeningService={setOpeningService}
-                                    chatType={chatType}
-                                />
-                            </Stack>
-                        </div>
-                    );
-                }}
-            />
+            {allChats.length > 0 && (
+                <Virtuoso
+                    ref={chatTypeLookup[chatType]}
+                    className="custom-scrollbar"
+                    style={{ height: Math.min(300, 80 * allChats.length) }}
+                    totalCount={allChats.length}
+                    initialTopMostItemIndex={0}
+                    atTopThreshold={64}
+                    atBottomThreshold={128}
+                    itemContent={(index) => {
+                        const chat = allChats[index];
+                        return (
+                            <div>
+                                <Stack direction="row">
+                                    <ChatListItem
+                                        key={`${chat.chatId}-${chat.isDm}-${chat.chatName}`}
+                                        socket={socket}
+                                        chat={chat}
+                                        myself={myself}
+                                        currentMainChat={currentMainChat}
+                                        currentSubChat={currentSubChat}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentSubChat={setCurrentSubChat}
+                                        setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        isThreadVisible={isThreadVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        isTaskCreationVisible={isTaskCreationVisible}
+                                        isSubChatVisible={isSubChatVisible}
+                                        setIsSubChatVisible={setIsSubChatVisible}
+                                        setOpeningService={setOpeningService}
+                                        chatType={chatType}
+                                    />
+                                </Stack>
+                            </div>
+                        );
+                    }}
+                />
+            )}
 
-            <Virtuoso
-                ref={virtuosoActivityRef}
-                className="custom-scrollbar"
-                style={{ height: Math.min(800, 80 * activityMessages.length) }}
-                totalCount={activityMessages.length}
-                initialTopMostItemIndex={0}
-                atTopThreshold={64}
-                atBottomThreshold={128}
-                itemContent={(index) => {
-                    const activityMessage = activityMessages[index];
-                    return (
-                        <div>
-                            <Stack direction="row">
-                                <ChatListItemForActivity
-                                    key={activityMessage.activityId}
-                                    socket={socket}
-                                    activity={activityMessage}
-                                    myself={myself}
-                                    currentMainChat={currentMainChat}
-                                    currentSubChat={currentSubChat}
-                                    setCurrentMainChat={setCurrentMainChat}
-                                    setCurrentSubChat={setCurrentSubChat}
-                                    setCurrentThreadChat={setCurrentThreadChat}
-                                    setIsMainChatVisible={setIsMainChatVisible}
-                                    setIsThreadVisible={setIsThreadVisible}
-                                    isThreadVisible={isThreadVisible}
-                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                    setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                    isTaskPreviewVisible={isTaskPreviewVisible}
-                                    isTaskCreationVisible={isTaskCreationVisible}
-                                    isSubChatVisible={isSubChatVisible}
-                                    setIsSubChatVisible={setIsSubChatVisible}
-                                    setOpeningService={setOpeningService}
-                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                    setCurrentProject={setCurrentProject}
-                                />
-                            </Stack>
-                        </div>
-                    );
-                }}
-            />
+            {activityMessages.length > 0 && (
+                <Virtuoso
+                    ref={virtuosoActivityRef}
+                    className="custom-scrollbar"
+                    style={{ height: Math.min(800, 80 * activityMessages.length) }}
+                    totalCount={activityMessages.length}
+                    initialTopMostItemIndex={0}
+                    atTopThreshold={64}
+                    atBottomThreshold={128}
+                    itemContent={(index) => {
+                        const activityMessage = activityMessages[index];
+                        return (
+                            <div>
+                                <Stack direction="row">
+                                    <ChatListItemForActivity
+                                        key={activityMessage.activityId}
+                                        socket={socket}
+                                        activity={activityMessage}
+                                        myself={myself}
+                                        currentMainChat={currentMainChat}
+                                        currentSubChat={currentSubChat}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentSubChat={setCurrentSubChat}
+                                        setCurrentThreadChat={setCurrentThreadChat}
+                                        setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        isThreadVisible={isThreadVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        isTaskCreationVisible={isTaskCreationVisible}
+                                        isSubChatVisible={isSubChatVisible}
+                                        setIsSubChatVisible={setIsSubChatVisible}
+                                        setOpeningService={setOpeningService}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setCurrentProject={setCurrentProject}
+                                    />
+                                </Stack>
+                            </div>
+                        );
+                    }}
+                />
+            )}
         </List>
     );
 };

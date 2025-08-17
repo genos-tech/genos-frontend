@@ -42,6 +42,7 @@ type BnUpdateTaskCommentEditorProps = {
     socket: Socket | null;
     teamMembers: UserProps[];
     projectId?: number;
+    projectName?: string;
     taskId?: number;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
@@ -61,6 +62,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         socket,
         teamMembers,
         projectId,
+        projectName,
         taskId,
         setTaskUpdated,
         taskComments,
@@ -203,6 +205,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     {
                         method_type: "PUT",
                         project_id: projectId,
+                        project_name: projectName,
                         task_id: taskId,
                         comment_id: targetComment.commentId,
                         comment_body: editor.document,

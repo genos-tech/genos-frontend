@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
 import {
     Avatar,
@@ -293,6 +293,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
+
+    useEffect(() => {
+        setGroupedReactions(groupEmojis(activity.reactions.allReactions));
+    }, [activity]);
 
     return (
         <React.Fragment>

@@ -228,12 +228,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         chat_id: message.chatId,
                         thread_id: message.threadId,
                         message_id: message.messageId,
+                        message_body: message.content,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? chat.dmPartnerUser?.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
                     });
 
                     // If the reaction is for the first message in the thread,
@@ -246,12 +248,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             chat_name: chat.chatName,
                             chat_id: message.chatId,
                             message_id: message.threadId,
+                            message_body: message.content,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
+                            current_emojis: message.reactions?.allReactions || [],
                         });
                     }
 
@@ -265,12 +269,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             chat_id: message.chatId,
                             thread_id: message.messageId,
                             message_id: 1,
+                            message_body: message.content,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId
                                     : myself.userId,
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
+                            current_emojis: message.reactions?.allReactions || [],
                         });
                     }
                 }
@@ -294,12 +300,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         chat_id: message.chatId,
                         thread_id: message.threadId,
                         message_id: message.messageId,
+                        message_body: message.content,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? chat.dmPartnerUser?.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
                     });
 
                     // Update the parent message as well if it's the first thread message
@@ -311,12 +319,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             chat_name: chat.chatName,
                             chat_id: message.chatId,
                             message_id: message.threadId,
+                            message_body: message.content,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
+                            current_emojis: message.reactions?.allReactions || [],
                         });
                     }
 
@@ -330,12 +340,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             chat_id: message.chatId,
                             thread_id: message.messageId,
                             message_id: 1,
+                            message_body: message.content,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId
                                     : myself.userId,
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
+                            current_emojis: message.reactions?.allReactions || [],
                         });
                     }
                 }

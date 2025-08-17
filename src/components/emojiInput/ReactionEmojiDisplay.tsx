@@ -61,12 +61,17 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
         setShowEmojiPicker,
         setUniqueReactionEmojiCount,
     } = props;
-    const defaultEmojiList: string[] = ["👀", "👍", "✅"];
+    const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👀", "👍", "✅"]);
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
+
+    useEffect(() => {
+        const groupedReactionEmojis: string[] = groupedReactions.map((item) => item.emoji);
+        setBaseEmojiList(baseEmojiList.filter((emoji) => !groupedReactionEmojis.includes(emoji)));
+    }, [groupedReactions, reactions]);
 
     useEffect(() => {
         const _groupedReactions = groupEmojis(reactions);
@@ -96,12 +101,14 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                     chat_id: message.chatId,
                     thread_id: message.threadId,
                     message_id: message.messageId,
+                    message_body: message.content,
                     dm_partner_user_id:
                         message.sender.userId === myself.userId
                             ? dmPartnerUser?.userId
                             : myself.userId,
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
+                    current_emojis: message.reactions?.allReactions || [],
                 });
 
                 // If the reaction is for the first message in the thread,
@@ -114,12 +121,14 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         chat_name: chatName,
                         chat_id: message.chatId,
                         message_id: message.threadId,
+                        message_body: message.content,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? dmPartnerUser?.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
                     });
                 }
 
@@ -133,12 +142,14 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         chat_id: message.chatId,
                         thread_id: message.messageId,
                         message_id: 1,
+                        message_body: message.content,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? dmPartnerUser?.userId
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
                     });
                 }
             }
@@ -157,12 +168,14 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                     chat_id: message.chatId,
                     thread_id: message.threadId,
                     message_id: message.messageId,
+                    message_body: message.content,
                     dm_partner_user_id:
                         message.sender.userId === myself.userId
                             ? dmPartnerUser?.userId
                             : myself.userId,
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
+                    current_emojis: message.reactions?.allReactions || [],
                 });
 
                 // Update the parent message as well if it's the first thread message
@@ -174,12 +187,14 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         chat_name: chatName,
                         chat_id: message.chatId,
                         message_id: message.threadId,
+                        message_body: message.content,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? dmPartnerUser?.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
                     });
                 }
 
@@ -192,6 +207,7 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         chat_name: chatName,
                         chat_id: message.chatId,
                         thread_id: message.messageId,
+                        message_body: message.content,
                         message_id: 1,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
@@ -199,6 +215,7 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
                     });
                 }
             }
@@ -247,7 +264,7 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                 <>
                     {groupedReactions.length < 3 && (
                         <>
-                            {defaultEmojiList.map((emoji, index) => (
+                            {baseEmojiList.map((emoji, index) => (
                                 <Button
                                     key={`default-emoji-${index}`}
                                     onClick={() => handleAddReaction(emoji)}

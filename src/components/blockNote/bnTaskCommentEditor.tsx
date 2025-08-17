@@ -189,6 +189,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     {
                         method_type: "POST",
                         project_id: task.project?.projectId,
+                        project_name: task.project?.projectName,
                         task_id: task.id,
                         comment_body: editor.document,
                     },

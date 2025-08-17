@@ -22,6 +22,7 @@ type TaskCommentBubbleProps = {
     myself: UserProps;
     comment: TaskCommentProps;
     currentProjectId?: number;
+    currentProjectName?: string;
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
     setCurrentChat: (chat: ChatProps) => void;
@@ -33,6 +34,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         myself,
         comment,
         currentProjectId,
+        currentProjectName,
         setIsInEdit,
         setEditTargetComment,
         setCurrentChat,
@@ -76,8 +78,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         method_type: "DELETE",
                         team_id: myself.teamId,
                         project_id: currentProjectId,
+                        project_name: currentProjectName,
                         task_id: comment.taskId,
                         comment_id: comment.commentId,
+                        comment_body: comment.commentBody,
                         reaction_emoji: selectedEmoji,
                     });
                 }
@@ -97,8 +101,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         method_type: "POST",
                         team_id: myself.teamId,
                         project_id: currentProjectId,
+                        project_name: currentProjectName,
                         task_id: comment.taskId,
                         comment_id: comment.commentId,
+                        comment_body: comment.commentBody,
                         reaction_emoji: selectedEmoji,
                     });
                 }
@@ -119,7 +125,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     }, [showEmojiPicker]);
 
     return (
-        <Box ref={boxRef}  sx={{py: 0.5}}>
+        <Box ref={boxRef} sx={{ py: 0.5 }}>
             <EmojiPicker
                 showEmojiPicker={showEmojiPicker}
                 setShowEmojiPicker={setShowEmojiPicker}
@@ -169,6 +175,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 myself={myself}
                                 comment={comment}
                                 projectId={currentProjectId}
+                                projectName={currentProjectName}
                                 showUnderBarOption={showUnderBarOption}
                                 reactions={reactions}
                                 setReactions={setReactions}
