@@ -168,7 +168,7 @@ export const ChatList = (props: ChatListProps) => {
                 <Virtuoso
                     ref={virtuosoActivityRef}
                     className="custom-scrollbar"
-                    style={{ height: "89dvh" }}
+                    style={{ height: "85dvh" }}
                     totalCount={tmpActivityMessages.length}
                     initialTopMostItemIndex={0}
                     atTopThreshold={64}

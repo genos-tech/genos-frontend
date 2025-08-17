@@ -10,7 +10,7 @@ export const PinnedDivider = () => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.5,
+                py: 0.7,
                 justifyContent: "center",
                 alignItems: "center",
                 mt: "3px",
@@ -74,7 +74,7 @@ export const DMDivider = () => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.5,
+                py: 0.55,
                 justifyContent: "center",
                 alignItems: "center",
                 mt: "3px",
@@ -100,7 +100,7 @@ export const PMDivider = () => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.5,
+                py: 0.7,
                 justifyContent: "center",
                 alignItems: "center",
                 mt: "3px",
@@ -132,7 +132,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.5,
+                py: 0.7,
                 justifyContent: "center",
                 alignItems: "center",
                 mt: "3px",
