@@ -10,14 +10,19 @@ export const PinnedDivider = () => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                py: 0.5,
+                justifyContent: "center",
                 alignItems: "center",
-                justifyContent: "space-between",
-                px: 2,
-                py: 1,
+                mt: "3px",
             }}
         >
-            <Typography component="h1" sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}>
-                Pinned
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                Pinned Messages
             </Typography>
         </Stack>
     );
@@ -35,14 +40,18 @@ export const GMDivider = (props: GMDividerProps) => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                justifyContent: "center",
                 alignItems: "center",
-                justifyContent: "space-between",
-                px: 2,
-                py: 0.5,
+                mt: "3px",
             }}
         >
-            <Typography component="h1" sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}>
-                GMs
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                Group Messages
             </Typography>
             <IconButton
                 component="a"
@@ -65,14 +74,19 @@ export const DMDivider = () => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                py: 0.5,
+                justifyContent: "center",
                 alignItems: "center",
-                justifyContent: "space-between",
-                px: 2,
-                py: 1,
+                mt: "3px",
             }}
         >
-            <Typography component="h1" sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}>
-                DMs
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                Direct Messages
             </Typography>
         </Stack>
     );
@@ -86,13 +100,18 @@ export const PMDivider = () => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                py: 0.5,
+                justifyContent: "center",
                 alignItems: "center",
-                justifyContent: "space-between",
-                px: 2,
-                py: 1,
+                mt: "3px",
             }}
         >
-            <Typography component="h1" sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}>
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
                 Project Updates
             </Typography>
         </Stack>
@@ -107,14 +126,19 @@ export const ActivityDivider = () => {
             spacing={1}
             sx={{
                 backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                py: 0.5,
+                justifyContent: "center",
                 alignItems: "center",
-                justifyContent: "space-between",
-                px: 2,
-                py: 1,
+                mt: "3px",
             }}
         >
-            <Typography component="h1" sx={{ fontSize: { xs: 13 }, fontWeight: "lg", mr: "auto" }}>
-                Recent Activities (Mention, Thread, Task Comment)
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                Recent Activities
             </Typography>
         </Stack>
     );

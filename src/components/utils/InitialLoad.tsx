@@ -1,4 +1,6 @@
-import { CircularProgress, Typography, Box } from "@mui/joy";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { CircularProgress, Typography, Box, Button } from "@mui/joy";
 
 import { loadInitialData } from "../../services/loadInitialData";
 import { UserProps } from "../../types/admin";
@@ -14,6 +16,16 @@ type InitialLoadProps = {
 export const InitialLoad = (props: InitialLoadProps) => {
     const { myself, setIsLoading, setCurrentMainChat } = props;
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
+    const [showSignIn, setShowSignIn] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowSignIn(true);
+        }, 3000);
+
+        return () => clearTimeout(timer); // cleanup when unmounted
+    }, []);
 
     loadInitialData(myself, accessToken, setIsLoading, setCurrentMainChat);
 
@@ -33,6 +45,22 @@ export const InitialLoad = (props: InitialLoadProps) => {
             <Typography level="h4" sx={{ mt: 2 }}>
                 Loading...
             </Typography>
+            {showSignIn && (
+                <>
+                    <Typography level="h4" sx={{ mt: 2 }}>
+                        Your token might be already expired...
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        sx={{ mt: "10px" }}
+                        onClick={() => {
+                            navigate("/SignIn");
+                        }}
+                    >
+                        Sign in Again
+                    </Button>
+                </>
+            )}
         </Box>
     );
 };

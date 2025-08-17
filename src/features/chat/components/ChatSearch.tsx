@@ -96,7 +96,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
     }, [openSearchBox]);
 
     return (
-        <Box sx={{ px: 2, pb: 1.5, mt: 2 }}>
+        <Box sx={{ px: 2, pb: 0.5, mt: 2 }}>
             <Autocomplete
                 placeholder={"Search"}
                 open={openSearchBox}

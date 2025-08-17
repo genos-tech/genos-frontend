@@ -97,6 +97,11 @@ export const App = () => {
         Number(localStorage.getItem("openingService") || "1")
     );
 
+    // {1: DM, 2: GM, 3: PM, 4: Pin, 5: Activity}
+    const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
+        Number(localStorage.getItem("currentChatPaneType") || "1")
+    );
+
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
@@ -189,6 +194,8 @@ export const App = () => {
                         myself={myself}
                         setMyself={setMyself}
                         teamMembers={teamMembers}
+                        currentChatPaneType={currentChatPaneType}
+                        setCurrentChatPaneType={setCurrentChatPaneType}
                         activityMessages={activityMessages}
                         currentMainChat={currentMainChat}
                         setCurrentMainChat={setCurrentMainChat}

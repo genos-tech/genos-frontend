@@ -24,6 +24,8 @@ type ChatHomeProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     teamMembers: UserProps[];
+    currentChatPaneType: number;
+    setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -46,6 +48,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         myself,
         setMyself,
         teamMembers,
+        currentChatPaneType,
+        setCurrentChatPaneType,
         activityMessages,
         currentMainChat,
         setCurrentMainChat,
@@ -224,6 +228,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                         >
                             <ChatSidebar
                                 myself={myself}
+                                currentChatPaneType={currentChatPaneType}
+                                setCurrentChatPaneType={setCurrentChatPaneType}
                                 activityMessages={activityMessages}
                                 allChats={allChats}
                                 setAllChats={setAllChats}

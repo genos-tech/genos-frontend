@@ -1,7 +1,12 @@
 import { useState } from "react";
-import Sheet from "@mui/joy/Sheet";
+import { Stack, Sheet, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
+import PushPinIcon from "@mui/icons-material/PushPin";
+import PersonIcon from "@mui/icons-material/Person";
+import GroupsIcon from "@mui/icons-material/Groups";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 
 import { ModalCreateGM } from "./modals/ModalCreateGM";
 import { ChatSearch } from "./ChatSearch";
@@ -19,6 +24,8 @@ import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../.
 
 type ChatSidebarProps = {
     myself: UserProps;
+    currentChatPaneType: number;
+    setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
@@ -45,6 +52,8 @@ type ChatSidebarProps = {
 export const ChatSidebar = (props: ChatSidebarProps) => {
     const {
         myself,
+        currentChatPaneType,
+        setCurrentChatPaneType,
         activityMessages,
         allChats,
         setAllChats,
@@ -93,125 +102,201 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     setAllChats={setAllChats}
                 />
 
-                <PinnedDivider />
+                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                    <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
+                        <IconButton
+                            component="p"
+                            variant={currentChatPaneType === 1 ? "solid" : "soft"}
+                            size="sm"
+                            onClick={() => {
+                                setCurrentChatPaneType(1);
+                            }}
+                        >
+                            <PersonIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Group Message" sx={{ zIndex: "10020" }}>
+                        <IconButton
+                            component="p"
+                            variant={currentChatPaneType === 2 ? "solid" : "soft"}
+                            size="sm"
+                            onClick={() => {
+                                setCurrentChatPaneType(2);
+                            }}
+                        >
+                            <GroupsIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Project Updates" sx={{ zIndex: "10020" }}>
+                        <IconButton
+                            component="p"
+                            variant={currentChatPaneType === 3 ? "solid" : "soft"}
+                            size="sm"
+                            onClick={() => {
+                                setCurrentChatPaneType(3);
+                            }}
+                        >
+                            <AccountTreeIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Pinned" sx={{ zIndex: "10020" }}>
+                        <IconButton
+                            component="p"
+                            variant={currentChatPaneType === 4 ? "solid" : "soft"}
+                            size="sm"
+                            onClick={() => {
+                                setCurrentChatPaneType(4);
+                            }}
+                        >
+                            <PushPinIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
+                        <IconButton
+                            component="p"
+                            variant={currentChatPaneType === 5 ? "solid" : "soft"}
+                            size="sm"
+                            onClick={() => {
+                                setCurrentChatPaneType(5);
+                            }}
+                        >
+                            <NotificationsActiveIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
 
-                <DMDivider />
-
-                <ModalCreateGM
-                    socket={socket}
-                    myself={myself}
-                    open={openCreateGM}
-                    setOpen={setOpenCreateGM}
-                    allChats={allChats}
-                    setAllChats={setAllChats}
-                    setCurrentMainChat={setCurrentMainChat}
-                />
-
-                <ChatList
-                    socket={socket}
-                    myself={myself}
-                    chatType={1}
-                    activityMessages={[]}
-                    allChats={allChats.filter((chat) => chat.chatType === 1)}
-                    currentMainChat={currentMainChat}
-                    currentSubChat={currentSubChat}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setCurrentSubChat={setCurrentSubChat}
-                    setCurrentThreadChat={setCurrentThreadChat}
-                    setIsMainChatVisible={setIsMainChatVisible}
-                    setIsThreadVisible={setIsThreadVisible}
-                    isThreadVisible={isThreadVisible}
-                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    setIsTaskCreationVisible={setIsTaskCreationVisible}
-                    isTaskPreviewVisible={isTaskPreviewVisible}
-                    isTaskCreationVisible={isTaskCreationVisible}
-                    isSubChatVisible={isSubChatVisible}
-                    setIsSubChatVisible={setIsSubChatVisible}
-                    setOpeningService={setOpeningService}
-                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                    setCurrentProject={setCurrentProject}
-                />
-
-                <GMDivider setOpenCreateGM={setOpenCreateGM} />
-
-                <ChatList
-                    socket={socket}
-                    myself={myself}
-                    chatType={2}
-                    activityMessages={[]}
-                    allChats={allChats.filter((chat) => chat.chatType === 2)}
-                    currentMainChat={currentMainChat}
-                    currentSubChat={currentSubChat}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setCurrentSubChat={setCurrentSubChat}
-                    setCurrentThreadChat={setCurrentThreadChat}
-                    setIsMainChatVisible={setIsMainChatVisible}
-                    setIsThreadVisible={setIsThreadVisible}
-                    isThreadVisible={isThreadVisible}
-                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    setIsTaskCreationVisible={setIsTaskCreationVisible}
-                    isTaskPreviewVisible={isTaskPreviewVisible}
-                    isTaskCreationVisible={isTaskCreationVisible}
-                    isSubChatVisible={isSubChatVisible}
-                    setIsSubChatVisible={setIsSubChatVisible}
-                    setOpeningService={setOpeningService}
-                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                    setCurrentProject={setCurrentProject}
-                />
-
-                <PMDivider />
-
-                <ChatList
-                    socket={socket}
-                    myself={myself}
-                    chatType={3}
-                    activityMessages={[]}
-                    allChats={allChats.filter((chat) => chat.chatType === 3)}
-                    currentMainChat={currentMainChat}
-                    currentSubChat={currentSubChat}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setCurrentSubChat={setCurrentSubChat}
-                    setCurrentThreadChat={setCurrentThreadChat}
-                    setIsMainChatVisible={setIsMainChatVisible}
-                    setIsThreadVisible={setIsThreadVisible}
-                    isThreadVisible={isThreadVisible}
-                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    setIsTaskCreationVisible={setIsTaskCreationVisible}
-                    isTaskPreviewVisible={isTaskPreviewVisible}
-                    isTaskCreationVisible={isTaskCreationVisible}
-                    isSubChatVisible={isSubChatVisible}
-                    setIsSubChatVisible={setIsSubChatVisible}
-                    setOpeningService={setOpeningService}
-                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                    setCurrentProject={setCurrentProject}
-                />
-
-                <ActivityDivider />
-
-                <ChatList
-                    socket={socket}
-                    myself={myself}
-                    chatType={-1}
-                    activityMessages={activityMessages}
-                    allChats={[]}
-                    currentMainChat={currentMainChat}
-                    currentSubChat={currentSubChat}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setCurrentSubChat={setCurrentSubChat}
-                    setCurrentThreadChat={setCurrentThreadChat}
-                    setIsMainChatVisible={setIsMainChatVisible}
-                    setIsThreadVisible={setIsThreadVisible}
-                    isThreadVisible={isThreadVisible}
-                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    setIsTaskCreationVisible={setIsTaskCreationVisible}
-                    isTaskPreviewVisible={isTaskPreviewVisible}
-                    isTaskCreationVisible={isTaskCreationVisible}
-                    isSubChatVisible={isSubChatVisible}
-                    setIsSubChatVisible={setIsSubChatVisible}
-                    setOpeningService={setOpeningService}
-                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                    setCurrentProject={setCurrentProject}
-                />
+                {currentChatPaneType === 1 && (
+                    <>
+                        <DMDivider />
+                        <ChatList
+                            socket={socket}
+                            myself={myself}
+                            chatType={1}
+                            activityMessages={[]}
+                            allChats={allChats.filter((chat) => chat.chatType === 1)}
+                            currentMainChat={currentMainChat}
+                            currentSubChat={currentSubChat}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setCurrentSubChat={setCurrentSubChat}
+                            setCurrentThreadChat={setCurrentThreadChat}
+                            setIsMainChatVisible={setIsMainChatVisible}
+                            setIsThreadVisible={setIsThreadVisible}
+                            isThreadVisible={isThreadVisible}
+                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            setIsTaskCreationVisible={setIsTaskCreationVisible}
+                            isTaskPreviewVisible={isTaskPreviewVisible}
+                            isTaskCreationVisible={isTaskCreationVisible}
+                            isSubChatVisible={isSubChatVisible}
+                            setIsSubChatVisible={setIsSubChatVisible}
+                            setOpeningService={setOpeningService}
+                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            setCurrentProject={setCurrentProject}
+                        />
+                    </>
+                )}
+                {currentChatPaneType === 2 && (
+                    <>
+                        <GMDivider setOpenCreateGM={setOpenCreateGM} />
+                        <ChatList
+                            socket={socket}
+                            myself={myself}
+                            chatType={2}
+                            activityMessages={[]}
+                            allChats={allChats.filter((chat) => chat.chatType === 2)}
+                            currentMainChat={currentMainChat}
+                            currentSubChat={currentSubChat}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setCurrentSubChat={setCurrentSubChat}
+                            setCurrentThreadChat={setCurrentThreadChat}
+                            setIsMainChatVisible={setIsMainChatVisible}
+                            setIsThreadVisible={setIsThreadVisible}
+                            isThreadVisible={isThreadVisible}
+                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            setIsTaskCreationVisible={setIsTaskCreationVisible}
+                            isTaskPreviewVisible={isTaskPreviewVisible}
+                            isTaskCreationVisible={isTaskCreationVisible}
+                            isSubChatVisible={isSubChatVisible}
+                            setIsSubChatVisible={setIsSubChatVisible}
+                            setOpeningService={setOpeningService}
+                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            setCurrentProject={setCurrentProject}
+                        />
+                        <ModalCreateGM
+                            socket={socket}
+                            myself={myself}
+                            open={openCreateGM}
+                            setOpen={setOpenCreateGM}
+                            allChats={allChats}
+                            setAllChats={setAllChats}
+                            setCurrentMainChat={setCurrentMainChat}
+                        />
+                    </>
+                )}
+                {currentChatPaneType === 3 && (
+                    <>
+                        {" "}
+                        <PMDivider />
+                        <ChatList
+                            socket={socket}
+                            myself={myself}
+                            chatType={3}
+                            activityMessages={[]}
+                            allChats={allChats.filter((chat) => chat.chatType === 3)}
+                            currentMainChat={currentMainChat}
+                            currentSubChat={currentSubChat}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setCurrentSubChat={setCurrentSubChat}
+                            setCurrentThreadChat={setCurrentThreadChat}
+                            setIsMainChatVisible={setIsMainChatVisible}
+                            setIsThreadVisible={setIsThreadVisible}
+                            isThreadVisible={isThreadVisible}
+                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            setIsTaskCreationVisible={setIsTaskCreationVisible}
+                            isTaskPreviewVisible={isTaskPreviewVisible}
+                            isTaskCreationVisible={isTaskCreationVisible}
+                            isSubChatVisible={isSubChatVisible}
+                            setIsSubChatVisible={setIsSubChatVisible}
+                            setOpeningService={setOpeningService}
+                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            setCurrentProject={setCurrentProject}
+                        />
+                    </>
+                )}
+                {currentChatPaneType === 4 && (
+                    <>
+                        <PinnedDivider />
+                    </>
+                )}
+                {currentChatPaneType === 5 && (
+                    <>
+                        {" "}
+                        <ActivityDivider />
+                        <ChatList
+                            socket={socket}
+                            myself={myself}
+                            chatType={-1}
+                            activityMessages={activityMessages}
+                            allChats={[]}
+                            currentMainChat={currentMainChat}
+                            currentSubChat={currentSubChat}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setCurrentSubChat={setCurrentSubChat}
+                            setCurrentThreadChat={setCurrentThreadChat}
+                            setIsMainChatVisible={setIsMainChatVisible}
+                            setIsThreadVisible={setIsThreadVisible}
+                            isThreadVisible={isThreadVisible}
+                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            setIsTaskCreationVisible={setIsTaskCreationVisible}
+                            isTaskPreviewVisible={isTaskPreviewVisible}
+                            isTaskCreationVisible={isTaskCreationVisible}
+                            isSubChatVisible={isSubChatVisible}
+                            setIsSubChatVisible={setIsSubChatVisible}
+                            setOpeningService={setOpeningService}
+                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            setCurrentProject={setCurrentProject}
+                        />
+                    </>
+                )}
             </Sheet>
         </div>
     );

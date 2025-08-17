@@ -243,7 +243,7 @@ export const JoinTeam = () => {
                             </Stack>
                             {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
                         </Stack>
-                        <Stack sx={{ gap: 4, mt: 2 }}>
+                        <Stack sx={{ gap: 4 }}>
                             <form
                                 onSubmit={(event: React.FormEvent<JoinTeamFormElement>) => {
                                     event.preventDefault(); // Needs for prevent reload page
