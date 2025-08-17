@@ -8,7 +8,7 @@ import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
-import { extractHHMM } from "../../../../utils/dateUtils";
+import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";
 import { ReactionProps } from "../../../../types/common";
@@ -68,7 +68,104 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
     useEffect(() => {
         if (selectedEmoji !== null) {
-            setReactions([...reactions, selectedEmoji]);
+            const existingIndex = reactions.findIndex(
+                (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
+            );
+            if (existingIndex !== -1) {
+                // Emoji already exists, remove it
+                const updatedReactions = reactions.filter((_, idx) => idx !== existingIndex);
+                setReactions(updatedReactions);
+                if (socket) {
+                    socket.emit("message_reaction", {
+                        method_type: "DELETE",
+                        team_id: myself.teamId,
+                        chat_type: thread.chatType,
+                        chat_name: thread.chatName,
+                        chat_id: message.chatId,
+                        thread_id: message.threadId,
+                        message_id: message.messageId,
+                        message_body: message.content,
+                        dm_partner_user_id:
+                            message.sender.userId === myself.userId
+                                ? thread.dmPartnerUser?.userId
+                                : myself.userId,
+                        is_thread_binary: 1,
+                        reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
+                    });
+
+                    // If the reaction is for the first message in the thread,
+                    // delete the reaction from the parent message as well
+                    if (message.messageId === 1) {
+                        socket.emit("message_reaction", {
+                            method_type: "DELETE",
+                            team_id: myself.teamId,
+                            chat_type: thread.chatType,
+                            chat_name: thread.chatName,
+                            chat_id: message.chatId,
+                            message_id: message.threadId,
+                            message_body: message.content,
+                            dm_partner_user_id:
+                                message.sender.userId === myself.userId
+                                    ? thread.dmPartnerUser?.userId
+                                    : myself.userId,
+                            is_thread_binary: 0,
+                            reaction_emoji: selectedEmoji,
+                            current_emojis: message.reactions?.allReactions || [],
+                        });
+                    }
+                }
+            } else {
+                // Emoji not in reactions, add it
+                setReactions([
+                    ...reactions,
+                    {
+                        id: -1,
+                        emoji: selectedEmoji,
+                        sender: myself,
+                        tsSent: getCurrentTimestamp(),
+                    },
+                ]);
+                if (socket) {
+                    socket.emit("message_reaction", {
+                        method_type: "POST",
+                        team_id: myself.teamId,
+                        chat_type: thread.chatType,
+                        chat_name: thread.chatName,
+                        chat_id: message.chatId,
+                        thread_id: message.threadId,
+                        message_id: message.messageId,
+                        message_body: message.content,
+                        dm_partner_user_id:
+                            message.sender.userId === myself.userId
+                                ? thread.dmPartnerUser?.userId
+                                : myself.userId,
+                        is_thread_binary: 1,
+                        reaction_emoji: selectedEmoji,
+                        current_emojis: message.reactions?.allReactions || [],
+                    });
+
+                    // Update the parent message as well if it's the first thread message
+                    if (message.messageId === 1) {
+                        socket.emit("message_reaction", {
+                            method_type: "POST",
+                            team_id: myself.teamId,
+                            chat_type: thread.chatType,
+                            chat_name: thread.chatName,
+                            chat_id: message.chatId,
+                            message_id: message.threadId,
+                            message_body: message.content,
+                            dm_partner_user_id:
+                                message.sender.userId === myself.userId
+                                    ? thread.dmPartnerUser?.userId
+                                    : myself.userId,
+                            is_thread_binary: 0,
+                            reaction_emoji: selectedEmoji,
+                            current_emojis: message.reactions?.allReactions || [],
+                        });
+                    }
+                }
+            }
             setSelectedEmoji(null);
         }
     }, [selectedEmoji]);
