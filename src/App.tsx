@@ -9,10 +9,11 @@ import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
 import { UserProps } from "./types/admin";
-import { AllChatProps, ChatProps, ThreadProps } from "./types/chat";
+import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
 import { popAllChats } from "./features/chat/services/popAllChats";
+import { popActivityMessages } from "./features/chat/services/popActivityMessages";
 import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 
@@ -92,7 +93,9 @@ export const App = () => {
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
     // {1: Chat, 2: Tasks, 3: Notes}
-    const [openingService, setOpeningService] = useState<number>(1);
+    const [openingService, setOpeningService] = useState<number>(
+        Number(localStorage.getItem("openingService") || "1")
+    );
 
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
@@ -100,11 +103,19 @@ export const App = () => {
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState(false);
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const funcSetAllChats = async () => {
-        const allChats: AllChatProps[] = await popAllChats();
-        if (allChats) {
-            setAllChats(allChats);
+        const _allChats: AllChatProps[] = await popAllChats();
+        if (_allChats) {
+            setAllChats(_allChats);
         }
     };
+    const [activityMessages, setActivityMessages] = useState<ActivityMessageProps[]>([]);
+    const funcSetActivityMessages = async () => {
+        const activityMessages: ActivityMessageProps[] = await popActivityMessages();
+        if (activityMessages) {
+            setActivityMessages(activityMessages);
+        }
+    };
+
     const funcSetTeamMembers = async () => {
         const teamMembers: UserProps[] = await popTeamMembers(myself);
         if (teamMembers) {
@@ -114,6 +125,7 @@ export const App = () => {
 
     useEffect(() => {
         funcSetAllChats();
+        funcSetActivityMessages();
     }, []);
 
     useEffect(() => {
@@ -123,6 +135,7 @@ export const App = () => {
     useEffect(() => {
         if (isLoading === false) {
             funcSetAllChats();
+            funcSetActivityMessages();
 
             // Load all team users
             funcSetTeamMembers();
@@ -156,6 +169,7 @@ export const App = () => {
         funcSetAllChats: funcSetAllChats,
         setIsTaskCommentUpdated: setIsTaskCommentUpdated,
         isLoading: isLoading,
+        funcSetActivityMessages: funcSetActivityMessages,
     });
 
     return isLoading || currentMainChat === undefined ? (
@@ -175,12 +189,14 @@ export const App = () => {
                         myself={myself}
                         setMyself={setMyself}
                         teamMembers={teamMembers}
+                        activityMessages={activityMessages}
                         currentMainChat={currentMainChat}
                         setCurrentMainChat={setCurrentMainChat}
                         currentSubChat={currentSubChat}
                         setCurrentSubChat={setCurrentSubChat}
                         currentThreadChat={currentThreadChat}
                         setCurrentThreadChat={setCurrentThreadChat}
+                        openingService={openingService}
                         setOpeningService={setOpeningService}
                         allChats={allChats}
                         setAllChats={setAllChats}
@@ -196,6 +212,7 @@ export const App = () => {
                         myself={myself}
                         setMyself={setMyself}
                         setCurrentMainChat={setCurrentMainChat}
+                        openingService={openingService}
                         setOpeningService={setOpeningService}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
@@ -207,7 +224,9 @@ export const App = () => {
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
+                        openingService={openingService}
                         setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
                     />
                 ) : null}
             </CssVarsProvider>

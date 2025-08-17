@@ -1,16 +1,15 @@
 import { Socket } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
-import { Box, Stack, Typography, Card, Avatar, Tooltip, IconButton } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import EditIcon from "@mui/icons-material/Edit";
+import { Box, Typography } from "@mui/joy";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
+import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
 import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
-import { BnChatPreview } from "../../../../../components/blockNote/bnChatPreview";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
-import { extractMMDDHHMM, extractMMDDHHMMSSs } from "../../../../../utils/dateUtils";
+import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 
 type TaskCommentBlockProps = {
     myself: UserProps;
@@ -38,10 +37,8 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         setCurrentChat,
         setOpeningService,
     } = props;
-    const { mode } = useColorScheme();
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
-    const [targetCommentIndex, setTargetCommentIndex] = useState<number>(taskComments.length - 1);
 
     const boxRef = useRef<HTMLDivElement>(null);
 
@@ -68,123 +65,48 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         0
     );
 
+    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    useScrollToBottomOnNewTaskComment(
+        virtuosoRef as React.RefObject<VirtuosoHandle>,
+        taskComments
+    );
+
     return (
         <Box sx={{ mt: 2 }}>
             <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
                 Comments
             </Typography>
 
-            <Box sx={{ mb: 1 }}>
-                {taskComments.length > 0 && (
-                    <>
-                        <Box
-                            ref={boxRef}
-                            className="custom-scrollbar"
-                            sx={{
-                                height: Math.min(100 + totalComments * 30, 800),
-                                pb: "10px",
-                                overflowY: "scroll",
-                                overflowX: "hidden",
-                            }}
-                        >
-                            <Stack spacing={1}>
-                                {taskComments.map((comment, index) => {
-                                    const isEdited =
-                                        extractMMDDHHMMSSs(comment.tsSent) ===
-                                        extractMMDDHHMMSSs(comment.tsUpdated)
-                                            ? false
-                                            : true;
-                                    if (comment.commentBody[0].content.length > 0) {
-                                        return (
-                                            <Box
-                                                key={`${comment.commentId}-${comment.tsUpdated}-${index}`}
-                                            >
-                                                <Card
-                                                    sx={{
-                                                        backgroundColor:
-                                                            mode === "dark"
-                                                                ? "black"
-                                                                : "rgb(217, 217, 217)",
-                                                    }}
-                                                >
-                                                    <Stack
-                                                        direction="row"
-                                                        spacing={1}
-                                                        alignItems="center"
-                                                    >
-                                                        <Avatar size="sm">
-                                                            {comment.senderName[0]}
-                                                        </Avatar>
-                                                        <Typography level="title-md">
-                                                            {comment.senderName}
-                                                        </Typography>
-                                                        <Typography
-                                                            level="body-sm"
-                                                            textColor={
-                                                                mode === "dark"
-                                                                    ? "lightgrey"
-                                                                    : "rgba(37, 37, 37, 1)"
-                                                            }
-                                                            sx={{
-                                                                fontFamily: "monospace",
-                                                                opacity: 0.7,
-                                                                pl: "5px",
-                                                            }}
-                                                        >
-                                                            {isEdited === true && (
-                                                                <>
-                                                                    {extractMMDDHHMM(
-                                                                        comment.tsSent
-                                                                    )}{" "}
-                                                                    Edited
-                                                                </>
-                                                            )}
-                                                            {isEdited === false && (
-                                                                <>
-                                                                    {extractMMDDHHMM(
-                                                                        comment.tsSent
-                                                                    )}
-                                                                </>
-                                                            )}
-                                                        </Typography>
-                                                    </Stack>
-                                                    <Tooltip title="Edit" size="sm">
-                                                        <IconButton
-                                                            size="sm"
-                                                            onClick={() => {
-                                                                setIsInEdit(true);
-                                                                setEditTargetComment(comment);
-                                                                setTargetCommentIndex(index);
-                                                            }}
-                                                            sx={{
-                                                                position: "absolute",
-                                                                top: 5,
-                                                                right: 5,
-                                                            }}
-                                                        >
-                                                            <EditIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <BnChatPreview
-                                                        customClassName="task-comment-preview"
-                                                        myself={myself}
-                                                        socket={socket}
-                                                        key={`${taskComments[0].taskId}-${comment.commentId}-${comment.tsSent}`}
-                                                        content={comment.commentBody}
-                                                        isSent={true}
-                                                        setCurrentChat={setCurrentChat}
-                                                        setOpeningService={setOpeningService}
-                                                    />
-                                                </Card>
-                                            </Box>
-                                        );
-                                    }
-                                })}
-                            </Stack>
-                        </Box>
-                    </>
-                )}
-            </Box>
+            {taskComments.length > 0 && (
+                <Box sx={{ mb: 1 }}>
+                    <Virtuoso
+                        ref={virtuosoRef}
+                        className="custom-scrollbar"
+                        style={{ height: Math.min(100 + totalComments * 30, 800) }}
+                        totalCount={taskComments.length}
+                        initialTopMostItemIndex={taskComments.length - 1}
+                        atTopThreshold={64}
+                        atBottomThreshold={128}
+                        itemContent={(index) => {
+                            const comment = taskComments[index];
+                            return (
+                                <TaskCommentBubble
+                                    key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
+                                    socket={socket}
+                                    myself={myself}
+                                    comment={comment}
+                                    currentProjectId={task.project?.projectId}
+                                    currentProjectName={task.project?.projectName}
+                                    setIsInEdit={setIsInEdit}
+                                    setEditTargetComment={setEditTargetComment}
+                                    setCurrentChat={setCurrentChat}
+                                    setOpeningService={setOpeningService}
+                                />
+                            );
+                        }}
+                    />
+                </Box>
+            )}
 
             {isInEdit === true && editTargetComment && (
                 <BnUpdateTaskCommentEditor
@@ -192,6 +114,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                     socket={socket}
                     teamMembers={teamMembers}
                     projectId={task.project?.projectId}
+                    projectName={task.project?.projectName}
                     taskId={task.id}
                     taskComments={taskComments}
                     setTaskComments={setTaskComments}

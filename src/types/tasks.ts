@@ -1,5 +1,6 @@
 import { PartialBlock } from "@blocknote/core";
 import { UserProps } from "./admin";
+import { ReactionProps } from "./common";
 
 export type TagColorOption = {
     name: string;
@@ -49,6 +50,10 @@ export type TaskCommentProps = {
     senderName: string;
     commentId: number;
     commentBody: PartialBlock[] | any[];
+    reactions?: {
+        myReactions: ReactionProps[];
+        allReactions: ReactionProps[];
+    };
     tsSent: string;
     tsUpdated: string;
     isEdited: boolean;
@@ -148,7 +153,7 @@ export type SearchTeamTasksResponse = {
     systemUserId: string;
     taskId: number;
     title: string;
-    status: string;
+    status: TaskStatusProps;
 };
 
 export type FileProps = {

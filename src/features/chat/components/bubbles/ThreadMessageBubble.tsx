@@ -1,9 +1,9 @@
-import * as React from "react";
+import { useState, useEffect } from "react";
 import { Box, Stack, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { BubbleReactionButton } from "./BubbleReactionButton";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -11,7 +11,9 @@ import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus"
 import { extractHHMM } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";
+import { ReactionProps } from "../../../../types/common";
 import { ChatProps } from "../../../../types/chat";
+import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 
 type threadMessageBubbleProps = {
     myself: UserProps;
@@ -19,6 +21,7 @@ type threadMessageBubbleProps = {
     thread: ThreadProps;
     variant: "sent" | "received";
     message: ThreadMessageProps;
+    isFocused: boolean;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsInEdit: (value: boolean) => void;
@@ -34,6 +37,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         thread,
         variant,
         message,
+        isFocused,
         setOpeningService,
         setCurrentMainChat,
         setIsInEdit,
@@ -42,14 +46,39 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
-    const [isLiked, setIsLiked] = React.useState<boolean>(false);
     const dtSent = extractHHMM(message.tsSent);
+
+    // Reaction handling
+    const [showUnderBarOption, setShowUnderBarOption] = useState(false);
+    const [reactions, setReactions] = useState<ReactionProps[]>([]);
+    const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
+    useEffect(() => {
+        if (message.reactions) {
+            setReactions(message.reactions.allReactions);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (message.reactions) {
+            setReactions(message.reactions.allReactions);
+        }
+    }, [message]);
+
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            setReactions([...reactions, selectedEmoji]);
+            setSelectedEmoji(null);
+        }
+    }, [selectedEmoji]);
 
     return (
         <Box
             sx={{
                 maxWidth: "90%",
-                minWidth: "auto",
+                minWidth:
+                    250 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}
@@ -62,9 +91,18 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                 />
             ) : (
                 <Box sx={{ position: "relative" }}>
+                    <EmojiPicker
+                        showEmojiPicker={showEmojiPicker}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        setSelectedEmoji={setSelectedEmoji}
+                        pickerBottomPosition={10}
+                        pickerRightPosition={isSent ? 0 : -40}
+                    />
                     <Sheet
                         color={isSent ? "primary" : "neutral"}
                         variant={isSent ? "solid" : "soft"}
+                        onMouseEnter={() => setShowUnderBarOption(true)}
+                        onMouseLeave={() => setShowUnderBarOption(false)}
                         sx={[
                             {
                                 p: 1,
@@ -90,6 +128,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                   }
                                 : {
                                       backgroundColor: "neutral.outlinedBorder",
+                                  },
+                            isFocused
+                                ? {
+                                      background: "#1cb15dff",
+                                  }
+                                : {
+                                      background: "",
                                   },
                         ]}
                     >
@@ -121,18 +166,11 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             tsUpdated={message.tsUpdated}
                                             isThread={true}
                                         />
-                                        <BubbleReactionButton
-                                            sender={message.sender}
-                                            chatType={thread.chatType}
-                                            isLiked={isLiked}
-                                            setIsLiked={setIsLiked}
-                                            isSent={isSent}
-                                        />
                                         {/* 
                                         TODO: How to edit the first message in the thread?
                                         When we edit it, we also need to update the parent message.
                                         */}
-                                        {message.sender.isSystemUser !== true && (
+                                        {message.sender.userId === myself.userId && (
                                             <BubbleThreadEditButton
                                                 message={message}
                                                 setIsInEdit={setIsInEdit}
@@ -157,6 +195,23 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 />
                             )}
                         </Stack>
+
+                        <BubbleUnderBar
+                            socket={socket}
+                            myself={myself}
+                            chatType={thread.chatType}
+                            chatName={thread.chatName}
+                            dmPartnerUser={thread.dmPartnerUser}
+                            message={message}
+                            numReplies={0}
+                            isThread={true}
+                            isSent={isSent}
+                            showUnderBarOption={showUnderBarOption}
+                            reactions={reactions}
+                            setReactions={setReactions}
+                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                        />
                     </Sheet>
                 </Box>
             )}

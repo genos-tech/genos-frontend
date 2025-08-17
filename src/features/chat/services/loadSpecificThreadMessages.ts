@@ -7,6 +7,7 @@ const chatTypeNameLookup: { [key: number]: string } = {
     1: "dm",
     2: "gm",
     3: "pm",
+    4: "pm",
 };
 
 export const loadSpecificThreadMessages = async (
@@ -23,6 +24,7 @@ export const loadSpecificThreadMessages = async (
             const queryParts = [
                 `team_id=${myself.teamId}`,
                 `team_name=${myself.teamName}`,
+                `user_id=${myself.userId}`,
                 `${chatTypeNameLookup[chatType]}_id=${chatId}`,
                 `thread_id=${theadId}`,
             ];

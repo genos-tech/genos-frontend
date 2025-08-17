@@ -9,7 +9,7 @@ import { ChatSidebar } from "./components/ChatSidebar";
 import { MessagesPane } from "./MainChatPane";
 import { MessagesSubPane } from "./SubChatPane";
 import { UserProps } from "../../types/admin";
-import { AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
+import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
@@ -24,12 +24,14 @@ type ChatHomeProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     teamMembers: UserProps[];
+    activityMessages: ActivityMessageProps[];
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     currentSubChat: ChatProps | undefined;
     setCurrentSubChat: (chat: ChatProps) => void;
     currentThreadChat: ThreadProps | undefined;
     setCurrentThreadChat: (value: ThreadProps) => void;
+    openingService: number;
     setOpeningService: (service: number) => void;
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
@@ -44,12 +46,14 @@ export const ChatHome = (props: ChatHomeProps) => {
         myself,
         setMyself,
         teamMembers,
+        activityMessages,
         currentMainChat,
         setCurrentMainChat,
         currentSubChat,
         setCurrentSubChat,
         currentThreadChat,
         setCurrentThreadChat,
+        openingService,
         setOpeningService,
         allChats,
         setAllChats,
@@ -105,7 +109,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [currentThreadChat]);
 
     useEffect(() => {
-        if (currentProject && currentPreviewTaskId !== -1) {
+        if (currentProject && currentProject.projectId && currentPreviewTaskId !== -1) {
             (async () => {
                 const loadedTask: TaskProps[] = await loadSpecificTask(
                     myself,
@@ -159,8 +163,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     // }, [currentThreadChat]);
 
     // useEffect(() => {
-    //     console.log("currentProject Updated:", currentProject);
-    // }, [currentProject]);
+    //     console.log("currentMainChat Updated:", currentMainChat);
+    // }, [currentMainChat]);
     ////////////////////////////////////////////////////////////////////
 
     /////////////////// NEED FOR MAIN/SUB Chat Pane height ////////////////////
@@ -191,6 +195,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
+                openingService={openingService}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
             />
@@ -219,10 +224,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                         >
                             <ChatSidebar
                                 myself={myself}
+                                activityMessages={activityMessages}
                                 allChats={allChats}
                                 setAllChats={setAllChats}
                                 setCurrentMainChat={setCurrentMainChat}
                                 setCurrentSubChat={setCurrentSubChat}
+                                setCurrentThreadChat={setCurrentThreadChat}
                                 currentMainChat={currentMainChat}
                                 currentSubChat={currentSubChat ? currentSubChat : currentMainChat}
                                 socket={socket}
@@ -236,6 +243,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                 isTaskCreationVisible={isTaskCreationVisible}
                                 setOpeningService={setOpeningService}
+                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                setCurrentProject={setCurrentProject}
                             />
                         </Sheet>
                     </Box>
@@ -292,6 +301,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 socket={socket}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setCurrentSubChat={setCurrentSubChat}
+                                                currentSubChat={currentSubChat}
                                                 setCurrentThreadChat={setCurrentThreadChat}
                                                 setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsSubChatVisible={setIsSubChatVisible}
@@ -394,6 +404,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     myself={myself}
                                                     socket={socket}
                                                     teamMembers={teamMembers}
+                                                    currentThreadChat={currentThreadChat}
                                                     setCurrentThreadChat={setCurrentThreadChat}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     currentThreadChatId={currentThreadChatId}
@@ -599,6 +610,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             myself={myself}
                                             socket={socket}
                                             teamMembers={teamMembers}
+                                            currentThreadChat={currentThreadChat}
                                             setCurrentThreadChat={setCurrentThreadChat}
                                             setIsThreadVisible={setIsThreadVisible}
                                             currentThreadChatId={currentThreadChatId}

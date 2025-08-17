@@ -1,6 +1,7 @@
 import { PartialBlock } from "@blocknote/core";
 import { UserProps } from "./admin";
-import { ProjectProps, TagListProps } from "./tasks";
+import { ReactionProps } from "./common";
+import { ProjectProps } from "./tasks";
 
 // Chat Props
 export type AllChatProps = {
@@ -33,6 +34,7 @@ export type ChatProps = {
     TSLastMessage: string;
     project?: ProjectProps;
     taskExist?: boolean;
+    moveToSpecificIndex?: string;
 };
 
 // Thread Props
@@ -51,9 +53,38 @@ export type ThreadProps = {
     TSLastMessage: string;
     project?: ProjectProps;
     taskExist?: boolean;
+    moveToSpecificIndex?: string;
 };
 
 // Message Props
+export type ActivityMessageProps = {
+    activityId: string;
+    activityType: number;
+    chatType: number;
+    chatId: number;
+    chatName: string;
+    dmPartnerUser: UserProps | null;
+    isThread: boolean;
+    threadId: number;
+    messageId: number;
+    messageUniqueKey: string;
+    threadMessageUniqueKey: string;
+    taskId: number;
+    project?: ProjectProps;
+    firstLineContent: string;
+    latestReaction: {
+        emoji: string;
+        senderName: string;
+        tsSent: string;
+    };
+    sender: UserProps;
+    reactions: {
+        myReactions: ReactionProps[];
+        allReactions: ReactionProps[];
+    };
+    tsSent: string;
+};
+
 export type MessageProps = {
     chatType: number;
     messageIdWithChatId?: string;
@@ -77,6 +108,11 @@ export type MessageProps = {
     taskId: number | null;
     taskStatus: string | null;
     project?: ProjectProps;
+    reactions?: {
+        myReactions: ReactionProps[];
+        allReactions: ReactionProps[];
+    };
+    threadId?: number;
 };
 
 export type ThreadMessageProps = {
@@ -100,9 +136,15 @@ export type ThreadMessageProps = {
     };
     project?: ProjectProps;
     taskExist?: boolean;
+    reactions?: {
+        myReactions: ReactionProps[];
+        allReactions: ReactionProps[];
+    };
 };
 
 export type NewMessageProps = {
+    wsType: string;
+    isReactionUpdated: boolean;
     chatType: number;
     chatId: number;
     systemUserId?: string;
@@ -127,9 +169,15 @@ export type NewMessageProps = {
     taskStatus: string | null;
     project?: ProjectProps;
     isEdited: boolean;
+    reactions?: {
+        myReactions: ReactionProps[];
+        allReactions: ReactionProps[];
+    };
 };
 
 export type NewThreadMessageProps = {
+    wsType: string;
+    isReactionUpdated: boolean;
     chatType: number;
     chatId: number;
     systemUserId?: string;
@@ -154,6 +202,10 @@ export type NewThreadMessageProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     isEdited: boolean;
+    reactions?: {
+        myReactions: ReactionProps[];
+        allReactions: ReactionProps[];
+    };
 };
 
 // Other Props

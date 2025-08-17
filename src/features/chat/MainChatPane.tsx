@@ -5,10 +5,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { MessageBubble } from "./components/bubbles/MessageBubble";
 import { MainChatPaneHeader } from "./components/headers/MainChatPaneHeader";
-import {
-    useScrollToBottomOnNewMessage,
-    useScrollToBottomOnChatChange,
-} from "./hooks/messageBubbleHooks";
+import { useScrollToBottomOnChatChange } from "./hooks/messageBubbleHooks";
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import {
@@ -82,6 +79,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
     const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
+    const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
 
     useEffect(() => {
         setChatMessages(chat.messages);
@@ -89,19 +87,37 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
-    useScrollToBottomOnNewMessage(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        chat,
-        targetMessageIndex
-    );
+    // [Abolished] Move to the bottom of the chat we an user receive a new message
+    // useScrollToBottomOnNewMessage(
+    //     virtuosoRef as React.RefObject<VirtuosoHandle>,
+    //     chat,
+    //     targetMessageIndex
+    // );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
-        currentMainChatId
+        currentMainChatId,
+        indexMap,
+        currentMainChat.moveToSpecificIndex
     );
 
     useEffect(() => {
         setTargetMessageIndex(chatMessages.length - 1);
+        setIndexMap(
+            Object.fromEntries(
+                chatMessages.map((message, idx) => [message.messageIdWithChatId, idx])
+            )
+        );
     }, [chatMessages]);
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (indexMap && currentMainChat.moveToSpecificIndex) {
+                virtuosoRef.current?.scrollToIndex({
+                    index: indexMap[currentMainChat.moveToSpecificIndex],
+                });
+            }
+        }, 300); // wait N ms
+    }, [currentMainChat]);
 
     return (
         <div
@@ -127,18 +143,22 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     setIsTaskCreationVisible={setIsTaskCreationVisible}
                     setIsCreatingTask={setIsCreatingTask}
                 />
+
                 <Box sx={{ px: 0.3, my: 0.2 }}>
                     <Virtuoso
                         ref={virtuosoRef}
                         className="custom-scrollbar"
                         style={{
-                            height: isSubChatVisible
-                                ? calculateVirtuosoSubHight(
-                                      currentWindowHeight,
-                                      paneSizePCT,
-                                      numEditorLines
-                                  )
-                                : calculateVirtuosoHight(currentWindowHeight, numEditorLines),
+                            height:
+                                currentMainChat.chatType === 3 || currentMainChat.chatType === 4
+                                    ? "95vh"
+                                    : isSubChatVisible
+                                    ? calculateVirtuosoSubHight(
+                                          currentWindowHeight,
+                                          paneSizePCT,
+                                          numEditorLines
+                                      )
+                                    : calculateVirtuosoHight(currentWindowHeight, numEditorLines),
                         }}
                         totalCount={chatMessages.length}
                         initialTopMostItemIndex={chatMessages.length - 1}
@@ -148,6 +168,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         itemContent={(index) => {
                             const message = chatMessages[index];
                             const isYou = myself.userId === message.sender.userId;
+                            const isFocused =
+                                message.messageIdWithChatId ===
+                                currentMainChat.moveToSpecificIndex;
                             return (
                                 <div>
                                     <Stack
@@ -164,6 +187,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             variant={isYou ? "sent" : "received"}
                                             chat={chat}
                                             message={message}
+                                            isFocused={isFocused}
                                             socket={socket}
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
@@ -187,35 +211,38 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         }}
                     />
                 </Box>
-                <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-                    {isInEdit === true && editTargetMessage && (
-                        <BnUpdateEditor
-                            myself={myself}
-                            socket={socket}
-                            teamMembers={teamMembers}
-                            chat={chat}
-                            message={editTargetMessage}
-                            isInEdit={isInEdit}
-                            setIsInEdit={setIsInEdit}
-                            setCurrentChat={setCurrentMainChat}
-                            setOpeningService={setOpeningService}
-                        />
-                    )}
-                    {isInEdit === false && (
-                        <BnChatEditor
-                            myself={myself}
-                            socket={socket}
-                            teamMembers={teamMembers}
-                            chat={chat}
-                            setCurrentChat={setCurrentMainChat}
-                            funcSetAllChats={funcSetAllChats}
-                            isSubChatVisible={isSubChatVisible}
-                            setOpeningService={setOpeningService}
-                            numEditorLines={numEditorLines}
-                            setNumEditorLines={setNumEditorLines}
-                        />
-                    )}
-                </Box>
+
+                {currentMainChat.chatType !== 3 && currentMainChat.chatType !== 4 && (
+                    <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+                        {isInEdit === true && editTargetMessage && (
+                            <BnUpdateEditor
+                                myself={myself}
+                                socket={socket}
+                                teamMembers={teamMembers}
+                                chat={chat}
+                                message={editTargetMessage}
+                                isInEdit={isInEdit}
+                                setIsInEdit={setIsInEdit}
+                                setCurrentChat={setCurrentMainChat}
+                                setOpeningService={setOpeningService}
+                            />
+                        )}
+                        {isInEdit === false && (
+                            <BnChatEditor
+                                myself={myself}
+                                socket={socket}
+                                teamMembers={teamMembers}
+                                chat={chat}
+                                setCurrentChat={setCurrentMainChat}
+                                funcSetAllChats={funcSetAllChats}
+                                isSubChatVisible={isSubChatVisible}
+                                setOpeningService={setOpeningService}
+                                numEditorLines={numEditorLines}
+                                setNumEditorLines={setNumEditorLines}
+                            />
+                        )}
+                    </Box>
+                )}
             </Sheet>
         </div>
     );

@@ -74,6 +74,7 @@ type TaskSidebarProps = {
     setMyself: (value: UserProps) => void;
     setIsDashboardVisible: (value: boolean) => void;
     setTaskTableVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
     currentProject: ProjectProps | null;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTaskId: number;
@@ -97,6 +98,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setMyself,
         setIsDashboardVisible,
         setTaskTableVisible,
+        setIsTaskPreviewVisible,
         currentProject,
         setCurrentProject,
         currentPreviewTaskId,
@@ -143,6 +145,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         if (value !== null) {
             setOpenSearch(false);
             setCurrentPreviewTaskId(value.taskId);
+            setIsTaskPreviewVisible(true);
         }
     }
     // =======================================================================
@@ -800,13 +803,15 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                 variant={
                                                     teamId === myself.teamId ? "solid" : "plain"
                                                 }
-                                                onClick={() =>
+                                                onClick={() => {
+                                                    localStorage.setItem("teamId", teamId);
+                                                    localStorage.setItem("teamName", teamName);
                                                     setMyself({
                                                         ...myself,
                                                         teamId: teamId,
                                                         teamName: teamName,
-                                                    })
-                                                }
+                                                    });
+                                                }}
                                                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >
                                                 <Typography

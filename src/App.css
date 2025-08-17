@@ -154,6 +154,7 @@
 
 .task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-scrollbar {
   background-color: #161616;
+  opacity: 0;
 }
 
 .task-datagrid-dark .MuiDataGrid-footerContainer {

@@ -174,11 +174,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     return (
         <Box>
-            <EmojiPicker
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
-                setSelectedEmoji={setSelectedEmoji}
-            />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
                     className="bn-task-editor"

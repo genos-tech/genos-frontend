@@ -1,18 +1,18 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
-import { UserProps } from "../../../types/admin";
 
-export const loadTaskComments = async (
-    myself: UserProps,
-    taskId: number,
+export const loadActivityHistory = async (
+    teamId: string,
+    teamName: string,
+    userId: string,
     accessToken: string | null
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `user_id=${myself.userId}&task_id=${taskId}`;
-            const res = await api.get(`/task/comment/?${query}`);
+            const query: string = `team_id=${teamId}&team_name=${teamName}&user_id=${userId}`;
+            const res = await api.get(`/chat/activity/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

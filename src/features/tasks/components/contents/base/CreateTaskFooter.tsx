@@ -103,7 +103,7 @@ export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
                         setIsTaskCreationVisible(false);
                     }
                 }}
-                disabled={taskTitle === ""}
+                disabled={taskTitle === "" || taskContents.project?.projectId === null}
             >
                 Create
             </Button>

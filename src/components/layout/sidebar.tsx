@@ -23,11 +23,13 @@ type SidebarProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
+    openingService: number;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
 };
 export const Sidebar = (props: SidebarProps) => {
-    const { socket, myself, setMyself, setOpeningService, setCurrentMainChat } = props;
+    const { socket, myself, setMyself, openingService, setOpeningService, setCurrentMainChat } =
+        props;
     const { setAccessToken } = useAuth();
     const navigate = useNavigate();
 
@@ -47,6 +49,8 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("userName", "");
                 localStorage.setItem("userId", "");
                 localStorage.setItem("avatarImgPath", "");
+                localStorage.setItem("teamId", "");
+                localStorage.setItem("teamName", "");
                 setAccessToken(null);
                 navigate("/");
             } else {
@@ -59,14 +63,17 @@ export const Sidebar = (props: SidebarProps) => {
 
     const handleMoveToChat = (): void => {
         setOpeningService(1);
+        localStorage.setItem("openingService", "1");
     };
 
     const handleMoveToTasks = (): void => {
         setOpeningService(2);
+        localStorage.setItem("openingService", "2");
     };
 
     const handleMoveToNote = (): void => {
         setOpeningService(3);
+        localStorage.setItem("openingService", "3");
     };
 
     return (
@@ -150,21 +157,30 @@ export const Sidebar = (props: SidebarProps) => {
                     <ListItem>
                         <ListItemButton onClick={handleMoveToChat} title="Chats">
                             <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                <QuestionAnswerRoundedIcon sx={{ fontSize: 20 }} />
+                                <QuestionAnswerRoundedIcon
+                                    color={openingService === 1 ? "primary" : "disabled"}
+                                    sx={{ fontSize: 20 }}
+                                />
                             </Box>
                         </ListItemButton>
                     </ListItem>
                     <ListItem>
                         <ListItemButton onClick={handleMoveToTasks} title="Tasks">
                             <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                <AssignmentRoundedIcon sx={{ fontSize: 20 }} />
+                                <AssignmentRoundedIcon
+                                    color={openingService === 2 ? "primary" : "disabled"}
+                                    sx={{ fontSize: 20 }}
+                                />
                             </Box>
                         </ListItemButton>
                     </ListItem>
                     <ListItem>
                         <ListItemButton onClick={handleMoveToNote} title="Notes">
                             <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                <NoteAltIcon sx={{ fontSize: 20 }} />
+                                <NoteAltIcon
+                                    color={openingService === 3 ? "primary" : "disabled"}
+                                    sx={{ fontSize: 20 }}
+                                />
                             </Box>
                         </ListItemButton>
                     </ListItem>

@@ -24,6 +24,7 @@ type MessagesPaneProps = {
     myself: UserProps;
     teamMembers: UserProps[];
     socket: Socket | null;
+    currentThreadChat: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setIsThreadVisible: (value: boolean) => void;
     currentThreadChatId: number;
@@ -46,6 +47,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         myself,
         teamMembers,
         socket,
+        currentThreadChat,
         setCurrentThreadChat,
         setIsThreadVisible,
         currentThreadChatId,
@@ -68,6 +70,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         threadMessages.length - 1
     );
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
+    const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
 
     useEffect(() => {
         setThreadMessages(thread.messages || []);
@@ -82,12 +85,29 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
-        currentThreadChatId
+        currentThreadChatId,
+        indexMap,
+        currentThreadChat.moveToSpecificIndex
     );
 
     useEffect(() => {
         setTargetMessageIndex(threadMessages.length - 1);
+        setIndexMap(
+            Object.fromEntries(
+                threadMessages.map((message, idx) => [message.messageIdWithChatIdAndThreadId, idx])
+            )
+        );
     }, [threadMessages]);
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (indexMap && currentThreadChat.moveToSpecificIndex) {
+                virtuosoRef.current?.scrollToIndex({
+                    index: indexMap[currentThreadChat.moveToSpecificIndex],
+                });
+            }
+        }, 300); // wait N ms
+    }, [currentThreadChat]);
 
     return (
         <>
@@ -140,6 +160,9 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             itemContent={(index) => {
                                 const message = threadMessages[index];
                                 const isYou = myself.userId === message.sender.userId;
+                                const isFocused =
+                                    message.messageIdWithChatIdAndThreadId ===
+                                    currentThreadChat.moveToSpecificIndex;
                                 return (
                                     <div>
                                         <Stack
@@ -157,6 +180,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 thread={thread}
                                                 variant={isYou ? "sent" : "received"}
                                                 message={message}
+                                                isFocused={isFocused}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setIsInEdit={setIsInEdit}

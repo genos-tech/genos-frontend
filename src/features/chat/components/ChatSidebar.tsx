@@ -6,16 +6,25 @@ import { Socket } from "socket.io-client";
 import { ModalCreateGM } from "./modals/ModalCreateGM";
 import { ChatSearch } from "./ChatSearch";
 import { ChatList } from "./ChatList";
-import { DMDivider, GMDivider, PMDivider, PinnedDivider } from "./ChatSidebarDividers";
+import {
+    DMDivider,
+    GMDivider,
+    PMDivider,
+    PinnedDivider,
+    ActivityDivider,
+} from "./ChatSidebarDividers";
 import { UserProps } from "../../../types/admin";
-import { ChatProps, AllChatProps } from "../../../types/chat";
+import { ProjectProps } from "../../../types/tasks";
+import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../../../types/chat";
 
 type ChatSidebarProps = {
     myself: UserProps;
+    activityMessages: ActivityMessageProps[];
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
+    setCurrentThreadChat: (value: ThreadProps) => void;
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     socket: Socket | null;
@@ -29,15 +38,19 @@ type ChatSidebarProps = {
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
+    setCurrentProject: (value: ProjectProps) => void;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
     const {
         myself,
+        activityMessages,
         allChats,
         setAllChats,
         setCurrentMainChat,
         setCurrentSubChat,
+        setCurrentThreadChat,
         currentMainChat,
         currentSubChat,
         socket,
@@ -51,6 +64,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         isSubChatVisible,
         setIsSubChatVisible,
         setOpeningService,
+        setCurrentPreviewTaskId,
+        setCurrentProject,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -80,7 +95,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                 <PinnedDivider />
 
-                <GMDivider setOpenCreateGM={setOpenCreateGM} />
+                <DMDivider />
 
                 <ModalCreateGM
                     socket={socket}
@@ -96,12 +111,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     socket={socket}
                     myself={myself}
                     isDm={false}
-                    chatType={2}
-                    allChats={allChats}
+                    chatType={1}
+                    activityMessages={[]}
+                    allChats={allChats.filter((chat) => chat.chatType === 1)}
                     currentMainChat={currentMainChat}
                     currentSubChat={currentSubChat}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
+                    setCurrentThreadChat={setCurrentThreadChat}
                     setIsMainChatVisible={setIsMainChatVisible}
                     setIsThreadVisible={setIsThreadVisible}
                     isThreadVisible={isThreadVisible}
@@ -112,20 +129,24 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     isSubChatVisible={isSubChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
                     setOpeningService={setOpeningService}
+                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                    setCurrentProject={setCurrentProject}
                 />
 
-                <DMDivider />
+                <GMDivider setOpenCreateGM={setOpenCreateGM} />
 
                 <ChatList
                     socket={socket}
                     myself={myself}
                     isDm={true}
-                    chatType={1}
-                    allChats={allChats}
+                    chatType={2}
+                    activityMessages={[]}
+                    allChats={allChats.filter((chat) => chat.chatType === 2)}
                     currentMainChat={currentMainChat}
                     currentSubChat={currentSubChat}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
+                    setCurrentThreadChat={setCurrentThreadChat}
                     setIsMainChatVisible={setIsMainChatVisible}
                     setIsThreadVisible={setIsThreadVisible}
                     isThreadVisible={isThreadVisible}
@@ -136,6 +157,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     isSubChatVisible={isSubChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
                     setOpeningService={setOpeningService}
+                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                    setCurrentProject={setCurrentProject}
                 />
 
                 <PMDivider />
@@ -145,11 +168,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     myself={myself}
                     isDm={true}
                     chatType={3}
-                    allChats={allChats}
+                    activityMessages={[]}
+                    allChats={allChats.filter((chat) => chat.chatType === 3)}
                     currentMainChat={currentMainChat}
                     currentSubChat={currentSubChat}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
+                    setCurrentThreadChat={setCurrentThreadChat}
                     setIsMainChatVisible={setIsMainChatVisible}
                     setIsThreadVisible={setIsThreadVisible}
                     isThreadVisible={isThreadVisible}
@@ -160,6 +185,36 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     isSubChatVisible={isSubChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
                     setOpeningService={setOpeningService}
+                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                    setCurrentProject={setCurrentProject}
+                />
+
+                <ActivityDivider />
+
+                <ChatList
+                    socket={socket}
+                    myself={myself}
+                    isDm={true}
+                    chatType={-1}
+                    activityMessages={activityMessages}
+                    allChats={[]}
+                    currentMainChat={currentMainChat}
+                    currentSubChat={currentSubChat}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setCurrentSubChat={setCurrentSubChat}
+                    setCurrentThreadChat={setCurrentThreadChat}
+                    setIsMainChatVisible={setIsMainChatVisible}
+                    setIsThreadVisible={setIsThreadVisible}
+                    isThreadVisible={isThreadVisible}
+                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    isTaskPreviewVisible={isTaskPreviewVisible}
+                    isTaskCreationVisible={isTaskCreationVisible}
+                    isSubChatVisible={isSubChatVisible}
+                    setIsSubChatVisible={setIsSubChatVisible}
+                    setOpeningService={setOpeningService}
+                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                    setCurrentProject={setCurrentProject}
                 />
             </Sheet>
         </div>

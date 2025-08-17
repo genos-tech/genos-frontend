@@ -52,7 +52,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                 {
                                     marginTop: "3px",
                                     marginLeft:
-                                        chatType === 3 && sender.isSystemUser === true
+                                        (chatType === 3 || chatType === 4) &&
+                                        sender.isSystemUser === true
                                             ? "5px"
                                             : "0px",
                                 },

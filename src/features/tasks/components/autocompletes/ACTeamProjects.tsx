@@ -27,7 +27,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             key={taskContents.id}
             options={teamProjects}
             getOptionLabel={(option) => option.projectName}
-            value={taskContents.project}
+            value={taskContents.project?.projectId ? taskContents.project : undefined}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
             onChange={(event, value) => {
                 if (value !== null) {

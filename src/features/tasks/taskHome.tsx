@@ -1,3 +1,4 @@
+import { alpha } from "@mui/system";
 import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 import { useColorScheme } from "@mui/joy/styles";
@@ -11,7 +12,9 @@ import {
     MenuButton,
     MenuItem,
     Autocomplete,
+    AutocompleteOption,
     CircularProgress,
+    ListItemContent,
     Chip,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -51,9 +54,9 @@ import { useAuth } from "../../context/AuthContext";
 import { updateTeamTasks } from "./services/updateTeamTasks";
 
 const taskTypes: TaskTypesProps = {
-    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing Tasks" },
-    closed: { id: 2, statuses: ["Closed"], name: "Closed Tasks" },
-    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted Tasks" },
+    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
+    closed: { id: 2, statuses: ["Closed"], name: "Closed" },
+    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
 };
 
 type TaskHomeProps = {
@@ -61,6 +64,7 @@ type TaskHomeProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    openingService: number;
     setOpeningService: (service: number) => void;
     isCommentUpdated: boolean;
     setIsCommentUpdated: (value: boolean) => void;
@@ -71,6 +75,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         myself,
         setMyself,
         setCurrentMainChat,
+        openingService,
         setOpeningService,
         isCommentUpdated,
         setIsCommentUpdated,
@@ -148,6 +153,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         if (value !== null) {
             setOpenSearch(false);
             setCurrentPreviewTaskId(value.taskId);
+            setIsTaskPreviewVisible(true);
         }
     }
     // =======================================================================
@@ -298,6 +304,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
+                    openingService={openingService}
                     setCurrentMainChat={setCurrentMainChat}
                     setOpeningService={setOpeningService}
                 />
@@ -311,6 +318,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setMyself={setMyself}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
+                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     currentProject={currentProject}
                                     setCurrentProject={setCurrentProject}
                                     currentPreviewTaskId={currentPreviewTaskId}
@@ -386,7 +394,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         slotProps={{ root: { color: "neutral" } }}
                                                     >
                                                         <Chip
-                                                            variant="soft"
+                                                            variant="outlined"
                                                             color={
                                                                 displayTaskType.id === 1
                                                                     ? "primary"
@@ -414,7 +422,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             }}
                                                         >
                                                             <Chip
-                                                                variant="soft"
+                                                                variant="outlined"
                                                                 color="primary"
                                                                 sx={{
                                                                     borderRadius: "7px",
@@ -432,7 +440,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             }}
                                                         >
                                                             <Chip
-                                                                variant="soft"
+                                                                variant="outlined"
                                                                 color="success"
                                                                 sx={{
                                                                     borderRadius: "7px",
@@ -450,7 +458,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             }}
                                                         >
                                                             <Chip
-                                                                variant="soft"
+                                                                variant="outlined"
                                                                 color="danger"
                                                                 sx={{
                                                                     borderRadius: "7px",
@@ -466,6 +474,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                                             <Box sx={{ width: "50%" }}>
                                                 <Autocomplete
+                                                    key={`ac-project-tags-${currentPreviewTaskId}`}
                                                     sx={{ width: "100%" }}
                                                     placeholder={"Search"}
                                                     variant="soft"
@@ -477,11 +486,84 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         setOpenSearch(false);
                                                     }}
                                                     isOptionEqualToValue={(option, value) =>
-                                                        option.projectId === value.projectId
+                                                        option.taskId === value.taskId
                                                     }
-                                                    getOptionLabel={(option) =>
-                                                        `${option.taskId} | ${option.title}`
+                                                    getOptionLabel={(option) => option.title}
+                                                    renderTags={(tags, getTagProps) =>
+                                                        tags.map((item, index) => {
+                                                            const { key, ...tagProps } =
+                                                                getTagProps({ index }); // spread the 'key'
+                                                            return (
+                                                                <Chip
+                                                                    key={`ac-taskhome-search-task-chip-${key}`}
+                                                                    variant="soft"
+                                                                    sx={{
+                                                                        backgroundColor: alpha(
+                                                                            item.status.color ||
+                                                                                "#0044c2",
+                                                                            mode === "dark"
+                                                                                ? 0.5
+                                                                                : 0.75
+                                                                        ),
+                                                                        color: item.status
+                                                                            .textColor,
+                                                                        fontWeight: "bold",
+                                                                        borderRadius: "7px",
+                                                                    }}
+                                                                    size="sm"
+                                                                >
+                                                                    {item.status.status}
+                                                                </Chip>
+                                                            );
+                                                        })
                                                     }
+                                                    renderOption={(props, option) => (
+                                                        <AutocompleteOption
+                                                            {...props}
+                                                            key={`ac-taskhome-search-task-${option.taskId}`}
+                                                        >
+                                                            <ListItemContent
+                                                                sx={{
+                                                                    fontSize: "sm",
+                                                                    overflow: "hidden",
+                                                                    textOverflow: "ellipsis",
+                                                                    whiteSpace: "nowrap",
+                                                                    width: "100%", // take full width of button
+                                                                }}
+                                                            >
+                                                                <Chip
+                                                                    key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
+                                                                    variant="outlined"
+                                                                    color="neutral"
+                                                                    size="sm"
+                                                                >
+                                                                    ID:{option.taskId}
+                                                                </Chip>
+                                                                <Chip
+                                                                    key={`ac-taskhome-search-task-chip-${option.taskId}`}
+                                                                    variant="soft"
+                                                                    sx={{
+                                                                        backgroundColor: alpha(
+                                                                            option.status.color ||
+                                                                                "#0044c2",
+                                                                            mode === "dark"
+                                                                                ? 0.5
+                                                                                : 0.75
+                                                                        ),
+                                                                        color: option.status
+                                                                            .textColor,
+                                                                        fontWeight: "bold",
+                                                                        borderRadius: "7px",
+                                                                        m: "3px",
+                                                                    }}
+                                                                    size="sm"
+                                                                >
+                                                                    {option.status.status}
+                                                                </Chip>
+                                                                {option.title}
+                                                            </ListItemContent>
+                                                        </AutocompleteOption>
+                                                    )}
                                                     options={teamTaskOptions}
                                                     loading={loading}
                                                     endDecorator={
@@ -507,7 +589,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     size="sm"
                                                     startDecorator={<SearchRoundedIcon />}
                                                     aria-label="Search"
-                                                    groupBy={(option) => option.projectName}
+                                                    groupBy={(option) =>
+                                                        option.status.status || "N/A"
+                                                    }
                                                 />
                                             </Box>
 
@@ -759,6 +843,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setMyself={setMyself}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
+                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     currentProject={currentProject}
                                     setCurrentProject={setCurrentProject}
                                     currentPreviewTaskId={currentPreviewTaskId}

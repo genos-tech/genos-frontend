@@ -115,6 +115,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         },
     });
 
+    const boxRef = useRef<HTMLDivElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
@@ -188,6 +189,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     {
                         method_type: "POST",
                         project_id: task.project?.projectId,
+                        project_name: task.project?.projectName,
                         task_id: task.id,
                         comment_body: editor.document,
                     },
@@ -223,12 +225,24 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         }
     };
 
+    const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(0);
+    const [pickerRightPosition, setPickerRightPosition] = useState<number>(0);
+    useEffect(() => {
+        if (boxRef.current) {
+            const rect = boxRef.current.getBoundingClientRect();
+            setPickerBottomPosition(rect.bottom - 1350);
+            setPickerRightPosition(rect.left - 800);
+        }
+    }, [task, showEmojiPicker]);
+
     return (
-        <Box>
+        <Box ref={boxRef}>
             <EmojiPicker
                 showEmojiPicker={showEmojiPicker}
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
+                pickerBottomPosition={pickerBottomPosition}
+                pickerRightPosition={pickerRightPosition}
             />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView

@@ -42,6 +42,7 @@ type BnUpdateTaskCommentEditorProps = {
     socket: Socket | null;
     teamMembers: UserProps[];
     projectId?: number;
+    projectName?: string;
     taskId?: number;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
@@ -61,6 +62,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         socket,
         teamMembers,
         projectId,
+        projectName,
         taskId,
         setTaskUpdated,
         taskComments,
@@ -148,7 +150,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.max(numEditorLines - 5, 0) * 30 + 200,
-                500
+                800
             );
             editorRef.current.style.setProperty(
                 "--task-comment-editor-height",
@@ -203,6 +205,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     {
                         method_type: "PUT",
                         project_id: projectId,
+                        project_name: projectName,
                         task_id: taskId,
                         comment_id: targetComment.commentId,
                         comment_body: editor.document,
@@ -215,12 +218,25 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         }
     };
 
+    const boxRef = useRef<HTMLDivElement>(null);
+    const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(0);
+    const [pickerRightPosition, setPickerRightPosition] = useState<number>(0);
+    useEffect(() => {
+        if (boxRef.current) {
+            const rect = boxRef.current.getBoundingClientRect();
+            setPickerBottomPosition(rect.bottom - 1350);
+            setPickerRightPosition(rect.left - 800);
+        }
+    }, [showEmojiPicker]);
+
     return (
-        <Box>
+        <Box ref={boxRef}>
             <EmojiPicker
                 showEmojiPicker={showEmojiPicker}
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
+                pickerBottomPosition={pickerBottomPosition}
+                pickerRightPosition={pickerRightPosition}
             />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView

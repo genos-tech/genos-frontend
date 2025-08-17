@@ -85,7 +85,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 </Chip>
 
                 {/* Custom header in PM and DM/GM (having a task) thread */}
-                {((thread.chatType === 3 && currentPreviewTaskId !== -1) ||
+                {(((thread.chatType === 3 || thread.chatType === 4) &&
+                    currentPreviewTaskId !== -1) ||
                     (isTaskPreviewVisible === false &&
                         currentPreviewTaskId !== -1 &&
                         currentPreviewTask &&
@@ -139,7 +140,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
                 {/* Custom header in DM/GM thread */}
-                {thread.chatType !== 3 && currentPreviewTaskId === -1 && (
+                {thread.chatType !== 3 && thread.chatType !== 4 && currentPreviewTaskId === -1 && (
                     <>
                         <Tooltip title="New Task" size="sm">
                             <IconButton

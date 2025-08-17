@@ -72,7 +72,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 <HeaderUserName chat={chat} isYou={isYou} />
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
-                {chat.chatType === 3 && (
+                {(chat.chatType === 3 || chat.chatType === 4) && (
                     <Tooltip title="Create a new task" size="sm">
                         <IconButton
                             component="a"
@@ -92,7 +92,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </IconButton>
                     </Tooltip>
                 )}
-                {chat.chatType !== 3 && (
+                {chat.chatType !== 3 && chat.chatType !== 4 && (
                     <Button
                         component="a"
                         startDecorator={<PhoneInTalkRoundedIcon />}
