@@ -106,6 +106,7 @@ type CreateTaskProps = {
     myself: UserProps;
     currentMainChat?: ChatProps;
     currentThreadChat?: ThreadProps;
+    chatType: number;
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
@@ -136,6 +137,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         myself,
         currentMainChat,
         currentThreadChat,
+        chatType,
         setIsMainChatVisible,
         setIsThreadVisible,
         isThreadVisible,
@@ -167,12 +169,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         body: [],
         assignee: myself,
         reporter: myself,
-        chatType:
-            currentMainChat?.isDm === null || currentMainChat?.isDm === undefined
-                ? null
-                : currentMainChat.isDm
-                ? 1
-                : 2,
+        chatType: chatType,
         chatId: currentMainChat?.chatId || null,
         threadId: currentThreadChat?.threadId || null,
         dueDate: getFormattedTodayDateStr(),

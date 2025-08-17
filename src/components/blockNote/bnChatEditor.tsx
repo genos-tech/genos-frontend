@@ -156,7 +156,6 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     message: editor.document,
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
-                    isDm: chat.isDm,
                     chatType: chat.chatType,
                     dmPartnerUserId:
                         chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
@@ -169,7 +168,6 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     const updatedChat: ChatProps = {
                         chatId: chat.chatId,
                         chatName: chat.chatName,
-                        isDm: chat.isDm,
                         chatType: chat.chatType,
                         systemUserId: chat.systemUserId,
                         dmPartnerUser: chat.dmPartnerUser,
@@ -237,7 +235,6 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             chatId: chat.chatId,
                             chatName: chat.chatName,
                             systemUserId: chat.systemUserId,
-                            isDm: chat.isDm,
                             chatType: chat.chatType,
                             dmPartnerUser: chat.dmPartnerUser,
                             unread: false,

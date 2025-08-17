@@ -744,6 +744,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 myself={myself}
                                                 currentMainChat={undefined}
                                                 currentThreadChat={undefined}
+                                                chatType={-1}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setOpenCreateProject={setOpenCreateProject}

@@ -25,7 +25,6 @@ const moveToGMChat = async (
         const newChat: ChatProps = {
             chatId: chatId,
             chatName: chatName,
-            isDm: false,
             chatType: 2,
             dmPartnerUser: defaultDmPartner,
             unread: false,
@@ -65,7 +64,6 @@ const addGMChatAndMessage = async (
     const newChat: AllChatProps = {
         chatId: data.chatId,
         chatName: data.chatName,
-        isDm: false,
         chatType: 2,
         dmPartnerUser: defaultDmPartner,
         unread: false,
@@ -83,7 +81,6 @@ const addGMChatAndMessage = async (
             chatId: newChat.chatId,
             chatName: newChat.chatName,
             unread: false,
-            isDm: false,
             chatType: 2,
             dmPartnerUser: defaultDmPartner,
             latestMessage: newChat.latestMessage,
@@ -120,7 +117,6 @@ export const createChatGroup = async (
             {
                 joiningCGId: data.chatId, // gm_id
                 joiningCGName: data.chatName, // gm_name
-                isDm: false,
                 chatType: 2,
                 dmPartnerUser: null,
             },
@@ -130,7 +126,6 @@ export const createChatGroup = async (
                     message: createGroupMessage,
                     destCGName: chatName,
                     destCGId: data.chatId,
-                    isDm: false,
                     chatType: 2,
                     dmPartnerUser: null,
                     taskId: null,

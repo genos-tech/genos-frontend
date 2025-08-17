@@ -51,7 +51,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         chatId: thread.chatId,
         chatName: thread.chatName,
         threadId: thread.threadId,
-        isDm: thread.isDm,
         chatType: thread.chatType,
         dmPartnerUser: thread.dmPartnerUser,
         taskId: thread.taskId,

@@ -169,7 +169,6 @@ export const loadInitialData = (
                 const popSpecificMessagesWorker = new PopSpecificMessagesWorker();
                 popSpecificMessagesWorker.postMessage({
                     chatId: latestDmChatId,
-                    isDm: true,
                     chatType: 1,
                 });
                 popSpecificMessagesWorker.onmessage = (event) => {
@@ -203,7 +202,6 @@ export const loadInitialData = (
                         const currentMainChat: ChatProps = {
                             chatId: fetchedChat.chatId,
                             chatName: fetchedChat.chatName,
-                            isDm: true,
                             chatType: 1,
                             dmPartnerUser: fetchedChat.dmPartnerUser,
                             unread: InitialChatMessages.length === 1 ? true : false,
@@ -227,7 +225,6 @@ export const loadInitialData = (
                 const currentMainChat: ChatProps = {
                     chatId: -1,
                     chatName: "Origin",
-                    isDm: true,
                     chatType: 1,
                     dmPartnerUser: defaultDmPartner,
                     latestMessageText: "",

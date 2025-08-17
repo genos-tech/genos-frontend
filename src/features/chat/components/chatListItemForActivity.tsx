@@ -91,7 +91,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         const newMessages: ChatProps = {
             chatId: activity.chatId,
             chatName: activity.chatName,
-            isDm: activity.chatType === 1 ? true : false,
             chatType: activity.chatType,
             dmPartnerUser: activity.dmPartnerUser,
             unread: false,
@@ -192,7 +191,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     chatId: activity.chatId,
                     chatName: activity.chatName,
                     threadId: activity.threadId,
-                    isDm: activity.chatType === 1 ? true : false,
                     chatType: activity.chatType,
                     dmPartnerUser: activity.dmPartnerUser,
                     taskId: activity.taskId,
@@ -411,7 +409,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                                 fontWeight: "bold",
                                             }}
                                         >
-                                            Mentioned
+                                            Mention
                                         </Chip>
                                     )}
 

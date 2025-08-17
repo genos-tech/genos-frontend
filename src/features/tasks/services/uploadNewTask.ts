@@ -86,12 +86,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                             ? taskContents.generalLink.title
                             : null,
                     tags: taskContents.tags,
-                    chat_type:
-                        currentMainChat?.isDm === null || currentMainChat?.isDm === undefined
-                            ? null
-                            : currentMainChat.isDm
-                            ? 1
-                            : 2,
+                    chat_type: taskContents.chatType,
                     chat_id: currentMainChat?.chatId || null,
                     thread_id: currentThreadChat?.threadId || null,
                     parent_task_id: taskContents.parentTaskId,
@@ -160,7 +155,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         {
                             joiningCGId: taskContents.project.projectId,
                             joiningCGName: taskContents.project.projectName,
-                            isDm: false,
                             chatType: 3,
                             dmPartnerUserId: null,
                         },
@@ -175,7 +169,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         message: createTaskMessage,
                                         destCGName: taskContents.project.projectName,
                                         destCGId: taskContents.project.projectId,
-                                        isDm: false,
                                         chatType: 3,
                                         dmPartnerUserId: null,
                                         taskId: taskCreateData.task_id,
@@ -195,7 +188,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                                 rootMessageReceiverId: null,
                                                 threadId: null,
                                                 threadMessage: newTaskCreatedThreadMessage,
-                                                isDm: false,
                                                 chatType: 3,
                                                 dmPartnerUserId: null,
                                                 senderId: taskContents.project.systemUserId,
@@ -227,7 +219,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         message: null,
                                         destCGName: currentMainChat.chatName,
                                         destCGId: currentMainChat.chatId,
-                                        isDm: currentMainChat.chatType === 1 ? true : false,
                                         chatType: currentMainChat.chatType,
                                         dmPartnerUserId: currentMainChat.dmPartnerUser?.userId,
                                         taskId: taskCreateData.task_id,
@@ -244,7 +235,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         rootMessageReceiverId: null,
                                         threadId: currentThreadChat.threadId,
                                         threadMessage: createTaskMessage,
-                                        isDm: currentThreadChat.chatType === 1 ? true : false,
                                         chatType: currentThreadChat.chatType,
                                         dmPartnerUserId: currentThreadChat.dmPartnerUser?.userId,
                                         senderId: taskContents.project.systemUserId,

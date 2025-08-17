@@ -33,7 +33,6 @@ self.onmessage = async (event) => {
                     chatId: dmChat.chatId,
                     chatName: dmChat.chatName,
                     unread: dmChat.unread,
-                    isDm: true,
                     chatType: 1,
                     dmPartnerUser: dmChat.dmPartnerUser,
                     latestMessage: dmChat.latestMessage,

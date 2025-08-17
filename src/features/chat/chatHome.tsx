@@ -545,6 +545,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     myself={myself}
                                                     currentMainChat={currentMainChat}
                                                     currentThreadChat={currentThreadChat}
+                                                    chatType={currentThreadChat?.chatType || -1}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}
@@ -745,6 +746,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     myself={myself}
                                                     currentMainChat={currentMainChat}
                                                     currentThreadChat={currentThreadChat}
+                                                    chatType={currentThreadChat.chatType}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}

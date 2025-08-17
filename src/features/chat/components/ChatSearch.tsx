@@ -36,17 +36,18 @@ export const ChatSearch = (props: ChatSearchProps) => {
 
     const onChangeHandler = async (value: any) => {
         if (value !== null && socket !== null) {
-            var isDm: boolean = true;
+            var _chatType: number;
             if (value.type === "Group") {
-                isDm = false;
+                _chatType = 2;
+            } else {
+                _chatType = 1;
             }
             socket.emit(
                 "join",
                 {
                     joiningCGId: value.id, // dm_id or gm_id
                     joiningCGName: value.name, // dm_name or gm_name
-                    isDm: isDm,
-                    chatType: isDm === true ? 1 : 2,
+                    chatType: _chatType,
                     dmPartnerUserId: value.dmPartnerUser.userId || null,
                 },
                 (ack: any) => {
@@ -56,7 +57,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             socket,
                             value.id,
                             value.name,
-                            value.type === "Group" ? Boolean(false) : Boolean(true),
                             value.type === "Group" ? 2 : 1,
                             value.dmPartnerUser,
                             allChats,

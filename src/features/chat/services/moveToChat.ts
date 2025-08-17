@@ -21,7 +21,6 @@ export const moveToDMChat = async (
         socket.emit("join", {
             joiningCGId: -1, // dm_id or gm_id
             joiningCGName: chatName, // dm_name or gm_name
-            isDm: true,
             chatType: 1,
             dmPartnerUserId: dmPartnerUser.userId,
         });
@@ -30,9 +29,7 @@ export const moveToDMChat = async (
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 1);
     if (fetchedMessages) {
         console.log("move to dm:", fetchedMessages[fetchedMessages.length - 1]);
-        setCurrentMainChat(
-            defineNewChat(chatId, chatName, true, 1, dmPartnerUser, fetchedMessages)
-        );
+        setCurrentMainChat(defineNewChat(chatId, chatName, 1, dmPartnerUser, fetchedMessages));
     } else {
         console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages);
     }
@@ -46,9 +43,7 @@ export const moveToGMChat = async (
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
         console.log("move to gm:", fetchedMessages[fetchedMessages.length - 1]);
-        setCurrentMainChat(
-            defineNewChat(chatId, chatName, false, 2, defaultDmPartner, fetchedMessages)
-        );
+        setCurrentMainChat(defineNewChat(chatId, chatName, 2, defaultDmPartner, fetchedMessages));
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
     }
@@ -64,7 +59,6 @@ export const moveToSelectedChat = async (
     socket: Socket,
     chatId: number,
     chatName: string,
-    isDm: boolean,
     chatType: number,
     dmPartnerUser: UserProps,
     allChats: AllChatProps[],
@@ -84,9 +78,8 @@ export const moveToSelectedChat = async (
                     message: joinedMessage,
                     destCGName: chatName,
                     destCGId: chatId,
-                    isDm: isDm,
                     chatType: chatType,
-                    dmPartnerUserId: isDm === true ? dmPartnerUser.userId : null,
+                    dmPartnerUserId: chatType === 1 ? dmPartnerUser.userId : null,
                     taskId: null,
                     systemUserId: null,
                     taskStatus: null,
@@ -110,7 +103,6 @@ export const moveToSelectedChat = async (
                     const chat: AllChatProps = {
                         chatId: chatId,
                         chatName: chatName,
-                        isDm: isDm,
                         chatType: chatType,
                         dmPartnerUser: dmPartnerUser,
                         unread: true,
@@ -127,7 +119,7 @@ export const moveToSelectedChat = async (
                 }
             );
         } else {
-            if (isDm) {
+            if (chatType === 1) {
                 moveToDMChat(socket, chatId, chatName, dmPartnerUser, setCurrentMainChat);
             } else {
                 moveToGMChat(chatId, chatName, setCurrentMainChat);

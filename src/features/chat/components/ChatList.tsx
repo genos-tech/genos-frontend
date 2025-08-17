@@ -16,7 +16,6 @@ import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../.
 type ChatListProps = {
     socket: Socket | null;
     myself: UserProps;
-    isDm: boolean;
     chatType: number;
     activityMessages: ActivityMessageProps[];
     allChats: AllChatProps[];
@@ -43,7 +42,6 @@ export const ChatList = (props: ChatListProps) => {
     const {
         socket,
         myself,
-        isDm,
         chatType,
         activityMessages,
         allChats,
@@ -112,7 +110,7 @@ export const ChatList = (props: ChatListProps) => {
                             <div>
                                 <Stack direction="row">
                                     <ChatListItem
-                                        key={`${chat.chatId}-${chat.isDm}-${chat.chatName}`}
+                                        key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
                                         socket={socket}
                                         chat={chat}
                                         myself={myself}

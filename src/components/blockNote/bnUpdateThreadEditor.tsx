@@ -141,7 +141,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 rootMessageReceiverId: null,
                 threadId: thread.threadId,
                 threadMessage: editor.document,
-                isDm: thread.isDm,
                 chatType: thread.chatType,
                 dmPartnerUserId:
                     thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
@@ -159,7 +158,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     message: editor.document,
                     destCGName: thread.chatName,
                     destCGId: thread.chatId,
-                    isDm: thread.isDm,
                     chatType: thread.chatType,
                     dmPartnerUserId:
                         thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,

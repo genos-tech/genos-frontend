@@ -209,7 +209,6 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         rootMessageReceiverId: null,
                         threadId: null,
                         threadMessage: updatedTaskThreadMessage,
-                        isDm: false,
                         chatType: 3,
                         dmPartnerUserId: null,
                         senderId: task.project.systemUserId,

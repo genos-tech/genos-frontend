@@ -34,7 +34,6 @@ self.onmessage = async (event) => {
                 chatName: pmChat.chatName,
                 systemUserId: pmChat.systemUserId,
                 unread: pmChat.unread,
-                isDm: false,
                 chatType: 3,
                 dmPartnerUser: defaultDmPartner,
                 latestMessage: pmChat.latestMessage,

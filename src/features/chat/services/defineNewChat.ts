@@ -4,7 +4,6 @@ import { MessageProps, ChatProps } from "../../../types/chat";
 export const defineNewChat = (
     chatId: number,
     chatName: string,
-    isDm: boolean,
     chatType: number,
     dmPartnerUser: UserProps,
     messages: MessageProps[]
@@ -12,7 +11,6 @@ export const defineNewChat = (
     const newChat: ChatProps = {
         chatId: chatId,
         chatName: chatName,
-        isDm: isDm,
         chatType: chatType,
         dmPartnerUser: dmPartnerUser,
         unread: false,

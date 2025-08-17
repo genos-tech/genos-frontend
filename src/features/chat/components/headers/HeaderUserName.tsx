@@ -9,7 +9,7 @@ export const HeaderUserName = (props: { chat: ChatProps; isYou: boolean }) => {
     return (
         <>
             <div>
-                {chat.isDm ? (
+                {chat.chatType === 1 ? (
                     <Avatar src={chat.CGAvatarImgPath}>{chat.chatName[0]}</Avatar>
                 ) : (
                     <Avatar>
@@ -22,7 +22,7 @@ export const HeaderUserName = (props: { chat: ChatProps; isYou: boolean }) => {
                     component="h2"
                     noWrap
                     endDecorator={
-                        chat.isDm ? (
+                        chat.chatType === 1 ? (
                             <Chip
                                 variant="outlined"
                                 size="sm"

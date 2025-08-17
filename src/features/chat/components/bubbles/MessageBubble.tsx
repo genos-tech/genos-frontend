@@ -119,7 +119,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             : myself.userId,
                     threadId: message.messageId,
                     threadMessage: message.content,
-                    isDm: chat.isDm,
                     chatType: chat.chatType,
                     dmPartnerUserId:
                         chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
@@ -166,7 +165,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 chatId: newThreadMessage.chatId,
                                 chatName: chat.chatName,
                                 threadId: newThreadMessage.threadId,
-                                isDm: chat.isDm,
                                 chatType: chat.chatType,
                                 dmPartnerUser: chat.dmPartnerUser,
                                 taskId: message.taskId || null,

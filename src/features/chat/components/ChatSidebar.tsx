@@ -110,7 +110,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 <ChatList
                     socket={socket}
                     myself={myself}
-                    isDm={false}
                     chatType={1}
                     activityMessages={[]}
                     allChats={allChats.filter((chat) => chat.chatType === 1)}
@@ -138,7 +137,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 <ChatList
                     socket={socket}
                     myself={myself}
-                    isDm={true}
                     chatType={2}
                     activityMessages={[]}
                     allChats={allChats.filter((chat) => chat.chatType === 2)}
@@ -166,7 +164,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 <ChatList
                     socket={socket}
                     myself={myself}
-                    isDm={true}
                     chatType={3}
                     activityMessages={[]}
                     allChats={allChats.filter((chat) => chat.chatType === 3)}
@@ -194,7 +191,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 <ChatList
                     socket={socket}
                     myself={myself}
-                    isDm={true}
                     chatType={-1}
                     activityMessages={activityMessages}
                     allChats={[]}

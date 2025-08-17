@@ -80,7 +80,6 @@ export const ChatListItem = (props: ChatListItemProps) => {
         const newMessages: ChatProps = {
             chatId: chat.chatId,
             chatName: chat.chatName,
-            isDm: chat.isDm,
             chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
             unread: false,
@@ -123,7 +122,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            if (chat.isDm) {
+            if (chat.chatType === 1) {
                 popSpecificMessages(chat.chatId, chat.chatType)
                     .then((messages) => {
                         setCurrentSubChat(defineNewMessages(messages));
