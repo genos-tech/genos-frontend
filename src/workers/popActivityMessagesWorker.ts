@@ -7,7 +7,12 @@ self.onmessage = async (event) => {
         storeName: STORES.ACTIVITY_MESSAGES,
     });
 
-    self.postMessage(activityMessages);
+    // Sort messages by tsSent in desc
+    const sortedActivityMessages = [...activityMessages].sort((a, b) => {
+        return new Date(b.tsSent).getTime() - new Date(a.tsSent).getTime();
+    });
+
+    self.postMessage(sortedActivityMessages);
 };
 
 export {};

@@ -70,7 +70,9 @@ export const CreateMentionSpec = (
                                 alignItems: "center",
                                 gap: 0.5,
                                 backgroundColor:
-                                    myself.userId === userId ? "#ff77006c" : "rgba(255, 0, 238, 0.15)",
+                                    myself.userId === userId
+                                        ? "#ff77006c"
+                                        : "rgba(255, 0, 238, 0.15)",
                                 borderRadius: "12px",
                                 px: 1,
                                 py: 0.5,
@@ -119,13 +121,13 @@ export const MentionMenuItems = (
     editor: any,
     users: UserProps[]
 ): DefaultReactSuggestionItem[] => {
-    return users.map((user) => ({
-        title: user.userName,
-        subtext: user.userEmail,
+    return users.map((user, index) => ({
+        title: user.userEmail,
         badge: user.customStatus,
         onItemClick: () => {
             editor.insertInlineContent([
                 {
+                    key: user.userId,
                     type: "mention",
                     props: {
                         userName: user.userName,
@@ -154,6 +156,7 @@ export const MentionMenuItems = (
                         <PulseDot color={user.online ? "#4caf50" : "#9e9e9e"} />
                     </Box>
                 </Box>
+                {user.userName}
             </Box>
         ),
     }));

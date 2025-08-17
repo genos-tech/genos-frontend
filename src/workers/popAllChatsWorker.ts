@@ -15,7 +15,12 @@ self.onmessage = async (event) => {
         storeName: STORES.PM_CHATS,
     });
 
-    self.postMessage([...dmChats, ...gmChats, ...pmChats]);
+    // Sort messages by TSLastMessage in desc
+    const sortedAllChats = [...dmChats, ...gmChats, ...pmChats].sort((a, b) => {
+        return new Date(b.TSLastMessage).getTime() - new Date(a.TSLastMessage).getTime();
+    });
+
+    self.postMessage(sortedAllChats);
 };
 
 export {};

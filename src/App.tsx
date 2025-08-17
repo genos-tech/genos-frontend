@@ -169,6 +169,7 @@ export const App = () => {
         funcSetAllChats: funcSetAllChats,
         setIsTaskCommentUpdated: setIsTaskCommentUpdated,
         isLoading: isLoading,
+        funcSetActivityMessages: funcSetActivityMessages,
     });
 
     return isLoading || currentMainChat === undefined ? (

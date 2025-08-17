@@ -119,7 +119,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     }, [showEmojiPicker]);
 
     return (
-        <Box ref={boxRef}>
+        <Box ref={boxRef}  sx={{py: 0.5}}>
             <EmojiPicker
                 showEmojiPicker={showEmojiPicker}
                 setShowEmojiPicker={setShowEmojiPicker}

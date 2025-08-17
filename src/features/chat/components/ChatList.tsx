@@ -1,5 +1,7 @@
 import { Socket } from "socket.io-client";
-import List from "@mui/joy/List";
+import { useState, useEffect, useRef } from "react";
+import { List, Sheet, Stack } from "@mui/joy";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForActivity } from "./chatListItemForActivity";
@@ -59,6 +61,7 @@ export const ChatList = (props: ChatListProps) => {
         setCurrentPreviewTaskId,
         setCurrentProject,
     } = props;
+    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
     return (
         <List
@@ -73,17 +76,19 @@ export const ChatList = (props: ChatListProps) => {
             }}
             className="custom-scrollbar"
         >
-            {allChats.length > 0 &&
-                allChats
-                    .slice() // Avoid mutating the original array
-                    .sort(
-                        (a, b) =>
-                            new Date(b.TSLastMessage.replace(" ", "T")).getTime() -
-                            new Date(a.TSLastMessage.replace(" ", "T")).getTime()
-                    ) // Convert "YYYY-MM-DD HH:mm:ss" to "YYYY-MM-DDTHH:mm:ss" for proper parsing
-                    .map(
-                        (chat) =>
-                            chat.chatType === chatType && (
+            <Virtuoso
+                ref={virtuosoRef}
+                className="custom-scrollbar"
+                style={{ height: Math.min(300, 80 * allChats.length) }}
+                totalCount={allChats.length}
+                initialTopMostItemIndex={0}
+                atTopThreshold={64}
+                atBottomThreshold={128}
+                itemContent={(index) => {
+                    const chat = allChats[index];
+                    return (
+                        <div>
+                            <Stack direction="row">
                                 <ChatListItem
                                     key={`${chat.chatId}-${chat.isDm}-${chat.chatName}`}
                                     socket={socket}
@@ -105,42 +110,53 @@ export const ChatList = (props: ChatListProps) => {
                                     setOpeningService={setOpeningService}
                                     chatType={chatType}
                                 />
-                            )
-                    )}
+                            </Stack>
+                        </div>
+                    );
+                }}
+            />
 
-            {activityMessages.length > 0 &&
-                activityMessages
-                    .slice() // Avoid mutating the original array
-                    .sort(
-                        (a, b) =>
-                            new Date(b.tsSent.replace(" ", "T")).getTime() -
-                            new Date(a.tsSent.replace(" ", "T")).getTime()
-                    ) // Convert "YYYY-MM-DD HH:mm:ss" to "YYYY-MM-DDTHH:mm:ss" for proper parsing
-                    .map((activity) => (
-                        <ChatListItemForActivity
-                            key={activity.activityId}
-                            socket={socket}
-                            activity={activity}
-                            myself={myself}
-                            currentMainChat={currentMainChat}
-                            currentSubChat={currentSubChat}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setCurrentSubChat={setCurrentSubChat}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                            setIsMainChatVisible={setIsMainChatVisible}
-                            setIsThreadVisible={setIsThreadVisible}
-                            isThreadVisible={isThreadVisible}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsTaskCreationVisible={setIsTaskCreationVisible}
-                            isTaskPreviewVisible={isTaskPreviewVisible}
-                            isTaskCreationVisible={isTaskCreationVisible}
-                            isSubChatVisible={isSubChatVisible}
-                            setIsSubChatVisible={setIsSubChatVisible}
-                            setOpeningService={setOpeningService}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setCurrentProject={setCurrentProject}
-                        />
-                    ))}
+            <Virtuoso
+                ref={virtuosoRef}
+                className="custom-scrollbar"
+                style={{ height: Math.min(800, 80 * activityMessages.length) }}
+                totalCount={activityMessages.length}
+                initialTopMostItemIndex={0}
+                atTopThreshold={64}
+                atBottomThreshold={128}
+                itemContent={(index) => {
+                    const activityMessage = activityMessages[index];
+                    return (
+                        <div>
+                            <Stack direction="row">
+                                <ChatListItemForActivity
+                                    key={activityMessage.activityId}
+                                    socket={socket}
+                                    activity={activityMessage}
+                                    myself={myself}
+                                    currentMainChat={currentMainChat}
+                                    currentSubChat={currentSubChat}
+                                    setCurrentMainChat={setCurrentMainChat}
+                                    setCurrentSubChat={setCurrentSubChat}
+                                    setCurrentThreadChat={setCurrentThreadChat}
+                                    setIsMainChatVisible={setIsMainChatVisible}
+                                    setIsThreadVisible={setIsThreadVisible}
+                                    isThreadVisible={isThreadVisible}
+                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                    isTaskPreviewVisible={isTaskPreviewVisible}
+                                    isTaskCreationVisible={isTaskCreationVisible}
+                                    isSubChatVisible={isSubChatVisible}
+                                    setIsSubChatVisible={setIsSubChatVisible}
+                                    setOpeningService={setOpeningService}
+                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                    setCurrentProject={setCurrentProject}
+                                />
+                            </Stack>
+                        </div>
+                    );
+                }}
+            />
         </List>
     );
 };

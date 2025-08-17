@@ -296,7 +296,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
     return (
         <React.Fragment>
-            <ListItem>
+            <ListItem sx={{ width: "100%", p: 1, overflowX: "hidden" }}>
                 <ListItemButton
                     onClick={onClickHandler}
                     color="neutral"

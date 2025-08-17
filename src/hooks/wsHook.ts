@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Socket } from "socket.io-client";
 
 import { addChat } from "../features/chat/services/addChat";
+import { addActivityMessage } from "../features/chat/services/addActivityMessage";
 import { addMessage } from "../features/chat/services/addMessage";
 import { addThreadMessage } from "../features/chat/services/addThreadMessage";
 import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
@@ -15,6 +16,7 @@ import {
     NewMessageProps,
     NewThreadMessageProps,
     ThreadProps,
+    ActivityMessageProps,
 } from "../types/chat";
 
 type wsHookProps = {
@@ -31,6 +33,7 @@ type wsHookProps = {
     funcSetAllChats: () => void;
     setIsTaskCommentUpdated: (value: boolean) => void;
     isLoading: boolean;
+    funcSetActivityMessages: () => void;
 };
 
 export const wsHook = (props: wsHookProps) => {
@@ -48,6 +51,7 @@ export const wsHook = (props: wsHookProps) => {
         funcSetAllChats,
         setIsTaskCommentUpdated,
         isLoading,
+        funcSetActivityMessages,
     } = props;
 
     const updateAllChat = async (currentChat: ChatProps, newChatMessage: MessageProps) => {
@@ -528,6 +532,12 @@ export const wsHook = (props: wsHookProps) => {
             } else if (message.wsType === "task") {
                 if (setIsTaskCommentUpdated) {
                     setIsTaskCommentUpdated(true);
+                }
+            } else if (message.wsType === "activity") {
+                const newActivityMessage: ActivityMessageProps = message;
+                if (newActivityMessage) {
+                    await addActivityMessage(newActivityMessage);
+                    funcSetActivityMessages();
                 }
             }
         });

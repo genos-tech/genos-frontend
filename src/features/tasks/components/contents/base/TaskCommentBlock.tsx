@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
-import { Box, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography, List, Sheet } from "@mui/joy";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
@@ -63,44 +64,43 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         0
     );
 
+    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+
     return (
         <Box sx={{ mt: 2 }}>
             <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
                 Comments
             </Typography>
 
-            <Box sx={{ mb: 1 }}>
-                {taskComments.length > 0 && (
-                    <>
-                        <Box
-                            ref={boxRef}
-                            className="custom-scrollbar"
-                            sx={{
-                                height: Math.min(100 + totalComments * 30, 800),
-                                pb: "10px",
-                                overflowY: "scroll",
-                                overflowX: "hidden",
-                            }}
-                        >
-                            <Stack spacing={1}>
-                                {taskComments.map((comment, index) => (
-                                    <TaskCommentBubble
-                                        key={`task-comment-${comment.commentId}`}
-                                        socket={socket}
-                                        myself={myself}
-                                        comment={comment}
-                                        currentProjectId={task.project?.projectId}
-                                        setIsInEdit={setIsInEdit}
-                                        setEditTargetComment={setEditTargetComment}
-                                        setCurrentChat={setCurrentChat}
-                                        setOpeningService={setOpeningService}
-                                    />
-                                ))}
-                            </Stack>
-                        </Box>
-                    </>
-                )}
-            </Box>
+            {taskComments.length > 0 && (
+                <Box sx={{ mb: 1 }}>
+                    <Virtuoso
+                        ref={virtuosoRef}
+                        className="custom-scrollbar"
+                        style={{ height: Math.min(100 + totalComments * 30, 800) }}
+                        totalCount={taskComments.length}
+                        initialTopMostItemIndex={taskComments.length - 1}
+                        atTopThreshold={64}
+                        atBottomThreshold={128}
+                        itemContent={(index) => {
+                            const comment = taskComments[index];
+                            return (
+                                <TaskCommentBubble
+                                    key={`task-comment-${comment.commentId}`}
+                                    socket={socket}
+                                    myself={myself}
+                                    comment={comment}
+                                    currentProjectId={task.project?.projectId}
+                                    setIsInEdit={setIsInEdit}
+                                    setEditTargetComment={setEditTargetComment}
+                                    setCurrentChat={setCurrentChat}
+                                    setOpeningService={setOpeningService}
+                                />
+                            );
+                        }}
+                    />
+                </Box>
+            )}
 
             {isInEdit === true && editTargetComment && (
                 <BnUpdateTaskCommentEditor
