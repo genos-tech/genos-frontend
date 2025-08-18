@@ -479,7 +479,9 @@ export const wsHook = (props: wsHookProps) => {
                                 }
 
                                 if (newMessage.isEdited === true) {
-                                    await putMessageHandler(newMessage);
+                                    // As of now, no one can edit PM message.
+                                    // PM thread message is editable tho.
+                                    // await putMessageHandler(newMessage);
                                 } else {
                                     if (fromMe === false) {
                                         if (allChats.length > 0) {

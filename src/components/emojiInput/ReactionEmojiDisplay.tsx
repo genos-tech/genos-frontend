@@ -99,7 +99,7 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                     chat_type: chatType,
                     chat_name: chatName,
                     chat_id: message.chatId,
-                    thread_id: message.threadId,
+                    thread_id: isThread === true ? message.threadId : message.messageId,
                     message_id: message.messageId,
                     message_body: message.content,
                     dm_partner_user_id:
@@ -187,7 +187,6 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         chat_type: chatType,
                         chat_name: chatName,
                         chat_id: message.chatId,
-                        thread_id: -1,
                         message_id: message.threadId,
                         message_body: message.content,
                         dm_partner_user_id:
@@ -245,7 +244,7 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         }
                         color="neutral"
                         size="sm"
-                        sx={{ fontSize: "1rem", cursor: "pointer", px: 0.5, py: 0.5, mx: 0.2 }}
+                        sx={{ fontSize: "0.9rem", cursor: "pointer", px: 0.5, py: 0.5, mx: 0.2 }}
                         onClick={() => handleAddReaction(emoji)}
                     >
                         {emoji}
