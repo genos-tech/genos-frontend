@@ -138,7 +138,14 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         }
                         color="neutral"
                         size="sm"
-                        sx={{ fontSize: "1rem", cursor: "pointer", px: 0.5, py: 0.5, mb: 1 }}
+                        sx={{
+                            fontSize: "0.1rem",
+                            cursor: "pointer",
+                            px: 0.5,
+                            py: 0.5,
+                            mb: 1,
+                            mx: 0.2,
+                        }}
                         onClick={() => handleAddReaction(emoji)}
                     >
                         {emoji}

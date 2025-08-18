@@ -172,8 +172,6 @@ export const wsHook = (props: wsHookProps) => {
 
         await addThreadMessage(newChatMessage, newChatMessage.chatType);
 
-        console.log("currentThreadChat:", currentThreadChat);
-        console.log("newThreadMessage:", newThreadMessage);
         if (
             currentThreadChat !== undefined &&
             newThreadMessage.chatId === currentThreadChat.chatId &&
@@ -527,10 +525,12 @@ export const wsHook = (props: wsHookProps) => {
                     }
                 }
             } else if (message.wsType === "task") {
+                console.log("Got a task comment");
                 if (setIsTaskCommentUpdated) {
                     setIsTaskCommentUpdated(true);
                 }
             } else if (message.wsType === "activity") {
+                console.log("Got an activity message");
                 const newActivityMessage: ActivityMessageProps = message;
                 if (newActivityMessage) {
                     await addActivityMessage(newActivityMessage);

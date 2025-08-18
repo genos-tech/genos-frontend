@@ -48,7 +48,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                     joiningCGId: value.id, // dm_id or gm_id
                     joiningCGName: value.name, // dm_name or gm_name
                     chatType: _chatType,
-                    dmPartnerUserId: value.dmPartnerUser.userId || null,
+                    dmPartnerUserId: value.dmPartnerUser ? value.dmPartnerUser.userId : null,
                 },
                 (ack: any) => {
                     if (Number(value.id) !== -1)
