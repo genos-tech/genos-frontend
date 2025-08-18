@@ -103,6 +103,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             chat_type: thread.chatType,
                             chat_name: thread.chatName,
                             chat_id: message.chatId,
+                            thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
                             dm_partner_user_id:

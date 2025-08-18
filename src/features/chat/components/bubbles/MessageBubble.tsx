@@ -245,6 +245,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             chat_type: chat.chatType,
                             chat_name: chat.chatName,
                             chat_id: message.chatId,
+                            thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
                             dm_partner_user_id:

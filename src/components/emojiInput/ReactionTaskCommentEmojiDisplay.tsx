@@ -139,7 +139,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         color="neutral"
                         size="sm"
                         sx={{
-                            fontSize: "0.1rem",
+                            fontSize: "0.9rem",
                             cursor: "pointer",
                             px: 0.5,
                             py: 0.5,
