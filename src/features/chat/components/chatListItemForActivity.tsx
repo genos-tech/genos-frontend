@@ -1,22 +1,10 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
-import {
-    Avatar,
-    Box,
-    Chip,
-    Tooltip,
-    ListDivider,
-    ListItem,
-    Stack,
-    Typography,
-    IconButton,
-} from "@mui/joy";
+import { Avatar, Box, Chip, Tooltip, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import CircleIcon from "@mui/icons-material/Circle";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -27,7 +15,6 @@ import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { ProjectProps } from "../../../types/tasks";
 import {
     ActivityMessageProps,
-    AllChatProps,
     ChatProps,
     ThreadProps,
     ThreadMessageProps,
@@ -298,10 +285,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
     return (
         <React.Fragment>
-            <ListItem sx={{ width: "100%", p: 1, overflowX: "hidden" }}>
+            <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
                     onClick={onClickHandler}
                     color="neutral"
+                    variant="outlined"
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                 >
                     <Stack direction="column">

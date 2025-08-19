@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import { GlobalStyles, Avatar, Box, Divider, List, ListItem, Sheet } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
@@ -154,6 +155,16 @@ export const Sidebar = (props: SidebarProps) => {
                         "--ListItem-radius": (theme) => theme.vars.radius.sm,
                     }}
                 >
+                    <ListItem>
+                        <ListItemButton onClick={() => {}} title="Inbox">
+                            <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
+                                <NotificationsIcon
+                                    color={openingService === 0 ? "primary" : "disabled"}
+                                    sx={{ fontSize: 20 }}
+                                />
+                            </Box>
+                        </ListItemButton>
+                    </ListItem>
                     <ListItem>
                         <ListItemButton onClick={handleMoveToChat} title="Chats">
                             <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>

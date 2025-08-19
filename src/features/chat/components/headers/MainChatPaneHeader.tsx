@@ -101,7 +101,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         size="sm"
                         sx={{ display: { xs: "none", md: "inline-flex" } }}
                     >
-                        Call
+                        Call (TBD)
                     </Button>
                 )}
 

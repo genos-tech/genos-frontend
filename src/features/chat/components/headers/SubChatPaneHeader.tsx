@@ -93,7 +93,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         size="sm"
                         sx={{ display: { xs: "none", md: "inline-flex" } }}
                     >
-                        Call
+                        Call (TBD)
                     </Button>
                 )}
 
