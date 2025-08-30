@@ -1,0 +1,170 @@
+import { useState, useEffect, useRef } from "react";
+import { Box, List, Card, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+
+import { useScrollToBottomOnNewItem } from "./hooks/inboxHooks";
+import { InboxProps } from "../../types/common";
+import { UserProps } from "../../types/admin";
+import { Sidebar } from "../../components/layout/sidebar";
+import { InboxBubble } from "./components/InboxBubble";
+import { ChatProps } from "../../types/chat";
+
+type InboxHomeProps = {
+    myself: UserProps;
+    socket: Socket | null;
+    setMyself: (me: UserProps) => void;
+    openingService: number;
+    setOpeningService: (service: number) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
+    inboxItems: InboxProps[];
+};
+
+export const InboxHome = (props: InboxHomeProps) => {
+    const {
+        myself,
+        socket,
+        setMyself,
+        openingService,
+        setOpeningService,
+        setCurrentMainChat,
+        inboxItems,
+    } = props;
+    const boxRef = useRef<HTMLDivElement>(null);
+
+    const [activityInboxItems, setActivityInboxItems] = useState<InboxProps[]>([]);
+    const [requestInboxItems, setRequestInboxItems] = useState<InboxProps[]>([]);
+
+    useEffect(() => {
+        const box = boxRef.current;
+        if (box) {
+            box.scrollTop = box.scrollHeight;
+        }
+        setActivityInboxItems(inboxItems.filter((item) => item.itemType === 0));
+        setRequestInboxItems(inboxItems.filter((item) => item.itemType === 1));
+    }, [inboxItems]);
+
+    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    useScrollToBottomOnNewItem(virtuosoRef as React.RefObject<VirtuosoHandle>, inboxItems);
+
+    return (
+        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
+            <Sidebar
+                socket={socket}
+                myself={myself}
+                setMyself={setMyself}
+                openingService={openingService}
+                setOpeningService={setOpeningService}
+                setCurrentMainChat={setCurrentMainChat}
+            />
+            <Stack sx={{ width: "100%" }}>
+                <Card
+                    sx={{
+                        height: "50px",
+                        justifyContent: "center",
+                    }}
+                    variant="soft"
+                    color="neutral"
+                >
+                    <Typography level="h4">Inbox</Typography>
+                </Card>
+
+                <Box sx={{ px: "50px" }}>
+                    <Stack direction="row" sx={{ height: "3dvh" }}>
+                        <Box
+                            sx={{
+                                width: "50%",
+                                display: "flex", // make it a flex container
+                                justifyContent: "center", // horizontal center
+                                alignItems: "center", // vertical center
+                            }}
+                        >
+                            <Typography level="h4" sx={{ mt: "10px" }}>
+                                Activity
+                            </Typography>
+                        </Box>
+
+                        <Box
+                            sx={{
+                                width: "50%",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Typography level="h4" sx={{ mt: "10px" }}>
+                                Request
+                            </Typography>
+                        </Box>
+                    </Stack>
+
+                    <Stack direction={"row"} sx={{ height: "93dvh" }}>
+                        {/* For others inbox */}
+                        <List
+                            size="sm"
+                            sx={{
+                                "--ListItem-paddingY": "0.3rem",
+                                "--ListItem-paddingX": "1rem",
+                                overflowY: "auto",
+                                overflowX: "hidden",
+                            }}
+                            className="custom-scrollbar"
+                        >
+                            <Virtuoso
+                                ref={virtuosoRef}
+                                className="custom-scrollbar"
+                                style={{ height: "100%" }}
+                                totalCount={activityInboxItems.length}
+                                initialTopMostItemIndex={0}
+                                atTopThreshold={64}
+                                atBottomThreshold={128}
+                                itemContent={(index) => {
+                                    const item = activityInboxItems[index];
+                                    return (
+                                        <InboxBubble
+                                            socket={socket}
+                                            myself={myself}
+                                            inboxItem={item}
+                                        />
+                                    );
+                                }}
+                            />
+                        </List>
+
+                        {/* For request inbox */}
+                        <List
+                            size="sm"
+                            sx={{
+                                "--ListItem-paddingY": "0.3rem",
+                                "--ListItem-paddingX": "1rem",
+                                overflowY: "auto",
+                                overflowX: "hidden",
+                            }}
+                            className="custom-scrollbar"
+                        >
+                            <Virtuoso
+                                ref={virtuosoRef}
+                                className="custom-scrollbar"
+                                style={{ height: "100%" }}
+                                totalCount={requestInboxItems.length}
+                                initialTopMostItemIndex={0}
+                                atTopThreshold={64}
+                                atBottomThreshold={128}
+                                itemContent={(index) => {
+                                    const item = requestInboxItems[index];
+                                    return (
+                                        <InboxBubble
+                                            socket={socket}
+                                            myself={myself}
+                                            inboxItem={item}
+                                        />
+                                    );
+                                }}
+                            />
+                        </List>
+                    </Stack>
+                </Box>
+            </Stack>
+        </Box>
+    );
+};

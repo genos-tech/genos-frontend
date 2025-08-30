@@ -120,7 +120,7 @@ export const SignInForm = () => {
                         <Stack sx={{ gap: 4, mb: 2 }}>
                             <Stack sx={{ gap: 1 }}>
                                 <Typography component="h1" level="h3">
-                                    Sign in
+                                    Sign In
                                 </Typography>
                                 <Typography level="body-sm">
                                     New member?{" "}
@@ -195,8 +195,8 @@ export const SignInForm = () => {
                                             Forgot your password?
                                         </Link>
                                     </Box>
-                                    <Button type="submit" fullWidth>
-                                        Sign in
+                                    <Button type="submit" fullWidth variant="soft">
+                                        Sign In
                                     </Button>
                                 </Stack>
                             </form>

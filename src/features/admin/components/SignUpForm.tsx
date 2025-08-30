@@ -157,7 +157,7 @@ export const SignUpForm = () => {
                                 </FormControl>
 
                                 <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Button type="submit" fullWidth>
+                                    <Button type="submit" fullWidth variant="soft">
                                         Sign up
                                     </Button>
                                 </Stack>
@@ -166,7 +166,7 @@ export const SignUpForm = () => {
 
                         <Typography level="body-sm" textAlign={"right"}>
                             <Link href="SignIn" level="title-sm">
-                                Back to Sign in
+                                Back to Sign In
                             </Link>
                         </Typography>
                     </Box>

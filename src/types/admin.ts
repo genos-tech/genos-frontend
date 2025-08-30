@@ -42,19 +42,13 @@ export type MyTeamResponse = {
     team_ids: number[];
 };
 
-export type TeamDetails = {
-    teamId: string;
-    teamName: string;
-    teamEmail: string;
-};
-
 export type FindTeamResponse = {
     exist: boolean;
-    teamDetails: TeamDetails;
+    teamDetails: Team;
 };
 
 export type CreateTeamResponse = {
-    teamDetails: TeamDetails;
+    teamDetails: Team;
     detail: string | null;
     hint: string | null;
 };

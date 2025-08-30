@@ -12,3 +12,11 @@ export type ReactionProps = {
     sender: UserProps;
     tsSent: string;
 };
+
+export type InboxProps = {
+    itemId: number;
+    itemBody: string;
+    itemType: number;
+    isRead: boolean;
+    tsSent: string;
+};

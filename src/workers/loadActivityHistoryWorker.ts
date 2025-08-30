@@ -4,7 +4,7 @@ import { ActivityMessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
 import { clearStore, miniBatchInsertMessages } from "../db/crud";
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 1000;
 
 self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;

@@ -4,7 +4,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 
-import { loadAllTeams } from "../services/loadAllTeams";
+import { loadMyTeams } from "../services/loadMyTeams";
 import { joinTeam } from "../services/joinTeam";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sendDMMessage } from "../../chat/services/sendDMMessage";
@@ -53,12 +53,13 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     };
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        (async () => {
-            const loadedTeams: Team[] = await loadAllTeams(accessToken);
-            setTeams(loadedTeams);
-        })();
-
-        setAnchorEl(event.currentTarget);
+        if (accessToken !== null) {
+            (async () => {
+                const loadedTeams: Team[] = await loadMyTeams(accessToken, myself.userId);
+                setTeams(loadedTeams);
+            })();
+            setAnchorEl(event.currentTarget);
+        }
     };
 
     const handleClose = () => {

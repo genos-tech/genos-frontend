@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { defaultDmPartner } from "../features/chat/services/constants";
+import LoadInboxWorker from "../workers/loadInboxWorker.ts?worker";
 import LoadActivityHistoryWorker from "../workers/loadActivityHistoryWorker.ts?worker";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
@@ -19,6 +20,7 @@ export const loadInitialData = (
     setIsLoading: (state: boolean) => void,
     setCurrentMainChat: (value: ChatProps) => void
 ) => {
+    const [isInboxLoaded, setIsInboxLoaded] = useState<boolean | null>(false);
     const [isActivityHistoryLoaded, setIsActivityHistoryLoaded] = useState<boolean | null>(false);
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
@@ -28,6 +30,25 @@ export const loadInitialData = (
     const [latestDmChatId, setLatestDmChatId] = useState<number | null>(null);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
     const [InitialChatMessages, setInitialChatMessages] = useState<MessageProps[]>();
+
+    // Load Inbox
+    useEffect(() => {
+        if (accessToken && myself.userId !== "" && myself.userName !== "") {
+            const loadInboxWorker = new LoadInboxWorker();
+            loadInboxWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadInboxWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    setIsInboxLoaded(true);
+                } else {
+                    console.error("Failed initial inbox data loading");
+                    console.error("event.data:", event.data);
+                }
+            };
+            return () => {
+                loadInboxWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
 
     // Load Activity history
     useEffect(() => {
@@ -241,6 +262,7 @@ export const loadInitialData = (
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
         if (
+            isInboxLoaded &&
             isActivityHistoryLoaded &&
             isDMHistoryLoaded &&
             isGMHistoryLoaded &&
@@ -252,6 +274,7 @@ export const loadInitialData = (
             setIsLoading(false);
         }
     }, [
+        isInboxLoaded,
         isActivityHistoryLoaded,
         isDMHistoryLoaded,
         isGMHistoryLoaded,
