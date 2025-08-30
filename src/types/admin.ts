@@ -42,9 +42,19 @@ export type MyTeamResponse = {
     team_ids: number[];
 };
 
-export type JoinTeamResponse = {
+export type TeamDetails = {
     teamId: string;
     teamName: string;
+    teamEmail: string;
+};
+
+export type FindTeamResponse = {
+    exist: boolean;
+    teamDetails: TeamDetails;
+};
+
+export type CreateTeamResponse = {
+    teamDetails: TeamDetails;
     detail: string | null;
     hint: string | null;
 };

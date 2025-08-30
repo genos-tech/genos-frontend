@@ -2,7 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
-export const getMyTeams = async (
+export const loadMyTeams = async (
     accessToken: string,
     userId: string,
     setErrorMessage?: (value: string) => void
