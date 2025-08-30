@@ -12,10 +12,13 @@ import { UserProps } from "./types/admin";
 import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
+import { popInboxItems } from "./features/inbox/services/popInboxItems";
 import { popAllChats } from "./features/chat/services/popAllChats";
 import { popActivityMessages } from "./features/chat/services/popActivityMessages";
 import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
+import { InboxHome } from "./features/inbox/inboxHome";
+import { InboxProps } from "./types/common";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -92,7 +95,7 @@ export const App = () => {
     const [isWSConnected, setIsWSConnected] = useState(false);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
-    // {1: Chat, 2: Tasks, 3: Notes}
+    // {0: Inbox, 1: Chat, 2: Tasks, 3: Notes}
     const [openingService, setOpeningService] = useState<number>(
         Number(localStorage.getItem("openingService") || "1")
     );
@@ -106,6 +109,13 @@ export const App = () => {
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState(false);
+    const [inboxItems, setInboxItems] = useState<InboxProps[]>([]);
+    const funcSetInboxItems = async () => {
+        const inboxItems: InboxProps[] = await popInboxItems();
+        if (inboxItems) {
+            setInboxItems(inboxItems);
+        }
+    };
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const funcSetAllChats = async () => {
         const _allChats: AllChatProps[] = await popAllChats();
@@ -129,6 +139,7 @@ export const App = () => {
     };
 
     useEffect(() => {
+        funcSetInboxItems();
         funcSetAllChats();
         funcSetActivityMessages();
     }, []);
@@ -139,6 +150,7 @@ export const App = () => {
 
     useEffect(() => {
         if (isLoading === false) {
+            funcSetInboxItems();
             funcSetAllChats();
             funcSetActivityMessages();
 
@@ -146,12 +158,6 @@ export const App = () => {
             funcSetTeamMembers();
         }
     }, [isLoading]);
-
-    useEffect(() => {
-        if (openingService === 1) {
-            // console.log("Open Chat")
-        }
-    }, [openingService]);
 
     useEffect(() => {
         if (accessToken) {
@@ -187,6 +193,18 @@ export const App = () => {
         <div className="main-container">
             <CssVarsProvider disableTransitionOnChange>
                 <CssBaseline />
+
+                {openingService === 0 ? (
+                    <InboxHome
+                        myself={myself}
+                        socket={socketInstance}
+                        setMyself={setMyself}
+                        openingService={openingService}
+                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
+                        inboxItems={inboxItems}
+                    />
+                ) : null}
 
                 {openingService === 1 ? (
                     <ChatHome

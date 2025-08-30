@@ -2,14 +2,22 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
-export const loadAllTeams = async (accessToken: string | null) => {
+export const loadMyTeams = async (
+    accessToken: string,
+    userId: string,
+    setErrorMessage?: (value: string) => void
+) => {
     try {
         const api = authApi(accessToken);
+        const query = `user_id=${userId}`;
         if (api) {
-            const res = await api.get("/team/getAllTeams/");
+            const res = await api.get(`/team/getMyTeams/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");
+            if (setErrorMessage) {
+                setErrorMessage("Unauthorized. Auth toke is not found.");
+            }
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

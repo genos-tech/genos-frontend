@@ -3,6 +3,12 @@ import { initDB } from "./schema";
 import { DB_NAME, DB_VERSION, STORES, INDEX } from "./conf";
 
 const _messageIdWithChatId = {
+    Inbox: async () => {
+        const db = await openDB(DB_NAME, DB_VERSION);
+        const inboxStore = db.transaction(STORES.INBOX).objectStore(STORES.INBOX);
+        const inbox = await inboxStore.getAll();
+        return inbox;
+    },
     activityMessages: async () => {
         const db = await openDB(DB_NAME, DB_VERSION);
         const activityMessagesStore = db
@@ -161,7 +167,10 @@ export const getSpecificDataWithIndex = async (props: any) => {
 };
 
 export const messageIdWithChatId = async (props: any) => {
-    if (props.storeName === STORES.ACTIVITY_MESSAGES) {
+    if (props.storeName === STORES.INBOX) {
+        const data = await _messageIdWithChatId.Inbox();
+        return data;
+    } else if (props.storeName === STORES.ACTIVITY_MESSAGES) {
         const data = await _messageIdWithChatId.activityMessages();
         return data;
     } else if (props.storeName === STORES.DM_CHATS) {

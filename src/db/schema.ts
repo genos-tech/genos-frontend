@@ -13,6 +13,13 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 userInfoStore.createIndex(INDEX.USER_INFO, INDEX_KEY.USER_INFO, { unique: false });
             }
 
+            // Inbox
+            if (!db.objectStoreNames.contains(STORES.INBOX)) {
+                db.createObjectStore(STORES.INBOX, {
+                    keyPath: KEY_PATH.INBOX,
+                });
+            }
+
             // For Activity messages
             if (!db.objectStoreNames.contains(STORES.ACTIVITY_MESSAGES)) {
                 db.createObjectStore(STORES.ACTIVITY_MESSAGES, {

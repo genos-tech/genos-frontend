@@ -1,3 +1,4 @@
+import { io, Socket } from "socket.io-client";
 import React, { useEffect, useState } from "react";
 import {
     Alert,
@@ -23,31 +24,75 @@ import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
 import { createTeam } from "../services/createTeam";
 import { joinTeam } from "../services/joinTeam";
-import { loadAllTeams } from "../services/loadAllTeams";
+import { findTeam } from "../services/findTeam";
+import { loadMyTeams } from "../services/loadMyTeams";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sendDMMessage } from "../../chat/services/sendDMMessage";
 import { sleepMilliSeconds } from "../../../utils/sleep";
 import { useAuth } from "../../../context/AuthContext";
-import { Team, CreateDMResponse, JoinTeamResponse } from "../../../types/admin";
+import {
+    Team,
+    CreateDMResponse,
+    CreateTeamResponse,
+    FindTeamResponse,
+} from "../../../types/admin";
+import { wsJoinTeamHook } from "../../../hooks/wsJoinTeamHook";
 
-interface FormElements extends HTMLFormControlsCollection {
+interface FindTeamFormElements extends HTMLFormControlsCollection {
+    teamId: HTMLInputElement;
+}
+interface FindTeamFormElement extends HTMLFormElement {
+    readonly elements: FindTeamFormElements;
+}
+
+interface JoinTeamFormElements extends HTMLFormControlsCollection {
     teamName: HTMLInputElement;
 }
 interface JoinTeamFormElement extends HTMLFormElement {
-    readonly elements: FormElements;
+    readonly elements: JoinTeamFormElements;
 }
 
 export const JoinTeam = () => {
     const navigate = useNavigate();
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [searchTeamMessage, setSearchMessage] = useState<string | null>(null);
+    const [moveToTeamErrorMessage, setMoveToTeamErrorMessage] = useState<string | null>(null);
+    const [searchTeamErrorMessage, setSearchTeamErrorMessage] = useState<string | null>(null);
+    const [createTeamErrorMessage, setCreateTeamErrorMessage] = useState<string | null>(null);
     const { accessToken } = useAuth();
-    const [teams, setTeams] = useState<Team[]>([]);
+    const [joinedTeams, setJoinedTeams] = useState<Team[]>([]);
+
+    const ws_url = import.meta.env.VITE_WS_BASE_URL;
+    const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+    const socket = (accessToken: string | null): Socket => {
+        return io(ws_url, {
+            reconnection: true, // Enable reconnection
+            reconnectionAttempts: 5, // Try to reconnect 5 times
+            reconnectionDelay: 1000, // Wait 1 second before reconnecting
+            reconnectionDelayMax: 5000, // Max delay between reconnection attempts
+            timeout: 10000, // Timeout for the connection attempt
+            withCredentials: true,
+            query: {
+                teamId: localStorage.getItem("teamId"),
+                userId: localStorage.getItem("userId"),
+                userName: localStorage.getItem("userName"),
+                userEmail: localStorage.getItem("userEmail"),
+            },
+            extraHeaders: {
+                Authorization: accessToken || "",
+            },
+        });
+    };
 
     const moveToTeam = async (teamId: string, teamName: string) => {
         const userId: string | null = localStorage.getItem("userId");
 
         if (userId) {
-            const joinTeamRes = await joinTeam(accessToken, teamId, userId, setErrorMessage);
+            const joinTeamRes = await joinTeam(
+                accessToken,
+                teamId,
+                userId,
+                setMoveToTeamErrorMessage
+            );
 
             localStorage.setItem("teamId", teamId);
             localStorage.setItem("teamName", teamName);
@@ -58,7 +103,7 @@ export const JoinTeam = () => {
                     teamId,
                     userId,
                     userId,
-                    setErrorMessage
+                    setMoveToTeamErrorMessage
                 );
 
                 if (createDmRes && createDmRes.dm_exists === false) {
@@ -76,7 +121,7 @@ export const JoinTeam = () => {
                         createDmRes.user_1_id,
                         createDmRes.user_2_id,
                         initMessageBody,
-                        setErrorMessage,
+                        setMoveToTeamErrorMessage,
                         true
                     );
 
@@ -90,18 +135,34 @@ export const JoinTeam = () => {
         }
     };
 
+    const getApproveToJoinTeam = async (targetTeamDetails: Team) => {
+        const userId: string | null = localStorage.getItem("userId");
+        if (userId && socketInstance !== null) {
+            // Sent a request to join the team.
+            // The team owner(s) will get the request and they only can approve it.
+            socketInstance.emit("join_team_request", {
+                joiningTeamId: targetTeamDetails.teamId,
+                joiningTeamName: targetTeamDetails.teamName,
+            });
+            setSearchMessage("Sent a request to join the team!");
+            setFoundTeamDetails(undefined);
+        } else {
+            console.error("userId is not found in your localStorage");
+        }
+    };
+
     const _createTeam = async (teamName: string) => {
         const userId: string | null = localStorage.getItem("userId");
         if (userId) {
-            const createTeamRes: JoinTeamResponse = await createTeam(
+            const createTeamRes: CreateTeamResponse = await createTeam(
                 accessToken,
                 teamName,
                 userId,
-                setErrorMessage
+                setCreateTeamErrorMessage
             );
             await sleepMilliSeconds(100);
             if (createTeamRes) {
-                moveToTeam(createTeamRes.teamId, createTeamRes.teamName);
+                moveToTeam(createTeamRes.teamDetails.teamId, createTeamRes.teamDetails.teamName);
             } else {
                 navigate("/JoinTeam");
             }
@@ -110,14 +171,45 @@ export const JoinTeam = () => {
         }
     };
 
+    const [foundTeamDetails, setFoundTeamDetails] = useState<Team>();
+    const getTeamInfo = async (teamId: string) => {
+        const findTeamRes: FindTeamResponse = await findTeam(
+            accessToken,
+            teamId,
+            setSearchTeamErrorMessage
+        );
+        if (findTeamRes.exist === true) {
+            if (joinedTeams.some((team) => team.teamId === findTeamRes.teamDetails.teamId)) {
+                setSearchTeamErrorMessage("Already joined");
+            } else {
+                setFoundTeamDetails(findTeamRes.teamDetails);
+            }
+        } else {
+            setFoundTeamDetails(undefined);
+        }
+    };
+
     useEffect(() => {
-        if (accessToken !== null) {
+        const userId: string | null = localStorage.getItem("userId");
+        if (accessToken !== null && userId !== null) {
             (async () => {
-                const loadedTeams: Team[] = await loadAllTeams(accessToken);
-                setTeams(loadedTeams);
+                const loadedTeams: Team[] = await loadMyTeams(accessToken, userId);
+                setJoinedTeams(loadedTeams);
             })();
         }
     }, [accessToken]);
+
+    useEffect(() => {
+        if (accessToken) {
+            setSocketInstance(socket(accessToken));
+            console.log("WS connected");
+        }
+    }, [accessToken]);
+
+    wsJoinTeamHook({
+        socket: socketInstance,
+        accessToken: accessToken,
+    });
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -166,7 +258,7 @@ export const JoinTeam = () => {
                             display: "flex",
                             flexDirection: "column",
                             gap: 2,
-                            width: 400,
+                            minWidth: "400px",
                             maxWidth: "100%",
                             mx: "auto",
                             borderRadius: "sm",
@@ -180,7 +272,7 @@ export const JoinTeam = () => {
                             },
                         }}
                     >
-                        {teams.length > 0 && (
+                        {joinedTeams.length > 0 && (
                             <Box
                                 component="main"
                                 sx={{
@@ -204,8 +296,11 @@ export const JoinTeam = () => {
                                     },
                                 }}
                             >
+                                {moveToTeamErrorMessage && (
+                                    <Alert color="danger">{moveToTeamErrorMessage}</Alert>
+                                )}
                                 <Typography component="h1" level="h3">
-                                    Join Team
+                                    Join Your Team
                                 </Typography>
 
                                 <List
@@ -215,7 +310,7 @@ export const JoinTeam = () => {
                                         overflow: "auto",
                                     }}
                                 >
-                                    {teams.map((team) => (
+                                    {joinedTeams.map((team) => (
                                         <ListItemButton
                                             key={team.teamId}
                                             title={team.teamEmail}
@@ -235,15 +330,107 @@ export const JoinTeam = () => {
                             </Box>
                         )}
 
-                        <Stack sx={{ gap: 4, mb: 2 }}>
+                        {foundTeamDetails !== undefined && (
+                            <Stack sx={{ gap: 1, mb: 2 }}>
+                                <Stack sx={{ gap: 1 }}>
+                                    <Typography component="h1" level="h3">
+                                        Found the Team
+                                    </Typography>
+                                </Stack>
+                                {moveToTeamErrorMessage && (
+                                    <Alert color="danger">{moveToTeamErrorMessage}</Alert>
+                                )}
+                                <List
+                                    component="nav"
+                                    sx={{
+                                        maxHeight: 300,
+                                        overflow: "auto",
+                                    }}
+                                >
+                                    <ListItemButton
+                                        key={foundTeamDetails.teamId}
+                                        title={foundTeamDetails.teamEmail}
+                                        onClick={() => {
+                                            getApproveToJoinTeam(foundTeamDetails);
+                                        }}
+                                    >
+                                        <ListItemDecorator>
+                                            <AcUnitIcon />
+                                        </ListItemDecorator>
+                                        <Typography component="h1" level="h4">
+                                            {foundTeamDetails.teamName} (
+                                            {foundTeamDetails.teamEmail})
+                                        </Typography>
+                                    </ListItemButton>
+                                </List>
+                                <Stack
+                                    direction={"row"}
+                                    gap={2}
+                                    justifyContent={"center"}
+                                    sx={{ mb: 5 }}
+                                >
+                                    <Button
+                                        variant="outlined"
+                                        onClick={() => {
+                                            setFoundTeamDetails(undefined);
+                                        }}
+                                    >
+                                        Search another team
+                                    </Button>
+                                    <Button
+                                        variant="soft"
+                                        onClick={() => {
+                                            getApproveToJoinTeam(foundTeamDetails);
+                                        }}
+                                    >
+                                        Get Approval to Join
+                                    </Button>
+                                </Stack>
+                            </Stack>
+                        )}
+                        {foundTeamDetails === undefined && (
+                            <Stack sx={{ gap: 1, mb: 2 }}>
+                                <Stack sx={{ gap: 1 }}>
+                                    <Typography component="h1" level="h3">
+                                        Search by Team ID
+                                    </Typography>
+                                </Stack>
+                                {searchTeamMessage && (
+                                    <Alert color="success">{searchTeamMessage}</Alert>
+                                )}
+                                {searchTeamErrorMessage && (
+                                    <Alert color="danger">{searchTeamErrorMessage}</Alert>
+                                )}
+                                <form
+                                    onSubmit={(event: React.FormEvent<FindTeamFormElement>) => {
+                                        event.preventDefault(); // Needs for prevent reload page
+                                        const formElements = event.currentTarget.elements;
+                                        const teamId = formElements.teamId.value;
+                                        getTeamInfo(teamId);
+                                    }}
+                                >
+                                    <FormControl required>
+                                        <FormLabel>Team Id</FormLabel>
+                                        <Input type="name" name="teamId" />
+                                    </FormControl>
+                                    <Stack sx={{ gap: 1, mb: 5 }}>
+                                        <Button type="submit" fullWidth variant="soft">
+                                            Search
+                                        </Button>
+                                    </Stack>
+                                </form>
+                            </Stack>
+                        )}
+
+                        <Stack sx={{ gap: 1, mb: 2 }}>
                             <Stack sx={{ gap: 1 }}>
                                 <Typography component="h1" level="h3">
                                     Create New Team
                                 </Typography>
                             </Stack>
-                            {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
-                        </Stack>
-                        <Stack sx={{ gap: 4 }}>
+                            {createTeamErrorMessage && (
+                                <Alert color="danger">{createTeamErrorMessage}</Alert>
+                            )}
                             <form
                                 onSubmit={(event: React.FormEvent<JoinTeamFormElement>) => {
                                     event.preventDefault(); // Needs for prevent reload page
@@ -256,8 +443,8 @@ export const JoinTeam = () => {
                                     <FormLabel>Team Name</FormLabel>
                                     <Input type="name" name="teamName" />
                                 </FormControl>
-                                <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Button type="submit" fullWidth>
+                                <Stack sx={{ gap: 1 }}>
+                                    <Button type="submit" fullWidth variant="soft">
                                         Create
                                     </Button>
                                 </Stack>
@@ -266,7 +453,7 @@ export const JoinTeam = () => {
 
                         <Typography level="body-sm" textAlign={"right"}>
                             <Link href="SignIn" level="title-sm">
-                                Back to Sign in
+                                Back to Sign In
                             </Link>
                         </Typography>
                     </Box>

@@ -1,8 +1,9 @@
 export const DB_NAME = "originData";
-export const DB_VERSION = 11;
+export const DB_VERSION = 12;
 
 export const STORES = {
     USER_INFO: "users",
+    INBOX: "inbox",
     ACTIVITY_MESSAGES: "activityChats",
     DM_CHATS: "dmChats",
     DM_MESSAGES: "dmMessages",
@@ -18,6 +19,7 @@ export const STORES = {
 
 export const KEY_PATH = {
     USER_INFO: "userId",
+    INBOX: "itemId",
     ACTIVITY_MESSAGES: "activityId",
     DM_CHATS: "chatId",
     DM_MESSAGES: "messageIdWithChatId",

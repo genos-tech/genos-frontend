@@ -2,22 +2,19 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
-export const getMyTeams = async (
-    accessToken: string,
+export const loadInbox = async (
+    teamId: string,
     userId: string,
-    setErrorMessage?: (value: string) => void
+    accessToken: string | null
 ) => {
     try {
         const api = authApi(accessToken);
-        const query = `user_id=${userId}`;
         if (api) {
-            const res = await api.get(`/team/getMyTeams/?${query}`);
+            const query: string = `team_id=${teamId}&user_id=${userId}`;
+            const res = await api.get(`/inbox/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");
-            if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
-            }
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

@@ -32,7 +32,7 @@ import { loadProjectTags } from "../services/loadProjectTags";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps, TagListProps, SearchTeamTasksResponse } from "../../../types/tasks";
-import { loadAllTeams } from "../../admin/services/loadAllTeams";
+import { loadMyTeams } from "../../admin/services/loadMyTeams";
 import { Team } from "../../../types/admin";
 
 function Toggler({
@@ -191,10 +191,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     const [teams, setTeams] = useState<Team[]>([]);
     const loadTeams = () => {
-        (async () => {
-            const loadedTeams: Team[] = await loadAllTeams(accessToken);
-            setTeams(loadedTeams);
-        })();
+        if (accessToken !== null) {
+            (async () => {
+                const loadedTeams: Team[] = await loadMyTeams(accessToken, myself.userId);
+                setTeams(loadedTeams);
+            })();
+        }
     };
 
     useEffect(() => {

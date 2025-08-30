@@ -62,6 +62,11 @@ export const Sidebar = (props: SidebarProps) => {
         }
     };
 
+    const handleMoveToInbox = (): void => {
+        setOpeningService(0);
+        localStorage.setItem("openingService", "0");
+    };
+
     const handleMoveToChat = (): void => {
         setOpeningService(1);
         localStorage.setItem("openingService", "1");
@@ -156,7 +161,7 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <ListItemButton onClick={() => {}} title="Inbox">
+                        <ListItemButton onClick={handleMoveToInbox} title="Inbox">
                             <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                 <NotificationsIcon
                                     color={openingService === 0 ? "primary" : "disabled"}
