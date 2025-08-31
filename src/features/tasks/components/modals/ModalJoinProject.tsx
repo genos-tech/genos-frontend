@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import React, { useState } from "react";
 import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
 
@@ -14,6 +15,7 @@ const disableOpenJoinModalParams = {
 };
 
 type Props = {
+    socket: Socket | null;
     myself: UserProps;
     openJoinProject: {
         flag: boolean;
@@ -31,53 +33,90 @@ type Props = {
 };
 
 export const ModalJoinProject: React.FC<Props> = ({
+    socket,
     myself,
     openJoinProject,
     setOpenJoinProject,
     setCurrentProject,
 }) => {
     const { accessToken } = useAuth();
-
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const handleJoinProject = () => {
-        joinProject();
-    };
     async function joinProject(): Promise<void> {
         try {
-            const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    team_id: myself.teamId,
-                    project_id: openJoinProject.projectId,
-                    attendee_id: myself.userId,
-                }),
-            });
-
-            const joinProjectData = await joinProjectResponse.json();
-
-            if (!joinProjectResponse.ok) {
-                console.error(joinProjectData);
-                throw new Error(joinProjectData.hint || "Failed to join the created project");
-            } else {
-                setCurrentProject({
-                    projectId: openJoinProject.projectId,
-                    projectName: openJoinProject.projectName,
-                    projectTags: [],
-                    systemUserId: openJoinProject.systemUserId,
-                });
+            if (socket !== null) {
+                socket.emit(
+                    "join_project_request",
+                    {
+                        teamId: myself.teamId,
+                        joiningProjectId: openJoinProject.projectId,
+                        joiningProjectName: openJoinProject.projectName,
+                    },
+                    async (ack: any) => {
+                        const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                            body: JSON.stringify({
+                                team_id: myself.teamId,
+                                sender_id: myself.userId,
+                                receiver_id: myself.userId,
+                                item_body: `Sent a request to join the project: ${openJoinProject.projectName}.`,
+                                item_type: 0,
+                            }),
+                        });
+                        if (!sendInboxMessageResponse.ok) {
+                            throw new Error("Failed to send a inbox message");
+                        }
+                    }
+                );
                 setOpenJoinProject(disableOpenJoinModalParams);
+            } else {
+                const err_msg: string = "Socket not found.";
+                console.error(err_msg);
+                setErrorMessage(err_msg);
+                throw new Error(err_msg);
             }
+
+            // const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
+            //     method: "POST",
+            //     headers: {
+            //         "Content-Type": "application/json",
+            //         Authorization: `Bearer ${accessToken}`,
+            //     },
+            //     body: JSON.stringify({
+            //         team_id: myself.teamId,
+            //         project_id: openJoinProject.projectId,
+            //         attendee_id: myself.userId,
+            //     }),
+            // });
+
+            // const joinProjectData = await joinProjectResponse.json();
+
+            // if (!joinProjectResponse.ok) {
+            //     console.error(joinProjectData);
+            //     throw new Error(joinProjectData.hint || "Failed to join the created project");
+            // } else {
+            //     setCurrentProject({
+            //         projectId: openJoinProject.projectId,
+            //         projectName: openJoinProject.projectName,
+            //         projectTags: [],
+            //         systemUserId: openJoinProject.systemUserId,
+            //     });
+            //     setOpenJoinProject(disableOpenJoinModalParams);
+            // }
         } catch (error) {
             const err_msg = `${error}`;
             console.error(err_msg);
             setErrorMessage(err_msg);
         }
     }
+
+    const handleJoinProject = () => {
+        joinProject();
+    };
 
     return (
         <>
@@ -88,7 +127,7 @@ export const ModalJoinProject: React.FC<Props> = ({
             >
                 <ModalDialog>
                     <Typography level="h4">
-                        Joining{" "}
+                        Sending a request to join{" "}
                         <Typography level="h3" color="primary">
                             {openJoinProject.projectName}
                         </Typography>
@@ -105,8 +144,13 @@ export const ModalJoinProject: React.FC<Props> = ({
                         >
                             Cancel
                         </Button>
-                        <Button component="button" color="primary" onClick={handleJoinProject}>
-                            Join (Get approval)
+                        <Button
+                            component="button"
+                            variant="soft"
+                            color="primary"
+                            onClick={handleJoinProject}
+                        >
+                            Send
                         </Button>
                     </Stack>
                 </ModalDialog>

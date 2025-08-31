@@ -41,7 +41,9 @@ export const InboxHome = (props: InboxHomeProps) => {
             box.scrollTop = box.scrollHeight;
         }
         setActivityInboxItems(inboxItems.filter((item) => item.itemType === 0));
-        setRequestInboxItems(inboxItems.filter((item) => item.itemType === 1));
+        setRequestInboxItems(
+            inboxItems.filter((item) => item.itemType === 1 || item.itemType === 2)
+        );
     }, [inboxItems]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
@@ -80,7 +82,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             }}
                         >
                             <Typography level="h4" sx={{ mt: "10px" }}>
-                                Activity
+                                Activities
                             </Typography>
                         </Box>
 
@@ -93,7 +95,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             }}
                         >
                             <Typography level="h4" sx={{ mt: "10px" }}>
-                                Request
+                                Requests
                             </Typography>
                         </Box>
                     </Stack>

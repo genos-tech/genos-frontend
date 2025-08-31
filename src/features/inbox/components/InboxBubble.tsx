@@ -83,6 +83,67 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         }
     }
 
+    async function approveProjectJoin(itemId: number): Promise<void> {
+        try {
+            const approveTeamJoinResponse = await fetch(`${base_url}/project/join/fromInbox/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    team_id: myself.teamId,
+                    item_id: itemId,
+                }),
+            });
+
+            const approveTeamJoinData = await approveTeamJoinResponse.json();
+
+            if (!approveTeamJoinResponse.ok) {
+                throw new Error("Project Creation Failed");
+            } else {
+                const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        team_id: myself.teamId,
+                        sender_id: myself.userId,
+                        receiver_id: approveTeamJoinData.attendee,
+                        item_body: `Your request to join the team has been approved.`,
+                        item_type: 0,
+                    }),
+                });
+
+                if (!sendInboxMessageResponse.ok) {
+                    throw new Error("Failed to send approved message");
+                } else {
+                    const updateInboxItemResponse = await fetch(`${base_url}/inbox/`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify({
+                            team_id: myself.teamId,
+                            item_id: itemId,
+                            is_read: true,
+                        }),
+                    });
+
+                    if (!updateInboxItemResponse.ok) {
+                        throw new Error("Failed to update inbox item");
+                    }
+                }
+            }
+        } catch (error) {
+            const err_msg = `${error}`;
+            console.error(err_msg);
+        }
+    }
+
     return (
         <Box
             ref={boxRef}
@@ -105,18 +166,13 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     }}
                 >
                     <Stack direction="row" alignItems="center">
-                        <Typography level="body-xs" fontWeight="bold">
-                            {extractMMDDHHMM(inboxItem.tsSent)}
-                        </Typography>
-
                         {inboxItem.itemType === 1 && (
                             <Chip
                                 key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
                                 variant="soft"
                                 color="neutral"
                                 sx={{
-                                    marginLeft: "auto",
-                                    marginRight: "7px",
+                                    marginRight: "auto",
                                     borderRadius: "7px",
                                     fontWeight: "bold",
                                 }}
@@ -125,11 +181,30 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 Team Request
                             </Chip>
                         )}
+                        {inboxItem.itemType === 2 && (
+                            <Chip
+                                key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
+                                variant="soft"
+                                color="neutral"
+                                sx={{
+                                    marginRight: "auto",
+                                    borderRadius: "7px",
+                                    fontWeight: "bold",
+                                }}
+                                size="md"
+                            >
+                                Project Request
+                            </Chip>
+                        )}
+
+                        <Typography level="body-xs" fontWeight="bold">
+                            {extractMMDDHHMM(inboxItem.tsSent)}
+                        </Typography>
                     </Stack>
 
                     <Typography>{inboxItem.itemBody}</Typography>
 
-                    {inboxItem.itemType === 1 &&
+                    {(inboxItem.itemType === 1 || inboxItem.itemType === 2) &&
                         (inboxItem.isRead === true || requestApproved === true) && (
                             <Button
                                 variant="outlined"
@@ -141,7 +216,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 Approved
                             </Button>
                         )}
-                    {inboxItem.itemType === 1 &&
+                    {(inboxItem.itemType === 1 || inboxItem.itemType === 2) &&
                         inboxItem.isRead === false &&
                         requestApproved === false && (
                             <Button
@@ -149,7 +224,12 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 size="sm"
                                 sx={{ width: "100px", alignSelf: "flex-end" }}
                                 onClick={() => {
-                                    approveTeamJoin(inboxItem.itemId);
+                                    if (inboxItem.itemType === 1) {
+                                        approveTeamJoin(inboxItem.itemId);
+                                    }
+                                    if (inboxItem.itemType === 2) {
+                                        approveProjectJoin(inboxItem.itemId);
+                                    }
                                     setRequestApproved(true);
                                 }}
                             >
