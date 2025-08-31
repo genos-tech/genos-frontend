@@ -922,7 +922,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                         myself={myself}
                         openJoinProject={openJoinProject}
                         setOpenJoinProject={setOpenJoinProject}
-                        setCurrentProject={setCurrentProject}
                     />
 
                     {/* Modal for deleting a project */}

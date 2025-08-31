@@ -29,15 +29,12 @@ type Props = {
         projectName: string;
         systemUserId: string;
     }) => void;
-    setCurrentProject: (value: ProjectProps) => void;
 };
-
 export const ModalJoinProject: React.FC<Props> = ({
     socket,
     myself,
     openJoinProject,
     setOpenJoinProject,
-    setCurrentProject,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -79,34 +76,6 @@ export const ModalJoinProject: React.FC<Props> = ({
                 setErrorMessage(err_msg);
                 throw new Error(err_msg);
             }
-
-            // const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json",
-            //         Authorization: `Bearer ${accessToken}`,
-            //     },
-            //     body: JSON.stringify({
-            //         team_id: myself.teamId,
-            //         project_id: openJoinProject.projectId,
-            //         attendee_id: myself.userId,
-            //     }),
-            // });
-
-            // const joinProjectData = await joinProjectResponse.json();
-
-            // if (!joinProjectResponse.ok) {
-            //     console.error(joinProjectData);
-            //     throw new Error(joinProjectData.hint || "Failed to join the created project");
-            // } else {
-            //     setCurrentProject({
-            //         projectId: openJoinProject.projectId,
-            //         projectName: openJoinProject.projectName,
-            //         projectTags: [],
-            //         systemUserId: openJoinProject.systemUserId,
-            //     });
-            //     setOpenJoinProject(disableOpenJoinModalParams);
-            // }
         } catch (error) {
             const err_msg = `${error}`;
             console.error(err_msg);

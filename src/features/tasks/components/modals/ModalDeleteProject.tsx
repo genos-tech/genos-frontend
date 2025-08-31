@@ -38,9 +38,13 @@ export const ModalDeleteProject: React.FC<Props> = ({
             const api = authApi(accessToken);
             if (api) {
                 const query: string = `team_id=${myself.teamId}&project_id=${openDeleteProject.projectId}`;
-                await api.delete(`/project/?${query}`);
-                setCurrentProject(null);
-                setOpenDeleteProject(disableOpenDeleteModalParams);
+                const res = await api.delete(`/project/?${query}`);
+                if (res.status === 204) {
+                    setCurrentProject(null);
+                    setOpenDeleteProject(disableOpenDeleteModalParams);
+                } else if (res.status === 200) {
+                    setErrorMessage(res.data.message);
+                }
             } else {
                 console.error("Unauthorized. Auth toke is not found.");
             }
