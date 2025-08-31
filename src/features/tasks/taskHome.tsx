@@ -918,6 +918,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                     {/* Modal for creating a new project */}
                     <ModalJoinProject
+                        socket={socket}
                         myself={myself}
                         openJoinProject={openJoinProject}
                         setOpenJoinProject={setOpenJoinProject}

@@ -38,6 +38,8 @@ import {
 } from "../../../types/admin";
 import { wsJoinTeamHook } from "../../../hooks/wsJoinTeamHook";
 
+const base_url = import.meta.env.VITE_API_BASE_URL;
+
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
 }
@@ -140,10 +142,32 @@ export const JoinTeam = () => {
         if (userId && socketInstance !== null) {
             // Sent a request to join the team.
             // The team owner(s) will get the request and they only can approve it.
-            socketInstance.emit("join_team_request", {
-                joiningTeamId: targetTeamDetails.teamId,
-                joiningTeamName: targetTeamDetails.teamName,
-            });
+            socketInstance.emit(
+                "join_team_request",
+                {
+                    joiningTeamId: targetTeamDetails.teamId,
+                    joiningTeamName: targetTeamDetails.teamName,
+                },
+                async (ack: any) => {
+                    const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify({
+                            team_id: targetTeamDetails.teamId,
+                            sender_id: userId,
+                            receiver_id: userId,
+                            item_body: `Sent a request to join the team: ${targetTeamDetails.teamName}.`,
+                            item_type: 0,
+                        }),
+                    });
+                    if (!sendInboxMessageResponse.ok) {
+                        throw new Error("Failed to send a inbox message");
+                    }
+                }
+            );
             setSearchMessage("Sent a request to join the team!");
             setFoundTeamDetails(undefined);
         } else {

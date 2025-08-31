@@ -64,10 +64,11 @@ export const ModalDeleteProject: React.FC<Props> = ({
             >
                 <ModalDialog>
                     <Typography level="h4">
-                        Deleting{" "}
+                        Are you sure to delete{" "}
                         <Typography level="h3" color="danger">
                             {openDeleteProject.projectName}
-                        </Typography>
+                        </Typography>{" "}
+                        ?
                     </Typography>
                     {errorMessage && errorMessage !== "" && (
                         <Alert color="danger">{errorMessage}</Alert>
