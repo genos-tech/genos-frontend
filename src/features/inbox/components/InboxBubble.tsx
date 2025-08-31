@@ -149,8 +149,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
             ref={boxRef}
             sx={{
                 py: 0.5,
+                px: 3,
                 height: "100%",
-                display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
             }}
@@ -160,7 +160,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     variant="outlined"
                     sx={{
                         backgroundColor: mode === "dark" ? "black" : "white",
-                        width: "500px",
+                        width: "100%",
                         display: "flex",
                         flexDirection: "column",
                     }}
