@@ -162,13 +162,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         if (isPreviewMode === true && setTaskClosed) {
                             setTaskClosed(true);
                         }
+
                         if (setIsMainChatVisible && isThreadVisible) {
                             setIsMainChatVisible(true);
                         }
+
                         // setIsThreadVisible(); // Not update, keep as it is !!!
                         if (setIsTaskPreviewVisible) {
-                            setIsTaskPreviewVisible(false);
-
+                            if (isPreviewMode === true) {
+                                setIsTaskPreviewVisible(false);
+                            }
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (isCreatingTask === false) {
                                 if (setIsTaskHomeVisible) {
@@ -176,6 +179,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 }
                             }
                         }
+
                         if (setIsTaskCreationVisible) {
                             setIsTaskCreationVisible(false);
                             // Open task-home when both task-preview and task-create-form are closed.
