@@ -17,6 +17,7 @@ import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadE
 import { UserProps } from "../../types/admin";
 import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
+import { getTimeDiffSeconds } from "../../utils/dateUtils";
 
 type MessagesPaneProps = {
     currentWindowHeight: number;
@@ -163,6 +164,38 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                 const isFocused =
                                     message.messageIdWithChatIdAndThreadId ===
                                     currentThreadChat.moveToSpecificIndex;
+
+                                let isSimpleBubble: boolean;
+                                isSimpleBubble = false;
+                                if (index > 0) {
+                                    const limitSeconds: number = 600;
+                                    if (
+                                        threadMessages[index - 1].sender.userId ===
+                                            message.sender.userId &&
+                                        getTimeDiffSeconds(
+                                            threadMessages[index - 1].tsSent,
+                                            message.tsSent
+                                        ) < limitSeconds
+                                    ) {
+                                        isSimpleBubble = true;
+                                    }
+                                }
+
+                                let paddingTop: number;
+                                let paddingBottom: number;
+                                paddingTop = 0.3;
+                                paddingBottom = 0.3;
+
+                                if (message.reactions) {
+                                    if (message.reactions.allReactions.length > 0) {
+                                        paddingBottom = paddingBottom + 2.5;
+                                    }
+                                }
+
+                                if (index === threadMessages.length - 1) {
+                                    paddingBottom = paddingBottom + 3;
+                                }
+
                                 return (
                                     <div>
                                         <Stack
@@ -170,7 +203,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                             spacing={2}
                                             sx={{
                                                 flexDirection: isYou ? "row-reverse" : "row",
-                                                paddingY: 1.8,
+                                                paddingTop: paddingTop,
+                                                paddingBottom: paddingBottom,
                                                 paddingX: 1,
                                             }}
                                         >
@@ -181,6 +215,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 variant={isYou ? "sent" : "received"}
                                                 message={message}
                                                 isFocused={isFocused}
+                                                isSimpleBubble={isSimpleBubble}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setIsInEdit={setIsInEdit}

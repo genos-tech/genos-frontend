@@ -2,7 +2,7 @@ import { Socket } from "socket.io-client";
 import { Box, Button, Stack } from "@mui/joy";
 import CircleIcon from "@mui/icons-material/Circle";
 
-import { ReactionEmojiDisplay } from "../../../../components/emojiInput/ReactionEmojiDisplay";
+import { ShowEmojiReaction } from "../../../../components/emojiInput/ShowEmojiReaction";
 import { UserProps } from "../../../../types/admin";
 import { ReactionProps } from "../../../../types/common";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
@@ -57,7 +57,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                 }}
             >
                 <Box>
-                    <ReactionEmojiDisplay
+                    <ShowEmojiReaction
                         socket={socket}
                         myself={myself}
                         chatType={chatType}

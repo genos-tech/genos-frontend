@@ -1,7 +1,6 @@
 import { Socket } from "socket.io-client";
 import { useState, useEffect } from "react";
-import { Box, Button, Chip, IconButton, Tooltip } from "@mui/joy";
-import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
+import { Box, Chip, Tooltip } from "@mui/joy";
 
 import { UserProps } from "../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../types/common";
@@ -30,7 +29,7 @@ export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] 
         .sort((a, b) => b.count - a.count);
 };
 
-type ReactionEmojiProps = {
+type ShowEmojiReactionProps = {
     socket: Socket | null;
     myself: UserProps;
     chatType: number;
@@ -45,7 +44,7 @@ type ReactionEmojiProps = {
     setShowEmojiPicker: (value: boolean) => void;
     setUniqueReactionEmojiCount: (value: number) => void;
 };
-export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
+export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
     const {
         socket,
         myself,
@@ -259,48 +258,6 @@ export const ReactionEmojiDisplay = (props: ReactionEmojiProps) => {
                         +{hidden.length} more
                     </Chip>
                 </Tooltip>
-            )}
-
-            {showUnderBarOption && (
-                <>
-                    {groupedReactions.length < 3 && (
-                        <>
-                            {baseEmojiList.map((emoji, index) => (
-                                <Button
-                                    key={`default-emoji-${index}`}
-                                    onClick={() => handleAddReaction(emoji)}
-                                    variant="plain"
-                                    size="sm"
-                                    sx={{
-                                        minWidth: "auto",
-                                        paddingX: "4px",
-                                        paddingY: "0",
-                                        fontSize: "20px",
-                                    }}
-                                >
-                                    {emoji}
-                                </Button>
-                            ))}
-                        </>
-                    )}
-                    <IconButton
-                        key={`emoji-icon-${message.messageId}`}
-                        onClick={() => {
-                            setShowEmojiPicker(true);
-                        }}
-                        color="primary"
-                        variant="plain"
-                        size="sm"
-                        sx={{
-                            minWidth: "auto",
-                            paddingX: "4px",
-                            paddingY: "0",
-                            fontSize: "20px",
-                        }}
-                    >
-                        <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />
-                    </IconButton>
-                </>
             )}
         </Box>
     );

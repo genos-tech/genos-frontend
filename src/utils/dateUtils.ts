@@ -106,3 +106,11 @@ export const getFormattedNDaysAfterDateStr = (n: number): string => {
 export const getFormattedDateStr = (date: Date): string => {
     return date.toISOString().split("T")[0]; // Extract YYYY-MM-DD from ISO string
 };
+
+export const getTimeDiffSeconds = (ts1: string, ts2: string): number => {
+    const d1 = new Date(ts1);
+    const d2 = new Date(ts2);
+
+    // difference in milliseconds → convert to seconds
+    return Math.abs((d2.getTime() - d1.getTime()) / 1000);
+};

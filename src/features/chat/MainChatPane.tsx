@@ -17,6 +17,7 @@ import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
+import { getTimeDiffSeconds } from "../../utils/dateUtils";
 
 type MessagesPaneProps = {
     currentWindowHeight: number;
@@ -171,6 +172,40 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             const isFocused =
                                 message.messageIdWithChatId ===
                                 currentMainChat.moveToSpecificIndex;
+
+                            let isSimpleBubble: boolean;
+                            isSimpleBubble = false;
+                            if (index > 0) {
+                                const limitSeconds: number = 600;
+                                if (
+                                    chatMessages[index - 1].sender.userId ===
+                                        message.sender.userId &&
+                                    getTimeDiffSeconds(
+                                        chatMessages[index - 1].tsSent,
+                                        message.tsSent
+                                    ) < limitSeconds
+                                ) {
+                                    isSimpleBubble = true;
+                                }
+                            }
+
+                            let paddingTop: number;
+                            let paddingBottom: number;
+                            paddingTop = 0.3;
+                            paddingBottom = 0.3;
+
+                            if (message.reactions) {
+                                if (message.reactions.allReactions.length > 0) {
+                                    paddingBottom = paddingBottom + 2.5;
+                                }
+                            } else if (message.numReplies > 0) {
+                                paddingBottom = paddingBottom + 2.5;
+                            }
+
+                            if (index === chatMessages.length - 1) {
+                                paddingBottom = paddingBottom + 3;
+                            }
+
                             return (
                                 <div>
                                     <Stack
@@ -178,7 +213,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                         spacing={2}
                                         sx={{
                                             flexDirection: isYou ? "row-reverse" : "row",
-                                            paddingY: 1.8,
+                                            paddingTop: paddingTop,
+                                            paddingBottom: paddingBottom,
                                             paddingX: 1,
                                         }}
                                     >
@@ -188,6 +224,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             chat={chat}
                                             message={message}
                                             isFocused={isFocused}
+                                            isSimpleBubble={isSimpleBubble}
                                             socket={socket}
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
