@@ -162,20 +162,27 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </>
                 )}
 
-                <Tooltip title="Open Task" size="sm">
-                    <IconButton
-                        size="sm"
-                        onClick={() => {
-                            setIsMainChatVisible(true);
-                            setIsThreadVisible(true);
-                            setIsTaskPreviewVisible(true);
-                            setIsTaskCreationVisible(false);
-                            setIsOpeningTask(true);
-                        }}
-                    >
-                        <OpenInNewIcon />
-                    </IconButton>
-                </Tooltip>
+                {!(
+                    thread.chatType !== 3 &&
+                    thread.chatType !== 4 &&
+                    currentPreviewTaskId === -1
+                ) && (
+                    <Tooltip title="Open Task" size="sm">
+                        <IconButton
+                            size="sm"
+                            onClick={() => {
+                                setIsMainChatVisible(true);
+                                setIsThreadVisible(true);
+                                setIsTaskPreviewVisible(true);
+                                setIsTaskCreationVisible(false);
+                                setIsOpeningTask(true);
+                            }}
+                        >
+                            <OpenInNewIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
+
                 <Tooltip title="Close Thread" size="sm">
                     <IconButton
                         size="sm"
