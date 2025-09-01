@@ -65,8 +65,6 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
     );
-    const displayed = groupedReactions.slice(0, 10);
-    const hidden = groupedReactions.slice(10);
 
     useEffect(() => {
         const groupedReactionEmojis: string[] = groupedReactions.map((item) => item.emoji);
@@ -239,7 +237,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                                         minWidth: "auto",
                                         paddingX: "4px",
                                         paddingY: "0",
-                                        fontSize: "20px",
+                                        fontSize: "16px",
                                     }}
                                 >
                                     {emoji}
@@ -247,20 +245,20 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             ))}
                         </>
                     )}
-                    <Tooltip size="sm" title="Reaction">
+                    <Tooltip size="sm" title="React">
                         <IconButton
                             key={`emoji-icon-${message.messageId}`}
                             onClick={() => {
                                 setShowEmojiPicker(true);
                             }}
-                            color="primary"
                             variant="plain"
                             size="sm"
                             sx={{
                                 minWidth: "auto",
                                 paddingX: "4px",
                                 paddingY: "0",
-                                fontSize: "20px",
+                                fontSize: "16px",
+                                fontWeight: "bold",
                             }}
                         >
                             <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />

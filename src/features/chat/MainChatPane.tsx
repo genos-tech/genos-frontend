@@ -194,10 +194,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             paddingTop = 0.3;
                             paddingBottom = 0.3;
 
-                            if (message.reactions) {
-                                if (message.reactions.allReactions.length > 0) {
-                                    paddingBottom = paddingBottom + 2.5;
-                                }
+                            if (message.reactions && message.reactions.allReactions.length > 0) {
+                                paddingBottom = paddingBottom + 2.5;
                             } else if (message.numReplies > 0) {
                                 paddingBottom = paddingBottom + 2.5;
                             }
