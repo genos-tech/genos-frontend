@@ -50,6 +50,45 @@ export const ModalJoinProject: React.FC<Props> = ({
                         joiningProjectName: openJoinProject.projectName,
                     },
                     async (ack: any) => {
+                        const item_body = [
+                            {
+                                type: "paragraph",
+                                props: {
+                                    textColor: "default",
+                                    textAlignment: "left",
+                                    backgroundColor: "default",
+                                },
+                                content: [
+                                    {
+                                        text: "Sent a request to join the project: ",
+                                        type: "text",
+                                        styles: {},
+                                    },
+                                    {
+                                        text: openJoinProject.projectName,
+                                        type: "text",
+                                        styles: { code: true },
+                                    },
+                                    {
+                                        text: ".",
+                                        type: "text",
+                                        styles: {},
+                                    },
+                                ],
+                                children: [],
+                            },
+                            {
+                                type: "paragraph",
+                                props: {
+                                    textColor: "default",
+                                    textAlignment: "left",
+                                    backgroundColor: "default",
+                                },
+                                content: [],
+                                children: [],
+                            },
+                        ];
+
                         const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
                             method: "POST",
                             headers: {
@@ -60,7 +99,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                 team_id: myself.teamId,
                                 sender_id: myself.userId,
                                 receiver_id: myself.userId,
-                                item_body: `Sent a request to join the project: ${openJoinProject.projectName}.`,
+                                item_body: item_body,
                                 item_type: 0,
                             }),
                         });

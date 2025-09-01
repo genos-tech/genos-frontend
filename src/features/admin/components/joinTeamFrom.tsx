@@ -139,7 +139,9 @@ export const JoinTeam = () => {
 
     const getApproveToJoinTeam = async (targetTeamDetails: Team) => {
         const userId: string | null = localStorage.getItem("userId");
-        if (userId && socketInstance !== null) {
+        const userName: string | null = localStorage.getItem("userName");
+        const userEmail: string | null = localStorage.getItem("userEmail");
+        if (userId && userName && userEmail && socketInstance !== null) {
             // Sent a request to join the team.
             // The team owner(s) will get the request and they only can approve it.
             socketInstance.emit(
@@ -149,6 +151,66 @@ export const JoinTeam = () => {
                     joiningTeamName: targetTeamDetails.teamName,
                 },
                 async (ack: any) => {
+                    const item_body = [
+                        {
+                            type: "paragraph",
+                            props: {
+                                textColor: "default",
+                                textAlignment: "left",
+                                backgroundColor: "default",
+                            },
+                            content: [
+                                {
+                                    type: "mention",
+                                    props: {
+                                        online: false,
+                                        teamId: targetTeamDetails.teamId,
+                                        userId: userId,
+                                        teamName: "Unknown",
+                                        userName: userName,
+                                        userEmail: userEmail,
+                                        customStatus: "Unknown",
+                                        avatarImgPath: [""],
+                                    },
+                                },
+                                { text: " wants to join ", type: "text", styles: {} },
+                                {
+                                    text: targetTeamDetails.teamName,
+                                    type: "text",
+                                    styles: { code: true },
+                                },
+                                {
+                                    text: ".",
+                                    type: "text",
+                                    styles: {},
+                                },
+                            ],
+                            children: [],
+                        },
+                        {
+                            type: "paragraph",
+                            props: {
+                                textColor: "default",
+                                textAlignment: "left",
+                                backgroundColor: "default",
+                            },
+                            content: [
+                                { text: "Waiting for your approval...", type: "text", styles: {} },
+                            ],
+                            children: [],
+                        },
+                        {
+                            type: "paragraph",
+                            props: {
+                                textColor: "default",
+                                textAlignment: "left",
+                                backgroundColor: "default",
+                            },
+                            content: [],
+                            children: [],
+                        },
+                    ];
+
                     const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
                         method: "POST",
                         headers: {
@@ -159,7 +221,7 @@ export const JoinTeam = () => {
                             team_id: targetTeamDetails.teamId,
                             sender_id: userId,
                             receiver_id: userId,
-                            item_body: `Sent a request to join the team: ${targetTeamDetails.teamName}.`,
+                            item_body: item_body,
                             item_type: 0,
                         }),
                     });
