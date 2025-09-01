@@ -14,6 +14,7 @@ import { UserProps } from "../../../../types/admin";
 import { ReactionProps } from "../../../../types/common";
 import { ChatProps } from "../../../../types/chat";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
+import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 
 type threadMessageBubbleProps = {
     myself: UserProps;
@@ -22,6 +23,7 @@ type threadMessageBubbleProps = {
     variant: "sent" | "received";
     message: ThreadMessageProps;
     isFocused: boolean;
+    isSimpleBubble: boolean;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsInEdit: (value: boolean) => void;
@@ -38,6 +40,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         variant,
         message,
         isFocused,
+        isSimpleBubble,
         setOpeningService,
         setCurrentMainChat,
         setIsInEdit,
@@ -176,7 +179,8 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
             sx={{
                 maxWidth: "90%",
                 minWidth:
-                    250 + (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
+                    (isSimpleBubble ? 100 : 200) +
+                    (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}
@@ -237,49 +241,130 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         ]}
                     >
                         <Stack direction="column" spacing={1.5}>
-                            <Stack direction="row" spacing={1.5}>
-                                {message.sender.isSystemUser !== true && (
-                                    <Box sx={{ flex: 1 }}>
-                                        <AvatarWithStatus
-                                            userProfile={isSent ? myself : message.sender}
+                            {showUnderBarOption === true && isSimpleBubble === true && (
+                                <Stack direction="row" spacing={0}>
+                                    <BubbleUserName
+                                        isSimpleBubble={isSimpleBubble}
+                                        sender={message.sender}
+                                        chatType={thread.chatType}
+                                        taskId={thread.taskId}
+                                        taskStatus={null}
+                                        userName={message.sender.userName}
+                                        isSent={isSent}
+                                        dtSent={dtSent}
+                                        tsSent={message.tsSent}
+                                        tsUpdated={message.tsUpdated}
+                                        isThread={true}
+                                    />
+
+                                    <Box sx={{ textAlign: "right", pl: "10px" }}>
+                                        <EmojiReaction
                                             socket={socket}
-                                            thread={thread}
-                                            online={message.sender.online}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentMainChat={setCurrentMainChat}
+                                            myself={myself}
+                                            chatType={thread.chatType}
+                                            chatName={thread.chatName}
+                                            dmPartnerUser={thread.dmPartnerUser}
+                                            message={message}
+                                            numReplies={0}
+                                            isThread={true}
+                                            showUnderBarOption={showUnderBarOption}
+                                            reactions={reactions}
+                                            setReactions={setReactions}
+                                            setShowEmojiPicker={setShowEmojiPicker}
+                                            setUniqueReactionEmojiCount={
+                                                setUniqueReactionEmojiCount
+                                            }
                                         />
                                     </Box>
-                                )}
-                                <Box sx={{ flex: 20 }}>
-                                    <Stack direction="row" spacing={2}>
-                                        <BubbleUserName
-                                            sender={message.sender}
-                                            chatType={thread.chatType}
-                                            taskId={thread.taskId}
-                                            taskStatus={null}
-                                            userName={message.sender.userName}
-                                            isSent={isSent}
-                                            dtSent={dtSent}
-                                            tsSent={message.tsSent}
-                                            tsUpdated={message.tsUpdated}
-                                            isThread={true}
-                                        />
-                                        {/* 
+
+                                    {/* 
                                         TODO: How to edit the first message in the thread?
                                         When we edit it, we also need to update the parent message.
                                         */}
-                                        {message.sender.userId === myself.userId && (
-                                            <BubbleThreadEditButton
-                                                message={message}
-                                                setIsInEdit={setIsInEdit}
-                                                setEditTargetMessage={setEditTargetMessage}
-                                                currentMessageIndex={currentMessageIndex}
-                                                setTargetMessageIndex={setTargetMessageIndex}
+                                    {message.sender.userId === myself.userId && (
+                                        <BubbleThreadEditButton
+                                            message={message}
+                                            setIsInEdit={setIsInEdit}
+                                            setEditTargetMessage={setEditTargetMessage}
+                                            currentMessageIndex={currentMessageIndex}
+                                            setTargetMessageIndex={setTargetMessageIndex}
+                                        />
+                                    )}
+                                </Stack>
+                            )}
+
+                            {isSimpleBubble === false && (
+                                <Stack direction="row" spacing={1.5}>
+                                    {message.sender.isSystemUser !== true && (
+                                        <Box sx={{ flex: 1 }}>
+                                            <AvatarWithStatus
+                                                userProfile={isSent ? myself : message.sender}
+                                                socket={socket}
+                                                thread={thread}
+                                                online={message.sender.online}
+                                                setOpeningService={setOpeningService}
+                                                setCurrentMainChat={setCurrentMainChat}
                                             />
-                                        )}
-                                    </Stack>
-                                </Box>
-                            </Stack>
+                                        </Box>
+                                    )}
+                                    <Box sx={{ flex: 20 }}>
+                                        <Stack direction="row" spacing={2}>
+                                            <BubbleUserName
+                                                isSimpleBubble={isSimpleBubble}
+                                                sender={message.sender}
+                                                chatType={thread.chatType}
+                                                taskId={thread.taskId}
+                                                taskStatus={null}
+                                                userName={message.sender.userName}
+                                                isSent={isSent}
+                                                dtSent={dtSent}
+                                                tsSent={message.tsSent}
+                                                tsUpdated={message.tsUpdated}
+                                                isThread={true}
+                                            />
+
+                                            {showUnderBarOption === true && (
+                                                <>
+                                                    <Box sx={{ textAlign: "right", pl: "10px" }}>
+                                                        <EmojiReaction
+                                                            socket={socket}
+                                                            myself={myself}
+                                                            chatType={thread.chatType}
+                                                            chatName={thread.chatName}
+                                                            dmPartnerUser={thread.dmPartnerUser}
+                                                            message={message}
+                                                            numReplies={0}
+                                                            isThread={true}
+                                                            showUnderBarOption={showUnderBarOption}
+                                                            reactions={reactions}
+                                                            setReactions={setReactions}
+                                                            setShowEmojiPicker={setShowEmojiPicker}
+                                                            setUniqueReactionEmojiCount={
+                                                                setUniqueReactionEmojiCount
+                                                            }
+                                                        />
+                                                    </Box>
+                                                    {message.sender.userId === myself.userId && (
+                                                        <BubbleThreadEditButton
+                                                            message={message}
+                                                            setIsInEdit={setIsInEdit}
+                                                            setEditTargetMessage={
+                                                                setEditTargetMessage
+                                                            }
+                                                            currentMessageIndex={
+                                                                currentMessageIndex
+                                                            }
+                                                            setTargetMessageIndex={
+                                                                setTargetMessageIndex
+                                                            }
+                                                        />
+                                                    )}
+                                                </>
+                                            )}
+                                        </Stack>
+                                    </Box>
+                                </Stack>
+                            )}
 
                             {message.content.length > 0 && (
                                 <BnChatPreview

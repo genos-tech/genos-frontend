@@ -7,6 +7,7 @@ import { statuses } from "../../../tasks/utils/taskMeta";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
 
 type BubbleUserNameTypes = {
+    isSimpleBubble: boolean;
     sender: UserProps;
     chatType: number;
     userName: string;
@@ -20,6 +21,7 @@ type BubbleUserNameTypes = {
 };
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
     const {
+        isSimpleBubble,
         sender,
         chatType,
         userName,
@@ -125,24 +127,27 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                 {/* Message bubble for normal users (not system users)*/}
                 {!sender.isSystemUser && (
                     <>
-                        <Typography
-                            level="body-md"
-                            component="span"
-                            sx={[
-                                { lineHeight: 1.5 },
-                                isSent
-                                    ? { color: "background.body" }
-                                    : { color: "var(--joy-palette-text-primary)" },
-                            ]}
-                        >
-                            {userName}
-                        </Typography>
+                        {isSimpleBubble === false && (
+                            <Typography
+                                level="body-md"
+                                component="span"
+                                sx={[
+                                    { lineHeight: 1.5 },
+                                    isSent
+                                        ? { color: "background.body" }
+                                        : { color: "var(--joy-palette-text-primary)" },
+                                ]}
+                            >
+                                {userName}
+                            </Typography>
+                        )}
 
                         <Typography
                             level="body-xs"
                             sx={[
                                 {
                                     lineHeight: 1.5,
+                                    paddingTop: isSimpleBubble === true ? 1 : 0,
                                 },
                                 isSent
                                     ? {
