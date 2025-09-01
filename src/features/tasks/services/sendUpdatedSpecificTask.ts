@@ -55,7 +55,7 @@ export const sendUpdatedSpecificTask = async (
 
             // Send ws message only when task metadata is update, not task body.
             if (res && taskBodyUpdated === false) {
-                const updatedTaskMessage = taskMessageTemplate(updatedTask);
+                const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
                 const updatedTaskThreadMessage = taskThreadMessageTemplate(myself, updatedTask);
                 if (socket) {
                     socket.emit("message", {

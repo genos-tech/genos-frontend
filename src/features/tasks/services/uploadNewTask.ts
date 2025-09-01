@@ -159,7 +159,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                             dmPartnerUserId: null,
                         },
                         (ack: any) => {
-                            const createTaskMessage = taskMessageTemplate(taskContents);
+                            const createTaskMessage = taskMessageTemplate(myself, taskContents);
                             if (taskContents.project !== null && createTaskMessage) {
                                 // Send "task created" message to PM
                                 socket.emit(
