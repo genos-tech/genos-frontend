@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Menu, MenuItem, IconButton, Dropdown } from "@mui/joy";
+import { Button, Avatar, Menu, MenuItem, IconButton, Dropdown } from "@mui/joy";
 import BusinessIcon from "@mui/icons-material/Business";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
@@ -100,15 +100,15 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <IconButton
-                    component="a"
-                    variant="outlined"
+                <Button
+                    variant="solid"
                     color="neutral"
                     size="sm"
+                    sx={{ px: 0.7 }}
                     onClick={handleClick}
                 >
-                    <BusinessIcon className="h-5 w-5" />
-                </IconButton>
+                    {myself.teamName.slice(0, 2).toUpperCase()}
+                </Button>
                 <Menu
                     className="custom-scrollbar"
                     size="sm"
