@@ -173,8 +173,6 @@ export const InboxBubble = (props: InboxBubbleProps) => {
         }
     }
 
-    console.log("inboxItem.itemBody:", inboxItem.itemBody);
-
     return (
         <Box
             ref={boxRef}
