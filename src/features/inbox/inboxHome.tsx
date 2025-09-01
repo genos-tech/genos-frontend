@@ -127,6 +127,8 @@ export const InboxHome = (props: InboxHomeProps) => {
                                             socket={socket}
                                             myself={myself}
                                             inboxItem={item}
+                                            setCurrentChat={setCurrentMainChat}
+                                            setOpeningService={setOpeningService}
                                         />
                                     );
                                 }}
@@ -159,6 +161,8 @@ export const InboxHome = (props: InboxHomeProps) => {
                                             socket={socket}
                                             myself={myself}
                                             inboxItem={item}
+                                            setCurrentChat={setCurrentMainChat}
+                                            setOpeningService={setOpeningService}
                                         />
                                     );
                                 }}

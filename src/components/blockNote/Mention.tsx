@@ -71,7 +71,7 @@ export const CreateMentionSpec = (
                                 gap: 0.5,
                                 backgroundColor:
                                     myself.userId === userId
-                                        ? "#ff77002d"
+                                        ? "#ddff003e"
                                         : "rgba(255, 0, 238, 0.15)",
                                 borderRadius: "12px",
                                 px: 1,
@@ -90,7 +90,7 @@ export const CreateMentionSpec = (
                             >
                                 @{userName}
                             </Typography>
-                            <PulseDot color={online ? "#4caf50" : "#999"} />
+                            {/* <PulseDot color={online ? "#4caf50" : "#999"} /> */}
                         </Box>
 
                         <UserProfile
@@ -153,7 +153,7 @@ export const MentionMenuItems = (
                         sx={{ width: 32, height: 32 }}
                     />
                     <Box position="absolute" bottom={0} right={0} width={10} height={10}>
-                        <PulseDot color={user.online ? "#4caf50" : "#9e9e9e"} />
+                        {/* <PulseDot color={user.online ? "#4caf50" : "#9e9e9e"} /> */}
                     </Box>
                 </Box>
                 {user.userName}

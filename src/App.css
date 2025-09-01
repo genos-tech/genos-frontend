@@ -399,6 +399,18 @@ div[data-floating-ui-focusable] {
   padding-left: 20px;
 }
 
+.inbox-preview-light .bn-editor {
+  color: black;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.inbox-preview-dark .bn-editor {
+  color: white;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
 .css-ljwjwd-JoyStack-root>:not(style)~:not(style) {
   margin-top: 5px !important;
   margin-left: 10px !important;

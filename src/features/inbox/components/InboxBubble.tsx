@@ -7,16 +7,45 @@ import { UserProps } from "../../../types/admin";
 import { InboxProps } from "../../../types/common";
 import { extractMMDDHHMM } from "../../../utils/dateUtils";
 import { useAuth } from "../../../context/AuthContext";
+import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
+import { ChatProps } from "../../../types/chat";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
+
+const item_body = [
+    {
+        type: "paragraph",
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [
+            { text: "Your request to join the team has been approved.", type: "text", styles: {} },
+        ],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [],
+        children: [],
+    },
+];
 
 type InboxBubbleProps = {
     socket: Socket | null;
     myself: UserProps;
     inboxItem: InboxProps;
+    setOpeningService: (service: number) => void;
+    setCurrentChat: (chat: ChatProps) => void;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { socket, myself, inboxItem } = props;
+    const { socket, myself, inboxItem, setOpeningService, setCurrentChat } = props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
     const { accessToken } = useAuth();
@@ -51,7 +80,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         team_id: myself.teamId,
                         sender_id: myself.userId,
                         receiver_id: approveTeamJoinData.attendee,
-                        item_body: `Your request to join the team has been approved.`,
+                        item_body: item_body,
                         item_type: 0,
                     }),
                 });
@@ -112,7 +141,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         team_id: myself.teamId,
                         sender_id: myself.userId,
                         receiver_id: approveTeamJoinData.attendee,
-                        item_body: `Your request to join the team has been approved.`,
+                        item_body: item_body,
                         item_type: 0,
                     }),
                 });
@@ -143,6 +172,8 @@ export const InboxBubble = (props: InboxBubbleProps) => {
             console.error(err_msg);
         }
     }
+
+    console.log("inboxItem.itemBody:", inboxItem.itemBody);
 
     return (
         <Box
@@ -202,7 +233,18 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         </Typography>
                     </Stack>
 
-                    <Typography>{inboxItem.itemBody}</Typography>
+                    {inboxItem.itemBody[0].content.length > 0 && (
+                        <BnChatPreview
+                            customClassName="inbox-preview"
+                            myself={myself}
+                            socket={socket}
+                            key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
+                            content={inboxItem.itemBody}
+                            isSent={true}
+                            setCurrentChat={setCurrentChat}
+                            setOpeningService={setOpeningService}
+                        />
+                    )}
 
                     {(inboxItem.itemType === 1 || inboxItem.itemType === 2) &&
                         (inboxItem.isRead === true || requestApproved === true) && (
