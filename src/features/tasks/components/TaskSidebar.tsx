@@ -18,7 +18,6 @@ import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FreeCancellationIcon from "@mui/icons-material/FreeCancellation";
-import BusinessIcon from "@mui/icons-material/Business";
 import WorkIcon from "@mui/icons-material/Work";
 import AddIcon from "@mui/icons-material/Add";
 import TableChartIcon from "@mui/icons-material/TableChart";
@@ -32,8 +31,6 @@ import { loadProjectTags } from "../services/loadProjectTags";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps, TagListProps, SearchTeamTasksResponse } from "../../../types/tasks";
-import { loadMyTeams } from "../../admin/services/loadMyTeams";
-import { Team } from "../../../types/admin";
 
 function Toggler({
     defaultExpanded,
@@ -189,18 +186,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         updateTeamProjects();
     }, [currentProject]);
 
-    const [teams, setTeams] = useState<Team[]>([]);
-    const loadTeams = () => {
-        if (accessToken !== null) {
-            (async () => {
-                const loadedTeams: Team[] = await loadMyTeams(accessToken, myself.userId);
-                setTeams(loadedTeams);
-            })();
-        }
-    };
-
     useEffect(() => {
-        loadTeams();
         updateProjectTags();
     }, [myself]);
 
@@ -726,7 +712,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 <ListItemButton
                                     onClick={() => {
                                         setOpen(!open);
-                                        loadTeams();
                                     }}
                                 >
                                     <FreeCancellationIcon />
@@ -770,102 +755,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         </Typography>
                                     </ListItemButton>
                                 </ListItem>
-                            </List>
-                        </Toggler>
-                    </ListItem>
-
-                    <ListItem nested>
-                        <Toggler
-                            defaultExpanded={false}
-                            renderToggle={({ open, setOpen }) => (
-                                <ListItemButton
-                                    onClick={() => {
-                                        setOpen(!open);
-                                        loadTeams();
-                                    }}
-                                >
-                                    <BusinessIcon />
-                                    <ListItemContent>
-                                        <Typography level="title-sm">Teams</Typography>
-                                    </ListItemContent>
-                                    <KeyboardArrowDownIcon
-                                        sx={[
-                                            open
-                                                ? {
-                                                      transform: "rotate(180deg)",
-                                                  }
-                                                : {
-                                                      transform: "none",
-                                                  },
-                                        ]}
-                                    />
-                                </ListItemButton>
-                            )}
-                        >
-                            <List sx={{ gap: 0.5 }}>
-                                <ListItem key={"listitem-createTeam"}>
-                                    <ListItemButton
-                                        color="neutral"
-                                        variant="soft"
-                                        onClick={() => {
-                                            setOpenCreateTeam(true);
-                                        }}
-                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                    >
-                                        <AddIcon />
-                                        <Typography
-                                            noWrap
-                                            sx={{
-                                                fontSize: "15px",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                                width: "100%", // take full width of button
-                                            }}
-                                        >
-                                            New Team
-                                        </Typography>
-                                    </ListItemButton>
-                                </ListItem>
-                                {teams.map(({ teamId, teamName }) => {
-                                    return (
-                                        <ListItem key={`team-${teamId}`}>
-                                            <ListItemButton
-                                                color={"neutral"}
-                                                variant={
-                                                    teamId === myself.teamId ? "solid" : "plain"
-                                                }
-                                                onClick={() => {
-                                                    localStorage.setItem("teamId", teamId);
-                                                    localStorage.setItem("teamName", teamName);
-                                                    setMyself({
-                                                        ...myself,
-                                                        teamId: teamId,
-                                                        teamName: teamName,
-                                                    });
-                                                }}
-                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                            >
-                                                <Typography
-                                                    noWrap
-                                                    sx={{
-                                                        color:
-                                                            teamId === myself.teamId
-                                                                ? "white"
-                                                                : "neutral-500",
-                                                        borderRadius: 5,
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                        width: "100%", // take full width of button
-                                                    }}
-                                                >
-                                                    {teamName}
-                                                </Typography>
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                })}
                             </List>
                         </Toggler>
                     </ListItem>
