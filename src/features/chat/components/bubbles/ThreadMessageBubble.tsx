@@ -94,12 +94,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
-                        current_emojis: message.reactions?.allReactions || [],
+                        current_emojis: reactions,
                     });
 
                     // If the reaction is for the first message in the thread,
-                    // delete the reaction from the parent message as well
-                    if (message.messageId === 1) {
+                    // delete the reaction from the parent message as well.
+                    // But not doing this for PM thead.
+                    if (message.messageId === 1 && thread.chatType !== 3) {
                         socket.emit("message_reaction", {
                             method_type: "DELETE",
                             team_id: myself.teamId,
@@ -115,7 +116,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
-                            current_emojis: message.reactions?.allReactions || [],
+                            current_emojis: reactions,
                         });
                     }
                 }
@@ -146,17 +147,19 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
-                        current_emojis: message.reactions?.allReactions || [],
+                        current_emojis: reactions,
                     });
 
                     // Update the parent message as well if it's the first thread message
-                    if (message.messageId === 1) {
+                    // But not doing this for PM thead.
+                    if (message.messageId === 1 && thread.chatType !== 3) {
                         socket.emit("message_reaction", {
                             method_type: "POST",
                             team_id: myself.teamId,
                             chat_type: thread.chatType,
                             chat_name: thread.chatName,
                             chat_id: message.chatId,
+                            thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
                             dm_partner_user_id:
@@ -165,7 +168,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
-                            current_emojis: message.reactions?.allReactions || [],
+                            current_emojis: reactions,
                         });
                     }
                 }

@@ -18,7 +18,6 @@ import {
     ThreadProps,
     ActivityMessageProps,
 } from "../types/chat";
-import { extractMMDDHHMMSSs } from "../utils/dateUtils";
 
 type wsHookProps = {
     socket: Socket | null;
@@ -96,7 +95,10 @@ export const wsHook = (props: wsHookProps) => {
     const putMessageHandler = async (newMessage: NewMessageProps) => {
         const newChatMessage: MessageProps = {
             chatType: newMessage.chatType,
-            messageIdWithChatId: `${newMessage.chatId}-${newMessage.messageId}`,
+            messageIdWithChatId:
+                newMessage.chatType === 3
+                    ? `${newMessage.chatId}-${newMessage.taskId}`
+                    : `${newMessage.chatId}-${newMessage.messageId}`,
             chatId: newMessage.chatId,
             messageId: newMessage.messageId,
             content: newMessage.content,
@@ -481,7 +483,7 @@ export const wsHook = (props: wsHookProps) => {
                                 if (newMessage.isEdited === true) {
                                     // As of now, no one can edit PM message.
                                     // PM thread message is editable tho.
-                                    // await putMessageHandler(newMessage);
+                                    await putMessageHandler(newMessage);
                                 } else {
                                     if (fromMe === false) {
                                         if (allChats.length > 0) {

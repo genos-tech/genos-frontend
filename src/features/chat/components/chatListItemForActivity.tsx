@@ -332,7 +332,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     )}
                                 </div>
 
-                                {activity.chatType !== 4 && (
+                                {activity.chatType !== 3 && activity.chatType !== 4 && (
                                     <Box>
                                         <Typography noWrap level="title-sm">
                                             {isYou
@@ -343,7 +343,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 )}
 
                                 <Box>
-                                    {activity.chatType === 4 && (
+                                    {(activity.chatType === 3 || activity.chatType === 4) && (
                                         <>
                                             {" "}
                                             <Chip
