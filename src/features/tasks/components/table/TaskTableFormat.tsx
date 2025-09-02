@@ -29,14 +29,14 @@ const statusOptions = [
     {
         label: "WIP",
         value: "WIP",
-        color: "#ecff00",
-        textColor: "midnightblue",
-        icon: <AutorenewIcon style={{ color: "midnightblue" }} />,
+        color: "#ff8c00ff",
+        textColor: "white",
+        icon: <AutorenewIcon style={{ color: "white" }} />,
     },
     {
         label: "Pending",
         value: "Pending",
-        color: "#ff47ec",
+        color: "#b900ff",
         textColor: "white",
         icon: <PendingIcon style={{ color: "white" }} />,
     },
@@ -154,13 +154,14 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                         label={tag.tagName}
                                         variant="outlined"
                                         sx={{
-                                            backgroundColor: alpha(
-                                                tag.tagColor || "#ff2323",
+                                            color: mode === "dark" ? "white" : "black",
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            borderWidth: "3px",
+                                            borderColor: alpha(
+                                                tag.tagColor,
                                                 mode === "dark" ? 0.5 : 0.75
                                             ),
-                                            color: tag.tagTextColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "7px",
                                             ml: 0.5,
                                         }}
                                         size="small"
@@ -195,7 +196,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             ),
                             color: textColor,
                             fontWeight: "bold",
-                            borderRadius: "7px",
+                            borderRadius: "5px",
                         }}
                         size="small"
                     />
@@ -232,7 +233,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                     backgroundColor: alpha(option.color || "#ff2323", 0.75),
                                     color: option.textColor,
                                     fontWeight: "bold",
-                                    borderRadius: "7px",
+                                    borderRadius: "5px",
                                 }}
                                 size="small"
                             />
@@ -264,7 +265,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             ),
                             color: textColor,
                             fontWeight: "bold",
-                            borderRadius: "7px",
+                            borderRadius: "5px",
                         }}
                         size="small"
                     />
@@ -301,7 +302,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                     backgroundColor: alpha(option.color || "#ff2323", 0.75),
                                     color: option.textColor,
                                     fontWeight: "bold",
-                                    borderRadius: "7px",
+                                    borderRadius: "5px",
                                 }}
                                 size="small"
                             />
@@ -334,7 +335,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             ),
                             color: textColor,
                             fontWeight: "bold",
-                            borderRadius: "7px",
+                            borderRadius: "5px",
                         }}
                         size="small"
                     />
@@ -371,7 +372,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                     backgroundColor: alpha(option.color || "#ff2323", 0.75),
                                     color: option.textColor,
                                     fontWeight: "bold",
-                                    borderRadius: "7px",
+                                    borderRadius: "5px",
                                 }}
                                 size="small"
                             />
@@ -409,7 +410,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             backgroundColor: alpha("#ff2323", mode === "dark" ? 0.5 : 0.75),
                             color: "white",
                             fontWeight: "bold",
-                            borderRadius: "7px",
+                            borderRadius: "5px",
                         }}
                     />
                 ) : (

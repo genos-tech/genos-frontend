@@ -286,7 +286,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         sx={{
                                             marginX: "5px",
                                             fontWeight: "bold",
-                                            borderRadius: "7px",
+                                            borderRadius: "5px",
                                         }}
                                         size="md"
                                     >
@@ -303,7 +303,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                                 : "transparent",
                                             color: parentTask.status.textColor,
                                             fontWeight: "bold",
-                                            borderRadius: "7px",
+                                            borderRadius: "5px",
                                         }}
                                         size="md"
                                     >

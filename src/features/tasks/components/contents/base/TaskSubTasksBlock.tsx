@@ -116,7 +116,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                 sx={{
                                                     marginX: "5px",
                                                     fontWeight: "bold",
-                                                    borderRadius: "7px",
+                                                    borderRadius: "5px",
                                                 }}
                                                 size="md"
                                             >
@@ -135,7 +135,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         : "transparent",
                                                     color: status.textColor,
                                                     fontWeight: "bold",
-                                                    borderRadius: "7px",
+                                                    borderRadius: "5px",
                                                 }}
                                                 size="md"
                                             >
@@ -179,7 +179,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                                     : "transparent",
                                                                 color: tagTextColor,
                                                                 fontWeight: "bold",
-                                                                borderRadius: "7px",
+                                                                borderRadius: "5px",
                                                             }}
                                                             size="md"
                                                         >

@@ -76,7 +76,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                         color="neutral"
                                         sx={{
                                             marginRight: taskStatusDetails ? "2px" : "7px",
-                                            borderRadius: "7px",
+                                            borderRadius: "5px",
                                             fontWeight: "bold",
                                         }}
                                         size="lg"
@@ -101,7 +101,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                             color: taskStatusDetails.textColor,
                                             marginRight: "7px",
                                             fontWeight: "bold",
-                                            borderRadius: "7px",
+                                            borderRadius: "5px",
                                         }}
                                     >
                                         {taskStatus || "N/A"}

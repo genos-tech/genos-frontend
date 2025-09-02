@@ -406,7 +406,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             }
                                                             sx={{
                                                                 fontWeight: "bold",
-                                                                borderRadius: "7px",
+                                                                borderRadius: "5px",
                                                             }}
                                                             size="lg"
                                                         >
@@ -425,7 +425,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 variant="outlined"
                                                                 color="primary"
                                                                 sx={{
-                                                                    borderRadius: "7px",
+                                                                    borderRadius: "5px",
                                                                 }}
                                                                 size="lg"
                                                             >
@@ -443,7 +443,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 variant="outlined"
                                                                 color="success"
                                                                 sx={{
-                                                                    borderRadius: "7px",
+                                                                    borderRadius: "5px",
                                                                 }}
                                                                 size="lg"
                                                             >
@@ -461,7 +461,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 variant="outlined"
                                                                 color="danger"
                                                                 sx={{
-                                                                    borderRadius: "7px",
+                                                                    borderRadius: "5px",
                                                                 }}
                                                                 size="lg"
                                                             >
@@ -508,7 +508,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                         color: item.status
                                                                             .textColor,
                                                                         fontWeight: "bold",
-                                                                        borderRadius: "7px",
+                                                                        borderRadius: "5px",
                                                                     }}
                                                                     size="sm"
                                                                 >
@@ -553,7 +553,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                         color: option.status
                                                                             .textColor,
                                                                         fontWeight: "bold",
-                                                                        borderRadius: "7px",
+                                                                        borderRadius: "5px",
                                                                         m: "3px",
                                                                     }}
                                                                     size="sm"

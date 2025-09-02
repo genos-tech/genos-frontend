@@ -45,7 +45,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                                     : "transparent",
                                 color: item.textColor,
                                 fontWeight: "bold",
-                                borderRadius: "7px",
+                                borderRadius: "5px",
                             }}
                             size="sm"
                         >
@@ -66,7 +66,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                                     : "transparent",
                                 color: option.textColor,
                                 fontWeight: "bold",
-                                borderRadius: "7px",
+                                borderRadius: "5px",
                             }}
                             size="sm"
                         >
