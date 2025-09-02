@@ -33,19 +33,19 @@ const predefinedStatusFilters: FilterProps[] = [
         label: "Open",
         filterModel: { items: [{ field: "status", operator: "equals", value: "Open" }] },
         lightModeColor: "#002bff",
-        darkModeColor: "#2bc8ff",
+        darkModeColor: "#2b80ffff",
     },
     {
         label: "WIP",
         filterModel: { items: [{ field: "status", operator: "equals", value: "WIP" }] },
-        lightModeColor: "#ff7000",
-        darkModeColor: "#fff700",
+        lightModeColor: "#ff8c00ff",
+        darkModeColor: "#ff8c00ff",
     },
     {
         label: "Pending",
         filterModel: { items: [{ field: "status", operator: "equals", value: "Pending" }] },
-        lightModeColor: "#ff47ec",
-        darkModeColor: "#ff47ec",
+        lightModeColor: "#b900ff",
+        darkModeColor: "#b900ff",
     },
 ];
 
@@ -269,9 +269,10 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                     onClick={() => apiRef.current?.setFilterModel(filterModel)}
                                     variant="outlined"
                                     sx={{
-                                        color: mode === "dark" ? darkModeColor : lightModeColor,
+                                        color: mode === "dark" ? "white" : "Black",
                                         borderColor:
                                             mode === "dark" ? darkModeColor : lightModeColor,
+                                        borderWidth: "2px",
                                         fontSize: "13px",
                                         fontWeight: "bold",
                                         opacity: 0.85,

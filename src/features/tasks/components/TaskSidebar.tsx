@@ -376,7 +376,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                         variant="soft"
                                                         color="neutral"
                                                         sx={{
-                                                            borderRadius: "7px",
+                                                            borderRadius: "5px",
                                                             fontWeight: "bold",
                                                         }}
                                                         size="sm"
@@ -395,7 +395,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                 : "transparent",
                                                             color: status.textColor,
                                                             fontWeight: "bold",
-                                                            borderRadius: "7px",
+                                                            borderRadius: "5px",
                                                             marginX: "-5px",
                                                         }}
                                                         size="sm"
@@ -575,9 +575,20 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                             >
                                                                                 <Chip
                                                                                     key={`chip-${tagName}-${index}`}
-                                                                                    variant="soft"
+                                                                                    variant="outlined"
                                                                                     sx={{
-                                                                                        backgroundColor:
+                                                                                        color:
+                                                                                            mode ===
+                                                                                            "dark"
+                                                                                                ? "white"
+                                                                                                : "black",
+                                                                                        fontWeight:
+                                                                                            "bold",
+                                                                                        borderRadius:
+                                                                                            "5px",
+                                                                                        borderWidth:
+                                                                                            "3px",
+                                                                                        borderColor:
                                                                                             alpha(
                                                                                                 tagColor,
                                                                                                 mode ===
@@ -585,11 +596,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                                                     ? 0.5
                                                                                                     : 0.75
                                                                                             ),
-                                                                                        color: tagTextColor,
-                                                                                        fontWeight:
-                                                                                            "bold",
-                                                                                        borderRadius:
-                                                                                            "7px",
                                                                                         overflow:
                                                                                             "hidden",
                                                                                         textOverflow:

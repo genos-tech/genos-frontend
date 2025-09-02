@@ -94,7 +94,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 variant="soft"
                                 color="neutral"
                                 sx={{
-                                    borderRadius: "7px",
+                                    borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
                                 size="lg"
@@ -117,7 +117,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     : "transparent",
                                 color: taskContents.status.textColor,
                                 fontWeight: "bold",
-                                borderRadius: "7px",
+                                borderRadius: "5px",
                             }}
                         >
                             {taskContents.status.status || "Open"}

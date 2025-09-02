@@ -96,7 +96,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             variant="soft"
                             color="neutral"
                             sx={{
-                                borderRadius: "7px",
+                                borderRadius: "5px",
                                 fontWeight: "bold",
                             }}
                             size="lg"
@@ -117,7 +117,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                             : "transparent",
                                         color: currentPreviewTask.status.textColor,
                                         fontWeight: "bold",
-                                        borderRadius: "7px",
+                                        borderRadius: "5px",
                                     }}
                                 >
                                     {currentPreviewTask.status.status || "N/A"}

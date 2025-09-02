@@ -42,15 +42,13 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                     return (
                         <Chip
                             key={`ac-project-tags-chip-${key}`}
-                            variant="soft"
+                            variant="outlined"
                             sx={{
-                                backgroundColor: alpha(
-                                    item.tagColor,
-                                    mode === "dark" ? 0.5 : 0.75
-                                ),
-                                color: item.tagTextColor,
+                                color: mode === "dark" ? "white" : "black",
                                 fontWeight: "bold",
-                                borderRadius: "7px",
+                                borderRadius: "5px",
+                                borderWidth: "3px",
+                                borderColor: alpha(item.tagColor, mode === "dark" ? 0.5 : 0.75),
                             }}
                             size="sm"
                         >
@@ -64,15 +62,13 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={`ac-project-tags-name-chip-${option.tagName}`}
-                            variant="soft"
+                            variant="outlined"
                             sx={{
-                                backgroundColor: alpha(
-                                    option.tagColor,
-                                    mode === "dark" ? 0.5 : 0.75
-                                ),
-                                color: option.tagTextColor,
+                                color: mode === "dark" ? "white" : "black",
                                 fontWeight: "bold",
-                                borderRadius: "7px",
+                                borderRadius: "5px",
+                                borderWidth: "3px",
+                                borderColor: alpha(option.tagColor, mode === "dark" ? 0.5 : 0.75),
                             }}
                             size="sm"
                         >

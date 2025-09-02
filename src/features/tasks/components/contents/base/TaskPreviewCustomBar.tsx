@@ -43,7 +43,7 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
                                 status: {
                                     code: 0,
                                     status: "WIP",
-                                    color: "#ffff23",
+                                    color: "#ff8c00ff",
                                     textColor: "purple",
                                 },
                             });

@@ -202,7 +202,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 color="neutral"
                                 sx={{
                                     marginRight: "auto",
-                                    borderRadius: "7px",
+                                    borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
                                 size="md"
@@ -217,7 +217,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 color="neutral"
                                 sx={{
                                     marginRight: "auto",
-                                    borderRadius: "7px",
+                                    borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
                                 size="md"

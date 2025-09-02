@@ -41,7 +41,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                     : "transparent",
                                 color: item.textColor,
                                 fontWeight: "bold",
-                                borderRadius: "7px",
+                                borderRadius: "5px",
                             }}
                             size="sm"
                         >
@@ -62,7 +62,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                     : "transparent",
                                 color: option.textColor,
                                 fontWeight: "bold",
-                                borderRadius: "7px",
+                                borderRadius: "5px",
                             }}
                             size="sm"
                         >
