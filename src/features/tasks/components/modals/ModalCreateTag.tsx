@@ -1,5 +1,7 @@
+import { alpha } from "@mui/system";
 import React, { useState } from "react";
 import { Modal, ModalDialog, Alert, Stack, Button, Input, Box, Chip, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
 import { UserProps } from "../../../../types/admin";
@@ -26,6 +28,7 @@ export const ModalCreateTag: React.FC<Props> = ({
     const { accessToken } = useAuth();
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
+    const { mode } = useColorScheme();
     const [selectedColor, setSelectedColor] = useState({
         chipColor: "#ff2323",
         textColor: "white",
@@ -107,11 +110,16 @@ export const ModalCreateTag: React.FC<Props> = ({
                         <Box>
                             Tag will be:&nbsp;
                             <Chip
-                                variant="soft"
+                                variant="outlined"
                                 sx={{
-                                    backgroundColor: selectedColor.chipColor,
-                                    color: selectedColor.textColor,
-                                    opacity: 0.8,
+                                    color: mode === "dark" ? "white" : "black",
+                                    fontWeight: "bold",
+                                    borderRadius: "5px",
+                                    borderWidth: "3px",
+                                    borderColor: alpha(
+                                        selectedColor.chipColor,
+                                        mode === "dark" ? 0.5 : 0.75
+                                    ),
                                 }}
                             >
                                 {tagName}
