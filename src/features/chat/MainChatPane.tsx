@@ -183,7 +183,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                     getTimeDiffSeconds(
                                         chatMessages[index - 1].tsSent,
                                         message.tsSent
-                                    ) < limitSeconds
+                                    ) < limitSeconds &&
+                                    currentMainChat.chatType !== 3 &&
+                                    currentMainChat.chatType !== 4
                                 ) {
                                     isSimpleBubble = true;
                                 }

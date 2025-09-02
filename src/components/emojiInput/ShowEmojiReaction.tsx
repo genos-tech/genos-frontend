@@ -98,7 +98,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                     chat_type: chatType,
                     chat_name: chatName,
                     chat_id: message.chatId,
-                    thread_id: isThread === true ? message.threadId : message.messageId,
+                    thread_id: isThread === true ? message.threadId : message.messageId || -1,
                     message_id: message.messageId,
                     message_body: message.content,
                     dm_partner_user_id:
@@ -107,19 +107,19 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                             : myself.userId,
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
-                    current_emojis: message.reactions?.allReactions || [],
+                    current_emojis: reactions,
                 });
 
                 // If the reaction is for the first message in the thread,
                 // delete the reaction from the parent message as well
-                if (isThread === true && message.messageId === 1) {
+                if (isThread === true && message.messageId === 1 && chatType !== 3) {
                     socket.emit("message_reaction", {
                         method_type: "DELETE",
                         team_id: myself.teamId,
                         chat_type: chatType,
                         chat_name: chatName,
                         chat_id: message.chatId,
-                        thread_id: -1,
+                        thread_id: message.threadId,
                         message_id: message.threadId,
                         message_body: message.content,
                         dm_partner_user_id:
@@ -128,12 +128,13 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
-                        current_emojis: message.reactions?.allReactions || [],
+                        current_emojis: reactions,
                     });
                 }
 
                 // Update the first thread message as well
-                if (isThread === false && numReplies > 0) {
+                // But not doing this for PM thead.
+                if (isThread === false && numReplies > 0  && chatType !== 3) {
                     socket.emit("message_reaction", {
                         method_type: "DELETE",
                         team_id: myself.teamId,
@@ -149,7 +150,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
-                        current_emojis: message.reactions?.allReactions || [],
+                        current_emojis: reactions,
                     });
                 }
             }
@@ -166,7 +167,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                     chat_type: chatType,
                     chat_name: chatName,
                     chat_id: message.chatId,
-                    thread_id: message.threadId,
+                    thread_id: isThread === true ? message.threadId : message.messageId || -1,
                     message_id: message.messageId,
                     message_body: message.content,
                     dm_partner_user_id:
@@ -175,17 +176,18 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                             : myself.userId,
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
-                    current_emojis: message.reactions?.allReactions || [],
+                    current_emojis: reactions,
                 });
 
                 // Update the parent message as well if it's the first thread message
-                if (isThread === true && message.messageId === 1) {
+                if (isThread === true && message.messageId === 1 && chatType !== 3) {
                     socket.emit("message_reaction", {
                         method_type: "POST",
                         team_id: myself.teamId,
                         chat_type: chatType,
                         chat_name: chatName,
                         chat_id: message.chatId,
+                        thread_id: message.threadId,
                         message_id: message.threadId,
                         message_body: message.content,
                         dm_partner_user_id:
@@ -194,12 +196,12 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
-                        current_emojis: message.reactions?.allReactions || [],
+                        current_emojis: reactions,
                     });
                 }
 
                 // Update the first thread message as well
-                if (isThread === false && numReplies > 0) {
+                if (isThread === false && chatType !== 3 && numReplies > 0) {
                     socket.emit("message_reaction", {
                         method_type: "POST",
                         team_id: myself.teamId,
@@ -215,7 +217,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
-                        current_emojis: message.reactions?.allReactions || [],
+                        current_emojis: reactions,
                     });
                 }
             }

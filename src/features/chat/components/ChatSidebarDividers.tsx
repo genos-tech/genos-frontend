@@ -150,6 +150,17 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
+                    variant={currentActivityMessageType === 0 ? "soft" : "outlined"}
+                    sx={{ fontSize: "13px", my: "1px" }}
+                    onClick={() => {
+                        setCurrentActivityMessageType(0);
+                    }}
+                >
+                    All
+                </Button>
+                <Button
+                    component="p"
+                    size="sm"
                     variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
                     onClick={() => {
