@@ -161,36 +161,6 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
-                    sx={{ fontSize: "13px", my: "1px" }}
-                    onClick={() => {
-                        if (currentActivityMessageType !== 1) {
-                            setCurrentActivityMessageType(1);
-                        } else {
-                            setCurrentActivityMessageType(0);
-                        }
-                    }}
-                >
-                    Thread
-                </Button>
-                <Button
-                    component="p"
-                    size="sm"
-                    variant={currentActivityMessageType === 2 ? "soft" : "outlined"}
-                    sx={{ fontSize: "13px", my: "1px" }}
-                    onClick={() => {
-                        if (currentActivityMessageType !== 2) {
-                            setCurrentActivityMessageType(2);
-                        } else {
-                            setCurrentActivityMessageType(0);
-                        }
-                    }}
-                >
-                    Task
-                </Button>
-                <Button
-                    component="p"
-                    size="sm"
                     variant={currentActivityMessageType === 3 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
                     onClick={() => {
@@ -206,6 +176,21 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
+                    variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
+                    sx={{ fontSize: "13px", my: "1px" }}
+                    onClick={() => {
+                        if (currentActivityMessageType !== 1) {
+                            setCurrentActivityMessageType(1);
+                        } else {
+                            setCurrentActivityMessageType(0);
+                        }
+                    }}
+                >
+                    Thread
+                </Button>
+                <Button
+                    component="p"
+                    size="sm"
                     variant={currentActivityMessageType === 4 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
                     onClick={() => {
@@ -217,6 +202,21 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                     }}
                 >
                     Reaction
+                </Button>
+                <Button
+                    component="p"
+                    size="sm"
+                    variant={currentActivityMessageType === 2 ? "soft" : "outlined"}
+                    sx={{ fontSize: "13px", my: "1px" }}
+                    onClick={() => {
+                        if (currentActivityMessageType !== 2) {
+                            setCurrentActivityMessageType(2);
+                        } else {
+                            setCurrentActivityMessageType(0);
+                        }
+                    }}
+                >
+                    Task
                 </Button>
             </Stack>
         </Stack>
