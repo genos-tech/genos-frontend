@@ -184,16 +184,30 @@ export const TaskHome = (props: TaskHomeProps) => {
         // TODO: should set "last-opened-project" using cache(localstorage)
         if (loadedTeamProjects.length > 0) {
             for (let i = 0; i < loadedTeamProjects.length; i++) {
-                if (loadedTeamProjects[i].isJoined === true) {
-                    setCurrentProject({
-                        projectId: loadedTeamProjects[i].projectId,
-                        projectName: loadedTeamProjects[i].projectName,
-                        projectTags: loadedTeamProjects[i].projectTags,
-                        systemUserId: loadedTeamProjects[i].systemUserId,
-                    });
-                    await updateTeamTasks(myself, accessToken);
-                    await fetchProjectTasks(loadedTeamProjects[i].projectId);
-                    break;
+                if (currentProject) {
+                    if (loadedTeamProjects[i].projectId === currentProject.projectId) {
+                        setCurrentProject({
+                            projectId: loadedTeamProjects[i].projectId,
+                            projectName: loadedTeamProjects[i].projectName,
+                            projectTags: loadedTeamProjects[i].projectTags,
+                            systemUserId: loadedTeamProjects[i].systemUserId,
+                        });
+                        await updateTeamTasks(myself, accessToken);
+                        await fetchProjectTasks(loadedTeamProjects[i].projectId);
+                        break;
+                    }
+                } else {
+                    if (loadedTeamProjects[i].isJoined === true) {
+                        setCurrentProject({
+                            projectId: loadedTeamProjects[i].projectId,
+                            projectName: loadedTeamProjects[i].projectName,
+                            projectTags: loadedTeamProjects[i].projectTags,
+                            systemUserId: loadedTeamProjects[i].systemUserId,
+                        });
+                        await updateTeamTasks(myself, accessToken);
+                        await fetchProjectTasks(loadedTeamProjects[i].projectId);
+                        break;
+                    }
                 }
             }
         } else {
