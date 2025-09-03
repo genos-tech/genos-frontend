@@ -159,34 +159,29 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     alignItems: "center",
                                                 }}
                                             >
-                                                {tags.map(
-                                                    (
-                                                        { tagName, tagColor, tagTextColor },
-                                                        index
-                                                    ) => (
-                                                        <Chip
-                                                            key={`${id}-${index}-${tagName}`}
-                                                            variant="soft"
-                                                            sx={{
-                                                                marginX: "5px",
-                                                                backgroundColor: tagColor
-                                                                    ? alpha(
-                                                                          tagColor,
-                                                                          mode === "dark"
-                                                                              ? 0.5
-                                                                              : 0.75
-                                                                      )
-                                                                    : "transparent",
-                                                                color: tagTextColor,
-                                                                fontWeight: "bold",
-                                                                borderRadius: "5px",
-                                                            }}
-                                                            size="md"
-                                                        >
-                                                            {`${tagName}`}
-                                                        </Chip>
-                                                    )
-                                                )}
+                                                {tags.map(({ tagName, tagColor }, index) => (
+                                                    <Chip
+                                                        key={`${id}-${index}-${tagName}`}
+                                                        variant="outlined"
+                                                        sx={{
+                                                            marginX: "5px",
+                                                            color:
+                                                                mode === "dark"
+                                                                    ? "white"
+                                                                    : "black",
+                                                            fontWeight: "bold",
+                                                            borderRadius: "5px",
+                                                            borderWidth: "3px",
+                                                            borderColor: alpha(
+                                                                tagColor,
+                                                                mode === "dark" ? 0.5 : 0.75
+                                                            ),
+                                                        }}
+                                                        size="md"
+                                                    >
+                                                        {`${tagName}`}
+                                                    </Chip>
+                                                ))}
                                             </Box>
                                         </ListItemButton>
                                     </ListItem>
