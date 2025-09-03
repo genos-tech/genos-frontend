@@ -132,6 +132,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     systemUserId: null,
                     taskId: message.taskId || null,
                     messageIdForPut: null,
+                    send_activity: false,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
@@ -333,6 +334,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            send_activity: false,
                         });
                     }
 
@@ -354,6 +356,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            send_activity: false,
                         });
                     }
                 }

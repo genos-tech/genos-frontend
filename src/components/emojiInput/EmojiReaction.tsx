@@ -196,6 +196,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        send_activity: false,
                     });
                 }
 
@@ -217,6 +218,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        send_activity: false,
                     });
                 }
             }
