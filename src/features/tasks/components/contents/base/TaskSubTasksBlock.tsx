@@ -164,7 +164,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         key={`${id}-${index}-${tagName}`}
                                                         variant="outlined"
                                                         sx={{
-                                                            marginX: "5px",
+                                                            marginX: "2px",
                                                             color:
                                                                 mode === "dark"
                                                                     ? "white"
