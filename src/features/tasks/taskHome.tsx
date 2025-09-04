@@ -163,7 +163,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
             setTeamTaskOptions([...loadedTeamTasks]);
         })();
-    }, [displayTaskType]);
+    }, [displayTaskType, currentProject]);
 
     function onChangeHandler(value: any) {
         if (value !== null) {
