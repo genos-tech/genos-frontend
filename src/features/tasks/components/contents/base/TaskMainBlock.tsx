@@ -46,7 +46,7 @@ type TaskMainBlockProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
-    setTaskStatusUpdated: (value: boolean) => void;
+    setTaskStatusUpdated?: (value: boolean) => void;
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
