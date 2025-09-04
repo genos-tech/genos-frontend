@@ -83,6 +83,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         currentPreviewTask.attachments
     );
     const [taskUpdated, setTaskUpdated] = useState(false);
+    const [taskStatusUpdated, setTaskStatusUpdated] = useState(false);
     const [taskBodyUpdated, setTaskBodyUpdated] = useState(false);
     const [taskBodySaved, setTaskBodySaved] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
@@ -118,6 +119,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             myself,
             newTaskContent,
             taskBodyUpdated,
+            taskStatusUpdated,
             accessToken
         );
 
@@ -154,6 +156,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setCurrentPreviewTask(newTaskContent);
         }
         setTaskUpdated(false);
+        setTaskStatusUpdated(false);
     };
 
     useEffect(() => {
@@ -374,6 +377,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                setTaskStatusUpdated={setTaskStatusUpdated}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

@@ -46,6 +46,7 @@ type TaskMainBlockProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    setTaskStatusUpdated: (value: boolean) => void;
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
@@ -73,6 +74,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setOpeningService,
         setCurrentMainChat,
         setCurrentPreviewTaskId,
+        setTaskStatusUpdated,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -222,6 +224,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 taskContents={taskContents}
                                 setTaskContents={setTaskContents}
                                 setTaskUpdated={setTaskUpdated}
+                                setTaskStatusUpdated={setTaskStatusUpdated}
                             />
                         </ListItem>
                     )}

@@ -13,9 +13,10 @@ type ACTaskStatusProps = {
     taskContents: TaskProps;
     setTaskContents: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
+    setTaskStatusUpdated: (value: boolean) => void;
 };
 export const ACTaskStatus = (props: ACTaskStatusProps) => {
-    const { socket, taskContents, setTaskContents, setTaskUpdated } = props;
+    const { socket, taskContents, setTaskContents, setTaskUpdated, setTaskStatusUpdated } = props;
 
     const { mode } = useColorScheme();
 
@@ -78,6 +79,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                             ...taskContents,
                             status: value.slice(-1)[0],
                         });
+                        setTaskStatusUpdated(true);
                         if (setTaskUpdated) {
                             setTaskUpdated(true);
                         }

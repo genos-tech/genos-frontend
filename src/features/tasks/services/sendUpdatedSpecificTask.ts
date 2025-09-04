@@ -14,6 +14,7 @@ export const sendUpdatedSpecificTask = async (
     myself: UserProps,
     updatedTask: TaskProps,
     taskBodyUpdated: boolean,
+    taskStatusUpdated: boolean,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
 ) => {
@@ -71,24 +72,29 @@ export const sendUpdatedSpecificTask = async (
                         messageIdForPut: null,
                     });
 
-                    socket.emit("thread_message", {
-                        methodType: "POST",
-                        isInit: false,
-                        rootMessageTSSent: "",
-                        rootMessageSenderId: null,
-                        rootMessageReceiverId: null,
-                        threadId: null,
-                        threadMessage: updatedTaskThreadMessage,
-                        chatType: 3,
-                        dmPartnerUserId: null,
-                        senderId: updatedTask.project.systemUserId,
-                        senderName: updatedTask.project.projectName,
-                        destCGName: updatedTask.project.projectName,
-                        destCGId: updatedTask.project.projectId,
-                        taskId: updatedTask.id,
-                        systemUserId: updatedTask.project.systemUserId,
-                        messageIdForPut: null,
-                    });
+                    // Send a thread message only when the task status is updated.
+                    // TODO: We can send other messages as well, but need more
+                    //       considerations about what kind of content we should send.
+                    if (taskStatusUpdated === true) {
+                        socket.emit("thread_message", {
+                            methodType: "POST",
+                            isInit: false,
+                            rootMessageTSSent: "",
+                            rootMessageSenderId: null,
+                            rootMessageReceiverId: null,
+                            threadId: null,
+                            threadMessage: updatedTaskThreadMessage,
+                            chatType: 3,
+                            dmPartnerUserId: null,
+                            senderId: updatedTask.project.systemUserId,
+                            senderName: updatedTask.project.projectName,
+                            destCGName: updatedTask.project.projectName,
+                            destCGId: updatedTask.project.projectId,
+                            taskId: updatedTask.id,
+                            systemUserId: updatedTask.project.systemUserId,
+                            messageIdForPut: null,
+                        });
+                    }
                 }
 
                 if (updatedTask) {
