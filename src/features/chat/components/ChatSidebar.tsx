@@ -105,7 +105,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     setAllChats={setAllChats}
                 />
 
-                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                <Stack
+                    direction="row"
+                    spacing={1}
+                    justifyContent="center"
+                    alignItems="center"
+                    flexWrap="wrap"
+                >
                     <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
                         <IconButton
                             component="p"

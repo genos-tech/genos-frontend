@@ -146,7 +146,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
             >
                 Recent Activities
             </Typography>
-            <Stack direction={"row"} spacing={0.5}>
+            <Stack direction={"row"} spacing={0.5} flexWrap="wrap">
                 <Button
                     component="p"
                     size="sm"

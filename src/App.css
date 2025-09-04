@@ -63,6 +63,25 @@
   border-radius: 10px;
 }
 
+.MuiAutocomplete-listbox::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.MuiAutocomplete-listbox::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb {
+  background: #626262;
+  border-radius: 10px;
+}
+
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb:hover {
+  background: #9c9c9c;
+  border-radius: 10px;
+}
+
 .MuiDataGrid-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;

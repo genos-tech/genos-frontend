@@ -154,6 +154,7 @@ export type SearchTeamTasksResponse = {
     taskId: number;
     title: string;
     status: TaskStatusProps;
+    tsUpdated: string;
 };
 
 export type FileProps = {

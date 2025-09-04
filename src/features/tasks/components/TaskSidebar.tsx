@@ -11,6 +11,7 @@ import {
     Typography,
     Sheet,
     Autocomplete,
+    AutocompleteOption,
     CircularProgress,
     Chip,
 } from "@mui/joy";
@@ -125,6 +126,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
                 -1,
+                "open,wip,pending",
+                -1,
                 accessToken
             );
 
@@ -163,6 +166,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                -1,
+                "open,wip,pending",
                 100,
                 accessToken
             );
@@ -231,7 +236,10 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
             <Box>
                 <Autocomplete
+                    key={`ac-project-tags-${currentPreviewTaskId}`}
+                    sx={{ width: "100%" }}
                     placeholder={"Search"}
+                    variant="soft"
                     open={openSearch}
                     onOpen={() => {
                         setOpenSearch(true);
@@ -239,13 +247,84 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     onClose={() => {
                         setOpenSearch(false);
                     }}
-                    isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
-                    getOptionLabel={(option) => `${option.taskId} | ${option.title}`}
+                    isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
+                    getOptionLabel={(option) => option.title}
+                    renderTags={(tags, getTagProps) =>
+                        tags.map((item, index) => {
+                            const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                            return (
+                                <Chip
+                                    key={`ac-taskhome-search-task-chip-${key}`}
+                                    variant="soft"
+                                    sx={{
+                                        backgroundColor: alpha(
+                                            item.status.color || "#0044c2",
+                                            mode === "dark" ? 0.5 : 0.75
+                                        ),
+                                        color: item.status.textColor,
+                                        fontWeight: "bold",
+                                        borderRadius: "5px",
+                                    }}
+                                    size="sm"
+                                >
+                                    {item.status.status}
+                                </Chip>
+                            );
+                        })
+                    }
+                    renderOption={(props, option) => (
+                        <AutocompleteOption
+                            {...props}
+                            key={`ac-taskhome-search-task-${option.taskId}`}
+                        >
+                            <ListItemContent
+                                sx={{
+                                    fontSize: "sm",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    width: "100%", // take full width of button
+                                }}
+                            >
+                                <Chip
+                                    key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
+                                    variant="outlined"
+                                    color="neutral"
+                                    size="sm"
+                                >
+                                    ID:{option.taskId}
+                                </Chip>
+                                <Chip
+                                    key={`ac-taskhome-search-task-chip-${option.taskId}`}
+                                    variant="soft"
+                                    sx={{
+                                        backgroundColor: alpha(
+                                            option.status.color || "#0044c2",
+                                            mode === "dark" ? 0.5 : 0.75
+                                        ),
+                                        color: option.status.textColor,
+                                        fontWeight: "bold",
+                                        borderRadius: "5px",
+                                        m: "3px",
+                                    }}
+                                    size="sm"
+                                >
+                                    {option.status.status}
+                                </Chip>
+                                {option.title}
+                            </ListItemContent>
+                        </AutocompleteOption>
+                    )}
                     options={teamTaskOptions}
                     loading={loading}
                     endDecorator={
                         loading ? (
-                            <CircularProgress size="sm" sx={{ bgcolor: "background.surface" }} />
+                            <CircularProgress
+                                size="sm"
+                                sx={{
+                                    bgcolor: "background.surface",
+                                }}
+                            />
                         ) : null
                     }
                     slotProps={{
@@ -372,6 +451,19 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                     sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 >
                                                     <Chip
+                                                        key={`recent-task-project-chip-${taskId}`}
+                                                        variant="outlined"
+                                                        color="neutral"
+                                                        sx={{
+                                                            borderRadius: "5px",
+                                                            fontWeight: "bold",
+                                                            marginX: "-10px",
+                                                        }}
+                                                        size="sm"
+                                                    >
+                                                        {projectName.toUpperCase().slice(0, 2)}
+                                                    </Chip>
+                                                    <Chip
                                                         key={`recent-task-chip-${taskId}`}
                                                         variant="soft"
                                                         color="neutral"
@@ -396,7 +488,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             color: status.textColor,
                                                             fontWeight: "bold",
                                                             borderRadius: "5px",
-                                                            marginX: "-5px",
+                                                            marginX: "-10px",
                                                         }}
                                                         size="sm"
                                                     >

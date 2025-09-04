@@ -5,13 +5,15 @@ import { UserProps } from "../../../types/admin";
 
 export const loadTeamTaskList = async (
     myself: UserProps,
+    projectId: number,
+    statuses: string,
     topN: number,
     accessToken: string | null
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${myself.teamId}&top_n=${topN}`;
+            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&statuses=${statuses}&top_n=${topN}`;
             const res = await api.get(`/search/teamTasks/?${query}`);
             return res.data;
         } else {

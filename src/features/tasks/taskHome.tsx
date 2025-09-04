@@ -135,6 +135,8 @@ export const TaskHome = (props: TaskHomeProps) => {
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
+                currentProject?.projectId || -1,
+                displayTaskType.statuses.join(","),
                 -1,
                 accessToken
             );
@@ -148,6 +150,20 @@ export const TaskHome = (props: TaskHomeProps) => {
             active = false;
         };
     }, [loading]);
+
+    useEffect(() => {
+        (async () => {
+            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+                myself,
+                currentProject?.projectId || -1,
+                displayTaskType.statuses.join(","),
+                -1,
+                accessToken
+            );
+
+            setTeamTaskOptions([...loadedTeamTasks]);
+        })();
+    }, [displayTaskType]);
 
     function onChangeHandler(value: any) {
         if (value !== null) {
