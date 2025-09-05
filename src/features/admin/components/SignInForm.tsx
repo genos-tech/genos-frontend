@@ -185,9 +185,6 @@ export const SignInForm = () => {
                                             onChange={(event) => {
                                                 if (event.target.checked) {
                                                     setRememberEmail(true);
-                                                } else {
-                                                    setRememberEmail(false);
-                                                    localStorage.setItem("signInEmail", "");
                                                 }
                                             }}
                                         />
