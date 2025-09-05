@@ -1,4 +1,4 @@
-import { Box, Tooltip, IconButton, Typography } from "@mui/joy";
+import { Box, Tooltip, IconButton } from "@mui/joy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 type BubbleReplyButtonTypes = {

@@ -1,11 +1,11 @@
-import { Avatar, Chip, Typography } from "@mui/joy";
-import CircleIcon from "@mui/icons-material/Circle";
+import { Avatar, Box, Chip, Typography } from "@mui/joy";
 import GroupsIcon from "@mui/icons-material/Groups";
 
 import { ChatProps } from "../../../../types/chat";
+import { PulseDot } from "../../../../components/utils/PulseDot";
 
-export const HeaderUserName = (props: { chat: ChatProps; isYou: boolean }) => {
-    const { chat, isYou } = props;
+export const HeaderUserName = (props: { isOnline: boolean; chat: ChatProps; isYou: boolean }) => {
+    const { isOnline, chat, isYou } = props;
     return (
         <>
             <div>
@@ -25,15 +25,17 @@ export const HeaderUserName = (props: { chat: ChatProps; isYou: boolean }) => {
                         chat.chatType === 1 ? (
                             <Chip
                                 variant="outlined"
-                                size="sm"
+                                size="md"
                                 color="neutral"
                                 sx={{ borderRadius: "sm" }}
                                 startDecorator={
-                                    <CircleIcon sx={{ fontSize: 8 }} color="success" />
+                                    <Box sx={{ ml: "-5px" }}>
+                                        <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
+                                    </Box>
                                 }
                                 slotProps={{ root: { component: "span" } }}
                             >
-                                Online
+                                {isOnline === true ? "Online" : "Offline"}
                             </Chip>
                         ) : undefined
                     }

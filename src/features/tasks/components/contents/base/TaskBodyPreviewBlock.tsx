@@ -7,6 +7,7 @@ import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 
 type TaskBodyPreviewBlockProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -19,6 +20,7 @@ type TaskBodyPreviewBlockProps = {
 };
 export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
     const {
+        teamMemberStatus,
         myself,
         socket,
         teamMembers,
@@ -33,6 +35,7 @@ export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
+                    teamMemberStatus={teamMemberStatus}
                     myself={myself}
                     socket={socket}
                     teamMembers={teamMembers}

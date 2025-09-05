@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Box, Chip, Typography, Card, Button, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -38,6 +38,7 @@ const item_body = [
 ];
 
 type InboxBubbleProps = {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     myself: UserProps;
     inboxItem: InboxProps;
@@ -45,7 +46,8 @@ type InboxBubbleProps = {
     setCurrentChat: (chat: ChatProps) => void;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { socket, myself, inboxItem, setOpeningService, setCurrentChat } = props;
+    const { teamMemberStatus, socket, myself, inboxItem, setOpeningService, setCurrentChat } =
+        props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
     const { accessToken } = useAuth();
@@ -234,6 +236,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     {inboxItem.itemBody[0].content.length > 0 && (
                         <BnChatPreview
                             customClassName="inbox-preview"
+                            teamMemberStatus={teamMemberStatus}
                             myself={myself}
                             socket={socket}
                             key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}

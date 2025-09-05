@@ -10,6 +10,7 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
 type SubChatPaneHeaderProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     chat: ChatProps;
     subChat: ChatProps;
@@ -25,6 +26,7 @@ type SubChatPaneHeaderProps = {
 
 export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
     const {
+        teamMemberStatus,
         myself,
         chat,
         subChat,
@@ -61,7 +63,11 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
             }}
         >
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
-                <HeaderUserName chat={subChat} isYou={isYou} />
+                <HeaderUserName
+                    isOnline={teamMemberStatus[chat.dmPartnerUser?.userId || ""]}
+                    chat={subChat}
+                    isYou={isYou}
+                />
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
                 {(subChat.chatType === 3 || subChat.chatType === 4) && (

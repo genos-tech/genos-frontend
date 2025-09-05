@@ -1,10 +1,6 @@
-import { Button, Stack, Typography, Input } from "@mui/joy";
+import { Button, Stack, Input } from "@mui/joy";
 
-import {
-    getFormattedDateStr,
-    getFormattedTodayDateStr,
-    getFormattedNDaysAfterDateStr,
-} from "../../../../../../utils/dateUtils";
+import { getFormattedDateStr, getFormattedTodayDateStr } from "../../../../../../utils/dateUtils";
 import { TaskProps } from "../../../../../../types/tasks";
 
 type TaskDueDateInputProps = {

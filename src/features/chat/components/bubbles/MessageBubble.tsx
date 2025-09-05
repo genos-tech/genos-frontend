@@ -22,6 +22,7 @@ import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 
 type MessageBubbleProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     variant: "sent" | "received";
     chat: ChatProps;
@@ -48,6 +49,7 @@ type MessageBubbleProps = {
 
 export const MessageBubble = (props: MessageBubbleProps) => {
     const {
+        teamMemberStatus,
         myself,
         variant,
         chat,
@@ -502,10 +504,17 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     ) && (
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
-                                                userProfile={isSent ? myself : message.sender}
+                                                myself={myself}
+                                                avatarUser={isSent ? myself : message.sender}
+                                                isOnline={
+                                                    teamMemberStatus[
+                                                        isSent
+                                                            ? myself.userId
+                                                            : message.sender.userId
+                                                    ]
+                                                }
                                                 socket={socket}
                                                 chat={chat}
-                                                online={message.sender.online}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
                                             />
@@ -599,6 +608,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                             {message.content && message.content.length > 0 && (
                                 <BnChatPreview
+                                    teamMemberStatus={teamMemberStatus}
                                     myself={myself}
                                     socket={socket}
                                     key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}

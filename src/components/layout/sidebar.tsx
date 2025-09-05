@@ -17,6 +17,7 @@ import { closeSidebar } from "../../utils";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/UserProfile";
+import { PulseDot } from "../../components/utils/PulseDot";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -236,11 +237,16 @@ export const Sidebar = (props: SidebarProps) => {
                 >
                     {myself.userName[0]}
                 </Avatar>
+                <Box position="absolute" bottom={0} right={0} width={24} height={33}>
+                    <PulseDot color={"#4caf50"} />
+                </Box>
             </Box>
 
             <UserProfile
                 socket={socket}
-                userProfile={myself}
+                myself={myself}
+                user={myself}
+                isOnline={true}
                 openUserProfile={openUserProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 setCurrentMainChat={setCurrentMainChat}

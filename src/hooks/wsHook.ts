@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Socket } from "socket.io-client";
 
+import { addUser } from "../features/admin/services/addUser";
 import { addChat } from "../features/chat/services/addChat";
 import { addActivityMessage } from "../features/chat/services/addActivityMessage";
 import { addMessage } from "../features/chat/services/addMessage";
@@ -18,6 +19,7 @@ import {
     ThreadProps,
     ActivityMessageProps,
 } from "../types/chat";
+import { getCurrentTimestamp } from "../utils/dateUtils";
 
 type wsHookProps = {
     socket: Socket | null;
@@ -192,6 +194,15 @@ export const wsHook = (props: wsHookProps) => {
             return;
         }
 
+        // emit heartbeat every 1 minute
+        const intervalId = setInterval(() => {
+            socket.emit("heartbeat", {
+                message: "alive",
+                is_online: true,
+                user: { ...myself, tsLastSeen: getCurrentTimestamp() },
+            });
+        }, 10_000);
+
         socket.on("connect", () => {
             console.log("WS connected");
         });
@@ -202,8 +213,8 @@ export const wsHook = (props: wsHookProps) => {
         });
 
         socket.on("message", async (message) => {
-            console.log("message:", message);
             if (message.wsType === "chat") {
+                console.log("chat_message:", message);
                 if (message.chatId !== null) {
                     var fromMe: boolean = false;
                     var toMe: boolean = false;
@@ -530,20 +541,27 @@ export const wsHook = (props: wsHookProps) => {
                 }
             } else if (message.wsType === "task") {
                 console.log("Got a task comment");
+                console.log("task_message:", message);
                 if (setIsTaskCommentUpdated) {
                     setIsTaskCommentUpdated(true);
                 }
             } else if (message.wsType === "activity") {
                 console.log("Got an activity message");
+                console.log("activity_message:", message);
                 const newActivityMessage: ActivityMessageProps = message;
                 if (newActivityMessage) {
                     await addActivityMessage(newActivityMessage);
                     funcSetActivityMessages();
                 }
+            } else if (message.wsType === "userStatus") {
+                const user: UserProps = message.user;
+
+                await addUser(user);
             }
         });
 
         return () => {
+            clearInterval(intervalId);
             socket.off("message");
             socket.off("connect");
         };

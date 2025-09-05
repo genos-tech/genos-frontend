@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
@@ -19,6 +19,8 @@ import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { InboxProps } from "./types/common";
+import { getCurrentTimestamp } from "./utils/dateUtils";
+import PopTeamUserStatusWorker from "./workers/popTeamUserStatusWorker.ts?worker";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -53,8 +55,8 @@ const useMyself = (): SetMyselfProps => {
         userId: "",
         userName: "",
         userEmail: "",
+        tsLastSeen: "",
         avatarImgPath: "",
-        online: true,
     });
 
     useEffect(() => {
@@ -65,8 +67,8 @@ const useMyself = (): SetMyselfProps => {
                 userId: localStorage.getItem("userId") || "",
                 userName: localStorage.getItem("userName") || "",
                 userEmail: localStorage.getItem("userEmail") || "",
+                tsLastSeen: getCurrentTimestamp(),
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
-                online: true,
             });
         };
 
@@ -91,8 +93,8 @@ export const App = () => {
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
+    const [teamMemberStatus, setTeamMemberStatus] = useState<Record<string, boolean>>({});
     const [isLoading, setIsLoading] = useState(true);
-    const [isWSConnected, setIsWSConnected] = useState(false);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
     // {0: Inbox, 1: Chat, 2: Tasks, 3: Notes}
@@ -166,6 +168,29 @@ export const App = () => {
         }
     }, [myself, accessToken]);
 
+    useEffect(() => {
+        if (myself.teamId !== "") {
+            const popTeamUserStatusWorker = new PopTeamUserStatusWorker();
+
+            const interval = setInterval(() => {
+                popTeamUserStatusWorker.postMessage({ myself });
+                popTeamUserStatusWorker.onmessage = (event) => {
+                    const data = event.data;
+                    if (data.error) {
+                        console.error("Worker failed:", data.error);
+                    } else {
+                        setTeamMemberStatus(data);
+                    }
+                };
+            }, 5000);
+
+            return () => {
+                popTeamUserStatusWorker.terminate();
+                clearInterval(interval);
+            };
+        }
+    }, [myself]);
+
     wsHook({
         socket: socketInstance,
         accessToken: accessToken,
@@ -196,6 +221,7 @@ export const App = () => {
 
                 {openingService === 0 ? (
                     <InboxHome
+                        teamMemberStatus={teamMemberStatus}
                         myself={myself}
                         socket={socketInstance}
                         setMyself={setMyself}
@@ -208,6 +234,7 @@ export const App = () => {
 
                 {openingService === 1 ? (
                     <ChatHome
+                        teamMemberStatus={teamMemberStatus}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
@@ -233,6 +260,7 @@ export const App = () => {
 
                 {openingService === 2 ? (
                     <TaskHome
+                        teamMemberStatus={teamMemberStatus}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}

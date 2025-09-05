@@ -32,12 +32,12 @@ import {
 
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import "../../App.css";
 
 type BnTaskPreviewProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -50,6 +50,7 @@ type BnTaskPreviewProps = {
 };
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const {
+        teamMemberStatus,
         myself,
         socket,
         teamMembers,
@@ -260,7 +261,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(MentionMenuItems(editor, teamMembers), query)
+                            filterSuggestionItems(
+                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                query
+                            )
                         }
                     />
                     <SuggestionMenuController

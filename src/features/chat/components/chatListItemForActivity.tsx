@@ -24,6 +24,7 @@ import { extractMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     activity: ActivityMessageProps;
     myself: UserProps;
@@ -48,6 +49,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
     const {
+        teamMemberStatus,
         socket,
         activity,
         myself,
@@ -71,8 +73,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     } = props;
     const { accessToken } = useAuth();
     const isYou = myself.userId === activity.dmPartnerUser?.userId;
-
-    const always_online: boolean = true; // TODO: need to get status from WS
 
     const defineNewMessages = (messages: any, moveToSpecificIndex: string) => {
         const newMessages: ChatProps = {
@@ -304,9 +304,12 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     {activity.chatType === 1 &&
                                         activity.dmPartnerUser !== null && (
                                             <AvatarWithStatus
-                                                userProfile={activity.dmPartnerUser}
+                                                myself={myself}
+                                                avatarUser={activity.dmPartnerUser}
+                                                isOnline={
+                                                    teamMemberStatus[activity.dmPartnerUser.userId]
+                                                }
                                                 socket={socket}
-                                                online={always_online}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
                                             />

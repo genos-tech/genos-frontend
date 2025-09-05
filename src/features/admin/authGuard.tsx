@@ -12,9 +12,5 @@ export const AuthGuard = () => {
 
     if (loading) return <div>Loading...</div>;
 
-    return localStorage.getItem("isSigningIn") === "yes" ? (
-        <Outlet />
-    ) : (
-        <Navigate to="/SignIn" />
-    );
+    return localStorage.getItem("isSigningIn") === "yes" ? <Outlet /> : <Navigate to="/SignIn" />;
 };

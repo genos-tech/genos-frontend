@@ -40,6 +40,7 @@ import { ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 
 type BnThreadEditorProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -52,6 +53,7 @@ type BnThreadEditorProps = {
 };
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
+        teamMemberStatus,
         myself,
         socket,
         teamMembers,
@@ -341,7 +343,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(MentionMenuItems(editor, teamMembers), query)
+                            filterSuggestionItems(
+                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                query
+                            )
                         }
                     />
                     <SuggestionMenuController

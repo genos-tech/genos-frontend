@@ -31,12 +31,12 @@ import {
 } from "@blocknote/core";
 
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import "../../App.css";
 
 type BnInboxPreviewProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -49,6 +49,7 @@ type BnInboxPreviewProps = {
 };
 export const BnInboxPreview = (props: BnInboxPreviewProps) => {
     const {
+        teamMemberStatus,
         myself,
         socket,
         teamMembers,
@@ -243,7 +244,10 @@ export const BnInboxPreview = (props: BnInboxPreviewProps) => {
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(MentionMenuItems(editor, teamMembers), query)
+                            filterSuggestionItems(
+                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                query
+                            )
                         }
                     />
                     <SuggestionMenuController

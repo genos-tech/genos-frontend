@@ -24,6 +24,7 @@ import { toggleMessagesPane } from "../../../utils";
 import { extractMMDDHHMM } from "../../../utils/dateUtils";
 
 type ChatListItemProps = ListItemButtonProps & {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     chat: AllChatProps;
     myself: UserProps;
@@ -46,6 +47,7 @@ type ChatListItemProps = ListItemButtonProps & {
 
 export const ChatListItem = (props: ChatListItemProps) => {
     const {
+        teamMemberStatus,
         socket,
         chat,
         myself,
@@ -74,8 +76,6 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 `${chat.chatName}-${chat.chatId}`);
 
     const isYou = myself.userId === chat.dmPartnerUser?.userId;
-
-    const always_online: boolean = true; // TODO: need to get status from WS
 
     const defineNewMessages = (messages: any) => {
         const newMessages: ChatProps = {
@@ -173,10 +173,11 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 <div>
                                     {chatType === 1 && chat.dmPartnerUser !== null && (
                                         <AvatarWithStatus
-                                            userProfile={chat.dmPartnerUser}
+                                            myself={myself}
+                                            avatarUser={chat.dmPartnerUser}
+                                            isOnline={teamMemberStatus[chat.dmPartnerUser.userId]}
                                             socket={socket}
                                             chat={chat}
-                                            online={always_online}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                         />

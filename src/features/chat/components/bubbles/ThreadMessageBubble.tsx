@@ -17,6 +17,7 @@ import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 
 type threadMessageBubbleProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     thread: ThreadProps;
@@ -34,6 +35,7 @@ type threadMessageBubbleProps = {
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const {
+        teamMemberStatus,
         myself,
         socket,
         thread,
@@ -302,10 +304,17 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     {message.sender.isSystemUser !== true && (
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
-                                                userProfile={isSent ? myself : message.sender}
+                                                myself={myself}
+                                                avatarUser={isSent ? myself : message.sender}
+                                                isOnline={
+                                                    teamMemberStatus[
+                                                        isSent
+                                                            ? myself.userId
+                                                            : message.sender.userId
+                                                    ]
+                                                }
                                                 socket={socket}
                                                 thread={thread}
-                                                online={message.sender.online}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
                                             />
@@ -372,6 +381,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
                             {message.content.length > 0 && (
                                 <BnChatPreview
+                                    teamMemberStatus={teamMemberStatus}
                                     myself={myself}
                                     socket={socket}
                                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}

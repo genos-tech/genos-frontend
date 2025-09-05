@@ -18,6 +18,7 @@ import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/em
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
 
 type TaskCommentBubbleProps = {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     myself: UserProps;
     comment: TaskCommentProps;
@@ -30,6 +31,7 @@ type TaskCommentBubbleProps = {
 };
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const {
+        teamMemberStatus,
         socket,
         myself,
         comment,
@@ -200,6 +202,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         </Tooltip>
                         <BnChatPreview
                             customClassName="task-comment-preview"
+                            teamMemberStatus={teamMemberStatus}
                             myself={myself}
                             socket={socket}
                             key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
