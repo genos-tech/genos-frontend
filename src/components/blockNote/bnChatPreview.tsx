@@ -18,6 +18,7 @@ import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 
 type BnChatPreviewProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     content: PartialBlock[] | any[];
@@ -27,8 +28,16 @@ type BnChatPreviewProps = {
     setOpeningService: (value: number) => void;
 };
 export const BnChatPreview = (props: BnChatPreviewProps) => {
-    const { myself, socket, content, isSent, customClassName, setCurrentChat, setOpeningService } =
-        props;
+    const {
+        teamMemberStatus,
+        myself,
+        socket,
+        content,
+        isSent,
+        customClassName,
+        setCurrentChat,
+        setOpeningService,
+    } = props;
     const { mode } = useColorScheme();
     const _bnBoxClassName: string = isSent
         ? `bn-message-bubble-box-${mode}-me`

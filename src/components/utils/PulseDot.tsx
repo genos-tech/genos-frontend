@@ -3,8 +3,8 @@ import { styled } from "@mui/joy";
 // Pulsing status dot
 export const PulseDot = styled("span")(({ color = "#ccc" }) => ({
     position: "relative",
-    width: "8px",
-    height: "8px",
+    width: "10px",
+    height: "10px",
     borderRadius: "50%",
     backgroundColor: color,
     display: "inline-block",

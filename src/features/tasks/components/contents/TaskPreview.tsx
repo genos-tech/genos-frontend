@@ -24,6 +24,7 @@ import { TaskProps, ProjectProps, TagListProps, TaskCommentProps } from "../../.
 import { ChatProps } from "../../../../types/chat";
 
 type TaskPreviewProps = {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     myself: UserProps;
     setCurrentProject: (value: ProjectProps) => void;
@@ -52,6 +53,7 @@ type TaskPreviewProps = {
 
 export const TaskPreview = (props: TaskPreviewProps) => {
     const {
+        teamMemberStatus,
         socket,
         myself,
         setCurrentProject,
@@ -353,6 +355,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <Divider sx={{ mt: 1, mb: 1 }} />
 
             <TaskMainBlock
+                teamMemberStatus={teamMemberStatus}
                 socket={socket}
                 taskContents={tmpCurrentTaskContent}
                 setTaskContents={setTmpCurrentTaskContent}
@@ -392,6 +395,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
             <TaskBodyPreviewBlock
                 key={`TaskBodyPreviewBlock-${tmpCurrentTaskContent.id}`}
+                teamMemberStatus={teamMemberStatus}
                 socket={socket}
                 myself={myself}
                 teamMembers={teamMembers}
@@ -406,6 +410,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <Divider sx={{ mt: 2 }} />
 
             <TaskSubTasksBlock
+                teamMemberStatus={teamMemberStatus}
                 socket={socket}
                 myself={myself}
                 currentTaskContent={tmpCurrentTaskContent}
@@ -429,6 +434,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <Divider sx={{ m: 2 }} />
 
             <TaskCommentBlock
+                teamMemberStatus={teamMemberStatus}
                 myself={myself}
                 socket={socket}
                 teamMembers={teamMembers}

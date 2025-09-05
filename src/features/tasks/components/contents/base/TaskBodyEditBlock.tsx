@@ -7,6 +7,7 @@ import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 
 type TaskBodyEditBlockProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -16,13 +17,22 @@ type TaskBodyEditBlockProps = {
     setOpeningService: (value: number) => void;
 };
 export const TaskBodyEditBlock = (props: TaskBodyEditBlockProps) => {
-    const { myself, socket, teamMembers, body, setBody, setCurrentChat, setOpeningService } =
-        props;
+    const {
+        teamMemberStatus,
+        myself,
+        socket,
+        teamMembers,
+        body,
+        setBody,
+        setCurrentChat,
+        setOpeningService,
+    } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 2 }}>
                 <div className="md-content">
                     <BnTaskPreview
+                        teamMemberStatus={teamMemberStatus}
                         myself={myself}
                         socket={socket}
                         teamMembers={teamMembers}

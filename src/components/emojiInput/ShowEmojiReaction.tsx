@@ -134,7 +134,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
 
                 // Update the first thread message as well
                 // But not doing this for PM thead.
-                if (isThread === false && numReplies > 0  && chatType !== 3) {
+                if (isThread === false && numReplies > 0 && chatType !== 3) {
                     socket.emit("message_reaction", {
                         method_type: "DELETE",
                         team_id: myself.teamId,

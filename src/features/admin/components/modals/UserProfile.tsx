@@ -12,7 +12,6 @@ import {
     Card,
     Chip,
 } from "@mui/joy";
-import CircleIcon from "@mui/icons-material/Circle";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
@@ -25,20 +24,24 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { CountrySelector } from "../../../../components/utils/CountrySelector";
 import { useAuth } from "../../../../context/AuthContext";
+import { PulseDot } from "../../../../components/utils/PulseDot";
 
 type UserProfileProps = {
     socket: Socket | null;
-    userProfile: UserProps;
+    myself: UserProps;
+    user: UserProps;
+    isOnline: boolean;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
 };
-
 export const UserProfile = (props: UserProfileProps) => {
     const {
         socket,
-        userProfile,
+        myself,
+        user,
+        isOnline,
         openUserProfile,
         setOpenUserProfile,
         setCurrentMainChat,
@@ -114,11 +117,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         maxHeight={200}
                                         sx={{ flex: 1, minWidth: 120, borderRadius: "100%" }}
                                     >
-                                        <img
-                                            src={userProfile.avatarImgPath}
-                                            loading="lazy"
-                                            alt=""
-                                        />
+                                        <img src={user.avatarImgPath} loading="lazy" alt="" />
                                     </AspectRatio>
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <Typography
@@ -132,21 +131,26 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     color="neutral"
                                                     sx={{ borderRadius: "sm" }}
                                                     startDecorator={
-                                                        <CircleIcon
-                                                            sx={{ fontSize: 8 }}
-                                                            color="success"
-                                                        />
+                                                        <Box sx={{ ml: "-5px" }}>
+                                                            <PulseDot
+                                                                color={
+                                                                    isOnline === true
+                                                                        ? "#4caf50"
+                                                                        : "#999"
+                                                                }
+                                                            />
+                                                        </Box>
                                                     }
                                                     slotProps={{ root: { component: "span" } }}
                                                     onClick={() => {
                                                         console.log("Set custom status");
                                                     }}
                                                 >
-                                                    Online
+                                                    {isOnline === true ? "Online" : "Offline"}
                                                 </Chip>
                                             }
                                         >
-                                            {userProfile.userName}
+                                            {user.userName}
                                         </Typography>
                                         <Stack direction={"row"} spacing={2}>
                                             <Typography
@@ -154,7 +158,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     <EmailRoundedIcon fontSize="small" />
                                                 }
                                             >
-                                                {userProfile.userEmail}
+                                                {user.userEmail}
                                             </Typography>
                                             <Typography
                                                 startDecorator={
@@ -168,7 +172,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <FormControl>
                                                 <FormLabel>Team</FormLabel>
                                                 <Typography fontWeight={"bold"}>
-                                                    {userProfile.teamName}
+                                                    {user.teamName}
                                                 </Typography>
                                             </FormControl>
                                             <FormControl>
@@ -213,15 +217,15 @@ export const UserProfile = (props: UserProfileProps) => {
                                 onClick={() => {
                                     (async () => {
                                         const chatId: number = await loadDMIdByUserId(
-                                            userProfile,
-                                            userProfile.userId,
+                                            user,
+                                            user.userId,
                                             accessToken
                                         );
                                         await moveToDMChat(
                                             socket,
                                             chatId,
-                                            userProfile.userName,
-                                            userProfile,
+                                            user.userName,
+                                            user,
                                             setCurrentMainChat
                                         );
                                         setOpeningService(1);

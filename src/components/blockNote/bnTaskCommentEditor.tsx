@@ -40,6 +40,7 @@ import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/u
 import "../../App.css";
 
 type BnTaskCommentEditorProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -55,6 +56,7 @@ type BnTaskCommentEditorProps = {
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const {
+        teamMemberStatus,
         myself,
         socket,
         teamMembers,
@@ -356,7 +358,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         triggerCharacter={"@"}
                         getItems={async (query) =>
                             // Gets the mentions menu items
-                            filterSuggestionItems(MentionMenuItems(editor, teamMembers), query)
+                            filterSuggestionItems(
+                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                query
+                            )
                         }
                     />
                     <SuggestionMenuController

@@ -14,6 +14,7 @@ import { ProjectProps } from "../../../types/tasks";
 import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../../../types/chat";
 
 type ChatListProps = {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     myself: UserProps;
     chatType: number;
@@ -41,6 +42,7 @@ type ChatListProps = {
 
 export const ChatList = (props: ChatListProps) => {
     const {
+        teamMemberStatus,
         socket,
         myself,
         chatType,
@@ -138,6 +140,7 @@ export const ChatList = (props: ChatListProps) => {
                                 <Stack direction="row">
                                     <ChatListItem
                                         key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
+                                        teamMemberStatus={teamMemberStatus}
                                         socket={socket}
                                         chat={chat}
                                         myself={myself}
@@ -180,6 +183,7 @@ export const ChatList = (props: ChatListProps) => {
                                 <Stack direction="row">
                                     <ChatListItemForActivity
                                         key={activityMessage.activityId}
+                                        teamMemberStatus={teamMemberStatus}
                                         socket={socket}
                                         activity={activityMessage}
                                         myself={myself}

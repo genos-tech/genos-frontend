@@ -80,7 +80,6 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
             {
                 type: "mention",
                 props: {
-                    online: false,
                     teamId: myself.teamId,
                     userId: task.assignee.userId,
                     teamName: "Unknown",
@@ -105,7 +104,6 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
             {
                 type: "mention",
                 props: {
-                    online: false,
                     teamId: myself.teamId,
                     userId: task.reporter.userId,
                     teamName: "Unknown",
@@ -141,7 +139,6 @@ export const taskCreatedThreadMessageTemplate = (myself: UserProps) => [
             {
                 type: "mention",
                 props: {
-                    online: false,
                     teamId: myself.teamId,
                     userId: myself.userId,
                     teamName: "Unknown",
@@ -173,7 +170,6 @@ export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) =>
             {
                 type: "mention",
                 props: {
-                    online: false,
                     teamId: myself.teamId,
                     userId: myself.userId,
                     teamName: "Unknown",
@@ -203,7 +199,6 @@ export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => [
             {
                 type: "mention",
                 props: {
-                    online: false,
                     teamId: myself.teamId,
                     userId: myself.userId,
                     teamName: "Unknown",

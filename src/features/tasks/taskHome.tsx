@@ -60,6 +60,7 @@ const taskTypes: TaskTypesProps = {
 };
 
 type TaskHomeProps = {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -71,6 +72,7 @@ type TaskHomeProps = {
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
+        teamMemberStatus,
         socket,
         myself,
         setMyself,
@@ -770,6 +772,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <CreateTaskForm
+                                                teamMemberStatus={teamMemberStatus}
                                                 socket={socket}
                                                 myself={myself}
                                                 currentMainChat={undefined}
@@ -838,6 +841,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <TaskPreview
+                                                teamMemberStatus={teamMemberStatus}
                                                 socket={socket}
                                                 myself={myself}
                                                 setCurrentProject={setCurrentProject}

@@ -6,7 +6,7 @@ export type UserProps = {
     userName: string;
     userEmail: string;
     avatarImgPath: string;
-    online: boolean;
+    tsLastSeen: string;
     customStatus?: string;
     isSystemUser?: boolean;
 };

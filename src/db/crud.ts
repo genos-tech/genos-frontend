@@ -98,7 +98,6 @@ const _messageIdWithChatId = {
 const _getDataWithIndex = {
     teamMembers: async (teamId: string) => {
         const db = await openDB(DB_NAME, DB_VERSION);
-        console.log("teamId:", teamId);
         return db.get(STORES.USER_INFO, teamId);
     },
     dmChats: async (chatId: number) => {
@@ -146,9 +145,9 @@ export const addData = async (props: any) => {
     await tx.done;
 };
 
-export const getData = async (storeName: string, id: string) => {
-    const db = await initDB();
-    return db.get(storeName, id);
+export const getData = async (props: any) => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    return db.get(props.storeName, props.key);
 };
 
 export const getSpecificDataWithIndex = async (props: any) => {

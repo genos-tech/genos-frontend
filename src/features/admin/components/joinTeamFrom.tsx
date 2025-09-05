@@ -163,14 +163,13 @@ export const JoinTeam = () => {
                                 {
                                     type: "mention",
                                     props: {
-                                        online: false,
                                         teamId: targetTeamDetails.teamId,
                                         userId: userId,
                                         teamName: "Unknown",
                                         userName: userName,
                                         userEmail: userEmail,
                                         customStatus: "Unknown",
-                                        avatarImgPath: [""],
+                                        avatarImgPath: "",
                                     },
                                 },
                                 { text: " wants to join ", type: "text", styles: {} },

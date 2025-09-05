@@ -11,6 +11,7 @@ import { InboxBubble } from "./components/InboxBubble";
 import { ChatProps } from "../../types/chat";
 
 type InboxHomeProps = {
+    teamMemberStatus: Record<string, boolean>;
     myself: UserProps;
     socket: Socket | null;
     setMyself: (me: UserProps) => void;
@@ -22,6 +23,7 @@ type InboxHomeProps = {
 
 export const InboxHome = (props: InboxHomeProps) => {
     const {
+        teamMemberStatus,
         myself,
         socket,
         setMyself,
@@ -124,6 +126,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = activityInboxItems[index];
                                     return (
                                         <InboxBubble
+                                            teamMemberStatus={teamMemberStatus}
                                             socket={socket}
                                             myself={myself}
                                             inboxItem={item}
@@ -158,6 +161,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = requestInboxItems[index];
                                     return (
                                         <InboxBubble
+                                            teamMemberStatus={teamMemberStatus}
                                             socket={socket}
                                             myself={myself}
                                             inboxItem={item}

@@ -20,6 +20,7 @@ import { TaskProps, ProjectProps } from "../../types/tasks";
 import { getTimeDiffSeconds } from "../../utils/dateUtils";
 
 type MessagesPaneProps = {
+    teamMemberStatus: Record<string, boolean>;
     currentWindowHeight: number;
     paneSizePCT: number;
     chat: ChatProps;
@@ -49,6 +50,7 @@ type MessagesPaneProps = {
 
 export const MessagesPane = (props: MessagesPaneProps) => {
     const {
+        teamMemberStatus,
         currentWindowHeight,
         paneSizePCT,
         chat,
@@ -131,6 +133,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         >
             <Sheet sx={{ backgroundColor: "background.surface" }}>
                 <MainChatPaneHeader
+                    teamMemberStatus={teamMemberStatus}
                     myself={myself}
                     chat={chat}
                     subChat={subChat}
@@ -219,6 +222,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                         }}
                                     >
                                         <MessageBubble
+                                            teamMemberStatus={teamMemberStatus}
                                             myself={myself}
                                             variant={isYou ? "sent" : "received"}
                                             chat={chat}
@@ -253,6 +257,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                         {isInEdit === true && editTargetMessage && (
                             <BnUpdateEditor
+                                teamMemberStatus={teamMemberStatus}
                                 myself={myself}
                                 socket={socket}
                                 teamMembers={teamMembers}
@@ -266,6 +271,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         )}
                         {isInEdit === false && (
                             <BnChatEditor
+                                teamMemberStatus={teamMemberStatus}
                                 myself={myself}
                                 socket={socket}
                                 teamMembers={teamMembers}

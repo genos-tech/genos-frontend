@@ -102,6 +102,7 @@ const taskContentTemplate: PartialBlock[] = [
 ];
 
 type CreateTaskProps = {
+    teamMemberStatus: Record<string, boolean>;
     socket: Socket | null;
     myself: UserProps;
     currentMainChat?: ChatProps;
@@ -133,6 +134,7 @@ type CreateTaskProps = {
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
     const {
+        teamMemberStatus,
         socket,
         myself,
         currentMainChat,
@@ -295,6 +297,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             <Divider sx={{ mt: 1, mb: 1 }} />
 
             <TaskMainBlock
+                teamMemberStatus={teamMemberStatus}
                 socket={socket}
                 taskContents={taskContents}
                 setTaskContents={setTaskContents}
@@ -323,6 +326,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             <Divider sx={{ mt: 1, mb: 1 }} />
 
             <TaskBodyEditBlock
+                teamMemberStatus={teamMemberStatus}
                 myself={myself}
                 socket={socket}
                 teamMembers={teamMembers}

@@ -34,14 +34,14 @@ export const CreateMentionSpec = (
                 teamName: {
                     default: "Unknown",
                 },
+                tsLastSeen: {
+                    default: "Unknown",
+                },
                 avatarImgPath: {
                     default: "Unknown",
                 },
                 customStatus: {
                     default: "Unknown",
-                },
-                online: {
-                    default: false,
                 },
             },
             content: "none",
@@ -53,9 +53,9 @@ export const CreateMentionSpec = (
                 const userId = props.inlineContent.props.userId;
                 const teamId = props.inlineContent.props.teamId;
                 const teamName = props.inlineContent.props.teamName;
+                const tsLastSeen = props.inlineContent.props.tsLastSeen;
                 const avatarImgPath = props.inlineContent.props.avatarImgPath;
                 const customStatus = props.inlineContent.props.customStatus;
-                const online = props.inlineContent.props.online;
 
                 const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
@@ -90,21 +90,22 @@ export const CreateMentionSpec = (
                             >
                                 @{userName}
                             </Typography>
-                            {/* <PulseDot color={online ? "#4caf50" : "#999"} /> */}
                         </Box>
 
                         <UserProfile
                             socket={socket}
-                            userProfile={{
+                            myself={myself}
+                            user={{
                                 userName: userName,
                                 userEmail: userEmail,
                                 userId: userId,
                                 teamId: teamId,
+                                tsLastSeen: tsLastSeen,
                                 teamName: teamName,
                                 avatarImgPath: avatarImgPath,
                                 customStatus: customStatus,
-                                online: online,
                             }}
+                            isOnline={false}
                             openUserProfile={openUserProfile}
                             setOpenUserProfile={setOpenUserProfile}
                             setCurrentMainChat={setCurrentMainChat}
@@ -118,6 +119,7 @@ export const CreateMentionSpec = (
 
 // Function which gets all users for the mentions menu.
 export const MentionMenuItems = (
+    teamMemberStatus: Record<string, boolean>,
     editor: any,
     users: UserProps[]
 ): DefaultReactSuggestionItem[] => {
@@ -137,7 +139,6 @@ export const MentionMenuItems = (
                         teamName: user.teamName,
                         avatarImgPath: user.avatarImgPath,
                         customStatus: user.customStatus,
-                        online: user.online,
                     },
                 },
                 " ",
@@ -153,7 +154,9 @@ export const MentionMenuItems = (
                         sx={{ width: 32, height: 32 }}
                     />
                     <Box position="absolute" bottom={0} right={0} width={10} height={10}>
-                        {/* <PulseDot color={user.online ? "#4caf50" : "#9e9e9e"} /> */}
+                        <PulseDot
+                            color={teamMemberStatus[user.userId] === true ? "#4caf50" : "#999"}
+                        />
                     </Box>
                 </Box>
                 {user.userName}

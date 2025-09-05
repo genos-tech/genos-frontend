@@ -22,7 +22,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowSignIn(true);
-        }, 3000);
+        }, 10000);
 
         return () => clearTimeout(timer); // cleanup when unmounted
     }, []);

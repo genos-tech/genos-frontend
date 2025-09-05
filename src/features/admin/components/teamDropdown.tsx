@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Button, Avatar, Menu, MenuItem, IconButton, Dropdown } from "@mui/joy";
-import BusinessIcon from "@mui/icons-material/Business";
+import { Button, Menu, MenuItem, Dropdown } from "@mui/joy";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -11,6 +10,7 @@ import { sendDMMessage } from "../../chat/services/sendDMMessage";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { Team, CreateDMResponse } from "../../../types/admin";
+import { getCurrentTimestamp } from "../../../utils/dateUtils";
 
 type TeamDropdownProps = {
     myself: UserProps;
@@ -78,7 +78,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             userId: myself.userId,
             userName: myself.userName,
             userEmail: myself.userEmail,
-            online: myself.online,
+            tsLastSeen: getCurrentTimestamp(),
             avatarImgPath: myself.avatarImgPath,
         });
         _joinTeam(teamId);
