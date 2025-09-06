@@ -85,7 +85,8 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     {chat.dmPartnerUser !== null &&
                         ((teamMemberProfiles[chat.dmPartnerUser.userId] &&
                             teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "") ||
-                            myself.userId === chat.dmPartnerUser.userId) && (
+                            (myself.userId === chat.dmPartnerUser.userId &&
+                                myself.customStatus != "")) && (
                             <Chip
                                 component="h2"
                                 variant="outlined"
