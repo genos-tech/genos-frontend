@@ -5,7 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../types/admin";
 import { InboxProps } from "../../../types/common";
-import { extractMMDDHHMM } from "../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 import { useAuth } from "../../../context/AuthContext";
 import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
 import { ChatProps } from "../../../types/chat";
@@ -237,7 +237,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         )}
 
                         <Typography level="body-xs" fontWeight="bold">
-                            {extractMMDDHHMM(inboxItem.tsSent)}
+                            {extractYYYYMMDDHHMM(inboxItem.tsSent)}
                         </Typography>
                     </Stack>
 

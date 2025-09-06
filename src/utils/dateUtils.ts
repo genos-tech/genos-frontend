@@ -61,24 +61,27 @@ const checkTimestampDay = (
     }
 };
 
+const monthNameLookUp: { [key: string]: string } = {
+    "01": "Jan",
+    "02": "Feb",
+    "03": "Mar",
+    "04": "Apr",
+    "05": "May",
+    "06": "Jun",
+    "07": "Jul",
+    "08": "Aug",
+    "09": "Sep",
+    "10": "Oct",
+    "11": "Nov",
+    "12": "Dec",
+};
+
 export const extractMMDDHHMMSSs = (ts: string) => {
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
     return tsLocal;
 };
 
-export const extractMMDDHHMM = (ts: string) => {
-    const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
-    const tsDay: string = checkTimestampDay(ts);
-
-    if (tsDay === "today") {
-        return `Today ${tsLocal.slice(11, 16)}`;
-    } else if (tsDay === "yesterday") {
-        return `Yesterday ${tsLocal.slice(11, 16)}`;
-    }
-    return `${tsLocal.slice(0, 10)} ${tsLocal.slice(11, 16)}`;
-};
-
-export const extractHHMM = (ts: string) => {
+export const extractYYYYMMDDHHMM = (ts: string) => {
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
     const tsDay: string = checkTimestampDay(ts);
 
@@ -87,9 +90,11 @@ export const extractHHMM = (ts: string) => {
     } else if (tsDay === "yesterday") {
         return `Yesterday ${tsLocal.slice(11, 16)}`;
     } else if (tsDay === "withinAYear") {
-        return `${tsLocal.slice(5, 10)} ${tsLocal.slice(11, 16)}`;
+        const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
+        return `${month}. ${+tsLocal.slice(8, 10)}, ${tsLocal.slice(10, 16)}`;
     }
-    return tsLocal;
+    const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
+    return `${tsLocal.slice(0, 4)} ${month}. ${+tsLocal.slice(8, 10)}, ${tsLocal.slice(10, 16)}`;
 };
 
 export const extractYYYYMMDD = (ts: string) => {
@@ -100,10 +105,9 @@ export const extractYYYYMMDD = (ts: string) => {
         return `Today`;
     } else if (tsDay === "yesterday") {
         return `Yesterday`;
-    } else if (tsDay === "withinAYear") {
-        return `${tsLocal.slice(0, 10)}`;
     }
-    return tsLocal;
+    const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
+    return `${month}. ${+tsLocal.slice(8, 10)}, ${tsLocal.slice(0, 4)}`;
 };
 
 export const getFormattedTodayDateStr = (): string => {

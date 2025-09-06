@@ -22,7 +22,7 @@ import { AvatarWithStatus } from "../../../components/utils/avatarWithStatus";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
-import { extractMMDDHHMM } from "../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 
 type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
@@ -232,7 +232,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     sx={{ display: { xs: "none", md: "block" } }}
                                 >
                                     {chat.latestMessage
-                                        ? extractMMDDHHMM(chat.latestMessage.tsSent)
+                                        ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
                                         : ""}
                                 </Typography>
                                 {chat.unread && (

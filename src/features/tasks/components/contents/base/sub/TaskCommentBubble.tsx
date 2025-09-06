@@ -10,7 +10,7 @@ import { ReactionProps } from "../../../../../../types/common";
 import { ChatProps } from "../../../../../../types/chat";
 import { TaskCommentProps } from "../../../../../../types/tasks";
 import {
-    extractMMDDHHMM,
+    extractYYYYMMDDHHMM,
     extractMMDDHHMMSSs,
     getCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
@@ -162,9 +162,9 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 }}
                             >
                                 {isEdited === true && (
-                                    <>{extractMMDDHHMM(comment.tsSent)} Edited</>
+                                    <>{extractYYYYMMDDHHMM(comment.tsSent)} Edited</>
                                 )}
-                                {isEdited === false && <>{extractMMDDHHMM(comment.tsSent)}</>}
+                                {isEdited === false && <>{extractYYYYMMDDHHMM(comment.tsSent)}</>}
                             </Typography>
                         </Stack>
                         <Box

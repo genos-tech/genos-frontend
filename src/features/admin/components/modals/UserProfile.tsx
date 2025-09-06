@@ -38,11 +38,13 @@ import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { updateUserStatus } from "../../services/updateUserStatus";
 
 const templateCustomStatueOptions = [
-    "⛔ OOO",
-    "🚫 Do Not Disturb",
-    "🧠 In the zone",
+    "💨 AFK",
+    "☕ Coffee Break",
+    "🧠 In the Zone",
     "🏖️ On Holiday",
     "🥪 Enjoying Lunch",
+    "⛔ OOO",
+    "🚫 Do Not Disturb",
 ];
 
 type UserProfileProps = {

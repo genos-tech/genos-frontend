@@ -10,7 +10,7 @@ import { BubbleReplyButton } from "./BubbleReplyButton";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
-import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskProps, ProjectProps } from "../../../../types/tasks";
@@ -76,7 +76,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
-    const dtSent = extractHHMM(message.tsSent);
+    const dtSent = extractYYYYMMDDHHMM(message.tsSent);
     const { accessToken } = useAuth();
 
     // Load the thread task if exists

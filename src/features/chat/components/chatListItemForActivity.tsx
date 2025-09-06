@@ -20,7 +20,7 @@ import {
     ThreadMessageProps,
 } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
-import { extractMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
@@ -443,7 +443,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     noWrap
                                     sx={{ display: { xs: "none", md: "block" } }}
                                 >
-                                    {extractMMDDHHMM(activity.tsSent)}
+                                    {extractYYYYMMDDHHMM(activity.tsSent)}
                                 </Typography>
                             </Stack>
                         </Stack>

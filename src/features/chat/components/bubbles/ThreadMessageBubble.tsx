@@ -8,7 +8,7 @@ import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
-import { extractHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";
 import { ReactionProps } from "../../../../types/common";
@@ -53,7 +53,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
-    const dtSent = extractHHMM(message.tsSent);
+    const dtSent = extractYYYYMMDDHHMM(message.tsSent);
 
     // Reaction handling
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
