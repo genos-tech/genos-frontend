@@ -40,6 +40,7 @@ import { updateUserStatus } from "../../services/updateUserStatus";
 const templateCustomStatueOptions = [
     "⛔ OOO",
     "🚫 Do Not Disturb",
+    "🧠 In the zone",
     "🏖️ On Holiday",
     "🥪 Enjoying Lunch",
 ];
@@ -69,18 +70,19 @@ export const UserProfile = (props: UserProfileProps) => {
     const { accessToken } = useAuth();
     const [openCustomStatusEditor, setOpenCustomStatusEditor] = useState(false);
     const [isStatusUpdated, setIsStatusUpdated] = useState(false);
+    const [newStatus, setNewStatus] = useState("");
     const [customStatusValue, setCustomStatusValue] = useState(
         user && user.customStatus !== "" && user.customStatus !== "undefined"
             ? user.customStatus
-            : "Custom your status"
+            : "Update Status"
     );
 
     useEffect(() => {
-        if (isStatusUpdated === false) {
+        if (isStatusUpdated === false && openCustomStatusEditor === false) {
             if (user && user.customStatus !== "" && user.customStatus !== "undefined") {
                 setCustomStatusValue(user.customStatus);
             } else {
-                setCustomStatusValue("Custom your status");
+                setCustomStatusValue("Update Status");
             }
         }
     }, [user, isStatusUpdated]);
@@ -88,7 +90,7 @@ export const UserProfile = (props: UserProfileProps) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
-        setCustomStatusValue(emoji + " " + customStatusValue);
+        setNewStatus(emoji + " " + newStatus);
         setSelectedEmoji(null);
     };
     useEffect(() => {
@@ -201,7 +203,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             ? "Online"
                                                             : "Offline"}
                                                     </Chip>
-                                                    {customStatusValue !== "Custom your status" &&
+                                                    {customStatusValue !== "Update Status" &&
                                                         openCustomStatusEditor === false && (
                                                             <Chip
                                                                 variant="outlined"
@@ -217,6 +219,23 @@ export const UserProfile = (props: UserProfileProps) => {
                                                                             true
                                                                         );
                                                                     }
+                                                                }}
+                                                            >
+                                                                {customStatusValue}
+                                                            </Chip>
+                                                        )}
+                                                    {myself.userId === user?.userId &&
+                                                        customStatusValue === "Update Status" &&
+                                                        openCustomStatusEditor === false && (
+                                                            <Chip
+                                                                variant="outlined"
+                                                                size="lg"
+                                                                color="neutral"
+                                                                sx={{ borderRadius: "sm" }}
+                                                                onClick={() => {
+                                                                    setOpenCustomStatusEditor(
+                                                                        true
+                                                                    );
                                                                 }}
                                                             >
                                                                 {customStatusValue}
@@ -250,7 +269,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                                             <MenuItem
                                                                                 key={idx}
                                                                                 onClick={() => {
-                                                                                    setCustomStatusValue(
+                                                                                    setNewStatus(
                                                                                         template
                                                                                     );
                                                                                 }}
@@ -262,20 +281,18 @@ export const UserProfile = (props: UserProfileProps) => {
                                                                 </Menu>
                                                             </Dropdown>
                                                             <Input
-                                                                size="md"
+                                                                size="sm"
                                                                 placeholder="Set you status…"
                                                                 variant="outlined"
-                                                                value={customStatusValue}
+                                                                value={newStatus}
                                                                 onChange={(e) =>
-                                                                    setCustomStatusValue(
-                                                                        e.target.value
-                                                                    )
+                                                                    setNewStatus(e.target.value)
                                                                 }
                                                             />
                                                             <Chip
-                                                                variant="solid"
-                                                                size="md"
-                                                                color="neutral"
+                                                                variant="soft"
+                                                                size="sm"
+                                                                color="primary"
                                                                 sx={{
                                                                     borderRadius: "sm",
                                                                     fontWeight: "bold",
@@ -288,27 +305,64 @@ export const UserProfile = (props: UserProfileProps) => {
                                                                     setIsStatusUpdated(true);
 
                                                                     if (
-                                                                        customStatusValue &&
-                                                                        customStatusValue !== ""
+                                                                        newStatus &&
+                                                                        newStatus !== ""
                                                                     ) {
+                                                                        setCustomStatusValue(
+                                                                            newStatus
+                                                                        );
                                                                         updateUserStatus(
                                                                             accessToken,
                                                                             myself.userId,
-                                                                            customStatusValue
+                                                                            newStatus
                                                                         );
                                                                         setMyself({
                                                                             ...myself,
                                                                             customStatus:
-                                                                                customStatusValue,
+                                                                                newStatus,
                                                                         });
                                                                         localStorage.setItem(
                                                                             "customStatus",
-                                                                            customStatusValue
+                                                                            newStatus
                                                                         );
                                                                     }
                                                                 }}
                                                             >
                                                                 SET
+                                                            </Chip>
+                                                            <Chip
+                                                                variant="outlined"
+                                                                size="sm"
+                                                                color="danger"
+                                                                sx={{
+                                                                    borderRadius: "sm",
+                                                                    fontWeight: "bold",
+                                                                }}
+                                                                onClick={() => {
+                                                                    setOpenCustomStatusEditor(
+                                                                        false
+                                                                    );
+                                                                    setIsStatusUpdated(true);
+                                                                    setCustomStatusValue(
+                                                                        "Update Status"
+                                                                    );
+                                                                    setNewStatus("");
+                                                                    updateUserStatus(
+                                                                        accessToken,
+                                                                        myself.userId,
+                                                                        ""
+                                                                    );
+                                                                    setMyself({
+                                                                        ...myself,
+                                                                        customStatus: "",
+                                                                    });
+                                                                    localStorage.setItem(
+                                                                        "customStatus",
+                                                                        ""
+                                                                    );
+                                                                }}
+                                                            >
+                                                                UNSET
                                                             </Chip>
                                                         </Stack>
                                                     )}
