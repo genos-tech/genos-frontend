@@ -208,18 +208,19 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 </Box>
 
                                 {chat.dmPartnerUser !== null &&
-                                    teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                                    teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !==
-                                        "" && (
+                                    ((teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                                        teamMemberProfiles[chat.dmPartnerUser.userId]
+                                            .customStatus !== "") ||
+                                        myself.userId === chat.dmPartnerUser.userId) && (
                                         <Chip
                                             variant="outlined"
                                             size="sm"
                                             sx={{ borderRadius: "sm", height: "10px" }}
                                         >
-                                            {
-                                                teamMemberProfiles[chat.dmPartnerUser.userId]
-                                                    .customStatus
-                                            }
+                                            {myself.userId === chat.dmPartnerUser.userId
+                                                ? myself.customStatus
+                                                : teamMemberProfiles[chat.dmPartnerUser.userId]
+                                                      .customStatus}
                                         </Chip>
                                     )}
                             </Stack>

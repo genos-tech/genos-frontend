@@ -364,7 +364,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                                     );
                                                                 }}
                                                             >
-                                                                UNSET
+                                                                RESET
                                                             </Chip>
                                                         </Stack>
                                                     )}

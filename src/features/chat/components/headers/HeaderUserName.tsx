@@ -83,15 +83,18 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     </Typography>
 
                     {chat.dmPartnerUser !== null &&
-                        teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                        teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
+                        ((teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                            teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "") ||
+                            myself.userId === chat.dmPartnerUser.userId) && (
                             <Chip
                                 component="h2"
                                 variant="outlined"
                                 size="md"
                                 sx={{ ml: "3px", borderRadius: "sm" }}
                             >
-                                {teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
+                                {myself.userId === chat.dmPartnerUser.userId
+                                    ? myself.customStatus
+                                    : teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                             </Chip>
                         )}
                 </Stack>

@@ -85,6 +85,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
+    const [currentTeamId, setCurrentTeamId] = useState("");
     const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
@@ -203,7 +204,10 @@ export const TaskHome = (props: TaskHomeProps) => {
         if (loadedTeamProjects.length > 0) {
             for (let i = 0; i < loadedTeamProjects.length; i++) {
                 if (currentProject) {
-                    if (loadedTeamProjects[i].projectId === currentProject.projectId) {
+                    if (
+                        loadedTeamProjects[i].projectId === currentProject.projectId ||
+                        myself.teamId !== currentTeamId
+                    ) {
                         setCurrentProject({
                             projectId: loadedTeamProjects[i].projectId,
                             projectName: loadedTeamProjects[i].projectName,
@@ -238,8 +242,15 @@ export const TaskHome = (props: TaskHomeProps) => {
     }, []);
 
     useEffect(() => {
+        if (myself.teamId !== currentTeamId) {
+            setCurrentTeamId(myself.teamId);
+            loadProjects();
+        }
+    }, [myself]);
+
+    useEffect(() => {
         loadProjects();
-    }, [myself, openCreateTeam, openCreateProject, isNewTaskCreated]);
+    }, [openCreateTeam, openCreateProject, isNewTaskCreated]);
 
     useEffect(() => {
         if (currentProject) {

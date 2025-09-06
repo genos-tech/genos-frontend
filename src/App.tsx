@@ -96,6 +96,7 @@ export const App = () => {
 
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
+    const [currentTeamId, setCurrentTeamId] = useState("");
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [teamMemberProfiles, setTeamMemberStatus] = useState<Record<string, UserProps>>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -151,8 +152,9 @@ export const App = () => {
     }, []);
 
     useEffect(() => {
-        if (myself.userId === "") {
+        if (myself.teamId !== currentTeamId) {
             setIsLoading(true);
+            setCurrentTeamId(myself.teamId);
         }
     }, [myself]);
 
@@ -169,14 +171,14 @@ export const App = () => {
 
     useEffect(() => {
         // myself.userId === "" -> Not init yet.
-        if (accessToken && myself.userId === "") {
+        if (accessToken && myself.teamId !== currentTeamId) {
             setSocketInstance(socket(accessToken));
             console.log("WS connected");
         }
     }, [myself, accessToken]);
 
     useEffect(() => {
-        if (myself.userId !== "" && myself.teamId !== "") {
+        if (myself.userId !== "") {
             const popTeamUsersWorker = new PopTeamUsersWorker();
 
             const interval = setInterval(() => {
