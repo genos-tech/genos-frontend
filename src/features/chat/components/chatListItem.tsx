@@ -207,21 +207,36 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     </Typography>
                                 </Box>
 
+                                {/* show my own custom status */}
                                 {chat.dmPartnerUser !== null &&
-                                    ((teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                                        teamMemberProfiles[chat.dmPartnerUser.userId]
-                                            .customStatus !== "") ||
-                                        (myself.userId === chat.dmPartnerUser.userId &&
-                                            myself.customStatus != "")) && (
+                                    myself.userId === chat.dmPartnerUser.userId &&
+                                    myself.customStatus != "" && (
                                         <Chip
+                                            component="h2"
                                             variant="outlined"
-                                            size="sm"
+                                            size="md"
                                             sx={{ borderRadius: "sm", height: "10px" }}
                                         >
-                                            {myself.userId === chat.dmPartnerUser.userId
-                                                ? myself.customStatus
-                                                : teamMemberProfiles[chat.dmPartnerUser.userId]
-                                                      .customStatus}
+                                            {myself.customStatus}
+                                        </Chip>
+                                    )}
+
+                                {/* show others custom status */}
+                                {chat.dmPartnerUser !== null &&
+                                    myself.userId !== chat.dmPartnerUser.userId &&
+                                    teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                                    teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !==
+                                        "" && (
+                                        <Chip
+                                            component="h2"
+                                            variant="outlined"
+                                            size="md"
+                                            sx={{ borderRadius: "sm", height: "10px" }}
+                                        >
+                                            {
+                                                teamMemberProfiles[chat.dmPartnerUser.userId]
+                                                    .customStatus
+                                            }
                                         </Chip>
                                     )}
                             </Stack>

@@ -195,13 +195,11 @@ export const wsHook = (props: wsHookProps) => {
         }
 
         const intervalId = setInterval(() => {
-            const isOfflineForced: string =
-                localStorage.getItem("isOfflineForced") || myself.isOfflineForced || "false";
-            const role: string = localStorage.getItem("role") || myself.role || "";
-            const baseCountry: string =
-                localStorage.getItem("baseCountry") || myself.baseCountry || "";
-            const customStatus: string =
-                localStorage.getItem("customStatus") || myself.customStatus || "";
+            const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
+            const role: string = localStorage.getItem("role") || "";
+            const baseCountry: string = localStorage.getItem("baseCountry") || "";
+            const customStatus: string = localStorage.getItem("customStatus") || "";
+
             socket.emit("heartbeat", {
                 message: "alive",
                 is_online: true,
@@ -214,7 +212,7 @@ export const wsHook = (props: wsHookProps) => {
                     tsLastSeen: getCurrentTimestamp(),
                 },
             });
-        }, 10_000);
+        }, 5_000);
 
         socket.on("connect", () => {
             console.log("WS connected");

@@ -45,17 +45,11 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
     const [isStatusUpdated, setIsStatusUpdated] = useState(false);
     const [newStatus, setNewStatus] = useState("");
     const [customStatusValue, setCustomStatusValue] = useState(
-        user && user.customStatus !== "" && user.customStatus !== "undefined"
-            ? user.customStatus
-            : "Update Status"
+        user ? user.customStatus : "Update Status"
     );
     useEffect(() => {
         if (isStatusUpdated === false && openCustomStatusEditor === false) {
-            if (user && user.customStatus !== "" && user.customStatus !== "undefined") {
-                setCustomStatusValue(user.customStatus);
-            } else {
-                setCustomStatusValue("Update Status");
-            }
+            setCustomStatusValue(user ? user.customStatus : "Update Status");
         }
     }, [user, isStatusUpdated]);
 
@@ -111,59 +105,67 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                 {user?.isOnline === true ? "Online" : "Offline"}
                             </Chip>
                         </MenuButton>
-                        <Menu sx={{ zIndex: 10010 }}>
-                            <MenuItem
-                                onClick={() => {
-                                    updateUserProfile({
-                                        accessToken: accessToken,
-                                        userId: myself.userId,
-                                        isOfflineForced: "false",
-                                    });
-                                    setMyself({
-                                        ...myself,
-                                        isOfflineForced: "false",
-                                    });
-                                    localStorage.setItem("isOfflineForced", "false");
-                                }}
-                            >
-                                Set Online
-                            </MenuItem>
-                            <MenuItem
-                                onClick={() => {
-                                    updateUserProfile({
-                                        accessToken: accessToken,
-                                        userId: myself.userId,
-                                        isOfflineForced: "true",
-                                    });
-                                    setMyself({
-                                        ...myself,
-                                        isOfflineForced: "true",
-                                    });
-                                    localStorage.setItem("isOfflineForced", "true");
-                                }}
-                            >
-                                Set Always Offline
-                            </MenuItem>
-                        </Menu>
+                        {myself.userId === user?.userId && (
+                            <Menu sx={{ zIndex: 10010 }}>
+                                <MenuItem
+                                    onClick={() => {
+                                        updateUserProfile({
+                                            accessToken: accessToken,
+                                            userId: myself.userId,
+                                            isOfflineForced: "false",
+                                        });
+                                        setMyself({
+                                            ...myself,
+                                            isOfflineForced: "false",
+                                        });
+                                        localStorage.setItem("isOfflineForced", "false");
+                                    }}
+                                >
+                                    Set Online
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        updateUserProfile({
+                                            accessToken: accessToken,
+                                            userId: myself.userId,
+                                            isOfflineForced: "true",
+                                        });
+                                        setMyself({
+                                            ...myself,
+                                            isOfflineForced: "true",
+                                        });
+                                        localStorage.setItem("isOfflineForced", "true");
+                                    }}
+                                >
+                                    Set Always Offline
+                                </MenuItem>
+                            </Menu>
+                        )}
                     </Dropdown>
 
-                    {customStatusValue !== "Update Status" && openCustomStatusEditor === false && (
-                        <Chip
-                            variant="outlined"
-                            size="lg"
-                            color="neutral"
-                            sx={{ borderRadius: "sm" }}
-                            onClick={() => {
-                                if (myself.userId === user?.userId) {
-                                    setOpenCustomStatusEditor(true);
-                                }
-                            }}
-                        >
-                            {customStatusValue}
-                        </Chip>
-                    )}
-                    {myself.userId === user?.userId &&
-                        customStatusValue === "Update Status" &&
+                    {/* show my or others custom status if it's set */}
+                    {customStatusValue !== "Update Status" &&
+                        customStatusValue != "" &&
+                        openCustomStatusEditor === false && (
+                            <Chip
+                                variant="outlined"
+                                size="lg"
+                                color="neutral"
+                                sx={{ borderRadius: "sm" }}
+                                onClick={() => {
+                                    // Only "me" can customize status.
+                                    if (myself.userId === user?.userId) {
+                                        setOpenCustomStatusEditor(true);
+                                    }
+                                }}
+                            >
+                                {customStatusValue}
+                            </Chip>
+                        )}
+
+                    {/* Only for me, show "Update Status" to customize status if it's not set */}
+                    {(customStatusValue === "Update Status" || customStatusValue === "") &&
+                        myself.userId === user?.userId &&
                         openCustomStatusEditor === false && (
                             <Chip
                                 variant="outlined"
@@ -174,10 +176,11 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                     setOpenCustomStatusEditor(true);
                                 }}
                             >
-                                {customStatusValue}
+                                Update Status
                             </Chip>
                         )}
 
+                    {/* Update custom status */}
                     {openCustomStatusEditor === true && (
                         <Stack direction={"row"} spacing={0.5}>
                             <IconButton
@@ -229,10 +232,6 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                     fontWeight: "bold",
                                 }}
                                 onClick={() => {
-                                    setOpenCustomStatusEditor(false);
-
-                                    setIsStatusUpdated(true);
-
                                     if (newStatus && newStatus !== "") {
                                         setCustomStatusValue(newStatus);
                                         updateUserProfile({
@@ -245,7 +244,9 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                             customStatus: newStatus,
                                         });
                                         localStorage.setItem("customStatus", newStatus);
+                                        setIsStatusUpdated(true);
                                     }
+                                    setOpenCustomStatusEditor(false);
                                 }}
                             >
                                 SET

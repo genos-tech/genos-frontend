@@ -20,7 +20,6 @@ type NoteHomeProps = {
     openingService: number;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (value: ChatProps) => void;
-    setCurrentChat: (chat: ChatProps) => void;
 };
 
 export const NoteHome = (props: NoteHomeProps) => {
@@ -33,7 +32,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         openingService,
         setOpeningService,
         setCurrentMainChat,
-        setCurrentChat,
     } = props;
 
     const tmpCurrentBody: any[] = [];
@@ -85,7 +83,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 setOpeningService={setOpeningService}
                                 setNoteBodyUpdated={setNoteBodyUpdated}
                                 setNoteBodySaved={setNoteBodySaved}
-                                setCurrentChat={setCurrentChat}
+                                setCurrentChat={setCurrentMainChat}
                             />
                         </Box>
                     </Panel>

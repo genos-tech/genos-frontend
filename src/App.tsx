@@ -61,6 +61,10 @@ const useMyself = (): SetMyselfProps => {
         avatarImgPath: "",
     });
 
+    // useEffect(() => {
+    //     console.log("updated myself:", myself);
+    // }, [myself]);
+
     useEffect(() => {
         const fetchUserData = () => {
             setMyself({
@@ -288,6 +292,7 @@ export const App = () => {
                     <NoteHome
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
+                        teamMembers={teamMembers}
                         myself={myself}
                         setMyself={setMyself}
                         openingService={openingService}
