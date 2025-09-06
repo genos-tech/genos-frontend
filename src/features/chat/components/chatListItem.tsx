@@ -211,7 +211,8 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     ((teamMemberProfiles[chat.dmPartnerUser.userId] &&
                                         teamMemberProfiles[chat.dmPartnerUser.userId]
                                             .customStatus !== "") ||
-                                        myself.userId === chat.dmPartnerUser.userId) && (
+                                        (myself.userId === chat.dmPartnerUser.userId &&
+                                            myself.customStatus != "")) && (
                                         <Chip
                                             variant="outlined"
                                             size="sm"
