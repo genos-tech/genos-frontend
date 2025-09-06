@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     Modal,
     ModalDialog,
@@ -12,7 +12,9 @@ import {
     Stack,
     Typography,
     Card,
+    Tooltip,
 } from "@mui/joy";
+import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
@@ -114,6 +116,19 @@ export const UserProfile = (props: UserProfileProps) => {
                                     >
                                         {user?.userName[0]}
                                     </Avatar>
+                                    <Box
+                                        position="absolute"
+                                        bottom={0}
+                                        right={0}
+                                        width={720}
+                                        height={400}
+                                    >
+                                        <Tooltip title="EDIT(TBD)" sx={{ zIndex: 10001 }}>
+                                            <IconButton size="lg">
+                                                <EditIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <UserProfileStatus
                                             myself={myself}
@@ -196,13 +211,21 @@ export const UserProfile = (props: UserProfileProps) => {
                                         <Stack direction="column" spacing={2}>
                                             <FormControl>
                                                 <FormLabel>Joined since</FormLabel>
-                                                <Typography fontWeight={"bold"}>
-                                                    {user &&
-                                                    user?.tsJoined !== "" &&
-                                                    user?.tsJoined !== "N/A"
-                                                        ? extractYYYYMMDD(user.tsJoined)
-                                                        : "N/A"}
-                                                </Typography>
+                                                <Button
+                                                    variant="plain"
+                                                    sx={{
+                                                        justifyContent: "flex-start", // left align the content
+                                                    }}
+                                                    disabled={true}
+                                                >
+                                                    <Typography fontWeight={"bold"}>
+                                                        {user &&
+                                                        user?.tsJoined !== "" &&
+                                                        user?.tsJoined !== "N/A"
+                                                            ? extractYYYYMMDD(user.tsJoined)
+                                                            : "N/A"}
+                                                    </Typography>
+                                                </Button>
                                             </FormControl>
                                         </Stack>
                                     </Stack>
