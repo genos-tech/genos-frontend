@@ -37,6 +37,7 @@ import { ChatProps, MessageProps } from "../../types/chat";
 type BnUpdateEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     chat: ChatProps;
@@ -50,6 +51,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         chat,
@@ -77,6 +79,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 teamMemberProfiles,
                 socket,
                 myself,
+                setMyself,
                 setOpeningService,
                 setCurrentChat
             ),

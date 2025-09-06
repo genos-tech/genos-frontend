@@ -14,6 +14,7 @@ import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 type TaskCommentBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     task: TaskProps;
@@ -29,6 +30,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         task,
@@ -97,6 +99,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                                     teamMemberProfiles={teamMemberProfiles}
                                     socket={socket}
                                     myself={myself}
+                                    setMyself={setMyself}
                                     comment={comment}
                                     currentProjectId={task.project?.projectId}
                                     currentProjectName={task.project?.projectName}
@@ -115,6 +118,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                 <BnUpdateTaskCommentEditor
                     teamMemberProfiles={teamMemberProfiles}
                     myself={myself}
+                    setMyself={setMyself}
                     socket={socket}
                     teamMembers={teamMembers}
                     projectId={task.project?.projectId}
@@ -135,6 +139,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                 <BnTaskCommentEditor
                     teamMemberProfiles={teamMemberProfiles}
                     myself={myself}
+                    setMyself={setMyself}
                     socket={socket}
                     teamMembers={teamMembers}
                     task={task}

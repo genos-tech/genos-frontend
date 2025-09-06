@@ -130,6 +130,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                             teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
                                             myself={myself}
+                                            setMyself={setMyself}
                                             inboxItem={item}
                                             setCurrentChat={setCurrentMainChat}
                                             setOpeningService={setOpeningService}

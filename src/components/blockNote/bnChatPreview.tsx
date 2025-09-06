@@ -20,6 +20,7 @@ import { ChatProps } from "../../types/chat";
 type BnChatPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     content: PartialBlock[] | any[];
     isSent: boolean;
@@ -31,6 +32,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         content,
         isSent,
@@ -59,6 +61,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 teamMemberProfiles,
                 socket,
                 myself,
+                setMyself,
                 setOpeningService,
                 setCurrentChat
             ),

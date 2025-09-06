@@ -27,6 +27,7 @@ type TaskPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTask: TaskProps;
     setCurrentPreviewTask: (value: TaskProps) => void;
@@ -56,6 +57,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         setCurrentProject,
         currentPreviewTask,
         setIsCreatingTask,
@@ -363,6 +365,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 teamProjects={teamProjects}
                 projectTags={projectTags}
                 myself={myself}
+                setMyself={setMyself}
                 assignee={assignee}
                 setAssignee={setAssignee}
                 reporter={reporter}
@@ -398,6 +401,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
+                setMyself={setMyself}
                 teamMembers={teamMembers}
                 body={body}
                 setBody={setBody}
@@ -413,6 +417,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
+                setMyself={setMyself}
                 currentTaskContent={tmpCurrentTaskContent}
                 setCurrentProject={setCurrentProject}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
@@ -436,6 +441,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <TaskCommentBlock
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
+                setMyself={setMyself}
                 socket={socket}
                 teamMembers={teamMembers}
                 task={tmpCurrentTaskContent}

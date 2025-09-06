@@ -25,6 +25,7 @@ import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../.
 type ChatSidebarProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
@@ -54,6 +55,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         currentChatPaneType,
         setCurrentChatPaneType,
         activityMessages,
@@ -188,6 +190,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
+                            setMyself={setMyself}
                             chatType={1}
                             activityMessages={[]}
                             allChats={allChats.filter((chat) => chat.chatType === 1)}
@@ -219,6 +222,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
+                            setMyself={setMyself}
                             chatType={2}
                             activityMessages={[]}
                             allChats={allChats.filter((chat) => chat.chatType === 2)}
@@ -259,6 +263,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
+                            setMyself={setMyself}
                             chatType={3}
                             activityMessages={[]}
                             allChats={allChats.filter((chat) => chat.chatType === 3)}
@@ -298,6 +303,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
+                            setMyself={setMyself}
                             chatType={-1}
                             activityMessages={activityMessages}
                             allChats={[]}

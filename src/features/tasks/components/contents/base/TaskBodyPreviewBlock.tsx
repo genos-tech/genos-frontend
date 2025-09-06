@@ -9,6 +9,7 @@ import { ChatProps } from "../../../../../types/chat";
 type TaskBodyPreviewBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     body: PartialBlock[] | null;
@@ -22,6 +23,7 @@ export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         body,
@@ -37,6 +39,7 @@ export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
                 <BnTaskPreview
                     teamMemberProfiles={teamMemberProfiles}
                     myself={myself}
+                    setMyself={setMyself}
                     socket={socket}
                     teamMembers={teamMembers}
                     body={body || []}

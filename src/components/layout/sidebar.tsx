@@ -253,6 +253,7 @@ export const Sidebar = (props: SidebarProps) => {
             <UserProfile
                 socket={socket}
                 myself={myself}
+                setMyself={setMyself}
                 user={teamMemberProfiles[myself.userId]}
                 openUserProfile={openUserProfile}
                 setOpenUserProfile={setOpenUserProfile}

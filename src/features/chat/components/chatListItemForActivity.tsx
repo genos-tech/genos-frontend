@@ -28,6 +28,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     socket: Socket | null;
     activity: ActivityMessageProps;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -53,6 +54,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         socket,
         activity,
         myself,
+        setMyself,
         currentMainChat,
         currentSubChat,
         setCurrentMainChat,
@@ -305,6 +307,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         activity.dmPartnerUser !== null && (
                                             <AvatarWithStatus
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 avatarUser={
                                                     teamMemberProfiles[
                                                         activity.dmPartnerUser.userId

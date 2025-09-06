@@ -24,6 +24,7 @@ type MessagesPaneProps = {
     currentWindowHeight: number;
     thread: ThreadProps;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     teamMembers: UserProps[];
     socket: Socket | null;
     currentThreadChat: ThreadProps;
@@ -48,6 +49,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         currentWindowHeight,
         thread,
         myself,
+        setMyself,
         teamMembers,
         socket,
         currentThreadChat,
@@ -238,6 +240,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             <BnUpdateThreadEditor
                                 teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
+                                setMyself={setMyself}
                                 socket={socket}
                                 teamMembers={teamMembers}
                                 thread={thread}

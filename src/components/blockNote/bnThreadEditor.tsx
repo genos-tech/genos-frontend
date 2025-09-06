@@ -42,6 +42,7 @@ import { addThreadMessage } from "../../features/chat/services/addThreadMessage"
 type BnThreadEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     thread: ThreadProps;
@@ -55,6 +56,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         thread,
@@ -82,6 +84,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 teamMemberProfiles,
                 socket,
                 myself,
+                setMyself,
                 setOpeningService,
                 setCurrentChat
             ),

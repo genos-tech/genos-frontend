@@ -17,6 +17,7 @@ type TaskSubTasksBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentTaskContent: TaskProps;
     setCurrentProject: (value: ProjectProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
@@ -28,6 +29,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         currentTaskContent,
         setCurrentProject,
         setCurrentPreviewTaskId,
@@ -93,6 +95,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                     <ListItem key={`listitem-${id}-${index}`}>
                                         <AvatarWithStatus
                                             myself={myself}
+                                            setMyself={setMyself}
                                             avatarUser={teamMemberProfiles[assignee.userId]}
                                             socket={socket}
                                             setOpeningService={setOpeningService}

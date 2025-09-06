@@ -40,6 +40,7 @@ import "../../App.css";
 type BnUpdateTaskCommentEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     projectId?: number;
@@ -61,6 +62,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         projectId,
@@ -95,6 +97,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 teamMemberProfiles,
                 socket,
                 myself,
+                setMyself,
                 setOpeningService,
                 setCurrentChat
             ),

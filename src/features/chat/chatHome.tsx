@@ -232,6 +232,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <ChatSidebar
                                 teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
+                                setMyself={setMyself}
                                 currentChatPaneType={currentChatPaneType}
                                 setCurrentChatPaneType={setCurrentChatPaneType}
                                 activityMessages={activityMessages}
@@ -302,6 +303,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 currentWindowHeight={height}
                                                 paneSizePCT={subChatPanelSize}
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 teamMembers={teamMembers}
                                                 chat={currentMainChat}
                                                 subChat={
@@ -356,6 +358,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         chat={currentMainChat}
                                         subChat={currentSubChat ? currentSubChat : currentMainChat}
                                         myself={myself}
+                                        setMyself={setMyself}
                                         teamMembers={teamMembers}
                                         socket={socket}
                                         currentMainChat={currentMainChat}
@@ -415,6 +418,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     currentWindowHeight={height}
                                                     thread={currentThreadChat}
                                                     myself={myself}
+                                                    setMyself={setMyself}
                                                     socket={socket}
                                                     teamMembers={teamMembers}
                                                     currentThreadChat={currentThreadChat}
@@ -485,6 +489,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
+                                                    setMyself={setMyself}
                                                     setCurrentProject={setCurrentProject}
                                                     currentPreviewTask={currentPreviewTask}
                                                     setIsMainChatVisible={setIsMainChatVisible}
@@ -558,6 +563,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
+                                                    setMyself={setMyself}
                                                     currentMainChat={currentMainChat}
                                                     currentThreadChat={currentThreadChat}
                                                     chatType={currentThreadChat?.chatType || -1}
@@ -625,6 +631,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             currentWindowHeight={height}
                                             thread={currentThreadChat}
                                             myself={myself}
+                                            setMyself={setMyself}
                                             socket={socket}
                                             teamMembers={teamMembers}
                                             currentThreadChat={currentThreadChat}
@@ -689,6 +696,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
+                                                    setMyself={setMyself}
                                                     setCurrentProject={setCurrentProject}
                                                     currentPreviewTask={currentPreviewTask}
                                                     setIsMainChatVisible={setIsMainChatVisible}
@@ -762,6 +770,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
+                                                    setMyself={setMyself}
                                                     currentMainChat={currentMainChat}
                                                     currentThreadChat={currentThreadChat}
                                                     chatType={currentThreadChat.chatType}

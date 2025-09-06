@@ -43,12 +43,12 @@ export const SignInForm = () => {
         if (signInRes) {
             setAccessToken(signInRes.access); // Store access token in memory
             localStorage.setItem("isSigningIn", "yes");
-            localStorage.setItem("userName", signInRes.username);
-            localStorage.setItem("userId", signInRes.user_id);
-            localStorage.setItem("tsJoined", signInRes.ts_joined_at);
-            localStorage.setItem("customStatus", signInRes.custom_status);
-            localStorage.setItem("userEmail", signInRes.email);
-            localStorage.setItem("avatarImgPath", signInRes.profile_image_url);
+            localStorage.setItem("userName", signInRes.username || "");
+            localStorage.setItem("userId", signInRes.user_id || "");
+            localStorage.setItem("tsJoined", signInRes.ts_joined_at || "");
+            localStorage.setItem("customStatus", signInRes.custom_status || "");
+            localStorage.setItem("userEmail", signInRes.email || "");
+            localStorage.setItem("avatarImgPath", signInRes.profile_image_url || "");
 
             if (signInRes.user_id) {
                 navigate("/JoinTeam");

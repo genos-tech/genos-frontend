@@ -14,6 +14,7 @@ type SubChatPaneHeaderProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     chat: ChatProps;
     subChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -32,6 +33,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         chat,
         subChat,
         setCurrentMainChat,
@@ -72,6 +74,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     teamMemberProfiles={teamMemberProfiles}
                     socket={socket}
                     myself={myself}
+                    setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     setCurrentMainChat={setCurrentMainChat}
                     isOnline={

@@ -37,6 +37,7 @@ import { UserProps } from "../../types/admin";
 type BnUpdateThreadEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     thread: ThreadProps;
@@ -50,6 +51,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         thread,
@@ -77,6 +79,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 teamMemberProfiles,
                 socket,
                 myself,
+                setMyself,
                 setOpeningService,
                 setCurrentChat
             ),

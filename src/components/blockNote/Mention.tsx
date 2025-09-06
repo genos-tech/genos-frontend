@@ -13,6 +13,7 @@ export const CreateMentionSpec = (
     teamMemberProfiles: Record<string, UserProps>,
     socket: Socket | null,
     myself: UserProps,
+    setMyself: (value: UserProps) => void,
     setOpeningService: (service: number) => void,
     setCurrentMainChat: (chat: ChatProps) => void
 ) =>
@@ -72,6 +73,7 @@ export const CreateMentionSpec = (
                         <UserProfile
                             socket={socket}
                             myself={myself}
+                            setMyself={setMyself}
                             user={teamMemberProfiles[userId]}
                             openUserProfile={openUserProfile}
                             setOpenUserProfile={setOpenUserProfile}

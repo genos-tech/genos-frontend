@@ -194,12 +194,13 @@ export const wsHook = (props: wsHookProps) => {
             return;
         }
 
-        // emit heartbeat every 1 minute
         const intervalId = setInterval(() => {
+            const customStatus: string =
+                localStorage.getItem("customStatus") || myself.customStatus || "";
             socket.emit("heartbeat", {
                 message: "alive",
                 is_online: true,
-                user: { ...myself, tsLastSeen: getCurrentTimestamp() },
+                user: { ...myself, customStatus: customStatus, tsLastSeen: getCurrentTimestamp() },
             });
         }, 10_000);
 

@@ -17,6 +17,7 @@ type ChatListProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     chatType: number;
     currentActivityMessageType: number;
     activityMessages: ActivityMessageProps[];
@@ -45,6 +46,7 @@ export const ChatList = (props: ChatListProps) => {
         teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         chatType,
         activityMessages,
         allChats,
@@ -144,6 +146,7 @@ export const ChatList = (props: ChatListProps) => {
                                         socket={socket}
                                         chat={chat}
                                         myself={myself}
+                                        setMyself={setMyself}
                                         currentMainChat={currentMainChat}
                                         currentSubChat={currentSubChat}
                                         setCurrentMainChat={setCurrentMainChat}
@@ -187,6 +190,7 @@ export const ChatList = (props: ChatListProps) => {
                                         socket={socket}
                                         activity={activityMessage}
                                         myself={myself}
+                                        setMyself={setMyself}
                                         currentMainChat={currentMainChat}
                                         currentSubChat={currentSubChat}
                                         setCurrentMainChat={setCurrentMainChat}

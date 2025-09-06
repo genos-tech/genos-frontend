@@ -777,6 +777,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 teamMemberProfiles={teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 currentMainChat={undefined}
                                                 currentThreadChat={undefined}
                                                 chatType={-1}
@@ -846,6 +847,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 teamMemberProfiles={teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 setCurrentProject={setCurrentProject}
                                                 currentPreviewTask={currentPreviewTask}
                                                 setIsCreatingTask={setIsCreatingTask}

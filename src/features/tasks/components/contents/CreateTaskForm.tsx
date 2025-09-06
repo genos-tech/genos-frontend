@@ -105,6 +105,7 @@ type CreateTaskProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentMainChat?: ChatProps;
     currentThreadChat?: ThreadProps;
     chatType: number;
@@ -137,6 +138,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         currentMainChat,
         currentThreadChat,
         chatType,
@@ -305,6 +307,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 teamProjects={teamProjects}
                 projectTags={projectTags}
                 myself={myself}
+                setMyself={setMyself}
                 assignee={assignee}
                 setAssignee={setAssignee}
                 reporter={reporter}

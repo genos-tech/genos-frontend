@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import { useState } from "react";
-import { Avatar, Box, Chip, Typography } from "@mui/joy";
+import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
 import GroupsIcon from "@mui/icons-material/Groups";
 
 import { ChatProps } from "../../../../types/chat";
@@ -12,6 +12,7 @@ type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     isOnline: boolean;
@@ -23,6 +24,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
         teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         setOpeningService,
         setCurrentMainChat,
         isOnline,
@@ -51,36 +53,54 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                 )}
             </div>
             <div>
-                <Typography
-                    component="h2"
-                    noWrap
-                    endDecorator={
-                        chat.chatType === 1 ? (
+                <Stack direction={"row"}>
+                    <Typography
+                        component="h2"
+                        noWrap
+                        endDecorator={
+                            chat.chatType === 1 ? (
+                                <Chip
+                                    variant="outlined"
+                                    size="md"
+                                    color="neutral"
+                                    sx={{ borderRadius: "sm" }}
+                                    startDecorator={
+                                        <Box sx={{ ml: "-5px" }}>
+                                            <PulseDot
+                                                color={isOnline === true ? "#4caf50" : "#999"}
+                                            />
+                                        </Box>
+                                    }
+                                    slotProps={{ root: { component: "span" } }}
+                                >
+                                    {isOnline === true ? "Online" : "Offline"}
+                                </Chip>
+                            ) : undefined
+                        }
+                        sx={{ fontWeight: "lg", fontSize: "lg" }}
+                    >
+                        {isYou ? `${chat.chatName} (you)` : chat.chatName}
+                    </Typography>
+
+                    {chat.dmPartnerUser !== null &&
+                        teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                        teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
                             <Chip
+                                component="h2"
                                 variant="outlined"
                                 size="md"
-                                color="neutral"
-                                sx={{ borderRadius: "sm" }}
-                                startDecorator={
-                                    <Box sx={{ ml: "-5px" }}>
-                                        <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
-                                    </Box>
-                                }
-                                slotProps={{ root: { component: "span" } }}
+                                sx={{ ml: "3px", borderRadius: "sm" }}
                             >
-                                {isOnline === true ? "Online" : "Offline"}
+                                {teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                             </Chip>
-                        ) : undefined
-                    }
-                    sx={{ fontWeight: "lg", fontSize: "lg" }}
-                >
-                    {isYou ? `${chat.chatName} (you)` : chat.chatName}
-                </Typography>
+                        )}
+                </Stack>
             </div>
             {chat.dmPartnerUser && (
                 <UserProfile
                     socket={socket}
                     myself={myself}
+                    setMyself={setMyself}
                     user={teamMemberProfiles[chat.dmPartnerUser?.userId]}
                     openUserProfile={openUserProfile}
                     setOpenUserProfile={setOpenUserProfile}

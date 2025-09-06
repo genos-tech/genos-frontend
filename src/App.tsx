@@ -151,7 +151,9 @@ export const App = () => {
     }, []);
 
     useEffect(() => {
-        setIsLoading(true);
+        if (myself.userId === "") {
+            setIsLoading(true);
+        }
     }, [myself]);
 
     useEffect(() => {
@@ -166,14 +168,15 @@ export const App = () => {
     }, [isLoading]);
 
     useEffect(() => {
-        if (accessToken) {
+        // myself.userId === "" -> Not init yet.
+        if (accessToken && myself.userId === "") {
             setSocketInstance(socket(accessToken));
             console.log("WS connected");
         }
     }, [myself, accessToken]);
 
     useEffect(() => {
-        if (myself.teamId !== "") {
+        if (myself.userId !== "" && myself.teamId !== "") {
             const popTeamUsersWorker = new PopTeamUsersWorker();
 
             const interval = setInterval(() => {

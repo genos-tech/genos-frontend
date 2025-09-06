@@ -24,6 +24,7 @@ type MessagesPaneProps = {
     currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     teamMembers: UserProps[];
     chat: ChatProps;
     subChat: ChatProps;
@@ -53,6 +54,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         currentWindowHeight,
         paneSizePCT,
         myself,
+        setMyself,
         teamMembers,
         chat,
         subChat,
@@ -133,6 +135,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     teamMemberProfiles={teamMemberProfiles}
                     socket={socket}
                     myself={myself}
+                    setMyself={setMyself}
                     chat={chat}
                     subChat={subChat}
                     setCurrentMainChat={setCurrentMainChat}
@@ -217,6 +220,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                         <MessageBubble
                                             teamMemberProfiles={teamMemberProfiles}
                                             myself={myself}
+                                            setMyself={setMyself}
                                             variant={isYou ? "sent" : "received"}
                                             chat={subChat}
                                             message={message}
@@ -250,6 +254,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         <BnUpdateEditor
                             teamMemberProfiles={teamMemberProfiles}
                             myself={myself}
+                            setMyself={setMyself}
                             socket={socket}
                             teamMembers={teamMembers}
                             chat={chat}
@@ -264,6 +269,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         <BnChatEditor
                             teamMemberProfiles={teamMemberProfiles}
                             myself={myself}
+                            setMyself={setMyself}
                             socket={socket}
                             teamMembers={teamMembers}
                             chat={chat}

@@ -30,6 +30,7 @@ type TaskMainBlockProps = {
     teamProjects: ProjectProps[];
     projectTags: TagListProps[];
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     assignee: UserProps;
     setAssignee: (value: UserProps) => void;
     reporter: UserProps;
@@ -59,6 +60,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         teamProjects,
         projectTags,
         myself,
+        setMyself,
         assignee,
         setAssignee,
         reporter,
@@ -117,6 +119,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
                             myself={myself}
+                            setMyself={setMyself}
                             avatarUser={teamMemberProfiles[assignee.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
@@ -139,6 +142,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
                             myself={myself}
+                            setMyself={setMyself}
                             avatarUser={teamMemberProfiles[reporter.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
@@ -267,6 +271,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
                                 <AvatarWithStatus
                                     myself={myself}
+                                    setMyself={setMyself}
                                     avatarUser={teamMemberProfiles[assignee.userId]}
                                     socket={socket}
                                     setOpeningService={setOpeningService}

@@ -21,6 +21,7 @@ type TaskCommentBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     comment: TaskCommentProps;
     currentProjectId?: number;
     currentProjectName?: string;
@@ -34,6 +35,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         comment,
         currentProjectId,
         currentProjectName,
@@ -204,6 +206,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             customClassName="task-comment-preview"
                             teamMemberProfiles={teamMemberProfiles}
                             myself={myself}
+                            setMyself={setMyself}
                             socket={socket}
                             key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
                             content={comment.commentBody}

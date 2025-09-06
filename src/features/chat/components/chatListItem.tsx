@@ -9,6 +9,7 @@ import {
     Stack,
     Typography,
     IconButton,
+    Chip,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import CircleIcon from "@mui/icons-material/Circle";
@@ -28,6 +29,7 @@ type ChatListItemProps = ListItemButtonProps & {
     socket: Socket | null;
     chat: AllChatProps;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -51,6 +53,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
         socket,
         chat,
         myself,
+        setMyself,
         currentMainChat,
         currentSubChat,
         setCurrentMainChat,
@@ -174,6 +177,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     {chatType === 1 && chat.dmPartnerUser !== null && (
                                         <AvatarWithStatus
                                             myself={myself}
+                                            setMyself={setMyself}
                                             avatarUser={
                                                 teamMemberProfiles[chat.dmPartnerUser.userId]
                                             }
@@ -202,6 +206,22 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         {isYou ? `${chat.chatName} (you)` : chat.chatName}
                                     </Typography>
                                 </Box>
+
+                                {chat.dmPartnerUser !== null &&
+                                    teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                                    teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !==
+                                        "" && (
+                                        <Chip
+                                            variant="outlined"
+                                            size="sm"
+                                            sx={{ borderRadius: "sm", height: "10px" }}
+                                        >
+                                            {
+                                                teamMemberProfiles[chat.dmPartnerUser.userId]
+                                                    .customStatus
+                                            }
+                                        </Chip>
+                                    )}
                             </Stack>
 
                             {/* Right-aligned content */}

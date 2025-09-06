@@ -10,6 +10,7 @@ import { PulseDot } from "../utils/PulseDot";
 
 type AvatarWithStatusProps = {
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     avatarUser?: UserProps;
     socket: Socket | null;
     chat?: AllChatProps;
@@ -18,8 +19,16 @@ type AvatarWithStatusProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
 };
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
-    const { myself, avatarUser, socket, chat, thread, setOpeningService, setCurrentMainChat } =
-        props;
+    const {
+        myself,
+        setMyself,
+        avatarUser,
+        socket,
+        chat,
+        thread,
+        setOpeningService,
+        setCurrentMainChat,
+    } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
     const isOnline: boolean = avatarUser
@@ -51,6 +60,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             <UserProfile
                 socket={socket}
                 myself={myself}
+                setMyself={setMyself}
                 user={avatarUser}
                 openUserProfile={openUserProfile}
                 setOpenUserProfile={setOpenUserProfile}

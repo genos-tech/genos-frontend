@@ -41,13 +41,21 @@ type InboxBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     inboxItem: InboxProps;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { teamMemberProfiles, socket, myself, inboxItem, setOpeningService, setCurrentChat } =
-        props;
+    const {
+        teamMemberProfiles,
+        socket,
+        myself,
+        setMyself,
+        inboxItem,
+        setOpeningService,
+        setCurrentChat,
+    } = props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
     const { accessToken } = useAuth();
@@ -238,6 +246,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             customClassName="inbox-preview"
                             teamMemberProfiles={teamMemberProfiles}
                             myself={myself}
+                            setMyself={setMyself}
                             socket={socket}
                             key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
                             content={inboxItem.itemBody}

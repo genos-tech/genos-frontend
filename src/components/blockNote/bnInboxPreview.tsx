@@ -38,6 +38,7 @@ import "../../App.css";
 type BnInboxPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     body: any[];
@@ -51,6 +52,7 @@ export const BnInboxPreview = (props: BnInboxPreviewProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         body,
@@ -79,6 +81,7 @@ export const BnInboxPreview = (props: BnInboxPreviewProps) => {
                 teamMemberProfiles,
                 socket,
                 myself,
+                setMyself,
                 setOpeningService,
                 setCurrentChat
             ),
