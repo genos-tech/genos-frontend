@@ -143,42 +143,43 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                         )}
                     </Dropdown>
 
-                    {/* show my or others custom status if it's set */}
-                    {customStatusValue !== "Update Status" &&
-                        customStatusValue != "" &&
-                        openCustomStatusEditor === false && (
-                            <Chip
-                                variant="outlined"
-                                size="lg"
-                                color="neutral"
-                                sx={{ borderRadius: "sm" }}
-                                onClick={() => {
-                                    // Only "me" can customize status.
-                                    if (myself.userId === user?.userId) {
+                    {myself.userId === user?.userId && (
+                        <>
+                            {openCustomStatusEditor === false && (
+                                <Chip
+                                    variant="outlined"
+                                    size="lg"
+                                    color="neutral"
+                                    sx={{ borderRadius: "sm" }}
+                                    onClick={() => {
                                         setOpenCustomStatusEditor(true);
-                                    }
-                                }}
-                            >
-                                {customStatusValue}
-                            </Chip>
-                        )}
+                                    }}
+                                >
+                                    {myself.customStatus !== ""
+                                        ? myself.customStatus
+                                        : "Update Status"}
+                                </Chip>
+                            )}
+                        </>
+                    )}
 
-                    {/* Only for me, show "Update Status" to customize status if it's not set */}
-                    {(customStatusValue === "Update Status" || customStatusValue === "") &&
-                        myself.userId === user?.userId &&
-                        openCustomStatusEditor === false && (
-                            <Chip
-                                variant="outlined"
-                                size="lg"
-                                color="neutral"
-                                sx={{ borderRadius: "sm" }}
-                                onClick={() => {
-                                    setOpenCustomStatusEditor(true);
-                                }}
-                            >
-                                Update Status
-                            </Chip>
-                        )}
+                    {myself.userId !== user?.userId && (
+                        <>
+                            {openCustomStatusEditor === false && (
+                                <Chip
+                                    variant="outlined"
+                                    size="lg"
+                                    color="neutral"
+                                    sx={{ borderRadius: "sm" }}
+                                >
+                                    {customStatusValue !== "Update Status" &&
+                                    customStatusValue != ""
+                                        ? customStatusValue
+                                        : "Update Status"}
+                                </Chip>
+                            )}
+                        </>
+                    )}
 
                     {/* Update custom status */}
                     {openCustomStatusEditor === true && (
