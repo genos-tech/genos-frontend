@@ -27,6 +27,7 @@ export type SignInResponse = {
     access: string;
     message: string;
     profile_image_url: string;
+    custom_status: string;
     ts_joined_at: string;
 };
 

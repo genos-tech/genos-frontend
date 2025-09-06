@@ -57,6 +57,7 @@ const useMyself = (): SetMyselfProps => {
         userEmail: "",
         tsLastSeen: "",
         tsJoined: "",
+        customStatus: "",
         avatarImgPath: "",
     });
 
@@ -70,6 +71,7 @@ const useMyself = (): SetMyselfProps => {
                 userEmail: localStorage.getItem("userEmail") || "",
                 tsLastSeen: getCurrentTimestamp(),
                 tsJoined: localStorage.getItem("tsJoined") || "",
+                customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
             });
         };

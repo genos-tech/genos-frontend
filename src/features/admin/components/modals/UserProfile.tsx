@@ -1,4 +1,5 @@
 import { Socket } from "socket.io-client";
+import { useState, useEffect } from "react";
 import {
     Modal,
     ModalDialog,
@@ -11,7 +12,14 @@ import {
     Typography,
     Card,
     Chip,
+    Dropdown,
+    Input,
+    Menu,
+    MenuItem,
+    MenuButton,
 } from "@mui/joy";
+import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
+import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import EditIcon from "@mui/icons-material/Edit";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
@@ -26,6 +34,14 @@ import { CountrySelector } from "../../../../components/utils/CountrySelector";
 import { useAuth } from "../../../../context/AuthContext";
 import { PulseDot } from "../../../../components/utils/PulseDot";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
+
+const templateCustomStatueOptions = [
+    "⛔ OOO",
+    "🚫 Do Not Disturb",
+    "🏖️ On Holiday",
+    "🥪 Enjoying Lunch",
+];
 
 type UserProfileProps = {
     socket: Socket | null;
@@ -48,6 +64,39 @@ export const UserProfile = (props: UserProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
+    const [openCustomStatusEditor, setOpenCustomStatusEditor] = useState(false);
+    const [isStatusUpdated, setIsStatusUpdated] = useState(false);
+    const [customStatusValue, setCustomStatusValue] = useState(
+        user && user.customStatus !== "" && user.customStatus !== "undefined"
+            ? user.customStatus
+            : "Custom your status"
+    );
+
+    useEffect(() => {
+        if (isStatusUpdated === false) {
+            if (user && user.customStatus !== "" && user.customStatus !== "undefined") {
+                setCustomStatusValue(user.customStatus);
+            } else {
+                setCustomStatusValue("Custom your status");
+            }
+        }
+    }, [user, isStatusUpdated]);
+
+    const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+    const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    const insertEmoji = (emoji: any) => {
+        setCustomStatusValue(emoji + " " + customStatusValue);
+        setSelectedEmoji(null);
+    };
+    useEffect(() => {
+        if (selectedEmoji !== null) {
+            insertEmoji(selectedEmoji);
+        }
+    }, [selectedEmoji]);
+
+    if (openUserProfile === true) {
+        console.log("user:", user);
+    }
 
     return (
         <>
@@ -58,6 +107,11 @@ export const UserProfile = (props: UserProfileProps) => {
             >
                 <ModalDialog>
                     <Box sx={{ flex: 1, width: "900px" }}>
+                        <EmojiPicker
+                            showEmojiPicker={showEmojiPicker}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            setSelectedEmoji={setSelectedEmoji}
+                        />
                         <Box
                             sx={{
                                 position: "sticky",
@@ -148,17 +202,88 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             ? "Online"
                                                             : "Offline"}
                                                     </Chip>
-                                                    <Chip
-                                                        variant="outlined"
-                                                        size="lg"
-                                                        color="neutral"
-                                                        sx={{ borderRadius: "sm" }}
-                                                        onClick={() => {
-                                                            console.log("Set custom status");
-                                                        }}
-                                                    >
-                                                        (TBD) 🌴 Custom Status
-                                                    </Chip>
+                                                    {openCustomStatusEditor === false && (
+                                                        <Chip
+                                                            variant="outlined"
+                                                            size="lg"
+                                                            color="neutral"
+                                                            sx={{ borderRadius: "sm" }}
+                                                            onClick={() => {
+                                                                setOpenCustomStatusEditor(true);
+                                                            }}
+                                                        >
+                                                            {customStatusValue}
+                                                        </Chip>
+                                                    )}
+                                                    {openCustomStatusEditor === true && (
+                                                        <Stack direction={"row"} spacing={0}>
+                                                            <IconButton
+                                                                variant="outlined"
+                                                                onClick={() => {
+                                                                    setShowEmojiPicker(true);
+                                                                }}
+                                                            >
+                                                                <SentimentSatisfiedAltIcon />
+                                                            </IconButton>
+                                                            <Dropdown>
+                                                                <MenuButton
+                                                                    slots={{ root: IconButton }}
+                                                                    slotProps={{
+                                                                        root: {
+                                                                            variant: "outlined",
+                                                                            color: "neutral",
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <ArrowDropDown />
+                                                                </MenuButton>
+                                                                <Menu sx={{ zIndex: 10010 }}>
+                                                                    {templateCustomStatueOptions.map(
+                                                                        (template, idx) => (
+                                                                            <MenuItem
+                                                                                key={idx}
+                                                                                onClick={() => {
+                                                                                    setCustomStatusValue(
+                                                                                        template
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                {template}
+                                                                            </MenuItem>
+                                                                        )
+                                                                    )}
+                                                                </Menu>
+                                                            </Dropdown>
+                                                            <Input
+                                                                size="md"
+                                                                placeholder="Set you status…"
+                                                                variant="outlined"
+                                                                value={customStatusValue}
+                                                                onChange={(e) =>
+                                                                    setCustomStatusValue(
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                            />
+                                                            <Chip
+                                                                variant="solid"
+                                                                size="md"
+                                                                color="neutral"
+                                                                sx={{
+                                                                    borderRadius: "sm",
+                                                                    fontWeight: "bold",
+                                                                }}
+                                                                onClick={() => {
+                                                                    setOpenCustomStatusEditor(
+                                                                        false
+                                                                    );
+                                                                    setIsStatusUpdated(true);
+                                                                }}
+                                                            >
+                                                                SET
+                                                            </Chip>
+                                                        </Stack>
+                                                    )}
                                                 </Stack>
                                             }
                                         >
@@ -182,7 +307,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                         </Stack>
                                         <Stack direction="column" spacing={2}>
                                             <Stack direction={"row"} spacing={2}>
-                                                {" "}
                                                 <FormControl>
                                                     <FormLabel>Team Name</FormLabel>
                                                     <Typography fontWeight={"bold"}>
