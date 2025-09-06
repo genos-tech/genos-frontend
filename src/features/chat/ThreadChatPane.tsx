@@ -215,6 +215,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                             <ThreadMessageBubble
                                                 teamMemberProfiles={teamMemberProfiles}
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 socket={socket}
                                                 thread={thread}
                                                 variant={isYou ? "sent" : "received"}
@@ -255,6 +256,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             <BnThreadEditor
                                 teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
+                                setMyself={setMyself}
                                 socket={socket}
                                 teamMembers={teamMembers}
                                 thread={thread}

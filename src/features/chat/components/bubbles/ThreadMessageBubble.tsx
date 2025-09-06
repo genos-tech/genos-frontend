@@ -19,6 +19,7 @@ import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 type threadMessageBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     thread: ThreadProps;
     variant: "sent" | "received";
@@ -37,6 +38,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         thread,
         variant,
@@ -295,6 +297,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 avatarUser={
                                                     isSent
                                                         ? teamMemberProfiles[myself.userId]
@@ -370,6 +373,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 <BnChatPreview
                                     teamMemberProfiles={teamMemberProfiles}
                                     myself={myself}
+                                    setMyself={setMyself}
                                     socket={socket}
                                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                                     content={message.content}

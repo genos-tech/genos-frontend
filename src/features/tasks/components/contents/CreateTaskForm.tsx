@@ -331,6 +331,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             <TaskBodyEditBlock
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
+                setMyself={setMyself}
                 socket={socket}
                 teamMembers={teamMembers}
                 body={body}

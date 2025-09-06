@@ -165,6 +165,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         <InboxBubble
                                             teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
+                                            setMyself={setMyself}
                                             myself={myself}
                                             inboxItem={item}
                                             setCurrentChat={setCurrentMainChat}
