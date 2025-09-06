@@ -24,7 +24,7 @@ import { toggleMessagesPane } from "../../../utils";
 import { extractMMDDHHMM } from "../../../utils/dateUtils";
 
 type ChatListItemProps = ListItemButtonProps & {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     chat: AllChatProps;
     myself: UserProps;
@@ -47,7 +47,7 @@ type ChatListItemProps = ListItemButtonProps & {
 
 export const ChatListItem = (props: ChatListItemProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         chat,
         myself,
@@ -174,8 +174,9 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     {chatType === 1 && chat.dmPartnerUser !== null && (
                                         <AvatarWithStatus
                                             myself={myself}
-                                            avatarUser={chat.dmPartnerUser}
-                                            isOnline={teamMemberStatus[chat.dmPartnerUser.userId]}
+                                            avatarUser={
+                                                teamMemberProfiles[chat.dmPartnerUser.userId]
+                                            }
                                             socket={socket}
                                             chat={chat}
                                             setOpeningService={setOpeningService}

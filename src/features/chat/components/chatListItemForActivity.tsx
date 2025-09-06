@@ -24,7 +24,7 @@ import { extractMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     activity: ActivityMessageProps;
     myself: UserProps;
@@ -49,7 +49,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         activity,
         myself,
@@ -305,9 +305,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         activity.dmPartnerUser !== null && (
                                             <AvatarWithStatus
                                                 myself={myself}
-                                                avatarUser={activity.dmPartnerUser}
-                                                isOnline={
-                                                    teamMemberStatus[activity.dmPartnerUser.userId]
+                                                avatarUser={
+                                                    teamMemberProfiles[
+                                                        activity.dmPartnerUser.userId
+                                                    ]
                                                 }
                                                 socket={socket}
                                                 setOpeningService={setOpeningService}

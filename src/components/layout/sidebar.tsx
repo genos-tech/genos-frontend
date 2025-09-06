@@ -22,6 +22,7 @@ import { PulseDot } from "../../components/utils/PulseDot";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type SidebarProps = {
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -30,8 +31,15 @@ type SidebarProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
 };
 export const Sidebar = (props: SidebarProps) => {
-    const { socket, myself, setMyself, openingService, setOpeningService, setCurrentMainChat } =
-        props;
+    const {
+        teamMemberProfiles,
+        socket,
+        myself,
+        setMyself,
+        openingService,
+        setOpeningService,
+        setCurrentMainChat,
+    } = props;
     const { setAccessToken } = useAuth();
     const navigate = useNavigate();
 
@@ -52,6 +60,7 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("userId", "");
                 localStorage.setItem("avatarImgPath", "");
                 localStorage.setItem("teamId", "");
+                localStorage.setItem("tsJoined", "");
                 localStorage.setItem("teamName", "");
                 setAccessToken(null);
                 navigate("/");
@@ -228,13 +237,11 @@ export const Sidebar = (props: SidebarProps) => {
 
             <Divider />
 
-            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                <Avatar
-                    variant="solid"
-                    size="sm"
-                    onClick={() => setOpenUserProfile(true)}
-                    src={myself.avatarImgPath}
-                >
+            <Box
+                sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                onClick={() => setOpenUserProfile(true)}
+            >
+                <Avatar variant="solid" size="sm" src={myself.avatarImgPath}>
                     {myself.userName[0]}
                 </Avatar>
                 <Box position="absolute" bottom={0} right={0} width={24} height={33}>
@@ -245,8 +252,7 @@ export const Sidebar = (props: SidebarProps) => {
             <UserProfile
                 socket={socket}
                 myself={myself}
-                user={myself}
-                isOnline={true}
+                user={teamMemberProfiles[myself.userId]}
                 openUserProfile={openUserProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 setCurrentMainChat={setCurrentMainChat}

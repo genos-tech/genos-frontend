@@ -23,7 +23,7 @@ import { ProjectProps } from "../../../types/tasks";
 import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../../../types/chat";
 
 type ChatSidebarProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
@@ -52,7 +52,7 @@ type ChatSidebarProps = {
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         currentChatPaneType,
         setCurrentChatPaneType,
@@ -185,7 +185,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <>
                         <DMDivider />
                         <ChatList
-                            teamMemberStatus={teamMemberStatus}
+                            teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
                             chatType={1}
@@ -216,7 +216,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <>
                         <GMDivider setOpenCreateGM={setOpenCreateGM} />
                         <ChatList
-                            teamMemberStatus={teamMemberStatus}
+                            teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
                             chatType={2}
@@ -256,7 +256,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <>
                         <PMDivider />
                         <ChatList
-                            teamMemberStatus={teamMemberStatus}
+                            teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
                             chatType={3}
@@ -295,7 +295,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentActivityMessageType={setCurrentActivityMessageType}
                         />
                         <ChatList
-                            teamMemberStatus={teamMemberStatus}
+                            teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
                             myself={myself}
                             chatType={-1}

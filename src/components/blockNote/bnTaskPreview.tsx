@@ -37,7 +37,7 @@ import { ChatProps } from "../../types/chat";
 import "../../App.css";
 
 type BnTaskPreviewProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -50,7 +50,7 @@ type BnTaskPreviewProps = {
 };
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         teamMembers,
@@ -76,7 +76,13 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+            mention: CreateMentionSpec(
+                teamMemberProfiles,
+                socket,
+                myself,
+                setOpeningService,
+                setCurrentChat
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -262,7 +268,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
                                 query
                             )
                         }

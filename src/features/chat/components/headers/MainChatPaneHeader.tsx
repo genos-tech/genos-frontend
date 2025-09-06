@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { Button, IconButton, Stack, Tooltip } from "@mui/joy";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
@@ -10,7 +11,8 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
 type MainChatPaneHeaderProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
+    socket: Socket | null;
     myself: UserProps;
     chat: ChatProps;
     subChat: ChatProps;
@@ -23,11 +25,13 @@ type MainChatPaneHeaderProps = {
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsTaskCreationVisible: (value: boolean) => void;
     setIsCreatingTask: (value: boolean) => void;
+    setOpeningService: (value: number) => void;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
+        socket,
         myself,
         chat,
         subChat,
@@ -40,6 +44,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,
         setIsCreatingTask,
+        setOpeningService,
     } = props;
 
     let isYou: boolean = false;
@@ -72,7 +77,16 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         >
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
                 <HeaderUserName
-                    isOnline={teamMemberStatus[chat.dmPartnerUser?.userId || ""]}
+                    teamMemberProfiles={teamMemberProfiles}
+                    socket={socket}
+                    myself={myself}
+                    setOpeningService={setOpeningService}
+                    setCurrentMainChat={setCurrentMainChat}
+                    isOnline={
+                        chat.dmPartnerUser
+                            ? teamMemberProfiles[chat.dmPartnerUser.userId]?.isOnline || false
+                            : false
+                    }
                     chat={chat}
                     isYou={isYou}
                 />

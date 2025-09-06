@@ -17,7 +17,7 @@ import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 
 type threadMessageBubbleProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     thread: ThreadProps;
@@ -35,7 +35,7 @@ type threadMessageBubbleProps = {
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         thread,
@@ -219,27 +219,17 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             isSent
                                 ? {
                                       borderTopRightRadius: 0,
-                                  }
-                                : {
-                                      borderTopRightRadius: "lg",
-                                  },
-                            isSent
-                                ? {
                                       borderTopLeftRadius: "lg",
-                                  }
-                                : {
-                                      borderTopLeftRadius: 0,
-                                  },
-                            isSent
-                                ? {
                                       backgroundColor: "neutral.plainColor",
                                   }
                                 : {
+                                      borderTopRightRadius: "lg",
+                                      borderTopLeftRadius: 0,
                                       backgroundColor: "neutral.outlinedBorder",
                                   },
                             isFocused
                                 ? {
-                                      background: "#1cb15dff",
+                                      background: "#1c7fb1ff",
                                   }
                                 : {
                                       background: "",
@@ -305,13 +295,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
                                                 myself={myself}
-                                                avatarUser={isSent ? myself : message.sender}
-                                                isOnline={
-                                                    teamMemberStatus[
-                                                        isSent
-                                                            ? myself.userId
-                                                            : message.sender.userId
-                                                    ]
+                                                avatarUser={
+                                                    isSent
+                                                        ? teamMemberProfiles[myself.userId]
+                                                        : teamMemberProfiles[message.sender.userId]
                                                 }
                                                 socket={socket}
                                                 thread={thread}
@@ -381,7 +368,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
                             {message.content.length > 0 && (
                                 <BnChatPreview
-                                    teamMemberStatus={teamMemberStatus}
+                                    teamMemberProfiles={teamMemberProfiles}
                                     myself={myself}
                                     socket={socket}
                                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}

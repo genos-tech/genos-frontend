@@ -40,7 +40,7 @@ import { ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 
 type BnThreadEditorProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -53,7 +53,7 @@ type BnThreadEditorProps = {
 };
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         teamMembers,
@@ -78,7 +78,13 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+            mention: CreateMentionSpec(
+                teamMemberProfiles,
+                socket,
+                myself,
+                setOpeningService,
+                setCurrentChat
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -344,7 +350,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
                                 query
                             )
                         }

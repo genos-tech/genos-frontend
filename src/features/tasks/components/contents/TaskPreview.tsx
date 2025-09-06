@@ -24,7 +24,7 @@ import { TaskProps, ProjectProps, TagListProps, TaskCommentProps } from "../../.
 import { ChatProps } from "../../../../types/chat";
 
 type TaskPreviewProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     setCurrentProject: (value: ProjectProps) => void;
@@ -53,7 +53,7 @@ type TaskPreviewProps = {
 
 export const TaskPreview = (props: TaskPreviewProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         myself,
         setCurrentProject,
@@ -355,7 +355,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <Divider sx={{ mt: 1, mb: 1 }} />
 
             <TaskMainBlock
-                teamMemberStatus={teamMemberStatus}
+                teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 taskContents={tmpCurrentTaskContent}
                 setTaskContents={setTmpCurrentTaskContent}
@@ -395,7 +395,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
             <TaskBodyPreviewBlock
                 key={`TaskBodyPreviewBlock-${tmpCurrentTaskContent.id}`}
-                teamMemberStatus={teamMemberStatus}
+                teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
                 teamMembers={teamMembers}
@@ -410,7 +410,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <Divider sx={{ mt: 2 }} />
 
             <TaskSubTasksBlock
-                teamMemberStatus={teamMemberStatus}
+                teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
                 currentTaskContent={tmpCurrentTaskContent}
@@ -434,7 +434,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <Divider sx={{ m: 2 }} />
 
             <TaskCommentBlock
-                teamMemberStatus={teamMemberStatus}
+                teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
                 socket={socket}
                 teamMembers={teamMembers}

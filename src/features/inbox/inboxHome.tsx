@@ -11,7 +11,7 @@ import { InboxBubble } from "./components/InboxBubble";
 import { ChatProps } from "../../types/chat";
 
 type InboxHomeProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     setMyself: (me: UserProps) => void;
@@ -23,7 +23,7 @@ type InboxHomeProps = {
 
 export const InboxHome = (props: InboxHomeProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         setMyself,
@@ -54,6 +54,7 @@ export const InboxHome = (props: InboxHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
+                teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
@@ -126,7 +127,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = activityInboxItems[index];
                                     return (
                                         <InboxBubble
-                                            teamMemberStatus={teamMemberStatus}
+                                            teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
                                             myself={myself}
                                             inboxItem={item}
@@ -161,7 +162,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = requestInboxItems[index];
                                     return (
                                         <InboxBubble
-                                            teamMemberStatus={teamMemberStatus}
+                                            teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
                                             myself={myself}
                                             inboxItem={item}

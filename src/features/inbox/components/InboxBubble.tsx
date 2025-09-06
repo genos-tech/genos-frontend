@@ -38,7 +38,7 @@ const item_body = [
 ];
 
 type InboxBubbleProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     inboxItem: InboxProps;
@@ -46,7 +46,7 @@ type InboxBubbleProps = {
     setCurrentChat: (chat: ChatProps) => void;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { teamMemberStatus, socket, myself, inboxItem, setOpeningService, setCurrentChat } =
+    const { teamMemberProfiles, socket, myself, inboxItem, setOpeningService, setCurrentChat } =
         props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
@@ -236,7 +236,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     {inboxItem.itemBody[0].content.length > 0 && (
                         <BnChatPreview
                             customClassName="inbox-preview"
-                            teamMemberStatus={teamMemberStatus}
+                            teamMemberProfiles={teamMemberProfiles}
                             myself={myself}
                             socket={socket}
                             key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}

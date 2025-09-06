@@ -20,7 +20,7 @@ import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
 
 type ChatHomeProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -45,7 +45,7 @@ type ChatHomeProps = {
 
 export const ChatHome = (props: ChatHomeProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         myself,
         setMyself,
@@ -198,6 +198,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
+                teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
@@ -229,7 +230,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             }}
                         >
                             <ChatSidebar
-                                teamMemberStatus={teamMemberStatus}
+                                teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
                                 currentChatPaneType={currentChatPaneType}
                                 setCurrentChatPaneType={setCurrentChatPaneType}
@@ -297,7 +298,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             onResize={setSubChatPanelSize}
                                         >
                                             <MessagesSubPane
-                                                teamMemberStatus={teamMemberStatus}
+                                                teamMemberProfiles={teamMemberProfiles}
                                                 currentWindowHeight={height}
                                                 paneSizePCT={subChatPanelSize}
                                                 myself={myself}
@@ -349,7 +350,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     onResize={setMainChatPanelSize}
                                 >
                                     <MessagesPane
-                                        teamMemberStatus={teamMemberStatus}
+                                        teamMemberProfiles={teamMemberProfiles}
                                         currentWindowHeight={height}
                                         paneSizePCT={mainChatPanelSize}
                                         chat={currentMainChat}
@@ -410,7 +411,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 }}
                                             >
                                                 <ThreadPane
-                                                    teamMemberStatus={teamMemberStatus}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                     currentWindowHeight={height}
                                                     thread={currentThreadChat}
                                                     myself={myself}
@@ -481,7 +482,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 }}
                                             >
                                                 <TaskPreview
-                                                    teamMemberStatus={teamMemberStatus}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
                                                     setCurrentProject={setCurrentProject}
@@ -554,7 +555,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 }}
                                             >
                                                 <CreateTaskForm
-                                                    teamMemberStatus={teamMemberStatus}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
                                                     currentMainChat={currentMainChat}
@@ -620,7 +621,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         }}
                                     >
                                         <ThreadPane
-                                            teamMemberStatus={teamMemberStatus}
+                                            teamMemberProfiles={teamMemberProfiles}
                                             currentWindowHeight={height}
                                             thread={currentThreadChat}
                                             myself={myself}
@@ -685,7 +686,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 }}
                                             >
                                                 <TaskPreview
-                                                    teamMemberStatus={teamMemberStatus}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
                                                     setCurrentProject={setCurrentProject}
@@ -758,7 +759,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 }}
                                             >
                                                 <CreateTaskForm
-                                                    teamMemberStatus={teamMemberStatus}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
                                                     currentMainChat={currentMainChat}

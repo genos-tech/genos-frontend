@@ -13,7 +13,6 @@ export type AllChatProps = {
     unread: boolean | true;
     latestMessage?: MessageProps;
     latestMessageText: string;
-    CGAvatarImgPath?: string;
     TSLastMessage: string;
     project?: ProjectProps;
 };
@@ -28,7 +27,6 @@ export type ChatProps = {
     messages: MessageProps[];
     latestMessage?: MessageProps;
     latestMessageText: string;
-    CGAvatarImgPath?: string;
     TSLastMessage: string;
     project?: ProjectProps;
     taskExist?: boolean;
@@ -46,7 +44,6 @@ export type ThreadProps = {
     taskId: number | null;
     unread: boolean | true;
     messages: ThreadMessageProps[];
-    CGAvatarImgPath?: string;
     TSLastMessage: string;
     project?: ProjectProps;
     taskExist?: boolean;

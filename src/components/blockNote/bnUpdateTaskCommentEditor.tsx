@@ -38,7 +38,7 @@ import { getCurrentTimestamp } from "../../utils/dateUtils";
 import "../../App.css";
 
 type BnUpdateTaskCommentEditorProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -59,7 +59,7 @@ type BnUpdateTaskCommentEditorProps = {
 
 export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         teamMembers,
@@ -91,7 +91,13 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+            mention: CreateMentionSpec(
+                teamMemberProfiles,
+                socket,
+                myself,
+                setOpeningService,
+                setCurrentChat
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -373,7 +379,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
                                 query
                             )
                         }

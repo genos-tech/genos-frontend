@@ -12,7 +12,7 @@ import { ChatProps } from "../../../../../types/chat";
 import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 
 type TaskCommentBlockProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -27,7 +27,7 @@ type TaskCommentBlockProps = {
 
 export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         teamMembers,
@@ -94,7 +94,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                             return (
                                 <TaskCommentBubble
                                     key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                                    teamMemberStatus={teamMemberStatus}
+                                    teamMemberProfiles={teamMemberProfiles}
                                     socket={socket}
                                     myself={myself}
                                     comment={comment}
@@ -113,7 +113,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
 
             {isInEdit === true && editTargetComment && (
                 <BnUpdateTaskCommentEditor
-                    teamMemberStatus={teamMemberStatus}
+                    teamMemberProfiles={teamMemberProfiles}
                     myself={myself}
                     socket={socket}
                     teamMembers={teamMembers}
@@ -133,7 +133,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
             )}
             {isInEdit === false && (
                 <BnTaskCommentEditor
-                    teamMemberStatus={teamMemberStatus}
+                    teamMemberProfiles={teamMemberProfiles}
                     myself={myself}
                     socket={socket}
                     teamMembers={teamMembers}

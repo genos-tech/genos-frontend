@@ -92,6 +92,20 @@ export const extractHHMM = (ts: string) => {
     return tsLocal;
 };
 
+export const extractYYYYMMDD = (ts: string) => {
+    const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
+    const tsDay: string = checkTimestampDay(ts);
+
+    if (tsDay === "today") {
+        return `Today`;
+    } else if (tsDay === "yesterday") {
+        return `Yesterday`;
+    } else if (tsDay === "withinAYear") {
+        return `${tsLocal.slice(0, 10)}`;
+    }
+    return tsLocal;
+};
+
 export const getFormattedTodayDateStr = (): string => {
     let today = new Date();
     return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format

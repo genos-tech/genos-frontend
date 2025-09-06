@@ -40,7 +40,7 @@ import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/u
 import "../../App.css";
 
 type BnTaskCommentEditorProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -56,7 +56,7 @@ type BnTaskCommentEditorProps = {
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         teamMembers,
@@ -83,7 +83,13 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+            mention: CreateMentionSpec(
+                teamMemberProfiles,
+                socket,
+                myself,
+                setOpeningService,
+                setCurrentChat
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -359,7 +365,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
                                 query
                             )
                         }

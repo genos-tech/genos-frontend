@@ -1,16 +1,49 @@
+import { Socket } from "socket.io-client";
+import { useState } from "react";
 import { Avatar, Box, Chip, Typography } from "@mui/joy";
 import GroupsIcon from "@mui/icons-material/Groups";
 
 import { ChatProps } from "../../../../types/chat";
 import { PulseDot } from "../../../../components/utils/PulseDot";
+import { UserProfile } from "../../../admin/components/modals/UserProfile";
+import { UserProps } from "../../../../types/admin";
 
-export const HeaderUserName = (props: { isOnline: boolean; chat: ChatProps; isYou: boolean }) => {
-    const { isOnline, chat, isYou } = props;
+type HeaderUserNameProps = {
+    teamMemberProfiles: Record<string, UserProps>;
+    socket: Socket | null;
+    myself: UserProps;
+    setOpeningService: (service: number) => void;
+    setCurrentMainChat: (chat: ChatProps) => void;
+    isOnline: boolean;
+    chat: ChatProps;
+    isYou: boolean;
+};
+export const HeaderUserName = (props: HeaderUserNameProps) => {
+    const {
+        teamMemberProfiles,
+        socket,
+        myself,
+        setOpeningService,
+        setCurrentMainChat,
+        isOnline,
+        chat,
+        isYou,
+    } = props;
+
+    const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
+
     return (
         <>
             <div>
                 {chat.chatType === 1 ? (
-                    <Avatar src={chat.CGAvatarImgPath}>{chat.chatName[0]}</Avatar>
+                    <Avatar
+                        src={chat.dmPartnerUser?.avatarImgPath}
+                        onClick={() => {
+                            setOpenUserProfile(true);
+                        }}
+                    >
+                        {chat.chatName[0]}
+                    </Avatar>
                 ) : (
                     <Avatar>
                         <GroupsIcon sx={{ fontSize: 32 }} />
@@ -44,6 +77,17 @@ export const HeaderUserName = (props: { isOnline: boolean; chat: ChatProps; isYo
                     {isYou ? `${chat.chatName} (you)` : chat.chatName}
                 </Typography>
             </div>
+            {chat.dmPartnerUser && (
+                <UserProfile
+                    socket={socket}
+                    myself={myself}
+                    user={teamMemberProfiles[chat.dmPartnerUser?.userId]}
+                    openUserProfile={openUserProfile}
+                    setOpenUserProfile={setOpenUserProfile}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setOpeningService={setOpeningService}
+                />
+            )}
         </>
     );
 };

@@ -40,7 +40,7 @@ import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 
 type BnChatEditorProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -54,7 +54,7 @@ type BnChatEditorProps = {
 };
 export const BnChatEditor = (props: BnChatEditorProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         teamMembers,
@@ -81,6 +81,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
+                teamMemberProfiles,
                 socket,
                 myself,
                 setOpeningService,
@@ -379,7 +380,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
                                 query
                             )
                         }

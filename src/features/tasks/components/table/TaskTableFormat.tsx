@@ -10,6 +10,7 @@ import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
 
 import { UserProps } from "../../../../types/admin";
+import { PulseDot } from "../../../../components/utils/PulseDot";
 
 const hmlOptions = [
     { label: "Low", value: "Low", color: "#0044c2", textColor: "white" },
@@ -58,6 +59,7 @@ const statusOptions = [
 const getStatusOption = (value: string) => statusOptions.find((option) => option.value === value);
 
 type getTaskColumnsProps = {
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     accessToken: string | null;
     teamMembers: UserProps[];
@@ -94,6 +96,17 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                         <Avatar size="sm" src={params.row.assigneeImgPath}>
                             {params.row.assigneeName[0]}
                         </Avatar>
+                        <Box position="absolute" sx={{ pl: "20px", pt: "20px" }}>
+                            <PulseDot
+                                color={
+                                    props.myself.userId === params.row.assigneeId ||
+                                    props.teamMemberProfiles[params.row.assigneeId]?.isOnline ===
+                                        true
+                                        ? "#4caf50"
+                                        : "#999"
+                                }
+                            />
+                        </Box>
                         <div>
                             <Typography level="body-xs">
                                 {params.row.assigneeName} | {params.row.assigneeEmail}

@@ -7,5 +7,6 @@ export const defaultDmPartner: UserProps = {
     userId: "",
     userEmail: "",
     tsLastSeen: "",
+    tsJoined: "",
     avatarImgPath: "",
 };

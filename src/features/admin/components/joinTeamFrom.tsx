@@ -165,10 +165,10 @@ export const JoinTeam = () => {
                                     props: {
                                         teamId: targetTeamDetails.teamId,
                                         userId: userId,
-                                        teamName: "Unknown",
+                                        teamName: "N/A",
                                         userName: userName,
                                         userEmail: userEmail,
-                                        customStatus: "Unknown",
+                                        customStatus: "N/A",
                                         avatarImgPath: "",
                                     },
                                 },

@@ -20,7 +20,7 @@ import { TaskProps } from "../../types/tasks";
 import { getTimeDiffSeconds } from "../../utils/dateUtils";
 
 type MessagesPaneProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     currentWindowHeight: number;
     thread: ThreadProps;
     myself: UserProps;
@@ -44,7 +44,7 @@ type MessagesPaneProps = {
 
 export const ThreadPane = (props: MessagesPaneProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         currentWindowHeight,
         thread,
         myself,
@@ -211,7 +211,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                             }}
                                         >
                                             <ThreadMessageBubble
-                                                teamMemberStatus={teamMemberStatus}
+                                                teamMemberProfiles={teamMemberProfiles}
                                                 myself={myself}
                                                 socket={socket}
                                                 thread={thread}
@@ -236,7 +236,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                         {isInEdit === true && editTargetMessage && (
                             <BnUpdateThreadEditor
-                                teamMemberStatus={teamMemberStatus}
+                                teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
                                 socket={socket}
                                 teamMembers={teamMembers}
@@ -250,7 +250,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         )}
                         {isInEdit === false && (
                             <BnThreadEditor
-                                teamMemberStatus={teamMemberStatus}
+                                teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
                                 socket={socket}
                                 teamMembers={teamMembers}

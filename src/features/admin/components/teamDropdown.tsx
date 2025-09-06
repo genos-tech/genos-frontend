@@ -79,6 +79,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             userName: myself.userName,
             userEmail: myself.userEmail,
             tsLastSeen: getCurrentTimestamp(),
+            tsJoined: myself.tsJoined,
             avatarImgPath: myself.avatarImgPath,
         });
         _joinTeam(teamId);

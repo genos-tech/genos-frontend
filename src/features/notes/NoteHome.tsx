@@ -9,6 +9,7 @@ import { NoteSidebar } from "./components/NoteSidebar";
 import { ChatProps } from "../../types/chat";
 
 type NoteHomeProps = {
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -18,14 +19,22 @@ type NoteHomeProps = {
 };
 
 export const NoteHome = (props: NoteHomeProps) => {
-    const { socket, myself, setMyself, openingService, setOpeningService, setCurrentMainChat } =
-        props;
+    const {
+        teamMemberProfiles,
+        socket,
+        myself,
+        setMyself,
+        openingService,
+        setOpeningService,
+        setCurrentMainChat,
+    } = props;
 
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
+                    teamMemberProfiles={teamMemberProfiles}
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}

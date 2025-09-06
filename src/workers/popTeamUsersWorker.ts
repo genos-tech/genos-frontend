@@ -24,11 +24,14 @@ self.onmessage = async (event) => {
         const myself: UserProps = event.data.myself;
         const teamMembers: UserProps[] = await getTeamMembers(myself.teamId);
 
-        const allUsers: Record<string, boolean> = {};
+        const allUsers: Record<string, UserProps> = {};
 
         if (teamMembers && teamMembers.length > 0) {
             teamMembers.forEach((user) => {
-                allUsers[user.userId] = checkIsOnline(myself, user.userId, user.tsLastSeen);
+                allUsers[user.userId] = {
+                    ...user,
+                    isOnline: checkIsOnline(myself, user.userId, user.tsLastSeen),
+                };
             });
         }
 

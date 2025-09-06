@@ -7,6 +7,8 @@ export type UserProps = {
     userEmail: string;
     avatarImgPath: string;
     tsLastSeen: string;
+    isOnline?: boolean;
+    tsJoined: string;
     customStatus?: string;
     isSystemUser?: boolean;
 };
@@ -25,6 +27,7 @@ export type SignInResponse = {
     access: string;
     message: string;
     profile_image_url: string;
+    ts_joined_at: string;
 };
 
 export type SignUpResponse = {

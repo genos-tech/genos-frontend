@@ -2,7 +2,7 @@ import { Socket } from "socket.io-client";
 import {
     Modal,
     ModalDialog,
-    AspectRatio,
+    Avatar,
     Box,
     FormControl,
     FormLabel,
@@ -25,12 +25,12 @@ import { ChatProps } from "../../../../types/chat";
 import { CountrySelector } from "../../../../components/utils/CountrySelector";
 import { useAuth } from "../../../../context/AuthContext";
 import { PulseDot } from "../../../../components/utils/PulseDot";
+import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 
 type UserProfileProps = {
     socket: Socket | null;
     myself: UserProps;
-    user: UserProps;
-    isOnline: boolean;
+    user?: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -41,7 +41,6 @@ export const UserProfile = (props: UserProfileProps) => {
         socket,
         myself,
         user,
-        isOnline,
         openUserProfile,
         setOpenUserProfile,
         setCurrentMainChat,
@@ -91,7 +90,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                     }}
                                 >
                                     <EditIcon />
-                                    &nbsp;Edit
+                                    &nbsp;Edit (TBD)
                                 </IconButton>
                             </Box>
                         </Box>
@@ -112,45 +111,58 @@ export const UserProfile = (props: UserProfileProps) => {
                                     spacing={3}
                                     sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
                                 >
-                                    <AspectRatio
-                                        ratio="1"
-                                        maxHeight={200}
-                                        sx={{ flex: 1, minWidth: 120, borderRadius: "100%" }}
+                                    <Avatar
+                                        sx={{ width: 100, height: 100, fontSize: "50px" }}
+                                        onClick={() => setOpenUserProfile(true)}
+                                        src={user?.avatarImgPath}
                                     >
-                                        <img src={user.avatarImgPath} loading="lazy" alt="" />
-                                    </AspectRatio>
+                                        {user?.userName[0]}
+                                    </Avatar>
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <Typography
+                                            component="div"
                                             fontSize={28}
                                             fontWeight="bold"
                                             noWrap
                                             endDecorator={
-                                                <Chip
-                                                    variant="outlined"
-                                                    size="lg"
-                                                    color="neutral"
-                                                    sx={{ borderRadius: "sm" }}
-                                                    startDecorator={
-                                                        <Box sx={{ ml: "-5px" }}>
-                                                            <PulseDot
-                                                                color={
-                                                                    isOnline === true
-                                                                        ? "#4caf50"
-                                                                        : "#999"
-                                                                }
-                                                            />
-                                                        </Box>
-                                                    }
-                                                    slotProps={{ root: { component: "span" } }}
-                                                    onClick={() => {
-                                                        console.log("Set custom status");
-                                                    }}
-                                                >
-                                                    {isOnline === true ? "Online" : "Offline"}
-                                                </Chip>
+                                                <Stack direction={"row"} spacing={1}>
+                                                    <Chip
+                                                        variant="outlined"
+                                                        size="lg"
+                                                        color="neutral"
+                                                        sx={{ borderRadius: "sm" }}
+                                                        startDecorator={
+                                                            <Box sx={{ ml: "-5px" }}>
+                                                                <PulseDot
+                                                                    color={
+                                                                        user?.isOnline === true
+                                                                            ? "#4caf50"
+                                                                            : "#999"
+                                                                    }
+                                                                />
+                                                            </Box>
+                                                        }
+                                                        slotProps={{ root: { component: "span" } }}
+                                                    >
+                                                        {user?.isOnline === true
+                                                            ? "Online"
+                                                            : "Offline"}
+                                                    </Chip>
+                                                    <Chip
+                                                        variant="outlined"
+                                                        size="lg"
+                                                        color="neutral"
+                                                        sx={{ borderRadius: "sm" }}
+                                                        onClick={() => {
+                                                            console.log("Set custom status");
+                                                        }}
+                                                    >
+                                                        (TBD) 🌴 Custom Status
+                                                    </Chip>
+                                                </Stack>
                                             }
                                         >
-                                            {user.userName}
+                                            {user?.userName}
                                         </Typography>
                                         <Stack direction={"row"} spacing={2}>
                                             <Typography
@@ -158,7 +170,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     <EmailRoundedIcon fontSize="small" />
                                                 }
                                             >
-                                                {user.userEmail}
+                                                {user?.userEmail}
                                             </Typography>
                                             <Typography
                                                 startDecorator={
@@ -169,14 +181,23 @@ export const UserProfile = (props: UserProfileProps) => {
                                             </Typography>
                                         </Stack>
                                         <Stack direction="column" spacing={2}>
+                                            <Stack direction={"row"} spacing={2}>
+                                                {" "}
+                                                <FormControl>
+                                                    <FormLabel>Team Name</FormLabel>
+                                                    <Typography fontWeight={"bold"}>
+                                                        {user?.teamName}
+                                                    </Typography>
+                                                </FormControl>
+                                                <FormControl>
+                                                    <FormLabel>Team ID</FormLabel>
+                                                    <Typography fontWeight={"bold"}>
+                                                        {user?.teamId}
+                                                    </Typography>
+                                                </FormControl>
+                                            </Stack>
                                             <FormControl>
-                                                <FormLabel>Team</FormLabel>
-                                                <Typography fontWeight={"bold"}>
-                                                    {user.teamName}
-                                                </Typography>
-                                            </FormControl>
-                                            <FormControl>
-                                                <FormLabel>Role</FormLabel>
+                                                <FormLabel>Role (TBD to Edit)</FormLabel>
                                                 <Typography fontWeight={"bold"}>
                                                     Data Engineer
                                                 </Typography>
@@ -190,7 +211,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <FormControl>
                                                 <FormLabel>Joined since</FormLabel>
                                                 <Typography fontWeight={"bold"}>
-                                                    2025/04/01
+                                                    {user &&
+                                                    user?.tsJoined !== "" &&
+                                                    user?.tsJoined !== "N/A"
+                                                        ? extractYYYYMMDD(user.tsJoined)
+                                                        : "N/A"}
                                                 </Typography>
                                             </FormControl>
                                         </Stack>
@@ -216,21 +241,23 @@ export const UserProfile = (props: UserProfileProps) => {
                                 }}
                                 onClick={() => {
                                     (async () => {
-                                        const chatId: number = await loadDMIdByUserId(
-                                            user,
-                                            user.userId,
-                                            accessToken
-                                        );
-                                        await moveToDMChat(
-                                            socket,
-                                            chatId,
-                                            user.userName,
-                                            user,
-                                            setCurrentMainChat
-                                        );
-                                        setOpeningService(1);
-                                        localStorage.setItem("openingService", "1");
-                                        setOpenUserProfile(false);
+                                        if (user) {
+                                            const chatId: number = await loadDMIdByUserId(
+                                                user,
+                                                user?.userId,
+                                                accessToken
+                                            );
+                                            await moveToDMChat(
+                                                socket,
+                                                chatId,
+                                                user?.userName,
+                                                user,
+                                                setCurrentMainChat
+                                            );
+                                            setOpeningService(1);
+                                            localStorage.setItem("openingService", "1");
+                                            setOpenUserProfile(false);
+                                        }
                                     })();
                                 }}
                             >
