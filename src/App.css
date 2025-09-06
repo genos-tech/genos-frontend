@@ -166,6 +166,24 @@
   opacity: 0.8;
 }
 
+.task-datagrid-dark .css-1f02in7-MuiInputBase-root-MuiInput-root {
+  background-color: #d4d4d44e !important;
+  border-radius: 1ch;
+}
+
+.task-datagrid-light .css-1f02in7-MuiInputBase-root-MuiInput-root {
+  background-color: #c5c5c571 !important;
+  border-radius: 1ch;
+}
+
+.task-datagrid-dark .css-yhoksd-MuiButtonBase-root-MuiButton-root {
+  color: white !important;
+}
+
+.task-datagrid-light .css-yhoksd-MuiButtonBase-root-MuiButton-root {
+  color: rgb(55, 55, 55) !important;
+}
+
 .task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-virtualScroller {
   background-color: #000000;
   opacity: 0.9;
@@ -327,6 +345,47 @@
   padding-bottom: 20px;
   height: var(--task-body-editor-height, 500px);
   overflow-y: scroll;
+}
+
+.bn-note-body-box-light .bn-editor {
+  background-color: rgb(159, 159, 159);
+  padding-top: 20px;
+  padding-bottom: 20px;
+
+  height: 95dvh;
+  overflow-y: scroll;
+}
+
+.bn-note-body-box-dark .bn-editor {
+  background-color: #1f1f1f;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  height: 95dvh;
+  overflow-y: scroll;
+}
+
+/* File name color uploaded in a Note */
+.bn-file-name-with-icon:hover {
+  color: #000000;
+}
+
+.bn-note-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bn-note-editor::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+}
+
+.bn-note-editor::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+.bn-note-editor {
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: #888 transparent;
 }
 
 .bn-container {
