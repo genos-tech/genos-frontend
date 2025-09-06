@@ -10,6 +10,9 @@ export type UserProps = {
     isOnline?: boolean;
     tsJoined: string;
     customStatus?: string;
+    isOfflineForced?: string;
+    role?: string;
+    baseCountry?: string;
     isSystemUser?: boolean;
 };
 

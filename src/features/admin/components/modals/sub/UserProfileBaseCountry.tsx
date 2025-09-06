@@ -1,10 +1,18 @@
+import { useState, useEffect } from "react";
 import {
     ListItemContent,
     ListItemDecorator,
     AutocompleteOption,
     Autocomplete,
     Typography,
+    Stack,
+    Chip,
+    Button,
 } from "@mui/joy";
+
+import { UserProps } from "../../../../../types/admin";
+import { useAuth } from "../../../../../context/AuthContext";
+import { updateUserProfile } from "../../../services/updateUserProfile";
 
 const defaultCountry = {
     code: "JP",
@@ -13,49 +21,133 @@ const defaultCountry = {
     suggested: true,
 };
 
-export const CountrySelector = () => {
+type UserProfileBaseCountryProps = {
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    user?: UserProps;
+};
+export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
+    const { myself, setMyself, user } = props;
+    const { accessToken } = useAuth();
+
+    const [openCountryEditor, setOpenCountryEditor] = useState(false);
+    const [isCountryUpdated, setIsCountryUpdated] = useState(false);
+    const [countryValue, setCountryValue] = useState("Set Your Country");
+    useEffect(() => {
+        if (isCountryUpdated === false && openCountryEditor === false) {
+            if (
+                user &&
+                user.baseCountry &&
+                user.baseCountry !== "" &&
+                user.baseCountry !== "undefined"
+            ) {
+                setCountryValue(user.baseCountry);
+            } else {
+                setCountryValue("Set Your Country");
+            }
+        }
+    }, [user, isCountryUpdated]);
+
+    const [open, setOpen] = useState(true);
+
     return (
-        <Autocomplete
-            placeholder="Choose a country"
-            slotProps={{
-                input: {
-                    autoComplete: "new-password", // disable autocomplete and autofill
-                },
-                listbox: {
-                    sx: {
-                        zIndex: 10001, // Put the autocomplete to the front
-                    },
-                },
-            }}
-            sx={{ width: 300 }}
-            options={countries}
-            autoHighlight
-            getOptionLabel={(option) => option.label}
-            value={defaultCountry}
-            isOptionEqualToValue={(option, value) => option.code === value.code}
-            renderOption={(props, option) => {
-                const { key, ..._props } = props;
-                return (
-                    <AutocompleteOption key={option.code} {..._props}>
-                        <ListItemDecorator>
-                            <img
-                                loading="lazy"
-                                width="20"
-                                srcSet={`https://flagcdn.com/w40/${option.code.toLowerCase()}.png 2x`}
-                                src={`https://flagcdn.com/w20/${option.code.toLowerCase()}.png`}
-                                alt=""
-                            />
-                        </ListItemDecorator>
-                        <ListItemContent sx={{ fontSize: "sm" }}>
-                            {option.label}
-                            <Typography level="body-xs">
-                                ({option.code}) +{option.phone}
-                            </Typography>
-                        </ListItemContent>
-                    </AutocompleteOption>
-                );
-            }}
-        />
+        <>
+            {openCountryEditor === true && (
+                <Stack direction={"row"} spacing={0.3}>
+                    <Autocomplete
+                        open={open}
+                        onOpen={() => setOpen(true)}
+                        onClose={() => setOpen(false)} // this fires on outside click
+                        placeholder="Choose a country"
+                        slotProps={{
+                            input: {
+                                autoComplete: "new-password", // disable autocomplete and autofill
+                            },
+                            listbox: {
+                                sx: {
+                                    zIndex: 10001, // Put the autocomplete to the front
+                                },
+                            },
+                        }}
+                        sx={{ width: 300 }}
+                        options={countries}
+                        autoHighlight
+                        getOptionLabel={(option) => option.label}
+                        value={defaultCountry}
+                        isOptionEqualToValue={(option, value) => option.code === value.code}
+                        renderOption={(props, option) => {
+                            const { key, ..._props } = props;
+                            return (
+                                <AutocompleteOption key={option.code} {..._props}>
+                                    <ListItemDecorator>
+                                        <img
+                                            loading="lazy"
+                                            width="20"
+                                            srcSet={`https://flagcdn.com/w40/${option.code.toLowerCase()}.png 2x`}
+                                            src={`https://flagcdn.com/w20/${option.code.toLowerCase()}.png`}
+                                            alt=""
+                                        />
+                                    </ListItemDecorator>
+                                    <ListItemContent sx={{ fontSize: "sm" }}>
+                                        {option.label}
+                                        <Typography level="body-xs">
+                                            ({option.code}) +{option.phone}
+                                        </Typography>
+                                    </ListItemContent>
+                                </AutocompleteOption>
+                            );
+                        }}
+                        onChange={(event, value) => {
+                            if (value) {
+                                setOpenCountryEditor(false);
+                                setIsCountryUpdated(true);
+                                setCountryValue(value.label);
+                                updateUserProfile({
+                                    accessToken: accessToken,
+                                    userId: myself.userId,
+                                    baseCountry: value.label,
+                                });
+                                setMyself({
+                                    ...myself,
+                                    baseCountry: value.label,
+                                });
+                                localStorage.setItem("baseCountry", value.label);
+                            }
+                        }}
+                    />
+                    <Chip
+                        variant="outlined"
+                        size="sm"
+                        color="danger"
+                        sx={{
+                            borderRadius: "sm",
+                            fontWeight: "bold",
+                        }}
+                        onClick={() => {
+                            setOpenCountryEditor(false);
+                        }}
+                    >
+                        CANCEL
+                    </Chip>
+                </Stack>
+            )}
+
+            {openCountryEditor === false && (
+                <Button
+                    variant="plain"
+                    color="neutral"
+                    onClick={() => {
+                        setOpenCountryEditor(true);
+                    }}
+                    sx={{
+                        width: "400px",
+                        justifyContent: "flex-start", // left align the content
+                    }}
+                >
+                    <Typography fontWeight="bold">{countryValue}</Typography>
+                </Button>
+            )}
+        </>
     );
 };
 

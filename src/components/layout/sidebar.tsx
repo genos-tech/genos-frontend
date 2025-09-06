@@ -61,6 +61,9 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("avatarImgPath", "");
                 localStorage.setItem("teamId", "");
                 localStorage.setItem("tsJoined", "");
+                localStorage.setItem("isOfflineForced", "false");
+                localStorage.setItem("role", "");
+                localStorage.setItem("baseCountry", "");
                 localStorage.setItem("customStatus", "");
                 localStorage.setItem("teamName", "");
                 setAccessToken(null);

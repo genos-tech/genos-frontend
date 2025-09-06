@@ -71,6 +71,9 @@ const useMyself = (): SetMyselfProps => {
                 userEmail: localStorage.getItem("userEmail") || "",
                 tsLastSeen: getCurrentTimestamp(),
                 tsJoined: localStorage.getItem("tsJoined") || "",
+                isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
+                role: localStorage.getItem("role") || "",
+                baseCountry: localStorage.getItem("baseCountry") || "",
                 customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
             });
