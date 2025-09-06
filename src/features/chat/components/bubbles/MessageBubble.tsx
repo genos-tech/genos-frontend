@@ -22,8 +22,9 @@ import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 
 type MessageBubbleProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     variant: "sent" | "received";
     chat: ChatProps;
     message: MessageProps;
@@ -49,8 +50,9 @@ type MessageBubbleProps = {
 
 export const MessageBubble = (props: MessageBubbleProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
+        setMyself,
         variant,
         chat,
         message,
@@ -406,27 +408,17 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             isSent
                                 ? {
                                       borderTopRightRadius: 0,
-                                  }
-                                : {
-                                      borderTopRightRadius: "lg",
-                                  },
-                            isSent
-                                ? {
                                       borderTopLeftRadius: "lg",
-                                  }
-                                : {
-                                      borderTopLeftRadius: 0,
-                                  },
-                            isSent
-                                ? {
                                       backgroundColor: "neutral.plainColor",
                                   }
                                 : {
+                                      borderTopRightRadius: "lg",
+                                      borderTopLeftRadius: 0,
                                       backgroundColor: "neutral.outlinedBorder",
                                   },
                             isFocused
                                 ? {
-                                      background: "#1cb15dff",
+                                      background: "#1c7fb1ff",
                                   }
                                 : {
                                       background: "",
@@ -505,13 +497,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
                                                 myself={myself}
-                                                avatarUser={isSent ? myself : message.sender}
-                                                isOnline={
-                                                    teamMemberStatus[
-                                                        isSent
-                                                            ? myself.userId
-                                                            : message.sender.userId
-                                                    ]
+                                                setMyself={setMyself}
+                                                avatarUser={
+                                                    isSent
+                                                        ? teamMemberProfiles[myself.userId]
+                                                        : teamMemberProfiles[message.sender.userId]
                                                 }
                                                 socket={socket}
                                                 chat={chat}
@@ -608,8 +598,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                             {message.content && message.content.length > 0 && (
                                 <BnChatPreview
-                                    teamMemberStatus={teamMemberStatus}
+                                    teamMemberProfiles={teamMemberProfiles}
                                     myself={myself}
+                                    setMyself={setMyself}
                                     socket={socket}
                                     key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
                                     content={message.content}

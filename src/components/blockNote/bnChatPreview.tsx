@@ -18,8 +18,9 @@ import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 
 type BnChatPreviewProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     content: PartialBlock[] | any[];
     isSent: boolean;
@@ -29,8 +30,9 @@ type BnChatPreviewProps = {
 };
 export const BnChatPreview = (props: BnChatPreviewProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         content,
         isSent,
@@ -55,7 +57,14 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+            mention: CreateMentionSpec(
+                teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                setOpeningService,
+                setCurrentChat
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks

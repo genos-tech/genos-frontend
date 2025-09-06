@@ -9,6 +9,7 @@ import {
     Stack,
     Typography,
     IconButton,
+    Chip,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import CircleIcon from "@mui/icons-material/Circle";
@@ -24,10 +25,11 @@ import { toggleMessagesPane } from "../../../utils";
 import { extractMMDDHHMM } from "../../../utils/dateUtils";
 
 type ChatListItemProps = ListItemButtonProps & {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     chat: AllChatProps;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -47,10 +49,11 @@ type ChatListItemProps = ListItemButtonProps & {
 
 export const ChatListItem = (props: ChatListItemProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         chat,
         myself,
+        setMyself,
         currentMainChat,
         currentSubChat,
         setCurrentMainChat,
@@ -174,8 +177,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     {chatType === 1 && chat.dmPartnerUser !== null && (
                                         <AvatarWithStatus
                                             myself={myself}
-                                            avatarUser={chat.dmPartnerUser}
-                                            isOnline={teamMemberStatus[chat.dmPartnerUser.userId]}
+                                            setMyself={setMyself}
+                                            avatarUser={
+                                                teamMemberProfiles[chat.dmPartnerUser.userId]
+                                            }
                                             socket={socket}
                                             chat={chat}
                                             setOpeningService={setOpeningService}
@@ -201,6 +206,22 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         {isYou ? `${chat.chatName} (you)` : chat.chatName}
                                     </Typography>
                                 </Box>
+
+                                {chat.dmPartnerUser !== null &&
+                                    teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                                    teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !==
+                                        "" && (
+                                        <Chip
+                                            variant="outlined"
+                                            size="sm"
+                                            sx={{ borderRadius: "sm", height: "10px" }}
+                                        >
+                                            {
+                                                teamMemberProfiles[chat.dmPartnerUser.userId]
+                                                    .customStatus
+                                            }
+                                        </Chip>
+                                    )}
                             </Stack>
 
                             {/* Right-aligned content */}

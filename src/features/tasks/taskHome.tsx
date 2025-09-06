@@ -60,7 +60,7 @@ const taskTypes: TaskTypesProps = {
 };
 
 type TaskHomeProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -72,7 +72,7 @@ type TaskHomeProps = {
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         myself,
         setMyself,
@@ -333,6 +333,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
+                    teamMemberProfiles={teamMemberProfiles}
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
@@ -711,6 +712,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         {isTaskTableVisible === true && (
                                             <>
                                                 <ProjectTaskTable
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                     myself={myself}
                                                     currentProject={currentProject}
                                                     ongoingTasks={ongoingTasks}
@@ -772,9 +774,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <CreateTaskForm
-                                                teamMemberStatus={teamMemberStatus}
+                                                teamMemberProfiles={teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 currentMainChat={undefined}
                                                 currentThreadChat={undefined}
                                                 chatType={-1}
@@ -841,9 +844,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <TaskPreview
-                                                teamMemberStatus={teamMemberStatus}
+                                                teamMemberProfiles={teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
+                                                setMyself={setMyself}
                                                 setCurrentProject={setCurrentProject}
                                                 currentPreviewTask={currentPreviewTask}
                                                 setIsCreatingTask={setIsCreatingTask}

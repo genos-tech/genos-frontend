@@ -8,10 +8,13 @@ import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import { HeaderUserName } from "./HeaderUserName";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
+import { Socket } from "socket.io-client";
 
 type SubChatPaneHeaderProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
+    socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     chat: ChatProps;
     subChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -22,12 +25,15 @@ type SubChatPaneHeaderProps = {
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsTaskCreationVisible: (value: boolean) => void;
     setIsCreatingTask: (value: boolean) => void;
+    setOpeningService: (value: number) => void;
 };
 
 export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
+        socket,
         myself,
+        setMyself,
         chat,
         subChat,
         setCurrentMainChat,
@@ -38,6 +44,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,
         setIsCreatingTask,
+        setOpeningService,
     } = props;
     let isYou: boolean = false;
     if (subChat.dmPartnerUser !== null) {
@@ -64,7 +71,17 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         >
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
                 <HeaderUserName
-                    isOnline={teamMemberStatus[chat.dmPartnerUser?.userId || ""]}
+                    teamMemberProfiles={teamMemberProfiles}
+                    socket={socket}
+                    myself={myself}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    setCurrentMainChat={setCurrentMainChat}
+                    isOnline={
+                        chat.dmPartnerUser
+                            ? teamMemberProfiles[chat.dmPartnerUser.userId]?.isOnline || false
+                            : false
+                    }
                     chat={subChat}
                     isYou={isYou}
                 />

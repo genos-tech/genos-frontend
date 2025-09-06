@@ -35,8 +35,9 @@ import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps } from "../../types/chat";
 
 type BnUpdateEditorProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     chat: ChatProps;
@@ -48,8 +49,9 @@ type BnUpdateEditorProps = {
 };
 export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         chat,
@@ -73,7 +75,14 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(socket, myself, setOpeningService, setCurrentChat),
+            mention: CreateMentionSpec(
+                teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                setOpeningService,
+                setCurrentChat
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -281,7 +290,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberStatus, editor, teamMembers),
+                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
                                 query
                             )
                         }

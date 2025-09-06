@@ -7,7 +7,7 @@ import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 
 type TaskBodyEditBlockProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
     teamMembers: UserProps[];
@@ -18,7 +18,7 @@ type TaskBodyEditBlockProps = {
 };
 export const TaskBodyEditBlock = (props: TaskBodyEditBlockProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
         socket,
         teamMembers,
@@ -32,7 +32,7 @@ export const TaskBodyEditBlock = (props: TaskBodyEditBlockProps) => {
             <Box sx={{ mt: 2 }}>
                 <div className="md-content">
                     <BnTaskPreview
-                        teamMemberStatus={teamMemberStatus}
+                        teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
                         socket={socket}
                         teamMembers={teamMembers}

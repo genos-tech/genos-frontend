@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import { useState } from "react";
-import { Box, Badge, Avatar } from "@mui/joy";
+import { Box, Avatar } from "@mui/joy";
 
 import { AllChatProps, ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/UserProfile";
@@ -10,8 +10,8 @@ import { PulseDot } from "../utils/PulseDot";
 
 type AvatarWithStatusProps = {
     myself: UserProps;
-    avatarUser: UserProps;
-    isOnline: boolean;
+    setMyself: (value: UserProps) => void;
+    avatarUser?: UserProps;
     socket: Socket | null;
     chat?: AllChatProps;
     thread?: ThreadProps;
@@ -21,8 +21,8 @@ type AvatarWithStatusProps = {
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     const {
         myself,
+        setMyself,
         avatarUser,
-        isOnline,
         socket,
         chat,
         thread,
@@ -31,20 +31,26 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
+    const isOnline: boolean = avatarUser
+        ? myself.userId === avatarUser.userId
+            ? true
+            : avatarUser.isOnline || false
+        : false;
+
     return (
         <div>
-            <Box position="relative" width={32} height={32}>
-                <Avatar
-                    size="sm"
-                    sx={{ width: 32, height: 32 }}
-                    onClick={() => setOpenUserProfile(true)}
-                    src={avatarUser.avatarImgPath}
-                >
+            <Box
+                position="relative"
+                width={32}
+                height={32}
+                onClick={() => setOpenUserProfile(true)}
+            >
+                <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarUser?.avatarImgPath}>
                     {chat !== undefined || thread !== undefined
                         ? chat
                             ? chat?.chatName[0]
                             : thread?.chatName[0]
-                        : avatarUser.userName[0]}
+                        : avatarUser?.userName[0]}
                 </Avatar>
                 <Box position="absolute" bottom={0} right={0} width={12} height={17}>
                     <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
@@ -54,8 +60,8 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             <UserProfile
                 socket={socket}
                 myself={myself}
+                setMyself={setMyself}
                 user={avatarUser}
-                isOnline={isOnline}
                 openUserProfile={openUserProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 setCurrentMainChat={setCurrentMainChat}

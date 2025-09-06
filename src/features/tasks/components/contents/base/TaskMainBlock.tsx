@@ -22,7 +22,7 @@ import { AvatarWithStatus } from "../../../../../components/utils/avatarWithStat
 import { useAuth } from "../../../../../context/AuthContext";
 
 type TaskMainBlockProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     taskContents: TaskProps;
     setTaskContents: (value: TaskProps) => void;
@@ -30,6 +30,7 @@ type TaskMainBlockProps = {
     teamProjects: ProjectProps[];
     projectTags: TagListProps[];
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     assignee: UserProps;
     setAssignee: (value: UserProps) => void;
     reporter: UserProps;
@@ -51,7 +52,7 @@ type TaskMainBlockProps = {
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         taskContents,
         setTaskContents,
@@ -59,6 +60,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         teamProjects,
         projectTags,
         myself,
+        setMyself,
         assignee,
         setAssignee,
         reporter,
@@ -117,8 +119,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
                             myself={myself}
-                            avatarUser={assignee}
-                            isOnline={teamMemberStatus[assignee.userId]}
+                            setMyself={setMyself}
+                            avatarUser={teamMemberProfiles[assignee.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
                             setCurrentMainChat={setCurrentMainChat}
@@ -140,8 +142,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
                             myself={myself}
-                            avatarUser={reporter}
-                            isOnline={teamMemberStatus[reporter.userId]}
+                            setMyself={setMyself}
+                            avatarUser={teamMemberProfiles[reporter.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
                             setCurrentMainChat={setCurrentMainChat}
@@ -269,8 +271,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
                                 <AvatarWithStatus
                                     myself={myself}
-                                    avatarUser={assignee}
-                                    isOnline={teamMemberStatus[assignee.userId]}
+                                    setMyself={setMyself}
+                                    avatarUser={teamMemberProfiles[assignee.userId]}
                                     socket={socket}
                                     setOpeningService={setOpeningService}
                                     setCurrentMainChat={setCurrentMainChat}

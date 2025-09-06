@@ -92,6 +92,7 @@ const predefinedEffortLevelFilters: FilterProps[] = [
 ];
 
 type ProjectTaskTableProps = {
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     currentProject: ProjectProps | null;
     ongoingTasks: TaskTableProps[];
@@ -108,6 +109,7 @@ type ProjectTaskTableProps = {
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const {
+        teamMemberProfiles,
         myself,
         currentProject,
         ongoingTasks,
@@ -363,6 +365,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                         }}
                         rows={currentDisplayingTasks}
                         columns={getTaskColumns({
+                            teamMemberProfiles: teamMemberProfiles,
                             myself: myself,
                             accessToken: accessToken,
                             teamMembers: teamMembers,

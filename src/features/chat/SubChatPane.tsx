@@ -20,10 +20,11 @@ import { TaskProps, ProjectProps } from "../../types/tasks";
 import { getTimeDiffSeconds } from "../../utils/dateUtils";
 
 type MessagesPaneProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     teamMembers: UserProps[];
     chat: ChatProps;
     subChat: ChatProps;
@@ -49,10 +50,11 @@ type MessagesPaneProps = {
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         currentWindowHeight,
         paneSizePCT,
         myself,
+        setMyself,
         teamMembers,
         chat,
         subChat,
@@ -130,8 +132,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         >
             <Sheet sx={{ backgroundColor: "background.level1" }}>
                 <SubChatPaneHeader
-                    teamMemberStatus={teamMemberStatus}
+                    teamMemberProfiles={teamMemberProfiles}
+                    socket={socket}
                     myself={myself}
+                    setMyself={setMyself}
                     chat={chat}
                     subChat={subChat}
                     setCurrentMainChat={setCurrentMainChat}
@@ -142,6 +146,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                     setIsTaskCreationVisible={setIsTaskCreationVisible}
                     setIsCreatingTask={setIsCreatingTask}
+                    setOpeningService={setOpeningService}
                 />
 
                 <Box sx={{ px: 0.3, my: 0.2 }}>
@@ -213,8 +218,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                         }}
                                     >
                                         <MessageBubble
-                                            teamMemberStatus={teamMemberStatus}
+                                            teamMemberProfiles={teamMemberProfiles}
                                             myself={myself}
+                                            setMyself={setMyself}
                                             variant={isYou ? "sent" : "received"}
                                             chat={subChat}
                                             message={message}
@@ -246,8 +252,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                     {isInEdit === true && editTargetMessage && (
                         <BnUpdateEditor
-                            teamMemberStatus={teamMemberStatus}
+                            teamMemberProfiles={teamMemberProfiles}
                             myself={myself}
+                            setMyself={setMyself}
                             socket={socket}
                             teamMembers={teamMembers}
                             chat={chat}
@@ -260,8 +267,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     )}
                     {isInEdit === false && (
                         <BnChatEditor
-                            teamMemberStatus={teamMemberStatus}
+                            teamMemberProfiles={teamMemberProfiles}
                             myself={myself}
+                            setMyself={setMyself}
                             socket={socket}
                             teamMembers={teamMembers}
                             chat={chat}

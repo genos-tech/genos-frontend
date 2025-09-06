@@ -24,10 +24,11 @@ import { extractMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     activity: ActivityMessageProps;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -49,10 +50,11 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         activity,
         myself,
+        setMyself,
         currentMainChat,
         currentSubChat,
         setCurrentMainChat,
@@ -305,9 +307,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         activity.dmPartnerUser !== null && (
                                             <AvatarWithStatus
                                                 myself={myself}
-                                                avatarUser={activity.dmPartnerUser}
-                                                isOnline={
-                                                    teamMemberStatus[activity.dmPartnerUser.userId]
+                                                setMyself={setMyself}
+                                                avatarUser={
+                                                    teamMemberProfiles[
+                                                        activity.dmPartnerUser.userId
+                                                    ]
                                                 }
                                                 socket={socket}
                                                 setOpeningService={setOpeningService}

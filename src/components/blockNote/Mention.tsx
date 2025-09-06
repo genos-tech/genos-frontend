@@ -10,8 +10,10 @@ import { UserProfile } from "../../features/admin/components/modals/UserProfile"
 
 // The Mention inline content
 export const CreateMentionSpec = (
+    teamMemberProfiles: Record<string, UserProps>,
     socket: Socket | null,
     myself: UserProps,
+    setMyself: (value: UserProps) => void,
     setOpeningService: (service: number) => void,
     setCurrentMainChat: (chat: ChatProps) => void
 ) =>
@@ -20,28 +22,10 @@ export const CreateMentionSpec = (
             type: "mention",
             propSchema: {
                 userName: {
-                    default: "Unknown",
-                },
-                userEmail: {
-                    default: "Unknown",
+                    default: "N/A",
                 },
                 userId: {
-                    default: "Unknown",
-                },
-                teamId: {
-                    default: "Unknown",
-                },
-                teamName: {
-                    default: "Unknown",
-                },
-                tsLastSeen: {
-                    default: "Unknown",
-                },
-                avatarImgPath: {
-                    default: "Unknown",
-                },
-                customStatus: {
-                    default: "Unknown",
+                    default: "N/A",
                 },
             },
             content: "none",
@@ -49,13 +33,7 @@ export const CreateMentionSpec = (
         {
             render: (props) => {
                 const userName = props.inlineContent.props.userName;
-                const userEmail = props.inlineContent.props.userEmail;
                 const userId = props.inlineContent.props.userId;
-                const teamId = props.inlineContent.props.teamId;
-                const teamName = props.inlineContent.props.teamName;
-                const tsLastSeen = props.inlineContent.props.tsLastSeen;
-                const avatarImgPath = props.inlineContent.props.avatarImgPath;
-                const customStatus = props.inlineContent.props.customStatus;
 
                 const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
@@ -95,17 +73,8 @@ export const CreateMentionSpec = (
                         <UserProfile
                             socket={socket}
                             myself={myself}
-                            user={{
-                                userName: userName,
-                                userEmail: userEmail,
-                                userId: userId,
-                                teamId: teamId,
-                                tsLastSeen: tsLastSeen,
-                                teamName: teamName,
-                                avatarImgPath: avatarImgPath,
-                                customStatus: customStatus,
-                            }}
-                            isOnline={false}
+                            setMyself={setMyself}
+                            user={teamMemberProfiles[userId]}
                             openUserProfile={openUserProfile}
                             setOpenUserProfile={setOpenUserProfile}
                             setCurrentMainChat={setCurrentMainChat}
@@ -119,7 +88,7 @@ export const CreateMentionSpec = (
 
 // Function which gets all users for the mentions menu.
 export const MentionMenuItems = (
-    teamMemberStatus: Record<string, boolean>,
+    teamMemberProfiles: Record<string, UserProps>,
     editor: any,
     users: UserProps[]
 ): DefaultReactSuggestionItem[] => {
@@ -155,7 +124,11 @@ export const MentionMenuItems = (
                     />
                     <Box position="absolute" bottom={0} right={0} width={10} height={10}>
                         <PulseDot
-                            color={teamMemberStatus[user.userId] === true ? "#4caf50" : "#999"}
+                            color={
+                                teamMemberProfiles[user.userId]?.isOnline === true
+                                    ? "#4caf50"
+                                    : "#999"
+                            }
                         />
                     </Box>
                 </Box>

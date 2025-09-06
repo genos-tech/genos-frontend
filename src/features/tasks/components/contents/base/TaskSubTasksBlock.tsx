@@ -14,9 +14,10 @@ import { ChatProps } from "../../../../../types/chat";
 import { AvatarWithStatus } from "../../../../../components/utils/avatarWithStatus";
 
 type TaskSubTasksBlockProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     currentTaskContent: TaskProps;
     setCurrentProject: (value: ProjectProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
@@ -25,9 +26,10 @@ type TaskSubTasksBlockProps = {
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         socket,
         myself,
+        setMyself,
         currentTaskContent,
         setCurrentProject,
         setCurrentPreviewTaskId,
@@ -93,8 +95,8 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                     <ListItem key={`listitem-${id}-${index}`}>
                                         <AvatarWithStatus
                                             myself={myself}
-                                            avatarUser={assignee}
-                                            isOnline={teamMemberStatus[assignee.userId]}
+                                            setMyself={setMyself}
+                                            avatarUser={teamMemberProfiles[assignee.userId]}
                                             socket={socket}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}

@@ -6,7 +6,7 @@ import { UserProps } from "../../../types/admin";
 export const loadTeamMembers = async (myself: UserProps, accessToken: string | null) => {
     try {
         const api = authApi(accessToken);
-        const query: string = `team_id=${myself.teamId}&user_id=${myself.userId}`;
+        const query: string = `team_id=${myself.teamId}&team_name=${myself.teamName}&user_id=${myself.userId}`;
         if (api) {
             const res = await api.get(`/team/getTeamMembers/?${query}`);
             return res.data;

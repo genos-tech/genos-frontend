@@ -7,8 +7,9 @@ import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 
 type TaskBodyPreviewBlockProps = {
-    teamMemberStatus: Record<string, boolean>;
+    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
     body: PartialBlock[] | null;
@@ -20,8 +21,9 @@ type TaskBodyPreviewBlockProps = {
 };
 export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
     const {
-        teamMemberStatus,
+        teamMemberProfiles,
         myself,
+        setMyself,
         socket,
         teamMembers,
         body,
@@ -35,8 +37,9 @@ export const TaskBodyPreviewBlock = (props: TaskBodyPreviewBlockProps) => {
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
-                    teamMemberStatus={teamMemberStatus}
+                    teamMemberProfiles={teamMemberProfiles}
                     myself={myself}
+                    setMyself={setMyself}
                     socket={socket}
                     teamMembers={teamMembers}
                     body={body || []}

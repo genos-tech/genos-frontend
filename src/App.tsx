@@ -20,7 +20,7 @@ import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { InboxProps } from "./types/common";
 import { getCurrentTimestamp } from "./utils/dateUtils";
-import PopTeamUserStatusWorker from "./workers/popTeamUserStatusWorker.ts?worker";
+import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -56,6 +56,8 @@ const useMyself = (): SetMyselfProps => {
         userName: "",
         userEmail: "",
         tsLastSeen: "",
+        tsJoined: "",
+        customStatus: "",
         avatarImgPath: "",
     });
 
@@ -68,6 +70,8 @@ const useMyself = (): SetMyselfProps => {
                 userName: localStorage.getItem("userName") || "",
                 userEmail: localStorage.getItem("userEmail") || "",
                 tsLastSeen: getCurrentTimestamp(),
+                tsJoined: localStorage.getItem("tsJoined") || "",
+                customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
             });
         };
@@ -93,7 +97,7 @@ export const App = () => {
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
-    const [teamMemberStatus, setTeamMemberStatus] = useState<Record<string, boolean>>({});
+    const [teamMemberProfiles, setTeamMemberStatus] = useState<Record<string, UserProps>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
@@ -147,7 +151,9 @@ export const App = () => {
     }, []);
 
     useEffect(() => {
-        setIsLoading(true);
+        if (myself.userId === "") {
+            setIsLoading(true);
+        }
     }, [myself]);
 
     useEffect(() => {
@@ -162,19 +168,20 @@ export const App = () => {
     }, [isLoading]);
 
     useEffect(() => {
-        if (accessToken) {
+        // myself.userId === "" -> Not init yet.
+        if (accessToken && myself.userId === "") {
             setSocketInstance(socket(accessToken));
             console.log("WS connected");
         }
     }, [myself, accessToken]);
 
     useEffect(() => {
-        if (myself.teamId !== "") {
-            const popTeamUserStatusWorker = new PopTeamUserStatusWorker();
+        if (myself.userId !== "" && myself.teamId !== "") {
+            const popTeamUsersWorker = new PopTeamUsersWorker();
 
             const interval = setInterval(() => {
-                popTeamUserStatusWorker.postMessage({ myself });
-                popTeamUserStatusWorker.onmessage = (event) => {
+                popTeamUsersWorker.postMessage({ myself });
+                popTeamUsersWorker.onmessage = (event) => {
                     const data = event.data;
                     if (data.error) {
                         console.error("Worker failed:", data.error);
@@ -185,7 +192,7 @@ export const App = () => {
             }, 5000);
 
             return () => {
-                popTeamUserStatusWorker.terminate();
+                popTeamUsersWorker.terminate();
                 clearInterval(interval);
             };
         }
@@ -221,7 +228,7 @@ export const App = () => {
 
                 {openingService === 0 ? (
                     <InboxHome
-                        teamMemberStatus={teamMemberStatus}
+                        teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
                         socket={socketInstance}
                         setMyself={setMyself}
@@ -234,7 +241,7 @@ export const App = () => {
 
                 {openingService === 1 ? (
                     <ChatHome
-                        teamMemberStatus={teamMemberStatus}
+                        teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
@@ -260,7 +267,7 @@ export const App = () => {
 
                 {openingService === 2 ? (
                     <TaskHome
-                        teamMemberStatus={teamMemberStatus}
+                        teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
@@ -274,6 +281,7 @@ export const App = () => {
 
                 {openingService === 3 ? (
                     <NoteHome
+                        teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
