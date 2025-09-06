@@ -2,18 +2,39 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
-export const updateUserStatus = async (
-    accessToken: string | null,
-    userId: string,
-    customStatus: string,
-    setErrorMessage?: (value: string) => void
-) => {
+type updateUserProfileProps = {
+    accessToken: string | null;
+    userId: string;
+    customStatus?: string;
+    isOfflineForced?: string;
+    role?: string;
+    baseCountry?: string;
+    setErrorMessage?: (value: string) => void;
+};
+export const updateUserProfile = async (props: updateUserProfileProps) => {
+    const {
+        accessToken,
+        userId,
+        customStatus,
+        isOfflineForced,
+        role,
+        baseCountry,
+        setErrorMessage,
+    } = props;
+
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.put("/user/status/", {
+            const res = await api.put("/user/profile/", {
                 user_id: userId,
                 custom_status: customStatus,
+                is_offline_forced: isOfflineForced
+                    ? isOfflineForced === "true"
+                        ? true
+                        : false
+                    : false,
+                role: role,
+                base_country: baseCountry,
             });
             return res.data;
         } else {

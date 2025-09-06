@@ -7,21 +7,13 @@ import {
     Box,
     FormControl,
     FormLabel,
+    Button,
     IconButton,
     Stack,
     Typography,
     Card,
-    Chip,
-    Dropdown,
-    Input,
-    Menu,
-    MenuItem,
-    MenuButton,
 } from "@mui/joy";
-import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
-import EditIcon from "@mui/icons-material/Edit";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -30,22 +22,13 @@ import { moveToDMChat } from "../../../chat/services/moveToChat";
 import { loadDMIdByUserId } from "../../../chat/services/loadDMIdByUserId";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
-import { CountrySelector } from "../../../../components/utils/CountrySelector";
+import { UserProfileBaseCountry } from "./sub/UserProfileBaseCountry";
 import { useAuth } from "../../../../context/AuthContext";
-import { PulseDot } from "../../../../components/utils/PulseDot";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
-import { updateUserStatus } from "../../services/updateUserStatus";
 
-const templateCustomStatueOptions = [
-    "💨 AFK",
-    "☕ Coffee Break",
-    "🧠 In the Zone",
-    "🏖️ On Holiday",
-    "🥪 Enjoying Lunch",
-    "⛔ OOO",
-    "🚫 Do Not Disturb",
-];
+import { UserProfileStatus } from "./sub/UserProfileStatus";
+import { UserProfileRole } from "./sub/UserProfileRole";
 
 type UserProfileProps = {
     socket: Socket | null;
@@ -70,36 +53,8 @@ export const UserProfile = (props: UserProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
-    const [openCustomStatusEditor, setOpenCustomStatusEditor] = useState(false);
-    const [isStatusUpdated, setIsStatusUpdated] = useState(false);
-    const [newStatus, setNewStatus] = useState("");
-    const [customStatusValue, setCustomStatusValue] = useState(
-        user && user.customStatus !== "" && user.customStatus !== "undefined"
-            ? user.customStatus
-            : "Update Status"
-    );
-
-    useEffect(() => {
-        if (isStatusUpdated === false && openCustomStatusEditor === false) {
-            if (user && user.customStatus !== "" && user.customStatus !== "undefined") {
-                setCustomStatusValue(user.customStatus);
-            } else {
-                setCustomStatusValue("Update Status");
-            }
-        }
-    }, [user, isStatusUpdated]);
-
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
-    const insertEmoji = (emoji: any) => {
-        setNewStatus(emoji + " " + newStatus);
-        setSelectedEmoji(null);
-    };
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
 
     return (
         <>
@@ -109,7 +64,7 @@ export const UserProfile = (props: UserProfileProps) => {
                 sx={{ zIndex: 10001 }}
             >
                 <ModalDialog>
-                    <Box sx={{ flex: 1, width: "900px" }}>
+                    <Box sx={{ flex: 1, width: "1000px" }}>
                         <EmojiPicker
                             showEmojiPicker={showEmojiPicker}
                             setShowEmojiPicker={setShowEmojiPicker}
@@ -133,22 +88,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
                                     My profile
                                 </Typography>
-                                <IconButton
-                                    component="button"
-                                    variant="outlined"
-                                    size="sm"
-                                    sx={{
-                                        fontSize: "16px",
-                                        paddingX: "7px",
-                                        paddingY: "3px",
-                                    }}
-                                    onClick={() => {
-                                        setOpenUserProfile(false);
-                                    }}
-                                >
-                                    <EditIcon />
-                                    &nbsp;Edit (TBD)
-                                </IconButton>
                             </Box>
                         </Box>
 
@@ -156,7 +95,7 @@ export const UserProfile = (props: UserProfileProps) => {
                             spacing={4}
                             sx={{
                                 display: "flex",
-                                maxWidth: "800px",
+                                maxWidth: "900px",
                                 mx: "auto",
                                 px: { xs: 2, md: 6 },
                                 py: { xs: 2, md: 3 },
@@ -176,208 +115,27 @@ export const UserProfile = (props: UserProfileProps) => {
                                         {user?.userName[0]}
                                     </Avatar>
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
-                                        <Typography
-                                            component="div"
-                                            fontSize={28}
-                                            fontWeight="bold"
-                                            noWrap
-                                            endDecorator={
-                                                <Stack direction={"row"} spacing={0.5}>
-                                                    <Chip
-                                                        variant="outlined"
-                                                        size="lg"
-                                                        color="neutral"
-                                                        sx={{ borderRadius: "sm" }}
-                                                        startDecorator={
-                                                            <Box sx={{ ml: "-5px" }}>
-                                                                <PulseDot
-                                                                    color={
-                                                                        user?.isOnline === true
-                                                                            ? "#4caf50"
-                                                                            : "#999"
-                                                                    }
-                                                                />
-                                                            </Box>
-                                                        }
-                                                        slotProps={{ root: { component: "span" } }}
-                                                    >
-                                                        {user?.isOnline === true
-                                                            ? "Online"
-                                                            : "Offline"}
-                                                    </Chip>
-                                                    {customStatusValue !== "Update Status" &&
-                                                        openCustomStatusEditor === false && (
-                                                            <Chip
-                                                                variant="outlined"
-                                                                size="lg"
-                                                                color="neutral"
-                                                                sx={{ borderRadius: "sm" }}
-                                                                onClick={() => {
-                                                                    if (
-                                                                        myself.userId ===
-                                                                        user?.userId
-                                                                    ) {
-                                                                        setOpenCustomStatusEditor(
-                                                                            true
-                                                                        );
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {customStatusValue}
-                                                            </Chip>
-                                                        )}
-                                                    {myself.userId === user?.userId &&
-                                                        customStatusValue === "Update Status" &&
-                                                        openCustomStatusEditor === false && (
-                                                            <Chip
-                                                                variant="outlined"
-                                                                size="lg"
-                                                                color="neutral"
-                                                                sx={{ borderRadius: "sm" }}
-                                                                onClick={() => {
-                                                                    setOpenCustomStatusEditor(
-                                                                        true
-                                                                    );
-                                                                }}
-                                                            >
-                                                                {customStatusValue}
-                                                            </Chip>
-                                                        )}
-                                                    {openCustomStatusEditor === true && (
-                                                        <Stack direction={"row"} spacing={0}>
-                                                            <IconButton
-                                                                variant="outlined"
-                                                                onClick={() => {
-                                                                    setShowEmojiPicker(true);
-                                                                }}
-                                                            >
-                                                                <SentimentSatisfiedAltIcon />
-                                                            </IconButton>
-                                                            <Dropdown>
-                                                                <MenuButton
-                                                                    slots={{ root: IconButton }}
-                                                                    slotProps={{
-                                                                        root: {
-                                                                            variant: "outlined",
-                                                                            color: "neutral",
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <ArrowDropDown />
-                                                                </MenuButton>
-                                                                <Menu sx={{ zIndex: 10010 }}>
-                                                                    {templateCustomStatueOptions.map(
-                                                                        (template, idx) => (
-                                                                            <MenuItem
-                                                                                key={idx}
-                                                                                onClick={() => {
-                                                                                    setNewStatus(
-                                                                                        template
-                                                                                    );
-                                                                                }}
-                                                                            >
-                                                                                {template}
-                                                                            </MenuItem>
-                                                                        )
-                                                                    )}
-                                                                </Menu>
-                                                            </Dropdown>
-                                                            <Input
-                                                                size="sm"
-                                                                placeholder="Set you status…"
-                                                                variant="outlined"
-                                                                value={newStatus}
-                                                                onChange={(e) =>
-                                                                    setNewStatus(e.target.value)
-                                                                }
-                                                            />
-                                                            <Chip
-                                                                variant="soft"
-                                                                size="sm"
-                                                                color="primary"
-                                                                sx={{
-                                                                    borderRadius: "sm",
-                                                                    fontWeight: "bold",
-                                                                }}
-                                                                onClick={() => {
-                                                                    setOpenCustomStatusEditor(
-                                                                        false
-                                                                    );
+                                        <UserProfileStatus
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            user={user}
+                                            setShowEmojiPicker={setShowEmojiPicker}
+                                            selectedEmoji={selectedEmoji}
+                                            setSelectedEmoji={setSelectedEmoji}
+                                        />
 
-                                                                    setIsStatusUpdated(true);
-
-                                                                    if (
-                                                                        newStatus &&
-                                                                        newStatus !== ""
-                                                                    ) {
-                                                                        setCustomStatusValue(
-                                                                            newStatus
-                                                                        );
-                                                                        updateUserStatus(
-                                                                            accessToken,
-                                                                            myself.userId,
-                                                                            newStatus
-                                                                        );
-                                                                        setMyself({
-                                                                            ...myself,
-                                                                            customStatus:
-                                                                                newStatus,
-                                                                        });
-                                                                        localStorage.setItem(
-                                                                            "customStatus",
-                                                                            newStatus
-                                                                        );
-                                                                    }
-                                                                }}
-                                                            >
-                                                                SET
-                                                            </Chip>
-                                                            <Chip
-                                                                variant="outlined"
-                                                                size="sm"
-                                                                color="danger"
-                                                                sx={{
-                                                                    borderRadius: "sm",
-                                                                    fontWeight: "bold",
-                                                                }}
-                                                                onClick={() => {
-                                                                    setOpenCustomStatusEditor(
-                                                                        false
-                                                                    );
-                                                                    setIsStatusUpdated(true);
-                                                                    setCustomStatusValue(
-                                                                        "Update Status"
-                                                                    );
-                                                                    setNewStatus("");
-                                                                    updateUserStatus(
-                                                                        accessToken,
-                                                                        myself.userId,
-                                                                        ""
-                                                                    );
-                                                                    setMyself({
-                                                                        ...myself,
-                                                                        customStatus: "",
-                                                                    });
-                                                                    localStorage.setItem(
-                                                                        "customStatus",
-                                                                        ""
-                                                                    );
-                                                                }}
-                                                            >
-                                                                RESET
-                                                            </Chip>
-                                                        </Stack>
-                                                    )}
-                                                </Stack>
-                                            }
-                                        >
-                                            {user?.userName}
-                                        </Typography>
                                         <Stack direction={"row"} spacing={2}>
                                             <Typography
+                                                component="a"
+                                                href={`mailto:${user?.userEmail}`}
                                                 startDecorator={
                                                     <EmailRoundedIcon fontSize="small" />
                                                 }
+                                                sx={{
+                                                    textDecoration: "none",
+                                                    color: "inherit",
+                                                    cursor: "pointer",
+                                                }}
                                             >
                                                 {user?.userEmail}
                                             </Typography>
@@ -389,30 +147,50 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 +81 999-888-777
                                             </Typography>
                                         </Stack>
-                                        <Stack direction="column" spacing={2}>
-                                            <Stack direction={"row"} spacing={2}>
-                                                <FormControl>
-                                                    <FormLabel>Team Name</FormLabel>
-                                                    <Typography fontWeight={"bold"}>
+                                        <Stack direction="column" spacing={1}>
+                                            <FormControl>
+                                                <FormLabel>Team Name</FormLabel>
+                                                <Button
+                                                    variant="plain"
+                                                    sx={{
+                                                        justifyContent: "flex-start", // left align the content
+                                                    }}
+                                                    disabled={true}
+                                                >
+                                                    <Typography fontWeight="bold">
                                                         {user?.teamName}
                                                     </Typography>
-                                                </FormControl>
-                                                <FormControl>
-                                                    <FormLabel>Team ID</FormLabel>
-                                                    <Typography fontWeight={"bold"}>
+                                                </Button>
+                                            </FormControl>
+                                            <FormControl>
+                                                <FormLabel>Team ID</FormLabel>
+                                                <Button
+                                                    variant="plain"
+                                                    sx={{
+                                                        justifyContent: "flex-start", // left align the content
+                                                    }}
+                                                    disabled={true}
+                                                >
+                                                    <Typography fontWeight="bold">
                                                         {user?.teamId}
                                                     </Typography>
-                                                </FormControl>
-                                            </Stack>
+                                                </Button>
+                                            </FormControl>
                                             <FormControl>
-                                                <FormLabel>Role (TBD to Edit)</FormLabel>
-                                                <Typography fontWeight={"bold"}>
-                                                    Data Engineer
-                                                </Typography>
+                                                <FormLabel>Role</FormLabel>
+                                                <UserProfileRole
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    user={user}
+                                                />
                                             </FormControl>
                                             <FormControl>
                                                 <FormLabel>Country</FormLabel>
-                                                <CountrySelector />
+                                                <UserProfileBaseCountry
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    user={user}
+                                                />
                                             </FormControl>
                                         </Stack>
                                         <Stack direction="column" spacing={2}>
