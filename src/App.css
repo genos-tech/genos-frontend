@@ -300,7 +300,7 @@
 
 
 .bn-chat-editor-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
+  background-color: rgb(214, 214, 214);
   padding-top: 55px;
   height: var(--chat-editor-height, 200px);
   overflow: scroll;
@@ -315,8 +315,19 @@
   padding-left: 15px;
 }
 
+.bn-chat-editor-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-chat-editor-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+
 .bn-task-comment-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
+  background-color: rgb(214, 214, 214);
   padding-top: 55px;
   height: var(--task-comment-editor-height, 200px);
   overflow: scroll;
@@ -331,8 +342,19 @@
   padding-left: 15px;
 }
 
+.bn-task-comment-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-task-comment-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+
 .bn-task-body-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
+  background-color: rgb(214, 214, 214);
   padding-top: 20px;
   padding-bottom: 20px;
   height: var(--task-body-editor-height, 500px);
@@ -347,11 +369,21 @@
   overflow-y: scroll;
 }
 
+.bn-task-body-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-task-body-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+
 .bn-note-body-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
+  background-color: rgb(214, 214, 214);
   padding-top: 20px;
   padding-bottom: 20px;
-
   height: 95dvh;
   overflow-y: scroll;
 }
@@ -363,6 +395,17 @@
   height: 95dvh;
   overflow-y: scroll;
 }
+
+.bn-note-body-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-note-body-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
 
 /* File name color uploaded in a Note */
 .bn-file-name-with-icon:hover {
