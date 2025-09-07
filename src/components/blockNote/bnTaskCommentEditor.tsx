@@ -310,7 +310,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         disabled={editorDocLength < 2}
                         onClick={sendComment}
                     >
-                        <SendIcon />
+                        <SendIcon sx={{ mr: "3px" }} />
                         Send
                     </IconButton>
 

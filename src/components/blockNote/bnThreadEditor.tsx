@@ -294,7 +294,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         disabled={editorDocLength < 2}
                         onClick={sendingThreadMessage}
                     >
-                        <SendIcon />
+                        <SendIcon sx={{ mr: "3px" }} />
                         Send
                     </IconButton>
 

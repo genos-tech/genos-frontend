@@ -324,7 +324,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         disabled={editorDocLength < 2}
                         onClick={async () => sendingMessage()}
                     >
-                        <SendIcon />
+                        <SendIcon sx={{ mr: "3px" }} />
                         Send
                     </IconButton>
 

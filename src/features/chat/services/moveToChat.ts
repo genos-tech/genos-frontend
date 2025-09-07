@@ -28,7 +28,6 @@ export const moveToDMChat = async (
 
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 1);
     if (fetchedMessages) {
-        console.log("move to dm:", fetchedMessages[fetchedMessages.length - 1]);
         setCurrentMainChat(defineNewChat(chatId, chatName, 1, dmPartnerUser, fetchedMessages));
     } else {
         console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages);

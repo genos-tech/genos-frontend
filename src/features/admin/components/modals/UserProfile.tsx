@@ -28,7 +28,6 @@ import { UserProfileBaseCountry } from "./sub/UserProfileBaseCountry";
 import { useAuth } from "../../../../context/AuthContext";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
-
 import { UserProfileStatus } from "./sub/UserProfileStatus";
 import { UserProfileRole } from "./sub/UserProfileRole";
 
@@ -262,7 +261,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                     (async () => {
                                         if (user) {
                                             const chatId: number = await loadDMIdByUserId(
-                                                user,
+                                                myself,
                                                 user?.userId,
                                                 accessToken
                                             );
