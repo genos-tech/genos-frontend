@@ -171,6 +171,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                     size="lg"
                                     color="neutral"
                                     sx={{ borderRadius: "sm" }}
+                                    onClick={() => {}}
                                 >
                                     {customStatusValue !== "Update Status" &&
                                     customStatusValue != ""

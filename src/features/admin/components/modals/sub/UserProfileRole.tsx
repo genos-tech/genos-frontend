@@ -93,7 +93,9 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                     variant="plain"
                     color="neutral"
                     onClick={() => {
-                        setOpenRoleEditor(true);
+                        if (myself.userId === user?.userId) {
+                            setOpenRoleEditor(true);
+                        }
                     }}
                     sx={{
                         width: "400px",

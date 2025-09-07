@@ -137,7 +137,9 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                     variant="plain"
                     color="neutral"
                     onClick={() => {
-                        setOpenCountryEditor(true);
+                        if (myself.userId === user?.userId) {
+                            setOpenCountryEditor(true);
+                        }
                     }}
                     sx={{
                         width: "400px",
