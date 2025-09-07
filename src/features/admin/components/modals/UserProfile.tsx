@@ -65,7 +65,7 @@ export const UserProfile = (props: UserProfileProps) => {
                 sx={{ zIndex: 10001 }}
             >
                 <ModalDialog>
-                    <Box sx={{ flex: 1, width: "1000px" }}>
+                    <Box sx={{ flex: 1, width: "900px" }}>
                         <EmojiPicker
                             showEmojiPicker={showEmojiPicker}
                             setShowEmojiPicker={setShowEmojiPicker}
@@ -96,7 +96,7 @@ export const UserProfile = (props: UserProfileProps) => {
                             spacing={4}
                             sx={{
                                 display: "flex",
-                                maxWidth: "900px",
+                                maxWidth: "800px",
                                 mx: "auto",
                                 px: { xs: 2, md: 6 },
                                 py: { xs: 2, md: 3 },
@@ -105,11 +105,11 @@ export const UserProfile = (props: UserProfileProps) => {
                             <Card>
                                 <Stack
                                     direction="row"
-                                    spacing={3}
+                                    spacing={7}
                                     sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
                                 >
                                     <Avatar
-                                        sx={{ width: 100, height: 100, fontSize: "50px" }}
+                                        sx={{ width: 150, height: 150, fontSize: "50px" }}
                                         onClick={() => setOpenUserProfile(true)}
                                         src={user?.avatarImgPath}
                                     >
@@ -119,12 +119,12 @@ export const UserProfile = (props: UserProfileProps) => {
                                         position="absolute"
                                         bottom={0}
                                         right={0}
-                                        width={720}
-                                        height={400}
+                                        width={580}
+                                        height={360}
                                     >
                                         <Tooltip title="EDIT(TBD)" sx={{ zIndex: 10001 }}>
-                                            <IconButton size="lg">
-                                                <EditIcon />
+                                            <IconButton variant="soft">
+                                                <EditIcon sx={{ fontSize: "30px" }} />
                                             </IconButton>
                                         </Tooltip>
                                     </Box>
@@ -216,7 +216,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         </Stack>
                                         <Stack direction="column" spacing={2}>
                                             <FormControl>
-                                                <FormLabel>Joined since</FormLabel>
+                                                <FormLabel>Since Joined</FormLabel>
                                                 <Button
                                                     variant="plain"
                                                     sx={{
