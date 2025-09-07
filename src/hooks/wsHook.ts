@@ -472,6 +472,19 @@ export const wsHook = (props: wsHookProps) => {
                                         ) {
                                             setCurrentSubChat(updatedChat);
                                         }
+
+                                        if (newMessage.messageId === 1) {
+                                            // Join the newly created DM chat by someone.
+                                            if (updatedChat.dmPartnerUser) {
+                                                socket.emit("join", {
+                                                    joiningCGId: updatedChat.chatId,
+                                                    joiningCGName: updatedChat.chatName,
+                                                    chatType: 1,
+                                                    dmPartnerUserId:
+                                                        updatedChat.dmPartnerUser.userId,
+                                                });
+                                            }
+                                        }
                                     } else if (fromMe === true) {
                                         // If the message is from myself, do nothing because the chat sidebar and message section
                                         // are already updated when I sent the message from the Editor component.
@@ -488,6 +501,17 @@ export const wsHook = (props: wsHookProps) => {
                                                 await updateAllChat(newDMChat, newChatMessage);
                                             }
                                             setCurrentMainChat(newDMChat);
+
+                                            // Join the newly (I) created DM chat.
+                                            if (newDMChat.dmPartnerUser) {
+                                                socket.emit("join", {
+                                                    joiningCGId: newDMChat.chatId,
+                                                    joiningCGName: newDMChat.chatName,
+                                                    chatType: 1,
+                                                    dmPartnerUserId:
+                                                        newDMChat.dmPartnerUser.userId,
+                                                });
+                                            }
                                         }
                                     } else {
                                         // Do nothing cause it's a DM for others.

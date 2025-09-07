@@ -226,6 +226,13 @@ export const App = () => {
 
     useEffect(() => {
         if (socketInstance) {
+            socketInstance.emit("join", {
+                joiningCGId: -1, // dm_id or gm_id
+                joiningCGName: myself.userName, // dm_name or gm_name
+                chatType: 1,
+                dmPartnerUserId: myself.userId,
+            });
+
             const intervalId = setInterval(() => {
                 const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
                 const role: string = localStorage.getItem("role") || "";
