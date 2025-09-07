@@ -158,6 +158,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 startDecorator={
                                                     <LocalPhoneIcon fontSize="small" />
                                                 }
+                                                sx={{ userSelect: "text" }}
                                             >
                                                 +81 999-888-777
                                             </Typography>
@@ -172,7 +173,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     }}
                                                     disabled={true}
                                                 >
-                                                    <Typography fontWeight="bold">
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{ userSelect: "text" }}
+                                                    >
                                                         {user?.teamName}
                                                     </Typography>
                                                 </Button>
@@ -186,7 +190,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     }}
                                                     disabled={true}
                                                 >
-                                                    <Typography fontWeight="bold">
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{ userSelect: "text" }}
+                                                    >
                                                         {user?.teamId}
                                                     </Typography>
                                                 </Button>
@@ -218,7 +225,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     }}
                                                     disabled={true}
                                                 >
-                                                    <Typography fontWeight={"bold"}>
+                                                    <Typography
+                                                        fontWeight={"bold"}
+                                                        sx={{ userSelect: "text" }}
+                                                    >
                                                         {user &&
                                                         user?.tsJoined !== "" &&
                                                         user?.tsJoined !== "N/A"

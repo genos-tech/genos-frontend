@@ -78,14 +78,23 @@ export const wsHook = (props: wsHookProps) => {
         }
     };
 
-    const makeDMUpdatedChat = async (newMessage: NewMessageProps): Promise<ChatProps> => {
+    const makeDMUpdatedChat = async (
+        newMessage: NewMessageProps,
+        isNewlyJoinedChat: boolean
+    ): Promise<ChatProps> => {
+        // isNewlyJoinedChat: New DM chat with new friend or not
+
         const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
         return {
             chatId: newMessage.chatId,
-            chatName: newMessage.sender.userName,
+            chatName:
+                isNewlyJoinedChat === true
+                    ? newMessage.dmPartnerUser?.userName || ""
+                    : newMessage.sender.userName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser: newMessage.sender,
+            dmPartnerUser:
+                isNewlyJoinedChat === true ? newMessage.dmPartnerUser : newMessage.sender,
             unread: false,
             messages: updatedChat,
             latestMessage: newMessage,
@@ -411,7 +420,7 @@ export const wsHook = (props: wsHookProps) => {
                                 await addMessage(newChatMessage, newMessage.chatType);
 
                                 // Prepare a new/updated chat object from the new message for DM
-                                const updatedChat = await makeDMUpdatedChat(newMessage);
+                                const updatedChat = await makeDMUpdatedChat(newMessage, false);
 
                                 if (newMessage.isEdited === true) {
                                     if (fromMe === false && toMe === false) {
@@ -464,10 +473,22 @@ export const wsHook = (props: wsHookProps) => {
                                             setCurrentSubChat(updatedChat);
                                         }
                                     } else if (fromMe === true) {
-                                        // If the message is from me.
-                                        // Update the chat sidebar and message section only when the message is from my friends.
                                         // If the message is from myself, do nothing because the chat sidebar and message section
                                         // are already updated when I sent the message from the Editor component.
+
+                                        // But only if the messageId = 1, make a new DM chat because
+                                        // the new DM chat is just created by the user.
+                                        const newDMChat = await makeDMUpdatedChat(
+                                            newMessage,
+                                            true
+                                        );
+                                        if (newMessage.messageId === 1) {
+                                            // Update chat sidebar if the message not reaction-related.
+                                            if (newMessage.isReactionUpdated === false) {
+                                                await updateAllChat(newDMChat, newChatMessage);
+                                            }
+                                            setCurrentMainChat(newDMChat);
+                                        }
                                     } else {
                                         // Do nothing cause it's a DM for others.
                                     }
