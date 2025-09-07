@@ -92,6 +92,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         thread_id: message.threadId,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? thread.dmPartnerUser?.userId
@@ -114,6 +115,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? thread.dmPartnerUser?.userId
@@ -145,6 +147,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         thread_id: message.threadId,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? thread.dmPartnerUser?.userId
@@ -166,6 +169,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? thread.dmPartnerUser?.userId

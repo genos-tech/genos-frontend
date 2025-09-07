@@ -235,6 +235,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         thread_id: -1,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? chat.dmPartnerUser?.userId
@@ -257,6 +258,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId
@@ -279,6 +281,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: message.messageId,
                             message_id: 1,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId
@@ -310,6 +313,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         thread_id: -1,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? chat.dmPartnerUser?.userId
@@ -331,6 +335,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId
@@ -353,6 +358,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: message.messageId,
                             message_id: 1,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
                                     ? chat.dmPartnerUser?.userId

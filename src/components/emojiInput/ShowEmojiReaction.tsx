@@ -101,6 +101,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                     thread_id: isThread === true ? message.threadId : message.messageId || -1,
                     message_id: message.messageId,
                     message_body: message.content,
+                    message_sender: message.sender,
                     dm_partner_user_id:
                         message.sender.userId === myself.userId
                             ? dmPartnerUser?.userId
@@ -122,6 +123,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                         thread_id: message.threadId,
                         message_id: message.threadId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? dmPartnerUser?.userId
@@ -144,6 +146,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                         thread_id: message.messageId,
                         message_id: 1,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? dmPartnerUser?.userId
@@ -170,6 +173,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                     thread_id: isThread === true ? message.threadId : message.messageId || -1,
                     message_id: message.messageId,
                     message_body: message.content,
+                    message_sender: message.sender,
                     dm_partner_user_id:
                         message.sender.userId === myself.userId
                             ? dmPartnerUser?.userId
@@ -190,6 +194,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                         thread_id: message.threadId,
                         message_id: message.threadId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
                                 ? dmPartnerUser?.userId
@@ -211,6 +216,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                         chat_id: message.chatId,
                         thread_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         message_id: 1,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId

@@ -622,36 +622,47 @@ export const wsHook = (props: wsHookProps) => {
                 const tmpNewActivityMessage: ActivityMessageProps = message;
                 let newActivityMessage: ActivityMessageProps;
                 if (tmpNewActivityMessage) {
-                    if (
-                        tmpNewActivityMessage.mentionedUserIds &&
-                        isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
-                    ) {
-                        // If the message is GM or PM, check if the user is mentioned in the message.
-                        // If the user is mentioned, update activityId and activityType.
-                        const activityType = 3;
-                        const chatType = tmpNewActivityMessage.chatType;
-                        const chatId = tmpNewActivityMessage.chatId;
-                        const threadId = tmpNewActivityMessage.threadId;
-                        const messageId = tmpNewActivityMessage.messageId;
-                        let newActivityId: string;
-                        if (tmpNewActivityMessage.isThread === true) {
-                            newActivityId = `${activityType}-${chatType}-${chatId}-${threadId}-${messageId}`;
+                    if (tmpNewActivityMessage.activityType !== 2) {
+                        // For mention and thread activities
+                        if (
+                            tmpNewActivityMessage.mentionedUserIds &&
+                            isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
+                        ) {
+                            // If the message is GM or PM, check if the user is mentioned in the message.
+                            // If the user is mentioned, update activityId and activityType.
+                            const activityType = 3;
+                            const chatType = tmpNewActivityMessage.chatType;
+                            const chatId = tmpNewActivityMessage.chatId;
+                            const threadId = tmpNewActivityMessage.threadId;
+                            const messageId = tmpNewActivityMessage.messageId;
+                            let newActivityId: string;
+                            if (tmpNewActivityMessage.isThread === true) {
+                                newActivityId = `${activityType}-${chatType}-${chatId}-${threadId}-${messageId}`;
+                            } else {
+                                newActivityId = `${activityType}-${chatType}-${chatId}-${messageId}`;
+                            }
+                            newActivityMessage = {
+                                ...tmpNewActivityMessage,
+                                activityId: newActivityId,
+                                activityType: activityType,
+                            };
                         } else {
-                            newActivityId = `${activityType}-${chatType}-${chatId}-${messageId}`;
+                            // DM message or non-mentioned GM/PM message
+                            newActivityMessage = tmpNewActivityMessage;
                         }
-                        newActivityMessage = {
-                            ...tmpNewActivityMessage,
-                            activityId: newActivityId,
-                            activityType: activityType,
-                        };
-                    } else {
-                        // DM message or non-mentioned GM/PM message
-                        newActivityMessage = tmpNewActivityMessage;
-                    }
 
-                    if (newActivityMessage) {
-                        await addActivityMessage(newActivityMessage);
-                        funcSetActivityMessages();
+                        if (newActivityMessage) {
+                            await addActivityMessage(newActivityMessage);
+                            funcSetActivityMessages();
+                        }
+                    } else {
+                        // For reaction activities.
+                        // Only if the mentioned message is mine, define newActivityMessage.
+                        // If not, ignore.
+                        if (myself.userId === tmpNewActivityMessage.sender.userId) {
+                            await addActivityMessage(tmpNewActivityMessage);
+                            funcSetActivityMessages();
+                        }
                     }
                 }
             } else if (message.wsType === "userStatus") {
