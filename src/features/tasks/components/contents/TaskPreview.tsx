@@ -391,6 +391,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             <TaskPreviewCustomBar
                 currentTaskContent={tmpCurrentTaskContent}
                 setCurrentTaskContent={setTmpCurrentTaskContent}
+                setTaskStatusUpdated={setTaskStatusUpdated}
                 setTaskUpdated={setTaskUpdated}
                 setIsCreatingTask={setIsCreatingTask}
                 taskBodySaved={taskBodySaved}

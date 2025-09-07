@@ -77,6 +77,7 @@ export type ActivityMessageProps = {
         allReactions: ReactionProps[];
     };
     tsSent: string;
+    mentionedUserIds?: [];
 };
 
 export type MessageProps = {

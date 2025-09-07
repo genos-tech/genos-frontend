@@ -10,6 +10,7 @@ type TaskPreviewCustomBarProps = {
     currentTaskContent: TaskProps;
     setCurrentTaskContent: (value: TaskProps) => void;
     setTaskUpdated: (value: boolean) => void;
+    setTaskStatusUpdated: (value: boolean) => void;
     setIsCreatingTask: (value: any) => void;
     taskBodySaved: boolean;
 };
@@ -18,6 +19,7 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
         currentTaskContent,
         setCurrentTaskContent,
         setTaskUpdated,
+        setTaskStatusUpdated,
         setIsCreatingTask,
         taskBodySaved,
     } = props;
@@ -49,6 +51,7 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
                             });
                         })();
                         setTaskUpdated(true);
+                        setTaskStatusUpdated(true);
                     }}
                 >
                     <CheckCircleOutlineIcon sx={{ fontSize: "15px" }} />
@@ -80,6 +83,7 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
                             });
                         })();
                         setTaskUpdated(true);
+                        setTaskStatusUpdated(true);
                     }}
                 >
                     <CheckCircleOutlineIcon sx={{ fontSize: "15px" }} />
@@ -157,6 +161,7 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
                             });
                         })();
                         setTaskUpdated(true);
+                        setTaskStatusUpdated(true);
                     }}
                 >
                     <DeleteIcon sx={{ fontSize: "15px" }} />
