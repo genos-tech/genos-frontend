@@ -46,9 +46,9 @@ export const SignInForm = () => {
             localStorage.setItem("userName", signInRes.username || "");
             localStorage.setItem("userId", signInRes.user_id || "");
             localStorage.setItem("tsJoined", signInRes.ts_joined_at || "");
-            localStorage.setItem("isOfflineForced", signInRes.custom_status || "");
-            localStorage.setItem("role", signInRes.custom_status || "");
-            localStorage.setItem("baseCountry", signInRes.custom_status || "");
+            localStorage.setItem("isOfflineForced", signInRes.is_offline_forced || "");
+            localStorage.setItem("role", signInRes.role || "");
+            localStorage.setItem("baseCountry", signInRes.base_country || "");
             localStorage.setItem("customStatus", signInRes.custom_status || "");
             localStorage.setItem("userEmail", signInRes.email || "");
             localStorage.setItem("avatarImgPath", signInRes.profile_image_url || "");

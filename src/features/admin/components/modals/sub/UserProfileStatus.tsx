@@ -282,7 +282,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                             <Chip
                                 variant="outlined"
                                 size="sm"
-                                color="danger"
+                                color="neutral"
                                 sx={{
                                     borderRadius: "sm",
                                     fontWeight: "bold",

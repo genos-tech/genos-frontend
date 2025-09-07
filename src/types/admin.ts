@@ -30,7 +30,10 @@ export type SignInResponse = {
     access: string;
     message: string;
     profile_image_url: string;
+    is_offline_forced: string;
     custom_status: string;
+    role: string;
+    base_country: string;
     ts_joined_at: string;
 };
 
