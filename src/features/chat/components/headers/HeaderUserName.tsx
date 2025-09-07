@@ -7,6 +7,7 @@ import { ChatProps } from "../../../../types/chat";
 import { PulseDot } from "../../../../components/utils/PulseDot";
 import { UserProfile } from "../../../admin/components/modals/UserProfile";
 import { UserProps } from "../../../../types/admin";
+import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
 
 type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -38,14 +39,17 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
         <>
             <div>
                 {chat.chatType === 1 ? (
-                    <Avatar
-                        src={chat.dmPartnerUser?.avatarImgPath}
-                        onClick={() => {
-                            setOpenUserProfile(true);
-                        }}
-                    >
-                        {chat.chatName[0]}
-                    </Avatar>
+                    <AvatarWithStatus
+                        myself={myself}
+                        setMyself={setMyself}
+                        avatarUser={
+                            teamMemberProfiles[chat.dmPartnerUser ? chat.dmPartnerUser.userId : ""]
+                        }
+                        socket={socket}
+                        chat={chat}
+                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
+                    />
                 ) : (
                     <Avatar>
                         <GroupsIcon sx={{ fontSize: 32 }} />

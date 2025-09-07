@@ -101,6 +101,7 @@ export const wsHook = (props: wsHookProps) => {
             latestMessageText: newMessage.contentText,
             TSLastMessage: newMessage.tsSent,
             project: newMessage.project,
+            notMove: true,
         };
     };
 
@@ -118,6 +119,7 @@ export const wsHook = (props: wsHookProps) => {
             latestMessageText: newMessage.contentText,
             TSLastMessage: newMessage.tsSent,
             project: newMessage.project,
+            notMove: true,
         };
     };
 
@@ -135,6 +137,7 @@ export const wsHook = (props: wsHookProps) => {
             latestMessageText: newMessage.contentText,
             TSLastMessage: newMessage.tsSent,
             project: newMessage.project,
+            notMove: true,
         };
     };
 
@@ -162,6 +165,7 @@ export const wsHook = (props: wsHookProps) => {
             TSLastMessage: newMessage.tsSent,
             project: newMessage.project,
             taskExist: currentThread.taskId ? true : false,
+            notMove: true,
         };
     };
 
@@ -260,6 +264,7 @@ export const wsHook = (props: wsHookProps) => {
                                 ? [...currentThreadChat.messages, newThreadMessage]
                                 : [newThreadMessage],
                             TSLastMessage: newThreadMessage.tsSent,
+                            notMove: true,
                         };
                         if (updatedThreadChat && newThreadMessage) {
                             if (message.chatType === 1) {
@@ -420,7 +425,16 @@ export const wsHook = (props: wsHookProps) => {
                                 await addMessage(newChatMessage, newMessage.chatType);
 
                                 // Prepare a new/updated chat object from the new message for DM
-                                const updatedChat = await makeDMUpdatedChat(newMessage, false);
+                                let updatedChat: ChatProps;
+                                if (newMessage.isReactionUpdated === false) {
+                                    updatedChat = await makeDMUpdatedChat(newMessage, false);
+                                } else {
+                                    if (newMessage.sender.userId === myself.userId) {
+                                        updatedChat = await makeDMUpdatedChat(newMessage, true);
+                                    } else {
+                                        updatedChat = await makeDMUpdatedChat(newMessage, false);
+                                    }
+                                }
 
                                 if (newMessage.isEdited === true) {
                                     if (fromMe === false && toMe === false) {
@@ -664,17 +678,25 @@ export const wsHook = (props: wsHookProps) => {
                 console.log("Got an activity message");
                 console.log("activity_message:", message);
 
-                const tmpNewActivityMessage: ActivityMessageProps = message;
-                let newActivityMessage: ActivityMessageProps;
-                if (tmpNewActivityMessage) {
-                    if (tmpNewActivityMessage.activityType !== 2) {
-                        // For mention and thread activities
+                if (message.activityType !== 2) {
+                    let tmpNewActivityMessage: ActivityMessageProps = message;
+                    let newActivityMessage: ActivityMessageProps;
+                    if (tmpNewActivityMessage) {
+                        // If the mention or thread activity is for DM,
+                        // change the chatName and dmPartnerUser.
+                        if (tmpNewActivityMessage.activityType === 1) {
+                            tmpNewActivityMessage = {
+                                ...tmpNewActivityMessage,
+                                chatName: tmpNewActivityMessage.sender.userName,
+                                dmPartnerUser: tmpNewActivityMessage.sender,
+                            };
+                        }
+
                         if (
                             tmpNewActivityMessage.mentionedUserIds &&
                             isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
                         ) {
-                            // If the message is GM or PM, check if the user is mentioned in the message.
-                            // If the user is mentioned, update activityId and activityType.
+                            // Mention activity
                             const activityType = 3;
                             const chatType = tmpNewActivityMessage.chatType;
                             const chatId = tmpNewActivityMessage.chatId;
@@ -691,23 +713,50 @@ export const wsHook = (props: wsHookProps) => {
                                 activityId: newActivityId,
                                 activityType: activityType,
                             };
+                            if (newActivityMessage) {
+                                await addActivityMessage(newActivityMessage);
+                                funcSetActivityMessages();
+                            }
                         } else {
-                            // DM message or non-mentioned GM/PM message
+                            // Non-mentioned DM thread message OR GM/PM message and thread message
+                            newActivityMessage = tmpNewActivityMessage;
+                            if (
+                                newActivityMessage &&
+                                ((tmpNewActivityMessage.chatType === 1 &&
+                                    tmpNewActivityMessage.isThread === true) ||
+                                    tmpNewActivityMessage.chatType !== 1)
+                            ) {
+                                await addActivityMessage(newActivityMessage);
+                                funcSetActivityMessages();
+                            }
+                        }
+                    }
+                } else {
+                    let tmpNewActivityMessage: ActivityMessageProps = message;
+                    let newActivityMessage: ActivityMessageProps;
+                    if (tmpNewActivityMessage) {
+                        // For reaction activities (activityType = 2).
+                        // If the mention or thread activity is for DM,
+                        // change the chatName and dmPartnerUser.
+                        if (tmpNewActivityMessage.chatType === 1) {
+                            if (tmpNewActivityMessage.dmPartnerUser) {
+                                newActivityMessage = {
+                                    ...tmpNewActivityMessage,
+                                    chatName: tmpNewActivityMessage.dmPartnerUser.userName,
+                                    dmPartnerUser: tmpNewActivityMessage.sender,
+                                };
+                            } else {
+                                newActivityMessage = {
+                                    ...tmpNewActivityMessage,
+                                    chatName: "N/A",
+                                };
+                            }
+                        } else {
                             newActivityMessage = tmpNewActivityMessage;
                         }
 
-                        if (newActivityMessage) {
-                            await addActivityMessage(newActivityMessage);
-                            funcSetActivityMessages();
-                        }
-                    } else {
-                        // For reaction activities.
-                        // Only if the mentioned message is mine, define newActivityMessage.
-                        // If not, ignore.
-                        if (myself.userId === tmpNewActivityMessage.sender.userId) {
-                            await addActivityMessage(tmpNewActivityMessage);
-                            funcSetActivityMessages();
-                        }
+                        await addActivityMessage(newActivityMessage);
+                        funcSetActivityMessages();
                     }
                 }
             } else if (message.wsType === "userStatus") {

@@ -1,11 +1,12 @@
+import { UserProps } from "../../../types/admin";
 import { ActivityMessageProps } from "../../../types/chat";
 import PopActivityMessagesWorker from "../../../workers/popActivityMessagesWorker.ts?worker";
 
-export const popActivityMessages = (): Promise<ActivityMessageProps[]> => {
+export const popActivityMessages = (myself: UserProps): Promise<ActivityMessageProps[]> => {
     return new Promise((resolve, reject) => {
         const popActivityMessagesWorker = new PopActivityMessagesWorker();
 
-        popActivityMessagesWorker.postMessage({});
+        popActivityMessagesWorker.postMessage({ myself });
 
         popActivityMessagesWorker.onmessage = (event) => {
             popActivityMessagesWorker.terminate();

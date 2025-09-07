@@ -92,7 +92,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentThreadChatId,
         indexMap,
-        currentThreadChat.moveToSpecificIndex
+        currentThreadChat.moveToSpecificIndex,
+        currentThreadChat.notMove
     );
 
     useEffect(() => {

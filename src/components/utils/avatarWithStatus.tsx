@@ -7,6 +7,7 @@ import { UserProfile } from "../../features/admin/components/modals/UserProfile"
 import { UserProps } from "../../types/admin";
 import { ThreadProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
+import { TaskCommentProps } from "../../types/tasks";
 
 type AvatarWithStatusProps = {
     myself: UserProps;
@@ -15,6 +16,7 @@ type AvatarWithStatusProps = {
     socket: Socket | null;
     chat?: AllChatProps;
     thread?: ThreadProps;
+    comment?: TaskCommentProps;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
 };
@@ -26,6 +28,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         socket,
         chat,
         thread,
+        comment,
         setOpeningService,
         setCurrentMainChat,
     } = props;
@@ -45,13 +48,37 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 height={32}
                 onClick={() => setOpenUserProfile(true)}
             >
-                <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarUser?.avatarImgPath}>
-                    {chat !== undefined || thread !== undefined
-                        ? chat
-                            ? chat?.chatName[0]
-                            : thread?.chatName[0]
-                        : avatarUser?.userName[0]}
-                </Avatar>
+                {chat && (
+                    <Avatar
+                        size="sm"
+                        sx={{ width: 32, height: 32 }}
+                        src={avatarUser?.avatarImgPath}
+                    >
+                        {chat.chatType === 1
+                            ? avatarUser?.userName[0].toUpperCase()
+                            : chat?.chatName[0].toUpperCase()}
+                    </Avatar>
+                )}
+                {thread && (
+                    <Avatar
+                        size="sm"
+                        sx={{ width: 32, height: 32 }}
+                        src={avatarUser?.avatarImgPath}
+                    >
+                        {thread.chatType === 1
+                            ? avatarUser?.userName[0].toUpperCase()
+                            : thread?.chatName[0].toUpperCase()}
+                    </Avatar>
+                )}
+                {comment && (
+                    <Avatar
+                        size="sm"
+                        sx={{ width: 32, height: 32 }}
+                        src={avatarUser?.avatarImgPath}
+                    >
+                        {avatarUser?.userName[0].toUpperCase()}
+                    </Avatar>
+                )}
                 <Box position="absolute" bottom={0} right={0} width={12} height={17}>
                     <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
                 </Box>

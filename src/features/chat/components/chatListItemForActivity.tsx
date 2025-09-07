@@ -23,6 +23,9 @@ import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 
+// chatType = {1: DM, 2: GM, 3: PM, 4: Task Comment}
+// activityType = {1: message or comment, 2: reaction, 3: mention}
+
 type ChatListItemForActivityProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
@@ -79,9 +82,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     const defineNewMessages = (messages: any, moveToSpecificIndex: string) => {
         const newMessages: ChatProps = {
             chatId: activity.chatId,
-            chatName: activity.chatName,
+            chatName: activity.chatType === 1 ? activity.sender.userName : activity.chatName,
             chatType: activity.chatType,
-            dmPartnerUser: activity.dmPartnerUser,
+            dmPartnerUser: activity.sender,
             unread: false,
             messages: messages,
             latestMessage: messages[messages.length - 1],
@@ -178,10 +181,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             if (threadMessages && threadMessages.length > 0) {
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
-                    chatName: activity.chatName,
+                    chatName:
+                        activity.chatType === 1 ? activity.sender.userName : activity.chatName,
                     threadId: activity.threadId,
                     chatType: activity.chatType,
-                    dmPartnerUser: activity.dmPartnerUser,
+                    dmPartnerUser: activity.sender,
                     taskId: activity.taskId,
                     unread: false,
                     messages: threadMessages,
@@ -320,7 +324,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         )}
                                     {activity.chatType === 1 &&
                                         activity.dmPartnerUser === null && (
-                                            <Avatar size="sm">{activity.chatName[0]}</Avatar>
+                                            <Avatar size="sm">
+                                                {activity.chatName[0].toUpperCase()}
+                                            </Avatar>
                                         )}
                                     {activity.chatType === 2 && (
                                         <Avatar size="sm">

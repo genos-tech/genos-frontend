@@ -61,10 +61,6 @@ const useMyself = (): SetMyselfProps => {
         avatarImgPath: "",
     });
 
-    // useEffect(() => {
-    //     console.log("updated myself:", myself);
-    // }, [myself]);
-
     useEffect(() => {
         const fetchUserData = () => {
             setMyself({
@@ -139,7 +135,7 @@ export const App = () => {
     };
     const [activityMessages, setActivityMessages] = useState<ActivityMessageProps[]>([]);
     const funcSetActivityMessages = async () => {
-        const activityMessages: ActivityMessageProps[] = await popActivityMessages();
+        const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
         if (activityMessages) {
             setActivityMessages(activityMessages);
         }

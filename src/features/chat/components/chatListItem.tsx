@@ -188,7 +188,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         />
                                     )}
                                     {chatType === 1 && chat.dmPartnerUser === null && (
-                                        <Avatar size="sm">{chat.chatName[0]}</Avatar>
+                                        <Avatar size="sm">{chat.chatName[0].toUpperCase()}</Avatar>
                                     )}
                                     {chatType === 2 && (
                                         <Avatar size="sm">

@@ -94,7 +94,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                 return (
                     <Box textAlign="left" sx={{ display: "flex", gap: 2, alignItems: "center" }}>
                         <Avatar size="sm" src={params.row.assigneeImgPath}>
-                            {params.row.assigneeName[0]}
+                            {params.row.assigneeName[0].toUpperCase()}
                         </Avatar>
                         <Box position="absolute" sx={{ pl: "20px", pt: "20px" }}>
                             <PulseDot

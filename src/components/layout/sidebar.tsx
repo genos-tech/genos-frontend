@@ -246,7 +246,7 @@ export const Sidebar = (props: SidebarProps) => {
                 onClick={() => setOpenUserProfile(true)}
             >
                 <Avatar variant="solid" size="sm" src={myself.avatarImgPath}>
-                    {myself.userName[0]}
+                    {myself.userName[0].toUpperCase()}
                 </Avatar>
                 <Box position="absolute" bottom={0} right={0} width={24} height={33}>
                     <PulseDot color={"#4caf50"} />

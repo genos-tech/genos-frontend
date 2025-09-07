@@ -99,7 +99,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentSubChatId,
         indexMap,
-        currentSubChat?.moveToSpecificIndex
+        currentSubChat?.moveToSpecificIndex,
+        currentSubChat?.notMove
     );
 
     useEffect(() => {

@@ -16,6 +16,7 @@ import {
 } from "../../../../../../utils/dateUtils";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
+import { AvatarWithStatus } from "../../../../../../components/utils/avatarWithStatus";
 
 type TaskCommentBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -154,7 +155,15 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         }}
                     >
                         <Stack direction="row" spacing={1} alignItems="center">
-                            <Avatar size="sm">{comment.senderName[0]}</Avatar>
+                            <AvatarWithStatus
+                                myself={myself}
+                                setMyself={setMyself}
+                                avatarUser={teamMemberProfiles[comment.senderId]}
+                                socket={socket}
+                                comment={comment}
+                                setOpeningService={setOpeningService}
+                                setCurrentMainChat={setCurrentChat}
+                            />
                             <Typography level="title-md">{comment.senderName}</Typography>
                             <Typography
                                 level="body-sm"

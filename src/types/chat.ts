@@ -31,6 +31,7 @@ export type ChatProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     moveToSpecificIndex?: string;
+    notMove?: boolean;
 };
 
 // Thread Props
@@ -48,6 +49,7 @@ export type ThreadProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     moveToSpecificIndex?: string;
+    notMove?: boolean;
 };
 
 // Message Props
