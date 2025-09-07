@@ -229,6 +229,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         taskId: task.id,
                         systemUserId: task.project.systemUserId,
                         messageIdForPut: null,
+                        sendActivity: false,
                     });
                 }
             }

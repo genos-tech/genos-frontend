@@ -136,7 +136,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     systemUserId: null,
                     taskId: message.taskId || null,
                     messageIdForPut: null,
-                    send_activity: false,
+                    sendActivity: false,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
