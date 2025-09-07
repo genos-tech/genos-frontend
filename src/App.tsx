@@ -178,11 +178,11 @@ export const App = () => {
 
     useEffect(() => {
         // myself.userId === "" -> Not init yet.
-        if (accessToken && myself.teamId !== currentTeamId) {
+        if (socketInstance === null || (accessToken && myself.teamId !== currentTeamId)) {
             setSocketInstance(socket(accessToken));
-            console.log("WS connected");
+            console.log("Finished connecting WS");
         }
-    }, [myself, accessToken]);
+    }, [myself, accessToken, currentTeamId]);
 
     useEffect(() => {
         if (myself.userId !== "") {
@@ -223,6 +223,34 @@ export const App = () => {
         isLoading: isLoading,
         funcSetActivityMessages: funcSetActivityMessages,
     });
+
+    useEffect(() => {
+        if (socketInstance) {
+            const intervalId = setInterval(() => {
+                const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
+                const role: string = localStorage.getItem("role") || "";
+                const baseCountry: string = localStorage.getItem("baseCountry") || "";
+                const customStatus: string = localStorage.getItem("customStatus") || "";
+
+                socketInstance.emit("heartbeat", {
+                    message: "alive",
+                    is_online: true,
+                    user: {
+                        ...myself,
+                        isOfflineForced: isOfflineForced,
+                        role: role,
+                        baseCountry: baseCountry,
+                        customStatus: customStatus,
+                        tsLastSeen: getCurrentTimestamp(),
+                    },
+                });
+            }, 5_000);
+
+            return () => {
+                clearInterval(intervalId);
+            };
+        }
+    }, [socketInstance]);
 
     return isLoading || currentMainChat === undefined ? (
         <InitialLoad

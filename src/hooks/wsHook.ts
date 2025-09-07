@@ -191,28 +191,9 @@ export const wsHook = (props: wsHookProps) => {
 
     useEffect(() => {
         if (socket === null) {
+            console.error("socket is null");
             return;
         }
-
-        const intervalId = setInterval(() => {
-            const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
-            const role: string = localStorage.getItem("role") || "";
-            const baseCountry: string = localStorage.getItem("baseCountry") || "";
-            const customStatus: string = localStorage.getItem("customStatus") || "";
-
-            socket.emit("heartbeat", {
-                message: "alive",
-                is_online: true,
-                user: {
-                    ...myself,
-                    isOfflineForced: isOfflineForced,
-                    role: role,
-                    baseCountry: baseCountry,
-                    customStatus: customStatus,
-                    tsLastSeen: getCurrentTimestamp(),
-                },
-            });
-        }, 5_000);
 
         socket.on("connect", () => {
             console.log("WS connected");
@@ -572,7 +553,6 @@ export const wsHook = (props: wsHookProps) => {
         });
 
         return () => {
-            clearInterval(intervalId);
             socket.off("message");
             socket.off("connect");
         };
