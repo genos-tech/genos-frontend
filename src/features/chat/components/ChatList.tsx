@@ -182,35 +182,44 @@ export const ChatList = (props: ChatListProps) => {
                     itemContent={(index) => {
                         const activityMessage = tmpActivityMessages[index];
                         return (
-                            <div>
-                                <Stack direction="row">
-                                    <ChatListItemForActivity
-                                        key={activityMessage.activityId}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        socket={socket}
-                                        activity={activityMessage}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        currentMainChat={currentMainChat}
-                                        currentSubChat={currentSubChat}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        isThreadVisible={isThreadVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                        isTaskPreviewVisible={isTaskPreviewVisible}
-                                        isTaskCreationVisible={isTaskCreationVisible}
-                                        isSubChatVisible={isSubChatVisible}
-                                        setIsSubChatVisible={setIsSubChatVisible}
-                                        setOpeningService={setOpeningService}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setCurrentProject={setCurrentProject}
-                                    />
-                                </Stack>
-                            </div>
+                            <>
+                                {/* Not displaying the first message in a thread 
+                                because it's the same as its parent message */}
+                                {!(
+                                    activityMessage.isThread === true &&
+                                    activityMessage.messageId === 1
+                                ) && (
+                                    <div>
+                                        <Stack direction="row">
+                                            <ChatListItemForActivity
+                                                key={activityMessage.activityId}
+                                                teamMemberProfiles={teamMemberProfiles}
+                                                socket={socket}
+                                                activity={activityMessage}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                currentMainChat={currentMainChat}
+                                                currentSubChat={currentSubChat}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setCurrentSubChat={setCurrentSubChat}
+                                                setCurrentThreadChat={setCurrentThreadChat}
+                                                setIsMainChatVisible={setIsMainChatVisible}
+                                                setIsThreadVisible={setIsThreadVisible}
+                                                isThreadVisible={isThreadVisible}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                                setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                                isTaskPreviewVisible={isTaskPreviewVisible}
+                                                isTaskCreationVisible={isTaskCreationVisible}
+                                                isSubChatVisible={isSubChatVisible}
+                                                setIsSubChatVisible={setIsSubChatVisible}
+                                                setOpeningService={setOpeningService}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setCurrentProject={setCurrentProject}
+                                            />
+                                        </Stack>
+                                    </div>
+                                )}
+                            </>
                         );
                     }}
                 />
