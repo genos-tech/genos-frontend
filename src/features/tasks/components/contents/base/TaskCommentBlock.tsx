@@ -24,6 +24,8 @@ type TaskCommentBlockProps = {
     setIsCommentUpdated: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
+    taskCommentLines: number;
+    setTaskCommentLines: (value: number) => void;
 };
 
 export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
@@ -40,6 +42,8 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         setIsCommentUpdated,
         setCurrentChat,
         setOpeningService,
+        taskCommentLines,
+        setTaskCommentLines,
     } = props;
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
@@ -52,8 +56,9 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
             count += 1; // count the current node itself
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
-            } else if (node.type === "codeBlock") {
-                count += node.content[0].text.split("\n").length + 1;
+            }
+            if (node.content[0]) {
+                count += node.content[0].text.split("\n").length;
             }
         }
         return count;
@@ -135,6 +140,8 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                     setIsInEdit={setIsInEdit}
                     setCurrentChat={setCurrentChat}
                     setOpeningService={setOpeningService}
+                    taskCommentLines={taskCommentLines}
+                    setTaskCommentLines={setTaskCommentLines}
                 />
             )}
             {isInEdit === false && (
@@ -151,6 +158,8 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                     setIsCommentUpdated={setIsCommentUpdated}
                     setCurrentChat={setCurrentChat}
                     setOpeningService={setOpeningService}
+                    taskCommentLines={taskCommentLines}
+                    setTaskCommentLines={setTaskCommentLines}
                 />
             )}
         </Box>

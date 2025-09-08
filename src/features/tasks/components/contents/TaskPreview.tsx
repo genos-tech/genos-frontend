@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 import { Sheet, Divider } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
@@ -322,15 +322,25 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [isOpenTagList]);
 
+    const [taskCommentLines, setTaskCommentLines] = useState(0);
+    const sheetRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const sheet = sheetRef.current;
+        if (sheet) {
+            sheet.scrollTop = sheet.scrollHeight; // always scroll to bottom
+        }
+    }, [taskCommentLines]); // re-run whenever content changes
+
     return (
         <Sheet
+            ref={sheetRef}
             className="custom-scrollbar"
             variant="outlined"
             sx={{
                 minHeight: 500,
                 borderRadius: "sm",
                 p: 2,
-                overflowY: "scroll",
+                overflowY: "auto",
                 overflowX: "hidden",
             }}
         >
@@ -452,6 +462,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsCommentUpdated={setIsCommentUpdated}
                 setCurrentChat={setCurrentMainChat}
                 setOpeningService={setOpeningService}
+                taskCommentLines={taskCommentLines}
+                setTaskCommentLines={setTaskCommentLines}
             />
         </Sheet>
     );

@@ -144,8 +144,9 @@ export const BnInboxPreview = (props: BnInboxPreviewProps) => {
             count += 1; // count the current node itself
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
-            } else if (node.type === "codeBlock") {
-                count += node.content[0].text.split("\n").length + 1;
+            }
+            if (node.content[0]) {
+                count += node.content[0].text.split("\n").length;
             }
         }
         return count;

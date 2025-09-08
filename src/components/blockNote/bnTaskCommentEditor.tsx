@@ -53,6 +53,8 @@ type BnTaskCommentEditorProps = {
     setIsCommentUpdated: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
+    taskCommentLines: number;
+    setTaskCommentLines: (value: number) => void;
 };
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
@@ -70,6 +72,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setIsCommentUpdated,
         setCurrentChat,
         setOpeningService,
+        taskCommentLines,
+        setTaskCommentLines,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -140,8 +144,9 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             count += 1; // count the current node itself
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
-            } else if (node.type === "codeBlock") {
-                count += node.content[0].text.split("\n").length + 1;
+            }
+            if (node.content[0]) {
+                count += node.content[0].text.split("\n").length;
             }
         }
         return count;
@@ -154,13 +159,17 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 5, 0) * 30 + 200,
+                Math.max(numEditorLines - 4, 0) * 30 + 200,
                 800
             );
             editorRef.current.style.setProperty(
                 "--task-comment-editor-height",
                 `${dynamicHeight}px`
             );
+        }
+
+        if (numEditorLines !== taskCommentLines) {
+            setTaskCommentLines(numEditorLines);
         }
     }, [numEditorLines]);
 
