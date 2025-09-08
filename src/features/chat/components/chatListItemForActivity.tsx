@@ -454,48 +454,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             </Stack>
                         </Stack>
 
-                        {activity.activityType === 1 && (
-                            <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="flex-start"
-                            >
-                                {activity.chatType !== 4 && (
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            paddingTop: 1,
-                                            display: "-webkit-box",
-                                            WebkitLineClamp: "2",
-                                            WebkitBoxOrient: "vertical",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        {activity.sender.userName} has replied
-                                    </Typography>
-                                )}
-                                {activity.chatType === 4 && (
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            paddingTop: 1,
-                                            display: "-webkit-box",
-                                            WebkitLineClamp: "2",
-                                            WebkitBoxOrient: "vertical",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        {activity.sender.userName} has left a comment
-                                    </Typography>
-                                )}
-                            </Stack>
-                        )}
-
-                        {activity.activityType === 2 && (
+                        {activity.activityType !== 2 && (
                             <Stack
                                 direction="row"
                                 justifyContent="space-between"
@@ -504,87 +463,117 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 <Typography
                                     level="body-sm"
                                     sx={{
-                                        paddingTop: 1,
-                                        display: "-webkit-box",
-                                        WebkitLineClamp: "2",
-                                        WebkitBoxOrient: "vertical",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
+                                        paddingY: 1,
+                                        ml: "10px",
                                         fontWeight: "bold",
                                     }}
                                 >
-                                    {activity.latestReaction.senderName} has reacted{" "}
-                                    {activity.latestReaction.emoji}
+                                    {activity.firstLineContent}
                                 </Typography>
-
-                                <Box sx={{ paddingTop: 0.5 }}>
-                                    {displayed.map(({ senders, emoji, count }, index) => (
-                                        <Tooltip
-                                            key={`tooltip-${index}`}
-                                            title={
-                                                senders
-                                                    .slice(0, 5)
-                                                    .map((sender) => `${sender.userName} `)
-                                                    .join(" and ") +
-                                                (senders.length > 5 ? " and more" : "") +
-                                                " reacted"
-                                            }
-                                        >
-                                            <Chip
-                                                key={`emoji-chip-${emoji}-${index}`}
-                                                variant={
-                                                    senders.some((u) => u.userId === myself.userId)
-                                                        ? "solid"
-                                                        : "outlined"
-                                                }
-                                                color="neutral"
-                                                size="sm"
-                                                sx={{
-                                                    fontSize: "0.8rem",
-                                                    cursor: "pointer",
-                                                    px: 0.5,
-                                                    py: 0.5,
-                                                }}
-                                            >
-                                                {emoji}
-                                                {count}
-                                            </Chip>
-                                        </Tooltip>
-                                    ))}
-
-                                    {hidden.length > 0 && (
-                                        <Tooltip
-                                            title={hidden
-                                                .map(({ emoji, count }) => `${emoji} ${count}`)
-                                                .join(" ")}
-                                        >
-                                            <Chip
-                                                size="sm"
-                                                variant="plain"
-                                                sx={{ fontSize: "0.8rem" }}
-                                            >
-                                                +{hidden.length} more
-                                            </Chip>
-                                        </Tooltip>
-                                    )}
-                                </Box>
                             </Stack>
                         )}
 
-                        <Box sx={{ lineHeight: 0, textAlign: "right" }}>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: "2",
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                }}
-                            >
-                                {activity.firstLineContent}
-                            </Typography>
-                        </Box>
+                        {activity.activityType === 2 && (
+                            <>
+                                <Stack
+                                    direction="row"
+                                    justifyContent="space-between"
+                                    alignItems="flex-start"
+                                >
+                                    <Stack
+                                        direction="row"
+                                        justifyContent="space-between"
+                                        alignItems="flex-start"
+                                    >
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                paddingTop: 1.5,
+                                                ml: "10px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            {activity.latestReaction.senderName} has reacted
+                                        </Typography>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontSize: "30px",
+                                                pl: "10px",
+                                            }}
+                                        >
+                                            {activity.latestReaction.emoji}
+                                        </Typography>
+                                    </Stack>
+
+                                    <Box sx={{ paddingTop: 0.5 }}>
+                                        {displayed.map(({ senders, emoji, count }, index) => (
+                                            <Tooltip
+                                                key={`tooltip-${index}`}
+                                                title={
+                                                    senders
+                                                        .slice(0, 5)
+                                                        .map((sender) => `${sender.userName} `)
+                                                        .join(" and ") +
+                                                    (senders.length > 5 ? " and more" : "") +
+                                                    " reacted"
+                                                }
+                                            >
+                                                <Chip
+                                                    key={`emoji-chip-${emoji}-${index}`}
+                                                    variant={
+                                                        senders.some(
+                                                            (u) => u.userId === myself.userId
+                                                        )
+                                                            ? "solid"
+                                                            : "outlined"
+                                                    }
+                                                    color="neutral"
+                                                    size="sm"
+                                                    sx={{
+                                                        fontSize: "0.8rem",
+                                                        cursor: "pointer",
+                                                        px: 0.5,
+                                                        py: 0.5,
+                                                    }}
+                                                >
+                                                    {emoji}
+                                                    {count}
+                                                </Chip>
+                                            </Tooltip>
+                                        ))}
+
+                                        {hidden.length > 0 && (
+                                            <Tooltip
+                                                title={hidden
+                                                    .map(({ emoji, count }) => `${emoji} ${count}`)
+                                                    .join(" ")}
+                                            >
+                                                <Chip
+                                                    size="sm"
+                                                    variant="plain"
+                                                    sx={{ fontSize: "0.8rem" }}
+                                                >
+                                                    +{hidden.length} more
+                                                </Chip>
+                                            </Tooltip>
+                                        )}
+                                    </Box>
+                                </Stack>
+                                <Box sx={{ lineHeight: 0, textAlign: "right" }}>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            paddingBottom: 1,
+                                            ml: "10px",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {activity.firstLineContent}
+                                    </Typography>
+                                </Box>
+                            </>
+                        )}
                     </Stack>
                 </ListItemButton>
             </ListItem>
