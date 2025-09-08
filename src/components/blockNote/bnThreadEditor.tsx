@@ -245,7 +245,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 count += countLines(node.children); // recursive call
             }
             if (node.content[0]) {
-                count += node.content[0].text.split("\n").length;
+                if (node.content[0].text) {
+                    if (node.content[0].text) {
+                        count += node.content[0].text.split("\n").length;
+                    }
+                }
             }
         }
         return count;
