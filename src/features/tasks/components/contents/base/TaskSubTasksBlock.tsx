@@ -113,13 +113,15 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     setCurrentPreviewTaskId(id);
                                                 }
                                             }}
+                                            sx={{
+                                                marginLeft: "10px",
+                                            }}
                                         >
                                             <Chip
                                                 key={`id-chip-${id}-${index}`} // pass the key directly
                                                 variant="outlined"
                                                 color="neutral"
                                                 sx={{
-                                                    marginX: "5px",
                                                     fontWeight: "bold",
                                                     borderRadius: "5px",
                                                 }}
