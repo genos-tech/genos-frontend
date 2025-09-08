@@ -144,6 +144,8 @@ export const BnInboxPreview = (props: BnInboxPreviewProps) => {
             count += 1; // count the current node itself
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
+            } else if (node.type === "codeBlock") {
+                count += node.content[0].text.split("\n").length + 1;
             }
         }
         return count;
@@ -156,7 +158,7 @@ export const BnInboxPreview = (props: BnInboxPreviewProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.max(numEditorLines - 5, 0) * 30 + 300,
-                800
+                1000
             );
             editorRef.current.style.setProperty(
                 "--inbox-body-editor-height",

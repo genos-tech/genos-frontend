@@ -148,6 +148,8 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             count += 1; // count the current node itself
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
+            } else if (node.type === "codeBlock") {
+                count += node.content[0].text.split("\n").length + 1;
             }
         }
         return count;

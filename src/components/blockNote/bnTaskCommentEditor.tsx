@@ -140,6 +140,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             count += 1; // count the current node itself
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
+            } else if (node.type === "codeBlock") {
+                count += node.content[0].text.split("\n").length + 1;
             }
         }
         return count;
@@ -153,7 +155,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.max(numEditorLines - 5, 0) * 30 + 200,
-                500
+                800
             );
             editorRef.current.style.setProperty(
                 "--task-comment-editor-height",

@@ -152,6 +152,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             count += 1; // count the current node itself
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
+            } else if (node.type === "codeBlock") {
+                count += node.content[0].text.split("\n").length + 1;
             }
         }
         return count;
@@ -164,7 +166,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.max(numEditorLines - 5, 0) * 30 + 300,
-                800
+                1000
             );
             editorRef.current.style.setProperty("--task-body-editor-height", `${dynamicHeight}px`);
         }
