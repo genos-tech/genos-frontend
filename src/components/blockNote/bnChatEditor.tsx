@@ -267,6 +267,20 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         }
     };
 
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+            if (node.content[0]) {
+                count += node.content[0].text.split("\n").length;
+            }
+        }
+        return count;
+    };
+
     return (
         <Box>
             <EmojiPicker
@@ -284,7 +298,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     data-changing-font-demo // custom font
                     onChange={() => {
                         const comments: any[] = editor.document;
-                        setNumEditorLines(Math.max(countBnLines(comments), 1));
+                        setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
                     }}
                     onKeyDown={async (event) => {
