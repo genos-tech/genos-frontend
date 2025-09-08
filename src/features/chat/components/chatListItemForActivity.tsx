@@ -463,9 +463,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 <Typography
                                     level="body-sm"
                                     sx={{
-                                        paddingY: 1,
+                                        marginY: 1,
                                         ml: "10px",
                                         fontWeight: "bold",
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: "2",
+                                        WebkitBoxOrient: "vertical",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
                                     }}
                                 >
                                     {activity.firstLineContent}
@@ -491,6 +496,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                                 paddingTop: 1.5,
                                                 ml: "10px",
                                                 fontWeight: "bold",
+                                                display: "-webkit-box",
+                                                WebkitLineClamp: "2",
+                                                WebkitBoxOrient: "vertical",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
                                             }}
                                         >
                                             {activity.latestReaction.senderName} has reacted
@@ -500,6 +510,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             sx={{
                                                 fontSize: "30px",
                                                 pl: "10px",
+                                                display: "-webkit-box",
+                                                WebkitLineClamp: "2",
+                                                WebkitBoxOrient: "vertical",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
                                             }}
                                         >
                                             {activity.latestReaction.emoji}
@@ -564,9 +579,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     <Typography
                                         level="body-sm"
                                         sx={{
-                                            paddingBottom: 1,
+                                            marginBottom: 1,
                                             ml: "10px",
                                             fontWeight: "bold",
+                                            display: "-webkit-box",
+                                            WebkitLineClamp: "2",
+                                            WebkitBoxOrient: "vertical",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
                                         }}
                                     >
                                         {activity.firstLineContent}

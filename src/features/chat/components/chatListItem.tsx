@@ -201,11 +201,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         </Avatar>
                                     )}
                                 </div>
-                                <Box>
-                                    <Typography noWrap level="title-sm">
-                                        {isYou ? `${chat.chatName} (you)` : chat.chatName}
-                                    </Typography>
-                                </Box>
+
+                                <Typography noWrap level="title-sm" sx={{ pt: "3px", pl: "5px" }}>
+                                    {isYou ? `${chat.chatName} (you)` : chat.chatName}
+                                </Typography>
 
                                 {/* show my own custom status */}
                                 {chat.dmPartnerUser !== null &&
@@ -269,10 +268,13 @@ export const ChatListItem = (props: ChatListItemProps) => {
                             </Stack>
                         </Stack>
 
-                        <Box sx={{ lineHeight: 0, textAlign: "right" }}>
+                        <Box sx={{ lineHeight: 0, textAlign: "left" }}>
                             <Typography
                                 level="body-sm"
                                 sx={{
+                                    marginTop: 1,
+                                    ml: "20px",
+                                    fontWeight: "bold",
                                     display: "-webkit-box",
                                     WebkitLineClamp: "2",
                                     WebkitBoxOrient: "vertical",

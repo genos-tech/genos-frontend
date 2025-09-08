@@ -240,34 +240,6 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
             {openCustomStatusEditor === true && (
                 <Stack direction={"row"} spacing={0.5} justifyContent={"center"}>
                     <Button
-                        variant="soft"
-                        size="md"
-                        color="primary"
-                        sx={{
-                            borderRadius: "sm",
-                            fontWeight: "bold",
-                        }}
-                        onClick={() => {
-                            if (newStatus && newStatus !== "") {
-                                setCustomStatusValue(newStatus);
-                                updateUserProfile({
-                                    accessToken: accessToken,
-                                    userId: myself.userId,
-                                    customStatus: newStatus,
-                                });
-                                setMyself({
-                                    ...myself,
-                                    customStatus: newStatus,
-                                });
-                                localStorage.setItem("customStatus", newStatus);
-                                setIsStatusUpdated(true);
-                            }
-                            setOpenCustomStatusEditor(false);
-                        }}
-                    >
-                        SET
-                    </Button>
-                    <Button
                         variant="outlined"
                         size="md"
                         color="danger"
@@ -307,6 +279,34 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                         }}
                     >
                         CANCEL
+                    </Button>
+                    <Button
+                        variant="soft"
+                        size="md"
+                        color="primary"
+                        sx={{
+                            borderRadius: "sm",
+                            fontWeight: "bold",
+                        }}
+                        onClick={() => {
+                            if (newStatus && newStatus !== "") {
+                                setCustomStatusValue(newStatus);
+                                updateUserProfile({
+                                    accessToken: accessToken,
+                                    userId: myself.userId,
+                                    customStatus: newStatus,
+                                });
+                                setMyself({
+                                    ...myself,
+                                    customStatus: newStatus,
+                                });
+                                localStorage.setItem("customStatus", newStatus);
+                                setIsStatusUpdated(true);
+                            }
+                            setOpenCustomStatusEditor(false);
+                        }}
+                    >
+                        SET
                     </Button>
                 </Stack>
             )}
