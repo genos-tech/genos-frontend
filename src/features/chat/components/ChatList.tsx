@@ -88,29 +88,47 @@ export const ChatList = (props: ChatListProps) => {
         activityMessages
     );
 
-    const [tmpActivityMessages, setTmpActivityMessages] =
-        useState<ActivityMessageProps[]>(activityMessages);
+    {
+        /* Not displaying the first message in a thread 
+                                because it's the same as its parent message */
+    }
+    const [tmpActivityMessages, setTmpActivityMessages] = useState<ActivityMessageProps[]>(
+        activityMessages.filter((item) => !(item.isThread === true && item.messageId === 1))
+    );
 
     useEffect(() => {
-        // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
-        if (currentActivityMessageType === 0) {
-            setTmpActivityMessages(activityMessages);
-        }
-        if (currentActivityMessageType === 1) {
-            setTmpActivityMessages(
-                activityMessages.filter((item) => item.activityType === 1 && item.chatType !== 4)
-            );
-        }
-        if (currentActivityMessageType === 2) {
-            setTmpActivityMessages(
-                activityMessages.filter((item) => item.activityType === 1 && item.chatType === 4)
-            );
-        }
-        if (currentActivityMessageType === 3) {
-            setTmpActivityMessages(activityMessages.filter((item) => item.activityType === 3));
-        }
-        if (currentActivityMessageType === 4) {
-            setTmpActivityMessages(activityMessages.filter((item) => item.activityType === 2));
+        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
+            (item) => !(item.isThread === true && item.messageId === 1)
+        );
+        if (tmpActivityMessages) {
+            // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
+            if (currentActivityMessageType === 0) {
+                setTmpActivityMessages(tmpActivityMessages);
+            }
+            if (currentActivityMessageType === 1) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter(
+                        (item) => item.activityType === 1 && item.chatType !== 4
+                    )
+                );
+            }
+            if (currentActivityMessageType === 2) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter(
+                        (item) => item.activityType === 1 && item.chatType === 4
+                    )
+                );
+            }
+            if (currentActivityMessageType === 3) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter((item) => item.activityType === 3)
+                );
+            }
+            if (currentActivityMessageType === 4) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter((item) => item.activityType === 2)
+                );
+            }
         }
     }, [activityMessages, currentActivityMessageType]);
 
@@ -182,44 +200,35 @@ export const ChatList = (props: ChatListProps) => {
                     itemContent={(index) => {
                         const activityMessage = tmpActivityMessages[index];
                         return (
-                            <>
-                                {/* Not displaying the first message in a thread 
-                                because it's the same as its parent message */}
-                                {!(
-                                    activityMessage.isThread === true &&
-                                    activityMessage.messageId === 1
-                                ) && (
-                                    <div>
-                                        <Stack direction="row">
-                                            <ChatListItemForActivity
-                                                key={activityMessage.activityId}
-                                                teamMemberProfiles={teamMemberProfiles}
-                                                socket={socket}
-                                                activity={activityMessage}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                currentMainChat={currentMainChat}
-                                                currentSubChat={currentSubChat}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setCurrentSubChat={setCurrentSubChat}
-                                                setCurrentThreadChat={setCurrentThreadChat}
-                                                setIsMainChatVisible={setIsMainChatVisible}
-                                                setIsThreadVisible={setIsThreadVisible}
-                                                isThreadVisible={isThreadVisible}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                                isTaskPreviewVisible={isTaskPreviewVisible}
-                                                isTaskCreationVisible={isTaskCreationVisible}
-                                                isSubChatVisible={isSubChatVisible}
-                                                setIsSubChatVisible={setIsSubChatVisible}
-                                                setOpeningService={setOpeningService}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                setCurrentProject={setCurrentProject}
-                                            />
-                                        </Stack>
-                                    </div>
-                                )}
-                            </>
+                            <div>
+                                <Stack direction="row">
+                                    <ChatListItemForActivity
+                                        key={activityMessage.activityId}
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        socket={socket}
+                                        activity={activityMessage}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        currentMainChat={currentMainChat}
+                                        currentSubChat={currentSubChat}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentSubChat={setCurrentSubChat}
+                                        setCurrentThreadChat={setCurrentThreadChat}
+                                        setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        isThreadVisible={isThreadVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        isTaskCreationVisible={isTaskCreationVisible}
+                                        isSubChatVisible={isSubChatVisible}
+                                        setIsSubChatVisible={setIsSubChatVisible}
+                                        setOpeningService={setOpeningService}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setCurrentProject={setCurrentProject}
+                                    />
+                                </Stack>
+                            </div>
                         );
                     }}
                 />
