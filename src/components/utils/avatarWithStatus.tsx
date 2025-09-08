@@ -70,7 +70,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                             : thread?.chatName[0].toUpperCase()}
                     </Avatar>
                 )}
-                {comment && (
+                {chat === undefined && thread === undefined && (
                     <Avatar
                         size="sm"
                         sx={{ width: 32, height: 32 }}
