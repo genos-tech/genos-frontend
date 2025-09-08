@@ -253,7 +253,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
-                    className="bn-chat-editor"
+                    className="bn-box"
                     editor={editor}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}

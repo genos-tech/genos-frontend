@@ -212,7 +212,7 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
         <Box>
             <Box sx={{ position: "relative" }} className={bnBoxClassName}>
                 <BlockNoteView
-                    className="bn-note-editor"
+                    className="bn-box"
                     editor={editor}
                     sideMenu={false}
                     emojiPicker={false}

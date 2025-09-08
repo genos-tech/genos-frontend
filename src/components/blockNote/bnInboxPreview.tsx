@@ -177,7 +177,7 @@ export const BnInboxPreview = (props: BnInboxPreviewProps) => {
         <Box>
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
-                    className="bn-inbox-editor"
+                    className="bn-box"
                     editor={editor}
                     sideMenu={true} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}

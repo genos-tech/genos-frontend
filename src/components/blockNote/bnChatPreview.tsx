@@ -81,6 +81,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     return (
         <Box className={bnBoxClassName}>
             <BlockNoteView
+                className="bn-box"
                 editor={editor}
                 editable={false}
                 formattingToolbar={false}
