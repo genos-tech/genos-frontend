@@ -65,7 +65,7 @@ export const UserProfile = (props: UserProfileProps) => {
                 sx={{ zIndex: 10001 }}
             >
                 <ModalDialog>
-                    <Box sx={{ flex: 1, width: "900px" }}>
+                    <Box sx={{ flex: 1, width: "1000px" }}>
                         <EmojiPicker
                             showEmojiPicker={showEmojiPicker}
                             setShowEmojiPicker={setShowEmojiPicker}
@@ -96,7 +96,6 @@ export const UserProfile = (props: UserProfileProps) => {
                             spacing={4}
                             sx={{
                                 display: "flex",
-                                maxWidth: "800px",
                                 mx: "auto",
                                 px: { xs: 2, md: 6 },
                                 py: { xs: 2, md: 3 },
@@ -105,29 +104,41 @@ export const UserProfile = (props: UserProfileProps) => {
                             <Card>
                                 <Stack
                                     direction="row"
-                                    spacing={7}
                                     sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
                                 >
-                                    <Avatar
-                                        sx={{ width: 150, height: 150, fontSize: "50px" }}
-                                        onClick={() => setOpenUserProfile(true)}
-                                        src={user?.avatarImgPath}
-                                    >
-                                        {user?.userName[0]}
-                                    </Avatar>
                                     <Box
-                                        position="absolute"
-                                        bottom={0}
-                                        right={0}
-                                        width={580}
-                                        height={360}
+                                        sx={{
+                                            pl: "20px",
+                                            pr: "40px",
+                                            position: "relative",
+                                            display: "inline-block",
+                                        }}
                                     >
-                                        <Tooltip title="EDIT(TBD)" sx={{ zIndex: 10001 }}>
-                                            <IconButton variant="soft">
-                                                <EditIcon sx={{ fontSize: "30px" }} />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <Avatar
+                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
+                                            onClick={() => setOpenUserProfile(true)}
+                                            src={user?.avatarImgPath}
+                                        >
+                                            {user?.userName[0]}
+                                        </Avatar>
+
+                                        {myself.userId === user?.userId && (
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: 150, // adjust vertical position
+                                                    right: 30, // push it to the right side
+                                                }}
+                                            >
+                                                <Tooltip title="EDIT (TBD)" sx={{ zIndex: 10001 }}>
+                                                    <IconButton variant="soft">
+                                                        <EditIcon sx={{ fontSize: "30px" }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        )}
                                     </Box>
+
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <UserProfileStatus
                                             myself={myself}

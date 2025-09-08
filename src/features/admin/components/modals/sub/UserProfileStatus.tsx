@@ -10,6 +10,7 @@ import {
     Menu,
     MenuItem,
     MenuButton,
+    Button,
 } from "@mui/joy";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
@@ -64,242 +65,251 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
     }, [selectedEmoji]);
 
     return (
-        <Typography
-            component="div"
-            fontSize={28}
-            fontWeight="bold"
-            noWrap
-            endDecorator={
-                <Stack direction={"row"} spacing={0.5}>
-                    <Dropdown>
-                        <MenuButton
-                            slots={{ root: IconButton }}
-                            slotProps={{
-                                root: {
-                                    variant: "outlined",
-                                    color: "neutral",
-                                },
-                            }}
-                        >
-                            <Chip
-                                variant="plain"
-                                size="md"
-                                color="neutral"
-                                sx={{
-                                    borderRadius: "sm",
-                                    fontSize: "16px",
-                                }}
-                                startDecorator={
-                                    <Box sx={{ ml: "-5px" }}>
-                                        <PulseDot
-                                            color={user?.isOnline === true ? "#4caf50" : "#999"}
-                                        />
-                                    </Box>
-                                }
+        <Stack direction={"column"}>
+            <Typography
+                component="div"
+                fontSize={28}
+                fontWeight="bold"
+                noWrap
+                endDecorator={
+                    <Stack direction={"row"} spacing={0.5}>
+                        <Dropdown>
+                            <MenuButton
+                                slots={{ root: IconButton }}
                                 slotProps={{
                                     root: {
-                                        component: "span",
+                                        variant: "outlined",
+                                        color: "neutral",
                                     },
                                 }}
                             >
-                                {user?.isOnline === true ? "Online" : "Offline"}
-                            </Chip>
-                        </MenuButton>
-                        {myself.userId === user?.userId && (
-                            <Menu sx={{ zIndex: 10010 }}>
-                                <MenuItem
-                                    onClick={() => {
-                                        updateUserProfile({
-                                            accessToken: accessToken,
-                                            userId: myself.userId,
-                                            isOfflineForced: "false",
-                                        });
-                                        setMyself({
-                                            ...myself,
-                                            isOfflineForced: "false",
-                                        });
-                                        localStorage.setItem("isOfflineForced", "false");
-                                    }}
-                                >
-                                    Set Online
-                                </MenuItem>
-                                <MenuItem
-                                    onClick={() => {
-                                        updateUserProfile({
-                                            accessToken: accessToken,
-                                            userId: myself.userId,
-                                            isOfflineForced: "true",
-                                        });
-                                        setMyself({
-                                            ...myself,
-                                            isOfflineForced: "true",
-                                        });
-                                        localStorage.setItem("isOfflineForced", "true");
-                                    }}
-                                >
-                                    Set Always Offline
-                                </MenuItem>
-                            </Menu>
-                        )}
-                    </Dropdown>
-
-                    {myself.userId === user?.userId && (
-                        <>
-                            {openCustomStatusEditor === false && (
                                 <Chip
-                                    variant="outlined"
-                                    size="lg"
+                                    variant="plain"
+                                    size="md"
                                     color="neutral"
-                                    sx={{ borderRadius: "sm" }}
-                                    onClick={() => {
-                                        setOpenCustomStatusEditor(true);
+                                    sx={{
+                                        borderRadius: "sm",
+                                        fontSize: "16px",
                                     }}
-                                >
-                                    {myself.customStatus !== ""
-                                        ? myself.customStatus
-                                        : "Update Status"}
-                                </Chip>
-                            )}
-                        </>
-                    )}
-
-                    {myself.userId !== user?.userId && (
-                        <>
-                            {openCustomStatusEditor === false && (
-                                <Chip
-                                    variant="outlined"
-                                    size="lg"
-                                    color="neutral"
-                                    sx={{ borderRadius: "sm" }}
-                                    onClick={() => {}}
-                                >
-                                    {customStatusValue !== "Update Status" &&
-                                    customStatusValue != ""
-                                        ? customStatusValue
-                                        : "Update Status"}
-                                </Chip>
-                            )}
-                        </>
-                    )}
-
-                    {/* Update custom status */}
-                    {openCustomStatusEditor === true && (
-                        <Stack direction={"row"} spacing={0.5}>
-                            <IconButton
-                                variant="outlined"
-                                onClick={() => {
-                                    setShowEmojiPicker(true);
-                                }}
-                            >
-                                <SentimentSatisfiedAltIcon />
-                            </IconButton>
-                            <Dropdown>
-                                <MenuButton
-                                    slots={{ root: IconButton }}
+                                    startDecorator={
+                                        <Box sx={{ ml: "-5px" }}>
+                                            <PulseDot
+                                                color={
+                                                    user?.isOnline === true ? "#4caf50" : "#999"
+                                                }
+                                            />
+                                        </Box>
+                                    }
                                     slotProps={{
                                         root: {
-                                            variant: "outlined",
-                                            color: "neutral",
+                                            component: "span",
                                         },
                                     }}
                                 >
-                                    <ArrowDropDown />
-                                </MenuButton>
+                                    {user?.isOnline === true ? "Online" : "Offline"}
+                                </Chip>
+                            </MenuButton>
+                            {myself.userId === user?.userId && (
                                 <Menu sx={{ zIndex: 10010 }}>
-                                    {templateCustomStatueOptions.map((template, idx) => (
-                                        <MenuItem
-                                            key={idx}
-                                            onClick={() => {
-                                                setNewStatus(template);
-                                            }}
-                                        >
-                                            {template}
-                                        </MenuItem>
-                                    ))}
+                                    <MenuItem
+                                        onClick={() => {
+                                            updateUserProfile({
+                                                accessToken: accessToken,
+                                                userId: myself.userId,
+                                                isOfflineForced: "false",
+                                            });
+                                            setMyself({
+                                                ...myself,
+                                                isOfflineForced: "false",
+                                            });
+                                            localStorage.setItem("isOfflineForced", "false");
+                                        }}
+                                    >
+                                        Set Online
+                                    </MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            updateUserProfile({
+                                                accessToken: accessToken,
+                                                userId: myself.userId,
+                                                isOfflineForced: "true",
+                                            });
+                                            setMyself({
+                                                ...myself,
+                                                isOfflineForced: "true",
+                                            });
+                                            localStorage.setItem("isOfflineForced", "true");
+                                        }}
+                                    >
+                                        Set Always Offline
+                                    </MenuItem>
                                 </Menu>
-                            </Dropdown>
-                            <Input
-                                size="sm"
-                                placeholder="Set your status…"
-                                variant="outlined"
-                                value={newStatus}
-                                onChange={(e) => setNewStatus(e.target.value)}
-                            />
-                            <Chip
-                                variant="soft"
-                                size="sm"
-                                color="primary"
-                                sx={{
-                                    borderRadius: "sm",
-                                    fontWeight: "bold",
-                                }}
-                                onClick={() => {
-                                    if (newStatus && newStatus !== "") {
-                                        setCustomStatusValue(newStatus);
-                                        updateUserProfile({
-                                            accessToken: accessToken,
-                                            userId: myself.userId,
-                                            customStatus: newStatus,
-                                        });
-                                        setMyself({
-                                            ...myself,
-                                            customStatus: newStatus,
-                                        });
-                                        localStorage.setItem("customStatus", newStatus);
-                                        setIsStatusUpdated(true);
-                                    }
-                                    setOpenCustomStatusEditor(false);
-                                }}
-                            >
-                                SET
-                            </Chip>
-                            <Chip
-                                variant="outlined"
-                                size="sm"
-                                color="danger"
-                                sx={{
-                                    borderRadius: "sm",
-                                    fontWeight: "bold",
-                                }}
-                                onClick={() => {
-                                    setOpenCustomStatusEditor(false);
-                                    setIsStatusUpdated(true);
-                                    setCustomStatusValue("Update Status");
-                                    setNewStatus("");
-                                    updateUserProfile({
-                                        accessToken: accessToken,
-                                        userId: myself.userId,
-                                        customStatus: "",
-                                    });
-                                    setMyself({
-                                        ...myself,
-                                        customStatus: "",
-                                    });
-                                    localStorage.setItem("customStatus", "");
-                                }}
-                            >
-                                RESET
-                            </Chip>
-                            <Chip
-                                variant="outlined"
-                                size="sm"
-                                color="neutral"
-                                sx={{
-                                    borderRadius: "sm",
-                                    fontWeight: "bold",
-                                }}
-                                onClick={() => {
-                                    setOpenCustomStatusEditor(false);
-                                }}
-                            >
-                                CANCEL
-                            </Chip>
-                        </Stack>
-                    )}
+                            )}
+                        </Dropdown>
+
+                        {myself.userId === user?.userId && (
+                            <>
+                                {openCustomStatusEditor === false && (
+                                    <Chip
+                                        variant="outlined"
+                                        size="lg"
+                                        color="neutral"
+                                        sx={{ borderRadius: "sm" }}
+                                        onClick={() => {
+                                            setOpenCustomStatusEditor(true);
+                                        }}
+                                    >
+                                        {myself.customStatus !== ""
+                                            ? myself.customStatus
+                                            : "Update Status"}
+                                    </Chip>
+                                )}
+                            </>
+                        )}
+
+                        {myself.userId !== user?.userId && (
+                            <>
+                                {openCustomStatusEditor === false && (
+                                    <Chip
+                                        variant="outlined"
+                                        size="lg"
+                                        color="neutral"
+                                        sx={{ borderRadius: "sm" }}
+                                        onClick={() => {}}
+                                    >
+                                        {customStatusValue !== "Update Status" &&
+                                        customStatusValue != ""
+                                            ? customStatusValue
+                                            : "Update Status"}
+                                    </Chip>
+                                )}
+                            </>
+                        )}
+
+                        {/* Update custom status */}
+                        {openCustomStatusEditor === true && (
+                            <Stack direction={"row"} spacing={0.5} justifyContent={"center"}>
+                                <IconButton
+                                    variant="outlined"
+                                    onClick={() => {
+                                        setShowEmojiPicker(true);
+                                    }}
+                                >
+                                    <SentimentSatisfiedAltIcon />
+                                </IconButton>
+                                <Dropdown>
+                                    <MenuButton
+                                        slots={{ root: IconButton }}
+                                        slotProps={{
+                                            root: {
+                                                variant: "outlined",
+                                                color: "neutral",
+                                            },
+                                        }}
+                                    >
+                                        <ArrowDropDown />
+                                    </MenuButton>
+                                    <Menu sx={{ zIndex: 10010 }}>
+                                        {templateCustomStatueOptions.map((template, idx) => (
+                                            <MenuItem
+                                                key={idx}
+                                                onClick={() => {
+                                                    setNewStatus(template);
+                                                }}
+                                            >
+                                                {template}
+                                            </MenuItem>
+                                        ))}
+                                    </Menu>
+                                </Dropdown>
+                                <Input
+                                    size="sm"
+                                    placeholder="Set your status…"
+                                    variant="outlined"
+                                    value={newStatus}
+                                    sx={{ width: "200px" }}
+                                    onChange={(e) => setNewStatus(e.target.value)}
+                                />
+                            </Stack>
+                        )}
+                    </Stack>
+                }
+            >
+                {user?.userName}
+            </Typography>
+            {openCustomStatusEditor === true && (
+                <Stack direction={"row"} spacing={0.5} justifyContent={"center"}>
+                    <Button
+                        variant="soft"
+                        size="md"
+                        color="primary"
+                        sx={{
+                            borderRadius: "sm",
+                            fontWeight: "bold",
+                        }}
+                        onClick={() => {
+                            if (newStatus && newStatus !== "") {
+                                setCustomStatusValue(newStatus);
+                                updateUserProfile({
+                                    accessToken: accessToken,
+                                    userId: myself.userId,
+                                    customStatus: newStatus,
+                                });
+                                setMyself({
+                                    ...myself,
+                                    customStatus: newStatus,
+                                });
+                                localStorage.setItem("customStatus", newStatus);
+                                setIsStatusUpdated(true);
+                            }
+                            setOpenCustomStatusEditor(false);
+                        }}
+                    >
+                        SET
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        size="md"
+                        color="danger"
+                        sx={{
+                            borderRadius: "sm",
+                            fontWeight: "bold",
+                        }}
+                        onClick={() => {
+                            setOpenCustomStatusEditor(false);
+                            setIsStatusUpdated(true);
+                            setCustomStatusValue("Update Status");
+                            setNewStatus("");
+                            updateUserProfile({
+                                accessToken: accessToken,
+                                userId: myself.userId,
+                                customStatus: "",
+                            });
+                            setMyself({
+                                ...myself,
+                                customStatus: "",
+                            });
+                            localStorage.setItem("customStatus", "");
+                        }}
+                    >
+                        RESET
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        size="md"
+                        color="neutral"
+                        sx={{
+                            borderRadius: "sm",
+                            fontWeight: "bold",
+                        }}
+                        onClick={() => {
+                            setOpenCustomStatusEditor(false);
+                        }}
+                    >
+                        CANCEL
+                    </Button>
                 </Stack>
-            }
-        >
-            {user?.userName}
-        </Typography>
+            )}
+        </Stack>
     );
 };
