@@ -18,7 +18,7 @@ import { popActivityMessages } from "./features/chat/services/popActivityMessage
 import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
-import { InboxProps } from "./types/common";
+import { InboxItemProps } from "./types/common";
 import { getCurrentTimestamp } from "./utils/dateUtils";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 
@@ -38,6 +38,7 @@ const socket = (accessToken: string | null): Socket => {
         withCredentials: true,
         query: {
             teamId: localStorage.getItem("teamId"),
+            teamName: localStorage.getItem("teamName"),
             userId: localStorage.getItem("userId"),
             userName: localStorage.getItem("userName"),
             userEmail: localStorage.getItem("userEmail"),
@@ -119,9 +120,9 @@ export const App = () => {
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState(false);
-    const [inboxItems, setInboxItems] = useState<InboxProps[]>([]);
+    const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
     const funcSetInboxItems = async () => {
-        const inboxItems: InboxProps[] = await popInboxItems();
+        const inboxItems: InboxItemProps[] = await popInboxItems();
         if (inboxItems) {
             setInboxItems(inboxItems);
         }
@@ -219,6 +220,7 @@ export const App = () => {
         setIsTaskCommentUpdated: setIsTaskCommentUpdated,
         isLoading: isLoading,
         funcSetActivityMessages: funcSetActivityMessages,
+        funcSetInboxItems: funcSetInboxItems,
     });
 
     useEffect(() => {

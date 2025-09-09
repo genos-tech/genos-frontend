@@ -4,7 +4,7 @@ import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { useScrollToBottomOnNewItem } from "./hooks/inboxHooks";
-import { InboxProps } from "../../types/common";
+import { InboxItemProps } from "../../types/common";
 import { UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { InboxBubble } from "./components/InboxBubble";
@@ -18,7 +18,7 @@ type InboxHomeProps = {
     openingService: number;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    inboxItems: InboxProps[];
+    inboxItems: InboxItemProps[];
 };
 
 export const InboxHome = (props: InboxHomeProps) => {
@@ -34,8 +34,8 @@ export const InboxHome = (props: InboxHomeProps) => {
     } = props;
     const boxRef = useRef<HTMLDivElement>(null);
 
-    const [activityInboxItems, setActivityInboxItems] = useState<InboxProps[]>([]);
-    const [requestInboxItems, setRequestInboxItems] = useState<InboxProps[]>([]);
+    const [activityInboxItems, setActivityInboxItems] = useState<InboxItemProps[]>([]);
+    const [requestInboxItems, setRequestInboxItems] = useState<InboxItemProps[]>([]);
 
     useEffect(() => {
         const box = boxRef.current;
@@ -104,7 +104,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                     </Stack>
 
                     <Stack direction={"row"} sx={{ height: "93dvh" }}>
-                        {/* For others inbox */}
+                        {/* General Items */}
                         <List
                             size="sm"
                             sx={{
@@ -127,6 +127,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = activityInboxItems[index];
                                     return (
                                         <InboxBubble
+                                            key={`inbox-general-items-bubble-${item.itemId}`}
                                             teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
                                             myself={myself}
@@ -140,7 +141,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             />
                         </List>
 
-                        {/* For request inbox */}
+                        {/* Request Items */}
                         <List
                             size="sm"
                             sx={{
@@ -163,6 +164,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = requestInboxItems[index];
                                     return (
                                         <InboxBubble
+                                            key={`inbox-request-bubble-${item.itemId}`}
                                             teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
                                             setMyself={setMyself}

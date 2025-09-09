@@ -144,91 +144,10 @@ export const JoinTeam = () => {
         if (userId && userName && userEmail && socketInstance !== null) {
             // Sent a request to join the team.
             // The team owner(s) will get the request and they only can approve it.
-            socketInstance.emit(
-                "join_team_request",
-                {
-                    joiningTeamId: targetTeamDetails.teamId,
-                    joiningTeamName: targetTeamDetails.teamName,
-                },
-                async (ack: any) => {
-                    const item_body = [
-                        {
-                            type: "paragraph",
-                            props: {
-                                textColor: "default",
-                                textAlignment: "left",
-                                backgroundColor: "default",
-                            },
-                            content: [
-                                {
-                                    type: "mention",
-                                    props: {
-                                        teamId: targetTeamDetails.teamId,
-                                        userId: userId,
-                                        teamName: "N/A",
-                                        userName: userName,
-                                        userEmail: userEmail,
-                                        customStatus: "N/A",
-                                        avatarImgPath: "",
-                                    },
-                                },
-                                { text: " wants to join ", type: "text", styles: {} },
-                                {
-                                    text: targetTeamDetails.teamName,
-                                    type: "text",
-                                    styles: { code: true },
-                                },
-                                {
-                                    text: ".",
-                                    type: "text",
-                                    styles: {},
-                                },
-                            ],
-                            children: [],
-                        },
-                        {
-                            type: "paragraph",
-                            props: {
-                                textColor: "default",
-                                textAlignment: "left",
-                                backgroundColor: "default",
-                            },
-                            content: [
-                                { text: "Waiting for your approval...", type: "text", styles: {} },
-                            ],
-                            children: [],
-                        },
-                        {
-                            type: "paragraph",
-                            props: {
-                                textColor: "default",
-                                textAlignment: "left",
-                                backgroundColor: "default",
-                            },
-                            content: [],
-                            children: [],
-                        },
-                    ];
-
-                    const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify({
-                            team_id: targetTeamDetails.teamId,
-                            sender_id: userId,
-                            receiver_id: userId,
-                            item_body: item_body,
-                            item_type: 0,
-                        }),
-                    });
-                    if (!sendInboxMessageResponse.ok) {
-                        throw new Error("Failed to send a inbox message");
-                    }
-                }
-            );
+            socketInstance.emit("join_team_request", {
+                joiningTeamId: targetTeamDetails.teamId,
+                joiningTeamName: targetTeamDetails.teamName,
+            });
             setSearchMessage("Sent a request to join the team!");
             setFoundTeamDetails(undefined);
         } else {

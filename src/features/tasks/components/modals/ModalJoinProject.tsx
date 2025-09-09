@@ -45,7 +45,6 @@ export const ModalJoinProject: React.FC<Props> = ({
                 socket.emit(
                     "join_project_request",
                     {
-                        teamId: myself.teamId,
                         joiningProjectId: openJoinProject.projectId,
                         joiningProjectName: openJoinProject.projectName,
                     },
@@ -67,7 +66,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     {
                                         text: openJoinProject.projectName,
                                         type: "text",
-                                        styles: { code: true },
+                                        styles: { bold: true, textColor: "pink" },
                                     },
                                     {
                                         text: ".",

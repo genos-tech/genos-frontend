@@ -1,9 +1,9 @@
 import { STORES } from "../db/conf";
 import { messageIdWithChatId } from "../db/crud";
-import { InboxProps } from "../types/common";
+import { InboxItemProps } from "../types/common";
 
 self.onmessage = async (event) => {
-    const inboxItems: InboxProps[] = await messageIdWithChatId({
+    const inboxItems: InboxItemProps[] = await messageIdWithChatId({
         storeName: STORES.INBOX,
     });
 

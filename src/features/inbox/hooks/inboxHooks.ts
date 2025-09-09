@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
-import { InboxProps } from "../../../types/common";
+import { InboxItemProps } from "../../../types/common";
 
 export const useScrollToBottomOnNewItem = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
-    inbox: InboxProps[]
+    inbox: InboxItemProps[]
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;

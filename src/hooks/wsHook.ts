@@ -19,6 +19,8 @@ import {
     ThreadProps,
     ActivityMessageProps,
 } from "../types/chat";
+import { InboxItemProps } from "../types/common";
+import { addInboxItem } from "../features/admin/services/addInboxItem";
 
 function isInArray<T>(item: T, array: T[]): boolean {
     return array.includes(item);
@@ -39,6 +41,7 @@ type wsHookProps = {
     setIsTaskCommentUpdated: (value: boolean) => void;
     isLoading: boolean;
     funcSetActivityMessages: () => void;
+    funcSetInboxItems: () => void;
 };
 
 export const wsHook = (props: wsHookProps) => {
@@ -57,6 +60,7 @@ export const wsHook = (props: wsHookProps) => {
         setIsTaskCommentUpdated,
         isLoading,
         funcSetActivityMessages,
+        funcSetInboxItems,
     } = props;
 
     const updateAllChat = async (currentChat: ChatProps, newChatMessage: MessageProps) => {
@@ -771,9 +775,19 @@ export const wsHook = (props: wsHookProps) => {
                     }
                 }
             } else if (message.wsType === "userStatus") {
+                // console.log("Got an user status message");
+                // console.log("user_status_message:", message);
                 const user: UserProps = message.user;
-
                 await addUser(user);
+            } else if (message.wsType === "inbox") {
+                console.log("Got an inbox message");
+                console.log("inbox_message:", message);
+
+                const inboxItem: InboxItemProps = message.data;
+                if (message.alreadyExist === false) {
+                    await addInboxItem(inboxItem);
+                    funcSetInboxItems();
+                }
             }
         });
 

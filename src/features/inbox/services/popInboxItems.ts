@@ -1,7 +1,7 @@
-import { InboxProps } from "../../../types/common";
+import { InboxItemProps } from "../../../types/common";
 import PopInboxItemsWorker from "../../../workers/popInboxItemsWorker.ts?worker";
 
-export const popInboxItems = (): Promise<InboxProps[]> => {
+export const popInboxItems = (): Promise<InboxItemProps[]> => {
     return new Promise((resolve, reject) => {
         const popInboxItemsWorker = new PopInboxItemsWorker();
 
@@ -9,7 +9,7 @@ export const popInboxItems = (): Promise<InboxProps[]> => {
 
         popInboxItemsWorker.onmessage = (event) => {
             popInboxItemsWorker.terminate();
-            resolve(event.data as InboxProps[]);
+            resolve(event.data as InboxItemProps[]);
         };
 
         popInboxItemsWorker.onerror = (error) => {
