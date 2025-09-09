@@ -173,10 +173,11 @@ export const App = () => {
     }, [isLoading]);
 
     useEffect(() => {
-        // myself.userId === "" -> Not init yet.
-        if (socketInstance === null || (accessToken && myself.teamId !== currentTeamId)) {
-            setSocketInstance(socket(accessToken));
-            console.log("Finished connecting WS");
+        if (accessToken) {
+            if (socketInstance === null || myself.teamId !== currentTeamId) {
+                setSocketInstance(socket(accessToken));
+                console.log("Finished connecting WS");
+            }
         }
     }, [myself, accessToken, currentTeamId, socketInstance]);
 
