@@ -213,9 +213,20 @@ export const wsHook = (props: wsHookProps) => {
             console.log("WS connected");
         });
 
+        socket.on("disconnect", (reason, details) => {
+            // the reason of the disconnection, for example "transport error"
+            console.error("WS disconnected");
+            console.log(reason);
+        });
+
+        socket.on("connect_error", (err) => {
+            // the reason of the error, for example "xhr poll error"
+            console.error("WS connection error");
+            console.log(err.message);
+        });
+
         socket.on("auth_error", (data) => {
             console.error("Authentication Error:", data.message);
-            // alert(`Error: ${data.message}`);
         });
 
         socket.on("message", async (message) => {

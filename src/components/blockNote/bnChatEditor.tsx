@@ -140,7 +140,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 4, 0) * 30 + 200,
+                Math.max(numEditorLines - 5, 0) * 30 + 200,
                 isSubChatVisible === true ? 290 : 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);

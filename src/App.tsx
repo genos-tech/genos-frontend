@@ -31,10 +31,10 @@ const ws_url = import.meta.env.VITE_WS_BASE_URL;
 const socket = (accessToken: string | null): Socket => {
     return io(ws_url, {
         reconnection: true, // Enable reconnection
-        reconnectionAttempts: 5, // Try to reconnect 5 times
-        reconnectionDelay: 1000, // Wait 1 second before reconnecting
-        reconnectionDelayMax: 5000, // Max delay between reconnection attempts
-        timeout: 10000, // Timeout for the connection attempt
+        reconnectionAttempts: 100, // Try to reconnect 5 times
+        reconnectionDelay: 5000, // Wait 1 second before reconnecting
+        reconnectionDelayMax: 60000, // Max delay between reconnection attempts
+        timeout: 100000, // Timeout for the connection attempt
         withCredentials: true,
         query: {
             teamId: localStorage.getItem("teamId"),
@@ -178,7 +178,7 @@ export const App = () => {
             setSocketInstance(socket(accessToken));
             console.log("Finished connecting WS");
         }
-    }, [myself, accessToken, currentTeamId]);
+    }, [myself, accessToken, currentTeamId, socketInstance]);
 
     useEffect(() => {
         if (myself.userId !== "") {
