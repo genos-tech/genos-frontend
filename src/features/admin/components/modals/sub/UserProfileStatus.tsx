@@ -95,7 +95,14 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                         <Box sx={{ ml: "-5px" }}>
                                             <PulseDot
                                                 color={
-                                                    user?.isOnline === true ? "#4caf50" : "#999"
+                                                    myself.userId === user?.userId
+                                                        ? myself?.isOfflineForced !== "true"
+                                                            ? "#4caf50"
+                                                            : "#999"
+                                                        : user?.isOnline === true &&
+                                                          user?.isOfflineForced !== "true"
+                                                        ? "#4caf50"
+                                                        : "#999"
                                                 }
                                             />
                                         </Box>
@@ -106,7 +113,14 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                         },
                                     }}
                                 >
-                                    {user?.isOnline === true ? "Online" : "Offline"}
+                                    {myself.userId === user?.userId
+                                        ? myself?.isOfflineForced !== "true"
+                                            ? "Online"
+                                            : "Offline (Forced)"
+                                        : user?.isOnline === true &&
+                                          user?.isOfflineForced !== "true"
+                                        ? "Online"
+                                        : "Offline"}
                                 </Chip>
                             </MenuButton>
                             {myself.userId === user?.userId && (

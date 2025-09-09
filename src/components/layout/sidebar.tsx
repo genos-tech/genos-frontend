@@ -249,7 +249,7 @@ export const Sidebar = (props: SidebarProps) => {
                     {myself.userName[0].toUpperCase()}
                 </Avatar>
                 <Box position="absolute" bottom={0} right={0} width={24} height={33}>
-                    <PulseDot color={"#4caf50"} />
+                    <PulseDot color={myself?.isOfflineForced !== "true" ? "#4caf50" : "#999"} />
                 </Box>
             </Box>
 

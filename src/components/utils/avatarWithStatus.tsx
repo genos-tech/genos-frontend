@@ -36,8 +36,12 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
 
     const isOnline: boolean = avatarUser
         ? myself.userId === avatarUser.userId
+            ? myself?.isOfflineForced !== "true"
+                ? true
+                : false
+            : avatarUser.isOnline === true && avatarUser.isOfflineForced !== "true"
             ? true
-            : avatarUser.isOnline || false
+            : false
         : false;
 
     return (

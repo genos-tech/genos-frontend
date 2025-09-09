@@ -85,11 +85,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     setCurrentMainChat={setCurrentMainChat}
-                    isOnline={
-                        chat.dmPartnerUser
-                            ? teamMemberProfiles[chat.dmPartnerUser.userId]?.isOnline || false
-                            : false
-                    }
                     chat={chat}
                     isYou={isYou}
                 />

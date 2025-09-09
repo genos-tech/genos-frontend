@@ -77,11 +77,6 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     setCurrentMainChat={setCurrentMainChat}
-                    isOnline={
-                        chat.dmPartnerUser
-                            ? teamMemberProfiles[chat.dmPartnerUser.userId]?.isOnline || false
-                            : false
-                    }
                     chat={subChat}
                     isYou={isYou}
                 />

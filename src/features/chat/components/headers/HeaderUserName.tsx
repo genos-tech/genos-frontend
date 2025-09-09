@@ -16,7 +16,6 @@ type HeaderUserNameProps = {
     setMyself: (value: UserProps) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    isOnline: boolean;
     chat: ChatProps;
     isYou: boolean;
 };
@@ -28,12 +27,22 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
         setMyself,
         setOpeningService,
         setCurrentMainChat,
-        isOnline,
         chat,
         isYou,
     } = props;
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
+    const headerUser: UserProps | undefined =
+        teamMemberProfiles[chat.dmPartnerUser ? chat.dmPartnerUser.userId : ""];
+    const isOnline: boolean = headerUser
+        ? myself.userId === headerUser.userId
+            ? myself?.isOfflineForced !== "true"
+                ? true
+                : false
+            : headerUser.isOnline === true && headerUser.isOfflineForced !== "true"
+            ? true
+            : false
+        : false;
 
     return (
         <>
@@ -42,9 +51,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     <AvatarWithStatus
                         myself={myself}
                         setMyself={setMyself}
-                        avatarUser={
-                            teamMemberProfiles[chat.dmPartnerUser ? chat.dmPartnerUser.userId : ""]
-                        }
+                        avatarUser={headerUser}
                         socket={socket}
                         chat={chat}
                         setOpeningService={setOpeningService}

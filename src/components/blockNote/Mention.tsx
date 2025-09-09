@@ -125,7 +125,8 @@ export const MentionMenuItems = (
                     <Box position="absolute" bottom={0} right={0} width={10} height={10}>
                         <PulseDot
                             color={
-                                teamMemberProfiles[user.userId]?.isOnline === true
+                                teamMemberProfiles[user.userId]?.isOnline === true &&
+                                teamMemberProfiles[user.userId]?.isOfflineForced !== "true"
                                     ? "#4caf50"
                                     : "#999"
                             }

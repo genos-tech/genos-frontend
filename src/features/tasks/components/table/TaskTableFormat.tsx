@@ -99,9 +99,12 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                         <Box position="absolute" sx={{ pl: "20px", pt: "20px" }}>
                             <PulseDot
                                 color={
-                                    props.myself.userId === params.row.assigneeId ||
-                                    props.teamMemberProfiles[params.row.assigneeId]?.isOnline ===
-                                        true
+                                    props.myself.userId === params.row?.assigneeId
+                                        ? props.myself?.isOfflineForced !== "true"
+                                            ? "#4caf50"
+                                            : "#999"
+                                        : params.row?.isOnline === true &&
+                                          params.row?.isOfflineForced === "true"
                                         ? "#4caf50"
                                         : "#999"
                                 }
