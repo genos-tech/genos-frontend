@@ -43,6 +43,13 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         isThread = false,
     } = props;
 
+    let numRepliesWithoutFirstMessage: number;
+    if (chatType !== 3) {
+        numRepliesWithoutFirstMessage = numReplies - 1;
+    } else {
+        numRepliesWithoutFirstMessage = numReplies;
+    }
+
     return (
         <Box sx={{ paddingBottom: "3px", marginBottom: "1px", position: "relative" }}>
             <Stack
@@ -74,7 +81,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                     />
                 </Box>
 
-                {isThread == false && numReplies - 1 > 0 && (
+                {isThread == false && numRepliesWithoutFirstMessage > 0 && (
                     <Button
                         component="a"
                         size="sm"
@@ -95,15 +102,14 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                         }}
                     >
                         {/* TODO: read/unread for thread replies */}
-                        {numReplies - 1 == 1 ? (
+                        {numRepliesWithoutFirstMessage == 1 ? (
                             <Box sx={{ color: "neutral.plainColor" }}>
                                 {/* <CircleIcon sx={{ fontSize: 10 }} color="primary" /> */}
-                                &nbsp;
-                                1 reply
+                                &nbsp; 1 reply
                             </Box>
                         ) : (
                             <Box sx={{ color: "neutral.plainColor" }}>
-                                {numReplies - 1} replies
+                                {numRepliesWithoutFirstMessage} replies
                             </Box>
                         )}
                     </Button>

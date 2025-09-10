@@ -231,9 +231,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             paddingTop = 0.3;
                             paddingBottom = 0.3;
 
+                            let numRepliesWithoutFirstMessage: number;
+                            if (chat.chatType !== 3) {
+                                numRepliesWithoutFirstMessage = message.numReplies - 1;
+                            } else {
+                                numRepliesWithoutFirstMessage = message.numReplies;
+                            }
+
                             if (message.reactions && message.reactions.allReactions.length > 0) {
                                 paddingBottom = paddingBottom + 2.5;
-                            } else if (message.numReplies - 1 > 0) {
+                            } else if (numRepliesWithoutFirstMessage > 0) {
                                 paddingBottom = paddingBottom + 2.5;
                             }
 

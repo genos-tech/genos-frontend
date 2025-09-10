@@ -377,12 +377,19 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         }
     }, [selectedEmoji]);
 
+    let numRepliesWithoutFirstMessage: number;
+    if (chat.chatType !== 3) {
+        numRepliesWithoutFirstMessage = message.numReplies - 1;
+    } else {
+        numRepliesWithoutFirstMessage = message.numReplies;
+    }
+
     return (
         <Box
             sx={{
                 maxWidth: "90%",
                 minWidth:
-                    (isSimpleBubble ? (message.numReplies - 1 > 0 ? 150 : 100) : 200) +
+                    (isSimpleBubble ? (numRepliesWithoutFirstMessage > 0 ? 150 : 100) : 200) +
                     (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
