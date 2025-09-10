@@ -74,7 +74,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                     />
                 </Box>
 
-                {isThread == false && numReplies > 0 && (
+                {isThread == false && numReplies - 1 > 0 && (
                     <Button
                         component="a"
                         size="sm"
@@ -95,14 +95,16 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                         }}
                     >
                         {/* TODO: read/unread for thread replies */}
-                        {numReplies == 1 ? (
+                        {numReplies - 1 == 1 ? (
                             <Box sx={{ color: "neutral.plainColor" }}>
-                                <CircleIcon sx={{ fontSize: 10 }} color="primary" />
+                                {/* <CircleIcon sx={{ fontSize: 10 }} color="primary" /> */}
                                 &nbsp;
-                                {numReplies} reply
+                                1 reply
                             </Box>
                         ) : (
-                            <Box sx={{ color: "neutral.plainColor" }}>{numReplies} replies</Box>
+                            <Box sx={{ color: "neutral.plainColor" }}>
+                                {numReplies - 1} replies
+                            </Box>
                         )}
                     </Button>
                 )}

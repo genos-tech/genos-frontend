@@ -544,30 +544,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                             )}
                         >
                             <List sx={{ gap: 0.5 }}>
-                                <ListItem key={"listitem-createProject"}>
-                                    <ListItemButton
-                                        color="neutral"
-                                        variant="soft"
-                                        onClick={() => {
-                                            setOpenCreateProject(true);
-                                        }}
-                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                    >
-                                        <AddIcon />
-                                        <Typography
-                                            noWrap
-                                            sx={{
-                                                fontSize: "15px",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                                width: "100%", // take full width of button
-                                            }}
-                                        >
-                                            New Project
-                                        </Typography>
-                                    </ListItemButton>
-                                </ListItem>
                                 {teamProjects.map(
                                     (
                                         {
@@ -799,6 +775,30 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         )}
                                     </List>
                                 </Toggler>
+                                <ListItem key={"listitem-createProject"}>
+                                    <ListItemButton
+                                        color="neutral"
+                                        variant="soft"
+                                        onClick={() => {
+                                            setOpenCreateProject(true);
+                                        }}
+                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
+                                    >
+                                        <AddIcon />
+                                        <Typography
+                                            noWrap
+                                            sx={{
+                                                fontSize: "15px",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                width: "100%", // take full width of button
+                                            }}
+                                        >
+                                            New Project
+                                        </Typography>
+                                    </ListItemButton>
+                                </ListItem>
                             </List>
                         </Toggler>
                     </ListItem>

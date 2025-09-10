@@ -233,7 +233,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
                             if (message.reactions && message.reactions.allReactions.length > 0) {
                                 paddingBottom = paddingBottom + 2.5;
-                            } else if (message.numReplies > 0) {
+                            } else if (message.numReplies - 1 > 0) {
                                 paddingBottom = paddingBottom + 2.5;
                             }
 

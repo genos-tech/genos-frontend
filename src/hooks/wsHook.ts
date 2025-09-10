@@ -84,21 +84,18 @@ export const wsHook = (props: wsHookProps) => {
 
     const makeDMUpdatedChat = async (
         newMessage: NewMessageProps,
-        isNewlyJoinedChat: boolean
+        customFlag: boolean
     ): Promise<ChatProps> => {
-        // isNewlyJoinedChat: New DM chat with new friend or not
-
         const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
         return {
             chatId: newMessage.chatId,
             chatName:
-                isNewlyJoinedChat === true
+                customFlag === true
                     ? newMessage.dmPartnerUser?.userName || ""
                     : newMessage.sender.userName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser:
-                isNewlyJoinedChat === true ? newMessage.dmPartnerUser : newMessage.sender,
+            dmPartnerUser: customFlag === true ? newMessage.dmPartnerUser : newMessage.sender,
             unread: false,
             messages: updatedChat,
             latestMessage: newMessage,
@@ -442,7 +439,11 @@ export const wsHook = (props: wsHookProps) => {
                                 // Prepare a new/updated chat object from the new message for DM
                                 let updatedChat: ChatProps;
                                 if (newMessage.isReactionUpdated === false) {
-                                    updatedChat = await makeDMUpdatedChat(newMessage, false);
+                                    if (newMessage.isEdited === true) {
+                                        updatedChat = await makeDMUpdatedChat(newMessage, true);
+                                    } else {
+                                        updatedChat = await makeDMUpdatedChat(newMessage, false);
+                                    }
                                 } else {
                                     if (newMessage.sender.userId === myself.userId) {
                                         updatedChat = await makeDMUpdatedChat(newMessage, true);
