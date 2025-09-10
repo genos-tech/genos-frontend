@@ -157,7 +157,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
 
     return (
         <React.Fragment>
-            <ListItem sx={{ width: "100%", px: 1, overflowX: "hidden" }}>
+            <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
                     onClick={onClickHandler}
                     selected={selected}
@@ -272,8 +272,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                             <Typography
                                 level="body-sm"
                                 sx={{
-                                    marginTop: 1,
-                                    ml: "20px",
+                                    ml: "45px",
                                     fontWeight: "bold",
                                     display: "-webkit-box",
                                     WebkitLineClamp: "2",

@@ -431,7 +431,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                   },
                         ]}
                     >
-                        <Stack direction="column" spacing={1.5}>
+                        <Stack direction="column">
                             {showUnderBarOption === true && isSimpleBubble === true && (
                                 <Stack direction="row" spacing={0}>
                                     <BubbleUserName

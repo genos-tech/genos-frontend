@@ -463,8 +463,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 <Typography
                                     level="body-sm"
                                     sx={{
-                                        marginY: 1,
-                                        ml: "10px",
+                                        marginBottom: 0.5,
+                                        ml: "45px",
                                         fontWeight: "bold",
                                         display: "-webkit-box",
                                         WebkitLineClamp: "2",
@@ -494,7 +494,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             level="body-sm"
                                             sx={{
                                                 paddingTop: 1.5,
-                                                ml: "10px",
+                                                ml: "45px",
                                                 fontWeight: "bold",
                                                 display: "-webkit-box",
                                                 WebkitLineClamp: "2",
@@ -579,8 +579,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     <Typography
                                         level="body-sm"
                                         sx={{
-                                            marginBottom: 1,
-                                            ml: "10px",
+                                            marginBottom: 0.5,
+                                            ml: "45px",
                                             fontWeight: "bold",
                                             display: "-webkit-box",
                                             WebkitLineClamp: "2",

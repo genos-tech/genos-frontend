@@ -322,11 +322,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [isOpenTagList]);
 
+    // This is for auto scrolling to the bottom when an user writes comment.
     const [taskCommentLines, setTaskCommentLines] = useState(0);
     const sheetRef = useRef<HTMLDivElement | null>(null);
     useEffect(() => {
         const sheet = sheetRef.current;
-        if (sheet) {
+        if (sheet && taskCommentLines > 1) {
             sheet.scrollTop = sheet.scrollHeight; // always scroll to bottom
         }
     }, [taskCommentLines]); // re-run whenever content changes

@@ -38,8 +38,6 @@ import {
 } from "../../../types/admin";
 import { wsJoinTeamHook } from "../../../hooks/wsJoinTeamHook";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
-
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
 }

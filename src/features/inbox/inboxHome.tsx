@@ -64,12 +64,13 @@ export const InboxHome = (props: InboxHomeProps) => {
             />
             <Stack sx={{ width: "100%" }}>
                 <Card
+                    className="Sidebar-overlay"
                     sx={{
                         height: "50px",
                         justifyContent: "center",
+                        borderRadius: "0",
                     }}
                     variant="soft"
-                    color="neutral"
                 >
                     <Typography level="h4">Inbox</Typography>
                 </Card>
