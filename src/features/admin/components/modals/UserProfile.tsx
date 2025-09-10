@@ -87,7 +87,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    My profile
+                                    {myself.userId !== user?.userId
+                                        ? user?.userName
+                                            ? `${user?.userName}'s Profile`
+                                            : "Profile"
+                                        : "My Profile"}
                                 </Typography>
                             </Box>
                         </Box>

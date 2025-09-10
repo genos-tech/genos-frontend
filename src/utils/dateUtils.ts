@@ -97,6 +97,22 @@ export const extractYYYYMMDDHHMM = (ts: string) => {
     return `${tsLocal.slice(0, 4)} ${month}. ${+tsLocal.slice(8, 10)}, ${tsLocal.slice(10, 16)}`;
 };
 
+export const extractMMDD = (ts: string) => {
+    const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
+    const tsDay: string = checkTimestampDay(ts);
+
+    if (tsDay === "today") {
+        return `Today`;
+    } else if (tsDay === "yesterday") {
+        return `Yesterday`;
+    } else if (tsDay === "withinAYear") {
+        const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
+        return `${month}. ${+tsLocal.slice(8, 10)}`;
+    }
+    const month: string = monthNameLookUp[tsLocal.slice(5, 7)];
+    return `${month}. ${+tsLocal.slice(8, 10)}, ${tsLocal.slice(0, 4)}`;
+};
+
 export const extractYYYYMMDD = (ts: string) => {
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
     const tsDay: string = checkTimestampDay(ts);

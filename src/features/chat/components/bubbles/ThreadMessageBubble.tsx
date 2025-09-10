@@ -24,6 +24,7 @@ type threadMessageBubbleProps = {
     thread: ThreadProps;
     variant: "sent" | "received";
     message: ThreadMessageProps;
+    isScrolling: boolean;
     isFocused: boolean;
     isSimpleBubble: boolean;
     setOpeningService: (service: number) => void;
@@ -43,6 +44,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         thread,
         variant,
         message,
+        isScrolling,
         isFocused,
         isSimpleBubble,
         setOpeningService,
@@ -260,23 +262,25 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     />
 
                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                        <EmojiReaction
-                                            socket={socket}
-                                            myself={myself}
-                                            chatType={thread.chatType}
-                                            chatName={thread.chatName}
-                                            dmPartnerUser={thread.dmPartnerUser}
-                                            message={message}
-                                            numReplies={0}
-                                            isThread={true}
-                                            showUnderBarOption={showUnderBarOption}
-                                            reactions={reactions}
-                                            setReactions={setReactions}
-                                            setShowEmojiPicker={setShowEmojiPicker}
-                                            setUniqueReactionEmojiCount={
-                                                setUniqueReactionEmojiCount
-                                            }
-                                        />
+                                        {isScrolling !== true && (
+                                            <EmojiReaction
+                                                socket={socket}
+                                                myself={myself}
+                                                chatType={thread.chatType}
+                                                chatName={thread.chatName}
+                                                dmPartnerUser={thread.dmPartnerUser}
+                                                message={message}
+                                                numReplies={0}
+                                                isThread={true}
+                                                showUnderBarOption={showUnderBarOption}
+                                                reactions={reactions}
+                                                setReactions={setReactions}
+                                                setShowEmojiPicker={setShowEmojiPicker}
+                                                setUniqueReactionEmojiCount={
+                                                    setUniqueReactionEmojiCount
+                                                }
+                                            />
+                                        )}
                                     </Box>
 
                                     {/* 
@@ -333,23 +337,31 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             {showUnderBarOption === true && (
                                                 <>
                                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                                        <EmojiReaction
-                                                            socket={socket}
-                                                            myself={myself}
-                                                            chatType={thread.chatType}
-                                                            chatName={thread.chatName}
-                                                            dmPartnerUser={thread.dmPartnerUser}
-                                                            message={message}
-                                                            numReplies={0}
-                                                            isThread={true}
-                                                            showUnderBarOption={showUnderBarOption}
-                                                            reactions={reactions}
-                                                            setReactions={setReactions}
-                                                            setShowEmojiPicker={setShowEmojiPicker}
-                                                            setUniqueReactionEmojiCount={
-                                                                setUniqueReactionEmojiCount
-                                                            }
-                                                        />
+                                                        {isScrolling !== true && (
+                                                            <EmojiReaction
+                                                                socket={socket}
+                                                                myself={myself}
+                                                                chatType={thread.chatType}
+                                                                chatName={thread.chatName}
+                                                                dmPartnerUser={
+                                                                    thread.dmPartnerUser
+                                                                }
+                                                                message={message}
+                                                                numReplies={0}
+                                                                isThread={true}
+                                                                showUnderBarOption={
+                                                                    showUnderBarOption
+                                                                }
+                                                                reactions={reactions}
+                                                                setReactions={setReactions}
+                                                                setShowEmojiPicker={
+                                                                    setShowEmojiPicker
+                                                                }
+                                                                setUniqueReactionEmojiCount={
+                                                                    setUniqueReactionEmojiCount
+                                                                }
+                                                            />
+                                                        )}
                                                     </Box>
                                                     {message.sender.userId === myself.userId && (
                                                         <BubbleThreadEditButton

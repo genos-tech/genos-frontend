@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack } from "@mui/joy";
+import { Box, Sheet, Stack, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -17,7 +17,7 @@ import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
-import { getTimeDiffSeconds } from "../../utils/dateUtils";
+import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -125,6 +125,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         }, 300); // wait N ms
     }, [currentMainChat]);
 
+    const [isScrolling, setIsScrolling] = useState(false);
+
     return (
         <div
             onDrop={handleFileDrop}
@@ -158,6 +160,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     <Virtuoso
                         ref={virtuosoRef}
                         className="custom-scrollbar"
+                        context={{ isScrolling }}
+                        isScrolling={setIsScrolling}
                         style={{
                             height:
                                 currentMainChat.chatType === 3 || currentMainChat.chatType === 4
@@ -175,12 +179,34 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         atTopThreshold={64}
                         atTopStateChange={handleAtTop}
                         atBottomThreshold={128}
-                        itemContent={(index) => {
+                        itemContent={(index, _, { isScrolling }) => {
                             const message = chatMessages[index];
                             const isYou = myself.userId === message.sender.userId;
                             const isFocused =
                                 message.messageIdWithChatId ===
                                 currentMainChat.moveToSpecificIndex;
+
+                            const dateSeparator =
+                                index === 0 ||
+                                extractYYYYMMDD(chatMessages[index - 1].tsSent) !==
+                                    extractYYYYMMDD(chatMessages[index].tsSent) ? (
+                                    <div style={{ padding: "0.5rem 0" }}>
+                                        <div style={{ textAlign: "center", fontWeight: 300 }}>
+                                            <Chip variant="soft">
+                                                <span
+                                                    style={{
+                                                        backgroundColor: "var(--alt-background)",
+                                                        border: "1px solid var(--border)",
+                                                        padding: "0.1rem 2rem",
+                                                        borderRadius: "0.5rem",
+                                                    }}
+                                                >
+                                                    {extractMMDD(chatMessages[index].tsSent)}
+                                                </span>
+                                            </Chip>
+                                        </div>
+                                    </div>
+                                ) : null;
 
                             let isSimpleBubble: boolean;
                             isSimpleBubble = false;
@@ -217,6 +243,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
                             return (
                                 <div>
+                                    {dateSeparator}
                                     <Stack
                                         direction="row"
                                         spacing={2}
@@ -234,6 +261,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             variant={isYou ? "sent" : "received"}
                                             chat={chat}
                                             message={message}
+                                            isScrolling={isScrolling}
                                             isFocused={isFocused}
                                             isSimpleBubble={isSimpleBubble}
                                             socket={socket}

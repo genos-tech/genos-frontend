@@ -28,6 +28,7 @@ type MessageBubbleProps = {
     variant: "sent" | "received";
     chat: ChatProps;
     message: MessageProps;
+    isScrolling: boolean;
     isFocused: boolean;
     isSimpleBubble: boolean;
     socket: Socket | null;
@@ -56,6 +57,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         variant,
         chat,
         message,
+        isScrolling,
         isFocused,
         isSimpleBubble,
         socket,
@@ -449,23 +451,25 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     />
 
                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                        <EmojiReaction
-                                            socket={socket}
-                                            myself={myself}
-                                            chatType={chat.chatType}
-                                            chatName={chat.chatName}
-                                            dmPartnerUser={chat.dmPartnerUser}
-                                            message={message}
-                                            numReplies={message.numReplies}
-                                            isThread={false}
-                                            showUnderBarOption={showUnderBarOption}
-                                            reactions={reactions}
-                                            setReactions={setReactions}
-                                            setShowEmojiPicker={setShowEmojiPicker}
-                                            setUniqueReactionEmojiCount={
-                                                setUniqueReactionEmojiCount
-                                            }
-                                        />
+                                        {isScrolling !== true && (
+                                            <EmojiReaction
+                                                socket={socket}
+                                                myself={myself}
+                                                chatType={chat.chatType}
+                                                chatName={chat.chatName}
+                                                dmPartnerUser={chat.dmPartnerUser}
+                                                message={message}
+                                                numReplies={message.numReplies}
+                                                isThread={false}
+                                                showUnderBarOption={showUnderBarOption}
+                                                reactions={reactions}
+                                                setReactions={setReactions}
+                                                setShowEmojiPicker={setShowEmojiPicker}
+                                                setUniqueReactionEmojiCount={
+                                                    setUniqueReactionEmojiCount
+                                                }
+                                            />
+                                        )}
                                     </Box>
 
                                     <BubbleReplyButton replayHandler={replayHandler} />
@@ -535,23 +539,29 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             {showUnderBarOption === true && (
                                                 <>
                                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                                        <EmojiReaction
-                                                            socket={socket}
-                                                            myself={myself}
-                                                            chatType={chat.chatType}
-                                                            chatName={chat.chatName}
-                                                            dmPartnerUser={chat.dmPartnerUser}
-                                                            message={message}
-                                                            numReplies={message.numReplies}
-                                                            isThread={false}
-                                                            showUnderBarOption={showUnderBarOption}
-                                                            reactions={reactions}
-                                                            setReactions={setReactions}
-                                                            setShowEmojiPicker={setShowEmojiPicker}
-                                                            setUniqueReactionEmojiCount={
-                                                                setUniqueReactionEmojiCount
-                                                            }
-                                                        />
+                                                        {isScrolling !== true && (
+                                                            <EmojiReaction
+                                                                socket={socket}
+                                                                myself={myself}
+                                                                chatType={chat.chatType}
+                                                                chatName={chat.chatName}
+                                                                dmPartnerUser={chat.dmPartnerUser}
+                                                                message={message}
+                                                                numReplies={message.numReplies}
+                                                                isThread={false}
+                                                                showUnderBarOption={
+                                                                    showUnderBarOption
+                                                                }
+                                                                reactions={reactions}
+                                                                setReactions={setReactions}
+                                                                setShowEmojiPicker={
+                                                                    setShowEmojiPicker
+                                                                }
+                                                                setUniqueReactionEmojiCount={
+                                                                    setUniqueReactionEmojiCount
+                                                                }
+                                                            />
+                                                        )}
                                                     </Box>
 
                                                     <BubbleReplyButton

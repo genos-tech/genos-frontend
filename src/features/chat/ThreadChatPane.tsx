@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack } from "@mui/joy";
+import { Box, Sheet, Stack, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -17,7 +17,7 @@ import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadE
 import { UserProps } from "../../types/admin";
 import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
-import { getTimeDiffSeconds } from "../../utils/dateUtils";
+import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -115,6 +115,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         }, 300); // wait N ms
     }, [currentThreadChat]);
 
+    const [isScrolling, setIsScrolling] = useState(false);
+
     return (
         <>
             <div
@@ -152,6 +154,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         <Virtuoso
                             ref={virtuosoRef}
                             className="custom-scrollbar"
+                            context={{ isScrolling }}
+                            isScrolling={setIsScrolling}
                             style={{
                                 height: calculateVirtuosoHight(
                                     currentWindowHeight,
@@ -163,12 +167,35 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             atTopThreshold={64}
                             atTopStateChange={handleAtTop}
                             atBottomThreshold={128}
-                            itemContent={(index) => {
+                            itemContent={(index, _, { isScrolling }) => {
                                 const message = threadMessages[index];
                                 const isYou = myself.userId === message.sender.userId;
                                 const isFocused =
                                     message.messageIdWithChatIdAndThreadId ===
                                     currentThreadChat.moveToSpecificIndex;
+
+                                const dateSeparator =
+                                    index === 0 ||
+                                    extractYYYYMMDD(threadMessages[index - 1].tsSent) !==
+                                        extractYYYYMMDD(threadMessages[index].tsSent) ? (
+                                        <div style={{ padding: "0.5rem 0" }}>
+                                            <div style={{ textAlign: "center", fontWeight: 300 }}>
+                                                <Chip variant="soft">
+                                                    <span
+                                                        style={{
+                                                            backgroundColor:
+                                                                "var(--alt-background)",
+                                                            border: "1px solid var(--border)",
+                                                            padding: "0.1rem 2rem",
+                                                            borderRadius: "0.5rem",
+                                                        }}
+                                                    >
+                                                        {extractMMDD(threadMessages[index].tsSent)}
+                                                    </span>
+                                                </Chip>
+                                            </div>
+                                        </div>
+                                    ) : null;
 
                                 let isSimpleBubble: boolean;
                                 isSimpleBubble = false;
@@ -203,6 +230,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
 
                                 return (
                                     <div>
+                                        {dateSeparator}
                                         <Stack
                                             direction="row"
                                             spacing={2}
@@ -221,6 +249,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 thread={thread}
                                                 variant={isYou ? "sent" : "received"}
                                                 message={message}
+                                                isScrolling={isScrolling}
                                                 isFocused={isFocused}
                                                 isSimpleBubble={isSimpleBubble}
                                                 setOpeningService={setOpeningService}

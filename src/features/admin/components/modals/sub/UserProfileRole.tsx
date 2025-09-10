@@ -15,13 +15,15 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
 
     const [openRoleEditor, setOpenRoleEditor] = useState(false);
     const [isRoleUpdated, setIsRoleUpdated] = useState(false);
-    const [roleValue, setRoleValue] = useState("Set Your Role");
+    const [roleValue, setRoleValue] = useState(
+        myself.userId !== user?.userId ? "Not Set" : "Set Your Role"
+    );
     useEffect(() => {
         if (isRoleUpdated === false && openRoleEditor === false) {
             if (user && user.role && user.role !== "" && user.role !== "undefined") {
                 setRoleValue(user.role);
             } else {
-                setRoleValue("Set Your Role");
+                setRoleValue(myself.userId !== user?.userId ? "Not Set" : "Set Your Role");
             }
         }
     }, [user, isRoleUpdated]);

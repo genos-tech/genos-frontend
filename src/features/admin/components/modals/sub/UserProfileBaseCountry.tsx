@@ -32,7 +32,9 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
 
     const [openCountryEditor, setOpenCountryEditor] = useState(false);
     const [isCountryUpdated, setIsCountryUpdated] = useState(false);
-    const [countryValue, setCountryValue] = useState("Set Your Country");
+    const [countryValue, setCountryValue] = useState(
+        myself.userId !== user?.userId ? "Not Set" : "Set Your Role"
+    );
     useEffect(() => {
         if (isCountryUpdated === false && openCountryEditor === false) {
             if (
@@ -43,7 +45,7 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
             ) {
                 setCountryValue(user.baseCountry);
             } else {
-                setCountryValue("Set Your Country");
+                setCountryValue(myself.userId !== user?.userId ? "Not Set" : "Set Your Role");
             }
         }
     }, [user, isCountryUpdated]);
