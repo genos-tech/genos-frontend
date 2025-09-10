@@ -25,13 +25,15 @@ export const useScrollToBottomOnNewMessage = (
 export const useScrollToBottomOnChatChange = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
     currentMainChatId: number,
+    visibleRangeEnd: number,
+    maxIndex: number,
     indexMap?: { [k: string]: any },
     moveToSpecificIndex?: string,
     notMove?: boolean
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
-        if (virtuoso === null || notMove === true) {
+        if (virtuoso === null || (notMove === true && visibleRangeEnd < maxIndex)) {
             return;
         } else {
             setTimeout(() => {

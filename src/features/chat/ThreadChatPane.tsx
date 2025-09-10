@@ -82,6 +82,10 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     }, [thread]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    const [visibleRange, setVisibleRange] = useState({
+        startIndex: 0,
+        endIndex: 0,
+    });
 
     useScrollToBottomOnNewMessage(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
@@ -91,6 +95,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentThreadChatId,
+        visibleRange.endIndex,
+        threadMessages.length - 1,
         indexMap,
         currentThreadChat.moveToSpecificIndex,
         currentThreadChat.notMove
@@ -156,6 +162,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             className="custom-scrollbar"
                             context={{ isScrolling }}
                             isScrolling={setIsScrolling}
+                            rangeChanged={setVisibleRange}
                             style={{
                                 height: calculateVirtuosoHight(
                                     currentWindowHeight,

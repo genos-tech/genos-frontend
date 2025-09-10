@@ -91,6 +91,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     }, [chat.messages]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    const [visibleRange, setVisibleRange] = useState({
+        startIndex: 0,
+        endIndex: 0,
+    });
 
     // [Abolished] Move to the bottom of the chat we an user receive a new message
     // useScrollToBottomOnNewMessage(
@@ -101,6 +105,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentMainChatId,
+        visibleRange.endIndex,
+        chatMessages.length - 1,
         indexMap,
         currentMainChat.moveToSpecificIndex,
         currentMainChat.notMove
@@ -162,6 +168,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         className="custom-scrollbar"
                         context={{ isScrolling }}
                         isScrolling={setIsScrolling}
+                        rangeChanged={setVisibleRange}
                         style={{
                             height:
                                 currentMainChat.chatType === 3 || currentMainChat.chatType === 4
