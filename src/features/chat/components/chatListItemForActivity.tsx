@@ -358,7 +358,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 <Box>
                                     {(activity.chatType === 3 || activity.chatType === 4) && (
                                         <>
-                                            {" "}
                                             <Chip
                                                 size="sm"
                                                 variant="soft"
@@ -508,7 +507,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         <Typography
                                             level="body-sm"
                                             sx={{
-                                                fontSize: "30px",
+                                                fontSize: "25px",
                                                 pl: "10px",
                                                 display: "-webkit-box",
                                                 WebkitLineClamp: "2",

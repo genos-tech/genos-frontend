@@ -700,7 +700,7 @@ export const wsHook = (props: wsHookProps) => {
                     if (tmpNewActivityMessage) {
                         // If the mention or thread activity is for DM,
                         // change the chatName and dmPartnerUser.
-                        if (tmpNewActivityMessage.activityType === 1) {
+                        if (tmpNewActivityMessage.chatType === 1) {
                             tmpNewActivityMessage = {
                                 ...tmpNewActivityMessage,
                                 chatName: tmpNewActivityMessage.sender.userName,

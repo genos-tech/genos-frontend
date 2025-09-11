@@ -134,7 +134,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     right: 30, // push it to the right side
                                                 }}
                                             >
-                                                <Tooltip title="EDIT (TBD)" sx={{ zIndex: 10001 }}>
+                                                <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
                                                     <IconButton variant="soft">
                                                         <EditIcon sx={{ fontSize: "30px" }} />
                                                     </IconButton>

@@ -21,11 +21,16 @@ import { updateUserProfile } from "../../../services/updateUserProfile";
 import { useAuth } from "../../../../../context/AuthContext";
 
 const templateCustomStatueOptions = [
+    "🧠 In the Zone",
     "💨 AFK",
     "☕ Coffee Break",
-    "🧠 In the Zone",
-    "🏖️ On Holiday",
     "🥪 Enjoying Lunch",
+    "🌴 On Holiday",
+    "🚋 Commuting",
+    "🤒 Off Sick",
+    "✈️ Traveling",
+    "🏢 WFO",
+    "🏡 WFH",
     "⛔ OOO",
     "🚫 Do Not Disturb",
 ];
