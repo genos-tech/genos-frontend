@@ -18,6 +18,9 @@ import { UserProps } from "../../types/admin";
 import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
+import { addChat } from "../../features/chat/services/addChat";
+import { useAuth } from "../../context/AuthContext";
+import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -68,6 +71,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         currentPreviewTaskId,
     } = props;
 
+    const { accessToken } = useAuth();
+
     const [threadMessages, setThreadMessages] = useState(thread.messages || []);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<ThreadMessageProps>();
@@ -87,11 +92,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         endIndex: 0,
     });
 
-    useScrollToBottomOnNewMessage(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        thread,
-        targetMessageIndex
-    );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentThreadChatId,
@@ -101,6 +101,69 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         currentThreadChat.moveToSpecificIndex,
         currentThreadChat.notMove
     );
+
+    const updateReadStatus = (indexForLastReadMessageId: number) => {
+        if (accessToken && currentThreadChat.messages[indexForLastReadMessageId]) {
+            const updateReadStatusWorker = new UpdateReadStatusWorker();
+            updateReadStatusWorker.postMessage({
+                accessToken: accessToken,
+                myself: myself,
+                chatType: currentThreadChat.chatType,
+                chatId: currentThreadChat.chatId,
+                isThread: true,
+                threadId: currentThreadChat.threadId,
+                lastReadMessageId: currentThreadChat.messages[indexForLastReadMessageId].messageId,
+            });
+            return () => {
+                updateReadStatusWorker.terminate();
+            };
+        }
+    };
+
+    const [tsLastReadStatusUpdated, setTsLastReadStatusUpdated] = useState<number>(Date.now());
+    const [indexLastReadStatusUpdated, setIndexLastReadStatusUpdated] = useState<number>(-1);
+    useEffect(() => {
+        setTimeout(() => {
+            // Update read-sta
+            // tus only when the main chat opens from the chat list,
+            // not from the chat activity or other with "moveToSpecificIndex" value.
+            let targetIndex: number;
+            if (currentThreadChat.moveToSpecificIndex === undefined) {
+                targetIndex = currentThreadChat.messages.length - 1;
+            } else if (
+                indexMap &&
+                indexMap[currentThreadChat.moveToSpecificIndex] &&
+                currentThreadChat.chatId ===
+                    Number(currentThreadChat.moveToSpecificIndex?.split("-")[0])
+            ) {
+                targetIndex = Number(indexMap[currentThreadChat.moveToSpecificIndex]);
+            } else {
+                targetIndex = -1;
+            }
+
+            if (targetIndex !== -1) {
+                updateReadStatus(targetIndex);
+                setIndexLastReadStatusUpdated(targetIndex);
+
+                const now = Date.now();
+                setTsLastReadStatusUpdated(now);
+            }
+        }, 1000); // wait N ms
+    }, [indexMap]);
+
+    useEffect(() => {
+        const intervalMs: number = 1000; // every X milliseconds
+        const now = Date.now();
+        if (
+            now - tsLastReadStatusUpdated >= intervalMs &&
+            visibleRange.endIndex > indexLastReadStatusUpdated
+        ) {
+            updateReadStatus(visibleRange.endIndex);
+            // Update timestamp
+            setTsLastReadStatusUpdated(now);
+            setIndexLastReadStatusUpdated(visibleRange.endIndex);
+        }
+    }, [visibleRange]);
 
     useEffect(() => {
         setTargetMessageIndex(threadMessages.length - 1);

@@ -703,8 +703,7 @@ export const wsHook = (props: wsHookProps) => {
                         if (tmpNewActivityMessage.chatType === 1) {
                             tmpNewActivityMessage = {
                                 ...tmpNewActivityMessage,
-                                chatName: tmpNewActivityMessage.sender.userName,
-                                dmPartnerUser: tmpNewActivityMessage.sender,
+                                chatName: tmpNewActivityMessage.dmPartnerUser.userName,
                             };
                         }
 
@@ -759,7 +758,6 @@ export const wsHook = (props: wsHookProps) => {
                                 newActivityMessage = {
                                     ...tmpNewActivityMessage,
                                     chatName: tmpNewActivityMessage.dmPartnerUser.userName,
-                                    dmPartnerUser: tmpNewActivityMessage.sender,
                                 };
                             } else {
                                 newActivityMessage = {

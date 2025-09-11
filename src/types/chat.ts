@@ -59,7 +59,7 @@ export type ActivityMessageProps = {
     chatType: number;
     chatId: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     isThread: boolean;
     threadId: number;
     messageId: number;
