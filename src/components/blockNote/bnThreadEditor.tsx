@@ -189,7 +189,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         chatType: thread.chatType,
                         dmPartnerUser: thread.dmPartnerUser,
                         taskId: thread.taskId,
-                        unread: false,
+                        isRead: false,
                         messages: [
                             ...thread.messages,
                             {

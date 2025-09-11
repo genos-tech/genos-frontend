@@ -225,7 +225,7 @@ export const loadInitialData = (
                             chatName: fetchedChat.chatName,
                             chatType: 1,
                             dmPartnerUser: fetchedChat.dmPartnerUser,
-                            unread: InitialChatMessages.length === 1 ? true : false,
+                            isRead: InitialChatMessages.length === 1 ? true : false,
                             messages: InitialChatMessages,
                             latestMessage: InitialChatMessages[InitialChatMessages.length - 1],
                             latestMessageText:
@@ -250,7 +250,7 @@ export const loadInitialData = (
                     dmPartnerUser: defaultDmPartner,
                     latestMessageText: "",
                     TSLastMessage: "",
-                    unread: true,
+                    isRead: true,
                     messages: [],
                 };
                 setCurrentMainChat(currentMainChat);

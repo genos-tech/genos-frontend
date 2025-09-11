@@ -104,7 +104,7 @@ export const moveToSelectedChat = async (
                         chatName: chatName,
                         chatType: chatType,
                         dmPartnerUser: dmPartnerUser,
-                        unread: true,
+                        isRead: true,
                         latestMessage: message,
                         latestMessageText: "joined",
                         TSLastMessage: getCurrentTimestamp(),

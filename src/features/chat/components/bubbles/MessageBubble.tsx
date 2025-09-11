@@ -178,7 +178,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 chatType: chat.chatType,
                                 dmPartnerUser: chat.dmPartnerUser,
                                 taskId: message.taskId || null,
-                                unread: false,
+                                isRead: false,
                                 messages: threadMessages,
                                 project: message.project,
                                 TSLastMessage: getCurrentTimestamp(),

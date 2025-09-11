@@ -86,7 +86,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             chatName: chat.chatName,
             chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
-            unread: false,
+            isRead: false,
             messages: messages,
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
@@ -104,7 +104,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            chat.unread = Boolean(false); // TODO: Fix
+            chat.isRead = Boolean(false); // TODO: Fix
             popSpecificMessages(chat.chatId, chat.chatType)
                 .then((messages) => {
                     setCurrentMainChat(defineNewMessages(messages));
@@ -251,7 +251,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
                                         : ""}
                                 </Typography>
-                                {chat.unread && (
+                                {chat.isRead && (
                                     <CircleIcon sx={{ fontSize: 12 }} color="primary" />
                                 )}
                                 <Tooltip title="Split View " size="sm">

@@ -13,7 +13,7 @@ export const defineNewChat = (
         chatName: chatName,
         chatType: chatType,
         dmPartnerUser: dmPartnerUser,
-        unread: false,
+        isRead: false,
         messages: messages,
         latestMessage: messages[messages.length - 1],
         latestMessageText: messages[messages.length - 1].contentText,

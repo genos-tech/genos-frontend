@@ -10,7 +10,7 @@ export type AllChatProps = {
     chatName: string;
     systemUserId?: string;
     dmPartnerUser: UserProps | null;
-    unread: boolean | true;
+    isRead: boolean;
     latestMessage?: MessageProps;
     latestMessageText: string;
     TSLastMessage: string;
@@ -23,7 +23,7 @@ export type ChatProps = {
     chatName: string;
     systemUserId?: string;
     dmPartnerUser: UserProps | null;
-    unread: boolean | true;
+    isRead: boolean;
     messages: MessageProps[];
     latestMessage?: MessageProps;
     latestMessageText: string;
@@ -43,7 +43,7 @@ export type ThreadProps = {
     threadId: number;
     dmPartnerUser: UserProps | null;
     taskId: number | null;
-    unread: boolean | true;
+    isRead: boolean;
     messages: ThreadMessageProps[];
     TSLastMessage: string;
     project?: ProjectProps;
@@ -95,7 +95,7 @@ export type MessageProps = {
     tsUpdated: string;
     isLiked?: boolean | false;
     numReplies: number;
-    unreadThread?: boolean | true;
+    isReadThread?: boolean | true;
     attachment?: {
         fileName: string;
         type: string;
