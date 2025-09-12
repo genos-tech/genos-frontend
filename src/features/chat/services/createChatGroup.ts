@@ -9,6 +9,7 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { CreateGMResponse } from "../../../types/chat";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { emptyDmPartnerUser } from "../../../utils/defaultProps";
 
 const createGroupMessage = [
     { type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] },
@@ -118,7 +119,7 @@ export const createChatGroup = async (
                 joiningCGId: data.chatId, // gm_id
                 joiningCGName: data.chatName, // gm_name
                 chatType: 2,
-                dmPartnerUser: null,
+                dmPartnerUser: emptyDmPartnerUser,
             },
             (ack: any) => {
                 socket.emit("message", {
@@ -127,7 +128,7 @@ export const createChatGroup = async (
                     destCGName: chatName,
                     destCGId: data.chatId,
                     chatType: 2,
-                    dmPartnerUser: null,
+                    dmPartnerUserId: emptyDmPartnerUser.userId,
                     taskId: null,
                     taskStatus: null,
                     systemUserId: null,

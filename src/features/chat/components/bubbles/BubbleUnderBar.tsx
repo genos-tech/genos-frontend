@@ -12,7 +12,7 @@ type BubbleUnderBarTypes = {
     myself: UserProps;
     chatType: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     message: MessageProps | ThreadMessageProps;
     numReplies: number;
     isSent: boolean;

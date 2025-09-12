@@ -168,8 +168,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
                     chatType: chat.chatType,
-                    dmPartnerUserId:
-                        chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
+                    dmPartnerUserId: chat.dmPartnerUser.userId,
                     taskId: null,
                     taskStatus: null,
                     systemUserId: null,

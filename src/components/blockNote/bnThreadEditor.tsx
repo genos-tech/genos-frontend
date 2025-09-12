@@ -171,8 +171,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     threadId: thread.threadId,
                     threadMessage: editor.document,
                     chatType: thread.chatType,
-                    dmPartnerUserId:
-                        thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
+                    dmPartnerUserId: thread.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
                     destCGName: thread.chatName,

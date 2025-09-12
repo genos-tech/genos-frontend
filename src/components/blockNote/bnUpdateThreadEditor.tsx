@@ -153,8 +153,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 threadId: thread.threadId,
                 threadMessage: editor.document,
                 chatType: thread.chatType,
-                dmPartnerUserId:
-                    thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
+                dmPartnerUserId: thread.dmPartnerUser.userId,
                 senderId: message.sender.userId,
                 senderName: message.sender.userName,
                 destCGName: thread.chatName,
@@ -170,8 +169,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     destCGName: thread.chatName,
                     destCGId: thread.chatId,
                     chatType: thread.chatType,
-                    dmPartnerUserId:
-                        thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
+                    dmPartnerUserId: thread.dmPartnerUser.userId,
                     taskId: thread.taskId,
                     taskStatus: null,
                     systemUserId: null,

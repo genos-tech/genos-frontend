@@ -9,7 +9,7 @@ export type AllChatProps = {
     chatId: number;
     chatName: string;
     systemUserId?: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     isRead: boolean;
     latestMessage?: MessageProps;
     latestMessageText: string;
@@ -22,7 +22,7 @@ export type ChatProps = {
     chatId: number;
     chatName: string;
     systemUserId?: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     isRead: boolean;
     messages: MessageProps[];
     latestMessage?: MessageProps;
@@ -41,7 +41,7 @@ export type ThreadProps = {
     chatName: string;
     systemUserId?: string;
     threadId: number;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     taskId: number | null;
     isRead: boolean;
     messages: ThreadMessageProps[];
@@ -52,7 +52,7 @@ export type ThreadProps = {
     notMove?: boolean;
 };
 
-// Message Props
+// Activity Message Props
 export type ActivityMessageProps = {
     activityId: string;
     activityType: number;
@@ -147,7 +147,7 @@ export type NewMessageProps = {
     systemUserId?: string;
     messageId: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;
@@ -180,7 +180,7 @@ export type NewThreadMessageProps = {
     threadId: number;
     messageId: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;

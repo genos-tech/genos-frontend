@@ -9,6 +9,7 @@ import { addThreadMessage } from "../features/chat/services/addThreadMessage";
 import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
 import { loadSpecificThreadMessages } from "../features/chat/services/loadSpecificThreadMessages";
 import { UserProps } from "../types/admin";
+import { emptyDmPartnerUser } from "../utils/defaultProps";
 import {
     AllChatProps,
     ChatProps,
@@ -82,20 +83,23 @@ export const wsHook = (props: wsHookProps) => {
         }
     };
 
-    const makeDMUpdatedChat = async (
-        newMessage: NewMessageProps,
-        customFlag: boolean
-    ): Promise<ChatProps> => {
+    const makeDMUpdatedChat = async (newMessage: NewMessageProps): Promise<ChatProps> => {
         const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
+        let _chatName: string;
+        let _dmPartnerUser: UserProps;
+        if (myself.userId === newMessage.sender.userId) {
+            _chatName = newMessage.dmPartnerUser.userName;
+            _dmPartnerUser = newMessage.dmPartnerUser;
+        } else {
+            _chatName = newMessage.sender.userName;
+            _dmPartnerUser = newMessage.sender;
+        }
         return {
             chatId: newMessage.chatId,
-            chatName:
-                customFlag === true
-                    ? newMessage.dmPartnerUser?.userName || ""
-                    : newMessage.sender.userName,
+            chatName: _chatName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser: customFlag === true ? newMessage.dmPartnerUser : newMessage.sender,
+            dmPartnerUser: _dmPartnerUser,
             isRead: false,
             messages: updatedChat,
             latestMessage: newMessage,
@@ -113,7 +117,7 @@ export const wsHook = (props: wsHookProps) => {
             chatName: newMessage.chatName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser: null,
+            dmPartnerUser: emptyDmPartnerUser,
             isRead: false,
             messages: updatedChat,
             latestMessage: newMessage,
@@ -131,7 +135,7 @@ export const wsHook = (props: wsHookProps) => {
             chatName: newMessage.chatName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser: null,
+            dmPartnerUser: emptyDmPartnerUser,
             isRead: false,
             messages: updatedChat,
             latestMessage: newMessage,
@@ -281,7 +285,7 @@ export const wsHook = (props: wsHookProps) => {
                         if (updatedThreadChat && newThreadMessage) {
                             if (message.chatType === 1) {
                                 if (
-                                    newMessage.dmPartnerUser !== null &&
+                                    newMessage.dmPartnerUser.userId !== "" &&
                                     newMessage.dmPartnerUser.userId === myself.userId
                                 ) {
                                     if (
@@ -408,9 +412,12 @@ export const wsHook = (props: wsHookProps) => {
                             taskStatus: newMessage.taskStatus,
                         };
                         if (newChatMessage) {
-                            if (newMessage.chatType === 1 && newMessage.dmPartnerUser !== null) {
+                            if (
+                                newMessage.chatType === 1 &&
+                                newMessage.dmPartnerUser.userId !== ""
+                            ) {
                                 if (
-                                    newMessage.dmPartnerUser !== null &&
+                                    newMessage.dmPartnerUser.userId !== "" &&
                                     newMessage.dmPartnerUser.userId === myself.userId
                                 ) {
                                     if (
@@ -437,20 +444,7 @@ export const wsHook = (props: wsHookProps) => {
                                 await addMessage(newChatMessage, newMessage.chatType);
 
                                 // Prepare a new/updated chat object from the new message for DM
-                                let updatedChat: ChatProps;
-                                if (newMessage.isReactionUpdated === false) {
-                                    if (newMessage.isEdited === true) {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, true);
-                                    } else {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, false);
-                                    }
-                                } else {
-                                    if (newMessage.sender.userId === myself.userId) {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, true);
-                                    } else {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, false);
-                                    }
-                                }
+                                const updatedChat: ChatProps = await makeDMUpdatedChat(newMessage);
 
                                 if (newMessage.isEdited === true) {
                                     if (fromMe === false && toMe === false) {
@@ -521,10 +515,7 @@ export const wsHook = (props: wsHookProps) => {
 
                                         // But only if the messageId = 1, make a new DM chat because
                                         // the new DM chat is just created by the user.
-                                        const newDMChat = await makeDMUpdatedChat(
-                                            newMessage,
-                                            true
-                                        );
+                                        const newDMChat = await makeDMUpdatedChat(newMessage);
                                         if (newMessage.messageId === 1) {
                                             // Update chat sidebar if the message not reaction-related.
                                             if (newMessage.isReactionUpdated === false) {
@@ -747,28 +738,9 @@ export const wsHook = (props: wsHookProps) => {
                         }
                     }
                 } else {
-                    let tmpNewActivityMessage: ActivityMessageProps = message;
-                    let newActivityMessage: ActivityMessageProps;
-                    if (tmpNewActivityMessage) {
-                        // For reaction activities (activityType = 2).
-                        // If the mention or thread activity is for DM,
-                        // change the chatName and dmPartnerUser.
-                        if (tmpNewActivityMessage.chatType === 1) {
-                            if (tmpNewActivityMessage.dmPartnerUser) {
-                                newActivityMessage = {
-                                    ...tmpNewActivityMessage,
-                                    chatName: tmpNewActivityMessage.dmPartnerUser.userName,
-                                };
-                            } else {
-                                newActivityMessage = {
-                                    ...tmpNewActivityMessage,
-                                    chatName: "N/A",
-                                };
-                            }
-                        } else {
-                            newActivityMessage = tmpNewActivityMessage;
-                        }
-
+                    // ActivityType = 2: Reaction
+                    const newActivityMessage: ActivityMessageProps = message;
+                    if (newActivityMessage) {
                         await addActivityMessage(newActivityMessage);
                         funcSetActivityMessages();
                     }

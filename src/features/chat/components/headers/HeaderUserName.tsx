@@ -32,8 +32,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
     } = props;
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
-    const headerUser: UserProps | undefined =
-        teamMemberProfiles[chat.dmPartnerUser ? chat.dmPartnerUser.userId : ""];
+    const headerUser: UserProps | undefined = teamMemberProfiles[chat.dmPartnerUser.userId];
     const isOnline: boolean = headerUser
         ? myself.userId === headerUser.userId
             ? myself?.isOfflineForced !== "true"
@@ -94,7 +93,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     </Typography>
 
                     {/* show my own custom status */}
-                    {chat.dmPartnerUser !== null &&
+                    {chat.dmPartnerUser.userId !== "" &&
                         myself.userId === chat.dmPartnerUser.userId &&
                         myself.customStatus != "" && (
                             <Chip
@@ -108,7 +107,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         )}
 
                     {/* show others custom status */}
-                    {chat.dmPartnerUser !== null &&
+                    {chat.dmPartnerUser.userId !== "" &&
                         myself.userId !== chat.dmPartnerUser.userId &&
                         teamMemberProfiles[chat.dmPartnerUser.userId] &&
                         teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
@@ -123,12 +122,12 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         )}
                 </Stack>
             </div>
-            {chat.dmPartnerUser && (
+            {chat.dmPartnerUser.userId !== "" && (
                 <UserProfile
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
-                    user={teamMemberProfiles[chat.dmPartnerUser?.userId]}
+                    user={teamMemberProfiles[chat.dmPartnerUser.userId]}
                     openUserProfile={openUserProfile}
                     setOpenUserProfile={setOpenUserProfile}
                     setCurrentMainChat={setCurrentMainChat}

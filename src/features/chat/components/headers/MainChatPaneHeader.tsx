@@ -49,10 +49,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setOpeningService,
     } = props;
 
-    let isYou: boolean = false;
-    if (chat.dmPartnerUser !== null) {
-        isYou = myself.userId === chat.dmPartnerUser.userId;
-    }
+    const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
 
     const switchSubToMain = () => {
         setCurrentMainChat(subChat);

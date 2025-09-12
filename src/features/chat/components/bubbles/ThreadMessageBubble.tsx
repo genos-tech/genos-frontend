@@ -97,7 +97,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? thread.dmPartnerUser?.userId
+                                ? thread.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
@@ -120,7 +120,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? thread.dmPartnerUser?.userId
+                                    ? thread.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
@@ -152,7 +152,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? thread.dmPartnerUser?.userId
+                                ? thread.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
@@ -174,7 +174,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? thread.dmPartnerUser?.userId
+                                    ? thread.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,

@@ -77,15 +77,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setCurrentPreviewTaskId,
     } = props;
     const { accessToken } = useAuth();
-    const isYou = myself.userId === activity.dmPartnerUser?.userId;
+
+    const isYou = myself.userId === activity.dmPartnerUser.userId;
 
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
         const newChat: ChatProps = {
             chatId: activity.chatId,
-            chatName:
-                activity.chatType === 1
-                    ? activity.dmPartnerUser?.userName || "N/A"
-                    : activity.chatName,
+            chatName: activity.chatName,
             chatType: activity.chatType,
             dmPartnerUser: activity.dmPartnerUser,
             isRead: false,
@@ -178,11 +176,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             if (threadMessages && threadMessages.length > 0) {
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
-                    chatName:
-                        activity.chatType === 1 ? activity.sender.userName : activity.chatName,
+                    chatName: activity.chatName,
                     threadId: activity.threadId,
                     chatType: activity.chatType,
-                    dmPartnerUser: activity.sender,
+                    dmPartnerUser: activity.dmPartnerUser,
                     taskId: activity.taskId,
                     isRead: false,
                     messages: threadMessages,
@@ -301,7 +298,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             <Stack direction="row" spacing={1}>
                                 <div>
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser !== null && (
+                                        activity.dmPartnerUser.userId !== "" && (
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
@@ -316,7 +313,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             />
                                         )}
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser === null && (
+                                        activity.dmPartnerUser.userId === "" && (
                                             <Avatar size="sm">
                                                 {activity.chatName[0].toUpperCase()}
                                             </Avatar>

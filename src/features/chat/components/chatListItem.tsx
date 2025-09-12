@@ -78,7 +78,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             `${currentSubChat.chatName}-${currentSubChat.chatId}` ===
                 `${chat.chatName}-${chat.chatId}`);
 
-    const isYou = myself.userId === chat.dmPartnerUser?.userId;
+    const isYou = myself.userId === chat.dmPartnerUser.userId;
 
     const defineNewMessages = (messages: any) => {
         const newMessages: ChatProps = {
@@ -174,7 +174,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                         >
                             <Stack direction="row" spacing={1}>
                                 <div>
-                                    {chatType === 1 && chat.dmPartnerUser !== null && (
+                                    {chatType === 1 && chat.dmPartnerUser.userId !== "" && (
                                         <AvatarWithStatus
                                             myself={myself}
                                             setMyself={setMyself}
@@ -187,7 +187,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             setCurrentMainChat={setCurrentMainChat}
                                         />
                                     )}
-                                    {chatType === 1 && chat.dmPartnerUser === null && (
+                                    {chatType === 1 && chat.dmPartnerUser.userId === "" && (
                                         <Avatar size="sm">{chat.chatName[0].toUpperCase()}</Avatar>
                                     )}
                                     {chatType === 2 && (
@@ -207,7 +207,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 </Typography>
 
                                 {/* show my own custom status */}
-                                {chat.dmPartnerUser !== null &&
+                                {chat.dmPartnerUser.userId !== "" &&
                                     myself.userId === chat.dmPartnerUser.userId &&
                                     myself.customStatus != "" && (
                                         <Chip
@@ -221,7 +221,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     )}
 
                                 {/* show others custom status */}
-                                {chat.dmPartnerUser !== null &&
+                                {chat.dmPartnerUser.userId !== "" &&
                                     myself.userId !== chat.dmPartnerUser.userId &&
                                     teamMemberProfiles[chat.dmPartnerUser.userId] &&
                                     teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !==

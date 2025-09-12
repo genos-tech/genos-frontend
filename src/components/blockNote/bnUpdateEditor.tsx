@@ -150,7 +150,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 destCGName: chat.chatName,
                 destCGId: chat.chatId,
                 chatType: chat.chatType,
-                dmPartnerUserId: chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
+                dmPartnerUserId: chat.dmPartnerUser.userId,
                 taskId: message.taskId,
                 taskStatus: message.taskStatus,
                 systemUserId: null,
