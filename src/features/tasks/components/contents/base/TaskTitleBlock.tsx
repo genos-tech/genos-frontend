@@ -14,6 +14,7 @@ import {
 } from "@mui/joy";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CancelIcon from "@mui/icons-material/Cancel";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import AddIcon from "@mui/icons-material/Add";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -152,6 +153,22 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     variant="plain"
                     color="neutral"
                     onClick={() => {
+                        if (isPreviewMode === true) {
+                            {
+                                setIsTaskHomeVisible && setIsTaskHomeVisible(false);
+                                setIsMainChatVisible && setIsMainChatVisible(false);
+                            }
+                        }
+                    }}
+                >
+                    <OpenInNewIcon />
+                </IconButton>
+
+                <IconButton
+                    size="sm"
+                    variant="plain"
+                    color="neutral"
+                    onClick={() => {
                         if (isPreviewMode === false && setIsCreatingTask) {
                             setIsCreatingTask({
                                 flag: false,
@@ -163,7 +180,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             setTaskClosed(true);
                         }
 
-                        if (setIsMainChatVisible && isThreadVisible) {
+                        if (setIsMainChatVisible) {
                             setIsMainChatVisible(true);
                         }
 
@@ -193,6 +210,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 >
                     <CancelIcon />
                 </IconButton>
+
                 <Dropdown>
                     <MenuButton
                         size="sm"

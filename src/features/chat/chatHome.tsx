@@ -273,6 +273,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                         when close right -> MainChat-ThreadChat
                     MainChat-ThreadChat-TaskCreation (p5)
                         when close right -> MainChat-ThreadChat
+
+                Only Task Preview (p6)
                  */}
 
                 {isMainChatVisible && (
@@ -728,7 +730,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             </>
                         )}
 
-                        {/* p6 */}
+                        {/* p5 */}
                         {isTaskCreationVisible && (
                             <>
                                 {currentThreadChat && (
@@ -804,6 +806,68 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 )}
                             </>
                         )}
+                    </>
+                )}
+
+                {/* p6 */}
+                {isMainChatVisible === false && isTaskPreviewVisible && currentPreviewTask && (
+                    <>
+                        <PanelResizeHandle
+                            style={{
+                                width: "1px",
+                                backgroundColor: mode === "dark" ? "black" : "white",
+                                transition: "all 0.3s ease-in-out",
+                                cursor: "col-resize",
+                            }}
+                            className="chat-resize-handle"
+                        />
+
+                        <Panel id={"8"} order={8} minSize={30} maxSize={70}>
+                            <Box
+                                sx={{
+                                    px: { xs: 1, md: 2 },
+                                    pt: {
+                                        xs: "calc(12px + var(--Header-height))",
+                                        sm: "calc(12px + var(--Header-height))",
+                                        md: 2,
+                                    },
+                                    pb: { xs: 2, sm: 2, md: 3 },
+                                    flex: 1,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    minWidth: 0,
+                                    height: "100dvh",
+                                    gap: 1,
+                                    ml: "1px",
+                                    boxShadow: "0 0 0 1px grey",
+                                    borderColor: mode === "dark" ? "black" : "white",
+                                }}
+                            >
+                                <TaskPreview
+                                    teamMemberProfiles={teamMemberProfiles}
+                                    socket={socket}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    setCurrentProject={setCurrentProject}
+                                    currentPreviewTask={currentPreviewTask}
+                                    setIsMainChatVisible={setIsMainChatVisible}
+                                    setIsThreadVisible={setIsThreadVisible}
+                                    isThreadVisible={isThreadVisible}
+                                    setIsCreatingTask={setIsCreatingTask}
+                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                    setCurrentPreviewTask={setCurrentPreviewTask}
+                                    setOpenCreateProject={setOpenCreateProject}
+                                    setOpenCreateTag={setOpenCreateTag}
+                                    setCurrentMainChat={setCurrentMainChat}
+                                    setOpeningService={setOpeningService}
+                                    currentPreviewTaskId={currentPreviewTaskId}
+                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                    isCommentUpdated={isCommentUpdated}
+                                    setIsCommentUpdated={setIsCommentUpdated}
+                                />
+                            </Box>
+                        </Panel>
                     </>
                 )}
 
