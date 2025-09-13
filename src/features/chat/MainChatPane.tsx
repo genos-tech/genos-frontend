@@ -199,6 +199,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 virtuosoRef.current?.scrollToIndex({
                     index: indexMap[currentMainChat.moveToSpecificIndex],
                 });
+            } else {
+                virtuosoRef.current?.scrollToIndex({
+                    index: "LAST",
+                });
             }
         }, 300); // wait N ms
     }, [currentMainChat]);

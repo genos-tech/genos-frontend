@@ -374,6 +374,20 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         </>
                                     )}
 
+                                    {activity.activityType === 1 && (
+                                        <Chip
+                                            size="sm"
+                                            variant="outlined"
+                                            color="success"
+                                            sx={{
+                                                fontSize: "12px",
+                                                borderRadius: "4px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Reply
+                                        </Chip>
+                                    )}
                                     {activity.activityType === 2 && (
                                         <Chip
                                             size="sm"
@@ -492,7 +506,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                                 textOverflow: "ellipsis",
                                             }}
                                         >
-                                            {activity.latestReaction.senderName} has reacted
+                                            {activity.latestReaction.sender.userName} has reacted
                                         </Typography>
                                         <Typography
                                             level="body-sm"

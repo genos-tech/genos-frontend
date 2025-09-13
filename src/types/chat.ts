@@ -70,10 +70,11 @@ export type ActivityMessageProps = {
     firstLineContent: string;
     latestReaction: {
         emoji: string;
-        senderName: string;
+        sender: UserProps;
         tsSent: string;
     };
     sender: UserProps;
+    receiver: UserProps;
     reactions: {
         myReactions: ReactionProps[];
         allReactions: ReactionProps[];
@@ -152,6 +153,7 @@ export type NewMessageProps = {
     content: PartialBlock[] | any[];
     contentText: string;
     sender: UserProps;
+    receiver: UserProps;
     tsSent: string;
     tsUpdated: string;
     isLiked?: boolean | false;
@@ -185,6 +187,7 @@ export type NewThreadMessageProps = {
     content: PartialBlock[] | any[];
     contentText: string;
     sender: UserProps;
+    receiver: UserProps;
     taskId: number | null;
     tsSent: string;
     tsUpdated: string;
