@@ -105,6 +105,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     const updateReadStatus = (indexForLastReadMessageId: number) => {
         if (accessToken && currentThreadChat.messages[indexForLastReadMessageId]) {
             const updateReadStatusWorker = new UpdateReadStatusWorker();
+            const lastReadMessageId: number =
+                currentThreadChat.messages[indexForLastReadMessageId].messageId;
             updateReadStatusWorker.postMessage({
                 accessToken: accessToken,
                 myself: myself,
@@ -112,7 +114,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                 chatId: currentThreadChat.chatId,
                 isThread: true,
                 threadId: currentThreadChat.threadId,
-                lastReadMessageId: currentThreadChat.messages[indexForLastReadMessageId].messageId,
+                lastReadMessageId: lastReadMessageId,
             });
             return () => {
                 updateReadStatusWorker.terminate();

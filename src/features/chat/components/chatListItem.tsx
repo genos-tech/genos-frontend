@@ -17,6 +17,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
+import { addChat } from "../services/addChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { AvatarWithStatus } from "../../../components/utils/avatarWithStatus";
 import { UserProps } from "../../../types/admin";
@@ -28,6 +29,7 @@ type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     chat: AllChatProps;
+    funcSetAllChats: () => void;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     currentMainChat: ChatProps;
@@ -52,6 +54,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
         teamMemberProfiles,
         socket,
         chat,
+        funcSetAllChats,
         myself,
         setMyself,
         currentMainChat,
@@ -80,16 +83,16 @@ export const ChatListItem = (props: ChatListItemProps) => {
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
 
-    const defineNewMessages = (messages: any) => {
+    const defineNewChat = (messages: any) => {
         const newMessages: ChatProps = {
             chatId: chat.chatId,
             chatName: chat.chatName,
             chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
-            isRead: false,
+            lastReadMessageId: messages[messages.length - 1].messageId,
             messages: messages,
-            latestMessage: messages[messages.length - 1],
-            latestMessageText: messages[messages.length - 1].contentText,
+            latestMessage: chat.latestMessage,
+            latestMessageText: chat.latestMessageText,
             TSLastMessage: chat.TSLastMessage,
             systemUserId: chat.systemUserId,
             project: chat.project,
@@ -104,10 +107,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
-            chat.isRead = Boolean(false); // TODO: Fix
             popSpecificMessages(chat.chatId, chat.chatType)
                 .then((messages) => {
-                    setCurrentMainChat(defineNewMessages(messages));
+                    const newChat: ChatProps = defineNewChat(messages);
+                    setCurrentMainChat(defineNewChat(messages));
+                    addChat(newChat, chat.chatType);
+
                     // Switch Thread to Main
                     if (isThreadVisible) {
                         setIsMainChatVisible(true);
@@ -129,7 +134,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             if (chat.chatType === 1) {
                 popSpecificMessages(chat.chatId, chat.chatType)
                     .then((messages) => {
-                        setCurrentSubChat(defineNewMessages(messages));
+                        setCurrentSubChat(defineNewChat(messages));
                         if (isThreadVisible) {
                             setIsMainChatVisible(true);
                             if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -141,7 +146,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             } else {
                 popSpecificMessages(chat.chatId, chat.chatType)
                     .then((messages) => {
-                        setCurrentSubChat(defineNewMessages(messages));
+                        setCurrentSubChat(defineNewChat(messages));
                         if (isThreadVisible) {
                             setIsMainChatVisible(true);
                             if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -251,9 +256,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
                                         : ""}
                                 </Typography>
-                                {chat.isRead && (
-                                    <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-                                )}
+                                {chat.latestMessage &&
+                                    chat.lastReadMessageId < chat.latestMessage?.messageId && (
+                                        <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+                                    )}
                                 <Tooltip title="Split View " size="sm">
                                     <IconButton
                                         component="a"

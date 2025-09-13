@@ -113,6 +113,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     const updateReadStatus = (indexForLastReadMessageId: number) => {
         if (accessToken && currentMainChat.messages[indexForLastReadMessageId]) {
             const updateReadStatusWorker = new UpdateReadStatusWorker();
+            const lastReadMessageId: number =
+                currentMainChat.messages[indexForLastReadMessageId].messageId;
+
             updateReadStatusWorker.postMessage({
                 accessToken: accessToken,
                 myself: myself,
@@ -120,15 +123,17 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 chatId: currentMainChat.chatId,
                 isThread: false,
                 threadId: -1,
-                lastReadMessageId: currentMainChat.messages[indexForLastReadMessageId].messageId,
+                lastReadMessageId: lastReadMessageId,
             });
             updateReadStatusWorker.onmessage = (event) => {
                 if (event.data === "done") {
-                    async () => {
-                        const updatedChat = { ...chat, isRead: true };
-                        await addChat(updatedChat, updatedChat.chatType);
+                    if (chat.lastReadMessageId < lastReadMessageId) {
+                        const updatedChat = { ...chat, lastReadMessageId: lastReadMessageId };
+                        addChat(updatedChat, updatedChat.chatType);
                         funcSetAllChats();
-                    };
+                    } else {
+                        console.log("not update all chat...");
+                    }
                 } else {
                     console.error("Failed to update read status");
                 }
@@ -171,11 +176,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     }, [indexMap]);
 
     useEffect(() => {
-        const intervalMs: number = 1000; // every X milliseconds
+        const intervalMs: number = 500; // every X milliseconds
         const now = Date.now();
         if (
             now - tsLastReadStatusUpdated >= intervalMs &&
-            visibleRange.endIndex > indexLastReadStatusUpdated
+            visibleRange.endIndex + 1 > indexLastReadStatusUpdated
         ) {
             updateReadStatus(visibleRange.endIndex);
             // Update timestamp
@@ -199,10 +204,13 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 virtuosoRef.current?.scrollToIndex({
                     index: indexMap[currentMainChat.moveToSpecificIndex],
                 });
-            } else {
+            } else if (currentMainChat.notMove !== true) {
                 virtuosoRef.current?.scrollToIndex({
                     index: "LAST",
                 });
+                if (currentMainChat.latestMessage) {
+                    updateReadStatus(currentMainChat.latestMessage.messageId);
+                }
             }
         }, 300); // wait N ms
     }, [currentMainChat]);

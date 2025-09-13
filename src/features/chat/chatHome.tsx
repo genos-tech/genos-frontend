@@ -233,6 +233,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
                                 setMyself={setMyself}
+                                funcSetAllChats={funcSetAllChats}
                                 currentChatPaneType={currentChatPaneType}
                                 setCurrentChatPaneType={setCurrentChatPaneType}
                                 activityMessages={activityMessages}

@@ -181,7 +181,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         chatType: chat.chatType,
                         systemUserId: chat.systemUserId,
                         dmPartnerUser: chat.dmPartnerUser,
-                        isRead: false,
+                        lastReadMessageId: chat.lastReadMessageId + 1,
                         messages: [
                             ...chat.messages,
                             {
@@ -247,7 +247,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             systemUserId: chat.systemUserId,
                             chatType: chat.chatType,
                             dmPartnerUser: chat.dmPartnerUser,
-                            isRead: false,
+                            lastReadMessageId:
+                                chat.messages[chat.messages.length - 1].messageId + 1,
                             latestMessage: latestMessage,
                             latestMessageText: contentText,
                             TSLastMessage: getCurrentTimestamp(),

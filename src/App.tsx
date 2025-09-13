@@ -155,6 +155,13 @@ export const App = () => {
         funcSetActivityMessages();
     }, []);
 
+    // Auto save task body every Nms if needed
+    useEffect(() => {
+        setTimeout(() => {
+            funcSetAllChats();
+        }, 500); // wait 500ms
+    }, [currentMainChat, currentSubChat]);
+
     useEffect(() => {
         if (myself.teamId !== currentTeamId) {
             setIsLoading(true);

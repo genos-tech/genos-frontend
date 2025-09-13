@@ -71,7 +71,7 @@ export const wsHook = (props: wsHookProps) => {
             chatType: currentChat.chatType,
             systemUserId: currentChat.systemUserId,
             dmPartnerUser: currentChat.dmPartnerUser,
-            isRead: true,
+            lastReadMessageId: currentChat.lastReadMessageId,
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
             TSLastMessage: newChatMessage.tsSent,
@@ -100,7 +100,7 @@ export const wsHook = (props: wsHookProps) => {
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
             dmPartnerUser: _dmPartnerUser,
-            isRead: false,
+            lastReadMessageId: newMessage.lastReadMessageId,
             messages: updatedChat,
             latestMessage: newMessage,
             latestMessageText: newMessage.contentText,
@@ -118,7 +118,7 @@ export const wsHook = (props: wsHookProps) => {
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
             dmPartnerUser: emptyDmPartnerUser,
-            isRead: false,
+            lastReadMessageId: newMessage.lastReadMessageId,
             messages: updatedChat,
             latestMessage: newMessage,
             latestMessageText: newMessage.contentText,
@@ -136,7 +136,7 @@ export const wsHook = (props: wsHookProps) => {
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
             dmPartnerUser: emptyDmPartnerUser,
-            isRead: false,
+            lastReadMessageId: newMessage.lastReadMessageId,
             messages: updatedChat,
             latestMessage: newMessage,
             latestMessageText: newMessage.contentText,
@@ -165,7 +165,6 @@ export const wsHook = (props: wsHookProps) => {
             threadId: currentThread.threadId,
             dmPartnerUser: currentThread.dmPartnerUser,
             taskId: currentThread.taskId,
-            isRead: false,
             messages: updatedMessages,
             TSLastMessage: newMessage.tsSent,
             project: newMessage.project,
@@ -275,7 +274,6 @@ export const wsHook = (props: wsHookProps) => {
                             chatType: newMessage.chatType,
                             dmPartnerUser: newMessage.sender,
                             taskId: newThreadMessage.taskId,
-                            isRead: false,
                             messages: currentThreadChat
                                 ? [...currentThreadChat.messages, newThreadMessage]
                                 : [newThreadMessage],
@@ -509,7 +507,10 @@ export const wsHook = (props: wsHookProps) => {
 
                                         // But only if the messageId = 1, make a new DM chat because
                                         // the new DM chat is just created by the user.
-                                        const newDMChat = await makeDMUpdatedChat(newMessage);
+                                        const newDMChat = await makeDMUpdatedChat({
+                                            ...newMessage,
+                                            lastReadMessageId: newMessage.lastReadMessageId + 1,
+                                        });
                                         if (newMessage.messageId === 1) {
                                             // Update chat sidebar if the message not reaction-related.
                                             if (newMessage.isReactionUpdated === false) {

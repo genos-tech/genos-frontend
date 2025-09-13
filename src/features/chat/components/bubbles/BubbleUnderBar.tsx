@@ -101,7 +101,6 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             },
                         }}
                     >
-                        {/* TODO: read/isRead for thread replies */}
                         {numRepliesWithoutFirstMessage == 1 ? (
                             <Box sx={{ color: "neutral.plainColor" }}>
                                 {/* <CircleIcon sx={{ fontSize: 10 }} color="primary" /> */}

@@ -18,6 +18,7 @@ type ChatListProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    funcSetAllChats: () => void;
     chatType: number;
     currentActivityMessageType: number;
     activityMessages: ActivityMessageProps[];
@@ -47,6 +48,7 @@ export const ChatList = (props: ChatListProps) => {
         socket,
         myself,
         setMyself,
+        funcSetAllChats,
         chatType,
         activityMessages,
         allChats,
@@ -144,7 +146,7 @@ export const ChatList = (props: ChatListProps) => {
             }}
             className="custom-scrollbar"
         >
-            {allChats.length > 0 && (
+            {chatType !== -1 && allChats.length > 0 && (
                 <Virtuoso
                     ref={chatTypeLookup[chatType]}
                     className="custom-scrollbar"
@@ -163,6 +165,7 @@ export const ChatList = (props: ChatListProps) => {
                                         teamMemberProfiles={teamMemberProfiles}
                                         socket={socket}
                                         chat={chat}
+                                        funcSetAllChats={funcSetAllChats}
                                         myself={myself}
                                         setMyself={setMyself}
                                         currentMainChat={currentMainChat}
@@ -188,7 +191,7 @@ export const ChatList = (props: ChatListProps) => {
                 />
             )}
 
-            {tmpActivityMessages.length > 0 && (
+            {chatType === -1 && tmpActivityMessages.length > 0 && (
                 <Virtuoso
                     ref={virtuosoActivityRef}
                     className="custom-scrollbar"
@@ -209,6 +212,7 @@ export const ChatList = (props: ChatListProps) => {
                                         activity={activityMessage}
                                         myself={myself}
                                         setMyself={setMyself}
+                                        allChats={allChats}
                                         currentMainChat={currentMainChat}
                                         currentSubChat={currentSubChat}
                                         setCurrentMainChat={setCurrentMainChat}

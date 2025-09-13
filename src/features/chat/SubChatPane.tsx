@@ -111,6 +111,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const updateReadStatus = (indexForLastReadMessageId: number) => {
         if (accessToken && currentSubChat && currentSubChat.messages[indexForLastReadMessageId]) {
             const updateReadStatusWorker = new UpdateReadStatusWorker();
+            const lastReadMessageId: number =
+                currentSubChat.messages[indexForLastReadMessageId].messageId;
             updateReadStatusWorker.postMessage({
                 accessToken: accessToken,
                 myself: myself,
@@ -118,15 +120,17 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 chatId: currentSubChat.chatId,
                 isThread: false,
                 threadId: -1,
-                lastReadMessageId: currentSubChat.messages[indexForLastReadMessageId].messageId,
+                lastReadMessageId: lastReadMessageId,
             });
             updateReadStatusWorker.onmessage = (event) => {
                 if (event.data === "done") {
-                    async () => {
-                        const updatedChat = { ...chat, isRead: true };
-                        await addChat(updatedChat, updatedChat.chatType);
+                    if (chat.lastReadMessageId < lastReadMessageId) {
+                        const updatedChat = { ...chat, lastReadMessageId: lastReadMessageId };
+                        addChat(updatedChat, updatedChat.chatType);
                         funcSetAllChats();
-                    };
+                    } else {
+                        console.log("not update all chat...");
+                    }
                 } else {
                     console.error("Failed to update read status");
                 }

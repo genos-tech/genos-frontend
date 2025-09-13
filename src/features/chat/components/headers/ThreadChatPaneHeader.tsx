@@ -51,7 +51,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         chatType: thread.chatType,
         dmPartnerUser: thread.dmPartnerUser,
         taskId: thread.taskId,
-        isRead: false,
         messages: [],
         TSLastMessage: thread.TSLastMessage,
     };

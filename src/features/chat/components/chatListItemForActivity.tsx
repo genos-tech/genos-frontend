@@ -18,6 +18,7 @@ import {
     ChatProps,
     ThreadProps,
     ThreadMessageProps,
+    AllChatProps,
 } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
@@ -32,6 +33,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     activity: ActivityMessageProps;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    allChats: AllChatProps[];
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -58,6 +60,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         activity,
         myself,
         setMyself,
+        allChats,
         currentMainChat,
         currentSubChat,
         setCurrentMainChat,
@@ -81,12 +84,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     const isYou = myself.userId === activity.dmPartnerUser.userId;
 
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
+        const currentChat: AllChatProps = allChats.filter(
+            (chat) => chat.chatType === activity.chatType && chat.chatId === activity.chatId
+        )[0];
         const newChat: ChatProps = {
             chatId: activity.chatId,
             chatName: activity.chatName,
             chatType: activity.chatType,
             dmPartnerUser: activity.dmPartnerUser,
-            isRead: false,
+            lastReadMessageId:
+                activity.messageId > currentChat.lastReadMessageId
+                    ? activity.messageId
+                    : currentChat.lastReadMessageId,
             messages: messages,
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
@@ -181,7 +190,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     chatType: activity.chatType,
                     dmPartnerUser: activity.dmPartnerUser,
                     taskId: activity.taskId,
-                    isRead: false,
                     messages: threadMessages,
                     project: activity.project,
                     TSLastMessage: getCurrentTimestamp(),
