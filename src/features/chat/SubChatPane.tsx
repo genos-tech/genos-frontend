@@ -18,6 +18,9 @@ import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
+import { addChat } from "../../features/chat/services/addChat";
+import { useAuth } from "../../context/AuthContext";
+import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -77,6 +80,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setCurrentPreviewTaskId,
         setCurrentProject,
     } = props;
+    const { accessToken } = useAuth();
     const [chatMessages, setChatMessages] = useState(subChat.messages);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
@@ -94,11 +98,6 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         endIndex: 0,
     });
 
-    useScrollToBottomOnNewMessage(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        subChat,
-        targetMessageIndex
-    );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentSubChatId,
@@ -109,14 +108,98 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         currentSubChat?.notMove
     );
 
+    const updateReadStatus = (indexForLastReadMessageId: number) => {
+        if (accessToken && currentSubChat && currentSubChat.messages[indexForLastReadMessageId]) {
+            const updateReadStatusWorker = new UpdateReadStatusWorker();
+            const lastReadMessageId: number =
+                currentSubChat.messages[indexForLastReadMessageId].messageId;
+            updateReadStatusWorker.postMessage({
+                accessToken: accessToken,
+                myself: myself,
+                chatType: currentSubChat.chatType,
+                chatId: currentSubChat.chatId,
+                isThread: false,
+                threadId: -1,
+                lastReadMessageId: lastReadMessageId,
+            });
+            updateReadStatusWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    if (chat.lastReadMessageId < lastReadMessageId) {
+                        const updatedChat = { ...chat, lastReadMessageId: lastReadMessageId };
+                        addChat(updatedChat, updatedChat.chatType);
+                        funcSetAllChats();
+                    } else {
+                        console.log("not update all chat...");
+                    }
+                } else {
+                    console.error("Failed to update read status");
+                }
+            };
+            return () => {
+                updateReadStatusWorker.terminate();
+            };
+        }
+    };
+
+    const [tsLastReadStatusUpdated, setTsLastReadStatusUpdated] = useState<number>(Date.now());
+    const [indexLastReadStatusUpdated, setIndexLastReadStatusUpdated] = useState<number>(-1);
     useEffect(() => {
-        setTargetMessageIndex(chatMessages.length - 1);
-        setIndexMap(
-            Object.fromEntries(
-                chatMessages.map((message, idx) => [message.messageIdWithChatId, idx])
-            )
-        );
-    }, [chatMessages]);
+        setTimeout(() => {
+            // Update read-sta
+            // tus only when the main chat opens from the chat list,
+            // not from the chat activity or other with "moveToSpecificIndex" value.
+            let targetIndex: number;
+            if (currentSubChat && currentSubChat.moveToSpecificIndex === undefined) {
+                targetIndex = currentSubChat.messages.length - 1;
+            } else if (
+                currentSubChat &&
+                currentSubChat.moveToSpecificIndex &&
+                indexMap &&
+                indexMap[currentSubChat.moveToSpecificIndex] &&
+                currentSubChat.chatId === Number(currentSubChat.moveToSpecificIndex?.split("-")[0])
+            ) {
+                targetIndex = Number(indexMap[currentSubChat.moveToSpecificIndex]);
+            } else {
+                targetIndex = -1;
+            }
+
+            if (targetIndex !== -1) {
+                updateReadStatus(targetIndex);
+                setIndexLastReadStatusUpdated(targetIndex);
+
+                const now = Date.now();
+                setTsLastReadStatusUpdated(now);
+            }
+        }, 1000); // wait N ms
+    }, [indexMap]);
+
+    useEffect(() => {
+        const intervalMs: number = 1000; // every X milliseconds
+        const now = Date.now();
+        if (
+            now - tsLastReadStatusUpdated >= intervalMs &&
+            visibleRange.endIndex > indexLastReadStatusUpdated
+        ) {
+            updateReadStatus(visibleRange.endIndex);
+            // Update timestamp
+            setTsLastReadStatusUpdated(now);
+            setIndexLastReadStatusUpdated(visibleRange.endIndex);
+        }
+    }, [visibleRange]);
+
+    useEffect(() => {
+        if (currentSubChat) {
+            setTargetMessageIndex(currentSubChat.messages.length - 1);
+            setIndexMap(
+                Object.fromEntries(
+                    currentSubChat.messages.map((message, idx) => [
+                        message.messageIdWithChatId,
+                        idx,
+                    ])
+                )
+            );
+        }
+    }, [currentSubChat]);
 
     useEffect(() => {
         setTimeout(() => {

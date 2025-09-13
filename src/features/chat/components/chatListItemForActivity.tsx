@@ -18,6 +18,7 @@ import {
     ChatProps,
     ThreadProps,
     ThreadMessageProps,
+    AllChatProps,
 } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
@@ -32,6 +33,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     activity: ActivityMessageProps;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    allChats: AllChatProps[];
     currentMainChat: ChatProps;
     currentSubChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -58,6 +60,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         activity,
         myself,
         setMyself,
+        allChats,
         currentMainChat,
         currentSubChat,
         setCurrentMainChat,
@@ -77,22 +80,29 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setCurrentPreviewTaskId,
     } = props;
     const { accessToken } = useAuth();
-    const isYou = myself.userId === activity.dmPartnerUser?.userId;
 
-    const defineNewMessages = (messages: any, moveToSpecificIndex: string) => {
-        const newMessages: ChatProps = {
+    const isYou = myself.userId === activity.dmPartnerUser.userId;
+
+    const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
+        const currentChat: AllChatProps = allChats.filter(
+            (chat) => chat.chatType === activity.chatType && chat.chatId === activity.chatId
+        )[0];
+        const newChat: ChatProps = {
             chatId: activity.chatId,
-            chatName: activity.chatType === 1 ? activity.sender.userName : activity.chatName,
+            chatName: activity.chatName,
             chatType: activity.chatType,
-            dmPartnerUser: activity.sender,
-            unread: false,
+            dmPartnerUser: activity.dmPartnerUser,
+            lastReadMessageId:
+                activity.messageId > currentChat.lastReadMessageId
+                    ? activity.messageId
+                    : currentChat.lastReadMessageId,
             messages: messages,
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
             TSLastMessage: activity.tsSent,
             moveToSpecificIndex: moveToSpecificIndex,
         };
-        return newMessages;
+        return newChat;
     };
 
     const onClickHandler = async () => {
@@ -108,9 +118,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -128,9 +136,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentSubChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -150,9 +156,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, 3)
                         .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (activity.project) {
                                 setCurrentProject(activity.project);
                                 setCurrentPreviewTaskId(activity.taskId);
@@ -181,13 +185,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             if (threadMessages && threadMessages.length > 0) {
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
-                    chatName:
-                        activity.chatType === 1 ? activity.sender.userName : activity.chatName,
+                    chatName: activity.chatName,
                     threadId: activity.threadId,
                     chatType: activity.chatType,
-                    dmPartnerUser: activity.sender,
+                    dmPartnerUser: activity.dmPartnerUser,
                     taskId: activity.taskId,
-                    unread: false,
                     messages: threadMessages,
                     project: activity.project,
                     TSLastMessage: getCurrentTimestamp(),
@@ -212,9 +214,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -232,9 +232,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentSubChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -308,7 +306,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             <Stack direction="row" spacing={1}>
                                 <div>
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser !== null && (
+                                        activity.dmPartnerUser.userId !== "" && (
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
@@ -323,7 +321,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             />
                                         )}
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser === null && (
+                                        activity.dmPartnerUser.userId === "" && (
                                             <Avatar size="sm">
                                                 {activity.chatName[0].toUpperCase()}
                                             </Avatar>
@@ -384,6 +382,20 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         </>
                                     )}
 
+                                    {activity.activityType === 1 && (
+                                        <Chip
+                                            size="sm"
+                                            variant="outlined"
+                                            color="success"
+                                            sx={{
+                                                fontSize: "12px",
+                                                borderRadius: "4px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Reply
+                                        </Chip>
+                                    )}
                                     {activity.activityType === 2 && (
                                         <Chip
                                             size="sm"
@@ -502,7 +514,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                                 textOverflow: "ellipsis",
                                             }}
                                         >
-                                            {activity.latestReaction.senderName} has reacted
+                                            {activity.latestReaction.sender.userName} has reacted
                                         </Typography>
                                         <Typography
                                             level="body-sm"

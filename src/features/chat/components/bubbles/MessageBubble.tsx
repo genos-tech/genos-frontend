@@ -122,7 +122,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     rootMessageSenderId: message.sender.userId,
                     rootMessageReceiverId:
                         myself.userId === message.sender.userId
-                            ? chat.dmPartnerUser === null
+                            ? chat.dmPartnerUser.userId === ""
                                 ? null
                                 : chat.dmPartnerUser.userId
                             : myself.userId,
@@ -130,7 +130,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     threadMessage: message.content,
                     chatType: chat.chatType,
                     dmPartnerUserId:
-                        chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
+                        chat.dmPartnerUser.userId === "" ? null : chat.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
                     destCGName: chat.chatName,
@@ -153,7 +153,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             chat.chatType === 1
                                 ? myself.userId === message.sender.userId
                                     ? myself
-                                    : chat.dmPartnerUser || myself
+                                    : chat.dmPartnerUser
                                 : message.sender,
                         reactions: message.reactions,
                         taskId: message.taskId || null,
@@ -178,7 +178,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 chatType: chat.chatType,
                                 dmPartnerUser: chat.dmPartnerUser,
                                 taskId: message.taskId || null,
-                                unread: false,
                                 messages: threadMessages,
                                 project: message.project,
                                 TSLastMessage: getCurrentTimestamp(),
@@ -240,7 +239,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? chat.dmPartnerUser?.userId
+                                ? chat.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
@@ -263,7 +262,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
@@ -286,7 +285,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
@@ -318,7 +317,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? chat.dmPartnerUser?.userId
+                                ? chat.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
@@ -340,7 +339,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
@@ -363,7 +362,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,

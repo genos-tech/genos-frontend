@@ -32,7 +32,7 @@ self.onmessage = async (event) => {
             data: {
                 chatId: gmChat.chatId,
                 chatName: gmChat.chatName,
-                unread: gmChat.unread,
+                lastReadMessageId: gmChat.lastReadMessageId,
                 chatType: 2,
                 dmPartnerUser: defaultDmPartner,
                 latestMessage: gmChat.latestMessage,

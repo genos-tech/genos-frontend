@@ -42,10 +42,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     } = props;
     const { mode } = useColorScheme();
 
-    let isYou: boolean = false;
-    if (thread.dmPartnerUser !== null) {
-        isYou = myself.userId === thread.dmPartnerUser.userId;
-    }
+    const isYou: boolean = myself.userId === thread.dmPartnerUser.userId;
 
     const dummyThreadChat: ThreadProps = {
         chatId: thread.chatId,
@@ -54,7 +51,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         chatType: thread.chatType,
         dmPartnerUser: thread.dmPartnerUser,
         taskId: thread.taskId,
-        unread: false,
         messages: [],
         TSLastMessage: thread.TSLastMessage,
     };

@@ -9,6 +9,7 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { CreateGMResponse } from "../../../types/chat";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { emptyDmPartnerUser } from "../../../utils/defaultProps";
 
 const createGroupMessage = [
     { type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] },
@@ -27,7 +28,7 @@ const moveToGMChat = async (
             chatName: chatName,
             chatType: 2,
             dmPartnerUser: defaultDmPartner,
-            unread: false,
+            lastReadMessageId: fetchedMessages[fetchedMessages.length - 1].messageId,
             messages: fetchedMessages,
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
@@ -66,7 +67,7 @@ const addGMChatAndMessage = async (
         chatName: data.chatName,
         chatType: 2,
         dmPartnerUser: defaultDmPartner,
-        unread: false,
+        lastReadMessageId: -1,
         latestMessage: newMessage,
         latestMessageText: "Created this group",
         TSLastMessage: getCurrentTimestamp(),
@@ -80,7 +81,7 @@ const addGMChatAndMessage = async (
         {
             chatId: newChat.chatId,
             chatName: newChat.chatName,
-            unread: false,
+            lastReadMessageId: -1,
             chatType: 2,
             dmPartnerUser: defaultDmPartner,
             latestMessage: newChat.latestMessage,
@@ -118,7 +119,7 @@ export const createChatGroup = async (
                 joiningCGId: data.chatId, // gm_id
                 joiningCGName: data.chatName, // gm_name
                 chatType: 2,
-                dmPartnerUser: null,
+                dmPartnerUser: emptyDmPartnerUser,
             },
             (ack: any) => {
                 socket.emit("message", {
@@ -127,7 +128,7 @@ export const createChatGroup = async (
                     destCGName: chatName,
                     destCGId: data.chatId,
                     chatType: 2,
-                    dmPartnerUser: null,
+                    dmPartnerUserId: emptyDmPartnerUser.userId,
                     taskId: null,
                     taskStatus: null,
                     systemUserId: null,

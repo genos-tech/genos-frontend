@@ -33,7 +33,9 @@ export const useScrollToBottomOnChatChange = (
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
-        if (virtuoso === null || (notMove === true && visibleRangeEnd < maxIndex)) {
+        // `notMove === true && visibleRangeEnd < maxIndex - 3`: Even if `notMove===true`,
+        // scrolling to the LAST when an user is around in the last/latest message.
+        if (virtuoso === null || (notMove === true && visibleRangeEnd < maxIndex - 3)) {
             return;
         } else {
             setTimeout(() => {

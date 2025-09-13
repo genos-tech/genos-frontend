@@ -12,7 +12,7 @@ type BubbleUnderBarTypes = {
     myself: UserProps;
     chatType: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     message: MessageProps | ThreadMessageProps;
     numReplies: number;
     isSent: boolean;
@@ -101,7 +101,6 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             },
                         }}
                     >
-                        {/* TODO: read/unread for thread replies */}
                         {numRepliesWithoutFirstMessage == 1 ? (
                             <Box sx={{ color: "neutral.plainColor" }}>
                                 {/* <CircleIcon sx={{ fontSize: 10 }} color="primary" /> */}

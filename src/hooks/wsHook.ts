@@ -9,6 +9,7 @@ import { addThreadMessage } from "../features/chat/services/addThreadMessage";
 import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
 import { loadSpecificThreadMessages } from "../features/chat/services/loadSpecificThreadMessages";
 import { UserProps } from "../types/admin";
+import { emptyDmPartnerUser } from "../utils/defaultProps";
 import {
     AllChatProps,
     ChatProps,
@@ -70,7 +71,7 @@ export const wsHook = (props: wsHookProps) => {
             chatType: currentChat.chatType,
             systemUserId: currentChat.systemUserId,
             dmPartnerUser: currentChat.dmPartnerUser,
-            unread: true,
+            lastReadMessageId: currentChat.lastReadMessageId,
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
             TSLastMessage: newChatMessage.tsSent,
@@ -82,21 +83,24 @@ export const wsHook = (props: wsHookProps) => {
         }
     };
 
-    const makeDMUpdatedChat = async (
-        newMessage: NewMessageProps,
-        customFlag: boolean
-    ): Promise<ChatProps> => {
+    const makeDMUpdatedChat = async (newMessage: NewMessageProps): Promise<ChatProps> => {
         const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
+        let _chatName: string;
+        let _dmPartnerUser: UserProps;
+        if (myself.userId === newMessage.sender.userId) {
+            _chatName = newMessage.dmPartnerUser.userName;
+            _dmPartnerUser = newMessage.dmPartnerUser;
+        } else {
+            _chatName = newMessage.sender.userName;
+            _dmPartnerUser = newMessage.sender;
+        }
         return {
             chatId: newMessage.chatId,
-            chatName:
-                customFlag === true
-                    ? newMessage.dmPartnerUser?.userName || ""
-                    : newMessage.sender.userName,
+            chatName: _chatName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser: customFlag === true ? newMessage.dmPartnerUser : newMessage.sender,
-            unread: false,
+            dmPartnerUser: _dmPartnerUser,
+            lastReadMessageId: newMessage.lastReadMessageId,
             messages: updatedChat,
             latestMessage: newMessage,
             latestMessageText: newMessage.contentText,
@@ -113,8 +117,8 @@ export const wsHook = (props: wsHookProps) => {
             chatName: newMessage.chatName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser: null,
-            unread: false,
+            dmPartnerUser: emptyDmPartnerUser,
+            lastReadMessageId: newMessage.lastReadMessageId,
             messages: updatedChat,
             latestMessage: newMessage,
             latestMessageText: newMessage.contentText,
@@ -131,8 +135,8 @@ export const wsHook = (props: wsHookProps) => {
             chatName: newMessage.chatName,
             systemUserId: newMessage.systemUserId,
             chatType: newMessage.chatType,
-            dmPartnerUser: null,
-            unread: false,
+            dmPartnerUser: emptyDmPartnerUser,
+            lastReadMessageId: newMessage.lastReadMessageId,
             messages: updatedChat,
             latestMessage: newMessage,
             latestMessageText: newMessage.contentText,
@@ -161,7 +165,6 @@ export const wsHook = (props: wsHookProps) => {
             threadId: currentThread.threadId,
             dmPartnerUser: currentThread.dmPartnerUser,
             taskId: currentThread.taskId,
-            unread: false,
             messages: updatedMessages,
             TSLastMessage: newMessage.tsSent,
             project: newMessage.project,
@@ -271,7 +274,6 @@ export const wsHook = (props: wsHookProps) => {
                             chatType: newMessage.chatType,
                             dmPartnerUser: newMessage.sender,
                             taskId: newThreadMessage.taskId,
-                            unread: false,
                             messages: currentThreadChat
                                 ? [...currentThreadChat.messages, newThreadMessage]
                                 : [newThreadMessage],
@@ -279,15 +281,14 @@ export const wsHook = (props: wsHookProps) => {
                             notMove: true,
                         };
                         if (updatedThreadChat && newThreadMessage) {
-                            if (message.chatType === 1) {
-                                if (
-                                    newMessage.dmPartnerUser !== null &&
-                                    newMessage.dmPartnerUser.userId === myself.userId
-                                ) {
-                                    if (
-                                        newMessage.dmPartnerUser.userId ===
-                                        newMessage.sender.userId
-                                    ) {
+                            if (
+                                newMessage.chatType === 1 &&
+                                newMessage.sender.userId !== "" &&
+                                newMessage.receiver.userId !== "" &&
+                                newMessage.dmPartnerUser.userId !== ""
+                            ) {
+                                if (newMessage.receiver.userId === myself.userId) {
+                                    if (newMessage.sender.userId === myself.userId) {
                                         console.log("Personal DM thread");
                                         fromMe = true;
                                         toMe = true;
@@ -299,7 +300,6 @@ export const wsHook = (props: wsHookProps) => {
                                     if (newMessage.sender.userId === myself.userId) {
                                         console.log("DM thread from myself");
                                         fromMe = true;
-                                        toMe = true;
                                     } else {
                                         console.log("DM thread not for me");
                                     }
@@ -408,15 +408,14 @@ export const wsHook = (props: wsHookProps) => {
                             taskStatus: newMessage.taskStatus,
                         };
                         if (newChatMessage) {
-                            if (newMessage.chatType === 1 && newMessage.dmPartnerUser !== null) {
-                                if (
-                                    newMessage.dmPartnerUser !== null &&
-                                    newMessage.dmPartnerUser.userId === myself.userId
-                                ) {
-                                    if (
-                                        newMessage.dmPartnerUser.userId ===
-                                        newMessage.sender.userId
-                                    ) {
+                            if (
+                                newMessage.chatType === 1 &&
+                                newMessage.sender.userId !== "" &&
+                                newMessage.receiver.userId !== "" &&
+                                newMessage.dmPartnerUser.userId !== ""
+                            ) {
+                                if (newMessage.receiver.userId === myself.userId) {
+                                    if (newMessage.sender.userId === myself.userId) {
                                         console.log("Personal DM");
                                         fromMe = true;
                                         toMe = true;
@@ -437,20 +436,7 @@ export const wsHook = (props: wsHookProps) => {
                                 await addMessage(newChatMessage, newMessage.chatType);
 
                                 // Prepare a new/updated chat object from the new message for DM
-                                let updatedChat: ChatProps;
-                                if (newMessage.isReactionUpdated === false) {
-                                    if (newMessage.isEdited === true) {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, true);
-                                    } else {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, false);
-                                    }
-                                } else {
-                                    if (newMessage.sender.userId === myself.userId) {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, true);
-                                    } else {
-                                        updatedChat = await makeDMUpdatedChat(newMessage, false);
-                                    }
-                                }
+                                const updatedChat: ChatProps = await makeDMUpdatedChat(newMessage);
 
                                 if (newMessage.isEdited === true) {
                                     if (fromMe === false && toMe === false) {
@@ -521,10 +507,10 @@ export const wsHook = (props: wsHookProps) => {
 
                                         // But only if the messageId = 1, make a new DM chat because
                                         // the new DM chat is just created by the user.
-                                        const newDMChat = await makeDMUpdatedChat(
-                                            newMessage,
-                                            true
-                                        );
+                                        const newDMChat = await makeDMUpdatedChat({
+                                            ...newMessage,
+                                            lastReadMessageId: newMessage.lastReadMessageId + 1,
+                                        });
                                         if (newMessage.messageId === 1) {
                                             // Update chat sidebar if the message not reaction-related.
                                             if (newMessage.isReactionUpdated === false) {
@@ -694,86 +680,78 @@ export const wsHook = (props: wsHookProps) => {
                 console.log("Got an activity message");
                 console.log("activity_message:", message);
 
-                if (message.activityType !== 2) {
-                    let tmpNewActivityMessage: ActivityMessageProps = message;
-                    let newActivityMessage: ActivityMessageProps;
-                    if (tmpNewActivityMessage) {
-                        // If the mention or thread activity is for DM,
-                        // change the chatName and dmPartnerUser.
-                        if (tmpNewActivityMessage.chatType === 1) {
-                            tmpNewActivityMessage = {
-                                ...tmpNewActivityMessage,
-                                chatName: tmpNewActivityMessage.sender.userName,
-                                dmPartnerUser: tmpNewActivityMessage.sender,
-                            };
-                        }
+                let tmpNewActivityMessage: ActivityMessageProps = message;
+                let newActivityMessage: ActivityMessageProps;
 
-                        if (
-                            tmpNewActivityMessage.mentionedUserIds &&
-                            isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
-                        ) {
-                            // Mention activity
-                            const activityType = 3;
-                            const chatType = tmpNewActivityMessage.chatType;
-                            const chatId = tmpNewActivityMessage.chatId;
-                            const threadId = tmpNewActivityMessage.threadId;
-                            const messageId = tmpNewActivityMessage.messageId;
-                            let newActivityId: string;
-                            if (tmpNewActivityMessage.isThread === true) {
-                                newActivityId = `${activityType}-${chatType}-${chatId}-${threadId}-${messageId}`;
+                if (tmpNewActivityMessage) {
+                    // If it's a common thread message or mention activity.
+                    if (tmpNewActivityMessage.activityType !== 2) {
+                        // If it's a thread or mention activity, add the activity
+                        // only when the sender of the reacted message is not myself.
+                        // (Users want to check only activities from others. No need to add own activities.)
+                        if (tmpNewActivityMessage.sender.userId !== myself.userId) {
+                            //Update `activityType` if the myself is in the `mentionedUserIds`.
+                            // By default, WS returns with activityType = 1 (common message, not mention nor reaction)
+                            if (
+                                tmpNewActivityMessage.mentionedUserIds &&
+                                isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
+                            ) {
+                                console.log("Me mentioned");
+                                const activityType = 3;
+                                const chatType = tmpNewActivityMessage.chatType;
+                                const chatId = tmpNewActivityMessage.chatId;
+                                const threadId = tmpNewActivityMessage.threadId;
+                                const messageId = tmpNewActivityMessage.messageId;
+                                let newActivityId: string;
+                                if (tmpNewActivityMessage.isThread === true) {
+                                    newActivityId = `${activityType}-${chatType}-${chatId}-${threadId}-${messageId}`;
+                                } else {
+                                    newActivityId = `${activityType}-${chatType}-${chatId}-${messageId}`;
+                                }
+                                newActivityMessage = {
+                                    ...tmpNewActivityMessage,
+                                    activityId: newActivityId,
+                                    activityType: activityType,
+                                };
+                                if (newActivityMessage) {
+                                    await addActivityMessage(newActivityMessage);
+                                    funcSetActivityMessages();
+                                }
+                            } else if (tmpNewActivityMessage.isThread === true) {
+                                console.log("thread replay from others");
+                                newActivityMessage = tmpNewActivityMessage;
+                                if (newActivityMessage) {
+                                    await addActivityMessage(newActivityMessage);
+                                    funcSetActivityMessages();
+                                }
                             } else {
-                                newActivityId = `${activityType}-${chatType}-${chatId}-${messageId}`;
+                                console.log("[IGNORE] Common message or mention but not to me");
                             }
-                            newActivityMessage = {
-                                ...tmpNewActivityMessage,
-                                activityId: newActivityId,
-                                activityType: activityType,
-                            };
+                        } else {
+                            console.log("[IGNORE] Thread or mention from me");
+                        }
+                    } else {
+                        // If it's a reaction activity, add the activity
+                        // only when the sender of the reacted message is myself.
+                        // (Users want to check only reactions to me)
+                        if (
+                            tmpNewActivityMessage.sender.userId === myself.userId &&
+                            tmpNewActivityMessage.latestReaction.sender.userId !== myself.userId
+                        ) {
+                            console.log("Got reaction to me");
+                            newActivityMessage = tmpNewActivityMessage;
                             if (newActivityMessage) {
                                 await addActivityMessage(newActivityMessage);
                                 funcSetActivityMessages();
                             }
                         } else {
-                            // Non-mentioned DM thread message OR GM/PM message and thread message
-                            newActivityMessage = tmpNewActivityMessage;
-                            if (
-                                newActivityMessage &&
-                                ((tmpNewActivityMessage.chatType === 1 &&
-                                    tmpNewActivityMessage.isThread === true) ||
-                                    tmpNewActivityMessage.chatType !== 1)
-                            ) {
-                                await addActivityMessage(newActivityMessage);
-                                funcSetActivityMessages();
-                            }
+                            console.log(
+                                "[IGNORE] Reaction to others message or reacted by myself"
+                            );
                         }
                     }
                 } else {
-                    let tmpNewActivityMessage: ActivityMessageProps = message;
-                    let newActivityMessage: ActivityMessageProps;
-                    if (tmpNewActivityMessage) {
-                        // For reaction activities (activityType = 2).
-                        // If the mention or thread activity is for DM,
-                        // change the chatName and dmPartnerUser.
-                        if (tmpNewActivityMessage.chatType === 1) {
-                            if (tmpNewActivityMessage.dmPartnerUser) {
-                                newActivityMessage = {
-                                    ...tmpNewActivityMessage,
-                                    chatName: tmpNewActivityMessage.dmPartnerUser.userName,
-                                    dmPartnerUser: tmpNewActivityMessage.sender,
-                                };
-                            } else {
-                                newActivityMessage = {
-                                    ...tmpNewActivityMessage,
-                                    chatName: "N/A",
-                                };
-                            }
-                        } else {
-                            newActivityMessage = tmpNewActivityMessage;
-                        }
-
-                        await addActivityMessage(newActivityMessage);
-                        funcSetActivityMessages();
-                    }
+                    console.error("Invalid message:", message);
                 }
             } else if (message.wsType === "userStatus") {
                 // console.log("Got an user status message");

@@ -168,8 +168,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
                     chatType: chat.chatType,
-                    dmPartnerUserId:
-                        chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
+                    dmPartnerUserId: chat.dmPartnerUser.userId,
                     taskId: null,
                     taskStatus: null,
                     systemUserId: null,
@@ -182,7 +181,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         chatType: chat.chatType,
                         systemUserId: chat.systemUserId,
                         dmPartnerUser: chat.dmPartnerUser,
-                        unread: false,
+                        lastReadMessageId: chat.lastReadMessageId + 1,
                         messages: [
                             ...chat.messages,
                             {
@@ -248,7 +247,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             systemUserId: chat.systemUserId,
                             chatType: chat.chatType,
                             dmPartnerUser: chat.dmPartnerUser,
-                            unread: false,
+                            lastReadMessageId:
+                                chat.messages[chat.messages.length - 1].messageId + 1,
                             latestMessage: latestMessage,
                             latestMessageText: contentText,
                             TSLastMessage: getCurrentTimestamp(),

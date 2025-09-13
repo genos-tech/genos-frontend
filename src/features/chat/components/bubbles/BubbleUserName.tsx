@@ -75,7 +75,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                         variant="soft"
                                         color="neutral"
                                         sx={{
-                                            marginRight: taskStatusDetails ? "2px" : "7px",
+                                            marginRight: taskStatusDetails ? "5px" : "7px",
                                             borderRadius: "5px",
                                             fontWeight: "bold",
                                         }}
@@ -99,7 +99,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                                   )
                                                 : "transparent",
                                             color: taskStatusDetails.textColor,
-                                            marginRight: "7px",
+                                            marginRight: "10px",
                                             fontWeight: "bold",
                                             borderRadius: "5px",
                                         }}
@@ -109,7 +109,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                 </>
                             )}
                             {isEdited === true && (
-                                <>
+                                <Typography sx={{ marginRight: "10px" }}>
                                     {sender.isSystemUser === true && (
                                         <>
                                             {isThread === true && <>{dtSent}</>}
@@ -117,7 +117,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                         </>
                                     )}
                                     {sender.isSystemUser !== true && <>{dtSent} Edited</>}
-                                </>
+                                </Typography>
                             )}
                             {isEdited === false && <>{dtSent}</>}
                         </Typography>
@@ -132,7 +132,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                 level="body-md"
                                 component="span"
                                 sx={[
-                                    { lineHeight: 1.5 },
+                                    { lineHeight: 1.5, marginRight: "10px" },
                                     isSent
                                         ? { color: "background.body" }
                                         : { color: "var(--joy-palette-text-primary)" },

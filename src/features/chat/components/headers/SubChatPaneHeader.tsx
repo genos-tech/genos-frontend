@@ -46,10 +46,8 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         setIsCreatingTask,
         setOpeningService,
     } = props;
-    let isYou: boolean = false;
-    if (subChat.dmPartnerUser !== null) {
-        isYou = myself.userId === subChat.dmPartnerUser.userId;
-    }
+
+    const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
 
     const swapChat = () => {
         setCurrentMainChat(subChat);
