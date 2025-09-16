@@ -31,6 +31,7 @@ import { TaskPreview } from "./components/contents/TaskPreview";
 import { ProjectTaskTable } from "./components/table/TaskTable";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { loadSpecificTask } from "./services/loadSpecificTask";
+import { updateSpecificTask } from "./services/updateSpecificTask";
 import { loadTeamProjects } from "./services/loadTeamProjects";
 import { loadTeamTaskList } from "./services/loadTaskSearchList";
 import { ModalCreateTag } from "./components/modals/ModalCreateTag";
@@ -51,7 +52,6 @@ import {
     SearchTeamTasksResponse,
 } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
-import { updateTeamTasks } from "./services/updateTeamTasks";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
@@ -108,7 +108,9 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [displayTaskType, setDisplayTaskType] = useState<TaskType>(taskTypes.ongoing);
 
     const [openCreateTeam, setOpenCreateTeam] = useState(false);
+    const [isNewTeamCreated, setIsNewTeamCreated] = useState(false);
     const [openCreateProject, setOpenCreateProject] = useState(false);
+    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [openJoinProject, setOpenJoinProject] = useState<{
         flag: boolean;
         projectId: number;
@@ -121,7 +123,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         projectName: string;
     }>({ flag: false, projectId: -1, projectName: "" });
     const [openCreateTag, setOpenCreateTag] = useState(false);
-    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
 
     // =======================================================================
@@ -214,7 +215,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                             projectTags: loadedTeamProjects[i].projectTags,
                             systemUserId: loadedTeamProjects[i].systemUserId,
                         });
-                        await updateTeamTasks(myself, accessToken);
+                        await updateSpecificTask(
+                            myself,
+                            loadedTeamProjects[i].projectId,
+                            accessToken
+                        );
                         await fetchProjectTasks(loadedTeamProjects[i].projectId);
                         break;
                     }
@@ -226,7 +231,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                             projectTags: loadedTeamProjects[i].projectTags,
                             systemUserId: loadedTeamProjects[i].systemUserId,
                         });
-                        await updateTeamTasks(myself, accessToken);
+                        await updateSpecificTask(
+                            myself,
+                            loadedTeamProjects[i].projectId,
+                            accessToken
+                        );
                         await fetchProjectTasks(loadedTeamProjects[i].projectId);
                         break;
                     }
@@ -238,19 +247,18 @@ export const TaskHome = (props: TaskHomeProps) => {
     };
 
     useEffect(() => {
-        loadProjects();
-    }, []);
-
-    useEffect(() => {
-        if (myself.teamId !== currentTeamId) {
+        if (
+            myself.teamId !== currentTeamId ||
+            isNewTeamCreated === true ||
+            isNewProjectCreated === true ||
+            isNewTaskCreated === true
+        ) {
             setCurrentTeamId(myself.teamId);
             loadProjects();
+            setIsNewTeamCreated(false);
+            setIsNewProjectCreated(false);
         }
-    }, [myself]);
-
-    useEffect(() => {
-        loadProjects();
-    }, [openCreateTeam, openCreateProject, isNewTaskCreated]);
+    }, [myself, isNewTeamCreated, isNewProjectCreated, isNewTaskCreated]);
 
     useEffect(() => {
         if (currentProject) {
@@ -367,7 +375,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setCurrentProject={setCurrentProject}
                                     currentPreviewTaskId={currentPreviewTaskId}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                    setOpenCreateTeam={setOpenCreateTeam}
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
@@ -799,7 +806,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 currentProject={currentProject}
                                                 setCurrentProject={setCurrentProject}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                isNewProjectCreated={isNewProjectCreated}
                                                 isNewTagCreated={isNewTagCreated}
                                                 setIsNewTaskCreated={setIsNewTaskCreated}
                                                 setCurrentMainChat={setCurrentMainChat}
@@ -898,7 +904,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setCurrentProject={setCurrentProject}
                                     currentPreviewTaskId={currentPreviewTaskId}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                    setOpenCreateTeam={setOpenCreateTeam}
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenJoinProject={setOpenJoinProject}
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
@@ -954,6 +959,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         setMyself={setMyself}
                         openCreateTeam={openCreateTeam}
                         setOpenCreateTeam={setOpenCreateTeam}
+                        setIsNewTeamCreated={setIsNewTeamCreated}
                     />
 
                     {/* Modal for creating a new project */}

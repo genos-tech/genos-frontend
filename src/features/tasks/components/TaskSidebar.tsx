@@ -77,7 +77,6 @@ type TaskSidebarProps = {
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
-    setOpenCreateTeam: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
@@ -101,7 +100,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setCurrentProject,
         currentPreviewTaskId,
         setCurrentPreviewTaskId,
-        setOpenCreateTeam,
         setOpenCreateProject,
         setOpenJoinProject,
         setIsTaskHomeVisible,

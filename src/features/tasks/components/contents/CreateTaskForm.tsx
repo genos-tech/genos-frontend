@@ -121,7 +121,6 @@ type CreateTaskProps = {
     currentProject: ProjectProps | null;
     setCurrentProject: (value: ProjectProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
-    isNewProjectCreated: boolean;
     isNewTagCreated: boolean;
     setIsNewTaskCreated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
