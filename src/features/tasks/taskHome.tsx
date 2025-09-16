@@ -713,8 +713,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                         currentProject.projectName,
                                                                 });
                                                             }}
+                                                            sx={{
+                                                                color: "red",
+                                                                fontWeight: "bold",
+                                                            }}
                                                         >
-                                                            <DeleteIcon />
+                                                            <DeleteIcon sx={{ color: "red" }} />
                                                             Delete Project
                                                         </MenuItem>
                                                     </Menu>

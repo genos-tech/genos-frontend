@@ -363,6 +363,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                 isTaskContentVisible={isTaskContentVisible}
                 isCreatingTask={isCreatingTask}
+                setCurrentTaskContent={setTmpCurrentTaskContent}
+                setTaskStatusUpdated={setTaskStatusUpdated}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

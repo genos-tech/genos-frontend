@@ -1,6 +1,5 @@
 import { Stack, IconButton } from "@mui/joy";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CheckIcon from "@mui/icons-material/Check";
 
@@ -110,65 +109,34 @@ export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
             )}
 
             {/* Sub Task IconButton aligned to the right */}
-            <IconButton
-                component="p"
-                variant="outlined"
-                size="sm"
-                sx={{
-                    fontSize: "14px",
-                    paddingX: "7px",
-                    marginLeft: "auto",
-                }}
-                onClick={() => {
-                    if (
-                        currentTaskContent.id !== undefined &&
-                        currentTaskContent.rootTaskId != null
-                    ) {
-                        setIsCreatingTask({
-                            flag: true,
-                            parentTaskId: currentTaskContent.id,
-                            rootTaskId: currentTaskContent.rootTaskId,
-                        });
-                    } else {
-                        console.error("Task ID nod defined error.");
-                    }
-                }}
-            >
-                <AddIcon />
-                Sub Task
-            </IconButton>
-            {/* Delete IconButton */}
-            {currentTaskContent.status.status !== "Closed" ? (
+            {currentTaskContent.status.status !== "Deleted" && (
                 <IconButton
                     component="p"
                     variant="outlined"
-                    color="danger"
                     size="sm"
                     sx={{
                         fontSize: "14px",
                         paddingX: "7px",
+                        marginLeft: "auto",
                     }}
                     onClick={() => {
-                        (async () => {
-                            setCurrentTaskContent({
-                                ...currentTaskContent,
-                                status: {
-                                    code: 0,
-                                    status: "Deleted",
-                                    color: "#ff2323",
-                                    textColor: "white",
-                                },
+                        if (
+                            currentTaskContent.id !== undefined &&
+                            currentTaskContent.rootTaskId != null
+                        ) {
+                            setIsCreatingTask({
+                                flag: true,
+                                parentTaskId: currentTaskContent.id,
+                                rootTaskId: currentTaskContent.rootTaskId,
                             });
-                        })();
-                        setTaskUpdated(true);
-                        setTaskStatusUpdated(true);
+                        } else {
+                            console.error("Task ID nod defined error.");
+                        }
                     }}
                 >
-                    <DeleteIcon sx={{ fontSize: "15px" }} />
-                    Delete
+                    <AddIcon />
+                    Sub Task
                 </IconButton>
-            ) : (
-                <div></div>
             )}
         </Stack>
     );

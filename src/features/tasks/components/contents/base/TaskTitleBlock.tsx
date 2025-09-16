@@ -1,4 +1,5 @@
 import { alpha } from "@mui/system";
+import { useState } from "react";
 import {
     Box,
     Chip,
@@ -14,11 +15,13 @@ import {
 } from "@mui/joy";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CancelIcon from "@mui/icons-material/Cancel";
+import DeleteIcon from "@mui/icons-material/Delete";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import AddIcon from "@mui/icons-material/Add";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskProps } from "../../../../../types/tasks";
+import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 
 type TaskTitleBlockProps = {
     taskContents: TaskProps;
@@ -41,6 +44,8 @@ type TaskTitleBlockProps = {
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskContentVisible?: boolean;
     isCreatingTask?: boolean;
+    setCurrentTaskContent: (value: TaskProps) => void;
+    setTaskStatusUpdated: (value: boolean) => void;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -64,9 +69,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setIsTaskHomeVisible,
         isTaskContentVisible,
         isCreatingTask,
+        setCurrentTaskContent,
+        setTaskStatusUpdated,
     } = props;
 
     const { mode } = useColorScheme();
+    const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
 
     return (
         <Box
@@ -236,8 +244,31 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             <AddIcon />
                             New Tag
                         </MenuItem>
+                        {taskContents.status.status !== "Closed" && (
+                            <MenuItem
+                                onClick={() => {
+                                    setOpenDeleteTask(true);
+                                }}
+                                sx={{
+                                    color: "red",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                <DeleteIcon sx={{ color: "red" }} />
+                                Delete Task
+                            </MenuItem>
+                        )}
                     </Menu>
                 </Dropdown>
+
+                <ModalDeleteTask
+                    openDeleteTask={openDeleteTask}
+                    setOpenDeleteTask={setOpenDeleteTask}
+                    currentTaskContent={taskContents}
+                    setCurrentTaskContent={setCurrentTaskContent}
+                    setTaskUpdated={setTaskUpdated}
+                    setTaskStatusUpdated={setTaskStatusUpdated}
+                />
 
                 {isPreviewMode === false && titleError && titleErrorOpen !== undefined && (
                     <Snackbar

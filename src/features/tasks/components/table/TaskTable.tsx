@@ -335,14 +335,17 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                     }}
                 >
                     <DataGrid
-                        onCellClick={(params) => {}}
-                        onCellDoubleClick={(params) => {
-                            setIsTaskPreviewVisible(true);
-                            setCurrentPreviewTaskId(Number(params.id));
-                        }}
-                        onRowClick={(params, event, detail) => {
+                        onCellClick={(params) => {
                             // setIsTaskPreviewVisible(true);
                             // setCurrentPreviewTaskId(Number(params.id));
+                        }}
+                        onCellDoubleClick={(params) => {
+                            // setIsTaskPreviewVisible(true);
+                            // setCurrentPreviewTaskId(Number(params.id));
+                        }}
+                        onRowClick={(params, event, detail) => {
+                            setIsTaskPreviewVisible(true);
+                            setCurrentPreviewTaskId(Number(params.id));
                         }}
                         className={className}
                         apiRef={apiRef}
