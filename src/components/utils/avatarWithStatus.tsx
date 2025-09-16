@@ -14,9 +14,9 @@ type AvatarWithStatusProps = {
     setMyself: (value: UserProps) => void;
     avatarUser?: UserProps;
     socket: Socket | null;
+    isForBubble?: boolean;
     chat?: AllChatProps;
     thread?: ThreadProps;
-    comment?: TaskCommentProps;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
 };
@@ -26,9 +26,9 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         setMyself,
         avatarUser,
         socket,
+        isForBubble,
         chat,
         thread,
-        comment,
         setOpeningService,
         setCurrentMainChat,
     } = props;
@@ -58,7 +58,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                         sx={{ width: 32, height: 32 }}
                         src={avatarUser?.avatarImgPath}
                     >
-                        {chat.chatType === 1
+                        {chat.chatType === 1 || isForBubble === true
                             ? avatarUser?.userName[0].toUpperCase()
                             : chat?.chatName[0].toUpperCase()}
                     </Avatar>
@@ -69,7 +69,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                         sx={{ width: 32, height: 32 }}
                         src={avatarUser?.avatarImgPath}
                     >
-                        {thread.chatType === 1
+                        {thread.chatType === 1 || isForBubble === true
                             ? avatarUser?.userName[0].toUpperCase()
                             : thread?.chatName[0].toUpperCase()}
                     </Avatar>

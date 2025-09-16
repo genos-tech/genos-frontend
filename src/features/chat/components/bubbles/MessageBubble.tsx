@@ -520,6 +520,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         : teamMemberProfiles[message.sender.userId]
                                                 }
                                                 socket={socket}
+                                                isForBubble={true}
                                                 chat={chat}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}

@@ -160,7 +160,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 setMyself={setMyself}
                                 avatarUser={teamMemberProfiles[comment.senderId]}
                                 socket={socket}
-                                comment={comment}
+                                isForBubble={true}
                                 setOpeningService={setOpeningService}
                                 setCurrentMainChat={setCurrentChat}
                             />

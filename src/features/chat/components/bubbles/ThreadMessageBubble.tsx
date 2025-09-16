@@ -312,6 +312,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                         : teamMemberProfiles[message.sender.userId]
                                                 }
                                                 socket={socket}
+                                                isForBubble={true}
                                                 thread={thread}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
