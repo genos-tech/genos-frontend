@@ -4,7 +4,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 
 import { TaskProps } from "../../../../../../types/tasks";
-import { getDomainFromUrl } from "../../../../../../utils/urlHandler";
+import { getPageTitle } from "../../../../utils/getPageTitle";
 
 type GeneralURLManagerProps = {
     generalLink: { url: string; title: string };
@@ -30,15 +30,22 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
     const handleSave = async () => {
         if (taskContents && setTaskContents) {
             if (isValidUrl(url)) {
+                let pageTitle: string;
                 if (title === "") {
-                    setTitle(getDomainFromUrl(url));
+                    pageTitle = await getPageTitle(url);
+                    if (!pageTitle) {
+                        pageTitle = url;
+                    }
+                } else {
+                    pageTitle = title;
                 }
+
+                setTitle(pageTitle);
+                setError("");
                 setTaskContents({
                     ...taskContents,
-                    generalLink: { url: url, title: title },
+                    generalLink: { url: url, title: pageTitle },
                 });
-                setTitle(title);
-                setError("");
                 setIsEditing(false);
                 if (setTaskUpdated) {
                     setTaskUpdated(true);
@@ -60,6 +67,9 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                 setUrl(generalLink.url);
                 setTitle(generalLink.title);
             }
+        } else {
+            setUrl("");
+            setTitle("");
         }
     }, [taskContents]);
 
@@ -80,14 +90,16 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                         type="url"
                         sx={{ width: "150px", height: "30px" }}
                     />
-                    <Input
-                        key={"title"}
-                        size="sm"
-                        placeholder="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        sx={{ width: "150px", height: "30px" }}
-                    />
+                    {taskContents && (title !== "" || isEditing === true) && (
+                        <Input
+                            key={"title"}
+                            size="sm"
+                            placeholder="Title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            sx={{ width: "150px", height: "30px" }}
+                        />
+                    )}
                     {error && (
                         <Snackbar
                             autoHideDuration={5000}

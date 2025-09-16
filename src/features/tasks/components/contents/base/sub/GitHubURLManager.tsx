@@ -4,7 +4,7 @@ import EditIcon from "@mui/icons-material/Edit";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { TaskProps } from "../../../../../../types/tasks";
-import { getDomainFromUrl } from "../../../../../../utils/urlHandler";
+import { getPageTitle } from "../../../../utils/getPageTitle";
 
 type GitHubURLManagerProps = {
     githubLink: { url: string; title: string };
@@ -26,15 +26,22 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
     const handlePRSave = async () => {
         if (taskContents && setTaskContents) {
             if (isValidGitHubPR(prUrl)) {
+                let pageTitle: string;
                 if (prTitle === "") {
-                    setPRTitle(getDomainFromUrl(prUrl));
+                    pageTitle = await getPageTitle(prUrl);
+                    if (!pageTitle) {
+                        pageTitle = prUrl;
+                    }
+                } else {
+                    pageTitle = prTitle;
                 }
+
+                setPRTitle(pageTitle);
+                setPRError("");
                 setTaskContents({
                     ...taskContents,
-                    githubLink: { url: prUrl, title: prTitle },
+                    githubLink: { url: prUrl, title: pageTitle },
                 });
-                setPRTitle(prTitle);
-                setPRError("");
                 setIsEditing(false);
                 if (setTaskUpdated) {
                     setTaskUpdated(true);
@@ -56,6 +63,9 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                 setPRUrl(githubLink.url);
                 setPRTitle(githubLink.title);
             }
+        } else {
+            setPRUrl("");
+            setPRTitle("");
         }
     }, [taskContents]);
 
@@ -76,16 +86,18 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                         type="url"
                         sx={{ width: "150px", height: "30px" }}
                     />
-                    <Input
-                        key={"prTitle"}
-                        size="sm"
-                        placeholder="PR Title"
-                        value={prTitle}
-                        onChange={(e) => {
-                            setPRTitle(e.target.value);
-                        }}
-                        sx={{ width: "150px", height: "30px" }}
-                    />
+                    {taskContents && (prTitle !== "" || isEditing === true) && (
+                        <Input
+                            key={"prTitle"}
+                            size="sm"
+                            placeholder="PR Title"
+                            value={prTitle}
+                            onChange={(e) => {
+                                setPRTitle(e.target.value);
+                            }}
+                            sx={{ width: "150px", height: "30px" }}
+                        />
+                    )}
                     {prError && (
                         <Snackbar
                             autoHideDuration={5000}
