@@ -49,8 +49,8 @@ type BnTaskCommentEditorProps = {
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
     taskCommentLines: number;
@@ -182,7 +182,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (isCommentUpdated && task.id) {
+        if (isCommentUpdated && isCommentUpdated.isUpdate === true && task.id) {
             setTaskComments([
                 ...taskComments,
                 {
@@ -197,7 +197,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 },
             ]);
             editor.replaceBlocks(editor.document, []);
-            setIsCommentUpdated(false);
+            setIsCommentUpdated({ isUpdate: false, scrollToBottom: false });
         }
     }, [isCommentUpdated, taskComments]);
 
@@ -218,7 +218,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         comment_body: editor.document,
                     },
                     (ack: any) => {
-                        setIsCommentUpdated(true);
+                        setIsCommentUpdated({ isUpdate: true, scrollToBottom: true });
                     }
                 );
 

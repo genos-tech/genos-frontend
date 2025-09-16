@@ -58,26 +58,26 @@ export type ActivityMessageProps = {
     chatType: number;
     chatId: number;
     chatName: string;
-    dmPartnerUser: UserProps;
+    dmPartnerUserId: string;
+    dmPartnerUserName: string;
+    dmPartnerUserEmail: string;
     isThread: boolean;
     threadId: number;
     messageId: number;
     messageUniqueKey: string;
     threadMessageUniqueKey: string;
     taskId: number;
-    project?: ProjectProps;
+    projectId?: number;
+    projectName?: string;
     firstLineContent: string;
     latestReaction: {
         emoji: string;
         sender: UserProps;
         tsSent: string;
     };
-    sender: UserProps;
+    senderId: string;
     receiver: UserProps;
-    reactions: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions: ReactionProps[];
     tsSent: string;
     mentionedUserIds?: [];
 };
@@ -105,10 +105,7 @@ export type MessageProps = {
     taskId: number | null;
     taskStatus: string | null;
     project?: ProjectProps;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
     threadId?: number;
 };
 
@@ -133,10 +130,7 @@ export type ThreadMessageProps = {
     };
     project?: ProjectProps;
     taskExist?: boolean;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
 };
 
 export type NewMessageProps = {
@@ -166,10 +160,7 @@ export type NewMessageProps = {
     taskStatus: string | null;
     project?: ProjectProps;
     isEdited: boolean;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
     lastReadMessageId: number;
 };
 
@@ -200,10 +191,7 @@ export type NewThreadMessageProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     isEdited: boolean;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
 };
 
 // Other Props

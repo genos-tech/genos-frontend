@@ -20,8 +20,8 @@ type TaskCommentBlockProps = {
     task: TaskProps;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
     taskCommentLines: number;
@@ -48,8 +48,6 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
 
-    const boxRef = useRef<HTMLDivElement>(null);
-
     const countLines = (nodes: any[]): number => {
         let count = 0;
         for (const node of nodes) {
@@ -66,13 +64,6 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         return count;
     };
 
-    useEffect(() => {
-        const box = boxRef.current;
-        if (box) {
-            box.scrollTop = box.scrollHeight;
-        }
-    }, [taskComments]); // Re-scroll on content change
-
     const totalComments = taskComments.reduce(
         (sum, taskComment) => sum + (countLines(taskComment.commentBody) ?? 0),
         0
@@ -81,7 +72,8 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
     useScrollToBottomOnNewTaskComment(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
-        taskComments
+        taskComments,
+        isCommentUpdated.scrollToBottom
     );
 
     return (

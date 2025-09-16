@@ -67,8 +67,8 @@ type TaskHomeProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     openingService: number;
     setOpeningService: (service: number) => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {

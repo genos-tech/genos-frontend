@@ -318,7 +318,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                             }
 
                             if (message.reactions) {
-                                if (message.reactions.allReactions.length > 0) {
+                                if (message.reactions.length > 0) {
                                     paddingBottom = paddingBottom + 2.5;
                                 }
                             } else if (numRepliesWithoutFirstMessage > 0) {

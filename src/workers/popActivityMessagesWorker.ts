@@ -12,7 +12,7 @@ self.onmessage = async (event) => {
 
     // Filter and then sort messages by tsSent in desc
     const sortedActivityMessages = [...activityMessages]
-        .filter((msg) => !(msg.activityType === 2 && myself.userId !== msg.sender.userId))
+        .filter((msg) => !(msg.activityType === 2 && myself.userId !== msg.senderId))
         .sort((a, b) => new Date(b.tsSent).getTime() - new Date(a.tsSent).getTime());
 
     self.postMessage(sortedActivityMessages);

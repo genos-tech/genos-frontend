@@ -329,7 +329,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 numRepliesWithoutFirstMessage = message.numReplies;
                             }
 
-                            if (message.reactions && message.reactions.allReactions.length > 0) {
+                            if (message.reactions && message.reactions.length > 0) {
                                 paddingBottom = paddingBottom + 2.5;
                             } else if (numRepliesWithoutFirstMessage > 0) {
                                 paddingBottom = paddingBottom + 2.5;

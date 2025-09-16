@@ -45,8 +45,8 @@ type TaskPreviewProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskContentVisible?: boolean;
     isCreatingTask?: boolean;

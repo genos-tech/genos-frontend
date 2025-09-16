@@ -50,10 +50,7 @@ export type TaskCommentProps = {
     senderName: string;
     commentId: number;
     commentBody: PartialBlock[] | any[];
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
     tsSent: string;
     tsUpdated: string;
     isEdited: boolean;

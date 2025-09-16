@@ -39,7 +39,7 @@ type wsHookProps = {
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     funcSetAllChats: () => void;
-    setIsTaskCommentUpdated: (value: boolean) => void;
+    setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     isLoading: boolean;
     funcSetActivityMessages: () => void;
     funcSetInboxItems: () => void;
@@ -674,7 +674,7 @@ export const wsHook = (props: wsHookProps) => {
                 console.log("Got a task comment");
                 console.log("task_message:", message);
                 if (setIsTaskCommentUpdated) {
-                    setIsTaskCommentUpdated(true);
+                    setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: false });
                 }
             } else if (message.wsType === "activity") {
                 console.log("Got an activity message");
@@ -684,12 +684,12 @@ export const wsHook = (props: wsHookProps) => {
                 let newActivityMessage: ActivityMessageProps;
 
                 if (tmpNewActivityMessage) {
-                    // If it's a common thread message or mention activity.
+                    // If it's a common thread message, task comment, or mention activity.
                     if (tmpNewActivityMessage.activityType !== 2) {
                         // If it's a thread or mention activity, add the activity
                         // only when the sender of the reacted message is not myself.
                         // (Users want to check only activities from others. No need to add own activities.)
-                        if (tmpNewActivityMessage.sender.userId !== myself.userId) {
+                        if (tmpNewActivityMessage.senderId !== myself.userId) {
                             //Update `activityType` if the myself is in the `mentionedUserIds`.
                             // By default, WS returns with activityType = 1 (common message, not mention nor reaction)
                             if (
@@ -724,6 +724,13 @@ export const wsHook = (props: wsHookProps) => {
                                     await addActivityMessage(newActivityMessage);
                                     funcSetActivityMessages();
                                 }
+                            } else if (tmpNewActivityMessage.chatType === 4) {
+                                console.log("task comment from others");
+                                newActivityMessage = tmpNewActivityMessage;
+                                if (newActivityMessage) {
+                                    await addActivityMessage(newActivityMessage);
+                                    funcSetActivityMessages();
+                                }
                             } else {
                                 console.log("[IGNORE] Common message or mention but not to me");
                             }
@@ -735,7 +742,7 @@ export const wsHook = (props: wsHookProps) => {
                         // only when the sender of the reacted message is myself.
                         // (Users want to check only reactions to me)
                         if (
-                            tmpNewActivityMessage.sender.userId === myself.userId &&
+                            tmpNewActivityMessage.senderId === myself.userId &&
                             tmpNewActivityMessage.latestReaction.sender.userId !== myself.userId
                         ) {
                             console.log("Got reaction to me");
