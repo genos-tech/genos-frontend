@@ -59,13 +59,13 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     useEffect(() => {
         if (comment.reactions) {
-            setReactions(comment.reactions.allReactions);
+            setReactions(comment.reactions);
         }
     }, []);
 
     useEffect(() => {
         if (comment.reactions) {
-            setReactions(comment.reactions.allReactions);
+            setReactions(comment.reactions);
         }
     }, [comment]);
 

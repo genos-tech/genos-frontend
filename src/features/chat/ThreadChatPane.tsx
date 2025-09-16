@@ -291,7 +291,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                 paddingBottom = 0.3;
 
                                 if (message.reactions) {
-                                    if (message.reactions.allReactions.length > 0) {
+                                    if (message.reactions.length > 0) {
                                         paddingBottom = paddingBottom + 2.5;
                                     }
                                 }

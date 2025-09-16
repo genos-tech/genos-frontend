@@ -81,17 +81,30 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     } = props;
     const { accessToken } = useAuth();
 
-    const isYou = myself.userId === activity.dmPartnerUser.userId;
+    const isYou = myself.userId === activity.dmPartnerUserId;
 
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
+        let chatType: number = activity.chatType;
+        if (activity.chatType === 4) {
+            chatType = 3;
+        }
         const currentChat: AllChatProps = allChats.filter(
-            (chat) => chat.chatType === activity.chatType && chat.chatId === activity.chatId
+            (chat) => chat.chatType === chatType && chat.chatId === activity.chatId
         )[0];
         const newChat: ChatProps = {
             chatId: activity.chatId,
             chatName: activity.chatName,
             chatType: activity.chatType,
-            dmPartnerUser: activity.dmPartnerUser,
+            dmPartnerUser: {
+                teamId: myself.teamId,
+                teamName: myself.teamName,
+                userId: activity.dmPartnerUserId,
+                userName: activity.dmPartnerUserName,
+                userEmail: activity.dmPartnerUserEmail,
+                avatarImgPath: "",
+                tsLastSeen: "",
+                tsJoined: "",
+            },
             lastReadMessageId:
                 activity.messageId > currentChat.lastReadMessageId
                     ? activity.messageId
@@ -157,8 +170,12 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     popSpecificMessages(activity.chatId, 3)
                         .then((messages) => {
                             setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
-                            if (activity.project) {
-                                setCurrentProject(activity.project);
+                            if (activity.projectId) {
+                                setCurrentProject({
+                                    projectId: activity.projectId,
+                                    projectName: activity.projectName || "",
+                                    projectTags: [],
+                                });
                                 setCurrentPreviewTaskId(activity.taskId);
                                 setIsThreadVisible(false);
                                 setIsTaskPreviewVisible(true);
@@ -183,21 +200,39 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 accessToken
             );
             if (threadMessages && threadMessages.length > 0) {
+                console.log("thread activity:", activity);
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
                     chatName: activity.chatName,
                     threadId: activity.threadId,
                     chatType: activity.chatType,
-                    dmPartnerUser: activity.dmPartnerUser,
+                    dmPartnerUser: {
+                        teamId: myself.teamId,
+                        teamName: myself.teamName,
+                        userId: activity.dmPartnerUserId,
+                        userName: activity.dmPartnerUserName,
+                        userEmail: activity.dmPartnerUserEmail,
+                        avatarImgPath: "",
+                        tsLastSeen: "",
+                        tsJoined: "",
+                    },
                     taskId: activity.taskId,
                     messages: threadMessages,
-                    project: activity.project,
+                    project: {
+                        projectId: activity.projectId || -1,
+                        projectName: activity.projectName || "",
+                        projectTags: [],
+                    },
                     TSLastMessage: getCurrentTimestamp(),
                     taskExist: threadMessages[0].taskExist,
                     moveToSpecificIndex: activity.threadMessageUniqueKey,
                 };
-                if (activity.project) {
-                    setCurrentProject(activity.project);
+                if (activity.projectId) {
+                    setCurrentProject({
+                        projectId: activity.projectId,
+                        projectName: activity.projectName || "",
+                        projectTags: [],
+                    });
                 }
                 if (newThread) {
                     setCurrentThreadChat(newThread);
@@ -278,13 +313,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
-        groupEmojis(activity.reactions.allReactions)
+        groupEmojis(activity.reactions)
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
 
     useEffect(() => {
-        setGroupedReactions(groupEmojis(activity.reactions.allReactions));
+        setGroupedReactions(groupEmojis(activity.reactions));
     }, [activity]);
 
     return (
@@ -306,14 +341,12 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             <Stack direction="row" spacing={1}>
                                 <div>
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser.userId !== "" && (
+                                        activity.dmPartnerUserId !== "" && (
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
                                                 avatarUser={
-                                                    teamMemberProfiles[
-                                                        activity.dmPartnerUser.userId
-                                                    ]
+                                                    teamMemberProfiles[activity.dmPartnerUserId]
                                                 }
                                                 socket={socket}
                                                 setOpeningService={setOpeningService}
@@ -321,7 +354,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             />
                                         )}
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser.userId === "" && (
+                                        activity.dmPartnerUserId === "" && (
                                             <Avatar size="sm">
                                                 {activity.chatName[0].toUpperCase()}
                                             </Avatar>

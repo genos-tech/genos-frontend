@@ -207,13 +207,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
     useEffect(() => {
         if (message.reactions) {
-            setReactions(message.reactions.allReactions);
+            setReactions(message.reactions);
         }
     }, []);
 
     useEffect(() => {
         if (message.reactions) {
-            setReactions(message.reactions.allReactions);
+            setReactions(message.reactions);
         }
     }, [message]);
 
