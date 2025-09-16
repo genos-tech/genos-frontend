@@ -39,7 +39,7 @@ type wsHookProps = {
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     funcSetAllChats: () => void;
-    setIsTaskCommentUpdated: (value: boolean) => void;
+    setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     isLoading: boolean;
     funcSetActivityMessages: () => void;
     funcSetInboxItems: () => void;
@@ -674,7 +674,7 @@ export const wsHook = (props: wsHookProps) => {
                 console.log("Got a task comment");
                 console.log("task_message:", message);
                 if (setIsTaskCommentUpdated) {
-                    setIsTaskCommentUpdated(true);
+                    setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: false });
                 }
             } else if (message.wsType === "activity") {
                 console.log("Got an activity message");

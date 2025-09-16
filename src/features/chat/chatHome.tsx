@@ -39,8 +39,8 @@ type ChatHomeProps = {
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
     funcSetAllChats: () => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {

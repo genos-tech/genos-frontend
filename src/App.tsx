@@ -119,7 +119,10 @@ export const App = () => {
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
-    const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState(false);
+    const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
+        isUpdate: false,
+        scrollToBottom: true,
+    });
     const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
     const funcSetInboxItems = async () => {
         const inboxItems: InboxItemProps[] = await popInboxItems();
