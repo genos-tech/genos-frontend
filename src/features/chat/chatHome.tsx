@@ -587,7 +587,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }
-                                                    isNewProjectCreated={isNewProjectCreated}
                                                     isNewTagCreated={isNewTagCreated}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
@@ -794,7 +793,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }
-                                                    isNewProjectCreated={isNewProjectCreated}
                                                     isNewTagCreated={isNewTagCreated}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
