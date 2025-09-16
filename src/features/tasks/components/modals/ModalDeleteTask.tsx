@@ -7,9 +7,9 @@ type Props = {
     openDeleteTask: boolean;
     setOpenDeleteTask: (value: boolean) => void;
     currentTaskContent: TaskProps;
-    setCurrentTaskContent: (value: TaskProps) => void;
+    setCurrentTaskContent?: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
-    setTaskStatusUpdated: (value: boolean) => void;
+    setTaskStatusUpdated?: (value: boolean) => void;
 };
 
 export const ModalDeleteTask: React.FC<Props> = ({
@@ -24,19 +24,23 @@ export const ModalDeleteTask: React.FC<Props> = ({
 
     const handleDeleteTask = () => {
         if (setTaskUpdated) {
-            (async () => {
-                setCurrentTaskContent({
-                    ...currentTaskContent,
-                    status: {
-                        code: 0,
-                        status: "Deleted",
-                        color: "#ff2323",
-                        textColor: "white",
-                    },
-                });
-            })();
+            // Update the existing task to be deleted.
+            // Not executed in the task creation process.
+            if (setCurrentTaskContent && setTaskStatusUpdated) {
+                (async () => {
+                    setCurrentTaskContent({
+                        ...currentTaskContent,
+                        status: {
+                            code: 0,
+                            status: "Deleted",
+                            color: "#ff2323",
+                            textColor: "white",
+                        },
+                    });
+                    setTaskStatusUpdated(true);
+                })();
+            }
             setTaskUpdated(true);
-            setTaskStatusUpdated(true);
             setOpenDeleteTask(false);
         } else {
             console.error("`setTaskUpdated` is required to delete a task.");

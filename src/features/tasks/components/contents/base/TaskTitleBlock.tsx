@@ -44,8 +44,8 @@ type TaskTitleBlockProps = {
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskContentVisible?: boolean;
     isCreatingTask?: boolean;
-    setCurrentTaskContent: (value: TaskProps) => void;
-    setTaskStatusUpdated: (value: boolean) => void;
+    setCurrentTaskContent?: (value: TaskProps) => void;
+    setTaskStatusUpdated?: (value: boolean) => void;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
