@@ -86,6 +86,8 @@ export const ChatList = (props: ChatListProps) => {
 
     const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(allChats);
 
+    const [selectedActivityId, setSelectedActivityId] = useState<string>("");
+
     const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
     useScrollToBottomOnNewActivity(
         virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
@@ -225,6 +227,8 @@ export const ChatList = (props: ChatListProps) => {
                                 <Stack direction="row">
                                     <ChatListItemForActivity
                                         key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                        selectedActivityId={selectedActivityId}
+                                        setSelectedActivityId={setSelectedActivityId}
                                         teamMemberProfiles={teamMemberProfiles}
                                         socket={socket}
                                         activity={activityMessage}

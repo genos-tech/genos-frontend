@@ -140,7 +140,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         <Tooltip title="New Task" size="sm">
                             <IconButton
                                 component="a"
-                                size="md"
+                                size="sm"
                                 variant="plain"
                                 color="neutral"
                                 onClick={() => {
@@ -151,6 +151,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
                                     setIsCreatingTask(true);
                                 }}
+                                sx={{ px: "10px" }}
                             >
                                 <PlaylistAddIcon />
                             </IconButton>

@@ -91,7 +91,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     <Tooltip title="Create a new task" size="sm">
                         <IconButton
                             component="a"
-                            size="md"
+                            size="sm"
                             variant="outlined"
                             color="neutral"
                             onClick={() => {
@@ -101,6 +101,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 setIsTaskCreationVisible(true);
                                 setIsCreatingTask(true);
                             }}
+                            sx={{ px: "10px" }}
                         >
                             <PlaylistAddIcon />
                             New Task

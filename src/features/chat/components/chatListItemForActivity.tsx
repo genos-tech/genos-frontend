@@ -30,6 +30,8 @@ import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadS
 // activityType = {1: message or comment, 2: reaction, 3: mention}
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
+    selectedActivityId: string;
+    setSelectedActivityId: (value: string) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     activity: ActivityMessageProps;
@@ -56,6 +58,8 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
     const {
+        selectedActivityId,
+        setSelectedActivityId,
         teamMemberProfiles,
         socket,
         activity,
@@ -142,6 +146,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     const onClickHandler = async () => {
+        setSelectedActivityId(activity.activityId);
+
         if (activity.isThread === false) {
             // Handling a non-thread message/comment
             if (activity.chatType !== 4) {
@@ -354,8 +360,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
                     onClick={onClickHandler}
-                    color="neutral"
-                    variant="outlined"
+                    color={selectedActivityId === activity.activityId ? "success" : "neutral"}
+                    variant={selectedActivityId === activity.activityId ? "soft" : "outlined"}
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                 >
                     <Stack direction="column">
