@@ -196,7 +196,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         setDeletedTasks(DeletedTasks);
     };
 
-    const loadProjects = async () => {
+    const loadProjects = async (targetProjectId: number) => {
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
 
@@ -204,17 +204,11 @@ export const TaskHome = (props: TaskHomeProps) => {
         // TODO: should set "last-opened-project" using cache(localstorage)
         if (loadedTeamProjects.length > 0) {
             for (let i = 0; i < loadedTeamProjects.length; i++) {
-                if (currentProject) {
+                if (targetProjectId !== -1 && currentProject) {
                     if (
-                        loadedTeamProjects[i].projectId === currentProject.projectId ||
+                        loadedTeamProjects[i].projectId === targetProjectId ||
                         myself.teamId !== currentTeamId
                     ) {
-                        setCurrentProject({
-                            projectId: loadedTeamProjects[i].projectId,
-                            projectName: loadedTeamProjects[i].projectName,
-                            projectTags: loadedTeamProjects[i].projectTags,
-                            systemUserId: loadedTeamProjects[i].systemUserId,
-                        });
                         await updateSpecificTask(
                             myself,
                             loadedTeamProjects[i].projectId,
@@ -247,18 +241,21 @@ export const TaskHome = (props: TaskHomeProps) => {
     };
 
     useEffect(() => {
+        setCurrentTeamId(myself.teamId);
+        loadProjects(currentProject?.projectId || -1);
+    }, []);
+
+    useEffect(() => {
         if (
-            myself.teamId !== currentTeamId ||
             isNewTeamCreated === true ||
             isNewProjectCreated === true ||
             isNewTaskCreated === true
         ) {
-            setCurrentTeamId(myself.teamId);
-            loadProjects();
+            loadProjects(currentProject?.projectId || -1);
             setIsNewTeamCreated(false);
             setIsNewProjectCreated(false);
         }
-    }, [myself, isNewTeamCreated, isNewProjectCreated, isNewTaskCreated]);
+    }, [isNewTeamCreated, isNewProjectCreated, isNewTaskCreated]);
 
     useEffect(() => {
         if (currentProject) {
@@ -367,7 +364,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             <Panel id={"1"} order={1} defaultSize={15} minSize={5} maxSize={30}>
                                 <TaskSidebar
                                     myself={myself}
-                                    setMyself={setMyself}
+                                    loadProjects={loadProjects}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
@@ -900,7 +897,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             <Panel id={"5"} order={5} minSize={5} maxSize={30}>
                                 <TaskSidebar
                                     myself={myself}
-                                    setMyself={setMyself}
+                                    loadProjects={loadProjects}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}

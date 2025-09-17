@@ -69,7 +69,7 @@ function Toggler({
 
 type TaskSidebarProps = {
     myself: UserProps;
-    setMyself: (value: UserProps) => void;
+    loadProjects: (value: number) => void;
     setIsDashboardVisible: (value: boolean) => void;
     setTaskTableVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
@@ -92,7 +92,7 @@ type TaskSidebarProps = {
 export const TaskSidebar = (props: TaskSidebarProps) => {
     const {
         myself,
-        setMyself,
+        loadProjects,
         setIsDashboardVisible,
         setTaskTableVisible,
         setIsTaskPreviewVisible,
@@ -576,6 +576,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                     projectTags: projectTags,
                                                                     systemUserId: systemUserId,
                                                                 });
+                                                                console.log("change load")
+                                                                loadProjects(projectId);
                                                             }}
                                                             sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                         >

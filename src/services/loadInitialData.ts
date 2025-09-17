@@ -7,7 +7,6 @@ import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
 import LoadTeamMemberWorker from "../workers/loadTeamMembersWorker.ts?worker";
-import LoadTeamTaskWorker from "../workers/loadTeamTasksWorker.ts?worker";
 import PopLatestChatWorker from "../workers/popLatestChatWorker.ts?worker";
 import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
 import PopSpecificMessagesWorker from "../workers/popSpecificMessagesWorker.ts?worker";
@@ -26,7 +25,6 @@ export const loadInitialData = (
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
     const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
     const [isTeamMembersLoaded, setIsTeamMembersLoaded] = useState<boolean | null>(false);
-    const [isTeamTasksLoaded, setIsTeamTasksLoaded] = useState<boolean | null>(false);
     const [latestDmChatId, setLatestDmChatId] = useState<number | null>(null);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
     const [InitialChatMessages, setInitialChatMessages] = useState<MessageProps[]>();
@@ -144,24 +142,6 @@ export const loadInitialData = (
         }
     }, [myself, accessToken]);
 
-    // Load Team tasks
-    useEffect(() => {
-        if (accessToken && myself.userId !== "" && myself.userName !== "") {
-            const loadTeamTasksWorker = new LoadTeamTaskWorker();
-            loadTeamTasksWorker.postMessage({ myself: myself, accessToken: accessToken });
-            loadTeamTasksWorker.onmessage = (event) => {
-                if (event.data === "done") {
-                    setIsTeamTasksLoaded(true);
-                } else {
-                    console.error("Failed initial team task loading");
-                }
-            };
-            return () => {
-                loadTeamTasksWorker.terminate();
-            };
-        }
-    }, [myself, accessToken]);
-
     // Fetch the latest DM Chat Id
     useEffect(() => {
         if (isDMHistoryLoaded) {
@@ -267,7 +247,6 @@ export const loadInitialData = (
             isDMHistoryLoaded &&
             isGMHistoryLoaded &&
             isPMHistoryLoaded &&
-            isTeamTasksLoaded &&
             isTeamMembersLoaded &&
             isInitialChatLoaded
         ) {
@@ -279,7 +258,6 @@ export const loadInitialData = (
         isDMHistoryLoaded,
         isGMHistoryLoaded,
         isPMHistoryLoaded,
-        isTeamTasksLoaded,
         isTeamMembersLoaded,
         isInitialChatLoaded,
     ]);
