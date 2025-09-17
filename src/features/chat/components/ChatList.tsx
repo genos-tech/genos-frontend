@@ -41,6 +41,7 @@ type ChatListProps = {
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    onlyUnread: boolean;
 };
 
 export const ChatList = (props: ChatListProps) => {
@@ -72,6 +73,7 @@ export const ChatList = (props: ChatListProps) => {
         setOpeningService,
         setCurrentPreviewTaskId,
         setCurrentProject,
+        onlyUnread,
     } = props;
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
@@ -85,6 +87,8 @@ export const ChatList = (props: ChatListProps) => {
     useScrollToBottomOnChatPaneChange(virtuosoDMRef as React.RefObject<VirtuosoHandle>, allChats);
     useScrollToBottomOnChatPaneChange(virtuosoGMRef as React.RefObject<VirtuosoHandle>, allChats);
     useScrollToBottomOnChatPaneChange(virtuosoPMRef as React.RefObject<VirtuosoHandle>, allChats);
+
+    const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(allChats);
 
     const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
     useScrollToBottomOnNewActivity(
@@ -136,7 +140,24 @@ export const ChatList = (props: ChatListProps) => {
                 );
             }
         }
-    }, [activityMessages, currentActivityMessageType]);
+    }, [activityMessages, currentActivityMessageType, onlyUnread]);
+
+    useEffect(() => {
+        setTmpAllChats(allChats);
+
+        if (onlyUnread === true) {
+            setTmpActivityMessages(tmpActivityMessages.filter((item) => item.isRead === false));
+            setTmpAllChats(
+                tmpAllChats.filter(
+                    (item) =>
+                        item.lastReadMessageId <
+                        (item.latestMessage
+                            ? item.latestMessage.messageId
+                            : item.lastReadMessageId + 1)
+                )
+            );
+        }
+    }, [onlyUnread, allChats]);
 
     return (
         <List
@@ -150,17 +171,17 @@ export const ChatList = (props: ChatListProps) => {
             }}
             className="custom-scrollbar"
         >
-            {chatType !== -1 && allChats.length > 0 && (
+            {chatType !== -1 && tmpAllChats.length > 0 && (
                 <Virtuoso
                     ref={chatTypeLookup[chatType]}
                     className="custom-scrollbar"
                     style={{ height: "87dvh" }}
-                    totalCount={allChats.length}
+                    totalCount={tmpAllChats.length}
                     initialTopMostItemIndex={0}
                     atTopThreshold={64}
                     atBottomThreshold={128}
                     itemContent={(index) => {
-                        const chat = allChats[index];
+                        const chat = tmpAllChats[index];
                         return (
                             <div>
                                 <Stack direction="row">

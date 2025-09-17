@@ -1,5 +1,6 @@
+import * as React from "react";
 import { useEffect, useState } from "react";
-import { Stack, Sheet, IconButton, Tooltip, Badge } from "@mui/joy";
+import { Stack, Sheet, IconButton, Tooltip, Badge, Typography, Switch } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -87,6 +88,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openCreateGM, setOpenCreateGM] = useState(false);
+    const [onlyUnread, setOnlyUnread] = useState(false);
 
     // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
     const [currentActivityMessageType, setCurrentActivityMessageType] = useState<number>(0);
@@ -146,24 +148,35 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     setAllChats={setAllChats}
                 />
 
-                <Stack
-                    direction="row"
-                    spacing={1.5}
-                    justifyContent="center"
-                    alignItems="center"
-                    flexWrap="wrap"
-                    sx={{ mt: "7px" }}
-                >
-                    {/* For DM */}
-                    {unReadChatCounts && (unReadChatCounts[1] || 0) > 0 && (
-                        <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
-                            <Badge
-                                badgeContent={unReadChatCounts[1]}
-                                color="primary"
-                                size="sm"
-                                anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                            >
+                <Stack direction="row" alignItems="center" sx={{ mt: "7px" }} flexWrap="wrap">
+                    {/* Centered buttons */}
+                    <Stack direction="row" spacing={1.5} justifyContent="center" flexGrow={1}>
+                        {/* For DM */}
+                        {unReadChatCounts && (unReadChatCounts[1] || 0) > 0 && (
+                            <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
+                                <Badge
+                                    badgeContent={unReadChatCounts[1]}
+                                    color="primary"
+                                    size="sm"
+                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                >
+                                    <IconButton
+                                        component="p"
+                                        variant={currentChatPaneType === 1 ? "solid" : "soft"}
+                                        size="sm"
+                                        onClick={() => {
+                                            setCurrentChatPaneType(1);
+                                            localStorage.setItem("currentChatPaneType", "1");
+                                        }}
+                                    >
+                                        <PersonIcon />
+                                    </IconButton>
+                                </Badge>
+                            </Tooltip>
+                        )}
+                        {!(unReadChatCounts && (unReadChatCounts[1] || 0) > 0) && (
+                            <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 1 ? "solid" : "soft"}
@@ -175,35 +188,35 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <PersonIcon />
                                 </IconButton>
-                            </Badge>
-                        </Tooltip>
-                    )}
-                    {!(unReadChatCounts && (unReadChatCounts[1] || 0) > 0) && (
-                        <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
-                            <IconButton
-                                component="p"
-                                variant={currentChatPaneType === 1 ? "solid" : "soft"}
-                                size="sm"
-                                onClick={() => {
-                                    setCurrentChatPaneType(1);
-                                    localStorage.setItem("currentChatPaneType", "1");
-                                }}
-                            >
-                                <PersonIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
+                            </Tooltip>
+                        )}
 
-                    {/* For GM */}
-                    {unReadChatCounts && (unReadChatCounts[2] || 0) > 0 && (
-                        <Tooltip title="Group Message" sx={{ zIndex: "10020" }}>
-                            <Badge
-                                badgeContent={unReadChatCounts[2]}
-                                color="primary"
-                                size="sm"
-                                anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                            >
+                        {/* For GM */}
+                        {unReadChatCounts && (unReadChatCounts[2] || 0) > 0 && (
+                            <Tooltip title="Group Message" sx={{ zIndex: "10020" }}>
+                                <Badge
+                                    badgeContent={unReadChatCounts[2]}
+                                    color="primary"
+                                    size="sm"
+                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                >
+                                    <IconButton
+                                        component="p"
+                                        variant={currentChatPaneType === 2 ? "solid" : "soft"}
+                                        size="sm"
+                                        onClick={() => {
+                                            setCurrentChatPaneType(2);
+                                            localStorage.setItem("currentChatPaneType", "2");
+                                        }}
+                                    >
+                                        <GroupsIcon />
+                                    </IconButton>
+                                </Badge>
+                            </Tooltip>
+                        )}
+                        {!(unReadChatCounts && (unReadChatCounts[2] || 0) > 0) && (
+                            <Tooltip title="Group Message" sx={{ zIndex: "10020" }}>
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 2 ? "solid" : "soft"}
@@ -215,35 +228,35 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <GroupsIcon />
                                 </IconButton>
-                            </Badge>
-                        </Tooltip>
-                    )}
-                    {!(unReadChatCounts && (unReadChatCounts[2] || 0) > 0) && (
-                        <Tooltip title="Group Message" sx={{ zIndex: "10020" }}>
-                            <IconButton
-                                component="p"
-                                variant={currentChatPaneType === 2 ? "solid" : "soft"}
-                                size="sm"
-                                onClick={() => {
-                                    setCurrentChatPaneType(2);
-                                    localStorage.setItem("currentChatPaneType", "2");
-                                }}
-                            >
-                                <GroupsIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
+                            </Tooltip>
+                        )}
 
-                    {/* For PM */}
-                    {unReadChatCounts && (unReadChatCounts[3] || 0) > 0 && (
-                        <Tooltip title="Project Message" sx={{ zIndex: "10020" }}>
-                            <Badge
-                                badgeContent={unReadChatCounts[3]}
-                                color="primary"
-                                size="sm"
-                                anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                            >
+                        {/* For PM */}
+                        {unReadChatCounts && (unReadChatCounts[3] || 0) > 0 && (
+                            <Tooltip title="Project Message" sx={{ zIndex: "10020" }}>
+                                <Badge
+                                    badgeContent={unReadChatCounts[3]}
+                                    color="primary"
+                                    size="sm"
+                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                >
+                                    <IconButton
+                                        component="p"
+                                        variant={currentChatPaneType === 3 ? "solid" : "soft"}
+                                        size="sm"
+                                        onClick={() => {
+                                            setCurrentChatPaneType(3);
+                                            localStorage.setItem("currentChatPaneType", "3");
+                                        }}
+                                    >
+                                        <AccountTreeIcon />
+                                    </IconButton>
+                                </Badge>
+                            </Tooltip>
+                        )}
+                        {!(unReadChatCounts && (unReadChatCounts[3] || 0) > 0) && (
+                            <Tooltip title="Project Updates" sx={{ zIndex: "10020" }}>
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 3 ? "solid" : "soft"}
@@ -255,50 +268,50 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <AccountTreeIcon />
                                 </IconButton>
-                            </Badge>
-                        </Tooltip>
-                    )}
-                    {!(unReadChatCounts && (unReadChatCounts[3] || 0) > 0) && (
-                        <Tooltip title="Project Updates" sx={{ zIndex: "10020" }}>
+                            </Tooltip>
+                        )}
+
+                        {/* For Pinned */}
+                        <Tooltip title="Pinned" sx={{ zIndex: "10020" }}>
                             <IconButton
                                 component="p"
-                                variant={currentChatPaneType === 3 ? "solid" : "soft"}
+                                variant={currentChatPaneType === 4 ? "solid" : "soft"}
                                 size="sm"
                                 onClick={() => {
-                                    setCurrentChatPaneType(3);
-                                    localStorage.setItem("currentChatPaneType", "3");
+                                    setCurrentChatPaneType(4);
+                                    localStorage.setItem("currentChatPaneType", "4");
                                 }}
                             >
-                                <AccountTreeIcon />
+                                <PushPinIcon />
                             </IconButton>
                         </Tooltip>
-                    )}
 
-                    {/* For Pinned */}
-                    <Tooltip title="Pinned" sx={{ zIndex: "10020" }}>
-                        <IconButton
-                            component="p"
-                            variant={currentChatPaneType === 4 ? "solid" : "soft"}
-                            size="sm"
-                            onClick={() => {
-                                setCurrentChatPaneType(4);
-                                localStorage.setItem("currentChatPaneType", "4");
-                            }}
-                        >
-                            <PushPinIcon />
-                        </IconButton>
-                    </Tooltip>
-
-                    {/* For Activity */}
-                    {unReadActivityMessageCounts > 0 && (
-                        <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
-                            <Badge
-                                badgeContent={unReadActivityMessageCounts}
-                                color="primary"
-                                size="sm"
-                                anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                            >
+                        {/* For Activity */}
+                        {unReadActivityMessageCounts > 0 && (
+                            <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
+                                <Badge
+                                    badgeContent={unReadActivityMessageCounts}
+                                    color="primary"
+                                    size="sm"
+                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                >
+                                    <IconButton
+                                        component="p"
+                                        variant={currentChatPaneType === 5 ? "solid" : "soft"}
+                                        size="sm"
+                                        onClick={() => {
+                                            setCurrentChatPaneType(5);
+                                            localStorage.setItem("currentChatPaneType", "5");
+                                        }}
+                                    >
+                                        <NotificationsActiveIcon />
+                                    </IconButton>
+                                </Badge>
+                            </Tooltip>
+                        )}
+                        {unReadActivityMessageCounts === 0 && (
+                            <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 5 ? "solid" : "soft"}
@@ -310,24 +323,39 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <NotificationsActiveIcon />
                                 </IconButton>
-                            </Badge>
-                        </Tooltip>
-                    )}
-                    {unReadActivityMessageCounts === 0 && (
-                        <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
-                            <IconButton
-                                component="p"
-                                variant={currentChatPaneType === 5 ? "solid" : "soft"}
-                                size="sm"
-                                onClick={() => {
-                                    setCurrentChatPaneType(5);
-                                    localStorage.setItem("currentChatPaneType", "5");
-                                }}
-                            >
-                                <NotificationsActiveIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
+                            </Tooltip>
+                        )}
+                    </Stack>
+
+                    {/* Switch on the right */}
+                    <Switch
+                        checked={onlyUnread}
+                        onChange={() => setOnlyUnread(!onlyUnread)}
+                        slotProps={{
+                            track: {
+                                children: (
+                                    <Typography
+                                        component="span"
+                                        level="inherit"
+                                        sx={{
+                                            ml: onlyUnread ? "6px" : "22px",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        Unread
+                                    </Typography>
+                                ),
+                            },
+                        }}
+                        size="sm"
+                        variant="soft"
+                        sx={{
+                            "--Switch-thumbSize": "15px",
+                            "--Switch-trackWidth": "70px",
+                            "--Switch-trackHeight": "23px",
+                            paddingRight: "10px",
+                        }}
+                    />
                 </Stack>
 
                 {currentChatPaneType === 1 && (
@@ -361,6 +389,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
+                            onlyUnread={onlyUnread}
                         />
                     </>
                 )}
@@ -395,6 +424,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
+                            onlyUnread={onlyUnread}
                         />
                         <ModalCreateGM
                             socket={socket}
@@ -438,6 +468,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
+                            onlyUnread={onlyUnread}
                         />
                     </>
                 )}
@@ -480,6 +511,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
+                            onlyUnread={onlyUnread}
                         />
                     </>
                 )}
