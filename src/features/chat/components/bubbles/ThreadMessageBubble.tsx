@@ -237,7 +237,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                   },
                             isFocused
                                 ? {
-                                      background: "#1c7fb1ff",
+                                      background: "#24c165d0",
                                   }
                                 : {
                                       background: "",

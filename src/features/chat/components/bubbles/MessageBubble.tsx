@@ -432,7 +432,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                   },
                             isFocused
                                 ? {
-                                      background: "#1c7fb1ff",
+                                      background: "#24c165d0",
                                   }
                                 : {
                                       background: "",
@@ -492,6 +492,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     {(chat.chatType === 3 || chat.chatType === 4) &&
                                         message.sender.isSystemUser === true && (
                                             <BubbleOpenTaskButton
+                                                message={message}
                                                 taskId={message.taskId}
                                                 setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsThreadVisible={setIsThreadVisible}
@@ -499,6 +500,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                                                 setIsOpeningTask={setIsOpeningTask}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setCurrentProject={setCurrentProject}
                                             />
                                         )}
                                 </Stack>
@@ -593,6 +595,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         chat.chatType === 4) &&
                                                         message.sender.isSystemUser === true && (
                                                             <BubbleOpenTaskButton
+                                                                message={message}
                                                                 taskId={message.taskId}
                                                                 setIsMainChatVisible={
                                                                     setIsMainChatVisible
@@ -609,6 +612,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 setIsOpeningTask={setIsOpeningTask}
                                                                 setCurrentPreviewTaskId={
                                                                     setCurrentPreviewTaskId
+                                                                }
+                                                                setCurrentProject={
+                                                                    setCurrentProject
                                                                 }
                                                             />
                                                         )}
