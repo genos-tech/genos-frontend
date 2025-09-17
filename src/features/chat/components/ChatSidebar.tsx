@@ -6,7 +6,6 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import PersonIcon from "@mui/icons-material/Person";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import CircleIcon from "@mui/icons-material/Circle";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 
 import { ModalCreateGM } from "./modals/ModalCreateGM";
@@ -101,10 +100,29 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             return acc;
         }, {});
     };
-
+    useEffect(() => {
+        setUnReadChatCounts(countUnreadChats(allChats));
+    }, []);
     useEffect(() => {
         setUnReadChatCounts(countUnreadChats(allChats));
     }, [allChats]);
+
+    const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
+    const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
+        return activityMessages.reduce<number>((acc, activity) => {
+            if (activity.isRead === false) {
+                acc += 1;
+            }
+            return acc;
+        }, 0);
+    };
+    useEffect(() => {
+        // Exclude the first thread message cause it's actually not a thread message.
+        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
+            (item) => !(item.isThread === true && item.messageId === 1)
+        );
+        setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
+    }, [activityMessages]);
 
     return (
         <div style={{ display: "flex", height: "100dvh" }}>
@@ -136,6 +154,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     flexWrap="wrap"
                     sx={{ mt: "7px" }}
                 >
+                    {/* For DM */}
                     {unReadChatCounts && (unReadChatCounts[1] || 0) > 0 && (
                         <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
                             <Badge
@@ -175,8 +194,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         </Tooltip>
                     )}
 
+                    {/* For GM */}
                     {unReadChatCounts && (unReadChatCounts[2] || 0) > 0 && (
-                        <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
+                        <Tooltip title="Group Message" sx={{ zIndex: "10020" }}>
                             <Badge
                                 badgeContent={unReadChatCounts[2]}
                                 color="primary"
@@ -214,8 +234,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         </Tooltip>
                     )}
 
+                    {/* For PM */}
                     {unReadChatCounts && (unReadChatCounts[3] || 0) > 0 && (
-                        <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
+                        <Tooltip title="Project Message" sx={{ zIndex: "10020" }}>
                             <Badge
                                 badgeContent={unReadChatCounts[3]}
                                 color="primary"
@@ -253,6 +274,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         </Tooltip>
                     )}
 
+                    {/* For Pinned */}
                     <Tooltip title="Pinned" sx={{ zIndex: "10020" }}>
                         <IconButton
                             component="p"
@@ -267,19 +289,45 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         </IconButton>
                     </Tooltip>
 
-                    <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
-                        <IconButton
-                            component="p"
-                            variant={currentChatPaneType === 5 ? "solid" : "soft"}
-                            size="sm"
-                            onClick={() => {
-                                setCurrentChatPaneType(5);
-                                localStorage.setItem("currentChatPaneType", "5");
-                            }}
-                        >
-                            <NotificationsActiveIcon />
-                        </IconButton>
-                    </Tooltip>
+                    {/* For Activity */}
+                    {unReadActivityMessageCounts > 0 && (
+                        <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
+                            <Badge
+                                badgeContent={unReadActivityMessageCounts}
+                                color="primary"
+                                size="sm"
+                                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                            >
+                                <IconButton
+                                    component="p"
+                                    variant={currentChatPaneType === 5 ? "solid" : "soft"}
+                                    size="sm"
+                                    onClick={() => {
+                                        setCurrentChatPaneType(5);
+                                        localStorage.setItem("currentChatPaneType", "5");
+                                    }}
+                                >
+                                    <NotificationsActiveIcon />
+                                </IconButton>
+                            </Badge>
+                        </Tooltip>
+                    )}
+                    {unReadActivityMessageCounts === 0 && (
+                        <Tooltip title="Recent Activities" sx={{ zIndex: "10020" }}>
+                            <IconButton
+                                component="p"
+                                variant={currentChatPaneType === 5 ? "solid" : "soft"}
+                                size="sm"
+                                onClick={() => {
+                                    setCurrentChatPaneType(5);
+                                    localStorage.setItem("currentChatPaneType", "5");
+                                }}
+                            >
+                                <NotificationsActiveIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                 </Stack>
 
                 {currentChatPaneType === 1 && (

@@ -102,6 +102,7 @@ export const ChatList = (props: ChatListProps) => {
     );
 
     useEffect(() => {
+        // Exclude the first thread message cause it's actually not a thread message.
         const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
             (item) => !(item.isThread === true && item.messageId === 1)
         );

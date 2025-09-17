@@ -25,7 +25,6 @@ import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
-import { addActivityMessage } from "../services/addActivityMessage";
 
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task Comment}
 // activityType = {1: message or comment, 2: reaction, 3: mention}
@@ -306,7 +305,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             setIsThreadVisible(true);
         }
 
-        updateActivityReadStatus();
+        if (activity.isRead === false) {
+            updateActivityReadStatus();
+        }
     };
 
     const chatTypeLookup: { [key: number]: string } = {
