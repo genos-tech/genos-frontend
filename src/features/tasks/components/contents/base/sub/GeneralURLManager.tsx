@@ -10,11 +10,10 @@ type GeneralURLManagerProps = {
     generalLink: { url: string; title: string };
     taskContents?: TaskProps;
     setTaskContents?: (value: TaskProps) => void;
-    isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const GeneralURLManager = (props: GeneralURLManagerProps) => {
-    const { generalLink, taskContents, setTaskContents, isPreviewMode, setTaskUpdated } = props;
+    const { generalLink, taskContents, setTaskContents, setTaskUpdated } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [url, setUrl] = useState("");
     const [title, setTitle] = useState("");

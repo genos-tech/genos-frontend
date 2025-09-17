@@ -10,11 +10,10 @@ type GitHubURLManagerProps = {
     githubLink: { url: string; title: string };
     taskContents?: TaskProps;
     setTaskContents?: (value: TaskProps) => void;
-    isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const GitHubURLManager = (props: GitHubURLManagerProps) => {
-    const { githubLink, taskContents, setTaskContents, isPreviewMode, setTaskUpdated } = props;
+    const { githubLink, taskContents, setTaskContents, setTaskUpdated } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [prUrl, setPRUrl] = useState("");
     const [prTitle, setPRTitle] = useState("");

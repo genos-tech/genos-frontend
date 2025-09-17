@@ -29,7 +29,6 @@ type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     chat: AllChatProps;
-    funcSetAllChats: () => void;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     currentMainChat: ChatProps;
@@ -39,8 +38,6 @@ type ChatListItemProps = ListItemButtonProps & {
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     isThreadVisible: boolean;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
     isTaskCreationVisible: boolean;
     isSubChatVisible: boolean;
@@ -54,7 +51,6 @@ export const ChatListItem = (props: ChatListItemProps) => {
         teamMemberProfiles,
         socket,
         chat,
-        funcSetAllChats,
         myself,
         setMyself,
         currentMainChat,
@@ -64,8 +60,6 @@ export const ChatListItem = (props: ChatListItemProps) => {
         setIsMainChatVisible,
         setIsThreadVisible,
         isThreadVisible,
-        setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
         isTaskPreviewVisible,
         isTaskCreationVisible,
         isSubChatVisible,

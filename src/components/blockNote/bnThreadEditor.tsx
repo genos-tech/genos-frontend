@@ -29,7 +29,6 @@ import {
     defaultBlockSpecs,
 } from "@blocknote/core";
 
-import { countBnLines } from "./services/countBnLines";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";

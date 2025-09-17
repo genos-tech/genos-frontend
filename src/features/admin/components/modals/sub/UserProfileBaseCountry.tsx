@@ -78,6 +78,7 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                         value={defaultCountry}
                         isOptionEqualToValue={(option, value) => option.code === value.code}
                         renderOption={(props, option) => {
+                            // @ts-ignore
                             const { key, ..._props } = props;
                             return (
                                 <AutocompleteOption key={option.code} {..._props}>

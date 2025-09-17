@@ -7,7 +7,6 @@ import { UserProfile } from "../../features/admin/components/modals/UserProfile"
 import { UserProps } from "../../types/admin";
 import { ThreadProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
-import { TaskCommentProps } from "../../types/tasks";
 
 type AvatarWithStatusProps = {
     myself: UserProps;

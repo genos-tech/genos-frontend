@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useEffect, useState } from "react";
 import { Stack, Sheet, IconButton, Tooltip, Badge, Typography, Switch } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -366,7 +365,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             myself={myself}
                             setMyself={setMyself}
-                            funcSetAllChats={funcSetAllChats}
                             chatType={1}
                             activityMessages={[]}
                             setActivityMessages={setActivityMessages}
@@ -381,7 +379,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setIsThreadVisible={setIsThreadVisible}
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsTaskCreationVisible={setIsTaskCreationVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isTaskCreationVisible={isTaskCreationVisible}
                             isSubChatVisible={isSubChatVisible}
@@ -401,7 +398,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             myself={myself}
                             setMyself={setMyself}
-                            funcSetAllChats={funcSetAllChats}
                             chatType={2}
                             activityMessages={[]}
                             setActivityMessages={setActivityMessages}
@@ -416,7 +412,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setIsThreadVisible={setIsThreadVisible}
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsTaskCreationVisible={setIsTaskCreationVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isTaskCreationVisible={isTaskCreationVisible}
                             isSubChatVisible={isSubChatVisible}
@@ -445,7 +440,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             myself={myself}
                             setMyself={setMyself}
-                            funcSetAllChats={funcSetAllChats}
                             chatType={3}
                             activityMessages={[]}
                             setActivityMessages={setActivityMessages}
@@ -460,7 +454,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setIsThreadVisible={setIsThreadVisible}
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsTaskCreationVisible={setIsTaskCreationVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isTaskCreationVisible={isTaskCreationVisible}
                             isSubChatVisible={isSubChatVisible}
@@ -488,7 +481,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             myself={myself}
                             setMyself={setMyself}
-                            funcSetAllChats={funcSetAllChats}
                             chatType={-1}
                             activityMessages={activityMessages}
                             setActivityMessages={setActivityMessages}
@@ -503,7 +495,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setIsThreadVisible={setIsThreadVisible}
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsTaskCreationVisible={setIsTaskCreationVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isTaskCreationVisible={isTaskCreationVisible}
                             isSubChatVisible={isSubChatVisible}

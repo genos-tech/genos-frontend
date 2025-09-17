@@ -50,7 +50,6 @@ import { RiAlertFill } from "react-icons/ri";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import "../../App.css";

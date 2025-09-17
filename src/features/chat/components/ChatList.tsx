@@ -18,7 +18,6 @@ type ChatListProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    funcSetAllChats: () => void;
     chatType: number;
     currentActivityMessageType: number;
     activityMessages: ActivityMessageProps[];
@@ -33,7 +32,6 @@ type ChatListProps = {
     setIsThreadVisible: (value: boolean) => void;
     isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
     isTaskCreationVisible: boolean;
     isSubChatVisible: boolean;
@@ -50,7 +48,6 @@ export const ChatList = (props: ChatListProps) => {
         socket,
         myself,
         setMyself,
-        funcSetAllChats,
         chatType,
         activityMessages,
         setActivityMessages,
@@ -65,7 +62,6 @@ export const ChatList = (props: ChatListProps) => {
         setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
         isTaskPreviewVisible,
         isTaskCreationVisible,
         isSubChatVisible,
@@ -143,12 +139,10 @@ export const ChatList = (props: ChatListProps) => {
     }, [activityMessages, currentActivityMessageType, onlyUnread]);
 
     useEffect(() => {
-        setTmpAllChats(allChats);
-
         if (onlyUnread === true) {
             setTmpActivityMessages(tmpActivityMessages.filter((item) => item.isRead === false));
             setTmpAllChats(
-                tmpAllChats.filter(
+                allChats.filter(
                     (item) =>
                         item.lastReadMessageId <
                         (item.latestMessage
@@ -156,6 +150,8 @@ export const ChatList = (props: ChatListProps) => {
                             : item.lastReadMessageId + 1)
                 )
             );
+        } else {
+            setTmpAllChats([...allChats]);
         }
     }, [onlyUnread, allChats]);
 
@@ -190,7 +186,6 @@ export const ChatList = (props: ChatListProps) => {
                                         teamMemberProfiles={teamMemberProfiles}
                                         socket={socket}
                                         chat={chat}
-                                        funcSetAllChats={funcSetAllChats}
                                         myself={myself}
                                         setMyself={setMyself}
                                         currentMainChat={currentMainChat}
@@ -200,8 +195,6 @@ export const ChatList = (props: ChatListProps) => {
                                         setIsMainChatVisible={setIsMainChatVisible}
                                         setIsThreadVisible={setIsThreadVisible}
                                         isThreadVisible={isThreadVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
                                         isTaskPreviewVisible={isTaskPreviewVisible}
                                         isTaskCreationVisible={isTaskCreationVisible}
                                         isSubChatVisible={isSubChatVisible}

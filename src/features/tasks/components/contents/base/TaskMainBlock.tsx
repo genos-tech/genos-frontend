@@ -247,7 +247,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             githubLink={taskContents.githubLink}
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
-                            isPreviewMode={isPreviewMode}
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
@@ -256,7 +255,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             generalLink={taskContents.generalLink}
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
-                            isPreviewMode={isPreviewMode}
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>

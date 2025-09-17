@@ -6,11 +6,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { useAuth } from "../../../context/AuthContext";
 import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
 import { ChatProps } from "../../../types/chat";
-
-const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const requestNameLookUp: { [key: number]: string } = {
     1: "team",

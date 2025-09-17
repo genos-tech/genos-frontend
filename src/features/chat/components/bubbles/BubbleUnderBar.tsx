@@ -1,6 +1,5 @@
 import { Socket } from "socket.io-client";
 import { Box, Button, Stack } from "@mui/joy";
-import CircleIcon from "@mui/icons-material/Circle";
 
 import { ShowEmojiReaction } from "../../../../components/emojiInput/ShowEmojiReaction";
 import { UserProps } from "../../../../types/admin";
