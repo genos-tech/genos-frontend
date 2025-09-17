@@ -31,6 +31,7 @@ type ChatSidebarProps = {
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -62,6 +63,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         currentChatPaneType,
         setCurrentChatPaneType,
         activityMessages,
+        setActivityMessages,
         allChats,
         setAllChats,
         setCurrentMainChat,
@@ -291,6 +293,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             chatType={1}
                             activityMessages={[]}
+                            setActivityMessages={setActivityMessages}
                             allChats={allChats.filter((chat) => chat.chatType === 1)}
                             currentActivityMessageType={-1}
                             currentMainChat={currentMainChat}
@@ -324,6 +327,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             chatType={2}
                             activityMessages={[]}
+                            setActivityMessages={setActivityMessages}
                             allChats={allChats.filter((chat) => chat.chatType === 2)}
                             currentActivityMessageType={-1}
                             currentMainChat={currentMainChat}
@@ -366,6 +370,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             chatType={3}
                             activityMessages={[]}
+                            setActivityMessages={setActivityMessages}
                             allChats={allChats.filter((chat) => chat.chatType === 3)}
                             currentActivityMessageType={-1}
                             currentMainChat={currentMainChat}
@@ -407,6 +412,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             chatType={-1}
                             activityMessages={activityMessages}
+                            setActivityMessages={setActivityMessages}
                             allChats={allChats}
                             currentActivityMessageType={currentActivityMessageType}
                             currentMainChat={currentMainChat}

@@ -110,7 +110,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             popSpecificMessages(chat.chatId, chat.chatType)
                 .then((messages) => {
                     const newChat: ChatProps = defineNewChat(messages);
-                    setCurrentMainChat(defineNewChat(messages));
+                    setCurrentMainChat(newChat);
                     addChat(newChat, chat.chatType);
 
                     // Switch Thread to Main

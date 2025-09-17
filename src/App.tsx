@@ -302,6 +302,7 @@ export const App = () => {
                         currentChatPaneType={currentChatPaneType}
                         setCurrentChatPaneType={setCurrentChatPaneType}
                         activityMessages={activityMessages}
+                        setActivityMessages={setActivityMessages}
                         currentMainChat={currentMainChat}
                         setCurrentMainChat={setCurrentMainChat}
                         currentSubChat={currentSubChat}

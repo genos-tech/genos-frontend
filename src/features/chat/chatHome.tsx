@@ -28,6 +28,7 @@ type ChatHomeProps = {
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     currentSubChat: ChatProps | undefined;
@@ -53,6 +54,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         currentChatPaneType,
         setCurrentChatPaneType,
         activityMessages,
+        setActivityMessages,
         currentMainChat,
         setCurrentMainChat,
         currentSubChat,
@@ -237,6 +239,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 currentChatPaneType={currentChatPaneType}
                                 setCurrentChatPaneType={setCurrentChatPaneType}
                                 activityMessages={activityMessages}
+                                setActivityMessages={setActivityMessages}
                                 allChats={allChats}
                                 setAllChats={setAllChats}
                                 setCurrentMainChat={setCurrentMainChat}

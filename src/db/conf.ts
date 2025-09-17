@@ -1,10 +1,10 @@
 export const DB_NAME = "originData";
-export const DB_VERSION = 12;
+export const DB_VERSION = 13;
 
 export const STORES = {
     USER_INFO: "users",
     INBOX: "inbox",
-    ACTIVITY_MESSAGES: "activityChats",
+    ACTIVITY_MESSAGES: "activityMessages",
     DM_CHATS: "dmChats",
     DM_MESSAGES: "dmMessages",
     DM_THREAD_MESSAGES: "dmThreadMessages",

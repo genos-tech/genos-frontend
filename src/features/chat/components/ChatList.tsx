@@ -22,6 +22,7 @@ type ChatListProps = {
     chatType: number;
     currentActivityMessageType: number;
     activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
@@ -51,6 +52,7 @@ export const ChatList = (props: ChatListProps) => {
         funcSetAllChats,
         chatType,
         activityMessages,
+        setActivityMessages,
         allChats,
         currentActivityMessageType,
         setCurrentMainChat,
@@ -87,7 +89,8 @@ export const ChatList = (props: ChatListProps) => {
     const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
     useScrollToBottomOnNewActivity(
         virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
-        activityMessages
+        activityMessages,
+        true
     );
 
     {
@@ -206,10 +209,12 @@ export const ChatList = (props: ChatListProps) => {
                             <div>
                                 <Stack direction="row">
                                     <ChatListItemForActivity
-                                        key={activityMessage.activityId}
+                                        key={`${activityMessage.activityId}-${activityMessage.isRead}`}
                                         teamMemberProfiles={teamMemberProfiles}
                                         socket={socket}
                                         activity={activityMessage}
+                                        activityMessages={tmpActivityMessages}
+                                        setActivityMessages={setActivityMessages}
                                         myself={myself}
                                         setMyself={setMyself}
                                         allChats={allChats}

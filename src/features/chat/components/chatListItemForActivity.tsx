@@ -6,6 +6,7 @@ import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import CircleIcon from "@mui/icons-material/Circle";
 
 import { useAuth } from "../../../context/AuthContext";
 import { popSpecificMessages } from "../services/popSpecificMessages";
@@ -23,6 +24,8 @@ import {
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
+import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
+import { addActivityMessage } from "../services/addActivityMessage";
 
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task Comment}
 // activityType = {1: message or comment, 2: reaction, 3: mention}
@@ -31,6 +34,8 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     activity: ActivityMessageProps;
+    activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     allChats: AllChatProps[];
@@ -55,6 +60,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         teamMemberProfiles,
         socket,
         activity,
+        activityMessages,
+        setActivityMessages,
         myself,
         setMyself,
         allChats,
@@ -76,6 +83,29 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     const { accessToken } = useAuth();
 
     const isYou = myself.userId === activity.dmPartnerUserId;
+
+    const updateActivityReadStatus = () => {
+        if (accessToken && activity.activityId) {
+            const updateActivityReadStatusWorker = new UpdateActivityReadStatusWorker();
+            updateActivityReadStatusWorker.postMessage({
+                accessToken: accessToken,
+                activityId: activity.activityId,
+                isRead: true,
+                activityMessages: activityMessages,
+            });
+            updateActivityReadStatusWorker.onmessage = (event) => {
+                const data = event.data;
+                if (data.error) {
+                    console.error("Worker failed:", data.error);
+                } else {
+                    setActivityMessages(data);
+                }
+            };
+            return () => {
+                updateActivityReadStatusWorker.terminate();
+            };
+        }
+    };
 
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
         let chatType: number = activity.chatType;
@@ -275,6 +305,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
             setIsThreadVisible(true);
         }
+
+        updateActivityReadStatus();
     };
 
     const chatTypeLookup: { [key: number]: string } = {
@@ -489,6 +521,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 >
                                     {extractYYYYMMDDHHMM(activity.tsSent)}
                                 </Typography>
+                                {activity.isRead === false && (
+                                    <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+                                )}
                             </Stack>
                         </Stack>
 

@@ -80,6 +80,7 @@ export type ActivityMessageProps = {
     reactions: ReactionProps[];
     tsSent: string;
     mentionedUserIds?: [];
+    isRead: boolean;
 };
 
 export type MessageProps = {

@@ -75,11 +75,12 @@ export const useScrollToBottomOnChatPaneChange = (
 
 export const useScrollToBottomOnNewActivity = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
-    activityMessages: ActivityMessageProps[]
+    activityMessages: ActivityMessageProps[],
+    notMove: boolean
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
-        if (virtuoso === null) {
+        if (virtuoso === null || notMove === true) {
             return;
         } else {
             setTimeout(() => {

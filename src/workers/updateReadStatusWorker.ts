@@ -12,13 +12,6 @@ self.onmessage = async (event) => {
     const threadId: number = event.data.threadId;
     const lastReadMessageId: number = event.data.lastReadMessageId;
 
-    // console.log("--------")
-    // console.log("chatType:", chatType);
-    // console.log("chatId:", chatId);
-    // console.log("isThread:", isThread);
-    // console.log("threadId:", threadId);
-    // console.log("lastReadMessageId:", lastReadMessageId);
-
     try {
         const api = authApi(accessToken);
         if (api) {
