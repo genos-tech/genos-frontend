@@ -155,6 +155,7 @@ export const App = () => {
         const _allChats: AllChatProps[] = await popAllChats();
         if (_allChats) {
             setAllChats(_allChats);
+            setUnReadChatCounts(countUnreadChats(_allChats));
         }
     };
     const [unReadChatCounts, setUnReadChatCounts] = useState<Record<string, number>>();
@@ -176,6 +177,7 @@ export const App = () => {
         const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
         if (activityMessages) {
             setActivityMessages(activityMessages);
+            setUnReadActivityMessageCounts(countUnreadActivityMessages(activityMessages));
         }
     };
     const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
@@ -195,15 +197,14 @@ export const App = () => {
         setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
     }, [activityMessages]);
 
+    // Chat count icon on the sidebar
     const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
     useEffect(() => {
         if (unReadChatCounts) {
             // 1: DM, 2: GM, 3: PM
             setUnReadChatAndActivityCounts(
-                unReadChatCounts[1] ||
-                    0 + unReadChatCounts[2] ||
-                    0 + unReadChatCounts[3] ||
-                    0 + unReadActivityMessageCounts
+                (unReadChatCounts[1] || 0 + unReadChatCounts[2] || 0 + unReadChatCounts[3] || 0) +
+                    unReadActivityMessageCounts
             );
         }
     }, [unReadChatCounts, unReadActivityMessageCounts]);
@@ -219,7 +220,6 @@ export const App = () => {
         funcSetInboxItems();
         funcSetAllChats();
         funcSetActivityMessages();
-        setUnReadChatCounts(countUnreadChats(allChats));
     }, []);
 
     // Auto save task body every Nms if needed
