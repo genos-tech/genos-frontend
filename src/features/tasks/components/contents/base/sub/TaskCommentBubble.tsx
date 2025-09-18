@@ -151,13 +151,15 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 >
                     <Card
                         sx={{
-                            backgroundColor: mode === "dark" ? "black" : "rgba(221, 221, 221, 0.45)",
+                            backgroundColor:
+                                mode === "dark" ? "black" : "rgba(221, 221, 221, 0.45)",
                         }}
                     >
                         <Stack direction="row" spacing={1} alignItems="center">
                             <AvatarWithStatus
                                 myself={myself}
                                 setMyself={setMyself}
+                                isYou={myself.userId === comment.senderId ? true : false}
                                 avatarUser={teamMemberProfiles[comment.senderId]}
                                 socket={socket}
                                 isForBubble={true}

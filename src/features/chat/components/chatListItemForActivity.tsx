@@ -378,6 +378,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
+                                                isYou={isYou}
                                                 avatarUser={
                                                     teamMemberProfiles[activity.dmPartnerUserId]
                                                 }

@@ -33,7 +33,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const headerUser: UserProps | undefined = teamMemberProfiles[chat.dmPartnerUser.userId];
-    const isOnline: boolean = headerUser
+    let isOnline: boolean = headerUser
         ? myself.userId === headerUser.userId
             ? myself?.isOfflineForced !== "true"
                 ? true
@@ -43,6 +43,10 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
             : false
         : false;
 
+    if (isYou === true) {
+        isOnline = myself.isOfflineForced !== "true" ? true : false;
+    }
+
     return (
         <>
             <div>
@@ -50,6 +54,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     <AvatarWithStatus
                         myself={myself}
                         setMyself={setMyself}
+                        isYou={isYou}
                         avatarUser={headerUser}
                         socket={socket}
                         chat={chat}
@@ -127,6 +132,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
+                    isYou={isYou}
                     user={teamMemberProfiles[chat.dmPartnerUser.userId]}
                     openUserProfile={openUserProfile}
                     setOpenUserProfile={setOpenUserProfile}

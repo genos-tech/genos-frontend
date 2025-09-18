@@ -21,6 +21,8 @@ self.onmessage = async (event) => {
     });
 
     self.postMessage(sortedAllChats);
+
+    self.close(); // Terminates itself
 };
 
 export {};

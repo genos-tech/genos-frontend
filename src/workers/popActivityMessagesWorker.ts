@@ -16,6 +16,8 @@ self.onmessage = async (event) => {
         .sort((a, b) => new Date(b.tsSent).getTime() - new Date(a.tsSent).getTime());
 
     self.postMessage(sortedActivityMessages);
+
+    self.close(); // Terminates itself
 };
 
 export {};

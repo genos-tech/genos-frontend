@@ -44,6 +44,8 @@ self.onmessage = async (event) => {
         }
         self.postMessage({ error: String(error) });
     }
+
+    self.close(); // Terminates itself
 };
 
 export {};

@@ -177,6 +177,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         <AvatarWithStatus
                                             myself={myself}
                                             setMyself={setMyself}
+                                            isYou={isYou}
                                             avatarUser={
                                                 teamMemberProfiles[chat.dmPartnerUser.userId]
                                             }

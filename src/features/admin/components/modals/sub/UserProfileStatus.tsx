@@ -38,26 +38,39 @@ const templateCustomStatueOptions = [
 type UserProfileStatusProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    isYou: boolean;
     user?: UserProps;
     setShowEmojiPicker: (value: boolean) => void;
     selectedEmoji: any;
     setSelectedEmoji: (value: any) => void;
 };
 export const UserProfileStatus = (props: UserProfileStatusProps) => {
-    const { myself, setMyself, user, setShowEmojiPicker, selectedEmoji, setSelectedEmoji } = props;
+    const { myself, setMyself, isYou, user, setShowEmojiPicker, selectedEmoji, setSelectedEmoji } =
+        props;
     const { accessToken } = useAuth();
+
+    const [profileUser, setProfileUser] = useState<UserProps | undefined>(
+        isYou === true ? myself : user
+    );
+    useEffect(() => {
+        if (isYou === true) {
+            setProfileUser(myself);
+        } else {
+            setProfileUser(user);
+        }
+    }, [user]);
 
     const [openCustomStatusEditor, setOpenCustomStatusEditor] = useState(false);
     const [isStatusUpdated, setIsStatusUpdated] = useState(false);
     const [newStatus, setNewStatus] = useState("");
     const [customStatusValue, setCustomStatusValue] = useState(
-        user ? user.customStatus : "Update Status"
+        profileUser ? profileUser.customStatus : "Update Status"
     );
     useEffect(() => {
         if (isStatusUpdated === false && openCustomStatusEditor === false) {
-            setCustomStatusValue(user ? user.customStatus : "Update Status");
+            setCustomStatusValue(profileUser ? profileUser.customStatus : "Update Status");
         }
-    }, [user, isStatusUpdated]);
+    }, [profileUser, isStatusUpdated]);
 
     const insertEmoji = (emoji: any) => {
         setNewStatus(emoji + " " + newStatus);
@@ -100,12 +113,12 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                         <Box sx={{ ml: "-5px" }}>
                                             <PulseDot
                                                 color={
-                                                    myself.userId === user?.userId
+                                                    myself.userId === profileUser?.userId
                                                         ? myself?.isOfflineForced !== "true"
                                                             ? "#4caf50"
                                                             : "#999"
-                                                        : user?.isOnline === true &&
-                                                          user?.isOfflineForced !== "true"
+                                                        : profileUser?.isOnline === true &&
+                                                          profileUser?.isOfflineForced !== "true"
                                                         ? "#4caf50"
                                                         : "#999"
                                                 }
@@ -118,17 +131,17 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                         },
                                     }}
                                 >
-                                    {myself.userId === user?.userId
+                                    {myself.userId === profileUser?.userId
                                         ? myself?.isOfflineForced !== "true"
                                             ? "Online"
                                             : "Offline (Forced)"
-                                        : user?.isOnline === true &&
-                                          user?.isOfflineForced !== "true"
+                                        : profileUser?.isOnline === true &&
+                                          profileUser?.isOfflineForced !== "true"
                                         ? "Online"
                                         : "Offline"}
                                 </Chip>
                             </MenuButton>
-                            {myself.userId === user?.userId && (
+                            {myself.userId === profileUser?.userId && (
                                 <Menu sx={{ zIndex: 10010 }}>
                                     <MenuItem
                                         onClick={() => {
@@ -166,7 +179,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                             )}
                         </Dropdown>
 
-                        {myself.userId === user?.userId && (
+                        {myself.userId === profileUser?.userId && (
                             <>
                                 {openCustomStatusEditor === false && (
                                     <Chip
@@ -186,7 +199,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                             </>
                         )}
 
-                        {myself.userId !== user?.userId && (
+                        {myself.userId !== profileUser?.userId && (
                             <>
                                 {openCustomStatusEditor === false && (
                                     <Chip
@@ -254,7 +267,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                     </Stack>
                 }
             >
-                {user?.userName}
+                {profileUser?.userName}
             </Typography>
             {openCustomStatusEditor === true && (
                 <Stack direction={"row"} spacing={0.5} justifyContent={"center"}>

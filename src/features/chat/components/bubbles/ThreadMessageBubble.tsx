@@ -306,6 +306,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
+                                                isYou={isSent}
                                                 avatarUser={
                                                     isSent
                                                         ? teamMemberProfiles[myself.userId]

@@ -33,6 +33,8 @@ self.onmessage = async (event) => {
         });
         self.postMessage([]);
     }
+
+    self.close(); // Terminates itself
 };
 
 export {};

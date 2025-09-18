@@ -120,6 +120,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <AvatarWithStatus
                             myself={myself}
                             setMyself={setMyself}
+                            isYou={myself.userId === assignee.userId ? true : false}
                             avatarUser={teamMemberProfiles[assignee.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
@@ -143,6 +144,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <AvatarWithStatus
                             myself={myself}
                             setMyself={setMyself}
+                            isYou={myself.userId === reporter.userId ? true : false}
                             avatarUser={teamMemberProfiles[reporter.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
@@ -270,6 +272,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <AvatarWithStatus
                                     myself={myself}
                                     setMyself={setMyself}
+                                    isYou={myself.userId === assignee.userId ? true : false}
                                     avatarUser={teamMemberProfiles[assignee.userId]}
                                     socket={socket}
                                     setOpeningService={setOpeningService}

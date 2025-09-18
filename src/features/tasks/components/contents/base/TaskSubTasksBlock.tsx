@@ -96,6 +96,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                         <AvatarWithStatus
                                             myself={myself}
                                             setMyself={setMyself}
+                                            isYou={
+                                                myself.userId === assignee.userId ? true : false
+                                            }
                                             avatarUser={teamMemberProfiles[assignee.userId]}
                                             socket={socket}
                                             setOpeningService={setOpeningService}

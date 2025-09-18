@@ -266,7 +266,7 @@ export const App = () => {
                         setTeamMemberStatus(data);
                     }
                 };
-            }, 5000);
+            }, 60_000);
 
             return () => {
                 popTeamUsersWorker.terminate();
@@ -293,6 +293,28 @@ export const App = () => {
         funcSetInboxItems: funcSetInboxItems,
     });
 
+    const sendHeartBeat = () => {
+        if (socketInstance) {
+            const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
+            const role: string = localStorage.getItem("role") || "";
+            const baseCountry: string = localStorage.getItem("baseCountry") || "";
+            const customStatus: string = localStorage.getItem("customStatus") || "";
+
+            socketInstance.emit("heartbeat", {
+                message: "alive",
+                is_online: true,
+                user: {
+                    ...myself,
+                    isOfflineForced: isOfflineForced,
+                    role: role,
+                    baseCountry: baseCountry,
+                    customStatus: customStatus,
+                    tsLastSeen: getCurrentTimestamp(),
+                },
+            });
+        }
+    };
+
     useEffect(() => {
         if (socketInstance) {
             socketInstance.emit("join", {
@@ -302,25 +324,11 @@ export const App = () => {
                 dmPartnerUserId: myself.userId,
             });
 
-            const intervalId = setInterval(() => {
-                const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
-                const role: string = localStorage.getItem("role") || "";
-                const baseCountry: string = localStorage.getItem("baseCountry") || "";
-                const customStatus: string = localStorage.getItem("customStatus") || "";
+            sendHeartBeat();
 
-                socketInstance.emit("heartbeat", {
-                    message: "alive",
-                    is_online: true,
-                    user: {
-                        ...myself,
-                        isOfflineForced: isOfflineForced,
-                        role: role,
-                        baseCountry: baseCountry,
-                        customStatus: customStatus,
-                        tsLastSeen: getCurrentTimestamp(),
-                    },
-                });
-            }, 5_000);
+            const intervalId = setInterval(() => {
+                sendHeartBeat();
+            }, 60_000);
 
             return () => {
                 clearInterval(intervalId);

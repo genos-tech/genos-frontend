@@ -11,6 +11,7 @@ import { PulseDot } from "../utils/PulseDot";
 type AvatarWithStatusProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    isYou: boolean;
     avatarUser?: UserProps;
     socket: Socket | null;
     isForBubble?: boolean;
@@ -23,6 +24,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     const {
         myself,
         setMyself,
+        isYou,
         avatarUser,
         socket,
         isForBubble,
@@ -33,7 +35,8 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
-    const isOnline: boolean = avatarUser
+    let isOnline: boolean;
+    isOnline = avatarUser
         ? myself.userId === avatarUser.userId
             ? myself?.isOfflineForced !== "true"
                 ? true
@@ -42,6 +45,15 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             ? true
             : false
         : false;
+
+    let avatarImg: string;
+
+    if (isYou === true) {
+        isOnline = myself?.isOfflineForced !== "true" ? true : false;
+        avatarImg = myself.avatarImgPath;
+    } else {
+        avatarImg = avatarUser?.avatarImgPath || "";
+    }
 
     return (
         <div>
@@ -52,33 +64,21 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 onClick={() => setOpenUserProfile(true)}
             >
                 {chat && (
-                    <Avatar
-                        size="sm"
-                        sx={{ width: 32, height: 32 }}
-                        src={avatarUser?.avatarImgPath}
-                    >
+                    <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarImg}>
                         {chat.chatType === 1 || isForBubble === true
                             ? avatarUser?.userName[0].toUpperCase()
                             : chat?.chatName[0].toUpperCase()}
                     </Avatar>
                 )}
                 {thread && (
-                    <Avatar
-                        size="sm"
-                        sx={{ width: 32, height: 32 }}
-                        src={avatarUser?.avatarImgPath}
-                    >
+                    <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarImg}>
                         {thread.chatType === 1 || isForBubble === true
                             ? avatarUser?.userName[0].toUpperCase()
                             : thread?.chatName[0].toUpperCase()}
                     </Avatar>
                 )}
                 {chat === undefined && thread === undefined && (
-                    <Avatar
-                        size="sm"
-                        sx={{ width: 32, height: 32 }}
-                        src={avatarUser?.avatarImgPath}
-                    >
+                    <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarImg}>
                         {avatarUser?.userName[0].toUpperCase()}
                     </Avatar>
                 )}
@@ -91,6 +91,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
+                isYou={isYou}
                 user={avatarUser}
                 openUserProfile={openUserProfile}
                 setOpenUserProfile={setOpenUserProfile}

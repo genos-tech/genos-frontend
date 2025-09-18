@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Modal,
     ModalDialog,
@@ -35,6 +35,7 @@ type UserProfileProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    isYou: boolean;
     user?: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
@@ -46,6 +47,7 @@ export const UserProfile = (props: UserProfileProps) => {
         socket,
         setMyself,
         myself,
+        isYou,
         user,
         openUserProfile,
         setOpenUserProfile,
@@ -56,6 +58,17 @@ export const UserProfile = (props: UserProfileProps) => {
     const { accessToken } = useAuth();
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+
+    const [profileUser, setProfileUser] = useState<UserProps | undefined>(
+        isYou === true ? myself : user
+    );
+    useEffect(() => {
+        if (isYou === true) {
+            setProfileUser(myself);
+        } else {
+            setProfileUser(user);
+        }
+    }, [user]);
 
     return (
         <>
@@ -87,9 +100,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    {myself.userId !== user?.userId
-                                        ? user?.userName
-                                            ? `${user?.userName}'s Profile`
+                                    {isYou === true
+                                        ? "My Profile"
+                                        : myself.userId !== profileUser?.userId
+                                        ? profileUser?.userName
+                                            ? `${profileUser?.userName}'s Profile`
                                             : "Profile"
                                         : "My Profile"}
                                 </Typography>
@@ -121,12 +136,12 @@ export const UserProfile = (props: UserProfileProps) => {
                                         <Avatar
                                             sx={{ width: 180, height: 180, fontSize: "50px" }}
                                             onClick={() => setOpenUserProfile(true)}
-                                            src={user?.avatarImgPath}
+                                            src={profileUser?.avatarImgPath}
                                         >
-                                            {user?.userName[0]}
+                                            {profileUser?.userName[0]}
                                         </Avatar>
 
-                                        {myself.userId === user?.userId && (
+                                        {myself.userId === profileUser?.userId && (
                                             <Box
                                                 sx={{
                                                     position: "absolute",
@@ -147,6 +162,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         <UserProfileStatus
                                             myself={myself}
                                             setMyself={setMyself}
+                                            isYou={isYou}
                                             user={user}
                                             setShowEmojiPicker={setShowEmojiPicker}
                                             selectedEmoji={selectedEmoji}
@@ -156,7 +172,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         <Stack direction={"row"} spacing={2}>
                                             <Typography
                                                 component="a"
-                                                href={`mailto:${user?.userEmail}`}
+                                                href={`mailto:${profileUser?.userEmail}`}
                                                 startDecorator={
                                                     <EmailRoundedIcon fontSize="small" />
                                                 }
@@ -166,7 +182,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     cursor: "pointer",
                                                 }}
                                             >
-                                                {user?.userEmail}
+                                                {profileUser?.userEmail}
                                             </Typography>
                                             <Typography
                                                 startDecorator={
@@ -191,7 +207,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         fontWeight="bold"
                                                         sx={{ userSelect: "text" }}
                                                     >
-                                                        {user?.teamName}
+                                                        {profileUser?.teamName}
                                                     </Typography>
                                                 </Button>
                                             </FormControl>
@@ -208,7 +224,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         fontWeight="bold"
                                                         sx={{ userSelect: "text" }}
                                                     >
-                                                        {user?.teamId}
+                                                        {profileUser?.teamId}
                                                     </Typography>
                                                 </Button>
                                             </FormControl>
@@ -217,7 +233,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 <UserProfileRole
                                                     myself={myself}
                                                     setMyself={setMyself}
-                                                    user={user}
+                                                    user={profileUser}
                                                 />
                                             </FormControl>
                                             <FormControl>
@@ -225,7 +241,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 <UserProfileBaseCountry
                                                     myself={myself}
                                                     setMyself={setMyself}
-                                                    user={user}
+                                                    user={profileUser}
                                                 />
                                             </FormControl>
                                         </Stack>
@@ -243,10 +259,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         fontWeight={"bold"}
                                                         sx={{ userSelect: "text" }}
                                                     >
-                                                        {user &&
-                                                        user?.tsJoined !== "" &&
-                                                        user?.tsJoined !== "N/A"
-                                                            ? extractYYYYMMDD(user.tsJoined)
+                                                        {profileUser &&
+                                                        profileUser?.tsJoined !== "" &&
+                                                        profileUser?.tsJoined !== "N/A"
+                                                            ? extractYYYYMMDD(profileUser.tsJoined)
                                                             : "N/A"}
                                                     </Typography>
                                                 </Button>
@@ -274,17 +290,17 @@ export const UserProfile = (props: UserProfileProps) => {
                                 }}
                                 onClick={() => {
                                     (async () => {
-                                        if (user) {
+                                        if (profileUser) {
                                             const chatId: number = await loadDMIdByUserId(
                                                 myself,
-                                                user?.userId,
+                                                profileUser?.userId,
                                                 accessToken
                                             );
                                             await moveToDMChat(
                                                 socket,
                                                 chatId,
-                                                user?.userName,
-                                                user,
+                                                profileUser?.userName,
+                                                profileUser,
                                                 setCurrentMainChat
                                             );
                                             setOpeningService(1);

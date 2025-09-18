@@ -30,6 +30,8 @@ self.onmessage = async (event) => {
 
     // Send finish a message
     self.postMessage("done");
+
+    self.close(); // Terminates itself
 };
 
 export {};

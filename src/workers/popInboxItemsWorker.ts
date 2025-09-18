@@ -13,6 +13,8 @@ self.onmessage = async (event) => {
     });
 
     self.postMessage(sortedInboxItems);
+
+    self.close(); // Terminates itself
 };
 
 export {};

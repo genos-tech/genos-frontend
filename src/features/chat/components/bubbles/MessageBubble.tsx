@@ -516,6 +516,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
+                                                isYou={isSent}
                                                 avatarUser={
                                                     isSent
                                                         ? teamMemberProfiles[myself.userId]

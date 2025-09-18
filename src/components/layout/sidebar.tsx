@@ -272,6 +272,7 @@ export const Sidebar = (props: SidebarProps) => {
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
+                isYou={true}
                 user={teamMemberProfiles[myself.userId]}
                 openUserProfile={openUserProfile}
                 setOpenUserProfile={setOpenUserProfile}

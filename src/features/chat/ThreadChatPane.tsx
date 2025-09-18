@@ -5,10 +5,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { ThreadMessageBubble } from "./components/bubbles/ThreadMessageBubble";
 import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader";
-import {
-    useScrollToBottomOnNewMessage,
-    useScrollToBottomOnChatChange,
-} from "./hooks/messageBubbleHooks";
+import { useScrollToBottomOnChatChange } from "./hooks/messageBubbleHooks";
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
@@ -18,7 +15,6 @@ import { UserProps } from "../../types/admin";
 import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
-import { addChat } from "../../features/chat/services/addChat";
 import { useAuth } from "../../context/AuthContext";
 import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 

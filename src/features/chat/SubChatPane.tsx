@@ -5,10 +5,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { MessageBubble } from "./components/bubbles/MessageBubble";
 import { SubChatPaneHeader } from "./components/headers/SubChatPaneHeader";
-import {
-    useScrollToBottomOnNewMessage,
-    useScrollToBottomOnChatChange,
-} from "./hooks/messageBubbleHooks";
+import { useScrollToBottomOnChatChange } from "./hooks/messageBubbleHooks";
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";

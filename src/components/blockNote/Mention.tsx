@@ -74,6 +74,7 @@ export const CreateMentionSpec = (
                             socket={socket}
                             myself={myself}
                             setMyself={setMyself}
+                            isYou={myself.userId === userId ? true : false}
                             user={teamMemberProfiles[userId]}
                             openUserProfile={openUserProfile}
                             setOpenUserProfile={setOpenUserProfile}
