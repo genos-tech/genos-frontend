@@ -173,7 +173,7 @@ export const ChatList = (props: ChatListProps) => {
                 <Virtuoso
                     ref={chatTypeLookup[chatType]}
                     className="custom-scrollbar"
-                    style={{ height: "87dvh" }}
+                    style={{ height: "93dvh" }}
                     totalCount={tmpAllChats.length}
                     initialTopMostItemIndex={0}
                     atTopThreshold={64}
@@ -215,7 +215,7 @@ export const ChatList = (props: ChatListProps) => {
                 <Virtuoso
                     ref={virtuosoActivityRef}
                     className="custom-scrollbar"
-                    style={{ height: "83dvh" }}
+                    style={{ height: "89dvh" }}
                     totalCount={tmpActivityMessages.length}
                     initialTopMostItemIndex={0}
                     atTopThreshold={64}

@@ -532,7 +532,7 @@ div[data-floating-ui-focusable] {
 }
 
 .task-comment-preview-light code {
-  background-color: #d4d4d470 !important;
+  background-color: #adadad70 !important;
   color: rgb(255, 0, 144);
 }
 
@@ -543,7 +543,7 @@ div[data-floating-ui-focusable] {
 }
 
 .task-comment-preview-dark code {
-  background-color: #00000070 !important;
+  background-color: #2f2f2f70 !important;
   color: rgb(255, 140, 0);
 }
 

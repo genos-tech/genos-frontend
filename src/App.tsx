@@ -123,13 +123,29 @@ export const App = () => {
         isUpdate: false,
         scrollToBottom: true,
     });
+
+    // Inbox variables
     const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
+    const [unReadInboxItemCount, setUnReadInboxItemCount] = useState<number>(0);
+    const countUnReadInboxItem = (inboxItems: InboxItemProps[]): number => {
+        return inboxItems.reduce<number>((acc, item) => {
+            if (item.isRead === false) {
+                acc += 1;
+            }
+            return acc;
+        }, 0);
+    };
     const funcSetInboxItems = async () => {
         const inboxItems: InboxItemProps[] = await popInboxItems();
         if (inboxItems) {
             setInboxItems(inboxItems);
         }
     };
+    useEffect(() => {
+        setUnReadInboxItemCount(countUnReadInboxItem(inboxItems));
+    }, [inboxItems]);
+
+    // Chat variables
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const funcSetAllChats = async () => {
         const _allChats: AllChatProps[] = await popAllChats();
@@ -137,6 +153,20 @@ export const App = () => {
             setAllChats(_allChats);
         }
     };
+    const [unReadChatCounts, setUnReadChatCounts] = useState<Record<string, number>>();
+    const countUnreadChats = (chats: AllChatProps[]): Record<string, number> => {
+        return chats.reduce<Record<string, number>>((acc, chat) => {
+            if (chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId) {
+                acc[chat.chatType] = (acc[chat.chatType] ?? 0) + 1;
+            }
+            return acc;
+        }, {});
+    };
+    useEffect(() => {
+        setUnReadChatCounts(countUnreadChats(allChats));
+    }, [allChats]);
+
+    // Activity variables
     const [activityMessages, setActivityMessages] = useState<ActivityMessageProps[]>([]);
     const funcSetActivityMessages = async () => {
         const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
@@ -144,6 +174,35 @@ export const App = () => {
             setActivityMessages(activityMessages);
         }
     };
+    const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
+    const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
+        return activityMessages.reduce<number>((acc, activity) => {
+            if (activity.isRead === false) {
+                acc += 1;
+            }
+            return acc;
+        }, 0);
+    };
+    useEffect(() => {
+        // Exclude the first thread message cause it's actually not a thread message.
+        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
+            (item) => !(item.isThread === true && item.messageId === 1)
+        );
+        setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
+    }, [activityMessages]);
+
+    const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
+    useEffect(() => {
+        if (unReadChatCounts) {
+            // 0: DM, 1: GM, 2: PM
+            setUnReadChatAndActivityCounts(
+                unReadChatCounts[0] ||
+                    0 + unReadChatCounts[1] ||
+                    0 + unReadChatCounts[2] ||
+                    0 + unReadActivityMessageCounts
+            );
+        }
+    }, [unReadChatCounts, unReadActivityMessageCounts]);
 
     const funcSetTeamMembers = async () => {
         const teamMembers: UserProps[] = await popTeamMembers(myself);
@@ -156,6 +215,7 @@ export const App = () => {
         funcSetInboxItems();
         funcSetAllChats();
         funcSetActivityMessages();
+        setUnReadChatCounts(countUnreadChats(allChats));
     }, []);
 
     // Auto save task body every Nms if needed
@@ -289,6 +349,8 @@ export const App = () => {
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
                         inboxItems={inboxItems}
+                        unReadInboxItemCount={unReadInboxItemCount}
+                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     />
                 ) : null}
 
@@ -316,6 +378,10 @@ export const App = () => {
                         funcSetAllChats={funcSetAllChats}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
+                        unReadInboxItemCount={unReadInboxItemCount}
+                        unReadChatCounts={unReadChatCounts}
+                        unReadActivityMessageCounts={unReadActivityMessageCounts}
+                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     />
                 ) : null}
 
@@ -330,6 +396,8 @@ export const App = () => {
                         setOpeningService={setOpeningService}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
+                        unReadInboxItemCount={unReadInboxItemCount}
+                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     />
                 ) : null}
 
@@ -343,6 +411,8 @@ export const App = () => {
                         openingService={openingService}
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
+                        unReadInboxItemCount={unReadInboxItemCount}
+                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     />
                 ) : null}
             </CssVarsProvider>

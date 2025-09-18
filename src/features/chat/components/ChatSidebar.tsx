@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
-import { Stack, Sheet, IconButton, Tooltip, Badge, Typography, Switch } from "@mui/joy";
+import {
+    Stack,
+    Sheet,
+    IconButton,
+    Tooltip,
+    Badge,
+    Typography,
+    Switch,
+    Dropdown,
+    Menu,
+    MenuItem,
+    MenuButton,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 import PushPinIcon from "@mui/icons-material/PushPin";
@@ -7,17 +19,13 @@ import PersonIcon from "@mui/icons-material/Person";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import MoreVert from "@mui/icons-material/MoreVert";
+import AddIcon from "@mui/icons-material/Add";
 
 import { ModalCreateGM } from "./modals/ModalCreateGM";
 import { ChatSearch } from "./ChatSearch";
 import { ChatList } from "./ChatList";
-import {
-    DMDivider,
-    GMDivider,
-    PMDivider,
-    PinnedDivider,
-    ActivityDivider,
-} from "./ChatSidebarDividers";
+import { ActivityDivider } from "./ChatSidebarDividers";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps } from "../../../types/tasks";
 import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../../../types/chat";
@@ -26,7 +34,6 @@ type ChatSidebarProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    funcSetAllChats: () => void;
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
@@ -43,7 +50,6 @@ type ChatSidebarProps = {
     setIsThreadVisible: (value: boolean) => void;
     isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
     isTaskCreationVisible: boolean;
     isSubChatVisible: boolean;
@@ -51,6 +57,8 @@ type ChatSidebarProps = {
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    unReadChatCounts?: Record<string, number>;
+    unReadActivityMessageCounts: number;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -58,7 +66,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         teamMemberProfiles,
         myself,
         setMyself,
-        funcSetAllChats,
         currentChatPaneType,
         setCurrentChatPaneType,
         activityMessages,
@@ -75,7 +82,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
         isTaskPreviewVisible,
         isTaskCreationVisible,
         isSubChatVisible,
@@ -83,6 +89,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         setOpeningService,
         setCurrentPreviewTaskId,
         setCurrentProject,
+        unReadChatCounts,
+        unReadActivityMessageCounts,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -91,39 +99,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
     // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
     const [currentActivityMessageType, setCurrentActivityMessageType] = useState<number>(0);
-
-    const [unReadChatCounts, setUnReadChatCounts] = useState<Record<string, number>>();
-    const countUnreadChats = (chats: AllChatProps[]): Record<string, number> => {
-        return chats.reduce<Record<string, number>>((acc, chat) => {
-            if (chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId) {
-                acc[chat.chatType] = (acc[chat.chatType] ?? 0) + 1;
-            }
-            return acc;
-        }, {});
-    };
-    useEffect(() => {
-        setUnReadChatCounts(countUnreadChats(allChats));
-    }, []);
-    useEffect(() => {
-        setUnReadChatCounts(countUnreadChats(allChats));
-    }, [allChats]);
-
-    const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
-    const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
-        return activityMessages.reduce<number>((acc, activity) => {
-            if (activity.isRead === false) {
-                acc += 1;
-            }
-            return acc;
-        }, 0);
-    };
-    useEffect(() => {
-        // Exclude the first thread message cause it's actually not a thread message.
-        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
-            (item) => !(item.isThread === true && item.messageId === 1)
-        );
-        setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
-    }, [activityMessages]);
 
     return (
         <div style={{ display: "flex", height: "100dvh" }}>
@@ -150,11 +125,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 <Stack
                     direction="row"
                     alignItems="center"
-                    sx={{ ml: "70px", mt: "7px" }}
-                    flexWrap="wrap"
+                    sx={{ mt: "7px" }}
+                    // flexWrap="wrap"
                 >
                     {/* Centered buttons */}
-                    <Stack direction="row" spacing={1.5} justifyContent="center" flexGrow={1}>
+                    <Stack direction="row" spacing={2} justifyContent="center" flexGrow={1}>
                         {/* For DM */}
                         {unReadChatCounts && (unReadChatCounts[1] || 0) > 0 && (
                             <Tooltip title="Direct Message" sx={{ zIndex: "10020" }}>
@@ -329,42 +304,61 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 </IconButton>
                             </Tooltip>
                         )}
+                        {/* Switch on the right */}
+                        <Switch
+                            checked={onlyUnread}
+                            onChange={() => setOnlyUnread(!onlyUnread)}
+                            slotProps={{
+                                track: {
+                                    children: (
+                                        <Typography
+                                            component="span"
+                                            level="inherit"
+                                            sx={{
+                                                ml: onlyUnread ? "6px" : "22px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Unread
+                                        </Typography>
+                                    ),
+                                },
+                            }}
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                "--Switch-thumbSize": "15px",
+                                "--Switch-trackWidth": "70px",
+                                "--Switch-trackHeight": "23px",
+                                paddingLeft: "10px",
+                            }}
+                        />
                     </Stack>
 
-                    {/* Switch on the right */}
-                    <Switch
-                        checked={onlyUnread}
-                        onChange={() => setOnlyUnread(!onlyUnread)}
-                        slotProps={{
-                            track: {
-                                children: (
-                                    <Typography
-                                        component="span"
-                                        level="inherit"
-                                        sx={{
-                                            ml: onlyUnread ? "6px" : "22px",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        Unread
-                                    </Typography>
-                                ),
-                            },
-                        }}
-                        size="sm"
-                        variant="soft"
-                        sx={{
-                            "--Switch-thumbSize": "15px",
-                            "--Switch-trackWidth": "70px",
-                            "--Switch-trackHeight": "23px",
-                            paddingRight: "10px",
-                        }}
-                    />
+                    <Dropdown>
+                        <MenuButton
+                            slots={{ root: IconButton }}
+                            slotProps={{
+                                root: { color: "neutral" },
+                            }}
+                        >
+                            <MoreVert />
+                        </MenuButton>
+                        <Menu size="sm">
+                            <MenuItem
+                                onClick={() => {
+                                    setOpenCreateGM(true);
+                                }}
+                            >
+                                <AddIcon />
+                                Group Message
+                            </MenuItem>
+                        </Menu>
+                    </Dropdown>
                 </Stack>
 
                 {currentChatPaneType === 1 && (
                     <>
-                        <DMDivider />
                         <ChatList
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
@@ -397,7 +391,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 )}
                 {currentChatPaneType === 2 && (
                     <>
-                        <GMDivider setOpenCreateGM={setOpenCreateGM} />
                         <ChatList
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
@@ -426,20 +419,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentProject={setCurrentProject}
                             onlyUnread={onlyUnread}
                         />
-                        <ModalCreateGM
-                            socket={socket}
-                            myself={myself}
-                            open={openCreateGM}
-                            setOpen={setOpenCreateGM}
-                            allChats={allChats}
-                            setAllChats={setAllChats}
-                            setCurrentMainChat={setCurrentMainChat}
-                        />
                     </>
                 )}
                 {currentChatPaneType === 3 && (
                     <>
-                        <PMDivider />
                         <ChatList
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
@@ -470,11 +453,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         />
                     </>
                 )}
-                {currentChatPaneType === 4 && (
-                    <>
-                        <PinnedDivider />
-                    </>
-                )}
+                {currentChatPaneType === 4 && <>{}</>}
                 {currentChatPaneType === 5 && (
                     <>
                         <ActivityDivider
@@ -512,6 +491,16 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     </>
                 )}
             </Sheet>
+
+            <ModalCreateGM
+                socket={socket}
+                myself={myself}
+                open={openCreateGM}
+                setOpen={setOpenCreateGM}
+                allChats={allChats}
+                setAllChats={setAllChats}
+                setCurrentMainChat={setCurrentMainChat}
+            />
         </div>
     );
 };

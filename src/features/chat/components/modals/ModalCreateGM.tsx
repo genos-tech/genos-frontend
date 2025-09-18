@@ -49,7 +49,7 @@ export const ModalCreateGM: React.FC<Props> = ({
 
     return (
         <>
-            <Modal open={open} onClose={() => setOpen(false)}>
+            <Modal open={open} onClose={() => setOpen(false)} sx={{ zIndex: 10000 }}>
                 <ModalDialog>
                     <Typography level="h4">Create New Group</Typography>
                     <Input

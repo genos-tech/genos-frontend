@@ -151,7 +151,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 >
                     <Card
                         sx={{
-                            backgroundColor: mode === "dark" ? "black" : "rgba(177, 177, 177, 1)",
+                            backgroundColor: mode === "dark" ? "black" : "rgba(221, 221, 221, 0.45)",
                         }}
                     >
                         <Stack direction="row" spacing={1} alignItems="center">

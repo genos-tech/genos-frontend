@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, List, Card, Stack, Typography } from "@mui/joy";
+import { Box, List, Card, Stack, Typography, Badge } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -19,6 +19,8 @@ type InboxHomeProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     inboxItems: InboxItemProps[];
+    unReadInboxItemCount: number;
+    unReadChatAndActivityCounts: number;
 };
 
 export const InboxHome = (props: InboxHomeProps) => {
@@ -31,6 +33,8 @@ export const InboxHome = (props: InboxHomeProps) => {
         setOpeningService,
         setCurrentMainChat,
         inboxItems,
+        unReadInboxItemCount,
+        unReadChatAndActivityCounts,
     } = props;
     const boxRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +65,8 @@ export const InboxHome = (props: InboxHomeProps) => {
                 openingService={openingService}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
+                unReadInboxItemCount={unReadInboxItemCount}
+                unReadChatAndActivityCounts={unReadChatAndActivityCounts}
             />
             <Stack sx={{ width: "100%" }}>
                 <Card
@@ -98,9 +104,21 @@ export const InboxHome = (props: InboxHomeProps) => {
                                 alignItems: "center",
                             }}
                         >
-                            <Typography level="h4" sx={{ mt: "10px" }}>
-                                Requests
-                            </Typography>
+                            {unReadInboxItemCount > 0 && (
+                                <Badge
+                                    badgeContent={unReadInboxItemCount}
+                                    color="primary"
+                                    size="sm"
+                                    sx={{ mt: "10px" }}
+                                >
+                                    <Typography level="h4">Requests</Typography>
+                                </Badge>
+                            )}
+                            {unReadInboxItemCount < 1 && (
+                                <Typography level="h4" sx={{ mt: "10px" }}>
+                                    Requests
+                                </Typography>
+                            )}
                         </Box>
                     </Stack>
 

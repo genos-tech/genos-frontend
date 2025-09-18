@@ -20,6 +20,8 @@ type NoteHomeProps = {
     openingService: number;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (value: ChatProps) => void;
+    unReadInboxItemCount: number;
+    unReadChatAndActivityCounts: number;
 };
 
 export const NoteHome = (props: NoteHomeProps) => {
@@ -32,6 +34,8 @@ export const NoteHome = (props: NoteHomeProps) => {
         openingService,
         setOpeningService,
         setCurrentMainChat,
+        unReadInboxItemCount,
+        unReadChatAndActivityCounts,
     } = props;
 
     const tmpCurrentBody: any[] = [];
@@ -51,6 +55,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                     openingService={openingService}
                     setOpeningService={setOpeningService}
                     setCurrentMainChat={setCurrentMainChat}
+                    unReadInboxItemCount={unReadInboxItemCount}
+                    unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                 />
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} order={1} minSize={5} maxSize={20}>

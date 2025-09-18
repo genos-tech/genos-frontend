@@ -42,6 +42,10 @@ type ChatHomeProps = {
     funcSetAllChats: () => void;
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
+    unReadInboxItemCount: number;
+    unReadChatCounts?: Record<string, number>;
+    unReadActivityMessageCounts: number;
+    unReadChatAndActivityCounts: number;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -68,6 +72,10 @@ export const ChatHome = (props: ChatHomeProps) => {
         funcSetAllChats,
         isCommentUpdated,
         setIsCommentUpdated,
+        unReadInboxItemCount,
+        unReadChatCounts,
+        unReadActivityMessageCounts,
+        unReadChatAndActivityCounts,
     } = props;
 
     const { mode } = useColorScheme();
@@ -207,10 +215,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                 openingService={openingService}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
+                unReadInboxItemCount={unReadInboxItemCount}
+                unReadChatAndActivityCounts={unReadChatAndActivityCounts}
             />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
-                <Panel id={"1"} order={1} minSize={10} maxSize={30}>
+                <Panel id={"1"} order={1} minSize={20} maxSize={30}>
                     <Box
                         sx={{
                             height: "100%",
@@ -235,7 +245,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
                                 setMyself={setMyself}
-                                funcSetAllChats={funcSetAllChats}
                                 currentChatPaneType={currentChatPaneType}
                                 setCurrentChatPaneType={setCurrentChatPaneType}
                                 activityMessages={activityMessages}
@@ -254,12 +263,13 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 setIsThreadVisible={setIsThreadVisible}
                                 isThreadVisible={isThreadVisible}
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                setIsTaskCreationVisible={setIsTaskCreationVisible}
                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                 isTaskCreationVisible={isTaskCreationVisible}
                                 setOpeningService={setOpeningService}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
+                                unReadChatCounts={unReadChatCounts}
+                                unReadActivityMessageCounts={unReadActivityMessageCounts}
                             />
                         </Sheet>
                     </Box>
