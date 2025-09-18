@@ -142,7 +142,11 @@ export const App = () => {
         }
     };
     useEffect(() => {
-        setUnReadInboxItemCount(countUnReadInboxItem(inboxItems));
+        setUnReadInboxItemCount(
+            countUnReadInboxItem(
+                inboxItems.filter((item) => item.itemType === 1 || item.itemType === 2)
+            )
+        );
     }, [inboxItems]);
 
     // Chat variables
@@ -194,11 +198,11 @@ export const App = () => {
     const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
     useEffect(() => {
         if (unReadChatCounts) {
-            // 0: DM, 1: GM, 2: PM
+            // 1: DM, 2: GM, 3: PM
             setUnReadChatAndActivityCounts(
-                unReadChatCounts[0] ||
-                    0 + unReadChatCounts[1] ||
+                unReadChatCounts[1] ||
                     0 + unReadChatCounts[2] ||
+                    0 + unReadChatCounts[3] ||
                     0 + unReadActivityMessageCounts
             );
         }
