@@ -19,6 +19,7 @@ import { UserProfile } from "../../features/admin/components/modals/UserProfile"
 import { PulseDot } from "../../components/utils/PulseDot";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type SidebarProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -260,7 +261,7 @@ export const Sidebar = (props: SidebarProps) => {
             <Divider />
 
             <Box onClick={() => setOpenUserProfile(true)} sx={{ pl: "12px" }}>
-                <Avatar variant="solid" size="sm" src={myself.avatarImgPath}>
+                <Avatar variant="solid" size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
                     {myself.userName[0].toUpperCase()}
                 </Avatar>
                 <Box position="absolute" bottom={0} right={0} width={24} height={33}>

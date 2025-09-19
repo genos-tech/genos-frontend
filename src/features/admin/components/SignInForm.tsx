@@ -51,7 +51,7 @@ export const SignInForm = () => {
             localStorage.setItem("baseCountry", signInRes.base_country || "");
             localStorage.setItem("customStatus", signInRes.custom_status || "");
             localStorage.setItem("userEmail", signInRes.email || "");
-            localStorage.setItem("avatarImgPath", signInRes.profile_image_url || "");
+            localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
 
             if (signInRes.user_id) {
                 navigate("/JoinTeam");

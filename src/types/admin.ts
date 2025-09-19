@@ -29,7 +29,7 @@ export type SignInResponse = {
     email: string;
     access: string;
     message: string;
-    profile_image_url: string;
+    profile_image_file_name: string;
     is_offline_forced: string;
     custom_status: string;
     role: string;

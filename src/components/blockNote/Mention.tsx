@@ -8,6 +8,8 @@ import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/UserProfile";
 
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
 // The Mention inline content
 export const CreateMentionSpec = (
     teamMemberProfiles: Record<string, UserProps>,
@@ -119,7 +121,7 @@ export const MentionMenuItems = (
                 {/* Avatar + Status Dot */}
                 <Box position="relative" width={32} height={32}>
                     <Avatar
-                        src={user.avatarImgPath}
+                        src={`${media_url}/${user.avatarImgPath}`}
                         alt={user.userName}
                         sx={{ width: 32, height: 32 }}
                     />
