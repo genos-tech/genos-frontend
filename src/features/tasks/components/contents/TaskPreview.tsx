@@ -6,7 +6,7 @@ import { PartialBlock } from "@blocknote/core";
 import { PreviewTaskAttachmentBlock } from "./base/PreviewTaskAttachmentBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskBodyPreviewBlock } from "./base/TaskBodyPreviewBlock";
+import { TaskPreviewBodyBlock } from "./base/TaskPreviewBodyBlock";
 import { TaskPreviewCustomBar } from "./base/TaskPreviewCustomBar";
 import { TaskCommentBlock } from "./base/TaskCommentBlock";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
@@ -410,8 +410,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 taskBodySaved={taskBodySaved}
             />
 
-            <TaskBodyPreviewBlock
-                key={`TaskBodyPreviewBlock-${tmpCurrentTaskContent.id}`}
+            <TaskPreviewBodyBlock
+                key={`TaskPreviewBodyBlock-${tmpCurrentTaskContent.id}`}
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}

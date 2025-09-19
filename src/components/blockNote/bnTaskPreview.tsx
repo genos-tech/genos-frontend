@@ -168,7 +168,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 13, 0) * 20 + 300,
+                Math.max(numEditorLines - 13, 0) * 20 + 500,
                 1000
             );
             editorRef.current.style.setProperty("--task-body-editor-height", `${dynamicHeight}px`);

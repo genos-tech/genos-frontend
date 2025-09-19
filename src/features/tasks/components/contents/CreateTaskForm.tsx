@@ -5,7 +5,7 @@ import { PartialBlock } from "@blocknote/core";
 
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskBodyEditBlock } from "./base/TaskBodyEditBlock";
+import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
 import { CreateTaskFooter } from "./base/CreateTaskFooter";
 import { CreateTaskAttachmentBlock } from "./base/CreateTaskAttachmentBlock";
 import {
@@ -327,7 +327,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskBodyEditBlock
+            <TaskCreateBodyBlock
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
                 setMyself={setMyself}
