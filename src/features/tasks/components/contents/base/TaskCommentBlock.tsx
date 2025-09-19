@@ -64,7 +64,7 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
         return count;
     };
 
-    const totalComments = taskComments.reduce(
+    const totalCommentLines = taskComments.reduce(
         (sum, taskComment) => sum + (countLines(taskComment.commentBody) ?? 0),
         0
     );
@@ -87,7 +87,12 @@ export const TaskCommentBlock = (props: TaskCommentBlockProps) => {
                     <Virtuoso
                         ref={virtuosoRef}
                         className="custom-scrollbar"
-                        style={{ height: Math.min(100 + totalComments * 30, 800) }}
+                        style={{
+                            height: Math.min(
+                                taskComments.length * 60 + totalCommentLines * 18,
+                                800
+                            ),
+                        }}
                         totalCount={taskComments.length}
                         initialTopMostItemIndex={taskComments.length - 1}
                         atTopThreshold={64}
