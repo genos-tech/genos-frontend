@@ -304,36 +304,36 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 </IconButton>
                             </Tooltip>
                         )}
-                        {/* Switch on the right */}
-                        <Switch
-                            checked={onlyUnread}
-                            onChange={() => setOnlyUnread(!onlyUnread)}
-                            slotProps={{
-                                track: {
-                                    children: (
-                                        <Typography
-                                            component="span"
-                                            level="inherit"
-                                            sx={{
-                                                ml: onlyUnread ? "6px" : "22px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Unread
-                                        </Typography>
-                                    ),
-                                },
-                            }}
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                "--Switch-thumbSize": "15px",
-                                "--Switch-trackWidth": "70px",
-                                "--Switch-trackHeight": "23px",
-                                paddingLeft: "10px",
-                            }}
-                        />
                     </Stack>
+
+                    <Switch
+                        checked={onlyUnread}
+                        onChange={() => setOnlyUnread(!onlyUnread)}
+                        slotProps={{
+                            track: {
+                                children: (
+                                    <Typography
+                                        component="span"
+                                        level="inherit"
+                                        sx={{
+                                            ml: onlyUnread ? "6px" : "22px",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        Unread
+                                    </Typography>
+                                ),
+                            },
+                        }}
+                        size="sm"
+                        variant="soft"
+                        sx={{
+                            "--Switch-thumbSize": "15px",
+                            "--Switch-trackWidth": "70px",
+                            "--Switch-trackHeight": "23px",
+                            paddingLeft: "10px",
+                        }}
+                    />
 
                     <Dropdown>
                         <MenuButton

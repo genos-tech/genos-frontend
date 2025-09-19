@@ -172,6 +172,48 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     <OpenInNewIcon />
                 </IconButton>
 
+                <Dropdown>
+                    <MenuButton
+                        size="sm"
+                        slots={{ root: IconButton }}
+                        slotProps={{ root: { color: "neutral" } }}
+                    >
+                        <MoreVert />
+                    </MenuButton>
+                    <Menu size="sm">
+                        <MenuItem
+                            onClick={() => {
+                                setOpenCreateProject(true);
+                            }}
+                        >
+                            <AddIcon />
+                            New Project
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                setOpenCreateTag(true);
+                            }}
+                        >
+                            <AddIcon />
+                            New Tag
+                        </MenuItem>
+                        {taskContents.status.status !== "Closed" && (
+                            <MenuItem
+                                onClick={() => {
+                                    setOpenDeleteTask(true);
+                                }}
+                                sx={{
+                                    color: "red",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                <DeleteIcon sx={{ color: "red" }} />
+                                Delete Task
+                            </MenuItem>
+                        )}
+                    </Menu>
+                </Dropdown>
+
                 <IconButton
                     size="sm"
                     variant="plain"
@@ -218,48 +260,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 >
                     <CancelIcon />
                 </IconButton>
-
-                <Dropdown>
-                    <MenuButton
-                        size="sm"
-                        slots={{ root: IconButton }}
-                        slotProps={{ root: { color: "neutral" } }}
-                    >
-                        <MoreVert />
-                    </MenuButton>
-                    <Menu size="sm">
-                        <MenuItem
-                            onClick={() => {
-                                setOpenCreateProject(true);
-                            }}
-                        >
-                            <AddIcon />
-                            New Project
-                        </MenuItem>
-                        <MenuItem
-                            onClick={() => {
-                                setOpenCreateTag(true);
-                            }}
-                        >
-                            <AddIcon />
-                            New Tag
-                        </MenuItem>
-                        {taskContents.status.status !== "Closed" && (
-                            <MenuItem
-                                onClick={() => {
-                                    setOpenDeleteTask(true);
-                                }}
-                                sx={{
-                                    color: "red",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                <DeleteIcon sx={{ color: "red" }} />
-                                Delete Task
-                            </MenuItem>
-                        )}
-                    </Menu>
-                </Dropdown>
 
                 <ModalDeleteTask
                     openDeleteTask={openDeleteTask}

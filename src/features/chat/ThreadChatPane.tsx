@@ -348,6 +348,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                 setIsInEdit={setIsInEdit}
                                 setCurrentChat={setCurrentMainChat}
                                 setOpeningService={setOpeningService}
+                                numEditorLines={numEditorLines}
+                                setNumEditorLines={setNumEditorLines}
                             />
                         )}
                         {isInEdit === false && (

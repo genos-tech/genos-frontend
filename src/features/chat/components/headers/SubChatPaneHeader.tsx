@@ -114,7 +114,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     </Button>
                 )}
 
-                <div>
+                <Stack spacing={0} direction="row" sx={{ alignItems: "center" }}>
                     <IconButton
                         component="a"
                         size="sm"
@@ -123,6 +123,10 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         onClick={() => swapChat()}
                     >
                         <SwapVertIcon />
+                    </IconButton>
+
+                    <IconButton component="a" size="sm" variant="plain" color="neutral">
+                        <MoreVertRoundedIcon />
                     </IconButton>
 
                     <IconButton
@@ -134,11 +138,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     >
                         <CancelIcon />
                     </IconButton>
-                </div>
-
-                <IconButton component="a" size="sm" variant="plain" color="neutral">
-                    <MoreVertRoundedIcon />
-                </IconButton>
+                </Stack>
             </Stack>
         </Stack>
     );

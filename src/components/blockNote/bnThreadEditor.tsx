@@ -139,7 +139,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 5, 0) * 30 + 200,
+                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
                 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);

@@ -676,19 +676,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         <AddIcon />
                                                         Task
                                                     </IconButton>
-                                                    {(isTaskContentVisible === true ||
-                                                        isCreatingTask.flag === true) && (
-                                                        <IconButton
-                                                            size="sm"
-                                                            variant="plain"
-                                                            color="neutral"
-                                                            onClick={() => {
-                                                                setIsTaskHomeVisible(false);
-                                                            }}
-                                                        >
-                                                            <CancelIcon />
-                                                        </IconButton>
-                                                    )}
                                                     <Dropdown>
                                                         <MenuButton
                                                             slots={{ root: IconButton }}
@@ -737,6 +724,19 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             </MenuItem>
                                                         </Menu>
                                                     </Dropdown>
+                                                    {(isTaskContentVisible === true ||
+                                                        isCreatingTask.flag === true) && (
+                                                        <IconButton
+                                                            size="sm"
+                                                            variant="plain"
+                                                            color="neutral"
+                                                            onClick={() => {
+                                                                setIsTaskHomeVisible(false);
+                                                            }}
+                                                        >
+                                                            <CancelIcon />
+                                                        </IconButton>
+                                                    )}
                                                 </Box>
                                             </Box>
 

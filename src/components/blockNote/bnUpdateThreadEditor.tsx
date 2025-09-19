@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -46,6 +46,8 @@ type BnUpdateThreadEditorProps = {
     setIsInEdit: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
+    numEditorLines: number;
+    setNumEditorLines: (value: number) => void;
 };
 export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const {
@@ -60,6 +62,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         setIsInEdit,
         setCurrentChat,
         setOpeningService,
+        numEditorLines,
+        setNumEditorLines,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
@@ -131,6 +135,35 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
 
     const [editorDocLength, setEditorDocLength] = useState<number>(message.content.length);
 
+    const editorRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (editorRef.current) {
+            const dynamicHeight: number = Math.min(
+                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
+                500
+            );
+            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
+        }
+    }, [numEditorLines]);
+
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+            if (node.content[0]) {
+                if (node.content[0].text) {
+                    if (node.content[0].text) {
+                        count += node.content[0].text.split("\n").length;
+                    }
+                }
+            }
+        }
+        return count;
+    };
+
     useEffect(() => {
         if (isInEdit === false) {
             editor.replaceBlocks(editor.document, []);
@@ -186,7 +219,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
@@ -194,7 +227,11 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     theme={mode === "dark" ? "dark" : "light"}
                     formattingToolbar={false}
                     data-changing-font-demo // custom font
-                    onChange={() => setEditorDocLength(editor.document.length)}
+                    onChange={() => {
+                        const comments: any[] = editor.document;
+                        setNumEditorLines(countLines(comments));
+                        setEditorDocLength(editor.document.length);
+                    }}
                     onKeyDown={async (event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                             sendUpdatedMessage();

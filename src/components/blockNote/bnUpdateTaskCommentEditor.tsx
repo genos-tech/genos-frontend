@@ -169,7 +169,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 4, 0) * 30 + 200,
+                Math.max(numEditorLines - 8, 0) * 20 + 200,
                 800
             );
             editorRef.current.style.setProperty(

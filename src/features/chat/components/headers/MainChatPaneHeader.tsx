@@ -121,33 +121,39 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     </Button>
                 )}
 
-                {isSubChatVisible ? (
-                    <div>
-                        <IconButton
-                            component="a"
-                            size="sm"
-                            variant="plain"
-                            color="neutral"
-                            onClick={() => swapChat()}
-                        >
-                            <SwapVertIcon />
-                        </IconButton>
-                        <IconButton
-                            component="a"
-                            size="sm"
-                            variant="plain"
-                            color="neutral"
-                            onClick={() => switchSubToMain()}
-                        >
-                            <CancelIcon />
-                        </IconButton>
-                    </div>
-                ) : (
-                    ""
-                )}
-                <IconButton component="a" size="sm" variant="plain" color="neutral">
-                    <MoreVertRoundedIcon />
-                </IconButton>
+                <Stack spacing={0} direction="row" sx={{ alignItems: "center" }}>
+                    {isSubChatVisible && (
+                        <div>
+                            <IconButton
+                                component="a"
+                                size="sm"
+                                variant="plain"
+                                color="neutral"
+                                onClick={() => swapChat()}
+                            >
+                                <SwapVertIcon />
+                            </IconButton>
+                        </div>
+                    )}
+
+                    <IconButton component="a" size="sm" variant="plain" color="neutral">
+                        <MoreVertRoundedIcon />
+                    </IconButton>
+
+                    {isSubChatVisible && (
+                        <div>
+                            <IconButton
+                                component="a"
+                                size="sm"
+                                variant="plain"
+                                color="neutral"
+                                onClick={() => switchSubToMain()}
+                            >
+                                <CancelIcon />
+                            </IconButton>
+                        </div>
+                    )}
+                </Stack>
             </Stack>
         </Stack>
     );

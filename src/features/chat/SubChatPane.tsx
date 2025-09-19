@@ -385,7 +385,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                             isInEdit={isInEdit}
                             setIsInEdit={setIsInEdit}
                             setCurrentChat={setCurrentSubChat}
+                            isSubChatVisible={true}
                             setOpeningService={setOpeningService}
+                            numEditorLines={numEditorLines}
+                            setNumEditorLines={setNumEditorLines}
                         />
                     )}
                     {isInEdit === false && (
