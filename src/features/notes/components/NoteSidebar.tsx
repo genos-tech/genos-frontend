@@ -15,17 +15,56 @@ import HomeIcon from "@mui/icons-material/Home";
 import WindowIcon from "@mui/icons-material/Window";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
+import { NoteProps } from "../../../types/notes";
+
+function Toggler({
+    defaultExpanded,
+    renderToggle,
+    children,
+}: {
+    defaultExpanded: boolean;
+    children: React.ReactNode;
+    renderToggle: (params: {
+        open: boolean;
+        setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    }) => React.ReactNode;
+}) {
+    const [open, setOpen] = React.useState(defaultExpanded);
+    return (
+        <React.Fragment>
+            {renderToggle({ open, setOpen })}
+            <Box
+                sx={[
+                    {
+                        display: "grid",
+                        transition: "0.2s ease",
+                        "& > *": {
+                            overflow: "hidden",
+                        },
+                    },
+                    open ? { gridTemplateRows: "1fr" } : { gridTemplateRows: "0fr" },
+                ]}
+            >
+                {children}
+            </Box>
+        </React.Fragment>
+    );
+}
 
 type NoteSidebarProps = {
     myself: UserProps;
     noteType: number;
     setNoteType: (value: number) => void;
+    notes: NoteProps[];
+    currentNote: NoteProps | null;
+    setCurrentNote: (value: NoteProps) => void;
 };
 export const NoteSidebar = (props: NoteSidebarProps) => {
-    const { myself, noteType, setNoteType } = props;
+    const { myself, noteType, setNoteType, notes, currentNote, setCurrentNote } = props;
     const { accessToken } = useAuth();
 
     return (
@@ -94,19 +133,72 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
-                    <ListItem>
-                        <ListItemButton
-                            selected={noteType === 1 ? true : false}
-                            onClick={() => {
-                                setNoteType(1);
-                            }}
+
+                    <ListItem nested>
+                        <Toggler
+                            defaultExpanded={true}
+                            renderToggle={({ open, setOpen }) => (
+                                <ListItemButton
+                                    selected={noteType === 1 ? true : false}
+                                    onClick={() => {
+                                        setOpen(!open);
+                                        setNoteType(1);
+                                    }}
+                                >
+                                    <WindowIcon />
+                                    <ListItemContent>
+                                        <Typography level="title-sm">My Notes</Typography>
+                                    </ListItemContent>
+                                    <KeyboardArrowDownIcon
+                                        sx={[
+                                            open
+                                                ? {
+                                                      transform: "rotate(180deg)",
+                                                  }
+                                                : {
+                                                      transform: "none",
+                                                  },
+                                        ]}
+                                    />
+                                </ListItemButton>
+                            )}
                         >
-                            <WindowIcon />
-                            <ListItemContent>
-                                <Typography level="title-sm">My Notes</Typography>
-                            </ListItemContent>
-                        </ListItemButton>
+                            <List>
+                                {notes.map((note, index) => {
+                                    return (
+                                        <ListItem key={`personal-note-${note.noteId}`}>
+                                            <ListItemButton
+                                                selected={
+                                                    currentNote &&
+                                                    currentNote.noteId === note.noteId
+                                                        ? true
+                                                        : false
+                                                }
+                                                onClick={() => {
+                                                    setCurrentNote(note);
+                                                }}
+                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
+                                            >
+                                                <Typography
+                                                    noWrap
+                                                    sx={{
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
+                                                        width: "100%", // take full width of button
+                                                        fontSize: "15px",
+                                                    }}
+                                                >
+                                                    {note.title}
+                                                </Typography>
+                                            </ListItemButton>
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
+                        </Toggler>
                     </ListItem>
+
                     <ListItem>
                         <ListItemButton
                             selected={noteType === 2 ? true : false}

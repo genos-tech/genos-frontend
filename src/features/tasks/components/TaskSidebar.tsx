@@ -576,7 +576,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                     projectTags: projectTags,
                                                                     systemUserId: systemUserId,
                                                                 });
-                                                                console.log("change load")
                                                                 loadProjects(projectId);
                                                             }}
                                                             sx={{ overflow: "hidden" }} // ensure children don't overflow

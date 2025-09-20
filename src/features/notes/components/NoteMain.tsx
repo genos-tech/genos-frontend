@@ -28,6 +28,7 @@ import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
+import CheckIcon from "@mui/icons-material/Check";
 
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
@@ -35,6 +36,7 @@ import { BnNoteEditor } from "../../../components/blockNote/bnNoteEditor";
 import { NoteProps } from "../../../types/notes";
 import { sendUpdatedNote } from "../services/sendUpdatedNote";
 import { useAuth } from "../../../context/AuthContext";
+import { getCurrentTimestamp } from "../../../utils/dateUtils";
 
 type NoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -93,12 +95,7 @@ export const NoteMain = (props: NoteMainProps) => {
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
-    useEffect(() => {
-        if (currentNote) {
-            setBody(currentNote.body);
-            setNoteTitle(currentNote.title);
-        }
-    }, [currentNote]);
+    const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
@@ -141,25 +138,30 @@ export const NoteMain = (props: NoteMainProps) => {
     }, [noteBodyEdited]);
 
     // Tab management
-    const [tabs, setTabs] = useState([
-        { id: 1, label: "Notesfasfasdfasfasdfsdfasfasdfasdf 1", content: "Content 1" },
-        { id: 2, label: "Note 2", content: "Content 2" },
-    ]);
+    const [tabContents, setTabContents] = useState<NoteProps[]>(currentNote ? [currentNote] : []);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
-    const handleAdd = () => {
-        const newId = Date.now();
-        setTabs((prev) => [
-            ...prev,
-            { id: newId, label: `Note ${prev.length + 1}`, content: `Content ${prev.length + 1}` },
-        ]);
-        setSelectedTabIndex(tabs.length); // switch to new tab
-    };
+    useEffect(() => {
+        if (currentNote) {
+            setBody(currentNote.body);
+            setTsBody(getCurrentTimestamp()); // This must be executed together with "setBody" !!!!
+            setNoteTitle(currentNote.title);
+
+            if (
+                tabContents.length === 0 ||
+                (tabContents.length > 0 &&
+                    tabContents.some((note) => note.noteId === currentNote.noteId)) === false
+            ) {
+                setTabContents((prev) => [...prev, currentNote]);
+                setSelectedTabIndex(tabContents.length); // switch to new tab
+            }
+        }
+    }, [currentNote]);
 
     const handleCloseTab = (id: number) => {
-        setTabs((prev) => prev.filter((t) => t.id !== id));
-        if (tabs.length > 1 && selectedTabIndex >= tabs.length - 1) {
-            setSelectedTabIndex(tabs.length - 2); // fallback to previous tab
+        setTabContents((prev) => prev.filter((t) => t.noteId !== id));
+        if (tabContents.length > 1 && selectedTabIndex >= tabContents.length - 1) {
+            setSelectedTabIndex(tabContents.length - 2); // fallback to previous tab
         }
     };
 
@@ -263,33 +265,31 @@ export const NoteMain = (props: NoteMainProps) => {
                             <Tabs
                                 value={selectedTabIndex}
                                 onChange={(_, val) => {
-                                    console.log("val:", val);
+                                    setCurrentNote(tabContents[Number(val)]);
                                     setSelectedTabIndex(Number(val));
                                 }}
+                                aria-label="Scrollable tabs"
+                                sx={{ width: "100%" }}
                             >
-                                <TabList>
-                                    <FormControl required sx={{ justifyContent: "center" }}>
-                                        <Input
-                                            startDecorator={<NoteAltIcon />}
-                                            key={"taskTitle"}
-                                            variant="soft"
-                                            placeholder="Note Title"
-                                            value={noteTitle}
-                                            onChange={(e) => {
-                                                setNoteTitle(e.target.value);
-                                            }}
-                                            onBlur={() => {
-                                                setNoteUpdated(true);
-                                            }}
+                                <TabList
+                                    sx={{
+                                        px: "5px",
+                                        overflowX: "auto",
+                                        scrollSnapType: "x mandatory",
+                                        "&::-webkit-scrollbar": { display: "none" },
+                                    }}
+                                >
+                                    {tabContents.map((tab, index) => (
+                                        <Tab
+                                            key={tab.noteId}
                                             sx={{
-                                                fontSize: "20px",
-                                                fontWeight: "bold",
-                                                backgroundColor: "transparent",
+                                                my: "3px",
+                                                flex: "none",
+                                                scrollSnapAlign: "start",
+                                                borderRadius: "5px",
                                             }}
-                                        />
-                                    </FormControl>
-                                    {tabs.map((tab, index) => (
-                                        <Tab key={tab.id} indicatorInset>
+                                            variant="soft"
+                                        >
                                             <Box
                                                 sx={{
                                                     display: "flex",
@@ -298,9 +298,9 @@ export const NoteMain = (props: NoteMainProps) => {
                                                     maxWidth: "200px",
                                                 }}
                                             >
-                                                {tab.label.length > 10
-                                                    ? `${tab.label.slice(0, 10)}...`
-                                                    : tab.label}
+                                                {tab.title.length > 15
+                                                    ? `${tab.title.slice(0, 15)}...`
+                                                    : tab.title}
                                                 <IconButton
                                                     component="span"
                                                     size="sm"
@@ -308,7 +308,7 @@ export const NoteMain = (props: NoteMainProps) => {
                                                     color="neutral"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        handleCloseTab(Number(tab.id));
+                                                        handleCloseTab(Number(tab.noteId));
                                                     }}
                                                     sx={{ ml: 1 }}
                                                 >
@@ -317,20 +317,11 @@ export const NoteMain = (props: NoteMainProps) => {
                                             </Box>
                                         </Tab>
                                     ))}
-                                    <IconButton
-                                        component="p"
-                                        size="sm"
-                                        variant="plain"
-                                        onClick={handleAdd}
-                                        sx={{ ml: "auto" }}
-                                    >
-                                        <AddIcon />
-                                    </IconButton>
                                 </TabList>
 
-                                {tabs.map((tab, index) => (
+                                {tabContents.map((tabNote, index) => (
                                     <TabPanel
-                                        key={tab.id}
+                                        key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
                                         value={index}
                                         sx={{
                                             paddingX: "5px",
@@ -338,6 +329,55 @@ export const NoteMain = (props: NoteMainProps) => {
                                             paddingBottom: "5px",
                                         }}
                                     >
+                                        <FormControl
+                                            required
+                                            sx={{
+                                                mt: "5px",
+                                                ml: "5px",
+                                                justifyContent: "center",
+                                                position: "absolute",
+                                                zIndex: 10100,
+                                            }}
+                                        >
+                                            <Input
+                                                startDecorator={<NoteAltIcon />}
+                                                key={"noteTitle"}
+                                                variant="soft"
+                                                placeholder="Note Title"
+                                                value={noteTitle}
+                                                onChange={(e) => {
+                                                    setNoteTitle(e.target.value);
+                                                }}
+                                                onBlur={() => {
+                                                    setNoteUpdated(true);
+                                                }}
+                                                sx={{
+                                                    fontSize: "22px",
+                                                    fontWeight: "bold",
+                                                }}
+                                            />
+                                        </FormControl>
+                                        {noteBodySaved === true && (
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    mt: "8px",
+                                                    ml: "330px",
+                                                    zIndex: 10100,
+                                                }}
+                                            >
+                                                <Button
+                                                    variant="outlined"
+                                                    color="neutral"
+                                                    size="sm"
+                                                    startDecorator={
+                                                        <CheckIcon sx={{ fontSize: "15px" }} />
+                                                    }
+                                                >
+                                                    Saved
+                                                </Button>
+                                            </Box>
+                                        )}
                                         <BnNoteEditor
                                             teamMemberProfiles={teamMemberProfiles}
                                             myself={myself}

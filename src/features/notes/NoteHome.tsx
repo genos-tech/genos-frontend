@@ -98,6 +98,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                             myself={myself}
                             noteType={noteType}
                             setNoteType={setNoteType}
+                            notes={myNotes}
+                            setCurrentNote={setCurrentNote}
+                            currentNote={currentNote}
                         />
                     </Panel>
 
