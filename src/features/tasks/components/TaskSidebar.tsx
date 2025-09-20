@@ -445,6 +445,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             systemUserId: systemUserId,
                                                         });
                                                         setCurrentPreviewTaskId(taskId);
+                                                        setIsTaskPreviewVisible(true);
                                                     }}
                                                     sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 >
