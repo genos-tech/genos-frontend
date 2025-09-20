@@ -102,7 +102,7 @@ export const App = () => {
     const { myself, setMyself } = useMyself();
     const [currentTeamId, setCurrentTeamId] = useState("");
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
-    const [teamMemberProfiles, setTeamMemberStatus] = useState<Record<string, UserProps>>({});
+    const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, UserProps>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
@@ -260,6 +260,18 @@ export const App = () => {
         if (myself.userId !== "") {
             const popTeamUsersWorker = new PopTeamUsersWorker();
 
+            // Only for the initialization
+            popTeamUsersWorker.postMessage({ myself });
+            popTeamUsersWorker.onmessage = (event) => {
+                const data = event.data;
+                if (data.error) {
+                    console.error("Worker failed:", data.error);
+                } else {
+                    setTeamMemberProfiles(data);
+                }
+            };
+
+            // Run every minute
             const interval = setInterval(() => {
                 popTeamUsersWorker.postMessage({ myself });
                 popTeamUsersWorker.onmessage = (event) => {
@@ -267,7 +279,7 @@ export const App = () => {
                     if (data.error) {
                         console.error("Worker failed:", data.error);
                     } else {
-                        setTeamMemberStatus(data);
+                        setTeamMemberProfiles(data);
                     }
                 };
             }, 60_000);
@@ -303,12 +315,14 @@ export const App = () => {
             const role: string = localStorage.getItem("role") || "";
             const baseCountry: string = localStorage.getItem("baseCountry") || "";
             const customStatus: string = localStorage.getItem("customStatus") || "";
+            const avatarImgPath: string = localStorage.getItem("avatarImgPath") || "";
 
             socketInstance.emit("heartbeat", {
                 message: "alive",
                 is_online: true,
                 user: {
                     ...myself,
+                    avatarImgPath: avatarImgPath,
                     isOfflineForced: isOfflineForced,
                     role: role,
                     baseCountry: baseCountry,
