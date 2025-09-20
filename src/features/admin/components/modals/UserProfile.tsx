@@ -104,11 +104,6 @@ export const UserProfile = (props: UserProfileProps) => {
 
         const formData = new FormData();
         formData.append("user_profile_image", userProfileImage);
-        formData.append(
-            "user_profile_image_file_name",
-            `user_profiles/${myself.userId}/${userProfileImage.name}`
-        );
-
         const uploadProfileImageResponse = await fetch(`${base_url}/user/profile/image/`, {
             method: "PUT",
             headers: {

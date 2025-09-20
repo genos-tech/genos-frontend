@@ -8,7 +8,7 @@ import { ChatHome } from "./features/chat/chatHome";
 import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
-import { UserProps } from "./types/admin";
+import { FindTeamResponse, Team, UserProps } from "./types/admin";
 import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
@@ -20,6 +20,7 @@ import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { InboxItemProps } from "./types/common";
 import { getCurrentTimestamp } from "./utils/dateUtils";
+import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 
 type SetMyselfProps = {
@@ -216,6 +217,21 @@ export const App = () => {
         }
     };
 
+    // Load the current team info
+    const [currentTeam, setCurrentTeam] = useState<Team>({
+        teamId: myself.teamId,
+        teamName: myself.teamName,
+        teamEmail: "",
+        teamOwnerId: "",
+        teamImgPath: localStorage.getItem("teamImgPath") || undefined,
+    });
+    const initCurrentTeam = async () => {
+        const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
+        if (findTeamRes && findTeamRes.exist === true) {
+            setCurrentTeam(findTeamRes.teamDetails);
+        }
+    };
+
     useEffect(() => {
         funcSetInboxItems();
         funcSetAllChats();
@@ -230,6 +246,8 @@ export const App = () => {
     }, [currentMainChat, currentSubChat]);
 
     useEffect(() => {
+        initCurrentTeam();
+
         if (myself.teamId !== currentTeamId) {
             setIsLoading(true);
             setCurrentTeamId(myself.teamId);
@@ -367,6 +385,8 @@ export const App = () => {
 
                 {openingService === 0 ? (
                     <InboxHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
                         socket={socketInstance}
@@ -382,6 +402,8 @@ export const App = () => {
 
                 {openingService === 1 ? (
                     <ChatHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
@@ -413,6 +435,8 @@ export const App = () => {
 
                 {openingService === 2 ? (
                     <TaskHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
@@ -429,6 +453,8 @@ export const App = () => {
 
                 {openingService === 3 ? (
                     <NoteHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         teamMembers={teamMembers}

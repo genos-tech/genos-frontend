@@ -13,7 +13,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { useAuth } from "../../context/AuthContext";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
-import { UserProps } from "../../types/admin";
+import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/UserProfile";
 import { PulseDot } from "../../components/utils/PulseDot";
@@ -22,6 +22,8 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type SidebarProps = {
+    currentTeam: Team;
+    setCurrentTeam: (value: Team) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -34,6 +36,8 @@ type SidebarProps = {
 };
 export const Sidebar = (props: SidebarProps) => {
     const {
+        currentTeam,
+        setCurrentTeam,
         teamMemberProfiles,
         socket,
         myself,
@@ -132,7 +136,12 @@ export const Sidebar = (props: SidebarProps) => {
                 })}
             />
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: "center" }}>
-                <TeamDropdown myself={myself} setMyself={setMyself} />
+                <TeamDropdown
+                    currentTeam={currentTeam}
+                    setCurrentTeam={setCurrentTeam}
+                    myself={myself}
+                    setMyself={setMyself}
+                />
                 <ColorSchemeToggle />
             </Box>
 

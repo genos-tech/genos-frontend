@@ -20,6 +20,8 @@ export type Team = {
     teamId: string;
     teamName: string;
     teamEmail: string;
+    teamOwnerId: string;
+    teamImgPath?: string;
 };
 
 // Response

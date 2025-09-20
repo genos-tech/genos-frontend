@@ -41,7 +41,7 @@ import { ModalDeleteProject } from "./components/modals/ModalDeleteProject";
 import { ModalCreateTeam } from "../admin/components/modals/ModalCreateTeam";
 import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from "../../components/layout/sidebar";
-import { UserProps } from "../../types/admin";
+import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import {
     ProjectProps,
@@ -60,6 +60,8 @@ const taskTypes: TaskTypesProps = {
 };
 
 type TaskHomeProps = {
+    currentTeam: Team;
+    setCurrentTeam: (value: Team) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -74,6 +76,8 @@ type TaskHomeProps = {
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
+        currentTeam,
+        setCurrentTeam,
         teamMemberProfiles,
         socket,
         myself,
@@ -353,6 +357,8 @@ export const TaskHome = (props: TaskHomeProps) => {
 
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
+                    currentTeam={currentTeam}
+                    setCurrentTeam={setCurrentTeam}
                     teamMemberProfiles={teamMemberProfiles}
                     socket={socket}
                     myself={myself}

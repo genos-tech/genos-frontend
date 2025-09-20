@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Button, Menu, MenuItem, Dropdown } from "@mui/joy";
+import { IconButton, Menu, MenuItem, Dropdown, Avatar } from "@mui/joy";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 
 import { loadMyTeams } from "../services/loadMyTeams";
 import { joinTeam } from "../services/joinTeam";
@@ -12,13 +13,17 @@ import { UserProps } from "../../../types/admin";
 import { Team, CreateDMResponse } from "../../../types/admin";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 
+const base_url = import.meta.env.VITE_API_BASE_URL;
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
 type TeamDropdownProps = {
+    currentTeam: Team;
+    setCurrentTeam: (value: Team) => void;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
 };
-
 export const TeamDropdown = (props: TeamDropdownProps) => {
-    const { myself, setMyself } = props;
+    const { myself, setMyself, currentTeam, setCurrentTeam } = props;
     const { accessToken } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [teams, setTeams] = useState<Team[]>([]);
@@ -99,18 +104,78 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         };
     }, []);
 
+    // Team profile image file upload manager
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const handleButtonClick = () => {
+        inputRef.current?.click();
+    };
+    const toProfileFileName = (originalFileName: string): string => {
+        // Get the extension (including dot, e.g. ".png")
+        const ext = originalFileName.substring(originalFileName.lastIndexOf("."));
+        // return `profile${ext}`;
+
+        // use always "jpg"
+        return `profile.jpg`;
+    };
+    const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = event.target.files;
+        if (!selectedFiles || selectedFiles.length !== 1) return;
+
+        const tmpTeamProfileImage = selectedFiles[0]; // original File
+
+        // NOTE: This is the static path and is referred from backend as well.
+        //       So, need to check backend when you need to change it.
+        const newName = toProfileFileName(tmpTeamProfileImage.name);
+
+        // Create a new File instance with the existing file data but new name
+        const teamProfileImage = new File([tmpTeamProfileImage], newName, {
+            type: tmpTeamProfileImage.type,
+            lastModified: tmpTeamProfileImage.lastModified,
+        });
+
+        const formData = new FormData();
+        formData.append("team_profile_image", teamProfileImage);
+        formData.append("team_id", currentTeam.teamId);
+
+        const uploadProfileImageResponse = await fetch(`${base_url}/team/profile/image/`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+        });
+
+        const uploadProfileImageData = await uploadProfileImageResponse.json();
+
+        if (!uploadProfileImageResponse.ok) {
+            throw new Error("Failed to upload team profile image.");
+        } else {
+            localStorage.setItem("teamImgPath", uploadProfileImageData.profile_image_file_name);
+            setCurrentTeam({
+                ...currentTeam,
+                teamImgPath: uploadProfileImageData.profile_image_file_name,
+            });
+        }
+
+        handleClose();
+    };
+
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <Button
-                    variant="solid"
-                    color="neutral"
-                    size="sm"
-                    sx={{ px: 0.7 }}
-                    onClick={handleClick}
-                >
-                    {myself.teamName.slice(0, 2).toUpperCase()}
-                </Button>
+                <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
+                    <Avatar
+                        src={`${media_url}/${currentTeam.teamImgPath}`}
+                        variant="outlined"
+                        sx={{
+                            borderRadius: 4, // 0 for sharp square, or use theme radius values
+                            width: 34,
+                            height: 34,
+                        }}
+                    >
+                        {myself.teamName.slice(0, 2).toUpperCase()}
+                    </Avatar>
+                </IconButton>
                 <Menu
                     className="custom-scrollbar"
                     size="sm"
@@ -139,8 +204,33 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         }}
                     >
                         <AddIcon />
-                        New Team
+                        New Team (TBD)
                     </MenuItem>
+
+                    {myself.userId === currentTeam.teamOwnerId && (
+                        <>
+                            <input
+                                type="file"
+                                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                multiple={false}
+                                ref={inputRef}
+                                onChange={handleSelectedFiles}
+                                style={{ display: "none" }}
+                            />
+                            <MenuItem
+                                key={"editTeamProfileImage"}
+                                onClick={() => {
+                                    handleButtonClick();
+                                    console.error(
+                                        "This must move to the setting modal, and only the team owner can change the profile."
+                                    );
+                                }}
+                            >
+                                <EditIcon />
+                                Edit Team Profile
+                            </MenuItem>
+                        </>
+                    )}
                 </Menu>
             </Dropdown>
         </div>
