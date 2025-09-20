@@ -9,94 +9,24 @@ import {
     ListItemContent,
     Typography,
     Sheet,
-    Autocomplete,
-    CircularProgress,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import DashboardIcon from "@mui/icons-material/Dashboard";
+import HomeIcon from "@mui/icons-material/Home";
+import WindowIcon from "@mui/icons-material/Window";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { SearchTeamTasksResponse } from "../../../types/tasks";
-import { ProjectProps } from "../../../types/tasks";
 
-function Toggler({
-    defaultExpanded,
-    renderToggle,
-    children,
-}: {
-    defaultExpanded: boolean;
-    children: React.ReactNode;
-    renderToggle: (params: {
-        open: boolean;
-        setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    }) => React.ReactNode;
-}) {
-    const [open, setOpen] = React.useState(defaultExpanded);
-    return (
-        <React.Fragment>
-            {renderToggle({ open, setOpen })}
-            <Box
-                sx={[
-                    {
-                        display: "grid",
-                        transition: "0.2s ease",
-                        "& > *": {
-                            overflow: "hidden",
-                        },
-                    },
-                    open ? { gridTemplateRows: "1fr" } : { gridTemplateRows: "0fr" },
-                ]}
-            >
-                {children}
-            </Box>
-        </React.Fragment>
-    );
-}
-
-type TaskSidebarProps = {
+type NoteSidebarProps = {
     myself: UserProps;
+    noteType: number;
+    setNoteType: (value: number) => void;
 };
-
-export const NoteSidebar = (props: TaskSidebarProps) => {
-    const { myself } = props;
+export const NoteSidebar = (props: NoteSidebarProps) => {
+    const { myself, noteType, setNoteType } = props;
     const { accessToken } = useAuth();
-
-    // // =======================================================================
-    // const [openSearch, setOpenSearch] = useState(false);
-    // const [teamTaskOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
-    // const loading = openSearch && teamTaskOptions.length === 0;
-
-    // useEffect(() => {
-    //     let active = true;
-
-    //     if (!loading) {
-    //         return undefined;
-    //     }
-
-    //     (async () => {
-    //         const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList({
-    //             myself: myself, accessToken: accessToken || ""
-    //         });
-
-    //         if (active) {
-    //             setTeamTaskOptions([...loadedTeamTasks]);
-    //         }
-    //     })();
-
-    //     return () => {
-    //         active = false;
-    //     };
-    // }, [loading]);
-
-    // function onChangeHandler(value: any) {
-    //     if (value !== null) {
-    //         setOpenSearch(false);
-    //         setCurrentPreviewTaskId(value.taskId)
-    //     }
-    // }
-    // // =======================================================================
 
     return (
         <Sheet
@@ -131,44 +61,6 @@ export const NoteSidebar = (props: TaskSidebarProps) => {
                 })}
             />
 
-            {/* ============================================================================ */}
-
-            {/* <Box>
-                <Autocomplete
-                    placeholder={"Search"}
-                    open={openSearch}
-                    onOpen={() => {
-                        setOpenSearch(true);
-                    }}
-                    onClose={() => {
-                        setOpenSearch(false);
-                    }}
-                    isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
-                    getOptionLabel={(option) => `${option.taskId} | ${option.title}`}
-                    options={teamTaskOptions}
-                    loading={loading}
-                    endDecorator={
-                        loading ? (
-                            <CircularProgress size="sm" sx={{ bgcolor: 'background.surface' }} />
-                        ) : null
-                    }
-                    slotProps={{
-                        listbox: {
-                            sx: {
-                                zIndex: 10020
-                            },
-                        },
-                    }}
-                    onChange={(event, value) => onChangeHandler(value)}
-                    size="sm"
-                    startDecorator={<SearchRoundedIcon />}
-                    aria-label="Search"
-                    groupBy={(option) => option.projectName}
-                />
-            </Box> */}
-
-            {/* ============================================================================ */}
-
             <Box
                 sx={{
                     minHeight: 0,
@@ -190,10 +82,54 @@ export const NoteSidebar = (props: TaskSidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <ListItemButton onClick={() => {}}>
-                            <DashboardIcon />
+                        <ListItemButton
+                            selected={noteType === 0 ? true : false}
+                            onClick={() => {
+                                setNoteType(0);
+                            }}
+                        >
+                            <HomeIcon />
+                            <ListItemContent>
+                                <Typography level="title-sm">Home</Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemButton
+                            selected={noteType === 1 ? true : false}
+                            onClick={() => {
+                                setNoteType(1);
+                            }}
+                        >
+                            <WindowIcon />
                             <ListItemContent>
                                 <Typography level="title-sm">My Notes</Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemButton
+                            selected={noteType === 2 ? true : false}
+                            onClick={() => {
+                                setNoteType(2);
+                            }}
+                        >
+                            <AssignmentRoundedIcon />
+                            <ListItemContent>
+                                <Typography level="title-sm">Task Notes</Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemButton
+                            selected={noteType === 3 ? true : false}
+                            onClick={() => {
+                                setNoteType(3);
+                            }}
+                        >
+                            <QuestionAnswerRoundedIcon />
+                            <ListItemContent>
+                                <Typography level="title-sm">Thread Notes</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>

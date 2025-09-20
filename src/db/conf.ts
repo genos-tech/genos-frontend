@@ -15,6 +15,7 @@ export const STORES = {
     PM_MESSAGES: "pmMessages",
     PM_THREAD_MESSAGES: "pmThreadMessages",
     TASKS: "tasks",
+    NOTES: "notes",
 };
 
 export const KEY_PATH = {
@@ -31,6 +32,7 @@ export const KEY_PATH = {
     PM_MESSAGES: "messageIdWithChatId",
     PM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
     TASKS: "id",
+    NOTES: "note_id",
 };
 
 export const INDEX = {

@@ -44,7 +44,7 @@ type BnTaskPreviewProps = {
     teamMembers: UserProps[];
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
-    setTaskBodyUpdated?: (value: boolean) => void;
+    setTaskBodyEdited?: (value: boolean) => void;
     setTaskBodySaved?: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
@@ -58,7 +58,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         teamMembers,
         body,
         setBody,
-        setTaskBodyUpdated,
+        setTaskBodyEdited,
         setTaskBodySaved,
         setCurrentChat,
         setOpeningService,
@@ -207,8 +207,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
                         setBody(editor.document);
-                        if (setTaskBodyUpdated) {
-                            setTaskBodyUpdated(true);
+                        if (setTaskBodyEdited) {
+                            setTaskBodyEdited(true);
                             if (setTaskBodySaved) {
                                 setTaskBodySaved(false);
                             }

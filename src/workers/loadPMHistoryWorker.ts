@@ -3,7 +3,7 @@ import { loadPMHistory } from "../features/chat/services/loadPMHistory";
 import { UserProps } from "../types/admin";
 import { ChatProps, MessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
-import { clearStore, addData, miniBatchInsertMessages } from "../db/crud";
+import { clearStore, addData, miniBatchInsert } from "../db/crud";
 
 const BATCH_SIZE = 1000;
 
@@ -45,10 +45,10 @@ self.onmessage = async (event) => {
 
         // Insert messages by mini-batch
         for (let i = 0; i < pmChat.messages.length; i += BATCH_SIZE) {
-            const miniBatchMessages: MessageProps[] = pmChat.messages.slice(i, i + BATCH_SIZE);
-            await miniBatchInsertMessages({
+            const miniBatch: MessageProps[] = pmChat.messages.slice(i, i + BATCH_SIZE);
+            await miniBatchInsert({
                 storeName: STORES.PM_MESSAGES,
-                miniBatchMessages: miniBatchMessages,
+                miniBatch: miniBatch,
             });
         }
     }

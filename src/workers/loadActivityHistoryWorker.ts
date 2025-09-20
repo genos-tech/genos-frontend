@@ -2,7 +2,7 @@ import { loadActivityHistory } from "../features/chat/services/loadActivityHisto
 import { UserProps } from "../types/admin";
 import { ActivityMessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
-import { clearStore, miniBatchInsertMessages } from "../db/crud";
+import { clearStore, miniBatchInsert } from "../db/crud";
 
 const BATCH_SIZE = 1000;
 
@@ -20,13 +20,10 @@ self.onmessage = async (event) => {
 
     if (activityHistory) {
         for (let i = 0; i < activityHistory.length; i += BATCH_SIZE) {
-            const miniBatchMessages: ActivityMessageProps[] = activityHistory.slice(
-                i,
-                i + BATCH_SIZE
-            );
-            await miniBatchInsertMessages({
+            const miniBatch: ActivityMessageProps[] = activityHistory.slice(i, i + BATCH_SIZE);
+            await miniBatchInsert({
                 storeName: STORES.ACTIVITY_MESSAGES,
-                miniBatchMessages: miniBatchMessages,
+                miniBatch: miniBatch,
             });
         }
 

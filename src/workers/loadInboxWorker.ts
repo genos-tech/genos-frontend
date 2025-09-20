@@ -2,7 +2,7 @@ import { loadInbox } from "../features/chat/services/loadInbox";
 import { UserProps } from "../types/admin";
 import { InboxItemProps } from "../types/common";
 import { STORES } from "../db/conf";
-import { clearStore, miniBatchInsertMessages } from "../db/crud";
+import { clearStore, miniBatchInsert } from "../db/crud";
 
 const BATCH_SIZE = 1000;
 
@@ -21,10 +21,10 @@ self.onmessage = async (event) => {
 
     // mini batch insert
     for (let i = 0; i < inboxHistory.length; i += BATCH_SIZE) {
-        const miniBatchMessages: InboxItemProps[] = inboxHistory.slice(i, i + BATCH_SIZE);
-        await miniBatchInsertMessages({
+        const miniBatch: InboxItemProps[] = inboxHistory.slice(i, i + BATCH_SIZE);
+        await miniBatchInsert({
             storeName: STORES.INBOX,
-            miniBatchMessages: miniBatchMessages,
+            miniBatch: miniBatch,
         });
     }
 

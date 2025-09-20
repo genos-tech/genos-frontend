@@ -3,13 +3,16 @@ import { useState, useEffect } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { Box, CssBaseline, Typography } from "@mui/joy";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { PartialBlock } from "@blocknote/core";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
 import { ChatProps } from "../../types/chat";
 import { NoteMain } from "./components/NoteMain";
+import { NoteProps } from "../../types/notes";
+import { loadNotes } from "./services/loadNotes";
+import { useAuth } from "../../context/AuthContext";
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -42,10 +45,35 @@ export const NoteHome = (props: NoteHomeProps) => {
         unReadChatAndActivityCounts,
     } = props;
 
-    const tmpCurrentBody: any[] = [];
-    const [body, setBody] = useState<PartialBlock[]>(tmpCurrentBody);
-    const [taskBodyUpdated, setNoteBodyUpdated] = useState(false);
-    const [taskBodySaved, setNoteBodySaved] = useState(false);
+    const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
+
+    // 0: Home, 1: personal note, 2: task note, 3: chat note
+    const [noteType, setNoteType] = useState<number>(1);
+
+    const [currentNote, setCurrentNote] = useState<NoteProps | null>(null);
+
+    const [myNotes, setMyNotes] = useState<NoteProps[]>([]);
+    const [myTaskNotes, setTaskNotes] = useState<NoteProps[]>([]);
+    const [myChatNotes, setChatNotes] = useState<NoteProps[]>([]);
+    const loadMyNotes = async () => {
+        // Load the latest project as initial process
+        const loadedNotes: NoteProps[] = await loadNotes(myself, accessToken);
+        if (loadedNotes.length > 0) {
+            // for (let i = 0; i < loadedNotes.length; i++) {
+            // }
+            setMyNotes(loadedNotes);
+            setCurrentNote(loadedNotes[0]);
+        }
+    };
+    const loadTaskNotes = async () => {};
+    const loadChatNotes = async () => {};
+
+    useEffect(() => {
+        loadMyNotes();
+        loadTaskNotes();
+        loadChatNotes();
+    }, []);
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -66,14 +94,17 @@ export const NoteHome = (props: NoteHomeProps) => {
                 />
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} order={1} minSize={5} maxSize={20}>
-                        <NoteSidebar myself={myself} />
+                        <NoteSidebar
+                            myself={myself}
+                            noteType={noteType}
+                            setNoteType={setNoteType}
+                        />
                     </Panel>
 
-                    {/* Resizable Handle with MUI sx Styling */}
                     <PanelResizeHandle
                         style={{
                             width: "1px",
-                            backgroundColor: "#f0f0f0",
+                            backgroundColor: mode === "dark" ? "grey" : "lightgrey",
                             transition: "all 0.3s ease-in-out",
                             cursor: "col-resize",
                         }}
@@ -81,25 +112,36 @@ export const NoteHome = (props: NoteHomeProps) => {
                     />
 
                     <Panel id={"2"} order={2} minSize={5} maxSize={95}>
-                        <Box sx={{ padding: 2 }}>
-                            {/* Main content goes here */}
-                            <Typography fontSize={"20px"}>Note Home</Typography>
+                        <Box sx={{ paddingX: 1, height: "100dvh" }}>
                             <NoteMain
                                 teamMemberProfiles={teamMemberProfiles}
                                 socket={socket}
                                 teamMembers={teamMembers}
                                 myself={myself}
                                 setMyself={setMyself}
-                                body={body}
-                                setBody={setBody}
+                                noteType={noteType}
+                                setNoteType={setNoteType}
+                                currentNote={currentNote}
+                                setCurrentNote={setCurrentNote}
                                 setOpeningService={setOpeningService}
-                                setNoteBodyUpdated={setNoteBodyUpdated}
-                                setNoteBodySaved={setNoteBodySaved}
                                 setCurrentChat={setCurrentMainChat}
                             />
                         </Box>
                     </Panel>
                 </PanelGroup>
+
+                {/* Hover Animation with CSS */}
+                <style>
+                    {`
+                .resize-handle {
+                    transition: all 0.3s ease-in-out;
+                }
+                .resize-handle:hover {
+                    background-color: lightgray !important;
+                    width: 8px !important;
+                }
+                `}
+                </style>
             </Box>
         </CssVarsProvider>
     );

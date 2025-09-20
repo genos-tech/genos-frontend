@@ -126,13 +126,13 @@ export const batchInsertMessages = async (props: any) => {
     await tx.done;
 };
 
-export const miniBatchInsertMessages = async (props: any) => {
+export const miniBatchInsert = async (props: any) => {
     const db = await openDB(DB_NAME, DB_VERSION);
     const tx = db.transaction(props.storeName, "readwrite");
     const store = tx.objectStore(props.storeName);
 
-    props.miniBatchMessages.forEach((message: any) => {
-        store.put(message);
+    props.miniBatch.forEach((miniBatch: any) => {
+        store.put(miniBatch);
     });
 
     await tx.done;

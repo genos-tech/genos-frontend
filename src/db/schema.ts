@@ -152,6 +152,13 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                     unique: false,
                 });
             }
+
+            // Notes
+            if (!db.objectStoreNames.contains(STORES.NOTES)) {
+                db.createObjectStore(STORES.NOTES, {
+                    keyPath: KEY_PATH.NOTES,
+                });
+            }
         },
     });
 };

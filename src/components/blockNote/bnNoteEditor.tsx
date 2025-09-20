@@ -58,11 +58,12 @@ type BnNoteEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    noteType: number;
     socket: Socket | null;
     teamMembers: UserProps[];
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
-    setNoteBodyUpdated?: (value: boolean) => void;
+    setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
@@ -72,11 +73,12 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
         teamMemberProfiles,
         myself,
         setMyself,
+        noteType,
         socket,
         teamMembers,
         body,
         setBody,
-        setNoteBodyUpdated,
+        setNoteBodyEdited,
         setNoteBodySaved,
         setCurrentChat,
         setOpeningService,
@@ -211,134 +213,129 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
     }, [selectedEmoji]);
 
     return (
-        <Box>
-            <Box sx={{ position: "relative" }} className={bnBoxClassName}>
-                <BlockNoteView
-                    className="bn-box"
-                    editor={editor}
-                    sideMenu={false}
-                    emojiPicker={false}
-                    theme={mode === "dark" ? "dark" : "light"}
-                    formattingToolbar={false}
-                    data-changing-font-demo // custom font
-                    onKeyDown={(event) => {
-                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                            if (editor.document.length > 1) {
-                                //Auto saving logic here
-                            }
+        <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+            <BlockNoteView
+                className="bn-box"
+                editor={editor}
+                sideMenu={false}
+                emojiPicker={false}
+                theme={mode === "dark" ? "dark" : "light"}
+                formattingToolbar={false}
+                data-changing-font-demo // custom font
+                onKeyDown={(event) => {
+                    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                        if (editor.document.length > 1) {
+                            //Auto saving logic here
                         }
-                    }}
-                    onChange={() => {
-                        setBody(editor.document);
-                        if (setNoteBodyUpdated) {
-                            setNoteBodyUpdated(true);
-                            if (setNoteBodySaved) {
-                                setNoteBodySaved(false);
-                            }
+                    }
+                }}
+                onChange={() => {
+                    setBody(editor.document);
+                    if (setNoteBodyEdited) {
+                        setNoteBodyEdited(true);
+                        if (setNoteBodySaved) {
+                            setNoteBodySaved(false);
                         }
-                    }}
-                >
-                    <GridSuggestionMenuController
-                        triggerCharacter={":"}
-                        // Changes the Emoji Picker to only have 5 columns.
-                        columns={5}
-                        minQueryLength={2}
-                    />
+                    }
+                }}
+            >
+                <GridSuggestionMenuController
+                    triggerCharacter={":"}
+                    // Changes the Emoji Picker to only have 5 columns.
+                    columns={5}
+                    minQueryLength={2}
+                />
 
-                    <SideMenuController
-                        sideMenu={(props) => (
-                            <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
-                        )}
-                    />
-                    <FormattingToolbarController
-                        formattingToolbar={() => (
-                            <FormattingToolbar>
-                                <BlockTypeSelect
-                                    key={"blockTypeSelect"}
-                                    items={[
-                                        // Gets the default Block Type Select items.
-                                        ...blockTypeSelectItems(editor.dictionary),
-                                        // Adds an item for the Alert block.
-                                        {
-                                            name: "Alert",
-                                            type: "alert",
-                                            icon: RiAlertFill,
-                                            isSelected: (block) => block.type === "alert",
-                                        } satisfies BlockTypeSelectItem,
-                                    ]}
-                                />
+                <SideMenuController
+                    sideMenu={(props) => (
+                        <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
+                    )}
+                />
+                <FormattingToolbarController
+                    formattingToolbar={() => (
+                        <FormattingToolbar>
+                            <BlockTypeSelect
+                                key={"blockTypeSelect"}
+                                items={[
+                                    // Gets the default Block Type Select items.
+                                    ...blockTypeSelectItems(editor.dictionary),
+                                    // Adds an item for the Alert block.
+                                    {
+                                        name: "Alert",
+                                        type: "alert",
+                                        icon: RiAlertFill,
+                                        isSelected: (block) => block.type === "alert",
+                                    } satisfies BlockTypeSelectItem,
+                                ]}
+                            />
 
-                                <BasicTextStyleButton
-                                    basicTextStyle={"bold"}
-                                    key={"boldStyleButton"}
-                                />
-                                <BasicTextStyleButton
-                                    basicTextStyle={"italic"}
-                                    key={"italicStyleButton"}
-                                />
-                                <BasicTextStyleButton
-                                    basicTextStyle={"underline"}
-                                    key={"underlineStyleButton"}
-                                />
-                                <BasicTextStyleButton
-                                    basicTextStyle={"strike"}
-                                    key={"strikeStyleButton"}
-                                />
-                                <BasicTextStyleButton
-                                    key={"codeStyleButton"}
-                                    basicTextStyle={"code"}
-                                />
-                                <TextAlignButton
-                                    textAlignment={"left"}
-                                    key={"textAlignLeftButton"}
-                                />
-                                <TextAlignButton
-                                    textAlignment={"center"}
-                                    key={"textAlignCenterButton"}
-                                />
-                                <TextAlignButton
-                                    textAlignment={"right"}
-                                    key={"textAlignRightButton"}
-                                />
-                                <ColorStyleButton key={"colorStyleButton"} />
-                                <CreateLinkButton key={"createLinkButton"} />
-                                <FileCaptionButton key={"fileCaptionButton"} />
-                                <FileReplaceButton key={"fileReplaceButton"} />
-                                <AddCommentButton key={"addCommentButton"} />
-                                <AddTiptapCommentButton key={"addTiptapCommentButton"} />
-                                <FileDeleteButton key={"fileDeleteButton"} />
-                                <FileDownloadButton key={"fileDownloadButton"} />
-                                <FilePreviewButton key={"filePreviewButton"} />
-                                <FileRenameButton key={"fileRenameButton"} />
-                                <TableCellMergeButton key={"tableCellMergeButton"} />
-                                {/* <CustomEmojiToolbar
+                            <BasicTextStyleButton
+                                basicTextStyle={"bold"}
+                                key={"boldStyleButton"}
+                            />
+                            <BasicTextStyleButton
+                                basicTextStyle={"italic"}
+                                key={"italicStyleButton"}
+                            />
+                            <BasicTextStyleButton
+                                basicTextStyle={"underline"}
+                                key={"underlineStyleButton"}
+                            />
+                            <BasicTextStyleButton
+                                basicTextStyle={"strike"}
+                                key={"strikeStyleButton"}
+                            />
+                            <BasicTextStyleButton
+                                key={"codeStyleButton"}
+                                basicTextStyle={"code"}
+                            />
+                            <TextAlignButton textAlignment={"left"} key={"textAlignLeftButton"} />
+                            <TextAlignButton
+                                textAlignment={"center"}
+                                key={"textAlignCenterButton"}
+                            />
+                            <TextAlignButton
+                                textAlignment={"right"}
+                                key={"textAlignRightButton"}
+                            />
+                            <ColorStyleButton key={"colorStyleButton"} />
+                            <CreateLinkButton key={"createLinkButton"} />
+                            <FileCaptionButton key={"fileCaptionButton"} />
+                            <FileReplaceButton key={"fileReplaceButton"} />
+                            <AddCommentButton key={"addCommentButton"} />
+                            <AddTiptapCommentButton key={"addTiptapCommentButton"} />
+                            <FileDeleteButton key={"fileDeleteButton"} />
+                            <FileDownloadButton key={"fileDownloadButton"} />
+                            <FilePreviewButton key={"filePreviewButton"} />
+                            <FileRenameButton key={"fileRenameButton"} />
+                            <TableCellMergeButton key={"tableCellMergeButton"} />
+                            {/* <CustomEmojiToolbar
                                     key={"customButton"}
                                     setShowEmojiPicker={setShowEmojiPicker}
                                 /> */}
-                            </FormattingToolbar>
-                        )}
-                    />
+                        </FormattingToolbar>
+                    )}
+                />
 
-                    {/* Adds a mentions menu which opens with the "@" key */}
-                    <SuggestionMenuController
-                        triggerCharacter={"@"}
-                        getItems={async (query) =>
-                            // Gets the mentions menu items
-                            filterSuggestionItems(
-                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
-                                query
-                            )
-                        }
-                    />
-                    <SuggestionMenuController
-                        triggerCharacter={"/"}
-                        // Replaces the default Slash Menu items with our custom ones.
-                        getItems={async (query) =>
-                            filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-                        }
-                    />
-                </BlockNoteView>
-            </Box>
+                {/* Adds a mentions menu which opens with the "@" key */}
+                <SuggestionMenuController
+                    triggerCharacter={"@"}
+                    getItems={async (query) =>
+                        // Gets the mentions menu items
+                        filterSuggestionItems(
+                            MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                            query
+                        )
+                    }
+                />
+                <SuggestionMenuController
+                    triggerCharacter={"/"}
+                    // Replaces the default Slash Menu items with our custom ones.
+                    getItems={async (query) =>
+                        filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+                    }
+                />
+            </BlockNoteView>
         </Box>
     );
 };

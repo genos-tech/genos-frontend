@@ -87,8 +87,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         currentPreviewTask.attachments
     );
     const [taskUpdated, setTaskUpdated] = useState(false);
+    const [startIntervalUpdatingTask, setStartIntervalUpdatingTask] = useState(false);
     const [taskStatusUpdated, setTaskStatusUpdated] = useState(false);
-    const [taskBodyUpdated, setTaskBodyUpdated] = useState(false);
+    const [taskBodyEdited, setTaskBodyEdited] = useState(false);
     const [taskBodySaved, setTaskBodySaved] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
@@ -122,7 +123,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             socket,
             myself,
             newTaskContent,
-            taskBodyUpdated,
+            taskBodyEdited,
             taskStatusUpdated,
             accessToken
         );
@@ -152,7 +153,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setCurrentPreviewTask(currentPreviewTask);
             setCurrentTaskId(currentPreviewTask.id);
             setBody(currentPreviewTask.body || []);
-            setTaskBodyUpdated(false);
         } else {
             // Update only the tmpCurrentTaskContent when user updated the task content
             // (Not switched the previewing task)
@@ -160,7 +160,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setCurrentPreviewTask(newTaskContent);
         }
         setTaskUpdated(false);
+        setTaskBodySaved(true);
         setTaskStatusUpdated(false);
+        setTaskBodyEdited(false);
+        setStartIntervalUpdatingTask(false);
     };
 
     useEffect(() => {
@@ -170,22 +173,27 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [taskUpdated]);
 
+    useEffect(() => {
+        if (startIntervalUpdatingTask) {
+            sendUpdatedTask(false);
+        }
+    }, [startIntervalUpdatingTask]);
+
     // Auto save task body every Nms if needed
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (taskBodyUpdated === true) {
-                sendUpdatedTask(false);
-                setTaskBodySaved(true);
+            if (taskBodyEdited === true) {
+                setStartIntervalUpdatingTask(true);
             }
         }, 3000);
 
         // Clean up the interval when the component unmounts
         return () => clearInterval(intervalId);
-    }, [taskBodyUpdated]);
+    }, [taskBodyEdited]);
 
     // Update variables when an user change the target task
     useEffect(() => {
-        if (taskBodyUpdated) {
+        if (taskBodyEdited) {
             sendUpdatedTask(true);
         } else {
             setTmpCurrentTaskContent(currentPreviewTask);
@@ -210,7 +218,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     useEffect(() => {
         // Save task before the opening task preview is closed.
         if (taskClosed)
-            if (taskBodyUpdated) {
+            if (taskBodyEdited) {
                 const execute = async () => {
                     await sendUpdatedTask(false);
                     if (setIsTaskPreviewVisible) {
@@ -419,7 +427,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 teamMembers={teamMembers}
                 body={body}
                 setBody={setBody}
-                setTaskBodyUpdated={setTaskBodyUpdated}
+                setTaskBodyEdited={setTaskBodyEdited}
                 setTaskBodySaved={setTaskBodySaved}
                 setCurrentChat={setCurrentMainChat}
                 setOpeningService={setOpeningService}

@@ -14,7 +14,7 @@ type TaskPreviewBodyBlockProps = {
     teamMembers: UserProps[];
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
-    setTaskBodyUpdated: (value: boolean) => void;
+    setTaskBodyEdited: (value: boolean) => void;
     setTaskBodySaved: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
@@ -28,7 +28,7 @@ export const TaskPreviewBodyBlock = (props: TaskPreviewBodyBlockProps) => {
         teamMembers,
         body,
         setBody,
-        setTaskBodyUpdated,
+        setTaskBodyEdited,
         setTaskBodySaved,
         setCurrentChat,
         setOpeningService,
@@ -44,7 +44,7 @@ export const TaskPreviewBodyBlock = (props: TaskPreviewBodyBlockProps) => {
                     teamMembers={teamMembers}
                     body={body || []}
                     setBody={setBody}
-                    setTaskBodyUpdated={setTaskBodyUpdated}
+                    setTaskBodyEdited={setTaskBodyEdited}
                     setTaskBodySaved={setTaskBodySaved}
                     setCurrentChat={setCurrentChat}
                     setOpeningService={setOpeningService}

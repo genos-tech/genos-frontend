@@ -1,8 +1,9 @@
-import { loadTeamTasks } from "../features/tasks/services/loadTeamTasks";
+import { loadNotes } from "../features/notes/services/loadNotes";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
 import { STORES } from "../db/conf";
 import { clearStore, miniBatchInsert } from "../db/crud";
+import { NoteProps } from "../types/notes";
 
 const BATCH_SIZE = 1000;
 
@@ -10,15 +11,15 @@ self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;
     const accessToken: string = event.data.accessToken;
 
-    await clearStore(STORES.TASKS);
+    await clearStore(STORES.NOTES);
 
     // Load data from backend
-    const taskList: TaskTableProps[] = await loadTeamTasks(myself, accessToken);
+    const notes: NoteProps[] = await loadNotes(myself, accessToken);
 
-    for (let i = 0; i < taskList.length; i += BATCH_SIZE) {
-        const miniBatchTasks: TaskTableProps[] = taskList.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < notes.length; i += BATCH_SIZE) {
+        const miniBatchTasks: NoteProps[] = notes.slice(i, i + BATCH_SIZE);
         await miniBatchInsert({
-            storeName: STORES.TASKS,
+            storeName: STORES.NOTES,
             miniBatch: miniBatchTasks,
         });
     }
