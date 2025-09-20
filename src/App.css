@@ -447,9 +447,9 @@
 
 .bn-note-body-box-light .bn-editor {
   background-color: rgb(214, 214, 214);
-  padding-top: 40px;
+  padding-top: 50px;
   padding-bottom: 20px;
-  height: 91dvh;
+  height: 93dvh;
   overflow-y: scroll;
 }
 
@@ -460,9 +460,9 @@
 
 .bn-note-body-box-dark .bn-editor {
   background-color: #1f1f1f;
-  padding-top: 40px;
+  padding-top: 50px;
   padding-bottom: 20px;
-  height: 91dvh;
+  height: 93dvh;
   overflow-y: scroll;
 }
 

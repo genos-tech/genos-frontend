@@ -3,12 +3,16 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 
-export const loadNotes = async (myself: UserProps, accessToken: string | null) => {
+export const loadSpecificNote = async (
+    myself: UserProps,
+    noteId: number,
+    accessToken: string | null
+) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${myself.teamId}&user_id=${myself.userId}`;
-            const res = await api.get(`/note/all/?${query}`);
+            const query: string = `team_id=${myself.teamId}&user_id=${myself.userId}&note_id=${noteId}`;
+            const res = await api.get(`/note/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

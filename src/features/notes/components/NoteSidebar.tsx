@@ -19,7 +19,11 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { NoteProps } from "../../../types/notes";
+import { NoteMetaProps, NoteProps } from "../../../types/notes";
+import { loadSpecificNote } from "../services/loadSpecificNote";
+import { addNote } from "../services/addNote";
+import { getData } from "../../../db/crud";
+import { STORES } from "../../../db/conf";
 
 function Toggler({
     defaultExpanded,
@@ -59,13 +63,26 @@ type NoteSidebarProps = {
     myself: UserProps;
     noteType: number;
     setNoteType: (value: number) => void;
-    notes: NoteProps[];
+    noteMeta: NoteMetaProps[];
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
 };
 export const NoteSidebar = (props: NoteSidebarProps) => {
-    const { myself, noteType, setNoteType, notes, currentNote, setCurrentNote } = props;
+    const { myself, noteType, setNoteType, noteMeta, currentNote, setCurrentNote } = props;
     const { accessToken } = useAuth();
+
+    const LoadNote = async (noteId: number) => {
+        const note: NoteProps = await getData({ storeName: STORES.NOTES, key: noteId });
+        if (note) {
+            setCurrentNote(note);
+        } else {
+            const note: NoteProps = await loadSpecificNote(myself, noteId, accessToken);
+            if (!note.error) {
+                addNote(note);
+                setCurrentNote(note);
+            }
+        }
+    };
 
     return (
         <Sheet
@@ -164,7 +181,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             )}
                         >
                             <List>
-                                {notes.map((note, index) => {
+                                {noteMeta.map((note, index) => {
                                     return (
                                         <ListItem key={`personal-note-${note.noteId}`}>
                                             <ListItemButton
@@ -175,7 +192,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                                         : false
                                                 }
                                                 onClick={() => {
-                                                    setCurrentNote(note);
+                                                    LoadNote(note.noteId);
                                                 }}
                                                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >

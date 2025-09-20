@@ -1,5 +1,5 @@
 export const DB_NAME = "originData";
-export const DB_VERSION = 13;
+export const DB_VERSION = 15;
 
 export const STORES = {
     USER_INFO: "users",
@@ -32,7 +32,7 @@ export const KEY_PATH = {
     PM_MESSAGES: "messageIdWithChatId",
     PM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
     TASKS: "id",
-    NOTES: "note_id",
+    NOTES: "noteId",
 };
 
 export const INDEX = {

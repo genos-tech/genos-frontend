@@ -1,6 +1,5 @@
 import { loadNotes } from "../features/notes/services/loadNotes";
 import { UserProps } from "../types/admin";
-import { TaskTableProps } from "../types/tasks";
 import { STORES } from "../db/conf";
 import { clearStore, miniBatchInsert } from "../db/crud";
 import { NoteProps } from "../types/notes";

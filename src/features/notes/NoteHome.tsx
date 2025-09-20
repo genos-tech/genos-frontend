@@ -10,9 +10,12 @@ import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
 import { ChatProps } from "../../types/chat";
 import { NoteMain } from "./components/NoteMain";
-import { NoteProps } from "../../types/notes";
-import { loadNotes } from "./services/loadNotes";
+import { NoteMetaProps, NoteProps } from "../../types/notes";
+import { loadNoteMeta } from "./services/loadNoteMeta";
 import { useAuth } from "../../context/AuthContext";
+import { getData } from "../../db/crud";
+import { STORES } from "../../db/conf";
+import { loadSpecificNote } from "./services/loadSpecificNote";
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -52,28 +55,57 @@ export const NoteHome = (props: NoteHomeProps) => {
     const [noteType, setNoteType] = useState<number>(1);
 
     const [currentNote, setCurrentNote] = useState<NoteProps | null>(null);
+    const [currentNoteTitle, setCurrentNoteTitle] = useState<string>("");
 
-    const [myNotes, setMyNotes] = useState<NoteProps[]>([]);
-    const [myTaskNotes, setTaskNotes] = useState<NoteProps[]>([]);
-    const [myChatNotes, setChatNotes] = useState<NoteProps[]>([]);
-    const loadMyNotes = async () => {
+    const [myNoteMeta, setMyNoteMeta] = useState<NoteMetaProps[]>([]);
+    const [myTaskNoteMeta, setTaskNoteMeta] = useState<NoteMetaProps[]>([]);
+    const [myChatNoteMeta, setChatNoteMeta] = useState<NoteMetaProps[]>([]);
+    const loadMyNoteMeta = async () => {
         // Load the latest project as initial process
-        const loadedNotes: NoteProps[] = await loadNotes(myself, accessToken);
+        const loadedNotes: NoteMetaProps[] = await loadNoteMeta(myself, accessToken);
         if (loadedNotes.length > 0) {
             // for (let i = 0; i < loadedNotes.length; i++) {
             // }
-            setMyNotes(loadedNotes);
-            setCurrentNote(loadedNotes[0]);
+            setMyNoteMeta(loadedNotes);
         }
     };
-    const loadTaskNotes = async () => {};
-    const loadChatNotes = async () => {};
+    const loadTaskNoteMeta = async () => {};
+    const loadChatNoteMeta = async () => {};
+
+    const popInitialNote = async () => {
+        const noteId: string | null = localStorage.getItem("lastOpenNoteId");
+        if (noteId) {
+            const note: NoteProps = await getData({
+                storeName: STORES.NOTES,
+                key: Number(noteId),
+            });
+            if (note) {
+                setCurrentNote(note);
+            }
+        }
+    };
 
     useEffect(() => {
-        loadMyNotes();
-        loadTaskNotes();
-        loadChatNotes();
+        loadMyNoteMeta();
+        loadTaskNoteMeta();
+        loadChatNoteMeta();
+        popInitialNote();
     }, []);
+
+    useEffect(() => {
+        if (currentNote) {
+            localStorage.setItem("lastOpenNoteId", String(currentNote.noteId));
+        }
+    }, [currentNote]);
+
+    // Update note title in the sidebar
+    useEffect(() => {
+        setMyNoteMeta(
+            myNoteMeta.map((u) =>
+                u.noteId === currentNote?.noteId ? { ...u, title: currentNoteTitle } : u
+            )
+        );
+    }, [currentNoteTitle]);
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -98,7 +130,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                             myself={myself}
                             noteType={noteType}
                             setNoteType={setNoteType}
-                            notes={myNotes}
+                            noteMeta={myNoteMeta}
                             setCurrentNote={setCurrentNote}
                             currentNote={currentNote}
                         />
@@ -126,6 +158,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 setNoteType={setNoteType}
                                 currentNote={currentNote}
                                 setCurrentNote={setCurrentNote}
+                                currentNoteTitle={currentNoteTitle}
+                                setCurrentNoteTitle={setCurrentNoteTitle}
                                 setOpeningService={setOpeningService}
                                 setCurrentChat={setCurrentMainChat}
                             />

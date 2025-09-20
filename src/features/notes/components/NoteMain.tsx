@@ -37,6 +37,7 @@ import { NoteProps } from "../../../types/notes";
 import { sendUpdatedNote } from "../services/sendUpdatedNote";
 import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { addNote } from "../services/addNote";
 
 type NoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -48,6 +49,8 @@ type NoteMainProps = {
     setNoteType: (value: number) => void;
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
+    currentNoteTitle: string;
+    setCurrentNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
 };
@@ -61,6 +64,8 @@ export const NoteMain = (props: NoteMainProps) => {
         setMyself,
         currentNote,
         setCurrentNote,
+        currentNoteTitle,
+        setCurrentNoteTitle,
         setOpeningService,
         setCurrentChat,
         noteType,
@@ -89,7 +94,6 @@ export const NoteMain = (props: NoteMainProps) => {
         };
     }, []);
 
-    const [noteTitle, setNoteTitle] = useState<string>("");
     const [noteUpdated, setNoteUpdated] = useState(false);
     const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
@@ -102,14 +106,19 @@ export const NoteMain = (props: NoteMainProps) => {
         if (currentNote) {
             const newNote: NoteProps = {
                 ...currentNote,
-                title: noteTitle,
+                title: currentNoteTitle,
                 body: body || [],
             };
-
+            // Send the update note to the backend
             await sendUpdatedNote(myself, newNote, accessToken);
+
+            // Add the updated note to the indexedDB
+            await addNote(newNote);
+
             setStartIntervalUpdatingNote(false);
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
+            setNoteUpdated(false);
         }
     };
 
@@ -146,7 +155,7 @@ export const NoteMain = (props: NoteMainProps) => {
         if (currentNote) {
             setBody(currentNote.body);
             setTsBody(getCurrentTimestamp()); // This must be executed together with "setBody" !!!!
-            setNoteTitle(currentNote.title);
+            setCurrentNoteTitle(currentNote.title);
 
             if (
                 isUpdatingTabContents === true &&
@@ -187,8 +196,18 @@ export const NoteMain = (props: NoteMainProps) => {
     }, [isUpdatingTabContents]);
 
     useEffect(() => {
+        setNoteBodySaved(false);
         setCurrentNote(tabContents[selectedTabIndex]);
     }, [selectedTabIndex]);
+
+    // Update note title in the tab
+    useEffect(() => {
+        setTabContents(
+            tabContents.map((u) =>
+                u.noteId === currentNote?.noteId ? { ...u, title: currentNoteTitle } : u
+            )
+        );
+    }, [currentNoteTitle]);
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
@@ -225,7 +244,7 @@ export const NoteMain = (props: NoteMainProps) => {
                                 direction="row"
                                 alignItems="center"
                                 justifyContent="space-between"
-                                sx={{ width: "100%" }}
+                                sx={{ width: "100%", height: "30px", mt: "10px" }}
                             >
                                 <Menu
                                     ref={breadcrumbsRef}
@@ -328,19 +347,22 @@ export const NoteMain = (props: NoteMainProps) => {
                                                 {tab.title.length > 15
                                                     ? `${tab.title.slice(0, 15)}...`
                                                     : tab.title}
-                                                <IconButton
-                                                    component="span"
-                                                    size="sm"
-                                                    variant="plain"
-                                                    color="neutral"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleCloseTab(Number(tab.noteId));
-                                                    }}
-                                                    sx={{ ml: 1 }}
-                                                >
-                                                    <CloseIcon />
-                                                </IconButton>
+
+                                                {tabContents.length > 1 && (
+                                                    <IconButton
+                                                        component="span"
+                                                        size="sm"
+                                                        variant="plain"
+                                                        color="neutral"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleCloseTab(Number(tab.noteId));
+                                                        }}
+                                                        sx={{ ml: 1 }}
+                                                    >
+                                                        <CloseIcon />
+                                                    </IconButton>
+                                                )}
                                             </Box>
                                         </Tab>
                                     ))}
@@ -359,21 +381,21 @@ export const NoteMain = (props: NoteMainProps) => {
                                         <FormControl
                                             required
                                             sx={{
-                                                mt: "5px",
-                                                ml: "5px",
+                                                mt: "10px",
+                                                ml: "10px",
                                                 justifyContent: "center",
                                                 position: "absolute",
-                                                zIndex: 10100,
+                                                zIndex: 100,
                                             }}
                                         >
                                             <Input
                                                 startDecorator={<NoteAltIcon />}
-                                                key={"noteTitle"}
+                                                key={"currentNoteTitle"}
                                                 variant="soft"
                                                 placeholder="Note Title"
-                                                value={noteTitle}
+                                                value={currentNoteTitle}
                                                 onChange={(e) => {
-                                                    setNoteTitle(e.target.value);
+                                                    setCurrentNoteTitle(e.target.value);
                                                 }}
                                                 onBlur={() => {
                                                     setNoteUpdated(true);
@@ -388,9 +410,9 @@ export const NoteMain = (props: NoteMainProps) => {
                                             <Box
                                                 sx={{
                                                     position: "absolute",
-                                                    mt: "8px",
-                                                    ml: "330px",
-                                                    zIndex: 10100,
+                                                    mt: "12px",
+                                                    ml: "340px",
+                                                    zIndex: 100,
                                                 }}
                                             >
                                                 <Button
