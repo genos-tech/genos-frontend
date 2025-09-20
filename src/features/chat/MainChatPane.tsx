@@ -132,7 +132,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         addChat(updatedChat, updatedChat.chatType);
                         funcSetAllChats();
                     } else {
-                        console.log("not update all chat...");
+                        // console.log("Nothing to update read status...");
                     }
                 } else {
                     console.error("Failed to update read status");

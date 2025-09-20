@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Avatar } from "@mui/joy";
 
 import { AllChatProps, ChatProps } from "../../types/chat";
@@ -7,6 +7,8 @@ import { UserProfile } from "../../features/admin/components/modals/UserProfile"
 import { UserProps } from "../../types/admin";
 import { ThreadProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
+
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type AvatarWithStatusProps = {
     myself: UserProps;
@@ -46,14 +48,20 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             : false
         : false;
 
-    let avatarImg: string;
+    const setAvatarImg = (): string => {
+        if (isYou === true) {
+            isOnline = myself?.isOfflineForced !== "true" ? true : false;
+            return myself.avatarImgPath;
+        } else {
+            return avatarUser?.avatarImgPath || "";
+        }
+    };
 
-    if (isYou === true) {
-        isOnline = myself?.isOfflineForced !== "true" ? true : false;
-        avatarImg = myself.avatarImgPath;
-    } else {
-        avatarImg = avatarUser?.avatarImgPath || "";
-    }
+    let avatarImg: string = setAvatarImg();
+
+    useEffect(() => {
+        avatarImg = setAvatarImg();
+    }, [myself]);
 
     return (
         <div>
@@ -64,21 +72,33 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 onClick={() => setOpenUserProfile(true)}
             >
                 {chat && (
-                    <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarImg}>
+                    <Avatar
+                        size="sm"
+                        sx={{ width: 32, height: 32 }}
+                        src={`${media_url}/${avatarImg}`}
+                    >
                         {chat.chatType === 1 || isForBubble === true
                             ? avatarUser?.userName[0].toUpperCase()
                             : chat?.chatName[0].toUpperCase()}
                     </Avatar>
                 )}
                 {thread && (
-                    <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarImg}>
+                    <Avatar
+                        size="sm"
+                        sx={{ width: 32, height: 32 }}
+                        src={`${media_url}/${avatarImg}`}
+                    >
                         {thread.chatType === 1 || isForBubble === true
                             ? avatarUser?.userName[0].toUpperCase()
                             : thread?.chatName[0].toUpperCase()}
                     </Avatar>
                 )}
                 {chat === undefined && thread === undefined && (
-                    <Avatar size="sm" sx={{ width: 32, height: 32 }} src={avatarImg}>
+                    <Avatar
+                        size="sm"
+                        sx={{ width: 32, height: 32 }}
+                        src={`${media_url}/${avatarImg}`}
+                    >
                         {avatarUser?.userName[0].toUpperCase()}
                     </Avatar>
                 )}

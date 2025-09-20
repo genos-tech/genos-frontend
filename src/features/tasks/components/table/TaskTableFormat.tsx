@@ -1,4 +1,5 @@
 import { alpha } from "@mui/system";
+import { useEffect, useState } from "react";
 import { Box, Typography, Avatar } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { GridColDef, GridRenderCellParams, GridRenderEditCellParams } from "@mui/x-data-grid";
@@ -11,6 +12,8 @@ import PendingIcon from "@mui/icons-material/Pending";
 
 import { UserProps } from "../../../../types/admin";
 import { PulseDot } from "../../../../components/utils/PulseDot";
+
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 const hmlOptions = [
     { label: "Low", value: "Low", color: "#0044c2", textColor: "white" },
@@ -66,6 +69,7 @@ type getTaskColumnsProps = {
 };
 
 export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
+    const { myself, teamMembers } = props;
     const { mode } = useColorScheme();
 
     return [
@@ -93,14 +97,21 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             renderCell: (params) => {
                 return (
                     <Box textAlign="left" sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-                        <Avatar size="sm" src={params.row.assigneeImgPath}>
+                        <Avatar
+                            size="sm"
+                            src={
+                                params.row.assigneeId === myself.userId
+                                    ? `${media_url}/${myself.avatarImgPath}`
+                                    : `${media_url}/${params.row.assigneeImgPath}`
+                            }
+                        >
                             {params.row.assigneeName[0].toUpperCase()}
                         </Avatar>
                         <Box position="absolute" sx={{ pl: "20px", pt: "20px" }}>
                             <PulseDot
                                 color={
-                                    props.myself.userId === params.row?.assigneeId
-                                        ? props.myself?.isOfflineForced !== "true"
+                                    myself.userId === params.row?.assigneeId
+                                        ? myself?.isOfflineForced !== "true"
                                             ? "#4caf50"
                                             : "#999"
                                         : params.row?.isOnline === true &&
@@ -140,7 +151,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                     }}
                     fullWidth
                 >
-                    {props.teamMembers.map((option) => (
+                    {teamMembers.map((option) => (
                         <MenuItem key={option.userId} value={option.userEmail}>
                             {option.userName} | {option.userEmail}
                         </MenuItem>

@@ -5,12 +5,14 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { useScrollToBottomOnNewItem } from "./hooks/inboxHooks";
 import { InboxItemProps } from "../../types/common";
-import { UserProps } from "../../types/admin";
+import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { InboxBubble } from "./components/InboxBubble";
 import { ChatProps } from "../../types/chat";
 
 type InboxHomeProps = {
+    currentTeam: Team;
+    setCurrentTeam: (value: Team) => void;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
@@ -25,6 +27,8 @@ type InboxHomeProps = {
 
 export const InboxHome = (props: InboxHomeProps) => {
     const {
+        currentTeam,
+        setCurrentTeam,
         teamMemberProfiles,
         myself,
         socket,
@@ -58,6 +62,8 @@ export const InboxHome = (props: InboxHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
+                currentTeam={currentTeam}
+                setCurrentTeam={setCurrentTeam}
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}

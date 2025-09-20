@@ -122,12 +122,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     setAllChats={setAllChats}
                 />
 
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    sx={{ mt: "7px" }}
-                    // flexWrap="wrap"
-                >
+                <Stack direction="row" alignItems="center" sx={{ mt: "7px", overflowX: "clip" }}>
                     {/* Centered buttons */}
                     <Stack direction="row" spacing={2} justifyContent="center" flexGrow={1}>
                         {/* For DM */}

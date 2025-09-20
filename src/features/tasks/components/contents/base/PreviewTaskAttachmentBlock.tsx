@@ -276,7 +276,7 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
                     size="sm"
                     onClick={handleButtonClick}
                 >
-                    Select File
+                    Select Files
                 </Button>
             </Stack>
 

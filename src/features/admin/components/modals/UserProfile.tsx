@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     Modal,
     ModalDialog,
@@ -30,6 +30,9 @@ import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { UserProfileStatus } from "./sub/UserProfileStatus";
 import { UserProfileRole } from "./sub/UserProfileRole";
+
+const base_url = import.meta.env.VITE_API_BASE_URL;
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type UserProfileProps = {
     socket: Socket | null;
@@ -68,7 +71,59 @@ export const UserProfile = (props: UserProfileProps) => {
         } else {
             setProfileUser(user);
         }
-    }, [user]);
+    }, [user, myself]);
+
+    // Profile image file upload manager
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const handleButtonClick = () => {
+        inputRef.current?.click();
+    };
+    const toProfileFileName = (originalFileName: string): string => {
+        // Get the extension (including dot, e.g. ".png")
+        const ext = originalFileName.substring(originalFileName.lastIndexOf("."));
+        // return `profile${ext}`;
+
+        // use always "jpg"
+        return `profile.jpg`;
+    };
+    const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = event.target.files;
+        if (!selectedFiles || selectedFiles.length !== 1) return;
+
+        const tmpUserProfileImage = selectedFiles[0]; // original File
+
+        // NOTE: This is the static path and is referred from backend as well.
+        //       So, need to check backend when you need to change it.
+        const newName = toProfileFileName(tmpUserProfileImage.name);
+
+        // Create a new File instance with the existing file data but new name
+        const userProfileImage = new File([tmpUserProfileImage], newName, {
+            type: tmpUserProfileImage.type,
+            lastModified: tmpUserProfileImage.lastModified,
+        });
+
+        const formData = new FormData();
+        formData.append("user_profile_image", userProfileImage);
+        const uploadProfileImageResponse = await fetch(`${base_url}/user/profile/image/`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+        });
+
+        const uploadProfileImageData = await uploadProfileImageResponse.json();
+
+        if (!uploadProfileImageResponse.ok) {
+            throw new Error("Failed to upload user profile image.");
+        } else {
+            localStorage.setItem("avatarImgPath", uploadProfileImageData.profile_image_file_name);
+            setMyself({
+                ...myself,
+                avatarImgPath: uploadProfileImageData.profile_image_file_name,
+            });
+        }
+    };
 
     return (
         <>
@@ -136,7 +191,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         <Avatar
                                             sx={{ width: 180, height: 180, fontSize: "50px" }}
                                             onClick={() => setOpenUserProfile(true)}
-                                            src={profileUser?.avatarImgPath}
+                                            src={`${media_url}/${profileUser?.avatarImgPath}`}
                                         >
                                             {profileUser?.userName[0]}
                                         </Avatar>
@@ -149,8 +204,19 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     right: 30, // push it to the right side
                                                 }}
                                             >
+                                                <input
+                                                    type="file"
+                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                                    multiple={false}
+                                                    ref={inputRef}
+                                                    onChange={handleSelectedFiles}
+                                                    style={{ display: "none" }}
+                                                />
                                                 <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
-                                                    <IconButton variant="soft">
+                                                    <IconButton
+                                                        variant="soft"
+                                                        onClick={handleButtonClick}
+                                                    >
                                                         <EditIcon sx={{ fontSize: "30px" }} />
                                                     </IconButton>
                                                 </Tooltip>

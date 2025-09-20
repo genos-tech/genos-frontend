@@ -8,7 +8,7 @@ import { ThreadPane } from "./ThreadChatPane";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { MessagesPane } from "./MainChatPane";
 import { MessagesSubPane } from "./SubChatPane";
-import { UserProps } from "../../types/admin";
+import { Team, UserProps } from "../../types/admin";
 import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
@@ -20,6 +20,8 @@ import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
 
 type ChatHomeProps = {
+    currentTeam: Team;
+    setCurrentTeam: (value: Team) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -50,6 +52,8 @@ type ChatHomeProps = {
 
 export const ChatHome = (props: ChatHomeProps) => {
     const {
+        currentTeam,
+        setCurrentTeam,
         teamMemberProfiles,
         socket,
         myself,
@@ -208,6 +212,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
+                currentTeam={currentTeam}
+                setCurrentTeam={setCurrentTeam}
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}

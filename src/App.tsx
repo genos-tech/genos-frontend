@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
@@ -8,7 +8,7 @@ import { ChatHome } from "./features/chat/chatHome";
 import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
-import { UserProps } from "./types/admin";
+import { FindTeamResponse, Team, UserProps } from "./types/admin";
 import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "./types/chat";
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
@@ -20,6 +20,7 @@ import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { InboxItemProps } from "./types/common";
 import { getCurrentTimestamp } from "./utils/dateUtils";
+import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 
 type SetMyselfProps = {
@@ -102,7 +103,7 @@ export const App = () => {
     const { myself, setMyself } = useMyself();
     const [currentTeamId, setCurrentTeamId] = useState("");
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
-    const [teamMemberProfiles, setTeamMemberStatus] = useState<Record<string, UserProps>>({});
+    const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, UserProps>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
 
@@ -216,6 +217,21 @@ export const App = () => {
         }
     };
 
+    // Load the current team info
+    const [currentTeam, setCurrentTeam] = useState<Team>({
+        teamId: myself.teamId,
+        teamName: myself.teamName,
+        teamEmail: "",
+        teamOwnerId: "",
+        teamImgPath: localStorage.getItem("teamImgPath") || undefined,
+    });
+    const initCurrentTeam = async () => {
+        const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
+        if (findTeamRes && findTeamRes.exist === true) {
+            setCurrentTeam(findTeamRes.teamDetails);
+        }
+    };
+
     useEffect(() => {
         funcSetInboxItems();
         funcSetAllChats();
@@ -230,6 +246,8 @@ export const App = () => {
     }, [currentMainChat, currentSubChat]);
 
     useEffect(() => {
+        initCurrentTeam();
+
         if (myself.teamId !== currentTeamId) {
             setIsLoading(true);
             setCurrentTeamId(myself.teamId);
@@ -260,6 +278,18 @@ export const App = () => {
         if (myself.userId !== "") {
             const popTeamUsersWorker = new PopTeamUsersWorker();
 
+            // Only for the initialization
+            popTeamUsersWorker.postMessage({ myself });
+            popTeamUsersWorker.onmessage = (event) => {
+                const data = event.data;
+                if (data.error) {
+                    console.error("Worker failed:", data.error);
+                } else {
+                    setTeamMemberProfiles(data);
+                }
+            };
+
+            // Run every minute
             const interval = setInterval(() => {
                 popTeamUsersWorker.postMessage({ myself });
                 popTeamUsersWorker.onmessage = (event) => {
@@ -267,7 +297,7 @@ export const App = () => {
                     if (data.error) {
                         console.error("Worker failed:", data.error);
                     } else {
-                        setTeamMemberStatus(data);
+                        setTeamMemberProfiles(data);
                     }
                 };
             }, 60_000);
@@ -303,12 +333,14 @@ export const App = () => {
             const role: string = localStorage.getItem("role") || "";
             const baseCountry: string = localStorage.getItem("baseCountry") || "";
             const customStatus: string = localStorage.getItem("customStatus") || "";
+            const avatarImgPath: string = localStorage.getItem("avatarImgPath") || "";
 
             socketInstance.emit("heartbeat", {
                 message: "alive",
                 is_online: true,
                 user: {
                     ...myself,
+                    avatarImgPath: avatarImgPath,
                     isOfflineForced: isOfflineForced,
                     role: role,
                     baseCountry: baseCountry,
@@ -353,6 +385,8 @@ export const App = () => {
 
                 {openingService === 0 ? (
                     <InboxHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
                         socket={socketInstance}
@@ -368,6 +402,8 @@ export const App = () => {
 
                 {openingService === 1 ? (
                     <ChatHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
@@ -399,6 +435,8 @@ export const App = () => {
 
                 {openingService === 2 ? (
                     <TaskHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
@@ -415,6 +453,8 @@ export const App = () => {
 
                 {openingService === 3 ? (
                     <NoteHome
+                        currentTeam={currentTeam}
+                        setCurrentTeam={setCurrentTeam}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         teamMembers={teamMembers}
