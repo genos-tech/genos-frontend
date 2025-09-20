@@ -140,6 +140,7 @@ export const NoteMain = (props: NoteMainProps) => {
     // Tab management
     const [tabContents, setTabContents] = useState<NoteProps[]>(currentNote ? [currentNote] : []);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+    const [isUpdatingTabContents, setIsUpdatingTabContents] = useState(true);
 
     useEffect(() => {
         if (currentNote) {
@@ -148,22 +149,46 @@ export const NoteMain = (props: NoteMainProps) => {
             setNoteTitle(currentNote.title);
 
             if (
-                tabContents.length === 0 ||
-                (tabContents.length > 0 &&
-                    tabContents.some((note) => note.noteId === currentNote.noteId)) === false
+                isUpdatingTabContents === true &&
+                (tabContents.length === 0 ||
+                    (tabContents.length > 0 &&
+                        tabContents.some((note) => note.noteId === currentNote.noteId)) === false)
             ) {
+                // Add the clicked note to the tab.
                 setTabContents((prev) => [...prev, currentNote]);
+                // Also, update the index to the clicked note.
                 setSelectedTabIndex(tabContents.length); // switch to new tab
+            } else {
+                // Update the index when an user click a note in the sidebar
+                setSelectedTabIndex(
+                    tabContents.findIndex((note) => note.noteId === currentNote.noteId)
+                );
             }
+
+            setIsUpdatingTabContents(true);
         }
     }, [currentNote]);
 
-    const handleCloseTab = (id: number) => {
-        setTabContents((prev) => prev.filter((t) => t.noteId !== id));
-        if (tabContents.length > 1 && selectedTabIndex >= tabContents.length - 1) {
-            setSelectedTabIndex(tabContents.length - 2); // fallback to previous tab
+    const handleCloseTab = (closedNoteId: number) => {
+        if (tabContents.length > 1) {
+            setTabContents((prev) => prev.filter((t) => t.noteId !== closedNoteId));
+            if (selectedTabIndex >= tabContents.length - 1) {
+                setSelectedTabIndex(tabContents.length - 2); // fallback to previous tab
+            } else {
+                setIsUpdatingTabContents(false);
+            }
         }
     };
+
+    useEffect(() => {
+        if (isUpdatingTabContents === false) {
+            setCurrentNote(tabContents[selectedTabIndex]);
+        }
+    }, [isUpdatingTabContents]);
+
+    useEffect(() => {
+        setCurrentNote(tabContents[selectedTabIndex]);
+    }, [selectedTabIndex]);
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
@@ -263,8 +288,10 @@ export const NoteMain = (props: NoteMainProps) => {
                             </Stack>
 
                             <Tabs
+                                key={`tabs-${tabContents.length}`}
                                 value={selectedTabIndex}
                                 onChange={(_, val) => {
+                                    // console.log("move tab to:", val);
                                     setCurrentNote(tabContents[Number(val)]);
                                     setSelectedTabIndex(Number(val));
                                 }}

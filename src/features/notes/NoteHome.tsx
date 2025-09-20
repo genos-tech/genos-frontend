@@ -93,7 +93,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                 />
                 <PanelGroup direction="horizontal">
-                    <Panel id={"1"} order={1} minSize={5} maxSize={20}>
+                    <Panel id={"1"} order={1} minSize={15} maxSize={25}>
                         <NoteSidebar
                             myself={myself}
                             noteType={noteType}
@@ -114,7 +114,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                         className="resize-handle"
                     />
 
-                    <Panel id={"2"} order={2} minSize={5} maxSize={95}>
+                    <Panel id={"2"} order={2} minSize={50} maxSize={85}>
                         <Box sx={{ paddingX: 1, height: "100dvh" }}>
                             <NoteMain
                                 teamMemberProfiles={teamMemberProfiles}
