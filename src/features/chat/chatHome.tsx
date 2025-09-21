@@ -18,6 +18,7 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
+import { NoteMain } from "../notes/components/NoteMain";
 
 type ChatHomeProps = {
     currentTeam: Team;
@@ -89,6 +90,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [isThreadVisible, setIsThreadVisible] = useState(false); // Is Thread pane visible or not
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false); // Is task preview visible or not
     const [isTaskCreationVisible, setIsTaskCreationVisible] = useState(false); // Is task creation form visible or not
+    const [isNoteVisible, setIsNoteVisible] = useState(false); // Is task creation form visible or not
 
     const [isOpeningTask, setIsOpeningTask] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -293,8 +295,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                         when close right -> MainChat-ThreadChat
                     MainChat-ThreadChat-TaskCreation (p5)
                         when close right -> MainChat-ThreadChat
+                    ThreadChat-NoteView (p6)
+                        when close right -> MainChat-ThreadChat
 
-                Only Task Preview (p6)
+                Only Task Preview (p7)
                  */}
 
                 {isMainChatVisible && (
@@ -824,10 +828,58 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 )}
                             </>
                         )}
+
+                        {/* p6 */}
+                        {isNoteVisible && (
+                            <>
+                                {currentThreadChat && (
+                                    <>
+                                        <PanelResizeHandle
+                                            style={{
+                                                width: "1px",
+                                                backgroundColor:
+                                                    mode === "dark" ? "black" : "white",
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle"
+                                        />
+
+                                        <Panel id={"9"} order={9} minSize={30} maxSize={70}>
+                                            <Box
+                                                sx={{
+                                                    px: { xs: 1, md: 2 },
+                                                    pt: {
+                                                        xs: "calc(12px + var(--Header-height))",
+                                                        sm: "calc(12px + var(--Header-height))",
+                                                        md: 2,
+                                                    },
+                                                    pb: { xs: 2, sm: 2, md: 3 },
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    minWidth: 0,
+                                                    height: "100dvh",
+                                                    gap: 1,
+                                                    ml: "1px",
+                                                    boxShadow: "0 0 0 1px grey",
+                                                    borderColor:
+                                                        mode === "dark" ? "black" : "white",
+                                                }}
+                                            >
+                                                {/* <NoteMain>
+
+                                                </NoteMain> */}
+                                            </Box>
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
                     </>
                 )}
 
-                {/* p6 */}
+                {/* p7 */}
                 {isMainChatVisible === false && isTaskPreviewVisible && currentPreviewTask && (
                     <>
                         <PanelResizeHandle
@@ -840,7 +892,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             className="chat-resize-handle"
                         />
 
-                        <Panel id={"8"} order={8} minSize={30} maxSize={70}>
+                        <Panel id={"10"} order={10} minSize={30} maxSize={70}>
                             <Box
                                 sx={{
                                     px: { xs: 1, md: 2 },

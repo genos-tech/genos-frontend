@@ -64,8 +64,8 @@ function Toggler({
 type NoteSidebarProps = {
     myself: UserProps;
     noteMetaTree: NoteMetaTreeNode[];
-    noteType: number;
-    setNoteType: (value: number) => void;
+    currentNoteType: number;
+    setCurrentNoteType: (value: number) => void;
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
     tabContents: NoteProps[];
@@ -77,8 +77,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const {
         myself,
         noteMetaTree,
-        noteType,
-        setNoteType,
+        currentNoteType,
+        setCurrentNoteType,
         currentNote,
         setCurrentNote,
         tabContents,
@@ -133,7 +133,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         sx={{ my: "1px" }}
                         onClick={() => {
                             setOpen(!open);
-                            setNoteType(1);
+                            setCurrentNoteType(1);
+                            localStorage.setItem("currentNoteType", "1");
                             LoadNote(node.noteId);
                         }}
                     >
@@ -238,9 +239,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 >
                     <ListItem>
                         <ListItemButton
-                            selected={noteType === 0 ? true : false}
+                            selected={currentNoteType === 0 ? true : false}
                             onClick={() => {
-                                setNoteType(0);
+                                setCurrentNoteType(0);
+                                localStorage.setItem("currentNoteType", "0");
                             }}
                         >
                             <HomeIcon />
@@ -255,12 +257,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             defaultExpanded={true}
                             renderToggle={({ open, setOpen }) => (
                                 <ListItemButton
-                                    selected={noteType === 1 ? true : false}
+                                    selected={currentNoteType === 1 ? true : false}
                                     variant="outlined"
                                     color="primary"
                                     onClick={() => {
                                         setOpen(!open);
-                                        setNoteType(1);
+                                        setCurrentNoteType(1);
+                                        localStorage.setItem("currentNoteType", "1");
                                     }}
                                 >
                                     <WindowIcon />
@@ -286,9 +289,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     </ListItem>
                     <ListItem>
                         <ListItemButton
-                            selected={noteType === 2 ? true : false}
+                            selected={currentNoteType === 2 ? true : false}
                             onClick={() => {
-                                setNoteType(2);
+                                setCurrentNoteType(2);
+                                localStorage.setItem("currentNoteType", "2");
                             }}
                         >
                             <AssignmentRoundedIcon />
@@ -299,9 +303,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     </ListItem>
                     <ListItem>
                         <ListItemButton
-                            selected={noteType === 3 ? true : false}
+                            selected={currentNoteType === 3 ? true : false}
                             onClick={() => {
-                                setNoteType(3);
+                                setCurrentNoteType(3);
+                                localStorage.setItem("currentNoteType", "3");
                             }}
                         >
                             <QuestionAnswerRoundedIcon />

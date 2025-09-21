@@ -48,7 +48,7 @@ type NoteMainProps = {
     teamMembers: UserProps[];
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    noteType: number;
+    currentNoteType: number;
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
     currentNoteTitle: string;
@@ -78,7 +78,7 @@ export const NoteMain = (props: NoteMainProps) => {
         setCurrentNoteTitle,
         setOpeningService,
         setCurrentChat,
-        noteType,
+        currentNoteType,
         myNoteMeta,
         setMyNoteMeta,
         tabContents,
@@ -291,7 +291,7 @@ export const NoteMain = (props: NoteMainProps) => {
             )}
             {myNoteMeta.length > 0 && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
-                    {noteType === 0 && (
+                    {currentNoteType === 0 && (
                         <Stack
                             direction="row"
                             alignItems="center"
@@ -318,7 +318,7 @@ export const NoteMain = (props: NoteMainProps) => {
 
                     {body && (
                         <>
-                            {noteType !== 0 && (
+                            {currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
                                     <Stack
                                         direction="row"
@@ -563,7 +563,7 @@ export const NoteMain = (props: NoteMainProps) => {
                                                             teamMemberProfiles={teamMemberProfiles}
                                                             myself={myself}
                                                             setMyself={setMyself}
-                                                            noteType={noteType}
+                                                            currentNoteType={currentNoteType}
                                                             socket={socket}
                                                             teamMembers={teamMembers}
                                                             currentNote={currentNote}

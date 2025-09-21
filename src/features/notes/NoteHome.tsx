@@ -50,6 +50,27 @@ type NoteHomeProps = {
     openingService: number;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (value: ChatProps) => void;
+    currentNoteType: number;
+    setCurrentNoteType: (value: number) => void;
+    currentNote: NoteProps | null;
+    setCurrentNote: (value: NoteProps | null) => void;
+    currentNoteTitle: string;
+    setCurrentNoteTitle: (value: string) => void;
+    myNoteMeta: NoteMetaProps[];
+    setMyNoteMeta: (value: NoteMetaProps[]) => void;
+    myTaskNoteMeta: NoteMetaProps[];
+    setTaskNoteMeta: (value: NoteMetaProps[]) => void;
+    myChatNoteMeta: NoteMetaProps[];
+    setChatNoteMeta: (value: NoteMetaProps[]) => void;
+    tabContents: NoteProps[];
+    setTabContents: (value: NoteProps[]) => void;
+    selectedTabIndex: number;
+    setSelectedTabIndex: (value: number) => void;
+    newlyCreatedNotes: NoteProps[];
+    setNewlyCreatedNotes: (value: NoteProps[]) => void;
+    handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
+    currentNoteChain?: NoteMetaTreeNode[];
+    setCurrentNoteChain: (value: NoteMetaTreeNode[]) => void;
     unReadInboxItemCount: number;
     unReadChatAndActivityCounts: number;
 };
@@ -65,6 +86,27 @@ export const NoteHome = (props: NoteHomeProps) => {
         openingService,
         setOpeningService,
         setCurrentMainChat,
+        currentNoteType,
+        setCurrentNoteType,
+        currentNote,
+        setCurrentNote,
+        currentNoteTitle,
+        setCurrentNoteTitle,
+        myNoteMeta,
+        setMyNoteMeta,
+        myTaskNoteMeta,
+        setTaskNoteMeta,
+        myChatNoteMeta,
+        setChatNoteMeta,
+        tabContents,
+        setTabContents,
+        selectedTabIndex,
+        setSelectedTabIndex,
+        newlyCreatedNotes,
+        setNewlyCreatedNotes,
+        handleCreateNewNote,
+        currentNoteChain,
+        setCurrentNoteChain,
         unReadInboxItemCount,
         unReadChatAndActivityCounts,
     } = props;
@@ -72,17 +114,6 @@ export const NoteHome = (props: NoteHomeProps) => {
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
 
-    // 0: Home, 1: personal note, 2: task note, 3: chat note
-    const [noteType, setNoteType] = useState<number>(1);
-
-    const [currentNote, setCurrentNote] = useState<NoteProps | null>(null);
-    const [currentNoteTitle, setCurrentNoteTitle] = useState<string>("");
-
-    const [newlyCreatedNotes, setNewlyCreatedNotes] = useState<NoteProps[]>([]);
-
-    const [myNoteMeta, setMyNoteMeta] = useState<NoteMetaProps[]>([]);
-    const [myTaskNoteMeta, setTaskNoteMeta] = useState<NoteMetaProps[]>([]);
-    const [myChatNoteMeta, setChatNoteMeta] = useState<NoteMetaProps[]>([]);
     const loadMyNoteMeta = async () => {
         // Load the latest project as initial process
         const loadedNotes: NoteMetaProps[] = await loadNoteMeta(myself, accessToken);
@@ -106,34 +137,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                 setCurrentNote(note);
             }
         }
-    };
-
-    const [tabContents, setTabContents] = useState<NoteProps[]>(currentNote ? [currentNote] : []);
-    const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-    const handleCreateNewNote = async (parentNoteId: number | null) => {
-        const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedNotes.length + 1})`;
-        const newNote: NoteProps = await createEmptyNote(myself, parentNoteId, title, accessToken);
-        if (tabContents.length === 0 || tabContents[0] === undefined) {
-            setSelectedTabIndex(0);
-            setTabContents([newNote]);
-        } else {
-            setSelectedTabIndex(tabContents.length);
-            setTabContents([...tabContents, newNote]);
-        }
-        setNewlyCreatedNotes([...newlyCreatedNotes, newNote]);
-        setCurrentNote(newNote);
-        setCurrentNoteTitle(title);
-        addNote(newNote);
-        setMyNoteMeta([
-            {
-                noteId: newNote.noteId,
-                parentNoteId: newNote.parentNoteId,
-                title: newNote.title,
-                tsCreated: newNote.tsCreated,
-                tsUpdated: newNote.tsUpdated,
-            },
-            ...myNoteMeta,
-        ]);
     };
 
     useEffect(() => {
@@ -161,7 +164,6 @@ export const NoteHome = (props: NoteHomeProps) => {
     const noteMetaTree = buildTree(myNoteMeta);
 
     // Get Note chain used for the header
-    const [currentNoteChain, setCurrentNoteChain] = useState<NoteMetaTreeNode[]>();
     function findNoteChain(
         roots: NoteMetaTreeNode[],
         targetNoteId: number
@@ -217,11 +219,9 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     // This needs if no notes stored in the indexedDB.
     useEffect(() => {
-        setTimeout(() => {
-            if (currentNoteChain === undefined) {
-                setCurrentNoteChain([]);
-            }
-        }, 500);
+        if (currentNoteChain === undefined && myNoteMeta.length === 0) {
+            setCurrentNoteChain([]);
+        }
     }, []);
 
     return (
@@ -247,8 +247,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                             <NoteSidebar
                                 myself={myself}
                                 noteMetaTree={noteMetaTree}
-                                noteType={noteType}
-                                setNoteType={setNoteType}
+                                currentNoteType={currentNoteType}
+                                setCurrentNoteType={setCurrentNoteType}
                                 setCurrentNote={setCurrentNote}
                                 currentNote={currentNote}
                                 tabContents={tabContents}
@@ -278,7 +278,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                     teamMembers={teamMembers}
                                     myself={myself}
                                     setMyself={setMyself}
-                                    noteType={noteType}
+                                    currentNoteType={currentNoteType}
                                     currentNote={currentNote}
                                     setCurrentNote={setCurrentNote}
                                     currentNoteTitle={currentNoteTitle}

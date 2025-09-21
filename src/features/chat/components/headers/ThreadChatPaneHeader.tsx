@@ -5,6 +5,7 @@ import ReplyIcon from "@mui/icons-material/Reply";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useColorScheme } from "@mui/joy/styles";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
@@ -179,6 +180,18 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         </IconButton>
                     </Tooltip>
                 )}
+
+                <Tooltip title="New Note (TBD)" size="sm">
+                    <IconButton
+                        component="a"
+                        size="sm"
+                        variant="plain"
+                        color="neutral"
+                        onClick={() => {}}
+                    >
+                        <NoteAltIcon />
+                    </IconButton>
+                </Tooltip>
 
                 <Tooltip title="Close Thread" size="sm">
                     <IconButton

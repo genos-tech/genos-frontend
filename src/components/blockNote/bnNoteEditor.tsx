@@ -63,7 +63,7 @@ type BnNoteEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    noteType: number;
+    currentNoteType: number;
     socket: Socket | null;
     teamMembers: UserProps[];
     currentNote: NoteProps;
@@ -79,7 +79,7 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
         teamMemberProfiles,
         myself,
         setMyself,
-        noteType,
+        currentNoteType,
         socket,
         teamMembers,
         currentNote,
