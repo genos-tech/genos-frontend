@@ -53,7 +53,7 @@ import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import "../../App.css";
-import { NoteProps } from "../../types/notes";
+import { MyNoteProps } from "../../types/notes";
 import { useAuth } from "../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -66,7 +66,7 @@ type BnNoteEditorProps = {
     currentNoteType: number;
     socket: Socket | null;
     teamMembers: UserProps[];
-    currentNote: NoteProps;
+    currentNote: MyNoteProps;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;

@@ -2,11 +2,11 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
-import { NoteProps } from "../../../types/notes";
+import { MyNoteProps } from "../../../types/notes";
 
 export const sendUpdatedNote = async (
     myself: UserProps,
-    updatedNote: NoteProps,
+    updatedNote: MyNoteProps,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
 ) => {

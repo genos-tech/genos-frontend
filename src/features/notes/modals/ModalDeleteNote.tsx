@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, ModalDialog, Stack, Button, Typography, Alert } from "@mui/joy";
 
-import { NoteMetaProps, NoteProps } from "../../../types/notes";
+import { MyNoteMetaProps, MyNoteProps } from "../../../types/notes";
 import { deleteNote } from "../services/deleteNote";
 import { deleteData } from "../../../db/crud";
 import { STORES } from "../../../db/conf";
@@ -13,9 +13,9 @@ type Props = {
     myself: UserProps;
     openDeleteNote: boolean;
     setOpenDeleteNote: (value: boolean) => void;
-    myNoteMeta: NoteMetaProps[];
-    setMyNoteMeta: (value: NoteMetaProps[]) => void;
-    currentNote: NoteProps;
+    myNoteMeta: MyNoteMetaProps[];
+    setMyNoteMeta: (value: MyNoteMetaProps[]) => void;
+    currentNote: MyNoteProps;
     handleCloseTab: (value: number) => void;
 };
 

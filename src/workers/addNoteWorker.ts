@@ -1,9 +1,9 @@
 import { STORES } from "../db/conf";
 import { addData } from "../db/crud";
-import { NoteProps } from "../types/notes";
+import { MyNoteProps } from "../types/notes";
 
 self.onmessage = async (event) => {
-    const note: NoteProps = event.data.note;
+    const note: MyNoteProps = event.data.note;
 
     await addData({
         storeName: STORES.NOTES,

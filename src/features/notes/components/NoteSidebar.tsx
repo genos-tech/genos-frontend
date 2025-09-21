@@ -20,7 +20,7 @@ import AddIcon from "@mui/icons-material/Add";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { NoteMetaProps, NoteMetaTreeNode, NoteProps } from "../../../types/notes";
+import { MyNoteMetaTreeNode, MyNoteProps } from "../../../types/notes";
 import { loadSpecificNote } from "../services/loadSpecificNote";
 import { addNote } from "../services/addNote";
 import { getData } from "../../../db/crud";
@@ -63,14 +63,14 @@ function Toggler({
 
 type NoteSidebarProps = {
     myself: UserProps;
-    noteMetaTree: NoteMetaTreeNode[];
+    noteMetaTree: MyNoteMetaTreeNode[];
     currentNoteType: number;
     setCurrentNoteType: (value: number) => void;
-    currentNote: NoteProps | null;
-    setCurrentNote: (value: NoteProps) => void;
-    tabContents: NoteProps[];
+    currentNote: MyNoteProps | null;
+    setCurrentNote: (value: MyNoteProps) => void;
+    tabMyNotes: MyNoteProps[];
     handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
-    currentNoteChain: NoteMetaTreeNode[];
+    currentMyNoteChain: MyNoteMetaTreeNode[];
     allNoteIdChains: Record<number, number[]>;
 };
 export const NoteSidebar = (props: NoteSidebarProps) => {
@@ -81,28 +81,28 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         setCurrentNoteType,
         currentNote,
         setCurrentNote,
-        tabContents,
+        tabMyNotes,
         handleCreateNewNote,
-        currentNoteChain,
+        currentMyNoteChain,
         allNoteIdChains,
     } = props;
     const { accessToken } = useAuth();
 
     const [tsNoteChainUpdated, setTsNoteChainUpdated] = useState<string>(getCurrentTimestamp());
     const [tmpCurrentNoteChain, setTmpCurrentNoteChain] =
-        useState<NoteMetaTreeNode[]>(currentNoteChain);
+        useState<MyNoteMetaTreeNode[]>(currentMyNoteChain);
 
     useEffect(() => {
-        setTmpCurrentNoteChain(currentNoteChain);
+        setTmpCurrentNoteChain(currentMyNoteChain);
         setTsNoteChainUpdated(getCurrentTimestamp());
-    }, [currentNoteChain]);
+    }, [currentMyNoteChain]);
 
     const LoadNote = async (noteId: number) => {
-        const note: NoteProps = await getData({ storeName: STORES.NOTES, key: noteId });
+        const note: MyNoteProps = await getData({ storeName: STORES.NOTES, key: noteId });
         if (note) {
             setCurrentNote(note);
         } else {
-            const note: NoteProps = await loadSpecificNote(myself, noteId, accessToken);
+            const note: MyNoteProps = await loadSpecificNote(myself, noteId, accessToken);
             if (!note.error) {
                 addNote(note);
                 setCurrentNote(note);
@@ -110,7 +110,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         }
     };
 
-    const renderTree = (node: NoteMetaTreeNode) => (
+    const renderTree = (node: MyNoteMetaTreeNode) => (
         <ListItem nested key={`${node.noteId}-${tsNoteChainUpdated}`}>
             <Toggler
                 // Expanding toggle when the target note is in the tab.
@@ -118,7 +118,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     tmpCurrentNoteChain.some(
                         (chainedNote) => chainedNote.noteId === node.noteId
                     ) ||
-                    tabContents.some((tabNote) =>
+                    tabMyNotes.some((tabNote) =>
                         allNoteIdChains[tabNote.noteId]?.some(
                             (chainedNoteId) => chainedNoteId === node.noteId
                         )

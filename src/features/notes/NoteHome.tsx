@@ -9,19 +9,17 @@ import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
 import { ChatProps } from "../../types/chat";
-import { NoteMain } from "./components/NoteMain";
-import { NoteMetaProps, NoteProps, NoteMetaTreeNode } from "../../types/notes";
+import { MyNoteMain } from "./components/MyNoteMain";
+import { MyNoteMetaProps, MyNoteProps, MyNoteMetaTreeNode } from "../../types/notes";
 import { loadNoteMeta } from "./services/loadNoteMeta";
 import { useAuth } from "../../context/AuthContext";
 import { getData } from "../../db/crud";
 import { STORES } from "../../db/conf";
-import { createEmptyNote } from "./services/createEmptyNote";
-import { addNote } from "./services/addNote";
 
 // Build a tree structure
-function buildTree(items: NoteMetaProps[]): NoteMetaTreeNode[] {
-    const map: Record<number, NoteMetaTreeNode> = {};
-    const roots: NoteMetaTreeNode[] = [];
+function buildTree(items: MyNoteMetaProps[]): MyNoteMetaTreeNode[] {
+    const map: Record<number, MyNoteMetaTreeNode> = {};
+    const roots: MyNoteMetaTreeNode[] = [];
 
     // Initialize each item with children: []
     items.forEach((item) => {
@@ -52,25 +50,25 @@ type NoteHomeProps = {
     setCurrentMainChat: (value: ChatProps) => void;
     currentNoteType: number;
     setCurrentNoteType: (value: number) => void;
-    currentNote: NoteProps | null;
-    setCurrentNote: (value: NoteProps | null) => void;
+    currentNote: MyNoteProps | null;
+    setCurrentNote: (value: MyNoteProps | null) => void;
     currentNoteTitle: string;
     setCurrentNoteTitle: (value: string) => void;
-    myNoteMeta: NoteMetaProps[];
-    setMyNoteMeta: (value: NoteMetaProps[]) => void;
-    myTaskNoteMeta: NoteMetaProps[];
-    setTaskNoteMeta: (value: NoteMetaProps[]) => void;
-    myChatNoteMeta: NoteMetaProps[];
-    setChatNoteMeta: (value: NoteMetaProps[]) => void;
-    tabContents: NoteProps[];
-    setTabContents: (value: NoteProps[]) => void;
+    myNoteMeta: MyNoteMetaProps[];
+    setMyNoteMeta: (value: MyNoteMetaProps[]) => void;
+    taskNoteMeta: MyNoteMetaProps[];
+    setTaskNoteMeta: (value: MyNoteMetaProps[]) => void;
+    chatNoteMeta: MyNoteMetaProps[];
+    setChatNoteMeta: (value: MyNoteMetaProps[]) => void;
+    tabMyNotes: MyNoteProps[];
+    setTabMyNotes: (value: MyNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
-    newlyCreatedNotes: NoteProps[];
-    setNewlyCreatedNotes: (value: NoteProps[]) => void;
+    newlyCreatedMyNotes: MyNoteProps[];
+    setNewlyCreatedMyNotes: (value: MyNoteProps[]) => void;
     handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
-    currentNoteChain?: NoteMetaTreeNode[];
-    setCurrentNoteChain: (value: NoteMetaTreeNode[]) => void;
+    currentMyNoteChain?: MyNoteMetaTreeNode[];
+    setCurrentMyNoteChain: (value: MyNoteMetaTreeNode[]) => void;
     unReadInboxItemCount: number;
     unReadChatAndActivityCounts: number;
 };
@@ -94,19 +92,19 @@ export const NoteHome = (props: NoteHomeProps) => {
         setCurrentNoteTitle,
         myNoteMeta,
         setMyNoteMeta,
-        myTaskNoteMeta,
+        taskNoteMeta,
         setTaskNoteMeta,
-        myChatNoteMeta,
+        chatNoteMeta,
         setChatNoteMeta,
-        tabContents,
-        setTabContents,
+        tabMyNotes,
+        setTabMyNotes,
         selectedTabIndex,
         setSelectedTabIndex,
-        newlyCreatedNotes,
-        setNewlyCreatedNotes,
+        newlyCreatedMyNotes,
+        setNewlyCreatedMyNotes,
         handleCreateNewNote,
-        currentNoteChain,
-        setCurrentNoteChain,
+        currentMyNoteChain,
+        setCurrentMyNoteChain,
         unReadInboxItemCount,
         unReadChatAndActivityCounts,
     } = props;
@@ -116,7 +114,7 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     const loadMyNoteMeta = async () => {
         // Load the latest project as initial process
-        const loadedNotes: NoteMetaProps[] = await loadNoteMeta(myself, accessToken);
+        const loadedNotes: MyNoteMetaProps[] = await loadNoteMeta(myself, accessToken);
         if (loadedNotes.length > 0) {
             // for (let i = 0; i < loadedNotes.length; i++) {
             // }
@@ -129,7 +127,7 @@ export const NoteHome = (props: NoteHomeProps) => {
     const popInitialNote = async () => {
         const noteId: string | null = localStorage.getItem("lastOpenNoteId");
         if (noteId) {
-            const note: NoteProps = await getData({
+            const note: MyNoteProps = await getData({
                 storeName: STORES.NOTES,
                 key: Number(noteId),
             });
@@ -165,9 +163,9 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     // Get Note chain used for the header
     function findNoteChain(
-        roots: NoteMetaTreeNode[],
+        roots: MyNoteMetaTreeNode[],
         targetNoteId: number
-    ): NoteMetaTreeNode[] | null {
+    ): MyNoteMetaTreeNode[] | null {
         for (const root of roots) {
             const path = dfs(root, targetNoteId);
             if (path) return path;
@@ -175,7 +173,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         return null; // not found
     }
 
-    function dfs(node: NoteMetaTreeNode, targetNoteId: number): NoteMetaTreeNode[] | null {
+    function dfs(node: MyNoteMetaTreeNode, targetNoteId: number): MyNoteMetaTreeNode[] | null {
         if (node.noteId === targetNoteId) {
             return [node];
         }
@@ -200,7 +198,7 @@ export const NoteHome = (props: NoteHomeProps) => {
     useEffect(() => {
         if (currentNote) {
             const chain = findNoteChain(noteMetaTree, currentNote.noteId);
-            setCurrentNoteChain(chain || []);
+            setCurrentMyNoteChain(chain || []);
 
             if (chain) {
                 addChain(
@@ -209,9 +207,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                 );
             }
 
-            if (tabContents.length === 0)
-                setTabContents([
-                    ...tabContents.filter((t) => t.noteId !== currentNote.noteId),
+            if (tabMyNotes.length === 0)
+                setTabMyNotes([
+                    ...tabMyNotes.filter((t) => t.noteId !== currentNote.noteId),
                     currentNote,
                 ]);
         }
@@ -219,8 +217,8 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     // This needs if no notes stored in the indexedDB.
     useEffect(() => {
-        if (currentNoteChain === undefined && myNoteMeta.length === 0) {
-            setCurrentNoteChain([]);
+        if (currentMyNoteChain === undefined && myNoteMeta.length === 0) {
+            setCurrentMyNoteChain([]);
         }
     }, []);
 
@@ -243,7 +241,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                 />
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} order={1} minSize={15} maxSize={25}>
-                        {currentNoteChain && (
+                        {currentMyNoteChain && (
                             <NoteSidebar
                                 myself={myself}
                                 noteMetaTree={noteMetaTree}
@@ -251,9 +249,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 setCurrentNoteType={setCurrentNoteType}
                                 setCurrentNote={setCurrentNote}
                                 currentNote={currentNote}
-                                tabContents={tabContents}
+                                tabMyNotes={tabMyNotes}
                                 handleCreateNewNote={handleCreateNewNote}
-                                currentNoteChain={currentNoteChain}
+                                currentMyNoteChain={currentMyNoteChain}
                                 allNoteIdChains={allNoteIdChains}
                             />
                         )}
@@ -271,8 +269,8 @@ export const NoteHome = (props: NoteHomeProps) => {
 
                     <Panel id={"2"} order={2} minSize={50} maxSize={85}>
                         <Box sx={{ paddingX: 1, height: "100dvh" }}>
-                            {currentNoteChain && (
-                                <NoteMain
+                            {currentMyNoteChain && (
+                                <MyNoteMain
                                     teamMemberProfiles={teamMemberProfiles}
                                     socket={socket}
                                     teamMembers={teamMembers}
@@ -285,14 +283,14 @@ export const NoteHome = (props: NoteHomeProps) => {
                                     setCurrentNoteTitle={setCurrentNoteTitle}
                                     setOpeningService={setOpeningService}
                                     setCurrentChat={setCurrentMainChat}
-                                    myNoteMeta={myNoteMeta}
+                                    myNoteMeta={myNoteMeta} // TODO: Use the correct note based on noteType
                                     setMyNoteMeta={setMyNoteMeta}
-                                    tabContents={tabContents}
-                                    setTabContents={setTabContents}
+                                    tabMyNotes={tabMyNotes}
+                                    setTabMyNotes={setTabMyNotes}
                                     selectedTabIndex={selectedTabIndex}
                                     setSelectedTabIndex={setSelectedTabIndex}
                                     handleCreateNewNote={handleCreateNewNote}
-                                    currentNoteChain={currentNoteChain}
+                                    currentMyNoteChain={currentMyNoteChain}
                                 />
                             )}
                         </Box>

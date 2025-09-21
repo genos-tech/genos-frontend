@@ -2,7 +2,7 @@ import { loadNotes } from "../features/notes/services/loadNotes";
 import { UserProps } from "../types/admin";
 import { STORES } from "../db/conf";
 import { clearStore, miniBatchInsert } from "../db/crud";
-import { NoteProps } from "../types/notes";
+import { MyNoteProps } from "../types/notes";
 
 const BATCH_SIZE = 1000;
 
@@ -13,10 +13,10 @@ self.onmessage = async (event) => {
     await clearStore(STORES.NOTES);
 
     // Load data from backend
-    const notes: NoteProps[] = await loadNotes(myself, accessToken);
+    const notes: MyNoteProps[] = await loadNotes(myself, accessToken);
 
     for (let i = 0; i < notes.length; i += BATCH_SIZE) {
-        const miniBatchTasks: NoteProps[] = notes.slice(i, i + BATCH_SIZE);
+        const miniBatchTasks: MyNoteProps[] = notes.slice(i, i + BATCH_SIZE);
         await miniBatchInsert({
             storeName: STORES.NOTES,
             miniBatch: miniBatchTasks,

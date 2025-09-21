@@ -22,7 +22,17 @@ import { InboxItemProps } from "./types/common";
 import { getCurrentTimestamp } from "./utils/dateUtils";
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
-import { NoteMetaProps, NoteMetaTreeNode, NoteProps } from "./types/notes";
+import {
+    ChatNoteMetaProps,
+    ChatNoteMetaTreeNode,
+    ChatNoteProps,
+    MyNoteMetaProps,
+    MyNoteMetaTreeNode,
+    MyNoteProps,
+    TaskNoteMetaProps,
+    TaskNoteMetaTreeNode,
+    TaskNoteProps,
+} from "./types/notes";
 import { createEmptyNote } from "./features/notes/services/createEmptyNote";
 import { addNote } from "./features/notes/services/addNote";
 
@@ -125,41 +135,67 @@ export const App = () => {
         Number(localStorage.getItem("currentNoteType") || "1")
     );
 
-    const [currentNote, setCurrentNote] = useState<NoteProps | null>(null);
-    const [currentNoteTitle, setCurrentNoteTitle] = useState<string>("");
-    const [myNoteMeta, setMyNoteMeta] = useState<NoteMetaProps[]>([]);
-    const [myTaskNoteMeta, setTaskNoteMeta] = useState<NoteMetaProps[]>([]);
-    const [myChatNoteMeta, setChatNoteMeta] = useState<NoteMetaProps[]>([]);
-    const [currentNoteChain, setCurrentNoteChain] = useState<NoteMetaTreeNode[]>();
-    const [tabContents, setTabContents] = useState<NoteProps[]>(currentNote ? [currentNote] : []);
+    // My Note
+    const [currentMyNote, setCurrentMyNote] = useState<MyNoteProps | null>(null);
+    const [currentMyNoteTitle, setCurrentMyNoteTitle] = useState<string>("");
+    const [myNoteMeta, setMyNoteMeta] = useState<MyNoteMetaProps[]>([]);
+    const [currentMyNoteChain, setCurrentMyNoteChain] = useState<MyNoteMetaTreeNode[]>();
+    const [tabMyNotes, setTabMyNotes] = useState<MyNoteProps[]>(
+        currentMyNote ? [currentMyNote] : []
+    );
+    const [newlyCreatedMyNotes, setNewlyCreatedMyNotes] = useState<MyNoteProps[]>([]);
+
+    // Task Note
+    const [currentTaskNote, setCurrentTaskNote] = useState<TaskNoteProps | null>(null);
+    const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>("");
+    const [taskNoteMeta, setTaskNoteMeta] = useState<TaskNoteMetaProps[]>([]);
+    const [currentTaskNoteChain, setCurrentTaskNoteChain] = useState<TaskNoteMetaTreeNode[]>();
+    const [tabTaskNotes, setTabTaskNotes] = useState<TaskNoteProps[]>(
+        currentTaskNote ? [currentTaskNote] : []
+    );
+    const [newlyCreatedTaskNotes, setNewlyCreatedTaskNotes] = useState<TaskNoteProps[]>([]);
+
+    // Chat Note
+    const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
+    const [currentChatNoteTitle, setCurrentChatNoteTitle] = useState<string>("");
+    const [chatNoteMeta, setChatNoteMeta] = useState<ChatNoteMetaProps[]>([]);
+    const [currentChatNoteChain, setCurrentChatNoteChain] = useState<ChatNoteMetaTreeNode[]>();
+    const [tabChatNotes, setTabChatNotes] = useState<ChatNoteProps[]>(
+        currentChatNote ? [currentChatNote] : []
+    );
+    const [newlyCreatedChatNotes, setNewlyCreatedChatNotes] = useState<ChatNoteProps[]>([]);
+
+    // Note common
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-    const [newlyCreatedNotes, setNewlyCreatedNotes] = useState<NoteProps[]>([]);
     const handleCreateNewNote = async (parentNoteId: number | null) => {
-        const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedNotes.length + 1})`;
-        const newNote: NoteProps = await createEmptyNote(myself, parentNoteId, title, accessToken);
-        if (tabContents.length === 0 || tabContents[0] === undefined) {
-            setSelectedTabIndex(0);
-            setTabContents([newNote]);
-        } else {
-            setSelectedTabIndex(tabContents.length);
-            setTabContents([...tabContents, newNote]);
+        const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedMyNotes.length + 1})`;
+        const newNote = await createEmptyNote(myself, parentNoteId, title, accessToken);
+        if (currentNoteType === 1) {
+            if (tabMyNotes.length === 0 || tabMyNotes[0] === undefined) {
+                setSelectedTabIndex(0);
+                setTabMyNotes([newNote]);
+            } else {
+                setSelectedTabIndex(tabMyNotes.length);
+                setTabMyNotes([...tabMyNotes, newNote]);
+            }
+            setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
+            setCurrentMyNote(newNote);
+            setCurrentMyNoteTitle(title);
+            addNote(newNote);
+            setMyNoteMeta([
+                {
+                    noteId: newNote.noteId,
+                    parentNoteId: newNote.parentNoteId,
+                    title: newNote.title,
+                    tsCreated: newNote.tsCreated,
+                    tsUpdated: newNote.tsUpdated,
+                },
+                ...myNoteMeta,
+            ]);
         }
-        setNewlyCreatedNotes([...newlyCreatedNotes, newNote]);
-        setCurrentNote(newNote);
-        setCurrentNoteTitle(title);
-        addNote(newNote);
-        setMyNoteMeta([
-            {
-                noteId: newNote.noteId,
-                parentNoteId: newNote.parentNoteId,
-                title: newNote.title,
-                tsCreated: newNote.tsCreated,
-                tsUpdated: newNote.tsUpdated,
-            },
-            ...myNoteMeta,
-        ]);
     };
 
+    // ...
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
@@ -473,6 +509,19 @@ export const App = () => {
                         unReadChatCounts={unReadChatCounts}
                         unReadActivityMessageCounts={unReadActivityMessageCounts}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                        currentNoteType={currentNoteType}
+                        currentChatNote={currentChatNote}
+                        setCurrentChatNote={setCurrentChatNote}
+                        currentChatNoteTitle={currentChatNoteTitle}
+                        setCurrentChatNoteTitle={setCurrentChatNoteTitle}
+                        chatNoteMeta={chatNoteMeta}
+                        setChatNoteMeta={setChatNoteMeta}
+                        tabChatNotes={tabChatNotes}
+                        setTabChatNotes={setTabChatNotes}
+                        selectedTabIndex={selectedTabIndex}
+                        setSelectedTabIndex={setSelectedTabIndex}
+                        handleCreateNewNote={handleCreateNewNote}
+                        currentChatNoteChain={currentChatNoteChain}
                     />
                 ) : null}
 
@@ -508,25 +557,25 @@ export const App = () => {
                         setCurrentMainChat={setCurrentMainChat}
                         currentNoteType={currentNoteType}
                         setCurrentNoteType={setCurrentNoteType}
-                        currentNote={currentNote}
-                        setCurrentNote={setCurrentNote}
-                        currentNoteTitle={currentNoteTitle}
-                        setCurrentNoteTitle={setCurrentNoteTitle}
+                        currentNote={currentMyNote}
+                        setCurrentNote={setCurrentMyNote}
+                        currentNoteTitle={currentMyNoteTitle}
+                        setCurrentNoteTitle={setCurrentMyNoteTitle}
                         myNoteMeta={myNoteMeta}
                         setMyNoteMeta={setMyNoteMeta}
-                        myTaskNoteMeta={myTaskNoteMeta}
+                        taskNoteMeta={taskNoteMeta}
                         setTaskNoteMeta={setTaskNoteMeta}
-                        myChatNoteMeta={myChatNoteMeta}
+                        chatNoteMeta={chatNoteMeta}
                         setChatNoteMeta={setChatNoteMeta}
-                        tabContents={tabContents}
-                        setTabContents={setTabContents}
+                        tabMyNotes={tabMyNotes}
+                        setTabMyNotes={setTabMyNotes}
                         selectedTabIndex={selectedTabIndex}
                         setSelectedTabIndex={setSelectedTabIndex}
-                        newlyCreatedNotes={newlyCreatedNotes}
-                        setNewlyCreatedNotes={setNewlyCreatedNotes}
+                        newlyCreatedMyNotes={newlyCreatedMyNotes}
+                        setNewlyCreatedMyNotes={setNewlyCreatedMyNotes}
                         handleCreateNewNote={handleCreateNewNote}
-                        currentNoteChain={currentNoteChain}
-                        setCurrentNoteChain={setCurrentNoteChain}
+                        currentMyNoteChain={currentMyNoteChain}
+                        setCurrentMyNoteChain={setCurrentMyNoteChain}
                         unReadInboxItemCount={unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     />

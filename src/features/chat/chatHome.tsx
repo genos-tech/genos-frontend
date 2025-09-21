@@ -18,7 +18,7 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { NoteMain } from "../notes/components/NoteMain";
+import { ChatNoteProps, ChatNoteMetaTreeNode, ChatNoteMetaProps } from "../../types/notes";
 
 type ChatHomeProps = {
     currentTeam: Team;
@@ -49,6 +49,19 @@ type ChatHomeProps = {
     unReadChatCounts?: Record<string, number>;
     unReadActivityMessageCounts: number;
     unReadChatAndActivityCounts: number;
+    currentNoteType: number;
+    currentChatNote: ChatNoteProps | null;
+    setCurrentChatNote: (value: ChatNoteProps) => void;
+    currentChatNoteTitle: string;
+    setCurrentChatNoteTitle: (value: string) => void;
+    chatNoteMeta: ChatNoteMetaProps[];
+    setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
+    tabChatNotes: ChatNoteProps[];
+    setTabChatNotes: (value: ChatNoteProps[]) => void;
+    selectedTabIndex: number;
+    setSelectedTabIndex: (value: number) => void;
+    handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
+    currentChatNoteChain?: ChatNoteMetaTreeNode[];
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -81,6 +94,19 @@ export const ChatHome = (props: ChatHomeProps) => {
         unReadChatCounts,
         unReadActivityMessageCounts,
         unReadChatAndActivityCounts,
+        currentNoteType,
+        currentChatNote,
+        setCurrentChatNote,
+        currentChatNoteTitle,
+        setCurrentChatNoteTitle,
+        chatNoteMeta,
+        setChatNoteMeta,
+        tabChatNotes,
+        setTabChatNotes,
+        selectedTabIndex,
+        setSelectedTabIndex,
+        handleCreateNewNote,
+        currentChatNoteChain,
     } = props;
 
     const { mode } = useColorScheme();
@@ -867,9 +893,28 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                         mode === "dark" ? "black" : "white",
                                                 }}
                                             >
-                                                {/* <NoteMain>
-
-                                                </NoteMain> */}
+                                                {/* <NoteMain
+                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    socket={socket}
+                                                    teamMembers={teamMembers}
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentChat={setCurrentMainChat}
+                                                    currentNoteType={currentNoteType}
+                                                    currentNote={currentNote}
+                                                    setCurrentNote={setCurrentNote}
+                                                    currentNoteTitle={currentNoteTitle}
+                                                    setCurrentNoteTitle={setCurrentNoteTitle}
+                                                    myNoteMeta={myNoteMeta} // TODO: Use the correct note based on noteType
+                                                    setMyNoteMeta={setMyNoteMeta}
+                                                    tabMyNotes={tabMyNotes}
+                                                    setTabMyNotes={setTabMyNotes}
+                                                    selectedTabIndex={selectedTabIndex}
+                                                    setSelectedTabIndex={setSelectedTabIndex}
+                                                    handleCreateNewNote={handleCreateNewNote}
+                                                    currentMyNoteChain={currentMyNoteChain}
+                                                /> */}
                                             </Box>
                                         </Panel>
                                     </>
