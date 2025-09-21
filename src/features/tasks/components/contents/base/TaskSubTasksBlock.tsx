@@ -201,7 +201,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     </List>
                 </ListItem>
             </Stack>
-            <Divider sx={{ mt: 2 }} />
+            <Divider sx={{ m: 2 }} />
         </>
     ) : (
         <></>

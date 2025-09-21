@@ -3,12 +3,12 @@ import { Socket } from "socket.io-client";
 import { Sheet, Divider } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 
-import { PreviewTaskAttachmentBlock } from "./base/PreviewTaskAttachmentBlock";
+import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskPreviewBodyBlock } from "./base/TaskPreviewBodyBlock";
 import { TaskPreviewCustomBar } from "./base/TaskPreviewCustomBar";
-import { TaskCommentBlock } from "./base/TaskCommentBlock";
+import { TaskCommentEditorBlock } from "./base/TaskCommentEditorBlock";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -105,6 +105,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     // Save initial task title to restore it when use input empty title
     const [initTaskTitle, setInitTaskTitle] = useState<string>(currentPreviewTask.title);
+
+    // For task comments
+    const [isInEdit, setIsInEdit] = useState<boolean>(false);
+    const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
 
     // Set the current preview task when the component is mounted
     useEffect(() => {
@@ -447,7 +451,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setCurrentMainChat={setCurrentMainChat}
             />
 
-            <PreviewTaskAttachmentBlock
+            <TaskTabBlock
+                socket={socket}
+                myself={myself}
+                setMyself={setMyself}
+                teamMemberProfiles={teamMemberProfiles}
+                setCurrentChat={setCurrentMainChat}
+                setOpeningService={setOpeningService}
                 uploadedFiles={uploadedFiles}
                 setUploadedFiles={setUploadedFiles}
                 currentPreviewTaskId={currentPreviewTaskId}
@@ -456,11 +466,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskUpdated={setTaskUpdated}
                 setIsAttachmentDeleted={setIsAttachmentDeleted}
                 setDeletedAttachmentId={setDeletedAttachmentId}
+                taskComments={taskComments}
+                isCommentUpdated={isCommentUpdated}
+                setIsInEdit={setIsInEdit}
+                setEditTargetComment={setEditTargetComment}
             />
 
             <Divider sx={{ m: 2 }} />
 
-            <TaskCommentBlock
+            <TaskCommentEditorBlock
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
                 setMyself={setMyself}
@@ -475,6 +489,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setOpeningService={setOpeningService}
                 taskCommentLines={taskCommentLines}
                 setTaskCommentLines={setTaskCommentLines}
+                isInEdit={isInEdit}
+                setIsInEdit={setIsInEdit}
+                editTargetComment={editTargetComment}
             />
         </Sheet>
     );

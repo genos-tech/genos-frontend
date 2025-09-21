@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import React, { useEffect, useState, useRef } from "react";
 import {
     Box,
@@ -20,11 +21,17 @@ import FolderIcon from "@mui/icons-material/Folder";
 import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import HistoryIcon from "@mui/icons-material/History";
+import CommentIcon from "@mui/icons-material/Comment";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
-import { AttachmentFileProps } from "../../../../../types/tasks";
+import { AttachmentFileProps, TaskCommentProps } from "../../../../../types/tasks";
 import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
 import { useAuth } from "../../../../../context/AuthContext";
+import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
+import { TaskCommentBubble } from "./sub/TaskCommentBubble";
+import { UserProps } from "../../../../../types/admin";
+import { ChatProps } from "../../../../../types/chat";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -40,7 +47,13 @@ const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     };
 };
 
-type PreviewTaskAttachmentBlockProps = {
+type TaskTabBlockProps = {
+    socket: Socket | null;
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    teamMemberProfiles: Record<string, UserProps>;
+    setCurrentChat: (chat: ChatProps) => void;
+    setOpeningService: (value: number) => void;
     taskContents: TaskProps;
     setTaskContents: (value: TaskProps) => void;
     currentPreviewTaskId: number;
@@ -49,11 +62,20 @@ type PreviewTaskAttachmentBlockProps = {
     setTaskUpdated: (value: boolean) => void;
     setIsAttachmentDeleted: (value: boolean) => void;
     setDeletedAttachmentId: (value: number) => void;
+    taskComments: TaskCommentProps[];
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsInEdit: (value: boolean) => void;
+    setEditTargetComment: (value: TaskCommentProps) => void;
 };
-
-export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProps) => {
+export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
     const {
+        socket,
+        myself,
+        setMyself,
+        teamMemberProfiles,
+        setCurrentChat,
+        setOpeningService,
         uploadedFiles,
         setUploadedFiles,
         currentPreviewTaskId,
@@ -62,6 +84,10 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
         setTaskContents,
         setIsAttachmentDeleted,
         setDeletedAttachmentId,
+        taskComments,
+        isCommentUpdated,
+        setIsInEdit,
+        setEditTargetComment,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -70,7 +96,7 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
-    const [index, setIndex] = React.useState(0);
+    const [tabIndex, setTabIndex] = React.useState(0);
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         if (attachmentId > 0) {
@@ -228,6 +254,7 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
     useEffect(() => {
         setImages([]);
         setTextFiles([]);
+        setTabIndex(0);
     }, [currentPreviewTaskId]);
 
     useEffect(() => {
@@ -273,12 +300,40 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
         });
     }, [uploadedFiles]);
 
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+            if (node.content[0]) {
+                if (node.content[0].text) {
+                    count += node.content[0].text.split("\n").length;
+                }
+            }
+        }
+        return count;
+    };
+
+    const totalCommentLines = taskComments.reduce(
+        (sum, taskComment) => sum + (countLines(taskComment.commentBody) ?? 0),
+        0
+    );
+
+    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    useScrollToBottomOnNewTaskComment(
+        virtuosoRef as React.RefObject<VirtuosoHandle>,
+        taskComments,
+        isCommentUpdated.scrollToBottom
+    );
+
     return (
         <Box sx={{ flexGrow: 1, m: -2, overflowX: "hidden" }}>
             <Tabs
                 aria-label="Pipeline"
-                value={index}
-                onChange={(event, value) => setIndex(value as number)}
+                value={tabIndex}
+                onChange={(event, value) => setTabIndex(value as number)}
             >
                 <TabList
                     sx={{
@@ -304,9 +359,9 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
                 >
                     <Tab indicatorInset>
                         <ListItemDecorator>
-                            <InsertPhotoIcon />
+                            <CommentIcon />
                         </ListItemDecorator>
-                        Attachments
+                        Comments
                     </Tab>
                     <Tab indicatorInset>
                         <ListItemDecorator>
@@ -316,11 +371,17 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
                     </Tab>
                     <Tab indicatorInset>
                         <ListItemDecorator>
+                            <InsertPhotoIcon />
+                        </ListItemDecorator>
+                        Attachments
+                    </Tab>
+                    <Tab indicatorInset>
+                        <ListItemDecorator>
                             <HistoryIcon />
                         </ListItemDecorator>
                         History
                     </Tab>
-                    {index === 0 && (
+                    {tabIndex === 1 && (
                         <>
                             <Box sx={{ flexGrow: 1 }} />
                             <input
@@ -343,7 +404,7 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
                             </IconButton>
                         </>
                     )}
-                    {index === 1 && (
+                    {tabIndex === 2 && (
                         <>
                             <Box sx={{ flexGrow: 1 }} />
                             <IconButton
@@ -370,6 +431,54 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
                     })}
                 >
                     <TabPanel value={0}>
+                        <>
+                            {taskComments.length > 0 && (
+                                <Box sx={{ mb: 1 }}>
+                                    <Virtuoso
+                                        ref={virtuosoRef}
+                                        className="custom-scrollbar"
+                                        style={{
+                                            height: Math.min(
+                                                taskComments.length * 60 + totalCommentLines * 18,
+                                                800
+                                            ),
+                                        }}
+                                        totalCount={taskComments.length}
+                                        initialTopMostItemIndex={taskComments.length - 1}
+                                        atTopThreshold={64}
+                                        atBottomThreshold={128}
+                                        itemContent={(index) => {
+                                            const comment = taskComments[index];
+                                            return (
+                                                <TaskCommentBubble
+                                                    key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
+                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    socket={socket}
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    comment={comment}
+                                                    currentProjectId={
+                                                        taskContents.project?.projectId
+                                                    }
+                                                    currentProjectName={
+                                                        taskContents.project?.projectName
+                                                    }
+                                                    setIsInEdit={setIsInEdit}
+                                                    setEditTargetComment={setEditTargetComment}
+                                                    setCurrentChat={setCurrentChat}
+                                                    setOpeningService={setOpeningService}
+                                                />
+                                            );
+                                        }}
+                                    />
+                                </Box>
+                            )}
+                        </>
+                    </TabPanel>
+
+                    <TabPanel value={1}>Notes-Content</TabPanel>
+
+                    <TabPanel value={2}>
                         <Box
                             className="custom-scrollbar"
                             onDrop={handleDroppedFiles}
@@ -532,9 +641,7 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
                         )}
                     </TabPanel>
 
-                    <TabPanel value={1}>Notes-body</TabPanel>
-
-                    <TabPanel value={2}>History-body</TabPanel>
+                    <TabPanel value={3}>History-Content</TabPanel>
                 </Box>
             </Tabs>
         </Box>
