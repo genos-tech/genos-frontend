@@ -130,6 +130,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     <ListItemButton
                         selected={node.noteId === currentNote?.noteId ? true : false}
                         variant="soft"
+                        sx={{ my: "1px" }}
                         onClick={() => {
                             setOpen(!open);
                             setNoteType(1);

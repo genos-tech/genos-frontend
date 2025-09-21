@@ -12,7 +12,7 @@ export const loadSpecificNote = async (
         const api = authApi(accessToken);
         if (api) {
             const query: string = `team_id=${myself.teamId}&user_id=${myself.userId}&note_id=${noteId}`;
-            const res = await api.get(`/note/?${query}`);
+            const res = await api.get(`/note/personal/single/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");
