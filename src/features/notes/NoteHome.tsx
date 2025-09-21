@@ -215,6 +215,15 @@ export const NoteHome = (props: NoteHomeProps) => {
         }
     }, [currentNote]);
 
+    // This needs if no notes stored in the indexedDB.
+    useEffect(() => {
+        setTimeout(() => {
+            if (currentNoteChain === undefined) {
+                setCurrentNoteChain([]);
+            }
+        }, 500);
+    }, []);
+
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
