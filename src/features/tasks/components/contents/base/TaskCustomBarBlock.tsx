@@ -5,7 +5,7 @@ import CheckIcon from "@mui/icons-material/Check";
 
 import { TaskProps } from "../../../../../types/tasks";
 
-type TaskPreviewCustomBarProps = {
+type TaskCustomBarBlockProps = {
     currentTaskContent: TaskProps;
     setCurrentTaskContent: (value: TaskProps) => void;
     setTaskUpdated: (value: boolean) => void;
@@ -13,7 +13,7 @@ type TaskPreviewCustomBarProps = {
     setIsCreatingTask: (value: any) => void;
     taskBodySaved: boolean;
 };
-export const TaskPreviewCustomBar = (props: TaskPreviewCustomBarProps) => {
+export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
     const {
         currentTaskContent,
         setCurrentTaskContent,

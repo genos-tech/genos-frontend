@@ -6,7 +6,7 @@ import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 
-type TaskPreviewBodyBlockProps = {
+type TaskBodyBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -19,7 +19,7 @@ type TaskPreviewBodyBlockProps = {
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
 };
-export const TaskPreviewBodyBlock = (props: TaskPreviewBodyBlockProps) => {
+export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
     const {
         teamMemberProfiles,
         myself,

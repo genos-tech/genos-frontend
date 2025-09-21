@@ -6,8 +6,8 @@ import { PartialBlock } from "@blocknote/core";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskPreviewBodyBlock } from "./base/TaskPreviewBodyBlock";
-import { TaskPreviewCustomBar } from "./base/TaskPreviewCustomBar";
+import { TaskBodyBlock } from "./base/TaskBodyBlock";
+import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskCommentEditorBlock } from "./base/TaskCommentEditorBlock";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
@@ -413,7 +413,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskPreviewCustomBar
+            <TaskCustomBarBlock
                 currentTaskContent={tmpCurrentTaskContent}
                 setCurrentTaskContent={setTmpCurrentTaskContent}
                 setTaskStatusUpdated={setTaskStatusUpdated}
@@ -422,8 +422,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 taskBodySaved={taskBodySaved}
             />
 
-            <TaskPreviewBodyBlock
-                key={`TaskPreviewBodyBlock-${tmpCurrentTaskContent.id}`}
+            <TaskBodyBlock
+                key={`TaskBodyBlock-${tmpCurrentTaskContent.id}`}
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}

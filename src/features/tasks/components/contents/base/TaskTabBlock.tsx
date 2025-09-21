@@ -381,7 +381,25 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </ListItemDecorator>
                         History
                     </Tab>
+
                     {tabIndex === 1 && (
+                        <>
+                            <Box sx={{ flexGrow: 1 }} />
+                            <IconButton
+                                sx={{ mr: "15px", px: "3px" }}
+                                component="p"
+                                variant="soft"
+                                color="neutral"
+                                size="sm"
+                                onClick={() => {}}
+                            >
+                                <AddIcon />
+                                New Note
+                            </IconButton>
+                        </>
+                    )}
+
+                    {tabIndex === 2 && (
                         <>
                             <Box sx={{ flexGrow: 1 }} />
                             <input
@@ -401,22 +419,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 onClick={handleButtonClick}
                             >
                                 <FolderIcon /> Select Files
-                            </IconButton>
-                        </>
-                    )}
-                    {tabIndex === 2 && (
-                        <>
-                            <Box sx={{ flexGrow: 1 }} />
-                            <IconButton
-                                sx={{ mr: "15px", px: "3px" }}
-                                component="p"
-                                variant="soft"
-                                color="neutral"
-                                size="sm"
-                                onClick={() => {}}
-                            >
-                                <AddIcon />
-                                New Note
                             </IconButton>
                         </>
                     )}

@@ -6,7 +6,7 @@ import { UserProps } from "../../../../../types/admin";
 import { TaskProps, ProjectProps } from "../../../../../types/tasks";
 import { ChatProps, ThreadProps } from "../../../../../types/chat";
 
-type CreateTaskFooterProps = {
+type TaskCreateFooterProps = {
     socket: Socket | null;
     myself: UserProps;
     accessToken: string | null;
@@ -26,7 +26,7 @@ type CreateTaskFooterProps = {
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
 };
-export const CreateTaskFooter = (props: CreateTaskFooterProps) => {
+export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     const {
         socket,
         myself,

@@ -75,7 +75,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
 
     return childTasks.length > 0 ? (
         <>
-            <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
+            <Typography level="h4" sx={{ mt: 1, mb: 1 }}>
                 Sub Tasks
             </Typography>
             <Stack
@@ -83,6 +83,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 direction="row"
                 sx={{
                     width: "100%",
+                    minHeight: "40px",
                     maxHeight: "200px",
                     overflowY: "scroll",
                 }}
@@ -201,7 +202,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     </List>
                 </ListItem>
             </Stack>
-            <Divider sx={{ m: 2 }} />
+            <Divider sx={{ mt: 1, mb: 2 }} />
         </>
     ) : (
         <></>
