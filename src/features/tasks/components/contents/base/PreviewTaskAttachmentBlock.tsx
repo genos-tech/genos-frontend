@@ -1,7 +1,25 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Box, Typography, Card, CardContent, IconButton, Button, Stack } from "@mui/joy";
+import {
+    Box,
+    Typography,
+    Card,
+    CardContent,
+    IconButton,
+    Button,
+    Stack,
+    Tabs,
+    TabList,
+    TabPanel,
+    ListItemDecorator,
+} from "@mui/joy";
+import Tab, { tabClasses } from "@mui/joy/Tab";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import AddIcon from "@mui/icons-material/Add";
+import FolderIcon from "@mui/icons-material/Folder";
+import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import HistoryIcon from "@mui/icons-material/History";
 
 import { AttachmentFileProps } from "../../../../../types/tasks";
 import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
@@ -52,6 +70,7 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
+    const [index, setIndex] = React.useState(0);
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         if (attachmentId > 0) {
@@ -255,183 +274,269 @@ export const PreviewTaskAttachmentBlock = (props: PreviewTaskAttachmentBlockProp
     }, [uploadedFiles]);
 
     return (
-        <Box>
-            <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
-                <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
-                    Attachments
-                </Typography>
-                <Box sx={{ flexGrow: 1 }} />
-                <input
-                    type="file"
-                    accept="*"
-                    multiple={true}
-                    ref={inputRef}
-                    onChange={handleSelectedFiles}
-                    style={{ display: "none" }}
-                />
-                <Button
-                    component="p"
-                    variant="outlined"
-                    color="neutral"
-                    size="sm"
-                    onClick={handleButtonClick}
-                >
-                    Select Files
-                </Button>
-            </Stack>
-
-            <Box
-                className="custom-scrollbar"
-                onDrop={handleDroppedFiles}
-                onDragOver={(e) => e.preventDefault()}
-                sx={{
-                    width: "100%",
-                    minHeight: "150px",
-                    height: "100%",
-                    border: "2px dashed #ccc",
-                    display: "flex",
-                    alignItems: "center",
-                }}
+        <Box sx={{ flexGrow: 1, m: -2, overflowX: "hidden" }}>
+            <Tabs
+                aria-label="Pipeline"
+                value={index}
+                onChange={(event, value) => setIndex(value as number)}
             >
-                {uploadedFiles.length === 0 && (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            flex: 1,
-                            textAlign: "center",
-                        }}
-                    >
-                        <Typography>Drag & Drop your files here</Typography>
-                    </Box>
-                )}
+                <TabList
+                    sx={{
+                        pt: 1,
+                        justifyContent: "left",
+                        [`&& .${tabClasses.root}`]: {
+                            flex: "initial",
+                            bgcolor: "transparent",
+                            "&:hover": {
+                                bgcolor: "transparent",
+                            },
+                            [`&.${tabClasses.selected}`]: {
+                                color: "primary.plainColor",
+                                "&::after": {
+                                    height: 2,
+                                    borderTopLeftRadius: 3,
+                                    borderTopRightRadius: 3,
+                                    bgcolor: "primary.500",
+                                },
+                            },
+                        },
+                    }}
+                >
+                    <Tab indicatorInset>
+                        <ListItemDecorator>
+                            <InsertPhotoIcon />
+                        </ListItemDecorator>
+                        Attachments
+                    </Tab>
+                    <Tab indicatorInset>
+                        <ListItemDecorator>
+                            <NoteAltIcon />
+                        </ListItemDecorator>
+                        Notes
+                    </Tab>
+                    <Tab indicatorInset>
+                        <ListItemDecorator>
+                            <HistoryIcon />
+                        </ListItemDecorator>
+                        History
+                    </Tab>
+                    {index === 0 && (
+                        <>
+                            <Box sx={{ flexGrow: 1 }} />
+                            <input
+                                type="file"
+                                accept="*"
+                                multiple={true}
+                                ref={inputRef}
+                                onChange={handleSelectedFiles}
+                                style={{ display: "none" }}
+                            />
+                            <IconButton
+                                sx={{ mr: "15px", px: "3px" }}
+                                component="p"
+                                variant="soft"
+                                color="neutral"
+                                size="sm"
+                                onClick={handleButtonClick}
+                            >
+                                <FolderIcon /> Select Files
+                            </IconButton>
+                        </>
+                    )}
+                    {index === 1 && (
+                        <>
+                            <Box sx={{ flexGrow: 1 }} />
+                            <IconButton
+                                sx={{ mr: "15px", px: "3px" }}
+                                component="p"
+                                variant="soft"
+                                color="neutral"
+                                size="sm"
+                                onClick={() => {}}
+                            >
+                                <AddIcon />
+                                New Note
+                            </IconButton>
+                        </>
+                    )}
+                </TabList>
 
                 <Box
-                    style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        marginLeft: "10px",
-                        marginTop: "10px",
-                        gap: "10px",
-                    }}
+                    sx={(theme) => ({
+                        "--bg": theme.vars.palette.background.surface,
+                        background: "var(--bg)",
+                        boxShadow: "0 0 0 100vmax var(--bg)",
+                        clipPath: "inset(0 -100vmax)",
+                    })}
                 >
-                    {textFiles.map((file, index) => (
+                    <TabPanel value={0}>
                         <Box
-                            key={`testfile-${file.name}-${file.attachmentId}-${index}`}
-                            style={{ position: "relative", textAlign: "center" }}
+                            className="custom-scrollbar"
+                            onDrop={handleDroppedFiles}
+                            onDragOver={(e) => e.preventDefault()}
+                            sx={{
+                                width: "100%",
+                                minHeight: "150px",
+                                height: "100%",
+                                border: "2px dashed #ccc",
+                                display: "flex",
+                                alignItems: "center",
+                            }}
                         >
-                            <IconButton
-                                onClick={() => {
-                                    handleDeleteTextFile(taskContents.id, file);
-                                }}
-                                size="sm"
-                                sx={{
-                                    position: "absolute",
-                                    top: 0,
-                                    right: 0,
-                                    background: "transparent",
-                                }}
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                            <a
-                                href={file.url}
-                                download={file.name}
-                                style={{ textDecoration: "none", color: "inherit" }}
-                            >
-                                <InsertDriveFileIcon sx={{ fontSize: 40, cursor: "pointer" }} />
-                            </a>
-                            <Typography
-                                fontSize={"10px"}
-                                sx={{
-                                    maxWidth: "80px", // Set the maximum width
-                                    textOverflow: "ellipsis", // Add "..." if the text overflows
-                                    overflow: "hidden", // Hide the overflowing text
-                                    whiteSpace: "nowrap", // Prevent text from wrapping to the next line
-                                }}
-                            >
-                                {file.name}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-                <Box
-                    style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        marginLeft: "10px",
-                        marginTop: "10px",
-                        gap: "10px",
-                    }}
-                >
-                    {images.map((image, index) => (
-                        <Box
-                            key={`image-${image.name}-${image.attachmentId}-${index}`}
-                            style={{ position: "relative", display: "inline-block" }}
-                        >
-                            <IconButton
-                                onClick={() => {
-                                    handleDeleteImage(taskContents.id, image);
-                                }}
-                                size="sm"
-                                sx={{
-                                    position: "absolute",
-                                    top: 0,
-                                    right: 0,
-                                    background: "white",
-                                }}
-                            >
-                                <CloseIcon />
-                            </IconButton>
-                            <img
-                                src={image.url}
-                                alt="Uploaded"
+                            {uploadedFiles.length === 0 && (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        flex: 1,
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    <Typography>Drag & Drop your files here</Typography>
+                                </Box>
+                            )}
+
+                            <Box
                                 style={{
-                                    width: `${image.width}px`,
-                                    height: `${image.height}px`,
-                                    cursor: "pointer",
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    marginLeft: "10px",
+                                    marginTop: "10px",
+                                    gap: "10px",
                                 }}
-                                onClick={() => setSelectedImage(image.url)}
-                            />
+                            >
+                                {textFiles.map((file, index) => (
+                                    <Box
+                                        key={`testfile-${file.name}-${file.attachmentId}-${index}`}
+                                        style={{ position: "relative", textAlign: "center" }}
+                                    >
+                                        <IconButton
+                                            onClick={() => {
+                                                handleDeleteTextFile(taskContents.id, file);
+                                            }}
+                                            size="sm"
+                                            sx={{
+                                                position: "absolute",
+                                                top: 0,
+                                                right: 0,
+                                                background: "transparent",
+                                            }}
+                                        >
+                                            <CloseIcon />
+                                        </IconButton>
+                                        <a
+                                            href={file.url}
+                                            download={file.name}
+                                            style={{
+                                                textDecoration: "none",
+                                                color: "inherit",
+                                            }}
+                                        >
+                                            <InsertDriveFileIcon
+                                                sx={{ fontSize: 40, cursor: "pointer" }}
+                                            />
+                                        </a>
+                                        <Typography
+                                            fontSize={"10px"}
+                                            sx={{
+                                                maxWidth: "80px", // Set the maximum width
+                                                textOverflow: "ellipsis", // Add "..." if the text overflows
+                                                overflow: "hidden", // Hide the overflowing text
+                                                whiteSpace: "nowrap", // Prevent text from wrapping to the next line
+                                            }}
+                                        >
+                                            {file.name}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Box>
+                            <Box
+                                style={{
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    marginLeft: "10px",
+                                    marginTop: "10px",
+                                    gap: "10px",
+                                }}
+                            >
+                                {images.map((image, index) => (
+                                    <Box
+                                        key={`image-${image.name}-${image.attachmentId}-${index}`}
+                                        style={{
+                                            position: "relative",
+                                            display: "inline-block",
+                                        }}
+                                    >
+                                        <IconButton
+                                            onClick={() => {
+                                                handleDeleteImage(taskContents.id, image);
+                                            }}
+                                            size="sm"
+                                            sx={{
+                                                position: "absolute",
+                                                top: 0,
+                                                right: 0,
+                                                background: "white",
+                                            }}
+                                        >
+                                            <CloseIcon />
+                                        </IconButton>
+                                        <img
+                                            src={image.url}
+                                            alt="Uploaded"
+                                            style={{
+                                                width: `${image.width}px`,
+                                                height: `${image.height}px`,
+                                                cursor: "pointer",
+                                            }}
+                                            onClick={() => setSelectedImage(image.url)}
+                                        />
+                                    </Box>
+                                ))}
+                            </Box>
                         </Box>
-                    ))}
+                        {selectedImage && (
+                            <Box
+                                onClick={handleCloseModal}
+                                style={{
+                                    position: "fixed",
+                                    top: 0,
+                                    left: 0,
+                                    width: "100%",
+                                    height: "100%",
+                                    background: "rgba(0,0,0,0.5)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    zIndex: 10000,
+                                }}
+                            >
+                                <Card
+                                    sx={{
+                                        position: "relative",
+                                        padding: "20px",
+                                        background: "white",
+                                        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                                    }}
+                                >
+                                    <CardContent>
+                                        <img
+                                            src={selectedImage}
+                                            alt="Full View"
+                                            style={{ maxWidth: "100%", maxHeight: "80vh" }}
+                                        />
+                                    </CardContent>
+                                </Card>
+                            </Box>
+                        )}
+                    </TabPanel>
+
+                    <TabPanel value={1}>Notes-body</TabPanel>
+
+                    <TabPanel value={2}>History-body</TabPanel>
                 </Box>
-            </Box>
-            {selectedImage && (
-                <Box
-                    onClick={handleCloseModal}
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "100%",
-                        background: "rgba(0,0,0,0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 10000,
-                    }}
-                >
-                    <Card
-                        sx={{
-                            position: "relative",
-                            padding: "20px",
-                            background: "white",
-                            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                        }}
-                    >
-                        <CardContent>
-                            <img
-                                src={selectedImage}
-                                alt="Full View"
-                                style={{ maxWidth: "100%", maxHeight: "80vh" }}
-                            />
-                        </CardContent>
-                    </Card>
-                </Box>
-            )}
+            </Tabs>
         </Box>
     );
 };
