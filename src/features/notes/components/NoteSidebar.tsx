@@ -59,6 +59,28 @@ function Toggler({
     );
 }
 
+// Build a tree structure
+type NoteMetaTreeNode = NoteMetaProps & { children: NoteMetaTreeNode[] };
+function buildTree(items: NoteMetaProps[]): NoteMetaTreeNode[] {
+    const map: Record<string, NoteMetaTreeNode> = {};
+    const roots: NoteMetaTreeNode[] = [];
+
+    // Initialize each item with children: []
+    items.forEach((item) => {
+        map[item.noteId] = { ...item, children: [] };
+    });
+
+    items.forEach((item) => {
+        if (item.parentNoteId) {
+            map[item.parentNoteId].children.push(map[item.noteId]);
+        } else {
+            roots.push(map[item.noteId]);
+        }
+    });
+
+    return roots;
+}
+
 type NoteSidebarProps = {
     myself: UserProps;
     noteType: number;
@@ -83,6 +105,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             }
         }
     };
+
+    const noteMetaTree = buildTree(noteMeta);
+
+    // console.log("noteMetaTree:", noteMetaTree);
 
     return (
         <Sheet

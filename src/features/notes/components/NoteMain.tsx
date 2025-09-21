@@ -195,8 +195,13 @@ export const NoteMain = (props: NoteMainProps) => {
             storeName: STORES.NOTES,
             key: noteId,
         });
-        setTabContents([note]);
-        setCurrentNote(note);
+        if (note) {
+            setTabContents([note]);
+            setCurrentNote(note);
+        } else {
+            // console.log("not four note in indexedDB:", note);
+            setTabContents([]);
+        }
         setSelectedTabIndex(0);
     };
 
@@ -233,12 +238,19 @@ export const NoteMain = (props: NoteMainProps) => {
         );
     }, [currentNoteTitle]);
 
-    const handleCreateNewNote = async () => {
-        const parentNoteId = null;
-        const title = `New Note (${newlyCreatedNotes.length + 1})`;
+    const handleCreateNewNote = async (parentNoteId: number | null) => {
+        const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedNotes.length + 1})`;
         const newNote: NoteProps = await createEmptyNote(myself, parentNoteId, title, accessToken);
+        if (tabContents.length === 0 || tabContents[0] === undefined) {
+            setSelectedTabIndex(0);
+            setTabContents([newNote]);
+        } else {
+            setSelectedTabIndex(tabContents.length);
+            setTabContents([...tabContents, newNote]);
+        }
         setNewlyCreatedNotes([...newlyCreatedNotes, newNote]);
         setCurrentNote(newNote);
+        setCurrentNoteTitle(title);
         addNote(newNote);
         setMyNoteMeta([
             {
@@ -255,278 +267,328 @@ export const NoteMain = (props: NoteMainProps) => {
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     return (
-        <Stack direction={"column"} sx={{ width: "100%" }}>
-            {noteType === 0 && (
-                <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    sx={{ width: "100%" }}
+        <>
+            {myNoteMeta.length === 0 && (
+                <Box
+                    sx={{
+                        height: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: "100%",
+                    }}
                 >
-                    <Typography fontSize="20px">Note Home</Typography>
-
-                    <Tooltip title="Create a new my note" size="sm">
-                        <IconButton
-                            component="button"
-                            size="sm"
-                            variant="outlined"
-                            color="neutral"
-                            onClick={() => {}}
-                            sx={{ px: "10px" }}
-                        >
-                            <PlaylistAddIcon />
-                            New Note
-                        </IconButton>
-                    </Tooltip>
-                </Stack>
+                    <IconButton
+                        component="button"
+                        variant="soft"
+                        color="neutral"
+                        sx={{
+                            fontSize: "15px",
+                            paddingRight: "10px",
+                        }}
+                        onClick={() => {
+                            handleCreateNewNote(null);
+                        }}
+                    >
+                        <AddIcon />
+                        New Note
+                    </IconButton>
+                </Box>
             )}
+            {myNoteMeta.length > 0 && (
+                <Stack direction={"column"} sx={{ width: "100%" }}>
+                    {noteType === 0 && (
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{ width: "100%" }}
+                        >
+                            <Typography fontSize="20px">Note Home</Typography>
 
-            {body && (
-                <>
-                    {noteType !== 0 && (
-                        <Stack direction={"column"} sx={{ width: "100%" }}>
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                                justifyContent="space-between"
-                                sx={{ width: "100%", height: "30px", mt: "10px", mb: "3px" }}
-                            >
-                                <Menu
-                                    ref={breadcrumbsRef}
-                                    anchorEl={anchorEl}
-                                    open={Boolean(anchorEl)}
-                                    onClose={handleClose}
-                                    aria-labelledby="with-menu-demo-breadcrumbs"
+                            <Tooltip title="Create a new my note" size="sm">
+                                <IconButton
+                                    component="button"
+                                    size="sm"
+                                    variant="outlined"
+                                    color="neutral"
+                                    onClick={() => {}}
+                                    sx={{ px: "10px" }}
                                 >
-                                    <MenuItem onClick={handleClose}>Breadcrumb 2</MenuItem>
-                                    <MenuItem onClick={handleClose}>Breadcrumb 3</MenuItem>
-                                    <MenuItem onClick={handleClose}>Breadcrumb 4</MenuItem>
-                                </Menu>
-                                <Breadcrumbs separator="›" aria-label="breadcrumbs">
-                                    <Link color="primary" href="#condensed-with-menu">
-                                        <PlayArrowIcon />
-                                        Breadcrumb 1
-                                    </Link>
-                                    <Button
-                                        size="sm"
-                                        onClick={handleClick}
-                                        variant="plain"
-                                        color="primary"
-                                    >
-                                        •••
-                                    </Button>
-                                    <Link color="primary" href="#condensed-with-menu">
-                                        Breadcrumb 5
-                                    </Link>
-                                    <Link color="primary" href="#condensed-with-menu">
-                                        Breadcrumb 6
-                                    </Link>
-                                </Breadcrumbs>
-
-                                <Stack direction={"row"}>
-                                    <Tooltip title="Create a new my note" size="sm">
-                                        <IconButton
-                                            component="button"
-                                            size="sm"
-                                            variant="outlined"
-                                            color="neutral"
-                                            onClick={() => {
-                                                handleCreateNewNote();
-                                            }}
-                                            sx={{ px: "10px" }}
-                                        >
-                                            <PlaylistAddIcon />
-                                            New Note
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Dropdown>
-                                        <MenuButton
-                                            slots={{ root: IconButton }}
-                                            slotProps={{
-                                                root: { color: "neutral" },
-                                            }}
-                                        >
-                                            <MoreVert />
-                                        </MenuButton>
-                                        <Menu size="sm">
-                                            <MenuItem
-                                                onClick={() => {
-                                                    handleCreateNewNote();
-                                                }}
-                                            >
-                                                <AddIcon />
-                                                New Note
-                                            </MenuItem>
-                                            <MenuItem
-                                                onClick={() => {
-                                                    setOpenDeleteNote(true);
-                                                }}
-                                                sx={{
-                                                    color: "red",
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                <DeleteIcon sx={{ color: "red" }} />
-                                                Delete Note
-                                            </MenuItem>
-                                        </Menu>
-                                    </Dropdown>
-                                </Stack>
-                                {currentNote && (
-                                    <ModalDeleteNote
-                                        myself={myself}
-                                        openDeleteNote={openDeleteNote}
-                                        setOpenDeleteNote={setOpenDeleteNote}
-                                        myNoteMeta={myNoteMeta}
-                                        setMyNoteMeta={setMyNoteMeta}
-                                        currentNote={currentNote}
-                                        handleCloseTab={handleCloseTab}
-                                    />
-                                )}
-                            </Stack>
-
-                            <Tabs
-                                key={`tabs-${tabContents.length}`}
-                                value={selectedTabIndex}
-                                onChange={(_, val) => {
-                                    // console.log("move tab to:", val);
-                                    setCurrentNote(tabContents[Number(val)]);
-                                    setSelectedTabIndex(Number(val));
-                                }}
-                                aria-label="Scrollable tabs"
-                                sx={{ width: "100%" }}
-                            >
-                                <TabList
-                                    sx={{
-                                        px: "5px",
-                                        overflowX: "auto",
-                                        scrollSnapType: "x mandatory",
-                                        "&::-webkit-scrollbar": { display: "none" },
-                                    }}
-                                >
-                                    {tabContents.map((tab, index) => (
-                                        <Tab
-                                            key={tab.noteId}
-                                            sx={{
-                                                my: "3px",
-                                                flex: "none",
-                                                scrollSnapAlign: "start",
-                                                borderRadius: "5px",
-                                            }}
-                                            variant="soft"
-                                        >
-                                            <Box
-                                                sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    height: "20px",
-                                                    maxWidth: "200px",
-                                                }}
-                                            >
-                                                {tab.title.length > 15
-                                                    ? `${tab.title.slice(0, 15)}...`
-                                                    : tab.title}
-
-                                                {tabContents.length > 1 && (
-                                                    <IconButton
-                                                        component="span"
-                                                        size="sm"
-                                                        variant="plain"
-                                                        color="neutral"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleCloseTab(Number(tab.noteId));
-                                                        }}
-                                                        sx={{ ml: 1 }}
-                                                    >
-                                                        <CloseIcon />
-                                                    </IconButton>
-                                                )}
-                                            </Box>
-                                        </Tab>
-                                    ))}
-                                </TabList>
-
-                                {tabContents.map((tabNote, index) => (
-                                    <TabPanel
-                                        key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
-                                        value={index}
-                                        sx={{
-                                            paddingX: "5px",
-                                            paddingTop: "0px",
-                                            paddingBottom: "5px",
-                                        }}
-                                    >
-                                        <FormControl
-                                            required
-                                            sx={{
-                                                mt: "10px",
-                                                ml: "10px",
-                                                justifyContent: "center",
-                                                position: "absolute",
-                                                zIndex: 100,
-                                            }}
-                                        >
-                                            <Input
-                                                startDecorator={<NoteAltIcon />}
-                                                key={"currentNoteTitle"}
-                                                variant="soft"
-                                                placeholder="Note Title"
-                                                value={currentNoteTitle}
-                                                onChange={(e) => {
-                                                    setCurrentNoteTitle(e.target.value);
-                                                }}
-                                                onBlur={() => {
-                                                    setNoteUpdated(true);
-                                                }}
-                                                sx={{
-                                                    fontSize: "22px",
-                                                    fontWeight: "bold",
-                                                }}
-                                            />
-                                        </FormControl>
-                                        {noteBodySaved === true && (
-                                            <Box
-                                                sx={{
-                                                    position: "absolute",
-                                                    mt: "12px",
-                                                    ml: "340px",
-                                                    zIndex: 100,
-                                                }}
-                                            >
-                                                <Button
-                                                    variant="outlined"
-                                                    color="neutral"
-                                                    size="sm"
-                                                    startDecorator={
-                                                        <CheckIcon sx={{ fontSize: "15px" }} />
-                                                    }
-                                                >
-                                                    Saved
-                                                </Button>
-                                            </Box>
-                                        )}
-                                        <BnNoteEditor
-                                            teamMemberProfiles={teamMemberProfiles}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            noteType={noteType}
-                                            socket={socket}
-                                            teamMembers={teamMembers}
-                                            body={body}
-                                            setBody={setBody}
-                                            setNoteBodyEdited={setNoteBodyEdited}
-                                            setNoteBodySaved={setNoteBodySaved}
-                                            setCurrentChat={setCurrentChat}
-                                            setOpeningService={setOpeningService}
-                                        />
-                                    </TabPanel>
-                                ))}
-                            </Tabs>
+                                    <PlaylistAddIcon />
+                                    New Note
+                                </IconButton>
+                            </Tooltip>
                         </Stack>
                     )}
-                </>
+
+                    {body && (
+                        <>
+                            {noteType !== 0 && (
+                                <Stack direction={"column"} sx={{ width: "100%" }}>
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        justifyContent="space-between"
+                                        sx={{
+                                            width: "100%",
+                                            height: "30px",
+                                            mt: "10px",
+                                            mb: "3px",
+                                        }}
+                                    >
+                                        <Menu
+                                            ref={breadcrumbsRef}
+                                            anchorEl={anchorEl}
+                                            open={Boolean(anchorEl)}
+                                            onClose={handleClose}
+                                            aria-labelledby="with-menu-demo-breadcrumbs"
+                                        >
+                                            <MenuItem onClick={handleClose}>Breadcrumb 2</MenuItem>
+                                            <MenuItem onClick={handleClose}>Breadcrumb 3</MenuItem>
+                                            <MenuItem onClick={handleClose}>Breadcrumb 4</MenuItem>
+                                        </Menu>
+                                        <Breadcrumbs separator="›" aria-label="breadcrumbs">
+                                            <Link color="primary" href="#condensed-with-menu">
+                                                <PlayArrowIcon />
+                                                Breadcrumb 1
+                                            </Link>
+                                            <Button
+                                                size="sm"
+                                                onClick={handleClick}
+                                                variant="plain"
+                                                color="primary"
+                                            >
+                                                •••
+                                            </Button>
+                                            <Link color="primary" href="#condensed-with-menu">
+                                                Breadcrumb 5
+                                            </Link>
+                                            <Link color="primary" href="#condensed-with-menu">
+                                                Breadcrumb 6
+                                            </Link>
+                                        </Breadcrumbs>
+
+                                        <Stack direction={"row"}>
+                                            <Tooltip title="Create a new my note" size="sm">
+                                                <IconButton
+                                                    component="button"
+                                                    size="sm"
+                                                    variant="outlined"
+                                                    color="neutral"
+                                                    onClick={() => {
+                                                        handleCreateNewNote(null);
+                                                    }}
+                                                    sx={{ px: "10px" }}
+                                                >
+                                                    <PlaylistAddIcon />
+                                                    New Note
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Dropdown>
+                                                <MenuButton
+                                                    slots={{ root: IconButton }}
+                                                    slotProps={{
+                                                        root: { color: "neutral" },
+                                                    }}
+                                                >
+                                                    <MoreVert />
+                                                </MenuButton>
+                                                <Menu size="sm">
+                                                    <MenuItem
+                                                        onClick={() => {
+                                                            if (currentNote) {
+                                                                handleCreateNewNote(
+                                                                    currentNote.noteId
+                                                                );
+                                                            } else {
+                                                                console.error(
+                                                                    "Can't parent note ID to create a child note."
+                                                                );
+                                                            }
+                                                        }}
+                                                    >
+                                                        <AddIcon />
+                                                        Child Note
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        onClick={() => {
+                                                            setOpenDeleteNote(true);
+                                                        }}
+                                                        sx={{
+                                                            color: "red",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                    >
+                                                        <DeleteIcon sx={{ color: "red" }} />
+                                                        Delete Note
+                                                    </MenuItem>
+                                                </Menu>
+                                            </Dropdown>
+                                        </Stack>
+                                        {currentNote && (
+                                            <ModalDeleteNote
+                                                myself={myself}
+                                                openDeleteNote={openDeleteNote}
+                                                setOpenDeleteNote={setOpenDeleteNote}
+                                                myNoteMeta={myNoteMeta}
+                                                setMyNoteMeta={setMyNoteMeta}
+                                                currentNote={currentNote}
+                                                handleCloseTab={handleCloseTab}
+                                            />
+                                        )}
+                                    </Stack>
+
+                                    <Tabs
+                                        key={`tabs-${tabContents.length}`}
+                                        value={selectedTabIndex}
+                                        onChange={(_, val) => {
+                                            // console.log("move tab to:", val);
+                                            setCurrentNote(tabContents[Number(val)]);
+                                            setSelectedTabIndex(Number(val));
+                                        }}
+                                        aria-label="Scrollable tabs"
+                                        sx={{ width: "100%" }}
+                                    >
+                                        <TabList
+                                            sx={{
+                                                px: "5px",
+                                                overflowX: "auto",
+                                                scrollSnapType: "x mandatory",
+                                                "&::-webkit-scrollbar": { display: "none" },
+                                            }}
+                                        >
+                                            {tabContents.map((tab, index) => (
+                                                <Tab
+                                                    key={tab.noteId}
+                                                    sx={{
+                                                        my: "3px",
+                                                        flex: "none",
+                                                        scrollSnapAlign: "start",
+                                                        borderRadius: "5px",
+                                                    }}
+                                                    variant="soft"
+                                                >
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            height: "20px",
+                                                            maxWidth: "200px",
+                                                        }}
+                                                    >
+                                                        {tab
+                                                            ? tab.title.length > 15
+                                                                ? `${tab.title.slice(0, 15)}...`
+                                                                : tab.title
+                                                            : "N/A"}
+
+                                                        {tabContents.length > 1 && (
+                                                            <IconButton
+                                                                component="span"
+                                                                size="sm"
+                                                                variant="plain"
+                                                                color="neutral"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleCloseTab(
+                                                                        Number(tab.noteId)
+                                                                    );
+                                                                }}
+                                                                sx={{ ml: 1 }}
+                                                            >
+                                                                <CloseIcon />
+                                                            </IconButton>
+                                                        )}
+                                                    </Box>
+                                                </Tab>
+                                            ))}
+                                        </TabList>
+
+                                        {tabContents.map((tabNote, index) => (
+                                            <TabPanel
+                                                key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
+                                                value={index}
+                                                sx={{
+                                                    paddingX: "5px",
+                                                    paddingTop: "0px",
+                                                    paddingBottom: "5px",
+                                                }}
+                                            >
+                                                <FormControl
+                                                    required
+                                                    sx={{
+                                                        mt: "10px",
+                                                        ml: "10px",
+                                                        justifyContent: "center",
+                                                        position: "absolute",
+                                                        zIndex: 100,
+                                                    }}
+                                                >
+                                                    <Input
+                                                        startDecorator={<NoteAltIcon />}
+                                                        key={"currentNoteTitle"}
+                                                        variant="soft"
+                                                        placeholder="Note Title"
+                                                        value={currentNoteTitle}
+                                                        onChange={(e) => {
+                                                            setCurrentNoteTitle(e.target.value);
+                                                        }}
+                                                        onBlur={() => {
+                                                            setNoteUpdated(true);
+                                                        }}
+                                                        sx={{
+                                                            fontSize: "22px",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                    />
+                                                </FormControl>
+                                                {noteBodySaved === true && (
+                                                    <Box
+                                                        sx={{
+                                                            position: "absolute",
+                                                            mt: "12px",
+                                                            ml: "340px",
+                                                            zIndex: 100,
+                                                        }}
+                                                    >
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="neutral"
+                                                            size="sm"
+                                                            startDecorator={
+                                                                <CheckIcon
+                                                                    sx={{ fontSize: "15px" }}
+                                                                />
+                                                            }
+                                                        >
+                                                            Saved
+                                                        </Button>
+                                                    </Box>
+                                                )}
+                                                <BnNoteEditor
+                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    noteType={noteType}
+                                                    socket={socket}
+                                                    teamMembers={teamMembers}
+                                                    body={body}
+                                                    setBody={setBody}
+                                                    setNoteBodyEdited={setNoteBodyEdited}
+                                                    setNoteBodySaved={setNoteBodySaved}
+                                                    setCurrentChat={setCurrentChat}
+                                                    setOpeningService={setOpeningService}
+                                                />
+                                            </TabPanel>
+                                        ))}
+                                    </Tabs>
+                                </Stack>
+                            )}
+                        </>
+                    )}
+                </Stack>
             )}
-        </Stack>
+        </>
     );
 };
