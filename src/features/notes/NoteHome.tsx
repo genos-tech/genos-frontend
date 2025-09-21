@@ -10,11 +10,34 @@ import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
 import { ChatProps } from "../../types/chat";
 import { NoteMain } from "./components/NoteMain";
-import { NoteMetaProps, NoteProps } from "../../types/notes";
+import { NoteMetaProps, NoteProps, NoteMetaTreeNode } from "../../types/notes";
 import { loadNoteMeta } from "./services/loadNoteMeta";
 import { useAuth } from "../../context/AuthContext";
 import { getData } from "../../db/crud";
 import { STORES } from "../../db/conf";
+import { createEmptyNote } from "./services/createEmptyNote";
+import { addNote } from "./services/addNote";
+
+// Build a tree structure
+function buildTree(items: NoteMetaProps[]): NoteMetaTreeNode[] {
+    const map: Record<number, NoteMetaTreeNode> = {};
+    const roots: NoteMetaTreeNode[] = [];
+
+    // Initialize each item with children: []
+    items.forEach((item) => {
+        map[item.noteId] = { ...item, children: [] };
+    });
+
+    items.forEach((item) => {
+        if (item.parentNoteId) {
+            map[item.parentNoteId].children.push(map[item.noteId]);
+        } else {
+            roots.push(map[item.noteId]);
+        }
+    });
+
+    return roots;
+}
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -30,7 +53,6 @@ type NoteHomeProps = {
     unReadInboxItemCount: number;
     unReadChatAndActivityCounts: number;
 };
-
 export const NoteHome = (props: NoteHomeProps) => {
     const {
         currentTeam,
@@ -86,6 +108,34 @@ export const NoteHome = (props: NoteHomeProps) => {
         }
     };
 
+    const [tabContents, setTabContents] = useState<NoteProps[]>(currentNote ? [currentNote] : []);
+    const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+    const handleCreateNewNote = async (parentNoteId: number | null) => {
+        const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedNotes.length + 1})`;
+        const newNote: NoteProps = await createEmptyNote(myself, parentNoteId, title, accessToken);
+        if (tabContents.length === 0 || tabContents[0] === undefined) {
+            setSelectedTabIndex(0);
+            setTabContents([newNote]);
+        } else {
+            setSelectedTabIndex(tabContents.length);
+            setTabContents([...tabContents, newNote]);
+        }
+        setNewlyCreatedNotes([...newlyCreatedNotes, newNote]);
+        setCurrentNote(newNote);
+        setCurrentNoteTitle(title);
+        addNote(newNote);
+        setMyNoteMeta([
+            {
+                noteId: newNote.noteId,
+                parentNoteId: newNote.parentNoteId,
+                title: newNote.title,
+                tsCreated: newNote.tsCreated,
+                tsUpdated: newNote.tsUpdated,
+            },
+            ...myNoteMeta,
+        ]);
+    };
+
     useEffect(() => {
         loadMyNoteMeta();
         loadTaskNoteMeta();
@@ -108,6 +158,63 @@ export const NoteHome = (props: NoteHomeProps) => {
         );
     }, [currentNoteTitle]);
 
+    const noteMetaTree = buildTree(myNoteMeta);
+
+    // Get Note chain used for the header
+    const [currentNoteChain, setCurrentNoteChain] = useState<NoteMetaTreeNode[]>();
+    function findNoteChain(
+        roots: NoteMetaTreeNode[],
+        targetNoteId: number
+    ): NoteMetaTreeNode[] | null {
+        for (const root of roots) {
+            const path = dfs(root, targetNoteId);
+            if (path) return path;
+        }
+        return null; // not found
+    }
+
+    function dfs(node: NoteMetaTreeNode, targetNoteId: number): NoteMetaTreeNode[] | null {
+        if (node.noteId === targetNoteId) {
+            return [node];
+        }
+        for (const child of node.children) {
+            const path = dfs(child, targetNoteId);
+            if (path) {
+                return [node, ...path]; // prepend current node to the chain
+            }
+        }
+        return null;
+    }
+
+    // Make a map of noteId -> chained-noteIds
+    const [allNoteIdChains, setAllNoteIdChains] = useState<Record<number, number[]>>({});
+    const addChain = (noteId: number, chain: number[]) => {
+        setAllNoteIdChains((prev) => ({
+            ...prev,
+            [noteId]: chain, // overwrite or add
+        }));
+    };
+
+    useEffect(() => {
+        if (currentNote) {
+            const chain = findNoteChain(noteMetaTree, currentNote.noteId);
+            setCurrentNoteChain(chain || []);
+
+            if (chain) {
+                addChain(
+                    currentNote.noteId,
+                    chain.map((item) => item.noteId)
+                );
+            }
+
+            if (tabContents.length === 0)
+                setTabContents([
+                    ...tabContents.filter((t) => t.noteId !== currentNote.noteId),
+                    currentNote,
+                ]);
+        }
+    }, [currentNote]);
+
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
@@ -127,14 +234,21 @@ export const NoteHome = (props: NoteHomeProps) => {
                 />
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} order={1} minSize={15} maxSize={25}>
-                        <NoteSidebar
-                            myself={myself}
-                            noteType={noteType}
-                            setNoteType={setNoteType}
-                            noteMeta={myNoteMeta}
-                            setCurrentNote={setCurrentNote}
-                            currentNote={currentNote}
-                        />
+                        {currentNoteChain && (
+                            <NoteSidebar
+                                myself={myself}
+                                noteMetaTree={noteMetaTree}
+                                noteType={noteType}
+                                setNoteType={setNoteType}
+                                noteMeta={myNoteMeta}
+                                setCurrentNote={setCurrentNote}
+                                currentNote={currentNote}
+                                tabContents={tabContents}
+                                handleCreateNewNote={handleCreateNewNote}
+                                currentNoteChain={currentNoteChain}
+                                allNoteIdChains={allNoteIdChains}
+                            />
+                        )}
                     </Panel>
 
                     <PanelResizeHandle
@@ -149,25 +263,34 @@ export const NoteHome = (props: NoteHomeProps) => {
 
                     <Panel id={"2"} order={2} minSize={50} maxSize={85}>
                         <Box sx={{ paddingX: 1, height: "100dvh" }}>
-                            <NoteMain
-                                teamMemberProfiles={teamMemberProfiles}
-                                socket={socket}
-                                teamMembers={teamMembers}
-                                myself={myself}
-                                setMyself={setMyself}
-                                noteType={noteType}
-                                setNoteType={setNoteType}
-                                currentNote={currentNote}
-                                setCurrentNote={setCurrentNote}
-                                currentNoteTitle={currentNoteTitle}
-                                setCurrentNoteTitle={setCurrentNoteTitle}
-                                setOpeningService={setOpeningService}
-                                setCurrentChat={setCurrentMainChat}
-                                newlyCreatedNotes={newlyCreatedNotes}
-                                setNewlyCreatedNotes={setNewlyCreatedNotes}
-                                myNoteMeta={myNoteMeta}
-                                setMyNoteMeta={setMyNoteMeta}
-                            />
+                            {currentNoteChain && (
+                                <NoteMain
+                                    teamMemberProfiles={teamMemberProfiles}
+                                    socket={socket}
+                                    teamMembers={teamMembers}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    noteType={noteType}
+                                    setNoteType={setNoteType}
+                                    noteMetaTree={noteMetaTree}
+                                    currentNote={currentNote}
+                                    setCurrentNote={setCurrentNote}
+                                    currentNoteTitle={currentNoteTitle}
+                                    setCurrentNoteTitle={setCurrentNoteTitle}
+                                    setOpeningService={setOpeningService}
+                                    setCurrentChat={setCurrentMainChat}
+                                    newlyCreatedNotes={newlyCreatedNotes}
+                                    setNewlyCreatedNotes={setNewlyCreatedNotes}
+                                    myNoteMeta={myNoteMeta}
+                                    setMyNoteMeta={setMyNoteMeta}
+                                    tabContents={tabContents}
+                                    setTabContents={setTabContents}
+                                    selectedTabIndex={selectedTabIndex}
+                                    setSelectedTabIndex={setSelectedTabIndex}
+                                    handleCreateNewNote={handleCreateNewNote}
+                                    currentNoteChain={currentNoteChain}
+                                />
+                            )}
                         </Box>
                     </Panel>
                 </PanelGroup>

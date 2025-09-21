@@ -25,7 +25,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import WindowIcon from "@mui/icons-material/Window";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
@@ -33,15 +33,15 @@ import CheckIcon from "@mui/icons-material/Check";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
 import { BnNoteEditor } from "../../../components/blockNote/bnNoteEditor";
-import { NoteMetaProps, NoteProps } from "../../../types/notes";
+import { NoteMetaProps, NoteProps, NoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedNote } from "../services/sendUpdatedNote";
 import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
-import { createEmptyNote } from "../services/createEmptyNote";
 import { ModalDeleteNote } from "../modals/ModalDeleteNote";
 import { getData } from "../../../db/crud";
 import { STORES } from "../../../db/conf";
+import { loadSpecificNote } from "../services/loadSpecificNote";
 
 type NoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -51,6 +51,7 @@ type NoteMainProps = {
     setMyself: (me: UserProps) => void;
     noteType: number;
     setNoteType: (value: number) => void;
+    noteMetaTree: NoteMetaTreeNode[];
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
     currentNoteTitle: string;
@@ -61,6 +62,12 @@ type NoteMainProps = {
     setNewlyCreatedNotes: (value: NoteProps[]) => void;
     myNoteMeta: NoteMetaProps[];
     setMyNoteMeta: (value: NoteMetaProps[]) => void;
+    tabContents: NoteProps[];
+    setTabContents: (value: NoteProps[]) => void;
+    selectedTabIndex: number;
+    setSelectedTabIndex: (value: number) => void;
+    handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
+    currentNoteChain: NoteMetaTreeNode[];
 };
 
 export const NoteMain = (props: NoteMainProps) => {
@@ -78,10 +85,17 @@ export const NoteMain = (props: NoteMainProps) => {
         setCurrentChat,
         noteType,
         setNoteType,
+        noteMetaTree,
         newlyCreatedNotes,
         setNewlyCreatedNotes,
         myNoteMeta,
         setMyNoteMeta,
+        tabContents,
+        setTabContents,
+        selectedTabIndex,
+        setSelectedTabIndex,
+        handleCreateNewNote,
+        currentNoteChain,
     } = props;
 
     const { accessToken } = useAuth();
@@ -159,8 +173,6 @@ export const NoteMain = (props: NoteMainProps) => {
     }, [noteBodyEdited]);
 
     // Tab management
-    const [tabContents, setTabContents] = useState<NoteProps[]>(currentNote ? [currentNote] : []);
-    const [selectedTabIndex, setSelectedTabIndex] = useState(0);
     const [isUpdatingTabContents, setIsUpdatingTabContents] = useState(true);
 
     useEffect(() => {
@@ -176,7 +188,7 @@ export const NoteMain = (props: NoteMainProps) => {
                         tabContents.some((note) => note.noteId === currentNote.noteId)) === false)
             ) {
                 // Add the clicked note to the tab.
-                setTabContents((prev) => [...prev, currentNote]);
+                setTabContents([...tabContents, currentNote]);
                 // Also, update the index to the clicked note.
                 setSelectedTabIndex(tabContents.length); // switch to new tab
             } else {
@@ -207,7 +219,7 @@ export const NoteMain = (props: NoteMainProps) => {
 
     const handleCloseTab = (closedNoteId: number) => {
         if (tabContents.length > 1) {
-            setTabContents((prev) => prev.filter((t) => t.noteId !== closedNoteId));
+            setTabContents(tabContents.filter((t) => t.noteId !== closedNoteId));
             if (selectedTabIndex >= tabContents.length - 1) {
                 setSelectedTabIndex(tabContents.length - 2); // fallback to previous tab
             } else {
@@ -220,13 +232,17 @@ export const NoteMain = (props: NoteMainProps) => {
 
     useEffect(() => {
         if (isUpdatingTabContents === false) {
-            setCurrentNote(tabContents[selectedTabIndex]);
+            if (tabContents[selectedTabIndex]) {
+                setCurrentNote(tabContents[selectedTabIndex]);
+            }
         }
     }, [isUpdatingTabContents]);
 
     useEffect(() => {
         setNoteBodySaved(false);
-        setCurrentNote(tabContents[selectedTabIndex]);
+        if (tabContents[selectedTabIndex]) {
+            setCurrentNote(tabContents[selectedTabIndex]);
+        }
     }, [selectedTabIndex]);
 
     // Update note title in the tab
@@ -238,33 +254,20 @@ export const NoteMain = (props: NoteMainProps) => {
         );
     }, [currentNoteTitle]);
 
-    const handleCreateNewNote = async (parentNoteId: number | null) => {
-        const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedNotes.length + 1})`;
-        const newNote: NoteProps = await createEmptyNote(myself, parentNoteId, title, accessToken);
-        if (tabContents.length === 0 || tabContents[0] === undefined) {
-            setSelectedTabIndex(0);
-            setTabContents([newNote]);
-        } else {
-            setSelectedTabIndex(tabContents.length);
-            setTabContents([...tabContents, newNote]);
-        }
-        setNewlyCreatedNotes([...newlyCreatedNotes, newNote]);
-        setCurrentNote(newNote);
-        setCurrentNoteTitle(title);
-        addNote(newNote);
-        setMyNoteMeta([
-            {
-                noteId: newNote.noteId,
-                parentNoteId: newNote.parentNoteId,
-                title: newNote.title,
-                tsCreated: newNote.tsCreated,
-                tsUpdated: newNote.tsUpdated,
-            },
-            ...myNoteMeta,
-        ]);
-    };
-
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
+
+    const LoadNote = async (noteId: number) => {
+        const note: NoteProps = await getData({ storeName: STORES.NOTES, key: noteId });
+        if (note) {
+            setCurrentNote(note);
+        } else {
+            const note: NoteProps = await loadSpecificNote(myself, noteId, accessToken);
+            if (!note.error) {
+                addNote(note);
+                setCurrentNote(note);
+            }
+        }
+    };
 
     return (
         <>
@@ -337,36 +340,35 @@ export const NoteMain = (props: NoteMainProps) => {
                                             mb: "3px",
                                         }}
                                     >
-                                        <Menu
-                                            ref={breadcrumbsRef}
-                                            anchorEl={anchorEl}
-                                            open={Boolean(anchorEl)}
-                                            onClose={handleClose}
-                                            aria-labelledby="with-menu-demo-breadcrumbs"
-                                        >
-                                            <MenuItem onClick={handleClose}>Breadcrumb 2</MenuItem>
-                                            <MenuItem onClick={handleClose}>Breadcrumb 3</MenuItem>
-                                            <MenuItem onClick={handleClose}>Breadcrumb 4</MenuItem>
-                                        </Menu>
                                         <Breadcrumbs separator="›" aria-label="breadcrumbs">
-                                            <Link color="primary" href="#condensed-with-menu">
-                                                <PlayArrowIcon />
-                                                Breadcrumb 1
-                                            </Link>
-                                            <Button
-                                                size="sm"
-                                                onClick={handleClick}
-                                                variant="plain"
-                                                color="primary"
+                                            <Typography
+                                                level="body-sm"
+                                                startDecorator={<WindowIcon />}
                                             >
-                                                •••
-                                            </Button>
-                                            <Link color="primary" href="#condensed-with-menu">
-                                                Breadcrumb 5
-                                            </Link>
-                                            <Link color="primary" href="#condensed-with-menu">
-                                                Breadcrumb 6
-                                            </Link>
+                                                My Notes
+                                            </Typography>
+                                            {currentNoteChain.map((node) => (
+                                                <Typography
+                                                    level="title-sm"
+                                                    component="button"
+                                                    onClick={() => {
+                                                        LoadNote(node.noteId);
+                                                    }}
+                                                    sx={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        padding: 0,
+                                                        cursor: "pointer",
+                                                        color: "#646CFF",
+                                                        textAlign: "left",
+                                                        fontWeight: "bold",
+                                                    }}
+                                                >
+                                                    {node.title.length > 15
+                                                        ? `${node.title.slice(0, 15)}...`
+                                                        : node.title}
+                                                </Typography>
+                                            ))}
                                         </Breadcrumbs>
 
                                         <Stack direction={"row"}>
@@ -477,11 +479,9 @@ export const NoteMain = (props: NoteMainProps) => {
                                                             maxWidth: "200px",
                                                         }}
                                                     >
-                                                        {tab
-                                                            ? tab.title.length > 15
-                                                                ? `${tab.title.slice(0, 15)}...`
-                                                                : tab.title
-                                                            : "N/A"}
+                                                        {tab.title.length > 15
+                                                            ? `${tab.title.slice(0, 15)}...`
+                                                            : tab.title}
 
                                                         {tabContents.length > 1 && (
                                                             <IconButton
@@ -548,7 +548,7 @@ export const NoteMain = (props: NoteMainProps) => {
                                                         sx={{
                                                             position: "absolute",
                                                             mt: "12px",
-                                                            ml: "340px",
+                                                            ml: "335px",
                                                             zIndex: 100,
                                                         }}
                                                     >

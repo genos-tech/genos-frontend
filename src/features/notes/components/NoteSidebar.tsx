@@ -16,14 +16,16 @@ import WindowIcon from "@mui/icons-material/Window";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import AddIcon from "@mui/icons-material/Add";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { NoteMetaProps, NoteProps } from "../../../types/notes";
+import { NoteMetaProps, NoteMetaTreeNode, NoteProps } from "../../../types/notes";
 import { loadSpecificNote } from "../services/loadSpecificNote";
 import { addNote } from "../services/addNote";
 import { getData } from "../../../db/crud";
 import { STORES } from "../../../db/conf";
+import { getCurrentTimestamp } from "../../../utils/dateUtils";
 
 function Toggler({
     defaultExpanded,
@@ -59,39 +61,43 @@ function Toggler({
     );
 }
 
-// Build a tree structure
-type NoteMetaTreeNode = NoteMetaProps & { children: NoteMetaTreeNode[] };
-function buildTree(items: NoteMetaProps[]): NoteMetaTreeNode[] {
-    const map: Record<string, NoteMetaTreeNode> = {};
-    const roots: NoteMetaTreeNode[] = [];
-
-    // Initialize each item with children: []
-    items.forEach((item) => {
-        map[item.noteId] = { ...item, children: [] };
-    });
-
-    items.forEach((item) => {
-        if (item.parentNoteId) {
-            map[item.parentNoteId].children.push(map[item.noteId]);
-        } else {
-            roots.push(map[item.noteId]);
-        }
-    });
-
-    return roots;
-}
-
 type NoteSidebarProps = {
     myself: UserProps;
+    noteMetaTree: NoteMetaTreeNode[];
     noteType: number;
     setNoteType: (value: number) => void;
     noteMeta: NoteMetaProps[];
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
+    tabContents: NoteProps[];
+    handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
+    currentNoteChain: NoteMetaTreeNode[];
+    allNoteIdChains: Record<number, number[]>;
 };
 export const NoteSidebar = (props: NoteSidebarProps) => {
-    const { myself, noteType, setNoteType, noteMeta, currentNote, setCurrentNote } = props;
+    const {
+        myself,
+        noteMetaTree,
+        noteType,
+        setNoteType,
+        noteMeta,
+        currentNote,
+        setCurrentNote,
+        tabContents,
+        handleCreateNewNote,
+        currentNoteChain,
+        allNoteIdChains,
+    } = props;
     const { accessToken } = useAuth();
+
+    const [tsNoteChainUpdated, setTsNoteChainUpdated] = useState<string>(getCurrentTimestamp());
+    const [tmpCurrentNoteChain, setTmpCurrentNoteChain] =
+        useState<NoteMetaTreeNode[]>(currentNoteChain);
+
+    useEffect(() => {
+        setTmpCurrentNoteChain(currentNoteChain);
+        setTsNoteChainUpdated(getCurrentTimestamp());
+    }, [currentNoteChain]);
 
     const LoadNote = async (noteId: number) => {
         const note: NoteProps = await getData({ storeName: STORES.NOTES, key: noteId });
@@ -106,9 +112,77 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         }
     };
 
-    const noteMetaTree = buildTree(noteMeta);
+    const renderTree = (node: NoteMetaTreeNode) => (
+        <ListItem nested key={`${node.noteId}-${tsNoteChainUpdated}`}>
+            <Toggler
+                // Expanding toggle when the target note is in the tab.
+                defaultExpanded={
+                    tmpCurrentNoteChain.some(
+                        (chainedNote) => chainedNote.noteId === node.noteId
+                    ) ||
+                    tabContents.some((tabNote) =>
+                        allNoteIdChains[tabNote.noteId]?.some(
+                            (chainedNoteId) => chainedNoteId === node.noteId
+                        )
+                    )
+                        ? true
+                        : false
+                }
+                renderToggle={({ open, setOpen }) => (
+                    <ListItemButton
+                        selected={node.noteId === currentNote?.noteId ? true : false}
+                        variant="soft"
+                        onClick={() => {
+                            setOpen(!open);
+                            setNoteType(1);
+                            LoadNote(node.noteId);
+                        }}
+                    >
+                        <ListItemContent>
+                            <Typography level="title-sm">{node.title}</Typography>
+                        </ListItemContent>
+                        <KeyboardArrowDownIcon
+                            sx={[
+                                open
+                                    ? {
+                                          transform: "rotate(180deg)",
+                                      }
+                                    : {
+                                          transform: "none",
+                                      },
+                            ]}
+                        />
+                    </ListItemButton>
+                )}
+            >
+                {node.children.length > 0 && (
+                    <List>{node.children.map((child) => renderTree(child))}</List>
+                )}
 
-    // console.log("noteMetaTree:", noteMetaTree);
+                {node.children.length === 0 && (
+                    <Typography
+                        level="title-sm"
+                        component="button"
+                        onClick={() => {
+                            handleCreateNewNote(node.noteId);
+                        }}
+                        sx={{
+                            ml: "25px",
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                            color: "inherit", // keeps normal text color
+                            textAlign: "left",
+                        }}
+                        startDecorator={<AddIcon />}
+                    >
+                        Child Note
+                    </Typography>
+                )}
+            </Toggler>
+        </ListItem>
+    );
 
     return (
         <Sheet
@@ -183,6 +257,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             renderToggle={({ open, setOpen }) => (
                                 <ListItemButton
                                     selected={noteType === 1 ? true : false}
+                                    variant="outlined"
+                                    color="primary"
                                     onClick={() => {
                                         setOpen(!open);
                                         setNoteType(1);
@@ -206,42 +282,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 </ListItemButton>
                             )}
                         >
-                            <List>
-                                {noteMeta.map((note, index) => {
-                                    return (
-                                        <ListItem key={`personal-note-${note.noteId}`}>
-                                            <ListItemButton
-                                                selected={
-                                                    currentNote &&
-                                                    currentNote.noteId === note.noteId
-                                                        ? true
-                                                        : false
-                                                }
-                                                onClick={() => {
-                                                    LoadNote(note.noteId);
-                                                }}
-                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                            >
-                                                <Typography
-                                                    noWrap
-                                                    sx={{
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                        width: "100%", // take full width of button
-                                                        fontSize: "15px",
-                                                    }}
-                                                >
-                                                    {note.title}
-                                                </Typography>
-                                            </ListItemButton>
-                                        </ListItem>
-                                    );
-                                })}
-                            </List>
+                            <List>{noteMetaTree.map((root) => renderTree(root))}</List>
                         </Toggler>
                     </ListItem>
-
                     <ListItem>
                         <ListItemButton
                             selected={noteType === 2 ? true : false}
@@ -251,7 +294,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         >
                             <AssignmentRoundedIcon />
                             <ListItemContent>
-                                <Typography level="title-sm">Task Notes</Typography>
+                                <Typography level="title-sm">Task Notes (TBD)</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
@@ -264,7 +307,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         >
                             <QuestionAnswerRoundedIcon />
                             <ListItemContent>
-                                <Typography level="title-sm">Thread Notes</Typography>
+                                <Typography level="title-sm">Chat Notes (TBD)</Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>

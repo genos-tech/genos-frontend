@@ -19,4 +19,7 @@ export type NoteProps = {
     tsCreated: string;
     tsUpdated: string;
     error?: string;
+    children?: NoteProps[];
 };
+
+export type NoteMetaTreeNode = NoteMetaProps & { children: NoteMetaTreeNode[] };
