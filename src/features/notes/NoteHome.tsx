@@ -240,7 +240,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 noteMetaTree={noteMetaTree}
                                 noteType={noteType}
                                 setNoteType={setNoteType}
-                                noteMeta={myNoteMeta}
                                 setCurrentNote={setCurrentNote}
                                 currentNote={currentNote}
                                 tabContents={tabContents}
@@ -271,16 +270,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                                     myself={myself}
                                     setMyself={setMyself}
                                     noteType={noteType}
-                                    setNoteType={setNoteType}
-                                    noteMetaTree={noteMetaTree}
                                     currentNote={currentNote}
                                     setCurrentNote={setCurrentNote}
                                     currentNoteTitle={currentNoteTitle}
                                     setCurrentNoteTitle={setCurrentNoteTitle}
                                     setOpeningService={setOpeningService}
                                     setCurrentChat={setCurrentMainChat}
-                                    newlyCreatedNotes={newlyCreatedNotes}
-                                    setNewlyCreatedNotes={setNewlyCreatedNotes}
                                     myNoteMeta={myNoteMeta}
                                     setMyNoteMeta={setMyNoteMeta}
                                     tabContents={tabContents}

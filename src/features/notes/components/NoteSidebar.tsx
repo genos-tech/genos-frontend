@@ -66,7 +66,6 @@ type NoteSidebarProps = {
     noteMetaTree: NoteMetaTreeNode[];
     noteType: number;
     setNoteType: (value: number) => void;
-    noteMeta: NoteMetaProps[];
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
     tabContents: NoteProps[];
@@ -80,7 +79,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         noteMetaTree,
         noteType,
         setNoteType,
-        noteMeta,
         currentNote,
         setCurrentNote,
         tabContents,

@@ -6,7 +6,6 @@ import {
     Typography,
     Tooltip,
     IconButton,
-    Link,
     Button,
     FormControl,
     Input,
@@ -50,16 +49,12 @@ type NoteMainProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     noteType: number;
-    setNoteType: (value: number) => void;
-    noteMetaTree: NoteMetaTreeNode[];
     currentNote: NoteProps | null;
     setCurrentNote: (value: NoteProps) => void;
     currentNoteTitle: string;
     setCurrentNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    newlyCreatedNotes: NoteProps[];
-    setNewlyCreatedNotes: (value: NoteProps[]) => void;
     myNoteMeta: NoteMetaProps[];
     setMyNoteMeta: (value: NoteMetaProps[]) => void;
     tabContents: NoteProps[];
@@ -84,10 +79,6 @@ export const NoteMain = (props: NoteMainProps) => {
         setOpeningService,
         setCurrentChat,
         noteType,
-        setNoteType,
-        noteMetaTree,
-        newlyCreatedNotes,
-        setNewlyCreatedNotes,
         myNoteMeta,
         setMyNoteMeta,
         tabContents,
@@ -566,20 +557,25 @@ export const NoteMain = (props: NoteMainProps) => {
                                                         </Button>
                                                     </Box>
                                                 )}
-                                                <BnNoteEditor
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    noteType={noteType}
-                                                    socket={socket}
-                                                    teamMembers={teamMembers}
-                                                    body={body}
-                                                    setBody={setBody}
-                                                    setNoteBodyEdited={setNoteBodyEdited}
-                                                    setNoteBodySaved={setNoteBodySaved}
-                                                    setCurrentChat={setCurrentChat}
-                                                    setOpeningService={setOpeningService}
-                                                />
+                                                {currentNote && (
+                                                    <>
+                                                        <BnNoteEditor
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            noteType={noteType}
+                                                            socket={socket}
+                                                            teamMembers={teamMembers}
+                                                            currentNote={currentNote}
+                                                            body={body}
+                                                            setBody={setBody}
+                                                            setNoteBodyEdited={setNoteBodyEdited}
+                                                            setNoteBodySaved={setNoteBodySaved}
+                                                            setCurrentChat={setCurrentChat}
+                                                            setOpeningService={setOpeningService}
+                                                        />
+                                                    </>
+                                                )}
                                             </TabPanel>
                                         ))}
                                     </Tabs>

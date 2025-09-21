@@ -53,6 +53,11 @@ import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import "../../App.css";
+import { NoteProps } from "../../types/notes";
+import { useAuth } from "../../context/AuthContext";
+
+const base_url = import.meta.env.VITE_API_BASE_URL;
+const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnNoteEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -61,6 +66,7 @@ type BnNoteEditorProps = {
     noteType: number;
     socket: Socket | null;
     teamMembers: UserProps[];
+    currentNote: NoteProps;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
@@ -76,6 +82,7 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
         noteType,
         socket,
         teamMembers,
+        currentNote,
         body,
         setBody,
         setNoteBodyEdited,
@@ -85,6 +92,7 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
     } = props;
 
     const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
     const bnBoxClassName: string = `bn-note-body-box-${mode}`;
 
     // To avoid rendering issues, it's good practice to define your custom drag
@@ -130,15 +138,24 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
 
     // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
     async function uploadFile(file: File) {
-        // const body = new FormData();
-        // body.append("file", file);
-        // console.log(`file:http://localhost:3000/${file.name}`);
-        // const ret = await fetch("https://tmpfiles.org/api/v1/upload", {
-        //     method: "POST",
-        //     body: body,
-        // });
-        // return (await ret.json()).data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
-        return `http://localhost:8890/media/${file.name}`;
+        const formData = new FormData();
+        formData.append("note_attachment_file", file);
+        formData.append("note_id", String(currentNote.noteId));
+        formData.append("uploader", myself.userId);
+        const uploadNoteAttachmentResponse = await fetch(`${base_url}/note/personal/attachment/`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+        });
+        const uploadNoteAttachmentData = await uploadNoteAttachmentResponse.json();
+
+        if (!uploadNoteAttachmentResponse.ok) {
+            throw new Error(uploadNoteAttachmentData.message || "Attachment Upload Failed");
+        }
+
+        return `${django_url}/${uploadNoteAttachmentData.noteAttachmentUrl}`;
     }
 
     // We use the English, default dictionary
