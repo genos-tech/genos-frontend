@@ -33,11 +33,15 @@ import CheckIcon from "@mui/icons-material/Check";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
 import { BnNoteEditor } from "../../../components/blockNote/bnNoteEditor";
-import { NoteProps } from "../../../types/notes";
+import { NoteMetaProps, NoteProps } from "../../../types/notes";
 import { sendUpdatedNote } from "../services/sendUpdatedNote";
 import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
+import { createEmptyNote } from "../services/createEmptyNote";
+import { ModalDeleteNote } from "../modals/ModalDeleteNote";
+import { getData } from "../../../db/crud";
+import { STORES } from "../../../db/conf";
 
 type NoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -53,6 +57,10 @@ type NoteMainProps = {
     setCurrentNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
+    newlyCreatedNotes: NoteProps[];
+    setNewlyCreatedNotes: (value: NoteProps[]) => void;
+    myNoteMeta: NoteMetaProps[];
+    setMyNoteMeta: (value: NoteMetaProps[]) => void;
 };
 
 export const NoteMain = (props: NoteMainProps) => {
@@ -70,6 +78,10 @@ export const NoteMain = (props: NoteMainProps) => {
         setCurrentChat,
         noteType,
         setNoteType,
+        newlyCreatedNotes,
+        setNewlyCreatedNotes,
+        myNoteMeta,
+        setMyNoteMeta,
     } = props;
 
     const { accessToken } = useAuth();
@@ -178,6 +190,16 @@ export const NoteMain = (props: NoteMainProps) => {
         }
     }, [currentNote]);
 
+    const setNote = async (noteId: number) => {
+        const note: NoteProps = await getData({
+            storeName: STORES.NOTES,
+            key: noteId,
+        });
+        setTabContents([note]);
+        setCurrentNote(note);
+        setSelectedTabIndex(0);
+    };
+
     const handleCloseTab = (closedNoteId: number) => {
         if (tabContents.length > 1) {
             setTabContents((prev) => prev.filter((t) => t.noteId !== closedNoteId));
@@ -186,6 +208,8 @@ export const NoteMain = (props: NoteMainProps) => {
             } else {
                 setIsUpdatingTabContents(false);
             }
+        } else if (myNoteMeta.length > 0) {
+            setNote(myNoteMeta[0].noteId);
         }
     };
 
@@ -208,6 +232,27 @@ export const NoteMain = (props: NoteMainProps) => {
             )
         );
     }, [currentNoteTitle]);
+
+    const handleCreateNewNote = async () => {
+        const parentNoteId = null;
+        const title = `New Note (${newlyCreatedNotes.length + 1})`;
+        const newNote: NoteProps = await createEmptyNote(myself, parentNoteId, title, accessToken);
+        setNewlyCreatedNotes([...newlyCreatedNotes, newNote]);
+        setCurrentNote(newNote);
+        addNote(newNote);
+        setMyNoteMeta([
+            {
+                noteId: newNote.noteId,
+                parentNoteId: newNote.parentNoteId,
+                title: newNote.title,
+                tsCreated: newNote.tsCreated,
+                tsUpdated: newNote.tsUpdated,
+            },
+            ...myNoteMeta,
+        ]);
+    };
+
+    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
@@ -244,7 +289,7 @@ export const NoteMain = (props: NoteMainProps) => {
                                 direction="row"
                                 alignItems="center"
                                 justifyContent="space-between"
-                                sx={{ width: "100%", height: "30px", mt: "10px" }}
+                                sx={{ width: "100%", height: "30px", mt: "10px", mb: "3px" }}
                             >
                                 <Menu
                                     ref={breadcrumbsRef}
@@ -278,32 +323,66 @@ export const NoteMain = (props: NoteMainProps) => {
                                     </Link>
                                 </Breadcrumbs>
 
-                                <Dropdown>
-                                    <MenuButton
-                                        slots={{ root: IconButton }}
-                                        slotProps={{
-                                            root: { color: "neutral" },
-                                        }}
-                                    >
-                                        <MoreVert />
-                                    </MenuButton>
-                                    <Menu size="sm">
-                                        <MenuItem onClick={() => {}}>
-                                            <AddIcon />
-                                            New Note (TBD)
-                                        </MenuItem>
-                                        <MenuItem
-                                            onClick={() => {}}
-                                            sx={{
-                                                color: "red",
-                                                fontWeight: "bold",
+                                <Stack direction={"row"}>
+                                    <Tooltip title="Create a new my note" size="sm">
+                                        <IconButton
+                                            component="button"
+                                            size="sm"
+                                            variant="outlined"
+                                            color="neutral"
+                                            onClick={() => {
+                                                handleCreateNewNote();
+                                            }}
+                                            sx={{ px: "10px" }}
+                                        >
+                                            <PlaylistAddIcon />
+                                            New Note
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Dropdown>
+                                        <MenuButton
+                                            slots={{ root: IconButton }}
+                                            slotProps={{
+                                                root: { color: "neutral" },
                                             }}
                                         >
-                                            <DeleteIcon sx={{ color: "red" }} />
-                                            Delete Note (TBD)
-                                        </MenuItem>
-                                    </Menu>
-                                </Dropdown>
+                                            <MoreVert />
+                                        </MenuButton>
+                                        <Menu size="sm">
+                                            <MenuItem
+                                                onClick={() => {
+                                                    handleCreateNewNote();
+                                                }}
+                                            >
+                                                <AddIcon />
+                                                New Note
+                                            </MenuItem>
+                                            <MenuItem
+                                                onClick={() => {
+                                                    setOpenDeleteNote(true);
+                                                }}
+                                                sx={{
+                                                    color: "red",
+                                                    fontWeight: "bold",
+                                                }}
+                                            >
+                                                <DeleteIcon sx={{ color: "red" }} />
+                                                Delete Note
+                                            </MenuItem>
+                                        </Menu>
+                                    </Dropdown>
+                                </Stack>
+                                {currentNote && (
+                                    <ModalDeleteNote
+                                        myself={myself}
+                                        openDeleteNote={openDeleteNote}
+                                        setOpenDeleteNote={setOpenDeleteNote}
+                                        myNoteMeta={myNoteMeta}
+                                        setMyNoteMeta={setMyNoteMeta}
+                                        currentNote={currentNote}
+                                        handleCloseTab={handleCloseTab}
+                                    />
+                                )}
                             </Stack>
 
                             <Tabs

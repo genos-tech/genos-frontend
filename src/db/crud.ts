@@ -241,10 +241,10 @@ export const getAllData = async (storeName: string) => {
     return db.getAll(storeName);
 };
 
-export const deleteData = async (storeName: string, id: string) => {
+export const deleteData = async (props: any) => {
     const db = await initDB();
-    const tx = db.transaction(storeName, "readwrite");
-    await tx.store.delete(id);
+    const tx = db.transaction(props.storeName, "readwrite");
+    await tx.store.delete(props.key);
     await tx.done;
 };
 

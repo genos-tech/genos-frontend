@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import { useState, useEffect } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { Box, CssBaseline, Typography } from "@mui/joy";
+import { Box, CssBaseline } from "@mui/joy";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -15,7 +15,6 @@ import { loadNoteMeta } from "./services/loadNoteMeta";
 import { useAuth } from "../../context/AuthContext";
 import { getData } from "../../db/crud";
 import { STORES } from "../../db/conf";
-import { loadSpecificNote } from "./services/loadSpecificNote";
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -56,6 +55,8 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     const [currentNote, setCurrentNote] = useState<NoteProps | null>(null);
     const [currentNoteTitle, setCurrentNoteTitle] = useState<string>("");
+
+    const [newlyCreatedNotes, setNewlyCreatedNotes] = useState<NoteProps[]>([]);
 
     const [myNoteMeta, setMyNoteMeta] = useState<NoteMetaProps[]>([]);
     const [myTaskNoteMeta, setTaskNoteMeta] = useState<NoteMetaProps[]>([]);
@@ -162,6 +163,10 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 setCurrentNoteTitle={setCurrentNoteTitle}
                                 setOpeningService={setOpeningService}
                                 setCurrentChat={setCurrentMainChat}
+                                newlyCreatedNotes={newlyCreatedNotes}
+                                setNewlyCreatedNotes={setNewlyCreatedNotes}
+                                myNoteMeta={myNoteMeta}
+                                setMyNoteMeta={setMyNoteMeta}
                             />
                         </Box>
                     </Panel>
