@@ -57,8 +57,8 @@ type MyNoteMainProps = {
     setCurrentChat: (chat: ChatProps) => void;
     myNoteMeta: NoteMetaProps[];
     setMyNoteMeta: (value: NoteMetaProps[]) => void;
-    tabMyNotes: MyNoteProps[];
-    setTabMyNotes: (value: MyNoteProps[]) => void;
+    tabNotes: MyNoteProps[];
+    setTabNotes: (value: MyNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
@@ -81,8 +81,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         currentNoteType,
         myNoteMeta,
         setMyNoteMeta,
-        tabMyNotes,
-        setTabMyNotes,
+        tabNotes,
+        setTabNotes,
         selectedTabIndex,
         setSelectedTabIndex,
         handleCreateNewMyNote,
@@ -174,18 +174,18 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
             if (
                 isUpdatingTabContents === true &&
-                (tabMyNotes.length === 0 ||
-                    (tabMyNotes.length > 0 &&
-                        tabMyNotes.some((note) => note.noteId === currentMyNote.noteId)) === false)
+                (tabNotes.length === 0 ||
+                    (tabNotes.length > 0 &&
+                        tabNotes.some((note) => note.noteId === currentMyNote.noteId)) === false)
             ) {
                 // Add the clicked note to the tab.
-                setTabMyNotes([...tabMyNotes, currentMyNote]);
+                setTabNotes([...tabNotes, currentMyNote]);
                 // Also, update the index to the clicked note.
-                setSelectedTabIndex(tabMyNotes.length); // switch to new tab
+                setSelectedTabIndex(tabNotes.length); // switch to new tab
             } else {
                 // Update the index when an user click a note in the sidebar
                 setSelectedTabIndex(
-                    tabMyNotes.findIndex((note) => note.noteId === currentMyNote.noteId)
+                    tabNotes.findIndex((note) => note.noteId === currentMyNote.noteId)
                 );
             }
 
@@ -199,20 +199,20 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
             key: noteId,
         });
         if (note) {
-            setTabMyNotes([note]);
+            setTabNotes([note]);
             setCurrentMyNote(note);
         } else {
             // console.log("not four note in indexedDB:", note);
-            setTabMyNotes([]);
+            setTabNotes([]);
         }
         setSelectedTabIndex(0);
     };
 
     const handleCloseTab = (closedNoteId: number) => {
-        if (tabMyNotes.length > 1) {
-            setTabMyNotes(tabMyNotes.filter((t) => t.noteId !== closedNoteId));
-            if (selectedTabIndex >= tabMyNotes.length - 1) {
-                setSelectedTabIndex(tabMyNotes.length - 2); // fallback to previous tab
+        if (tabNotes.length > 1) {
+            setTabNotes(tabNotes.filter((t) => t.noteId !== closedNoteId));
+            if (selectedTabIndex >= tabNotes.length - 1) {
+                setSelectedTabIndex(tabNotes.length - 2); // fallback to previous tab
             } else {
                 setIsUpdatingTabContents(false);
             }
@@ -223,23 +223,23 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     useEffect(() => {
         if (isUpdatingTabContents === false) {
-            if (tabMyNotes[selectedTabIndex]) {
-                setCurrentMyNote(tabMyNotes[selectedTabIndex]);
+            if (tabNotes[selectedTabIndex]) {
+                setCurrentMyNote(tabNotes[selectedTabIndex]);
             }
         }
     }, [isUpdatingTabContents]);
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabMyNotes[selectedTabIndex]) {
-            setCurrentMyNote(tabMyNotes[selectedTabIndex]);
+        if (tabNotes[selectedTabIndex]) {
+            setCurrentMyNote(tabNotes[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
 
     // Update note title in the tab
     useEffect(() => {
-        setTabMyNotes(
-            tabMyNotes.map((u) =>
+        setTabNotes(
+            tabNotes.map((u) =>
                 u.noteId === currentMyNote?.noteId ? { ...u, title: currentMyNoteTitle } : u
             )
         );
@@ -292,31 +292,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
             {myNoteMeta.length > 0 && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
-                    {currentNoteType === 0 && (
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            sx={{ width: "100%" }}
-                        >
-                            <Typography fontSize="20px">Note Home</Typography>
-
-                            <Tooltip title="Create a new my note" size="sm">
-                                <IconButton
-                                    component="button"
-                                    size="sm"
-                                    variant="outlined"
-                                    color="neutral"
-                                    onClick={() => {}}
-                                    sx={{ px: "10px" }}
-                                >
-                                    <PlaylistAddIcon />
-                                    New Note
-                                </IconButton>
-                            </Tooltip>
-                        </Stack>
-                    )}
-
                     {body && (
                         <>
                             {currentNoteType !== 0 && (
@@ -364,7 +339,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         </Breadcrumbs>
 
                                         <Stack direction={"row"}>
-                                            <Tooltip title="Create a new my note" size="sm">
+                                            <Tooltip title="Create a New Note" size="sm">
                                                 <IconButton
                                                     component="button"
                                                     size="sm"
@@ -373,7 +348,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     onClick={() => {
                                                         handleCreateNewMyNote(null);
                                                     }}
-                                                    sx={{ px: "10px" }}
+                                                    sx={{ px: "10px", mb: "5px" }}
                                                 >
                                                     <PlaylistAddIcon />
                                                     New Note
@@ -385,6 +360,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     slotProps={{
                                                         root: { color: "neutral" },
                                                     }}
+                                                    sx={{ mb: "5px" }}
                                                 >
                                                     <MoreVert />
                                                 </MenuButton>
@@ -434,11 +410,11 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabMyNotes.length}`}
+                                        key={`tabs-${tabNotes.length}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
                                             // console.log("move tab to:", val);
-                                            setCurrentMyNote(tabMyNotes[Number(val)]);
+                                            setCurrentMyNote(tabNotes[Number(val)]);
                                             setSelectedTabIndex(Number(val));
                                         }}
                                         aria-label="Scrollable tabs"
@@ -452,7 +428,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 "&::-webkit-scrollbar": { display: "none" },
                                             }}
                                         >
-                                            {tabMyNotes.map((tab, index) => (
+                                            {tabNotes.map((tab, index) => (
                                                 <Tab
                                                     key={tab.noteId}
                                                     sx={{
@@ -475,7 +451,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                             ? `${tab.title.slice(0, 15)}...`
                                                             : tab.title}
 
-                                                        {tabMyNotes.length > 1 && (
+                                                        {tabNotes.length > 1 && (
                                                             <IconButton
                                                                 component="span"
                                                                 size="sm"
@@ -497,7 +473,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             ))}
                                         </TabList>
 
-                                        {tabMyNotes.map((tabNote, index) => (
+                                        {tabNotes.map((tabNote, index) => (
                                             <TabPanel
                                                 key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
                                                 value={index}

@@ -74,7 +74,7 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("baseCountry", "");
                 localStorage.setItem("customStatus", "");
                 localStorage.setItem("teamName", "");
-                localStorage.setItem("lastOpenNoteId", "");
+                localStorage.setItem("lastOpenMyNoteId", "");
                 localStorage.setItem("currentNoteType", "");
                 setAccessToken(null);
                 navigate("/");

@@ -57,8 +57,8 @@ type ChatHomeProps = {
     setCurrentChatNoteTitle: (value: string) => void;
     chatNoteMeta: NoteMetaProps[];
     setChatNoteMeta: (value: NoteMetaProps[]) => void;
-    tabChatNotes: ChatNoteProps[];
-    setTabChatNotes: (value: ChatNoteProps[]) => void;
+    tabNotes: any[];
+    setTabNotes: (value: any[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewChatNote: (
@@ -108,8 +108,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         setCurrentChatNoteTitle,
         chatNoteMeta,
         setChatNoteMeta,
-        tabChatNotes,
-        setTabChatNotes,
+        tabNotes,
+        setTabNotes,
         selectedTabIndex,
         setSelectedTabIndex,
         handleCreateNewChatNote,
@@ -908,23 +908,19 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     teamMembers={teamMembers}
                                                     myself={myself}
                                                     setMyself={setMyself}
-                                                    chatType={currentThreadChat.chatType}
-                                                    chatId={currentThreadChat.chatId}
-                                                    isThread={true}
-                                                    threadId={currentThreadChat.threadId}
-                                                    setOpeningService={setOpeningService}
-                                                    setCurrentChat={setCurrentMainChat}
-                                                    currentNoteType={currentNoteType}
-                                                    currentNote={currentChatNote}
+                                                    currentChatNote={currentChatNote}
                                                     setCurrentChatNote={setCurrentChatNote}
                                                     currentChatNoteTitle={currentChatNoteTitle}
                                                     setCurrentChatNoteTitle={
                                                         setCurrentChatNoteTitle
                                                     }
-                                                    chatNoteMeta={chatNoteMeta} // TODO: Use the correct note based on noteType
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentChat={setCurrentMainChat}
+                                                    currentNoteType={currentNoteType}
+                                                    chatNoteMeta={chatNoteMeta}
                                                     setChatNoteMeta={setChatNoteMeta}
-                                                    tabChatNotes={tabChatNotes}
-                                                    setTabChatNotes={setTabChatNotes}
+                                                    tabNotes={tabNotes}
+                                                    setTabNotes={setTabNotes}
                                                     selectedTabIndex={selectedTabIndex}
                                                     setSelectedTabIndex={setSelectedTabIndex}
                                                     handleCreateNewChatNote={

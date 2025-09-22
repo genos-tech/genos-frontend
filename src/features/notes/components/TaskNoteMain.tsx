@@ -57,8 +57,8 @@ type TaskNoteMainProps = {
     setCurrentChat: (chat: ChatProps) => void;
     taskNoteMeta: NoteMetaProps[];
     setTaskNoteMeta: (value: NoteMetaProps[]) => void;
-    tabTaskNotes: TaskNoteProps[];
-    setTabTaskNotes: (value: TaskNoteProps[]) => void;
+    tabNotes: TaskNoteProps[];
+    setTabNotes: (value: TaskNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
@@ -81,8 +81,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         currentNoteType,
         taskNoteMeta,
         setTaskNoteMeta,
-        tabTaskNotes,
-        setTabTaskNotes,
+        tabNotes,
+        setTabNotes,
         selectedTabIndex,
         setSelectedTabIndex,
         handleCreateNewTaskNote,
@@ -174,19 +174,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
             if (
                 isUpdatingTabContents === true &&
-                (tabTaskNotes.length === 0 ||
-                    (tabTaskNotes.length > 0 &&
-                        tabTaskNotes.some((note) => note.noteId === currentTaskNote.noteId)) ===
-                        false)
+                (tabNotes.length === 0 ||
+                    (tabNotes.length > 0 &&
+                        tabNotes.some((note) => note.noteId === currentTaskNote.noteId)) === false)
             ) {
                 // Add the clicked note to the tab.
-                setTabTaskNotes([...tabTaskNotes, currentTaskNote]);
+                setTabNotes([...tabNotes, currentTaskNote]);
                 // Also, update the index to the clicked note.
-                setSelectedTabIndex(tabTaskNotes.length); // switch to new tab
+                setSelectedTabIndex(tabNotes.length); // switch to new tab
             } else {
                 // Update the index when an user click a note in the sidebar
                 setSelectedTabIndex(
-                    tabTaskNotes.findIndex((note) => note.noteId === currentTaskNote.noteId)
+                    tabNotes.findIndex((note) => note.noteId === currentTaskNote.noteId)
                 );
             }
 
@@ -200,20 +199,20 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             key: noteId,
         });
         if (note) {
-            setTabTaskNotes([note]);
+            setTabNotes([note]);
             setCurrentTaskNote(note);
         } else {
             // console.log("not four note in indexedDB:", note);
-            setTabTaskNotes([]);
+            setTabNotes([]);
         }
         setSelectedTabIndex(0);
     };
 
     const handleCloseTab = (closedNoteId: number) => {
-        if (tabTaskNotes.length > 1) {
-            setTabTaskNotes(tabTaskNotes.filter((t) => t.noteId !== closedNoteId));
-            if (selectedTabIndex >= tabTaskNotes.length - 1) {
-                setSelectedTabIndex(tabTaskNotes.length - 2); // fallback to previous tab
+        if (tabNotes.length > 1) {
+            setTabNotes(tabNotes.filter((t) => t.noteId !== closedNoteId));
+            if (selectedTabIndex >= tabNotes.length - 1) {
+                setSelectedTabIndex(tabNotes.length - 2); // fallback to previous tab
             } else {
                 setIsUpdatingTabContents(false);
             }
@@ -224,23 +223,23 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     useEffect(() => {
         if (isUpdatingTabContents === false) {
-            if (tabTaskNotes[selectedTabIndex]) {
-                setCurrentTaskNote(tabTaskNotes[selectedTabIndex]);
+            if (tabNotes[selectedTabIndex]) {
+                setCurrentTaskNote(tabNotes[selectedTabIndex]);
             }
         }
     }, [isUpdatingTabContents]);
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabTaskNotes[selectedTabIndex]) {
-            setCurrentTaskNote(tabTaskNotes[selectedTabIndex]);
+        if (tabNotes[selectedTabIndex]) {
+            setCurrentTaskNote(tabNotes[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
 
     // Update note title in the tab
     useEffect(() => {
-        setTabTaskNotes(
-            tabTaskNotes.map((u) =>
+        setTabNotes(
+            tabNotes.map((u) =>
                 u.noteId === currentTaskNote?.noteId ? { ...u, title: currentTaskNoteTitle } : u
             )
         );
@@ -263,33 +262,32 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     return (
         <>
+            {taskNoteMeta.length === 0 && (
+                <Box
+                    sx={{
+                        height: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: "100%",
+                    }}
+                >
+                    <IconButton
+                        component="button"
+                        variant="soft"
+                        color="neutral"
+                        sx={{
+                            fontSize: "15px",
+                            padding: "10px",
+                        }}
+                    >
+                        Not Found
+                    </IconButton>
+                </Box>
+            )}
+
             {taskNoteMeta.length > 0 && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
-                    {currentNoteType === 0 && (
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            sx={{ width: "100%" }}
-                        >
-                            <Typography fontSize="20px">Note Home</Typography>
-
-                            <Tooltip title="Create a new my note" size="sm">
-                                <IconButton
-                                    component="button"
-                                    size="sm"
-                                    variant="outlined"
-                                    color="neutral"
-                                    onClick={() => {}}
-                                    sx={{ px: "10px" }}
-                                >
-                                    <PlaylistAddIcon />
-                                    New Note
-                                </IconButton>
-                            </Tooltip>
-                        </Stack>
-                    )}
-
                     {body && (
                         <>
                             {currentNoteType !== 0 && (
@@ -395,11 +393,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabTaskNotes.length}`}
+                                        key={`tabs-${tabNotes.length}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
                                             // console.log("move tab to:", val);
-                                            setCurrentTaskNote(tabTaskNotes[Number(val)]);
+                                            setCurrentTaskNote(tabNotes[Number(val)]);
                                             setSelectedTabIndex(Number(val));
                                         }}
                                         aria-label="Scrollable tabs"
@@ -413,7 +411,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 "&::-webkit-scrollbar": { display: "none" },
                                             }}
                                         >
-                                            {tabTaskNotes.map((tab, index) => (
+                                            {tabNotes.map((tab, index) => (
                                                 <Tab
                                                     key={tab.noteId}
                                                     sx={{
@@ -436,7 +434,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             ? `${tab.title.slice(0, 15)}...`
                                                             : tab.title}
 
-                                                        {tabTaskNotes.length > 1 && (
+                                                        {tabNotes.length > 1 && (
                                                             <IconButton
                                                                 component="span"
                                                                 size="sm"
@@ -458,7 +456,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             ))}
                                         </TabList>
 
-                                        {tabTaskNotes.map((tabNote, index) => (
+                                        {tabNotes.map((tabNote, index) => (
                                             <TabPanel
                                                 key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
                                                 value={index}

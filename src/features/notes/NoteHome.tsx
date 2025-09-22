@@ -1,9 +1,10 @@
 import { Socket } from "socket.io-client";
 import { useState, useEffect } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { Box, CssBaseline } from "@mui/joy";
+import { Box, CssBaseline, IconButton, Tooltip, Typography, Stack } from "@mui/joy";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { useColorScheme } from "@mui/joy/styles";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
 import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
@@ -114,12 +115,8 @@ type NoteHomeProps = {
     setTaskNoteMeta: (value: NoteMetaProps[]) => void;
     chatNoteMeta: NoteMetaProps[];
     setChatNoteMeta: (value: NoteMetaProps[]) => void;
-    tabMyNotes: MyNoteProps[];
-    setTabMyNotes: (value: MyNoteProps[]) => void;
-    tabTaskNotes: TaskNoteProps[];
-    setTabTaskNotes: (value: TaskNoteProps[]) => void;
-    tabChatNotes: ChatNoteProps[];
-    setTabChatNotes: (value: ChatNoteProps[]) => void;
+    tabNotes: any[];
+    setTabNotes: (value: any[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     newlyCreatedMyNotes: MyNoteProps[];
@@ -174,12 +171,8 @@ export const NoteHome = (props: NoteHomeProps) => {
         setTaskNoteMeta,
         chatNoteMeta,
         setChatNoteMeta,
-        tabMyNotes,
-        setTabMyNotes,
-        tabTaskNotes,
-        setTabTaskNotes,
-        tabChatNotes,
-        setTabChatNotes,
+        tabNotes,
+        setTabNotes,
         selectedTabIndex,
         setSelectedTabIndex,
         newlyCreatedMyNotes,
@@ -227,28 +220,30 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     const popInitialNote = async () => {
         const noteType: string | null = localStorage.getItem("currentNoteType");
-        const noteId: string | null = localStorage.getItem("lastOpenNoteId");
-        if (noteType && noteId) {
-            if (Number(noteType) === 1) {
+        const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
+        const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
+        const chatNoteId: string | null = localStorage.getItem("lastOpenChatNoteId");
+        if (noteType) {
+            if (Number(noteType) === 1 && myNoteId) {
                 const note: MyNoteProps = await getData({
                     storeName: STORES.PERSONAL_NOTES,
-                    key: Number(noteId),
+                    key: Number(myNoteId),
                 });
                 if (note) {
                     setCurrentMyNote(note);
                 }
-            } else if (Number(noteType) === 2) {
+            } else if (Number(noteType) === 2 && taskNoteId) {
                 const note: TaskNoteProps = await getData({
                     storeName: STORES.TASK_NOTES,
-                    key: Number(noteId),
+                    key: Number(taskNoteId),
                 });
                 if (note) {
                     setCurrentTaskNote(note);
                 }
-            } else if (Number(noteType) === 3) {
+            } else if (Number(noteType) === 3 && chatNoteId) {
                 const note: ChatNoteProps = await getData({
                     storeName: STORES.CHAT_NOTES,
-                    key: Number(noteId),
+                    key: Number(chatNoteId),
                 });
                 if (note) {
                     setCurrentChatNote(note);
@@ -266,9 +261,21 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     useEffect(() => {
         if (currentMyNote) {
-            localStorage.setItem("lastOpenNoteId", String(currentMyNote.noteId));
+            localStorage.setItem("lastOpenMyNoteId", String(currentMyNote.noteId));
         }
     }, [currentMyNote]);
+
+    useEffect(() => {
+        if (currentTaskNote) {
+            localStorage.setItem("lastOpenTaskNoteId", String(currentTaskNote.noteId));
+        }
+    }, [currentTaskNote]);
+
+    useEffect(() => {
+        if (currentChatNote) {
+            localStorage.setItem("lastOpenChatNoteId", String(currentChatNote.noteId));
+        }
+    }, [currentChatNote]);
 
     // Update note title in the sidebar
     useEffect(() => {
@@ -405,11 +412,13 @@ export const NoteHome = (props: NoteHomeProps) => {
                 );
             }
 
-            if (tabMyNotes.length === 0)
-                setTabMyNotes([
-                    ...tabMyNotes.filter((t) => t.noteId !== currentMyNote.noteId),
+            if (tabNotes.length === 0)
+                setTabNotes([
+                    ...tabNotes.filter((t) => t.noteId !== currentMyNote.noteId),
                     currentMyNote,
                 ]);
+        } else {
+            setCurrentMyNoteChain([]);
         }
     }, [currentMyNote]);
 
@@ -425,11 +434,13 @@ export const NoteHome = (props: NoteHomeProps) => {
                 );
             }
 
-            if (tabTaskNotes.length === 0)
-                setTabTaskNotes([
-                    ...tabTaskNotes.filter((t) => t.noteId !== currentTaskNote.noteId),
+            if (tabNotes.length === 0)
+                setTabNotes([
+                    ...tabNotes.filter((t) => t.noteId !== currentTaskNote.noteId),
                     currentTaskNote,
                 ]);
+        } else {
+            setCurrentTaskNoteChain([]);
         }
     }, [currentTaskNote]);
 
@@ -445,11 +456,13 @@ export const NoteHome = (props: NoteHomeProps) => {
                 );
             }
 
-            if (tabChatNotes.length === 0)
-                setTabChatNotes([
-                    ...tabChatNotes.filter((t) => t.noteId !== currentChatNote.noteId),
+            if (tabNotes.length === 0)
+                setTabNotes([
+                    ...tabNotes.filter((t) => t.noteId !== currentChatNote.noteId),
                     currentChatNote,
                 ]);
+        } else {
+            setCurrentChatNoteChain([]);
         }
     }, [currentChatNote]);
 
@@ -464,7 +477,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         if (currentChatNoteChain === undefined && chatNoteMeta.length === 0) {
             setCurrentChatNoteChain([]);
         }
-    }, []);
+    }, [myNoteMeta, taskNoteMeta, chatNoteMeta]);
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -492,20 +505,16 @@ export const NoteHome = (props: NoteHomeProps) => {
                             myNoteMetaTree={myNoteMetaTree}
                             currentMyNote={currentMyNote}
                             setCurrentMyNote={setCurrentMyNote}
-                            tabMyNotes={tabMyNotes}
                             handleCreateNewMyNote={handleCreateNewMyNote}
                             currentMyNoteChain={currentMyNoteChain}
                             taskNoteMetaTree={taskNoteMetaTree}
                             currentTaskNote={currentTaskNote}
                             setCurrentTaskNote={setCurrentTaskNote}
-                            tabTaskNotes={tabTaskNotes}
-                            handleCreateNewTaskNote={handleCreateNewTaskNote}
                             currentTaskNoteChain={currentTaskNoteChain}
                             chatNoteMetaTree={chatNoteMetaTree}
                             currentChatNote={currentChatNote}
                             setCurrentChatNote={setCurrentChatNote}
-                            tabChatNotes={tabChatNotes}
-                            handleCreateNewChatNote={handleCreateNewChatNote}
+                            tabNotes={tabNotes}
                             currentChatNoteChain={currentChatNoteChain}
                             allNoteIdChains={allNoteIdChains}
                         />
@@ -521,82 +530,113 @@ export const NoteHome = (props: NoteHomeProps) => {
                         className="resize-handle"
                     />
 
-                    <Panel id={"2"} order={2} minSize={50} maxSize={85}>
-                        <Box sx={{ paddingX: 1, height: "100dvh" }}>
-                            {currentNoteType === 1 && currentMyNoteChain && (
-                                <MyNoteMain
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    socket={socket}
-                                    teamMembers={teamMembers}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    currentNoteType={currentNoteType}
-                                    currentMyNote={currentMyNote}
-                                    setCurrentMyNote={setCurrentMyNote}
-                                    currentMyNoteTitle={currentMyNoteTitle}
-                                    setCurrentMyNoteTitle={setCurrentMyNoteTitle}
-                                    setOpeningService={setOpeningService}
-                                    setCurrentChat={setCurrentMainChat}
-                                    myNoteMeta={myNoteMeta} // TODO: Use the correct note based on noteType
-                                    setMyNoteMeta={setMyNoteMeta}
-                                    tabMyNotes={tabMyNotes}
-                                    setTabMyNotes={setTabMyNotes}
-                                    selectedTabIndex={selectedTabIndex}
-                                    setSelectedTabIndex={setSelectedTabIndex}
-                                    handleCreateNewMyNote={handleCreateNewMyNote}
-                                    currentMyNoteChain={currentMyNoteChain}
-                                />
-                            )}
-                            {currentNoteType === 2 && currentTaskNoteChain && (
-                                <TaskNoteMain
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    socket={socket}
-                                    teamMembers={teamMembers}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    currentNoteType={currentNoteType}
-                                    currentTaskNote={currentTaskNote}
-                                    setCurrentTaskNote={setCurrentTaskNote}
-                                    currentTaskNoteTitle={currentTaskNoteTitle}
-                                    setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
-                                    setOpeningService={setOpeningService}
-                                    setCurrentChat={setCurrentMainChat}
-                                    taskNoteMeta={taskNoteMeta}
-                                    setTaskNoteMeta={setTaskNoteMeta}
-                                    tabTaskNotes={tabTaskNotes}
-                                    setTabTaskNotes={setTabTaskNotes}
-                                    selectedTabIndex={selectedTabIndex}
-                                    setSelectedTabIndex={setSelectedTabIndex}
-                                    handleCreateNewTaskNote={handleCreateNewTaskNote}
-                                    currentTaskNoteChain={currentTaskNoteChain}
-                                />
-                            )}
-                            {currentNoteType === 3 && currentChatNoteChain && (
-                                <ChatNoteMain
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    socket={socket}
-                                    teamMembers={teamMembers}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    currentChatNote={currentChatNote}
-                                    setCurrentChatNote={setCurrentChatNote}
-                                    currentChatNoteTitle={currentChatNoteTitle}
-                                    setCurrentChatNoteTitle={setCurrentChatNoteTitle}
-                                    setOpeningService={setOpeningService}
-                                    setCurrentChat={setCurrentMainChat}
-                                    currentNoteType={currentNoteType}
-                                    chatNoteMeta={chatNoteMeta}
-                                    setChatNoteMeta={setChatNoteMeta}
-                                    tabChatNotes={tabChatNotes}
-                                    setTabChatNotes={setTabChatNotes}
-                                    selectedTabIndex={selectedTabIndex}
-                                    setSelectedTabIndex={setSelectedTabIndex}
-                                    handleCreateNewChatNote={handleCreateNewChatNote}
-                                    currentChatNoteChain={currentChatNoteChain}
-                                />
-                            )}
-                        </Box>
-                    </Panel>
+                    {currentNoteType === 0 && (
+                        <Panel id={"2"} order={2} minSize={50} maxSize={85}>
+                            <Box sx={{ paddingX: 1, height: "100dvh" }}>
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    justifyContent="space-between"
+                                    sx={{ width: "100%" }}
+                                >
+                                    <Typography fontSize="20px">Note Home</Typography>
+
+                                    <Tooltip title="Create a New Note" size="sm">
+                                        <IconButton
+                                            component="button"
+                                            size="sm"
+                                            variant="outlined"
+                                            color="neutral"
+                                            onClick={() => {}}
+                                            sx={{ px: "10px" }}
+                                        >
+                                            <PlaylistAddIcon />
+                                            New Note
+                                        </IconButton>
+                                    </Tooltip>
+                                </Stack>
+                            </Box>
+                        </Panel>
+                    )}
+
+                    {currentNoteType !== 0 && (
+                        <Panel id={"2"} order={2} minSize={50} maxSize={85}>
+                            <Box sx={{ paddingX: 1, height: "100dvh" }}>
+                                {currentNoteType === 1 && currentMyNoteChain && (
+                                    <MyNoteMain
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        socket={socket}
+                                        teamMembers={teamMembers}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        currentNoteType={currentNoteType}
+                                        currentMyNote={currentMyNote}
+                                        setCurrentMyNote={setCurrentMyNote}
+                                        currentMyNoteTitle={currentMyNoteTitle}
+                                        setCurrentMyNoteTitle={setCurrentMyNoteTitle}
+                                        setOpeningService={setOpeningService}
+                                        setCurrentChat={setCurrentMainChat}
+                                        myNoteMeta={myNoteMeta} // TODO: Use the correct note based on noteType
+                                        setMyNoteMeta={setMyNoteMeta}
+                                        tabNotes={tabNotes}
+                                        setTabNotes={setTabNotes}
+                                        selectedTabIndex={selectedTabIndex}
+                                        setSelectedTabIndex={setSelectedTabIndex}
+                                        handleCreateNewMyNote={handleCreateNewMyNote}
+                                        currentMyNoteChain={currentMyNoteChain}
+                                    />
+                                )}
+                                {currentNoteType === 2 && currentTaskNoteChain && (
+                                    <TaskNoteMain
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        socket={socket}
+                                        teamMembers={teamMembers}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        currentNoteType={currentNoteType}
+                                        currentTaskNote={currentTaskNote}
+                                        setCurrentTaskNote={setCurrentTaskNote}
+                                        currentTaskNoteTitle={currentTaskNoteTitle}
+                                        setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
+                                        setOpeningService={setOpeningService}
+                                        setCurrentChat={setCurrentMainChat}
+                                        taskNoteMeta={taskNoteMeta}
+                                        setTaskNoteMeta={setTaskNoteMeta}
+                                        tabNotes={tabNotes}
+                                        setTabNotes={setTabNotes}
+                                        selectedTabIndex={selectedTabIndex}
+                                        setSelectedTabIndex={setSelectedTabIndex}
+                                        handleCreateNewTaskNote={handleCreateNewTaskNote}
+                                        currentTaskNoteChain={currentTaskNoteChain}
+                                    />
+                                )}
+                                {currentNoteType === 3 && currentChatNoteChain && (
+                                    <ChatNoteMain
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        socket={socket}
+                                        teamMembers={teamMembers}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        currentChatNote={currentChatNote}
+                                        setCurrentChatNote={setCurrentChatNote}
+                                        currentChatNoteTitle={currentChatNoteTitle}
+                                        setCurrentChatNoteTitle={setCurrentChatNoteTitle}
+                                        setOpeningService={setOpeningService}
+                                        setCurrentChat={setCurrentMainChat}
+                                        currentNoteType={currentNoteType}
+                                        chatNoteMeta={chatNoteMeta}
+                                        setChatNoteMeta={setChatNoteMeta}
+                                        tabNotes={tabNotes}
+                                        setTabNotes={setTabNotes}
+                                        selectedTabIndex={selectedTabIndex}
+                                        setSelectedTabIndex={setSelectedTabIndex}
+                                        handleCreateNewChatNote={handleCreateNewChatNote}
+                                        currentChatNoteChain={currentChatNoteChain}
+                                    />
+                                )}
+                            </Box>
+                        </Panel>
+                    )}
                 </PanelGroup>
 
                 {/* Hover Animation with CSS */}

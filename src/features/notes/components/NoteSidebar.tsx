@@ -75,26 +75,16 @@ type NoteSidebarProps = {
     myNoteMetaTree: MyNoteMetaTreeNode[];
     currentMyNote: MyNoteProps | null;
     setCurrentMyNote: (value: MyNoteProps) => void;
-    tabMyNotes: MyNoteProps[];
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
     currentMyNoteChain?: MyNoteMetaTreeNode[];
     taskNoteMetaTree: TaskNoteMetaTreeNode[];
     currentTaskNote: TaskNoteProps | null;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
-    tabTaskNotes: TaskNoteProps[];
-    handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
     chatNoteMetaTree: ChatNoteMetaTreeNode[];
     currentChatNote: ChatNoteProps | null;
     setCurrentChatNote: (value: ChatNoteProps) => void;
-    tabChatNotes: ChatNoteProps[];
-    handleCreateNewChatNote: (
-        parentNoteId: number | null,
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => Promise<void>;
+    tabNotes: any[];
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
     allNoteIdChains: Record<number, number[]>;
 };
@@ -106,20 +96,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         myNoteMetaTree,
         currentMyNote,
         setCurrentMyNote,
-        tabMyNotes,
         handleCreateNewMyNote,
         currentMyNoteChain,
         taskNoteMetaTree,
         currentTaskNote,
         setCurrentTaskNote,
-        tabTaskNotes,
-        handleCreateNewTaskNote,
         currentTaskNoteChain,
         chatNoteMetaTree,
         currentChatNote,
         setCurrentChatNote,
-        tabChatNotes,
-        handleCreateNewChatNote,
+        tabNotes,
         currentChatNoteChain,
         allNoteIdChains,
     } = props;
@@ -207,7 +193,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             tmpCurrentMyNoteChain.some(
                                 (chainedNote) => chainedNote.noteId === node.noteId
                             ) ||
-                            tabMyNotes.some((tabNote) =>
+                            tabNotes.some((tabNote) =>
                                 allNoteIdChains[tabNote.noteId]?.some(
                                     (chainedNoteId) => chainedNoteId === node.noteId
                                 )
@@ -289,7 +275,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             tmpCurrentTaskNoteChain.some(
                                 (chainedNote) => chainedNote.noteId === node.noteId
                             ) ||
-                            tabTaskNotes.some((tabNote) =>
+                            tabNotes.some((tabNote) =>
                                 allNoteIdChains[tabNote.noteId]?.some(
                                     (chainedNoteId) => chainedNoteId === node.noteId
                                 )
@@ -350,7 +336,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             tmpCurrentChatNoteChain.some(
                                 (chainedNote) => chainedNote.noteId === node.noteId
                             ) ||
-                            tabChatNotes.some((tabNote) =>
+                            tabNotes.some((tabNote) =>
                                 allNoteIdChains[tabNote.noteId]?.some(
                                     (chainedNoteId) => chainedNoteId === node.noteId
                                 )
