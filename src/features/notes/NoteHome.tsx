@@ -232,24 +232,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         popInitialNote();
     }, []);
 
-    useEffect(() => {
-        if (currentMyNote) {
-            localStorage.setItem("lastOpenMyNoteId", String(currentMyNote.noteId));
-        }
-    }, [currentMyNote]);
-
-    useEffect(() => {
-        if (currentTaskNote) {
-            localStorage.setItem("lastOpenTaskNoteId", String(currentTaskNote.noteId));
-        }
-    }, [currentTaskNote]);
-
-    useEffect(() => {
-        if (currentChatNote) {
-            localStorage.setItem("lastOpenChatNoteId", String(currentChatNote.noteId));
-        }
-    }, [currentChatNote]);
-
     // Update note title in the sidebar
     useEffect(() => {
         setMyNoteMeta(
@@ -384,12 +366,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     chain.map((item) => item.noteId)
                 );
             }
-
-            if (tabNotes.length === 0)
-                setTabNotes([
-                    ...tabNotes.filter((t) => t.noteId !== currentMyNote.noteId),
-                    currentMyNote,
-                ]);
+            if (tabNotes.length === 0) setTabNotes([currentMyNote]);
         } else {
             setCurrentMyNoteChain([]);
         }
@@ -407,11 +384,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                 );
             }
 
-            if (tabNotes.length === 0)
-                setTabNotes([
-                    ...tabNotes.filter((t) => t.noteId !== currentTaskNote.noteId),
-                    currentTaskNote,
-                ]);
+            if (tabNotes.length === 0) setTabNotes([currentTaskNote]);
         } else {
             setCurrentTaskNoteChain([]);
         }
@@ -429,11 +402,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                 );
             }
 
-            if (tabNotes.length === 0)
-                setTabNotes([
-                    ...tabNotes.filter((t) => t.noteId !== currentChatNote.noteId),
-                    currentChatNote,
-                ]);
+            if (tabNotes.length === 0) setTabNotes([currentChatNote]);
         } else {
             setCurrentChatNoteChain([]);
         }

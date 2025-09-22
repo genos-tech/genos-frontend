@@ -17,6 +17,7 @@ import {
     Tab,
     Dropdown,
     MenuButton,
+    Tooltip,
 } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 import CloseIcon from "@mui/icons-material/Close";
@@ -26,6 +27,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
@@ -39,6 +41,7 @@ import { ModalDeleteChatNote } from "../modals/ModalDeleteChatNote";
 import { getData } from "../../../db/crud";
 import { STORES } from "../../../db/conf";
 import { loadSpecificNote } from "../services/loadSpecificNote";
+import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 type ChatNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -123,6 +126,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
     const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
+
+    const [openSearchBox, setOpenSearchBox] = useState(false);
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
@@ -308,11 +313,27 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         sx={{
                                             width: "100%",
                                             height: "30px",
-                                            mt: "10px",
+                                            mt: isInChatPage === true ? "0px" : "10px",
                                             mb: "3px",
                                         }}
                                     >
-                                        {isInChatPage === true && <Box>Sub Notes (TBD)</Box>}
+                                        {isInChatPage === true && currentChatNote && (
+                                            <Box
+                                                sx={{
+                                                    ml: "5px",
+                                                    mb: "10px",
+                                                    width: "40%",
+                                                }}
+                                            >
+                                                <ACChatChildNotes
+                                                    myself={myself}
+                                                    noteId={currentChatNote.noteId}
+                                                    openSearchBox={openSearchBox}
+                                                    setOpenSearchBox={setOpenSearchBox}
+                                                    setCurrentChatNote={setCurrentChatNote}
+                                                />
+                                            </Box>
+                                        )}
                                         {isInChatPage === false && (
                                             <>
                                                 <Breadcrumbs
@@ -345,10 +366,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                     fontWeight: "bold",
                                                                 }}
                                                             >
-                                                                {node.title.length > 15
+                                                                {node.title.length > 20
                                                                     ? `${node.title.slice(
                                                                           0,
-                                                                          15
+                                                                          20
                                                                       )}...`
                                                                     : node.title}
                                                             </Typography>
@@ -358,6 +379,47 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         )}
 
                                         <Stack direction={"row"}>
+                                            {isInChatPage && currentChatNote && (
+                                                <IconButton
+                                                    component="button"
+                                                    variant="plain"
+                                                    color="neutral"
+                                                    sx={{
+                                                        fontSize: "14px",
+                                                        paddingRight: "10px",
+                                                        height: "5px",
+                                                    }}
+                                                    onClick={() => {
+                                                        handleCreateNewChatNote(
+                                                            currentChatNote.noteId,
+                                                            currentChatNote.chatType,
+                                                            currentChatNote.chatId,
+                                                            currentChatNote.isThread,
+                                                            currentChatNote.threadId
+                                                        );
+                                                    }}
+                                                >
+                                                    <AddIcon />
+                                                    Child Note
+                                                </IconButton>
+                                            )}
+
+                                            {isInChatPage && (
+                                                <Tooltip title="Open in Notes">
+                                                    <IconButton
+                                                        size="sm"
+                                                        color="neutral"
+                                                        variant="plain"
+                                                        sx={{ mb: "5px" }}
+                                                        onClick={() => {
+                                                            setOpeningService(3);
+                                                        }}
+                                                    >
+                                                        <OpenInNewIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+
                                             <Dropdown>
                                                 <MenuButton
                                                     slots={{ root: IconButton }}
@@ -455,8 +517,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             maxWidth: "200px",
                                                         }}
                                                     >
-                                                        {tab.title.length > 15
-                                                            ? `${tab.title.slice(0, 15)}...`
+                                                        {tab.title.length > 20
+                                                            ? `${tab.title.slice(0, 20)}...`
                                                             : tab.title}
 
                                                         {tabNotes.length > 1 && (

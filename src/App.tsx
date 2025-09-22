@@ -336,8 +336,10 @@ export const App = () => {
                 setSelectedTabIndex(0);
                 setTabNotes([newNote]);
             } else {
+                if (tabNotes.some((note) => note.noteId === newNote.noteId) === false) {
+                    setTabNotes([...tabNotes, newNote]);
+                }
                 setSelectedTabIndex(tabNotes.length);
-                setTabNotes([...tabNotes, newNote]);
             }
             setCurrentChatNote(newNote);
             setCurrentChatNoteTitle(newNote.title);
@@ -395,6 +397,24 @@ export const App = () => {
             setChatNoteMeta(loadedNotes);
         }
     };
+
+    useEffect(() => {
+        if (currentMyNote) {
+            localStorage.setItem("lastOpenMyNoteId", String(currentMyNote.noteId));
+        }
+    }, [currentMyNote]);
+
+    useEffect(() => {
+        if (currentTaskNote) {
+            localStorage.setItem("lastOpenTaskNoteId", String(currentTaskNote.noteId));
+        }
+    }, [currentTaskNote]);
+
+    useEffect(() => {
+        if (currentChatNote) {
+            localStorage.setItem("lastOpenChatNoteId", String(currentChatNote.noteId));
+        }
+    }, [currentChatNote]);
 
     // Inbox variables
     const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);

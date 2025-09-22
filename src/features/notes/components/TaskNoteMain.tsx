@@ -328,8 +328,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             fontWeight: "bold",
                                                         }}
                                                     >
-                                                        {node.title.length > 15
-                                                            ? `${node.title.slice(0, 15)}...`
+                                                        {node.title.length > 20
+                                                            ? `${node.title.slice(0, 20)}...`
                                                             : node.title}
                                                     </Typography>
                                                 ))}
@@ -430,8 +430,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             maxWidth: "200px",
                                                         }}
                                                     >
-                                                        {tab.title.length > 15
-                                                            ? `${tab.title.slice(0, 15)}...`
+                                                        {tab.title.length > 20
+                                                            ? `${tab.title.slice(0, 20)}...`
                                                             : tab.title}
 
                                                         {tabNotes.length > 1 && (
