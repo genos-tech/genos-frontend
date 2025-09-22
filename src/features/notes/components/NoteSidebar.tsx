@@ -17,6 +17,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AddIcon from "@mui/icons-material/Add";
+import ShareIcon from "@mui/icons-material/Share";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
@@ -560,6 +561,46 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             )}
                         >
                             <List>{chatNoteMetaTree.map((root) => renderChatNoteTree(root))}</List>
+                        </Toggler>
+                    </ListItem>
+
+                    <ListItem nested>
+                        <Toggler
+                            defaultExpanded={true}
+                            renderToggle={({ open, setOpen }) => (
+                                <ListItemButton
+                                    selected={currentNoteType === 4 ? true : false}
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => {
+                                        setOpen(!open);
+                                        setCurrentNoteType(4);
+                                        localStorage.setItem("currentNoteType", "4");
+                                    }}
+                                >
+                                    <ShareIcon />
+                                    <ListItemContent>
+                                        <Typography level="title-sm">
+                                            Shared Notes (TBD)
+                                        </Typography>
+                                    </ListItemContent>
+                                    <KeyboardArrowDownIcon
+                                        sx={[
+                                            open
+                                                ? {
+                                                      transform: "rotate(180deg)",
+                                                  }
+                                                : {
+                                                      transform: "none",
+                                                  },
+                                        ]}
+                                    />
+                                </ListItemButton>
+                            )}
+                        >
+                            <ListItemContent>
+                                <Typography level="title-sm"></Typography>
+                            </ListItemContent>
                         </Toggler>
                     </ListItem>
                 </List>

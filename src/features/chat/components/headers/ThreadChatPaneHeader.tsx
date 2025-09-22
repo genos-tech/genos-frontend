@@ -25,6 +25,12 @@ type ThreadChatPaneHeaderProps = {
     currentPreviewTask?: TaskProps;
     currentPreviewTaskId: number;
     setIsNoteVisible: (value: boolean) => void;
+    handleCreateNewChatNoteIfNotExist: (
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
@@ -42,6 +48,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         currentPreviewTask,
         currentPreviewTaskId,
         setIsNoteVisible,
+        handleCreateNewChatNoteIfNotExist,
     } = props;
     const { mode } = useColorScheme();
 
@@ -183,13 +190,19 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Tooltip title="New Note (TBD)" size="sm">
+                <Tooltip title="Open Note" size="sm">
                     <IconButton
                         component="a"
                         size="sm"
                         variant="plain"
                         color="neutral"
                         onClick={() => {
+                            handleCreateNewChatNoteIfNotExist(
+                                thread.chatType,
+                                thread.chatId,
+                                true,
+                                thread.threadId
+                            );
                             setIsNoteVisible(true);
                             setIsMainChatVisible(false);
                             setIsThreadVisible(true);

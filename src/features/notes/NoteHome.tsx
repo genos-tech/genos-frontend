@@ -20,13 +20,9 @@ import {
     TaskNoteMetaTreeNode,
     ChatNoteMetaTreeNode,
 } from "../../types/notes";
-import { loadMyNoteMeta } from "./services/loadMyNoteMeta";
-import { useAuth } from "../../context/AuthContext";
 import { getData } from "../../db/crud";
 import { STORES } from "../../db/conf";
 import { ChatNoteMain } from "./components/ChatNoteMain";
-import { loadTaskNoteMeta } from "./services/loadTaskNoteMeta";
-import { loadChatNoteMeta } from "./services/loadChatNoteMeta";
 import { TaskNoteMain } from "./components/TaskNoteMain";
 
 // Build a tree structure
@@ -197,26 +193,6 @@ export const NoteHome = (props: NoteHomeProps) => {
     } = props;
 
     const { mode } = useColorScheme();
-    const { accessToken } = useAuth();
-
-    const getMyNoteMeta = async () => {
-        const loadedNotes: NoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setMyNoteMeta(loadedNotes);
-        }
-    };
-    const getTaskNoteMeta = async () => {
-        const loadedNotes: NoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setTaskNoteMeta(loadedNotes);
-        }
-    };
-    const getChatNoteMeta = async () => {
-        const loadedNotes: NoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setChatNoteMeta(loadedNotes);
-        }
-    };
 
     const popInitialNote = async () => {
         const noteType: string | null = localStorage.getItem("currentNoteType");
@@ -253,9 +229,6 @@ export const NoteHome = (props: NoteHomeProps) => {
     };
 
     useEffect(() => {
-        getMyNoteMeta();
-        getTaskNoteMeta();
-        getChatNoteMeta();
         popInitialNote();
     }, []);
 
@@ -632,6 +605,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setSelectedTabIndex={setSelectedTabIndex}
                                         handleCreateNewChatNote={handleCreateNewChatNote}
                                         currentChatNoteChain={currentChatNoteChain}
+                                        isInChatPage={false}
                                     />
                                 )}
                             </Box>

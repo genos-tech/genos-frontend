@@ -68,6 +68,12 @@ type ChatHomeProps = {
         isThread: boolean,
         threadId: number
     ) => Promise<void>;
+    handleCreateNewChatNoteIfNotExist: (
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
 };
 
@@ -113,6 +119,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         selectedTabIndex,
         setSelectedTabIndex,
         handleCreateNewChatNote,
+        handleCreateNewChatNoteIfNotExist,
         currentChatNoteChain,
     } = props;
 
@@ -499,6 +506,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     currentPreviewTaskId={currentPreviewTaskId}
                                                     setIsNoteVisible={setIsNoteVisible}
+                                                    handleCreateNewChatNoteIfNotExist={
+                                                        handleCreateNewChatNoteIfNotExist
+                                                    }
                                                 />
                                             </Box>
                                         </Panel>
@@ -708,6 +718,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setCurrentMainChat={setCurrentMainChat}
                                             currentPreviewTaskId={currentPreviewTaskId}
                                             setIsNoteVisible={setIsNoteVisible}
+                                            handleCreateNewChatNoteIfNotExist={
+                                                handleCreateNewChatNoteIfNotExist
+                                            }
                                         />
                                     </Box>
                                 </Panel>
@@ -927,6 +940,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                         handleCreateNewChatNote
                                                     }
                                                     currentChatNoteChain={currentChatNoteChain}
+                                                    isInChatPage={true}
                                                 />
                                             </Box>
                                         </Panel>

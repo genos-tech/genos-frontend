@@ -41,6 +41,12 @@ type MessagesPaneProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     currentPreviewTaskId: number;
     setIsNoteVisible: (value: boolean) => void;
+    handleCreateNewChatNoteIfNotExist: (
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -67,6 +73,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         setCurrentMainChat,
         currentPreviewTaskId,
         setIsNoteVisible,
+        handleCreateNewChatNoteIfNotExist,
     } = props;
 
     const { accessToken } = useAuth();
@@ -218,6 +225,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         currentPreviewTask={currentPreviewTask}
                         currentPreviewTaskId={currentPreviewTaskId}
                         setIsNoteVisible={setIsNoteVisible}
+                        handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
                     />
 
                     <Box sx={{ px: 0.3, my: 0.2 }}>

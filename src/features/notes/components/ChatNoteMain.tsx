@@ -4,7 +4,6 @@ import {
     Box,
     Stack,
     Typography,
-    Tooltip,
     IconButton,
     Button,
     FormControl,
@@ -22,7 +21,6 @@ import {
 import { PartialBlock } from "@blocknote/core";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
@@ -69,6 +67,7 @@ type ChatNoteMainProps = {
         threadId: number
     ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
+    isInChatPage: boolean;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -93,6 +92,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setSelectedTabIndex,
         handleCreateNewChatNote,
         currentChatNoteChain,
+        isInChatPage,
     } = props;
 
     const { accessToken } = useAuth();
@@ -312,37 +312,50 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             mb: "3px",
                                         }}
                                     >
-                                        <Breadcrumbs separator="›" aria-label="breadcrumbs">
-                                            <Typography
-                                                level="body-sm"
-                                                startDecorator={<QuestionAnswerRoundedIcon />}
-                                            >
-                                                Chat Notes
-                                            </Typography>
-                                            {currentChatNoteChain &&
-                                                currentChatNoteChain.map((node) => (
+                                        {isInChatPage === true && <Box>Sub Notes (TBD)</Box>}
+                                        {isInChatPage === false && (
+                                            <>
+                                                <Breadcrumbs
+                                                    separator="›"
+                                                    aria-label="breadcrumbs"
+                                                >
                                                     <Typography
-                                                        level="title-sm"
-                                                        component="button"
-                                                        onClick={() => {
-                                                            LoadNote(node.noteId);
-                                                        }}
-                                                        sx={{
-                                                            background: "none",
-                                                            border: "none",
-                                                            padding: 0,
-                                                            cursor: "pointer",
-                                                            color: "#646CFF",
-                                                            textAlign: "left",
-                                                            fontWeight: "bold",
-                                                        }}
+                                                        level="body-sm"
+                                                        startDecorator={
+                                                            <QuestionAnswerRoundedIcon />
+                                                        }
                                                     >
-                                                        {node.title.length > 15
-                                                            ? `${node.title.slice(0, 15)}...`
-                                                            : node.title}
+                                                        Chat Notes
                                                     </Typography>
-                                                ))}
-                                        </Breadcrumbs>
+                                                    {currentChatNoteChain &&
+                                                        currentChatNoteChain.map((node) => (
+                                                            <Typography
+                                                                level="title-sm"
+                                                                component="button"
+                                                                onClick={() => {
+                                                                    LoadNote(node.noteId);
+                                                                }}
+                                                                sx={{
+                                                                    background: "none",
+                                                                    border: "none",
+                                                                    padding: 0,
+                                                                    cursor: "pointer",
+                                                                    color: "#646CFF",
+                                                                    textAlign: "left",
+                                                                    fontWeight: "bold",
+                                                                }}
+                                                            >
+                                                                {node.title.length > 15
+                                                                    ? `${node.title.slice(
+                                                                          0,
+                                                                          15
+                                                                      )}...`
+                                                                    : node.title}
+                                                            </Typography>
+                                                        ))}
+                                                </Breadcrumbs>
+                                            </>
+                                        )}
 
                                         <Stack direction={"row"}>
                                             <Dropdown>

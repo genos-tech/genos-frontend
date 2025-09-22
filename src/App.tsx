@@ -35,6 +35,10 @@ import { createEmptyMyNote } from "./features/notes/services/createEmptyMyNote";
 import { addNote } from "./features/notes/services/addNote";
 import { createEmptyChatNote } from "./features/notes/services/createEmptyChatNote";
 import { createEmptyTaskNote } from "./features/notes/services/createEmptyTaskNote";
+import { loadMyNoteMeta } from "./features/notes/services/loadMyNoteMeta";
+import { loadTaskNoteMeta } from "./features/notes/services/loadTaskNoteMeta";
+import { loadChatNoteMeta } from "./features/notes/services/loadChatNoteMeta";
+import { loadChatNotesByChatId } from "./features/notes/services/loadChatNotesByChatId";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -311,6 +315,87 @@ export const App = () => {
         ]);
     };
 
+    const handleCreateNewChatNoteIfNotExist = async (
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => {
+        const chatNotes: ChatNoteProps[] = await loadChatNotesByChatId(
+            myself,
+            chatType,
+            chatId,
+            isThread,
+            threadId,
+            accessToken
+        );
+
+        if (chatNotes.length > 0) {
+            const newNote = chatNotes[0];
+            if (tabNotes.length === 0 || tabNotes[0] === undefined) {
+                setSelectedTabIndex(0);
+                setTabNotes([newNote]);
+            } else {
+                setSelectedTabIndex(tabNotes.length);
+                setTabNotes([...tabNotes, newNote]);
+            }
+            setCurrentChatNote(newNote);
+            setCurrentChatNoteTitle(newNote.title);
+            addNote(3, newNote);
+        } else {
+            const title = "New Note";
+            const newNote = await createEmptyChatNote(
+                myself,
+                null,
+                chatType,
+                chatId,
+                isThread,
+                threadId,
+                title,
+                accessToken
+            );
+            if (tabNotes.length === 0 || tabNotes[0] === undefined) {
+                setSelectedTabIndex(0);
+                setTabNotes([newNote]);
+            } else {
+                setSelectedTabIndex(tabNotes.length);
+                setTabNotes([...tabNotes, newNote]);
+            }
+            setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
+            setCurrentChatNote(newNote);
+            setCurrentChatNoteTitle(title);
+            addNote(3, newNote);
+            setChatNoteMeta([
+                {
+                    noteId: newNote.noteId,
+                    parentNoteId: newNote.parentNoteId,
+                    title: newNote.title,
+                    tsUpdated: newNote.tsUpdated,
+                },
+                ...chatNoteMeta,
+            ]);
+        }
+    };
+
+    const getMyNoteMeta = async () => {
+        const loadedNotes: NoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
+        if (loadedNotes.length > 0) {
+            setMyNoteMeta(loadedNotes);
+        }
+    };
+    const getTaskNoteMeta = async () => {
+        const loadedNotes: NoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
+        if (loadedNotes.length > 0) {
+            setTaskNoteMeta(loadedNotes);
+        }
+    };
+    const getChatNoteMeta = async () => {
+        const loadedNotes: NoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
+        if (loadedNotes.length > 0) {
+            setChatNoteMeta(loadedNotes);
+        }
+    };
+
     // Inbox variables
     const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
     const [unReadInboxItemCount, setUnReadInboxItemCount] = useState<number>(0);
@@ -446,6 +531,11 @@ export const App = () => {
 
             // Load all team users
             funcSetTeamMembers();
+
+            // Load note metadata
+            getMyNoteMeta();
+            getTaskNoteMeta();
+            getChatNoteMeta();
         }
     }, [isLoading]);
 
@@ -584,6 +674,7 @@ export const App = () => {
                         selectedTabIndex={selectedTabIndex}
                         setSelectedTabIndex={setSelectedTabIndex}
                         handleCreateNewChatNote={handleCreateNewChatNote}
+                        handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
                         currentChatNoteChain={currentChatNoteChain}
                     />
                 ) : null}
