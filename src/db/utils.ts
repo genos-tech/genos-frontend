@@ -6,9 +6,9 @@ export async function getAllStores(dbName: string): Promise<string[]> {
     return Array.from(db.objectStoreNames);
 }
 
-export async function checkNoteExists(noteId: number): Promise<boolean> {
+export async function checkNoteExists(storeName: string, noteId: number): Promise<boolean> {
     const db = await openDB(DB_NAME, DB_VERSION);
-    const note = await db.get(STORES.NOTES, noteId);
+    const note = await db.get(storeName, noteId);
     return note !== undefined;
 }
 

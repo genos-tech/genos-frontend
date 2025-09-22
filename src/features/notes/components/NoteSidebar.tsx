@@ -20,7 +20,14 @@ import AddIcon from "@mui/icons-material/Add";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { MyNoteMetaTreeNode, MyNoteProps } from "../../../types/notes";
+import {
+    ChatNoteMetaTreeNode,
+    ChatNoteProps,
+    MyNoteMetaTreeNode,
+    MyNoteProps,
+    TaskNoteMetaTreeNode,
+    TaskNoteProps,
+} from "../../../types/notes";
 import { loadSpecificNote } from "../services/loadSpecificNote";
 import { addNote } from "../services/addNote";
 import { getData } from "../../../db/crud";
@@ -63,125 +70,335 @@ function Toggler({
 
 type NoteSidebarProps = {
     myself: UserProps;
-    noteMetaTree: MyNoteMetaTreeNode[];
     currentNoteType: number;
     setCurrentNoteType: (value: number) => void;
-    currentNote: MyNoteProps | null;
-    setCurrentNote: (value: MyNoteProps) => void;
+    myNoteMetaTree: MyNoteMetaTreeNode[];
+    currentMyNote: MyNoteProps | null;
+    setCurrentMyNote: (value: MyNoteProps) => void;
     tabMyNotes: MyNoteProps[];
-    handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
-    currentMyNoteChain: MyNoteMetaTreeNode[];
+    handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
+    currentMyNoteChain?: MyNoteMetaTreeNode[];
+    taskNoteMetaTree: TaskNoteMetaTreeNode[];
+    currentTaskNote: TaskNoteProps | null;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    tabTaskNotes: TaskNoteProps[];
+    handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
+    currentTaskNoteChain?: TaskNoteMetaTreeNode[];
+    chatNoteMetaTree: ChatNoteMetaTreeNode[];
+    currentChatNote: ChatNoteProps | null;
+    setCurrentChatNote: (value: ChatNoteProps) => void;
+    tabChatNotes: ChatNoteProps[];
+    handleCreateNewChatNote: (
+        parentNoteId: number | null,
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
+    currentChatNoteChain?: ChatNoteMetaTreeNode[];
     allNoteIdChains: Record<number, number[]>;
 };
 export const NoteSidebar = (props: NoteSidebarProps) => {
     const {
         myself,
-        noteMetaTree,
         currentNoteType,
         setCurrentNoteType,
-        currentNote,
-        setCurrentNote,
+        myNoteMetaTree,
+        currentMyNote,
+        setCurrentMyNote,
         tabMyNotes,
-        handleCreateNewNote,
+        handleCreateNewMyNote,
         currentMyNoteChain,
+        taskNoteMetaTree,
+        currentTaskNote,
+        setCurrentTaskNote,
+        tabTaskNotes,
+        handleCreateNewTaskNote,
+        currentTaskNoteChain,
+        chatNoteMetaTree,
+        currentChatNote,
+        setCurrentChatNote,
+        tabChatNotes,
+        handleCreateNewChatNote,
+        currentChatNoteChain,
         allNoteIdChains,
     } = props;
     const { accessToken } = useAuth();
 
-    const [tsNoteChainUpdated, setTsNoteChainUpdated] = useState<string>(getCurrentTimestamp());
-    const [tmpCurrentNoteChain, setTmpCurrentNoteChain] =
-        useState<MyNoteMetaTreeNode[]>(currentMyNoteChain);
-
+    const [tsMyNoteChainUpdated, setTsMyNoteChainUpdated] = useState<string>(
+        getCurrentTimestamp()
+    );
+    const [tmpCurrentMyNoteChain, setTmpCurrentMyNoteChain] = useState<MyNoteMetaTreeNode[]>();
     useEffect(() => {
-        setTmpCurrentNoteChain(currentMyNoteChain);
-        setTsNoteChainUpdated(getCurrentTimestamp());
+        if (currentMyNoteChain) {
+            setTmpCurrentMyNoteChain(currentMyNoteChain);
+            setTsMyNoteChainUpdated(getCurrentTimestamp());
+        }
     }, [currentMyNoteChain]);
 
-    const LoadNote = async (noteId: number) => {
-        const note: MyNoteProps = await getData({ storeName: STORES.NOTES, key: noteId });
-        if (note) {
-            setCurrentNote(note);
-        } else {
-            const note: MyNoteProps = await loadSpecificNote(myself, noteId, accessToken);
-            if (!note.error) {
-                addNote(note);
-                setCurrentNote(note);
+    const [tsTaskNoteChainUpdated, setTsTaskNoteChainUpdated] = useState<string>(
+        getCurrentTimestamp()
+    );
+    const [tmpCurrentTaskNoteChain, setTmpCurrentTaskNoteChain] =
+        useState<TaskNoteMetaTreeNode[]>();
+    useEffect(() => {
+        if (currentTaskNoteChain) {
+            setTmpCurrentTaskNoteChain(currentTaskNoteChain);
+            setTsTaskNoteChainUpdated(getCurrentTimestamp());
+        }
+    }, [currentTaskNoteChain]);
+
+    const [tsChatNoteChainUpdated, setTsChatNoteChainUpdated] = useState<string>(
+        getCurrentTimestamp()
+    );
+    const [tmpCurrentChatNoteChain, setTmpCurrentChatNoteChain] =
+        useState<ChatNoteMetaTreeNode[]>();
+    useEffect(() => {
+        if (currentChatNoteChain) {
+            setTmpCurrentChatNoteChain(currentChatNoteChain);
+            setTsChatNoteChainUpdated(getCurrentTimestamp());
+        }
+    }, [currentChatNoteChain]);
+
+    const LoadNote = async (noteType: number, noteId: number) => {
+        if (noteType === 1) {
+            const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
+            if (note) {
+                setCurrentMyNote(note);
+            } else {
+                const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
+                if (!note.error) {
+                    addNote(1, note);
+                    setCurrentMyNote(note);
+                }
+            }
+        } else if (noteType === 2) {
+            const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
+            if (note) {
+                setCurrentTaskNote(note);
+            } else {
+                const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
+                if (!note.error) {
+                    addNote(2, note);
+                    setCurrentTaskNote(note);
+                }
+            }
+        } else if (noteType === 3) {
+            const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
+            if (note) {
+                setCurrentChatNote(note);
+            } else {
+                const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
+                if (!note.error) {
+                    addNote(3, note);
+                    setCurrentChatNote(note);
+                }
             }
         }
     };
 
-    const renderTree = (node: MyNoteMetaTreeNode) => (
-        <ListItem nested key={`${node.noteId}-${tsNoteChainUpdated}`}>
-            <Toggler
-                // Expanding toggle when the target note is in the tab.
-                defaultExpanded={
-                    tmpCurrentNoteChain.some(
-                        (chainedNote) => chainedNote.noteId === node.noteId
-                    ) ||
-                    tabMyNotes.some((tabNote) =>
-                        allNoteIdChains[tabNote.noteId]?.some(
-                            (chainedNoteId) => chainedNoteId === node.noteId
-                        )
-                    )
-                        ? true
-                        : false
-                }
-                renderToggle={({ open, setOpen }) => (
-                    <ListItemButton
-                        selected={node.noteId === currentNote?.noteId ? true : false}
-                        variant="soft"
-                        sx={{ my: "1px" }}
-                        onClick={() => {
-                            setOpen(!open);
-                            setCurrentNoteType(1);
-                            localStorage.setItem("currentNoteType", "1");
-                            LoadNote(node.noteId);
-                        }}
+    const renderMyNoteTree = (node: MyNoteMetaTreeNode) => (
+        <Box key={`my-note-box-${node.noteId}-${tsMyNoteChainUpdated}`}>
+            {tmpCurrentMyNoteChain && (
+                <ListItem nested key={`my-note-${node.noteId}-${tsMyNoteChainUpdated}`}>
+                    <Toggler
+                        // Expanding toggle when the target note is in the tab.
+                        defaultExpanded={
+                            tmpCurrentMyNoteChain.some(
+                                (chainedNote) => chainedNote.noteId === node.noteId
+                            ) ||
+                            tabMyNotes.some((tabNote) =>
+                                allNoteIdChains[tabNote.noteId]?.some(
+                                    (chainedNoteId) => chainedNoteId === node.noteId
+                                )
+                            )
+                                ? true
+                                : false
+                        }
+                        renderToggle={({ open, setOpen }) => (
+                            <ListItemButton
+                                selected={
+                                    currentNoteType === 1 && node.noteId === currentMyNote?.noteId
+                                        ? true
+                                        : false
+                                }
+                                variant="soft"
+                                sx={{ my: "1px" }}
+                                onClick={() => {
+                                    setOpen(!open);
+                                    setCurrentNoteType(1);
+                                    localStorage.setItem("currentNoteType", "1");
+                                    LoadNote(1, node.noteId);
+                                }}
+                            >
+                                <ListItemContent>
+                                    <Typography level="title-sm">{node.title}</Typography>
+                                </ListItemContent>
+                                <KeyboardArrowDownIcon
+                                    sx={[
+                                        open
+                                            ? {
+                                                  transform: "rotate(180deg)",
+                                              }
+                                            : {
+                                                  transform: "none",
+                                              },
+                                    ]}
+                                />
+                            </ListItemButton>
+                        )}
                     >
-                        <ListItemContent>
-                            <Typography level="title-sm">{node.title}</Typography>
-                        </ListItemContent>
-                        <KeyboardArrowDownIcon
-                            sx={[
-                                open
-                                    ? {
-                                          transform: "rotate(180deg)",
-                                      }
-                                    : {
-                                          transform: "none",
-                                      },
-                            ]}
-                        />
-                    </ListItemButton>
-                )}
-            >
-                {node.children.length > 0 && (
-                    <List>{node.children.map((child) => renderTree(child))}</List>
-                )}
+                        {node.children.length > 0 && tmpCurrentMyNoteChain && (
+                            <List>{node.children.map((child) => renderMyNoteTree(child))}</List>
+                        )}
 
-                {node.children.length === 0 && (
-                    <Typography
-                        level="title-sm"
-                        component="button"
-                        onClick={() => {
-                            handleCreateNewNote(node.noteId);
-                        }}
-                        sx={{
-                            ml: "25px",
-                            background: "none",
-                            border: "none",
-                            padding: 0,
-                            cursor: "pointer",
-                            color: "inherit", // keeps normal text color
-                            textAlign: "left",
-                        }}
-                        startDecorator={<AddIcon />}
+                        {node.children.length === 0 && (
+                            <Typography
+                                level="title-sm"
+                                component="button"
+                                onClick={() => {
+                                    handleCreateNewMyNote(node.noteId);
+                                }}
+                                sx={{
+                                    ml: "25px",
+                                    background: "none",
+                                    border: "none",
+                                    padding: 0,
+                                    cursor: "pointer",
+                                    color: "inherit", // keeps normal text color
+                                    textAlign: "left",
+                                }}
+                                startDecorator={<AddIcon />}
+                            >
+                                Child Note
+                            </Typography>
+                        )}
+                    </Toggler>
+                </ListItem>
+            )}
+        </Box>
+    );
+
+    const renderTaskNoteTree = (node: TaskNoteMetaTreeNode) => (
+        <Box key={`task-note-box-${node.noteId}-${tsTaskNoteChainUpdated}`}>
+            {tmpCurrentTaskNoteChain && (
+                <ListItem nested key={`task-note-${node.noteId}-${tsTaskNoteChainUpdated}`}>
+                    <Toggler
+                        // Expanding toggle when the target note is in the tab.
+                        defaultExpanded={
+                            tmpCurrentTaskNoteChain.some(
+                                (chainedNote) => chainedNote.noteId === node.noteId
+                            ) ||
+                            tabTaskNotes.some((tabNote) =>
+                                allNoteIdChains[tabNote.noteId]?.some(
+                                    (chainedNoteId) => chainedNoteId === node.noteId
+                                )
+                            )
+                                ? true
+                                : false
+                        }
+                        renderToggle={({ open, setOpen }) => (
+                            <ListItemButton
+                                selected={
+                                    currentNoteType === 2 &&
+                                    node.noteId === currentTaskNote?.noteId
+                                        ? true
+                                        : false
+                                }
+                                variant="soft"
+                                sx={{ my: "1px" }}
+                                onClick={() => {
+                                    setOpen(!open);
+                                    setCurrentNoteType(2);
+                                    localStorage.setItem("currentNoteType", "2");
+                                    LoadNote(2, node.noteId);
+                                }}
+                            >
+                                <ListItemContent>
+                                    <Typography level="title-sm">{node.title}</Typography>
+                                </ListItemContent>
+                                <KeyboardArrowDownIcon
+                                    sx={[
+                                        open
+                                            ? {
+                                                  transform: "rotate(180deg)",
+                                              }
+                                            : {
+                                                  transform: "none",
+                                              },
+                                    ]}
+                                />
+                            </ListItemButton>
+                        )}
                     >
-                        Child Note
-                    </Typography>
-                )}
-            </Toggler>
-        </ListItem>
+                        {node.children.length > 0 && (
+                            <List>{node.children.map((child) => renderTaskNoteTree(child))}</List>
+                        )}
+                    </Toggler>
+                </ListItem>
+            )}
+        </Box>
+    );
+
+    const renderChatNoteTree = (node: ChatNoteMetaTreeNode) => (
+        <Box key={`chat-note-box-${node.noteId}-${tsChatNoteChainUpdated}`}>
+            {tmpCurrentChatNoteChain && (
+                <ListItem nested key={`chat-note-${node.noteId}-${tsChatNoteChainUpdated}`}>
+                    <Toggler
+                        // Expanding toggle when the target note is in the tab.
+                        defaultExpanded={
+                            tmpCurrentChatNoteChain.some(
+                                (chainedNote) => chainedNote.noteId === node.noteId
+                            ) ||
+                            tabChatNotes.some((tabNote) =>
+                                allNoteIdChains[tabNote.noteId]?.some(
+                                    (chainedNoteId) => chainedNoteId === node.noteId
+                                )
+                            )
+                                ? true
+                                : false
+                        }
+                        renderToggle={({ open, setOpen }) => (
+                            <ListItemButton
+                                selected={
+                                    currentNoteType === 3 &&
+                                    node.noteId === currentChatNote?.noteId
+                                        ? true
+                                        : false
+                                }
+                                variant="soft"
+                                sx={{ my: "1px" }}
+                                onClick={() => {
+                                    setOpen(!open);
+                                    setCurrentNoteType(3);
+                                    localStorage.setItem("currentNoteType", "3");
+                                    LoadNote(3, node.noteId);
+                                }}
+                            >
+                                <ListItemContent>
+                                    <Typography level="title-sm">{node.title}</Typography>
+                                </ListItemContent>
+                                <KeyboardArrowDownIcon
+                                    sx={[
+                                        open
+                                            ? {
+                                                  transform: "rotate(180deg)",
+                                              }
+                                            : {
+                                                  transform: "none",
+                                              },
+                                    ]}
+                                />
+                            </ListItemButton>
+                        )}
+                    >
+                        {node.children.length > 0 && (
+                            <List>{node.children.map((child) => renderChatNoteTree(child))}</List>
+                        )}
+                    </Toggler>
+                </ListItem>
+            )}
+        </Box>
     );
 
     return (
@@ -284,36 +501,80 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 </ListItemButton>
                             )}
                         >
-                            <List>{noteMetaTree.map((root) => renderTree(root))}</List>
+                            <List>{myNoteMetaTree.map((root) => renderMyNoteTree(root))}</List>
                         </Toggler>
                     </ListItem>
-                    <ListItem>
-                        <ListItemButton
-                            selected={currentNoteType === 2 ? true : false}
-                            onClick={() => {
-                                setCurrentNoteType(2);
-                                localStorage.setItem("currentNoteType", "2");
-                            }}
+
+                    <ListItem nested>
+                        <Toggler
+                            defaultExpanded={true}
+                            renderToggle={({ open, setOpen }) => (
+                                <ListItemButton
+                                    selected={currentNoteType === 2 ? true : false}
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => {
+                                        setOpen(!open);
+                                        setCurrentNoteType(2);
+                                        localStorage.setItem("currentNoteType", "2");
+                                    }}
+                                >
+                                    <AssignmentRoundedIcon />
+                                    <ListItemContent>
+                                        <Typography level="title-sm">Task Notes</Typography>
+                                    </ListItemContent>
+                                    <KeyboardArrowDownIcon
+                                        sx={[
+                                            open
+                                                ? {
+                                                      transform: "rotate(180deg)",
+                                                  }
+                                                : {
+                                                      transform: "none",
+                                                  },
+                                        ]}
+                                    />
+                                </ListItemButton>
+                            )}
                         >
-                            <AssignmentRoundedIcon />
-                            <ListItemContent>
-                                <Typography level="title-sm">Task Notes (TBD)</Typography>
-                            </ListItemContent>
-                        </ListItemButton>
+                            <List>{taskNoteMetaTree.map((root) => renderTaskNoteTree(root))}</List>
+                        </Toggler>
                     </ListItem>
-                    <ListItem>
-                        <ListItemButton
-                            selected={currentNoteType === 3 ? true : false}
-                            onClick={() => {
-                                setCurrentNoteType(3);
-                                localStorage.setItem("currentNoteType", "3");
-                            }}
+
+                    <ListItem nested>
+                        <Toggler
+                            defaultExpanded={true}
+                            renderToggle={({ open, setOpen }) => (
+                                <ListItemButton
+                                    selected={currentNoteType === 3 ? true : false}
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => {
+                                        setOpen(!open);
+                                        setCurrentNoteType(3);
+                                        localStorage.setItem("currentNoteType", "3");
+                                    }}
+                                >
+                                    <QuestionAnswerRoundedIcon />
+                                    <ListItemContent>
+                                        <Typography level="title-sm">Chat Notes</Typography>
+                                    </ListItemContent>
+                                    <KeyboardArrowDownIcon
+                                        sx={[
+                                            open
+                                                ? {
+                                                      transform: "rotate(180deg)",
+                                                  }
+                                                : {
+                                                      transform: "none",
+                                                  },
+                                        ]}
+                                    />
+                                </ListItemButton>
+                            )}
                         >
-                            <QuestionAnswerRoundedIcon />
-                            <ListItemContent>
-                                <Typography level="title-sm">Chat Notes (TBD)</Typography>
-                            </ListItemContent>
-                        </ListItemButton>
+                            <List>{chatNoteMetaTree.map((root) => renderChatNoteTree(root))}</List>
+                        </Toggler>
                     </ListItem>
                 </List>
             </Box>

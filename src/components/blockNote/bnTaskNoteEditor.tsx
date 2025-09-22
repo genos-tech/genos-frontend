@@ -53,20 +53,19 @@ import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import "../../App.css";
-import { MyNoteProps } from "../../types/notes";
+import { TaskNoteProps } from "../../types/notes";
 import { useAuth } from "../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
-type BnNoteEditorProps = {
+type BnTaskNoteEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    currentNoteType: number;
     socket: Socket | null;
     teamMembers: UserProps[];
-    currentNote: MyNoteProps;
+    currentTaskNote: TaskNoteProps;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
@@ -74,15 +73,14 @@ type BnNoteEditorProps = {
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
 };
-export const BnNoteEditor = (props: BnNoteEditorProps) => {
+export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const {
         teamMemberProfiles,
         myself,
         setMyself,
-        currentNoteType,
         socket,
         teamMembers,
-        currentNote,
+        currentTaskNote,
         body,
         setBody,
         setNoteBodyEdited,
@@ -140,9 +138,9 @@ export const BnNoteEditor = (props: BnNoteEditorProps) => {
     async function uploadFile(file: File) {
         const formData = new FormData();
         formData.append("note_attachment_file", file);
-        formData.append("note_id", String(currentNote.noteId));
+        formData.append("note_id", String(currentTaskNote.noteId));
         formData.append("uploader", myself.userId);
-        const uploadNoteAttachmentResponse = await fetch(`${base_url}/note/personal/attachment/`, {
+        const uploadNoteAttachmentResponse = await fetch(`${base_url}/note/task/attachment/`, {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${accessToken}`,

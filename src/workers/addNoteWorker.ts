@@ -1,14 +1,26 @@
 import { STORES } from "../db/conf";
 import { addData } from "../db/crud";
-import { MyNoteProps } from "../types/notes";
 
 self.onmessage = async (event) => {
-    const note: MyNoteProps = event.data.note;
+    const noteType: number = event.data.noteType;
+    const note: any = event.data.note;
 
-    await addData({
-        storeName: STORES.NOTES,
-        data: note,
-    });
+    if (noteType === 1) {
+        await addData({
+            storeName: STORES.PERSONAL_NOTES,
+            data: note,
+        });
+    } else if (noteType === 2) {
+        await addData({
+            storeName: STORES.TASK_NOTES,
+            data: note,
+        });
+    } else if (noteType === 3) {
+        await addData({
+            storeName: STORES.CHAT_NOTES,
+            data: note,
+        });
+    }
 
     self.postMessage("done");
 

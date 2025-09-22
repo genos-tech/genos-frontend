@@ -2,18 +2,18 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
-import { MyNoteProps } from "../../../types/notes";
+import { ChatNoteProps } from "../../../types/notes";
 
-export const sendUpdatedNote = async (
+export const sendUpdatedChatNote = async (
     myself: UserProps,
-    updatedNote: MyNoteProps,
+    updatedNote: ChatNoteProps,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.put("/note/personal/", {
+            const res = await api.put("/note/chat/", {
                 user_id: myself.userId,
                 note_id: updatedNote.noteId,
                 parent_note_id: updatedNote.parentNoteId,

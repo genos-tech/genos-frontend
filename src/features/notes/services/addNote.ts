@@ -1,11 +1,10 @@
 import AddNoteWorker from "../../../workers/addNoteWorker.ts?worker";
-import { MyNoteProps } from "../../../types/notes";
 
-export const addNote = (note: MyNoteProps): Promise<null> => {
+export const addNote = (noteType: number, note: any): Promise<null> => {
     return new Promise((resolve, reject) => {
         const addNoteWorker = new AddNoteWorker();
 
-        addNoteWorker.postMessage({ note: note });
+        addNoteWorker.postMessage({ noteType: noteType, note: note });
 
         addNoteWorker.onmessage = (event) => {
             addNoteWorker.terminate();

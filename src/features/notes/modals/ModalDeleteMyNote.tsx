@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Modal, ModalDialog, Stack, Button, Typography, Alert } from "@mui/joy";
 
-import { MyNoteMetaProps, MyNoteProps } from "../../../types/notes";
+import { NoteMetaProps, MyNoteProps } from "../../../types/notes";
 import { deleteNote } from "../services/deleteNote";
 import { deleteData } from "../../../db/crud";
 import { STORES } from "../../../db/conf";
@@ -13,26 +13,26 @@ type Props = {
     myself: UserProps;
     openDeleteNote: boolean;
     setOpenDeleteNote: (value: boolean) => void;
-    myNoteMeta: MyNoteMetaProps[];
-    setMyNoteMeta: (value: MyNoteMetaProps[]) => void;
-    currentNote: MyNoteProps;
+    myNoteMeta: NoteMetaProps[];
+    setMyNoteMeta: (value: NoteMetaProps[]) => void;
+    currentMyNote: MyNoteProps;
     handleCloseTab: (value: number) => void;
 };
 
-export const ModalDeleteNote: React.FC<Props> = ({
+export const ModalDeleteMyNote: React.FC<Props> = ({
     myself,
     openDeleteNote,
     setOpenDeleteNote,
     myNoteMeta,
     setMyNoteMeta,
-    currentNote,
+    currentMyNote,
     handleCloseTab,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const handleDeleteNote = async () => {
         let childExist: boolean;
-        const childNotes = myNoteMeta.filter((note) => note.parentNoteId === currentNote.noteId);
+        const childNotes = myNoteMeta.filter((note) => note.parentNoteId === currentMyNote.noteId);
 
         if (childNotes.length === 0) {
             childExist = false;
@@ -42,12 +42,12 @@ export const ModalDeleteNote: React.FC<Props> = ({
 
         if (childExist === false) {
             // Delete from backend
-            await deleteNote(myself, currentNote.noteId, accessToken);
+            await deleteNote(myself, currentMyNote.noteId, accessToken);
             // Delete from indexedDB
-            await deleteData({ storeName: STORES.NOTES, key: currentNote.noteId });
+            await deleteData({ storeName: STORES.PERSONAL_NOTES, key: currentMyNote.noteId });
             // Delete the deleted noteId from the meta object
-            setMyNoteMeta(myNoteMeta.filter((note) => note.noteId !== currentNote.noteId));
-            handleCloseTab(currentNote.noteId);
+            setMyNoteMeta(myNoteMeta.filter((note) => note.noteId !== currentMyNote.noteId));
+            handleCloseTab(currentMyNote.noteId);
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {
@@ -69,7 +69,7 @@ export const ModalDeleteNote: React.FC<Props> = ({
                     <Typography level="h4">
                         Are you sure to delete{" "}
                         <Typography level="h3" color="danger">
-                            {currentNote.title}
+                            {currentMyNote.title}
                         </Typography>{" "}
                         ?
                     </Typography>

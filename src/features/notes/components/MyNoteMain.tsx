@@ -31,13 +31,13 @@ import CheckIcon from "@mui/icons-material/Check";
 
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
-import { BnNoteEditor } from "../../../components/blockNote/bnNoteEditor";
-import { MyNoteMetaProps, MyNoteProps, MyNoteMetaTreeNode } from "../../../types/notes";
-import { sendUpdatedNote } from "../services/sendUpdatedNote";
+import { BnMyNoteEditor } from "../../../components/blockNote/bnMyNoteEditor";
+import { NoteMetaProps, MyNoteProps, MyNoteMetaTreeNode } from "../../../types/notes";
+import { sendUpdatedMyNote } from "../services/sendUpdatedMyNote";
 import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
-import { ModalDeleteNote } from "../modals/ModalDeleteNote";
+import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
 import { getData } from "../../../db/crud";
 import { STORES } from "../../../db/conf";
 import { loadSpecificNote } from "../services/loadSpecificNote";
@@ -49,19 +49,19 @@ type MyNoteMainProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     currentNoteType: number;
-    currentNote: MyNoteProps | null;
-    setCurrentNote: (value: MyNoteProps) => void;
-    currentNoteTitle: string;
-    setCurrentNoteTitle: (value: string) => void;
+    currentMyNote: MyNoteProps | null;
+    setCurrentMyNote: (value: MyNoteProps) => void;
+    currentMyNoteTitle: string;
+    setCurrentMyNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    myNoteMeta: MyNoteMetaProps[];
-    setMyNoteMeta: (value: MyNoteMetaProps[]) => void;
+    myNoteMeta: NoteMetaProps[];
+    setMyNoteMeta: (value: NoteMetaProps[]) => void;
     tabMyNotes: MyNoteProps[];
     setTabMyNotes: (value: MyNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
-    handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
+    handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
     currentMyNoteChain: MyNoteMetaTreeNode[];
 };
 
@@ -72,10 +72,10 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         teamMembers,
         myself,
         setMyself,
-        currentNote,
-        setCurrentNote,
-        currentNoteTitle,
-        setCurrentNoteTitle,
+        currentMyNote,
+        setCurrentMyNote,
+        currentMyNoteTitle,
+        setCurrentMyNoteTitle,
         setOpeningService,
         setCurrentChat,
         currentNoteType,
@@ -85,7 +85,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         setTabMyNotes,
         selectedTabIndex,
         setSelectedTabIndex,
-        handleCreateNewNote,
+        handleCreateNewMyNote,
         currentMyNoteChain,
     } = props;
 
@@ -120,17 +120,17 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
-        if (currentNote) {
+        if (currentMyNote) {
             const newNote: MyNoteProps = {
-                ...currentNote,
-                title: currentNoteTitle,
+                ...currentMyNote,
+                title: currentMyNoteTitle,
                 body: body || [],
             };
             // Send the update note to the backend
-            await sendUpdatedNote(myself, newNote, accessToken);
+            await sendUpdatedMyNote(myself, newNote, accessToken);
 
             // Add the updated note to the indexedDB
-            await addNote(newNote);
+            await addNote(1, newNote);
 
             setStartIntervalUpdatingNote(false);
             setNoteBodyEdited(false);
@@ -167,40 +167,40 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     const [isUpdatingTabContents, setIsUpdatingTabContents] = useState(true);
 
     useEffect(() => {
-        if (currentNote) {
-            setBody(currentNote.body);
+        if (currentMyNote) {
+            setBody(currentMyNote.body);
             setTsBody(getCurrentTimestamp()); // This must be executed together with "setBody" !!!!
-            setCurrentNoteTitle(currentNote.title);
+            setCurrentMyNoteTitle(currentMyNote.title);
 
             if (
                 isUpdatingTabContents === true &&
                 (tabMyNotes.length === 0 ||
                     (tabMyNotes.length > 0 &&
-                        tabMyNotes.some((note) => note.noteId === currentNote.noteId)) === false)
+                        tabMyNotes.some((note) => note.noteId === currentMyNote.noteId)) === false)
             ) {
                 // Add the clicked note to the tab.
-                setTabMyNotes([...tabMyNotes, currentNote]);
+                setTabMyNotes([...tabMyNotes, currentMyNote]);
                 // Also, update the index to the clicked note.
                 setSelectedTabIndex(tabMyNotes.length); // switch to new tab
             } else {
                 // Update the index when an user click a note in the sidebar
                 setSelectedTabIndex(
-                    tabMyNotes.findIndex((note) => note.noteId === currentNote.noteId)
+                    tabMyNotes.findIndex((note) => note.noteId === currentMyNote.noteId)
                 );
             }
 
             setIsUpdatingTabContents(true);
         }
-    }, [currentNote]);
+    }, [currentMyNote]);
 
     const setNote = async (noteId: number) => {
         const note: MyNoteProps = await getData({
-            storeName: STORES.NOTES,
+            storeName: STORES.PERSONAL_NOTES,
             key: noteId,
         });
         if (note) {
             setTabMyNotes([note]);
-            setCurrentNote(note);
+            setCurrentMyNote(note);
         } else {
             // console.log("not four note in indexedDB:", note);
             setTabMyNotes([]);
@@ -224,7 +224,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     useEffect(() => {
         if (isUpdatingTabContents === false) {
             if (tabMyNotes[selectedTabIndex]) {
-                setCurrentNote(tabMyNotes[selectedTabIndex]);
+                setCurrentMyNote(tabMyNotes[selectedTabIndex]);
             }
         }
     }, [isUpdatingTabContents]);
@@ -232,7 +232,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     useEffect(() => {
         setNoteBodySaved(false);
         if (tabMyNotes[selectedTabIndex]) {
-            setCurrentNote(tabMyNotes[selectedTabIndex]);
+            setCurrentMyNote(tabMyNotes[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
 
@@ -240,22 +240,22 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     useEffect(() => {
         setTabMyNotes(
             tabMyNotes.map((u) =>
-                u.noteId === currentNote?.noteId ? { ...u, title: currentNoteTitle } : u
+                u.noteId === currentMyNote?.noteId ? { ...u, title: currentMyNoteTitle } : u
             )
         );
-    }, [currentNoteTitle]);
+    }, [currentMyNoteTitle]);
 
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     const LoadNote = async (noteId: number) => {
-        const note: MyNoteProps = await getData({ storeName: STORES.NOTES, key: noteId });
+        const note: MyNoteProps = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
         if (note) {
-            setCurrentNote(note);
+            setCurrentMyNote(note);
         } else {
-            const note: MyNoteProps = await loadSpecificNote(myself, noteId, accessToken);
+            const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
             if (!note.error) {
-                addNote(note);
-                setCurrentNote(note);
+                addNote(1, note);
+                setCurrentMyNote(note);
             }
         }
     };
@@ -281,7 +281,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                             paddingRight: "10px",
                         }}
                         onClick={() => {
-                            handleCreateNewNote(null);
+                            handleCreateNewMyNote(null);
                         }}
                     >
                         <AddIcon />
@@ -289,6 +289,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                     </IconButton>
                 </Box>
             )}
+
             {myNoteMeta.length > 0 && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
                     {currentNoteType === 0 && (
@@ -370,7 +371,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     variant="outlined"
                                                     color="neutral"
                                                     onClick={() => {
-                                                        handleCreateNewNote(null);
+                                                        handleCreateNewMyNote(null);
                                                     }}
                                                     sx={{ px: "10px" }}
                                                 >
@@ -390,9 +391,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 <Menu size="sm">
                                                     <MenuItem
                                                         onClick={() => {
-                                                            if (currentNote) {
-                                                                handleCreateNewNote(
-                                                                    currentNote.noteId
+                                                            if (currentMyNote) {
+                                                                handleCreateNewMyNote(
+                                                                    currentMyNote.noteId
                                                                 );
                                                             } else {
                                                                 console.error(
@@ -419,14 +420,14 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 </Menu>
                                             </Dropdown>
                                         </Stack>
-                                        {currentNote && (
-                                            <ModalDeleteNote
+                                        {currentMyNote && (
+                                            <ModalDeleteMyNote
                                                 myself={myself}
                                                 openDeleteNote={openDeleteNote}
                                                 setOpenDeleteNote={setOpenDeleteNote}
                                                 myNoteMeta={myNoteMeta}
                                                 setMyNoteMeta={setMyNoteMeta}
-                                                currentNote={currentNote}
+                                                currentMyNote={currentMyNote}
                                                 handleCloseTab={handleCloseTab}
                                             />
                                         )}
@@ -437,7 +438,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
                                             // console.log("move tab to:", val);
-                                            setCurrentNote(tabMyNotes[Number(val)]);
+                                            setCurrentMyNote(tabMyNotes[Number(val)]);
                                             setSelectedTabIndex(Number(val));
                                         }}
                                         aria-label="Scrollable tabs"
@@ -518,12 +519,12 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 >
                                                     <Input
                                                         startDecorator={<NoteAltIcon />}
-                                                        key={"currentNoteTitle"}
+                                                        key={"currentMyNoteTitle"}
                                                         variant="soft"
                                                         placeholder="Note Title"
-                                                        value={currentNoteTitle}
+                                                        value={currentMyNoteTitle}
                                                         onChange={(e) => {
-                                                            setCurrentNoteTitle(e.target.value);
+                                                            setCurrentMyNoteTitle(e.target.value);
                                                         }}
                                                         onBlur={() => {
                                                             setNoteUpdated(true);
@@ -557,16 +558,15 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         </Button>
                                                     </Box>
                                                 )}
-                                                {currentNote && (
+                                                {currentMyNote && (
                                                     <>
-                                                        <BnNoteEditor
+                                                        <BnMyNoteEditor
                                                             teamMemberProfiles={teamMemberProfiles}
                                                             myself={myself}
                                                             setMyself={setMyself}
-                                                            currentNoteType={currentNoteType}
                                                             socket={socket}
                                                             teamMembers={teamMembers}
-                                                            currentNote={currentNote}
+                                                            currentMyNote={currentMyNote}
                                                             body={body}
                                                             setBody={setBody}
                                                             setNoteBodyEdited={setNoteBodyEdited}

@@ -236,6 +236,15 @@ export const getTasksByMultipleStatus = async (projectId: number, statuses: stri
     return results.flat();
 };
 
+
+export const getNote = async (teamId: string) => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const userInfoStore = db.transaction(STORES.USER_INFO).objectStore(STORES.USER_INFO);
+    const teamMembers = await userInfoStore.index(INDEX.USER_INFO).getAll(teamId);
+
+    return teamMembers;
+};
+
 export const getAllData = async (storeName: string) => {
     const db = await initDB();
     return db.getAll(storeName);

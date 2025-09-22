@@ -1,10 +1,11 @@
 import CheckNoteExistsWorker from "../../../workers/checkNoteExistsWorker.ts?worker";
 
-export const checkNoteExists = (noteId: number): Promise<boolean> => {
+export const checkNoteExists = (noteType: number, noteId: number): Promise<boolean> => {
     return new Promise((resolve, reject) => {
         const checkNoteExistsWorker = new CheckNoteExistsWorker();
 
         checkNoteExistsWorker.postMessage({
+            noteType,
             noteId,
         });
 

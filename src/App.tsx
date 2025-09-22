@@ -23,18 +23,18 @@ import { getCurrentTimestamp } from "./utils/dateUtils";
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 import {
-    ChatNoteMetaProps,
+    NoteMetaProps,
     ChatNoteMetaTreeNode,
     ChatNoteProps,
-    MyNoteMetaProps,
     MyNoteMetaTreeNode,
     MyNoteProps,
-    TaskNoteMetaProps,
     TaskNoteMetaTreeNode,
     TaskNoteProps,
 } from "./types/notes";
-import { createEmptyNote } from "./features/notes/services/createEmptyNote";
+import { createEmptyMyNote } from "./features/notes/services/createEmptyMyNote";
 import { addNote } from "./features/notes/services/addNote";
+import { createEmptyChatNote } from "./features/notes/services/createEmptyChatNote";
+import { createEmptyTaskNote } from "./features/notes/services/createEmptyTaskNote";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -112,13 +112,14 @@ export const App = () => {
     // Need to run if you delete IndexedDB database
     initDB();
 
+    // Common & Admin
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
     const [currentTeamId, setCurrentTeamId] = useState("");
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, UserProps>>({});
     const [isLoading, setIsLoading] = useState(true);
-    const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
+    const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
 
     // {0: Inbox, 1: Chat, 2: Tasks, 3: Notes}
     const [openingService, setOpeningService] = useState<number>(
@@ -135,10 +136,61 @@ export const App = () => {
         Number(localStorage.getItem("currentNoteType") || "1")
     );
 
+    const funcSetTeamMembers = async () => {
+        const teamMembers: UserProps[] = await popTeamMembers(myself);
+        if (teamMembers) {
+            setTeamMembers(teamMembers);
+        }
+    };
+
+    const [currentTeam, setCurrentTeam] = useState<Team>({
+        teamId: myself.teamId,
+        teamName: myself.teamName,
+        teamEmail: "",
+        teamOwnerId: "",
+        teamImgPath: localStorage.getItem("teamImgPath") || undefined,
+    });
+    const initCurrentTeam = async () => {
+        const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
+        if (findTeamRes && findTeamRes.exist === true) {
+            setCurrentTeam(findTeamRes.teamDetails);
+        }
+    };
+
+    const sendHeartBeat = () => {
+        if (socketInstance) {
+            const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
+            const role: string = localStorage.getItem("role") || "";
+            const baseCountry: string = localStorage.getItem("baseCountry") || "";
+            const customStatus: string = localStorage.getItem("customStatus") || "";
+            const avatarImgPath: string = localStorage.getItem("avatarImgPath") || "";
+
+            socketInstance.emit("heartbeat", {
+                message: "alive",
+                is_online: true,
+                user: {
+                    ...myself,
+                    avatarImgPath: avatarImgPath,
+                    isOfflineForced: isOfflineForced,
+                    role: role,
+                    baseCountry: baseCountry,
+                    customStatus: customStatus,
+                    tsLastSeen: getCurrentTimestamp(),
+                },
+            });
+        }
+    };
+
+    // Task
+    const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
+        isUpdate: false,
+        scrollToBottom: true,
+    });
+
     // My Note
     const [currentMyNote, setCurrentMyNote] = useState<MyNoteProps | null>(null);
     const [currentMyNoteTitle, setCurrentMyNoteTitle] = useState<string>("");
-    const [myNoteMeta, setMyNoteMeta] = useState<MyNoteMetaProps[]>([]);
+    const [myNoteMeta, setMyNoteMeta] = useState<NoteMetaProps[]>([]);
     const [currentMyNoteChain, setCurrentMyNoteChain] = useState<MyNoteMetaTreeNode[]>();
     const [tabMyNotes, setTabMyNotes] = useState<MyNoteProps[]>(
         currentMyNote ? [currentMyNote] : []
@@ -148,7 +200,7 @@ export const App = () => {
     // Task Note
     const [currentTaskNote, setCurrentTaskNote] = useState<TaskNoteProps | null>(null);
     const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>("");
-    const [taskNoteMeta, setTaskNoteMeta] = useState<TaskNoteMetaProps[]>([]);
+    const [taskNoteMeta, setTaskNoteMeta] = useState<NoteMetaProps[]>([]);
     const [currentTaskNoteChain, setCurrentTaskNoteChain] = useState<TaskNoteMetaTreeNode[]>();
     const [tabTaskNotes, setTabTaskNotes] = useState<TaskNoteProps[]>(
         currentTaskNote ? [currentTaskNote] : []
@@ -158,7 +210,7 @@ export const App = () => {
     // Chat Note
     const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
     const [currentChatNoteTitle, setCurrentChatNoteTitle] = useState<string>("");
-    const [chatNoteMeta, setChatNoteMeta] = useState<ChatNoteMetaProps[]>([]);
+    const [chatNoteMeta, setChatNoteMeta] = useState<NoteMetaProps[]>([]);
     const [currentChatNoteChain, setCurrentChatNoteChain] = useState<ChatNoteMetaTreeNode[]>();
     const [tabChatNotes, setTabChatNotes] = useState<ChatNoteProps[]>(
         currentChatNote ? [currentChatNote] : []
@@ -167,42 +219,105 @@ export const App = () => {
 
     // Note common
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-    const handleCreateNewNote = async (parentNoteId: number | null) => {
+    const handleCreateNewMyNote = async (parentNoteId: number | null) => {
         const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedMyNotes.length + 1})`;
-        const newNote = await createEmptyNote(myself, parentNoteId, title, accessToken);
-        if (currentNoteType === 1) {
-            if (tabMyNotes.length === 0 || tabMyNotes[0] === undefined) {
-                setSelectedTabIndex(0);
-                setTabMyNotes([newNote]);
-            } else {
-                setSelectedTabIndex(tabMyNotes.length);
-                setTabMyNotes([...tabMyNotes, newNote]);
-            }
-            setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
-            setCurrentMyNote(newNote);
-            setCurrentMyNoteTitle(title);
-            addNote(newNote);
-            setMyNoteMeta([
-                {
-                    noteId: newNote.noteId,
-                    parentNoteId: newNote.parentNoteId,
-                    title: newNote.title,
-                    tsCreated: newNote.tsCreated,
-                    tsUpdated: newNote.tsUpdated,
-                },
-                ...myNoteMeta,
-            ]);
+        const newNote = await createEmptyMyNote(myself, parentNoteId, title, accessToken);
+        if (tabMyNotes.length === 0 || tabMyNotes[0] === undefined) {
+            setSelectedTabIndex(0);
+            setTabMyNotes([newNote]);
+        } else {
+            setSelectedTabIndex(tabMyNotes.length);
+            setTabMyNotes([...tabMyNotes, newNote]);
         }
+        setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
+        setCurrentMyNote(newNote);
+        setCurrentMyNoteTitle(title);
+        addNote(1, newNote);
+        setMyNoteMeta([
+            {
+                noteId: newNote.noteId,
+                parentNoteId: newNote.parentNoteId,
+                title: newNote.title,
+                tsUpdated: newNote.tsUpdated,
+            },
+            ...myNoteMeta,
+        ]);
     };
 
-    // ...
-    const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
-    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
-    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
-    const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
-        isUpdate: false,
-        scrollToBottom: true,
-    });
+    const handleCreateNewTaskNote = async (parentNoteId: number | null, taskId: number) => {
+        const title = `${parentNoteId ? "Child" : "New"} Note (${
+            newlyCreatedTaskNotes.length + 1
+        })`;
+        const newNote = await createEmptyTaskNote(
+            myself,
+            parentNoteId,
+            taskId,
+            title,
+            accessToken
+        );
+        if (tabTaskNotes.length === 0 || tabTaskNotes[0] === undefined) {
+            setSelectedTabIndex(0);
+            setTabTaskNotes([newNote]);
+        } else {
+            setSelectedTabIndex(tabTaskNotes.length);
+            setTabTaskNotes([...tabTaskNotes, newNote]);
+        }
+        setNewlyCreatedTaskNotes([...newlyCreatedTaskNotes, newNote]);
+        setCurrentTaskNote(newNote);
+        setCurrentTaskNoteTitle(title);
+        addNote(2, newNote);
+        setTaskNoteMeta([
+            {
+                noteId: newNote.noteId,
+                parentNoteId: newNote.parentNoteId,
+                title: newNote.title,
+                tsUpdated: newNote.tsUpdated,
+            },
+            ...taskNoteMeta,
+        ]);
+    };
+
+    const handleCreateNewChatNote = async (
+        parentNoteId: number | null,
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => {
+        const title = `${parentNoteId ? "Child" : "New"} Note (${
+            newlyCreatedChatNotes.length + 1
+        })`;
+        const newNote = await createEmptyChatNote(
+            myself,
+            parentNoteId,
+            chatType,
+            chatId,
+            isThread,
+            threadId,
+            title,
+            accessToken
+        );
+        if (tabChatNotes.length === 0 || tabChatNotes[0] === undefined) {
+            setSelectedTabIndex(0);
+            setTabChatNotes([newNote]);
+        } else {
+            setSelectedTabIndex(tabChatNotes.length);
+            setTabChatNotes([...tabChatNotes, newNote]);
+        }
+        setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
+        setCurrentChatNote(newNote);
+        setCurrentChatNoteTitle(title);
+        addNote(3, newNote);
+        setChatNoteMeta([
+            {
+                noteId: newNote.noteId,
+                parentNoteId: newNote.parentNoteId,
+                title: newNote.title,
+                tsUpdated: newNote.tsUpdated,
+            },
+            ...chatNoteMeta,
+        ]);
+    };
 
     // Inbox variables
     const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
@@ -230,6 +345,9 @@ export const App = () => {
     }, [inboxItems]);
 
     // Chat variables
+    const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
+    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
+    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const funcSetAllChats = async () => {
         const _allChats: AllChatProps[] = await popAllChats();
@@ -261,6 +379,7 @@ export const App = () => {
         }
     };
     const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
+    const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
     const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
         return activityMessages.reduce<number>((acc, activity) => {
             if (activity.isRead === false) {
@@ -276,9 +395,6 @@ export const App = () => {
         );
         setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
     }, [activityMessages]);
-
-    // Chat count icon on the sidebar
-    const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
     useEffect(() => {
         if (unReadChatCounts) {
             // 1: DM, 2: GM, 3: PM
@@ -289,27 +405,24 @@ export const App = () => {
         }
     }, [unReadChatCounts, unReadActivityMessageCounts]);
 
-    const funcSetTeamMembers = async () => {
-        const teamMembers: UserProps[] = await popTeamMembers(myself);
-        if (teamMembers) {
-            setTeamMembers(teamMembers);
-        }
-    };
-
-    // Load the current team info
-    const [currentTeam, setCurrentTeam] = useState<Team>({
-        teamId: myself.teamId,
-        teamName: myself.teamName,
-        teamEmail: "",
-        teamOwnerId: "",
-        teamImgPath: localStorage.getItem("teamImgPath") || undefined,
+    // Common Hooks
+    wsHook({
+        socket: socketInstance,
+        accessToken: accessToken,
+        myself: myself,
+        allChats: allChats,
+        currentMainChat: currentMainChat,
+        currentSubChat: currentSubChat,
+        currentThreadChat: currentThreadChat,
+        setCurrentMainChat: setCurrentMainChat,
+        setCurrentSubChat: setCurrentSubChat,
+        setCurrentThreadChat: setCurrentThreadChat,
+        funcSetAllChats: funcSetAllChats,
+        setIsTaskCommentUpdated: setIsTaskCommentUpdated,
+        isLoading: isLoading,
+        funcSetActivityMessages: funcSetActivityMessages,
+        funcSetInboxItems: funcSetInboxItems,
     });
-    const initCurrentTeam = async () => {
-        const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
-        if (findTeamRes && findTeamRes.exist === true) {
-            setCurrentTeam(findTeamRes.teamDetails);
-        }
-    };
 
     useEffect(() => {
         funcSetInboxItems();
@@ -387,48 +500,6 @@ export const App = () => {
             };
         }
     }, [myself]);
-
-    wsHook({
-        socket: socketInstance,
-        accessToken: accessToken,
-        myself: myself,
-        allChats: allChats,
-        currentMainChat: currentMainChat,
-        currentSubChat: currentSubChat,
-        currentThreadChat: currentThreadChat,
-        setCurrentMainChat: setCurrentMainChat,
-        setCurrentSubChat: setCurrentSubChat,
-        setCurrentThreadChat: setCurrentThreadChat,
-        funcSetAllChats: funcSetAllChats,
-        setIsTaskCommentUpdated: setIsTaskCommentUpdated,
-        isLoading: isLoading,
-        funcSetActivityMessages: funcSetActivityMessages,
-        funcSetInboxItems: funcSetInboxItems,
-    });
-
-    const sendHeartBeat = () => {
-        if (socketInstance) {
-            const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
-            const role: string = localStorage.getItem("role") || "";
-            const baseCountry: string = localStorage.getItem("baseCountry") || "";
-            const customStatus: string = localStorage.getItem("customStatus") || "";
-            const avatarImgPath: string = localStorage.getItem("avatarImgPath") || "";
-
-            socketInstance.emit("heartbeat", {
-                message: "alive",
-                is_online: true,
-                user: {
-                    ...myself,
-                    avatarImgPath: avatarImgPath,
-                    isOfflineForced: isOfflineForced,
-                    role: role,
-                    baseCountry: baseCountry,
-                    customStatus: customStatus,
-                    tsLastSeen: getCurrentTimestamp(),
-                },
-            });
-        }
-    };
 
     useEffect(() => {
         if (socketInstance) {
@@ -520,7 +591,7 @@ export const App = () => {
                         setTabChatNotes={setTabChatNotes}
                         selectedTabIndex={selectedTabIndex}
                         setSelectedTabIndex={setSelectedTabIndex}
-                        handleCreateNewNote={handleCreateNewNote}
+                        handleCreateNewChatNote={handleCreateNewChatNote}
                         currentChatNoteChain={currentChatNoteChain}
                     />
                 ) : null}
@@ -557,10 +628,12 @@ export const App = () => {
                         setCurrentMainChat={setCurrentMainChat}
                         currentNoteType={currentNoteType}
                         setCurrentNoteType={setCurrentNoteType}
-                        currentNote={currentMyNote}
-                        setCurrentNote={setCurrentMyNote}
-                        currentNoteTitle={currentMyNoteTitle}
-                        setCurrentNoteTitle={setCurrentMyNoteTitle}
+                        currentMyNoteTitle={currentMyNoteTitle}
+                        setCurrentMyNoteTitle={setCurrentMyNoteTitle}
+                        currentTaskNoteTitle={currentTaskNoteTitle}
+                        setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
+                        currentChatNoteTitle={currentChatNoteTitle}
+                        setCurrentChatNoteTitle={setCurrentChatNoteTitle}
                         myNoteMeta={myNoteMeta}
                         setMyNoteMeta={setMyNoteMeta}
                         taskNoteMeta={taskNoteMeta}
@@ -569,13 +642,29 @@ export const App = () => {
                         setChatNoteMeta={setChatNoteMeta}
                         tabMyNotes={tabMyNotes}
                         setTabMyNotes={setTabMyNotes}
+                        tabTaskNotes={tabTaskNotes}
+                        setTabTaskNotes={setTabTaskNotes}
+                        tabChatNotes={tabChatNotes}
+                        setTabChatNotes={setTabChatNotes}
                         selectedTabIndex={selectedTabIndex}
                         setSelectedTabIndex={setSelectedTabIndex}
                         newlyCreatedMyNotes={newlyCreatedMyNotes}
                         setNewlyCreatedMyNotes={setNewlyCreatedMyNotes}
-                        handleCreateNewNote={handleCreateNewNote}
+                        currentMyNote={currentMyNote}
+                        setCurrentMyNote={setCurrentMyNote}
+                        handleCreateNewMyNote={handleCreateNewMyNote}
+                        currentTaskNote={currentTaskNote}
+                        setCurrentTaskNote={setCurrentTaskNote}
+                        handleCreateNewTaskNote={handleCreateNewTaskNote}
+                        currentChatNote={currentChatNote}
+                        setCurrentChatNote={setCurrentChatNote}
+                        handleCreateNewChatNote={handleCreateNewChatNote}
                         currentMyNoteChain={currentMyNoteChain}
                         setCurrentMyNoteChain={setCurrentMyNoteChain}
+                        currentTaskNoteChain={currentTaskNoteChain}
+                        setCurrentTaskNoteChain={setCurrentTaskNoteChain}
+                        currentChatNoteChain={currentChatNoteChain}
+                        setCurrentChatNoteChain={setCurrentChatNoteChain}
                         unReadInboxItemCount={unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     />

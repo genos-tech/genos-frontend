@@ -24,6 +24,7 @@ type ThreadChatPaneHeaderProps = {
     setIsCreatingTask: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     currentPreviewTaskId: number;
+    setIsNoteVisible: (value: boolean) => void;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
@@ -40,6 +41,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setIsCreatingTask,
         currentPreviewTask,
         currentPreviewTaskId,
+        setIsNoteVisible,
     } = props;
     const { mode } = useColorScheme();
 
@@ -187,7 +189,14 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         size="sm"
                         variant="plain"
                         color="neutral"
-                        onClick={() => {}}
+                        onClick={() => {
+                            setIsNoteVisible(true);
+                            setIsMainChatVisible(false);
+                            setIsThreadVisible(true);
+                            setIsTaskPreviewVisible(false);
+                            setIsTaskCreationVisible(false);
+                            setIsOpeningTask(false);
+                        }}
                     >
                         <NoteAltIcon />
                     </IconButton>

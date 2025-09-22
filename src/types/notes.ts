@@ -1,10 +1,9 @@
 import { PartialBlock } from "@blocknote/core";
 
-export type MyNoteMetaProps = {
+export type NoteMetaProps = {
     noteId: number;
     parentNoteId: number | null;
     title: string;
-    tsCreated: string;
     tsUpdated: string;
     error?: string;
 };
@@ -12,6 +11,7 @@ export type MyNoteMetaProps = {
 export type MyNoteProps = {
     teamId: string;
     ownerId: string;
+    roleId: number;
     noteId: number;
     parentNoteId: number | null;
     title: string;
@@ -22,22 +22,18 @@ export type MyNoteProps = {
     children?: MyNoteProps[];
 };
 
-export type MyNoteMetaTreeNode = MyNoteMetaProps & { children: MyNoteMetaTreeNode[] };
-
-export type ChatNoteMetaProps = {
-    noteId: number;
-    parentNoteId: number | null;
-    title: string;
-    tsCreated: string;
-    tsUpdated: string;
-    error?: string;
-};
+export type MyNoteMetaTreeNode = NoteMetaProps & { children: MyNoteMetaTreeNode[] };
 
 export type ChatNoteProps = {
     teamId: string;
     ownerId: string;
+    roleId: number;
     noteId: number;
     parentNoteId: number | null;
+    chatType: number;
+    chatId: number;
+    isThread: boolean;
+    threadId: number;
     title: string;
     body: PartialBlock[] | any[];
     tsCreated: string;
@@ -46,22 +42,15 @@ export type ChatNoteProps = {
     children?: ChatNoteProps[];
 };
 
-export type ChatNoteMetaTreeNode = ChatNoteMetaProps & { children: ChatNoteMetaTreeNode[] };
-
-export type TaskNoteMetaProps = {
-    noteId: number;
-    parentNoteId: number | null;
-    title: string;
-    tsCreated: string;
-    tsUpdated: string;
-    error?: string;
-};
+export type ChatNoteMetaTreeNode = NoteMetaProps & { children: ChatNoteMetaTreeNode[] };
 
 export type TaskNoteProps = {
     teamId: string;
     ownerId: string;
+    roleId: number;
     noteId: number;
     parentNoteId: number | null;
+    taskId: number;
     title: string;
     body: PartialBlock[] | any[];
     tsCreated: string;
@@ -70,4 +59,4 @@ export type TaskNoteProps = {
     children?: TaskNoteProps[];
 };
 
-export type TaskNoteMetaTreeNode = TaskNoteMetaProps & { children: TaskNoteMetaTreeNode[] };
+export type TaskNoteMetaTreeNode = NoteMetaProps & { children: TaskNoteMetaTreeNode[] };

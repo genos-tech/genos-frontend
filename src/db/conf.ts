@@ -1,5 +1,5 @@
 export const DB_NAME = "originData";
-export const DB_VERSION = 15;
+export const DB_VERSION = 17;
 
 export const STORES = {
     USER_INFO: "users",
@@ -15,7 +15,9 @@ export const STORES = {
     PM_MESSAGES: "pmMessages",
     PM_THREAD_MESSAGES: "pmThreadMessages",
     TASKS: "tasks",
-    NOTES: "notes",
+    PERSONAL_NOTES: "personalNotes",
+    TASK_NOTES: "taskNotes",
+    CHAT_NOTES: "chatNotes",
 };
 
 export const KEY_PATH = {
@@ -32,7 +34,9 @@ export const KEY_PATH = {
     PM_MESSAGES: "messageIdWithChatId",
     PM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
     TASKS: "id",
-    NOTES: "noteId",
+    PERSONAL_NOTES: "noteId",
+    TASK_NOTES: "noteId",
+    CHAT_NOTES: "noteId",
 };
 
 export const INDEX = {

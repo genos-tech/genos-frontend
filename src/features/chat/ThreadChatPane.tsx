@@ -40,6 +40,7 @@ type MessagesPaneProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     currentPreviewTaskId: number;
+    setIsNoteVisible: (value: boolean) => void;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -65,6 +66,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         setOpeningService,
         setCurrentMainChat,
         currentPreviewTaskId,
+        setIsNoteVisible,
     } = props;
 
     const { accessToken } = useAuth();
@@ -215,6 +217,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setIsCreatingTask={setIsCreatingTask}
                         currentPreviewTask={currentPreviewTask}
                         currentPreviewTaskId={currentPreviewTaskId}
+                        setIsNoteVisible={setIsNoteVisible}
                     />
 
                     <Box sx={{ px: 0.3, my: 0.2 }}>

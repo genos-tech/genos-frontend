@@ -154,9 +154,19 @@ export const initDB = async (): Promise<IDBPDatabase> => {
             }
 
             // Notes
-            if (!db.objectStoreNames.contains(STORES.NOTES)) {
-                db.createObjectStore(STORES.NOTES, {
-                    keyPath: KEY_PATH.NOTES,
+            if (!db.objectStoreNames.contains(STORES.PERSONAL_NOTES)) {
+                db.createObjectStore(STORES.PERSONAL_NOTES, {
+                    keyPath: KEY_PATH.PERSONAL_NOTES,
+                });
+            }
+            if (!db.objectStoreNames.contains(STORES.TASK_NOTES)) {
+                db.createObjectStore(STORES.TASK_NOTES, {
+                    keyPath: KEY_PATH.TASK_NOTES,
+                });
+            }
+            if (!db.objectStoreNames.contains(STORES.CHAT_NOTES)) {
+                db.createObjectStore(STORES.CHAT_NOTES, {
+                    keyPath: KEY_PATH.CHAT_NOTES,
                 });
             }
         },

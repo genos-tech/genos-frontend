@@ -18,7 +18,8 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { ChatNoteProps, ChatNoteMetaTreeNode, ChatNoteMetaProps } from "../../types/notes";
+import { ChatNoteProps, ChatNoteMetaTreeNode, NoteMetaProps } from "../../types/notes";
+import { ChatNoteMain } from "../notes/components/ChatNoteMain";
 
 type ChatHomeProps = {
     currentTeam: Team;
@@ -54,13 +55,19 @@ type ChatHomeProps = {
     setCurrentChatNote: (value: ChatNoteProps) => void;
     currentChatNoteTitle: string;
     setCurrentChatNoteTitle: (value: string) => void;
-    chatNoteMeta: ChatNoteMetaProps[];
-    setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
+    chatNoteMeta: NoteMetaProps[];
+    setChatNoteMeta: (value: NoteMetaProps[]) => void;
     tabChatNotes: ChatNoteProps[];
     setTabChatNotes: (value: ChatNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
-    handleCreateNewNote: (parentNoteId: number | null) => Promise<void>;
+    handleCreateNewChatNote: (
+        parentNoteId: number | null,
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
 };
 
@@ -105,7 +112,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         setTabChatNotes,
         selectedTabIndex,
         setSelectedTabIndex,
-        handleCreateNewNote,
+        handleCreateNewChatNote,
         currentChatNoteChain,
     } = props;
 
@@ -491,6 +498,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setOpeningService={setOpeningService}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     currentPreviewTaskId={currentPreviewTaskId}
+                                                    setIsNoteVisible={setIsNoteVisible}
                                                 />
                                             </Box>
                                         </Panel>
@@ -699,6 +707,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                             currentPreviewTaskId={currentPreviewTaskId}
+                                            setIsNoteVisible={setIsNoteVisible}
                                         />
                                     </Box>
                                 </Panel>
@@ -893,28 +902,36 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                         mode === "dark" ? "black" : "white",
                                                 }}
                                             >
-                                                {/* <NoteMain
+                                                <ChatNoteMain
                                                     teamMemberProfiles={teamMemberProfiles}
                                                     socket={socket}
                                                     teamMembers={teamMembers}
                                                     myself={myself}
                                                     setMyself={setMyself}
+                                                    chatType={currentThreadChat.chatType}
+                                                    chatId={currentThreadChat.chatId}
+                                                    isThread={true}
+                                                    threadId={currentThreadChat.threadId}
                                                     setOpeningService={setOpeningService}
                                                     setCurrentChat={setCurrentMainChat}
                                                     currentNoteType={currentNoteType}
-                                                    currentNote={currentNote}
-                                                    setCurrentNote={setCurrentNote}
-                                                    currentNoteTitle={currentNoteTitle}
-                                                    setCurrentNoteTitle={setCurrentNoteTitle}
-                                                    myNoteMeta={myNoteMeta} // TODO: Use the correct note based on noteType
-                                                    setMyNoteMeta={setMyNoteMeta}
-                                                    tabMyNotes={tabMyNotes}
-                                                    setTabMyNotes={setTabMyNotes}
+                                                    currentNote={currentChatNote}
+                                                    setCurrentChatNote={setCurrentChatNote}
+                                                    currentChatNoteTitle={currentChatNoteTitle}
+                                                    setCurrentChatNoteTitle={
+                                                        setCurrentChatNoteTitle
+                                                    }
+                                                    chatNoteMeta={chatNoteMeta} // TODO: Use the correct note based on noteType
+                                                    setChatNoteMeta={setChatNoteMeta}
+                                                    tabChatNotes={tabChatNotes}
+                                                    setTabChatNotes={setTabChatNotes}
                                                     selectedTabIndex={selectedTabIndex}
                                                     setSelectedTabIndex={setSelectedTabIndex}
-                                                    handleCreateNewNote={handleCreateNewNote}
-                                                    currentMyNoteChain={currentMyNoteChain}
-                                                /> */}
+                                                    handleCreateNewChatNote={
+                                                        handleCreateNewChatNote
+                                                    }
+                                                    currentChatNoteChain={currentChatNoteChain}
+                                                />
                                             </Box>
                                         </Panel>
                                     </>
