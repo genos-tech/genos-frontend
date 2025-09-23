@@ -58,8 +58,8 @@ type ChatNoteMainProps = {
     setCurrentChat: (chat: ChatProps) => void;
     chatNoteMeta: NoteMetaProps[];
     setChatNoteMeta: (value: NoteMetaProps[]) => void;
-    tabNotes: any[];
-    setTabNotes: (value: any[]) => void;
+    tabItems: any[];
+    setTabItems: (value: any[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewChatNote: (
@@ -90,8 +90,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         currentNoteType,
         chatNoteMeta,
         setChatNoteMeta,
-        tabNotes,
-        setTabNotes,
+        tabItems,
+        setTabItems,
         selectedTabIndex,
         setSelectedTabIndex,
         handleCreateNewChatNote,
@@ -187,18 +187,18 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
             if (
                 isUpdatingTabContents === true &&
-                (tabNotes.length === 0 ||
-                    (tabNotes.length > 0 &&
-                        tabNotes.some((note) => note.noteId === currentChatNote.noteId)) === false)
+                (tabItems.length === 0 ||
+                    (tabItems.length > 0 &&
+                        tabItems.some((note) => note.noteId === currentChatNote.noteId)) === false)
             ) {
                 // Add the clicked note to the tab.
-                setTabNotes([...tabNotes, currentChatNote]);
+                setTabItems([...tabItems, currentChatNote]);
                 // Also, update the index to the clicked note.
-                setSelectedTabIndex(tabNotes.length); // switch to new tab
+                setSelectedTabIndex(tabItems.length); // switch to new tab
             } else {
                 // Update the index when an user click a note in the sidebar
                 setSelectedTabIndex(
-                    tabNotes.findIndex((note) => note.noteId === currentChatNote.noteId)
+                    tabItems.findIndex((note) => note.noteId === currentChatNote.noteId)
                 );
             }
 
@@ -212,20 +212,20 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             key: noteId,
         });
         if (note) {
-            setTabNotes([note]);
+            setTabItems([note]);
             setCurrentChatNote(note);
         } else {
             // console.log("not four note in indexedDB:", note);
-            setTabNotes([]);
+            setTabItems([]);
         }
         setSelectedTabIndex(0);
     };
 
     const handleCloseTab = (closedNoteId: number) => {
-        if (tabNotes.length > 1) {
-            setTabNotes(tabNotes.filter((t) => t.noteId !== closedNoteId));
-            if (selectedTabIndex >= tabNotes.length - 1) {
-                setSelectedTabIndex(tabNotes.length - 2); // fallback to previous tab
+        if (tabItems.length > 1) {
+            setTabItems(tabItems.filter((t) => t.noteId !== closedNoteId));
+            if (selectedTabIndex >= tabItems.length - 1) {
+                setSelectedTabIndex(tabItems.length - 2); // fallback to previous tab
             } else {
                 setIsUpdatingTabContents(false);
             }
@@ -236,23 +236,23 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     useEffect(() => {
         if (isUpdatingTabContents === false) {
-            if (tabNotes[selectedTabIndex]) {
-                setCurrentChatNote(tabNotes[selectedTabIndex]);
+            if (tabItems[selectedTabIndex]) {
+                setCurrentChatNote(tabItems[selectedTabIndex]);
             }
         }
     }, [isUpdatingTabContents]);
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabNotes[selectedTabIndex] && tabNotes[selectedTabIndex].noteType === 3) {
-            setCurrentChatNote(tabNotes[selectedTabIndex]);
+        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 3) {
+            setCurrentChatNote(tabItems[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
 
     // Update note title in the tab
     useEffect(() => {
-        setTabNotes(
-            tabNotes.map((u) =>
+        setTabItems(
+            tabItems.map((u) =>
                 u.noteType === currentChatNote?.noteType && u.noteId === currentChatNote?.noteId
                     ? { ...u, title: currentChatNoteTitle }
                     : u
@@ -484,24 +484,24 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabNotes.length}`}
+                                        key={`tabs-${tabItems.length}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            setCurrentChatNote(tabNotes[Number(val)]);
+                                            setCurrentChatNote(tabItems[Number(val)]);
                                             setSelectedTabIndex(Number(val));
-                                            if (tabNotes[Number(val)].noteType) {
-                                                setCurrentNoteType(tabNotes[Number(val)].noteType);
+                                            if (tabItems[Number(val)].noteType) {
+                                                setCurrentNoteType(tabItems[Number(val)].noteType);
                                             } else {
                                                 console.error(
                                                     "Unexpected result in ChatNoteMain!!!!"
                                                 );
                                                 console.log(
-                                                    "tabNotes[Number(val)].noteType:",
-                                                    tabNotes[Number(val)].noteType
+                                                    "tabItems[Number(val)].noteType:",
+                                                    tabItems[Number(val)].noteType
                                                 );
                                                 console.log(
-                                                    "tabNotes[Number(val)]:",
-                                                    tabNotes[Number(val)]
+                                                    "tabItems[Number(val)]:",
+                                                    tabItems[Number(val)]
                                                 );
                                             }
                                         }}
@@ -516,7 +516,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 "&::-webkit-scrollbar": { display: "none" },
                                             }}
                                         >
-                                            {tabNotes.map((tab, index) => (
+                                            {tabItems.map((tab, index) => (
                                                 <Tab
                                                     key={tab.noteId}
                                                     sx={{
@@ -539,7 +539,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             ? `${tab.title.slice(0, 20)}...`
                                                             : tab.title}
 
-                                                        {tabNotes.length > 1 && (
+                                                        {tabItems.length > 1 && (
                                                             <IconButton
                                                                 component="span"
                                                                 size="sm"
@@ -561,7 +561,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             ))}
                                         </TabList>
 
-                                        {tabNotes.map((tabNote, index) => (
+                                        {tabItems.map((tabNote, index) => (
                                             <TabPanel
                                                 key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
                                                 value={index}

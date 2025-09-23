@@ -57,8 +57,8 @@ type ChatHomeProps = {
     setCurrentChatNoteTitle: (value: string) => void;
     chatNoteMeta: NoteMetaProps[];
     setChatNoteMeta: (value: NoteMetaProps[]) => void;
-    tabNotes: any[];
-    setTabNotes: (value: any[]) => void;
+    tabItems: any[];
+    setTabItems: (value: any[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewChatNote: (
@@ -75,6 +75,7 @@ type ChatHomeProps = {
         threadId: number
     ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
+    setCurrentNoteType: (value: number) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -114,13 +115,14 @@ export const ChatHome = (props: ChatHomeProps) => {
         setCurrentChatNoteTitle,
         chatNoteMeta,
         setChatNoteMeta,
-        tabNotes,
-        setTabNotes,
+        tabItems,
+        setTabItems,
         selectedTabIndex,
         setSelectedTabIndex,
         handleCreateNewChatNote,
         handleCreateNewChatNoteIfNotExist,
         currentChatNoteChain,
+        setCurrentNoteType,
     } = props;
 
     const { mode } = useColorScheme();
@@ -932,14 +934,15 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     currentNoteType={currentNoteType}
                                                     chatNoteMeta={chatNoteMeta}
                                                     setChatNoteMeta={setChatNoteMeta}
-                                                    tabNotes={tabNotes}
-                                                    setTabNotes={setTabNotes}
+                                                    tabItems={tabItems}
+                                                    setTabItems={setTabItems}
                                                     selectedTabIndex={selectedTabIndex}
                                                     setSelectedTabIndex={setSelectedTabIndex}
                                                     handleCreateNewChatNote={
                                                         handleCreateNewChatNote
                                                     }
                                                     currentChatNoteChain={currentChatNoteChain}
+                                                    setCurrentNoteType={setCurrentNoteType}
                                                     isInChatPage={true}
                                                 />
                                             </Box>

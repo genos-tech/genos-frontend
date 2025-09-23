@@ -39,6 +39,9 @@ import { loadMyNoteMeta } from "./features/notes/services/loadMyNoteMeta";
 import { loadTaskNoteMeta } from "./features/notes/services/loadTaskNoteMeta";
 import { loadChatNoteMeta } from "./features/notes/services/loadChatNoteMeta";
 import { loadChatNotesByChatId } from "./features/notes/services/loadChatNotesByChatId";
+import { updataMyNoteChain, initCurrentMyNoteChain } from "./hooks/notes/myNote";
+import { updateTabFromMyNoteUpdate } from "./hooks/notes/tab";
+import { buildMyNoteTree } from "./utils/note";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -196,7 +199,7 @@ export const App = () => {
     const [currentMyNoteTitle, setCurrentMyNoteTitle] = useState<string>("");
     const [myNoteMeta, setMyNoteMeta] = useState<NoteMetaProps[]>([]);
     const [currentMyNoteChain, setCurrentMyNoteChain] = useState<MyNoteMetaTreeNode[]>();
-    const [tabNotes, setTabNotes] = useState<any[]>([]);
+    const [tabItems, setTabItems] = useState<any[]>([]);
     const [newlyCreatedMyNotes, setNewlyCreatedMyNotes] = useState<MyNoteProps[]>([]);
 
     // Task Note
@@ -215,17 +218,12 @@ export const App = () => {
 
     // Note common
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+
+    // My Note related
     const handleCreateNewMyNote = async (parentNoteId: number | null) => {
         const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedMyNotes.length + 1})`;
         const _newNote = await createEmptyMyNote(myself, parentNoteId, title, accessToken);
         const newNote: MyNoteProps = { noteType: 1, ..._newNote };
-        if (tabNotes.length === 0 || tabNotes[0] === undefined) {
-            setSelectedTabIndex(0);
-            setTabNotes([newNote]);
-        } else {
-            setSelectedTabIndex(tabNotes.length);
-            setTabNotes([...tabNotes, newNote]);
-        }
         setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
         setCurrentMyNote(newNote);
         setCurrentMyNoteTitle(title);
@@ -241,6 +239,40 @@ export const App = () => {
             ...myNoteMeta,
         ]);
     };
+    const getMyNoteMeta = async () => {
+        const loadedNotes: NoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
+        if (loadedNotes.length > 0) {
+            setMyNoteMeta(loadedNotes);
+        }
+    };
+    const [allNoteIdChains, setAllNoteIdChains] = useState<Record<number, number[]>>({});
+    const [myNoteMetaTree, setMyNoteMetaTree] = useState<MyNoteMetaTreeNode[]>(
+        buildMyNoteTree(myNoteMeta)
+    );
+    useEffect(() => {
+        setMyNoteMetaTree(buildMyNoteTree(myNoteMeta));
+    }, [myNoteMeta]);
+    initCurrentMyNoteChain({
+        myNoteMeta: myNoteMeta,
+        currentMyNoteChain: currentMyNoteChain,
+        setCurrentMyNoteChain: setCurrentMyNoteChain,
+    });
+    updateTabFromMyNoteUpdate({
+        currentMyNote: currentMyNote,
+        setSelectedTabIndex: setSelectedTabIndex,
+        tabItems: tabItems,
+        setTabItems: setTabItems,
+    });
+    updataMyNoteChain({
+        currentMyNote: currentMyNote,
+        myNoteMetaTree: myNoteMetaTree,
+        currentMyNoteChain: currentMyNoteChain,
+        setCurrentMyNoteChain: setCurrentMyNoteChain,
+        allNoteIdChains: allNoteIdChains,
+        setAllNoteIdChains: setAllNoteIdChains,
+        tabItems: tabItems,
+        selectedTabIndex: selectedTabIndex,
+    });
 
     const handleCreateNewTaskNote = async (parentNoteId: number | null, taskId: number) => {
         const title = `${parentNoteId ? "Child" : "New"} Note (${
@@ -254,12 +286,12 @@ export const App = () => {
             accessToken
         );
         const newNote: TaskNoteProps = { noteType: 2, ..._newNote };
-        if (tabNotes.length === 0 || tabNotes[0] === undefined) {
+        if (tabItems.length === 0 || tabItems[0] === undefined) {
             setSelectedTabIndex(0);
-            setTabNotes([newNote]);
+            setTabItems([newNote]);
         } else {
-            setSelectedTabIndex(tabNotes.length);
-            setTabNotes([...tabNotes, newNote]);
+            setSelectedTabIndex(tabItems.length);
+            setTabItems([...tabItems, newNote]);
         }
         setNewlyCreatedTaskNotes([...newlyCreatedTaskNotes, newNote]);
         setCurrentTaskNote(newNote);
@@ -298,12 +330,12 @@ export const App = () => {
             accessToken
         );
         const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
-        if (tabNotes.length === 0 || tabNotes[0] === undefined) {
+        if (tabItems.length === 0 || tabItems[0] === undefined) {
             setSelectedTabIndex(0);
-            setTabNotes([newNote]);
+            setTabItems([newNote]);
         } else {
-            setSelectedTabIndex(tabNotes.length);
-            setTabNotes([...tabNotes, newNote]);
+            setSelectedTabIndex(tabItems.length);
+            setTabItems([...tabItems, newNote]);
         }
         setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
         setCurrentChatNote(newNote);
@@ -337,14 +369,14 @@ export const App = () => {
         );
         if (chatNotes.length > 0) {
             const newNote = chatNotes[0];
-            if (tabNotes.length === 0 || tabNotes[0] === undefined) {
+            if (tabItems.length === 0 || tabItems[0] === undefined) {
                 setSelectedTabIndex(0);
-                setTabNotes([newNote]);
+                setTabItems([newNote]);
             } else {
-                if (tabNotes.some((note) => note.noteId === newNote.noteId) === false) {
-                    setTabNotes([...tabNotes, newNote]);
+                if (tabItems.some((note) => note.noteId === newNote.noteId) === false) {
+                    setTabItems([...tabItems, newNote]);
                 }
-                setSelectedTabIndex(tabNotes.length);
+                setSelectedTabIndex(tabItems.length);
             }
             setCurrentChatNote(newNote);
             setCurrentChatNoteTitle(newNote.title);
@@ -362,12 +394,12 @@ export const App = () => {
                 accessToken
             );
             const newNote: ChatNoteProps = { noteType: 2, ..._newNote };
-            if (tabNotes.length === 0 || tabNotes[0] === undefined) {
+            if (tabItems.length === 0 || tabItems[0] === undefined) {
                 setSelectedTabIndex(0);
-                setTabNotes([newNote]);
+                setTabItems([newNote]);
             } else {
-                setSelectedTabIndex(tabNotes.length);
-                setTabNotes([...tabNotes, newNote]);
+                setSelectedTabIndex(tabItems.length);
+                setTabItems([...tabItems, newNote]);
             }
             setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
             setCurrentChatNote(newNote);
@@ -387,15 +419,9 @@ export const App = () => {
     };
 
     // useEffect(() => {
-    //     console.log("tabNotes:", tabNotes);
-    // }, [tabNotes]);
+    //     console.log("tabItems:", tabItems);
+    // }, [tabItems]);
 
-    const getMyNoteMeta = async () => {
-        const loadedNotes: NoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setMyNoteMeta(loadedNotes);
-        }
-    };
     const getTaskNoteMeta = async () => {
         const loadedNotes: NoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
         if (loadedNotes.length > 0) {
@@ -408,12 +434,6 @@ export const App = () => {
             setChatNoteMeta(loadedNotes);
         }
     };
-
-    useEffect(() => {
-        if (currentMyNote) {
-            localStorage.setItem("lastOpenMyNoteId", String(currentMyNote.noteId));
-        }
-    }, [currentMyNote]);
 
     useEffect(() => {
         if (currentTaskNote) {
@@ -700,13 +720,14 @@ export const App = () => {
                         setCurrentChatNoteTitle={setCurrentChatNoteTitle}
                         chatNoteMeta={chatNoteMeta}
                         setChatNoteMeta={setChatNoteMeta}
-                        tabNotes={tabNotes}
-                        setTabNotes={setTabNotes}
+                        tabItems={tabItems}
+                        setTabItems={setTabItems}
                         selectedTabIndex={selectedTabIndex}
                         setSelectedTabIndex={setSelectedTabIndex}
                         handleCreateNewChatNote={handleCreateNewChatNote}
                         handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
                         currentChatNoteChain={currentChatNoteChain}
+                        setCurrentNoteType={setCurrentNoteType}
                     />
                 ) : null}
 
@@ -754,8 +775,8 @@ export const App = () => {
                         setTaskNoteMeta={setTaskNoteMeta}
                         chatNoteMeta={chatNoteMeta}
                         setChatNoteMeta={setChatNoteMeta}
-                        tabNotes={tabNotes}
-                        setTabNotes={setTabNotes}
+                        tabItems={tabItems}
+                        setTabItems={setTabItems}
                         selectedTabIndex={selectedTabIndex}
                         setSelectedTabIndex={setSelectedTabIndex}
                         currentMyNote={currentMyNote}
@@ -775,6 +796,8 @@ export const App = () => {
                         setCurrentChatNoteChain={setCurrentChatNoteChain}
                         unReadInboxItemCount={unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                        myNoteMetaTree={myNoteMetaTree}
+                        allNoteIdChains={allNoteIdChains}
                     />
                 ) : null}
             </CssVarsProvider>
