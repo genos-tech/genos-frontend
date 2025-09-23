@@ -4,7 +4,6 @@ import {
     Box,
     Stack,
     Typography,
-    Tooltip,
     IconButton,
     Button,
     FormControl,
@@ -31,7 +30,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
 import { BnTaskNoteEditor } from "../../../components/blockNote/bnTaskNoteEditor";
-import { NoteMetaProps, TaskNoteProps, TaskNoteMetaTreeNode } from "../../../types/notes";
+import { TaskNoteMetaProps, TaskNoteProps, TaskNoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedTaskNote } from "../services/sendUpdatedTaskNote";
 import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
@@ -54,14 +53,14 @@ type TaskNoteMainProps = {
     setCurrentTaskNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    taskNoteMeta: NoteMetaProps[];
-    setTaskNoteMeta: (value: NoteMetaProps[]) => void;
+    taskNoteMeta: TaskNoteMetaProps[];
+    setTaskNoteMeta: (value: TaskNoteMetaProps[]) => void;
     tabItems: TaskNoteProps[];
     setTabItems: (value: TaskNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
-    currentTaskNoteChain?: TaskNoteMetaTreeNode[];
+    currentTaskNoteChain: TaskNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
 };
 
@@ -137,6 +136,32 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
             setNoteUpdated(false);
+
+            // This needs to update the note title on the tab.
+            setTabItems(
+                tabItems.map((item) =>
+                    item.noteType === currentTaskNote?.noteType &&
+                    item.noteId === currentTaskNote?.noteId
+                        ? { ...item, title: currentTaskNoteTitle }
+                        : item
+                )
+            );
+
+            // This needs to update the note title in the sidebar.
+            setTaskNoteMeta(
+                taskNoteMeta.map((item) =>
+                    item.noteType === newNote.noteType && item.noteId === newNote.noteId
+                        ? {
+                              noteType: newNote.noteType,
+                              noteId: newNote.noteId,
+                              parentNoteId: newNote.parentNoteId,
+                              taskId: newNote.taskId,
+                              title: newNote.title,
+                              tsUpdated: newNote.tsUpdated,
+                          }
+                        : item
+                )
+            );
         }
     };
 
@@ -231,26 +256,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 2) {
+        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 1) {
             setCurrentTaskNote(tabItems[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
 
-    // Update note title in the tab
-    useEffect(() => {
-        setTabItems(
-            tabItems.map((u) =>
-                u.noteType === currentTaskNote?.noteType && u.noteId === currentTaskNote?.noteId
-                    ? { ...u, title: currentTaskNoteTitle }
-                    : u
-            )
-        );
-    }, [currentTaskNoteTitle]);
-
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     const LoadNote = async (noteId: number) => {
-        const note: TaskNoteProps = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
+        const note: TaskNoteProps = await getData({
+            storeName: STORES.TASK_NOTES,
+            key: noteId,
+        });
         if (note) {
             setCurrentTaskNote(note);
         } else {
@@ -312,29 +329,28 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             >
                                                 Task Notes
                                             </Typography>
-                                            {currentTaskNoteChain &&
-                                                currentTaskNoteChain.map((node) => (
-                                                    <Typography
-                                                        level="title-sm"
-                                                        component="button"
-                                                        onClick={() => {
-                                                            LoadNote(node.noteId);
-                                                        }}
-                                                        sx={{
-                                                            background: "none",
-                                                            border: "none",
-                                                            padding: 0,
-                                                            cursor: "pointer",
-                                                            color: "#646CFF",
-                                                            textAlign: "left",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                    >
-                                                        {node.title.length > 20
-                                                            ? `${node.title.slice(0, 20)}...`
-                                                            : node.title}
-                                                    </Typography>
-                                                ))}
+                                            {currentTaskNoteChain.map((node) => (
+                                                <Typography
+                                                    level="title-sm"
+                                                    component="button"
+                                                    onClick={() => {
+                                                        LoadNote(node.noteId);
+                                                    }}
+                                                    sx={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        padding: 0,
+                                                        cursor: "pointer",
+                                                        color: "#646CFF",
+                                                        textAlign: "left",
+                                                        fontWeight: "bold",
+                                                    }}
+                                                >
+                                                    {node.title.length > 20
+                                                        ? `${node.title.slice(0, 20)}...`
+                                                        : node.title}
+                                                </Typography>
+                                            ))}
                                         </Breadcrumbs>
 
                                         <Stack direction={"row"}>
@@ -415,9 +431,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         >
                                             {tabItems.map((tab, index) => (
                                                 <Tab
-                                                    key={tab.noteId}
+                                                    key={`tab-main-${index}-${tsBody}`}
                                                     sx={{
-                                                        my: "3px",
+                                                        task: "3px",
                                                         flex: "none",
                                                         scrollSnapAlign: "start",
                                                         borderRadius: "5px",

@@ -23,16 +23,16 @@ import { PartialBlock } from "@blocknote/core";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
-import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
 import { BnChatNoteEditor } from "../../../components/blockNote/bnChatNoteEditor";
-import { NoteMetaProps, ChatNoteProps, ChatNoteMetaTreeNode } from "../../../types/notes";
+import { ChatNoteMetaProps, ChatNoteProps, ChatNoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedChatNote } from "../services/sendUpdatedChatNote";
 import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
@@ -56,10 +56,10 @@ type ChatNoteMainProps = {
     setCurrentChatNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    chatNoteMeta: NoteMetaProps[];
-    setChatNoteMeta: (value: NoteMetaProps[]) => void;
-    tabItems: any[];
-    setTabItems: (value: any[]) => void;
+    chatNoteMeta: ChatNoteMetaProps[];
+    setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
+    tabItems: ChatNoteProps[];
+    setTabItems: (value: ChatNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewChatNote: (
@@ -69,9 +69,9 @@ type ChatNoteMainProps = {
         isThread: boolean,
         threadId: number
     ) => Promise<void>;
-    currentChatNoteChain?: ChatNoteMetaTreeNode[];
-    isInChatPage: boolean;
+    currentChatNoteChain: ChatNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
+    isInChatPage: boolean;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -96,8 +96,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setSelectedTabIndex,
         handleCreateNewChatNote,
         currentChatNoteChain,
-        isInChatPage,
         setCurrentNoteType,
+        isInChatPage,
     } = props;
 
     const { accessToken } = useAuth();
@@ -129,8 +129,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const [body, setBody] = useState<PartialBlock[]>();
     const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
 
-    const [openSearchBox, setOpenSearchBox] = useState(false);
-
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
         if (currentChatNote) {
@@ -149,6 +147,35 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
             setNoteUpdated(false);
+
+            // This needs to update the note title on the tab.
+            setTabItems(
+                tabItems.map((item) =>
+                    item.noteType === currentChatNote?.noteType &&
+                    item.noteId === currentChatNote?.noteId
+                        ? { ...item, title: currentChatNoteTitle }
+                        : item
+                )
+            );
+
+            // This needs to update the note title in the sidebar.
+            setChatNoteMeta(
+                chatNoteMeta.map((item) =>
+                    item.noteType === newNote.noteType && item.noteId === newNote.noteId
+                        ? {
+                              noteType: newNote.noteType,
+                              noteId: newNote.noteId,
+                              parentNoteId: newNote.parentNoteId,
+                              chatType: newNote.chatType,
+                              chatId: newNote.chatId,
+                              isThread: newNote.isThread,
+                              threadId: newNote.threadId,
+                              title: newNote.title,
+                              tsUpdated: newNote.tsUpdated,
+                          }
+                        : item
+                )
+            );
         }
     };
 
@@ -208,14 +235,13 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     const setNote = async (noteId: number) => {
         const note: ChatNoteProps = await getData({
-            storeName: STORES.CHAT_NOTES,
+            storeName: STORES.TASK_NOTES,
             key: noteId,
         });
         if (note) {
             setTabItems([note]);
             setCurrentChatNote(note);
         } else {
-            // console.log("not four note in indexedDB:", note);
             setTabItems([]);
         }
         setSelectedTabIndex(0);
@@ -244,27 +270,16 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 3) {
+        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 1) {
             setCurrentChatNote(tabItems[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
-
-    // Update note title in the tab
-    useEffect(() => {
-        setTabItems(
-            tabItems.map((u) =>
-                u.noteType === currentChatNote?.noteType && u.noteId === currentChatNote?.noteId
-                    ? { ...u, title: currentChatNoteTitle }
-                    : u
-            )
-        );
-    }, [currentChatNoteTitle]);
 
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     const LoadNote = async (noteId: number) => {
         const note: ChatNoteProps = await getData({
-            storeName: STORES.CHAT_NOTES,
+            storeName: STORES.TASK_NOTES,
             key: noteId,
         });
         if (note) {
@@ -277,6 +292,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             }
         }
     };
+
+    const [openSearchBox, setOpenSearchBox] = useState(false);
 
     return (
         <>
@@ -469,7 +486,19 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     </MenuItem>
                                                 </Menu>
                                             </Dropdown>
+                                            {currentChatNote && (
+                                                <ModalDeleteChatNote
+                                                    myself={myself}
+                                                    openDeleteNote={openDeleteNote}
+                                                    setOpenDeleteNote={setOpenDeleteNote}
+                                                    chatNoteMeta={chatNoteMeta}
+                                                    setChatNoteMeta={setChatNoteMeta}
+                                                    currentChatNote={currentChatNote}
+                                                    handleCloseTab={handleCloseTab}
+                                                />
+                                            )}
                                         </Stack>
+
                                         {currentChatNote && (
                                             <ModalDeleteChatNote
                                                 myself={myself}
@@ -489,21 +518,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         onChange={(_, val) => {
                                             setCurrentChatNote(tabItems[Number(val)]);
                                             setSelectedTabIndex(Number(val));
-                                            if (tabItems[Number(val)].noteType) {
-                                                setCurrentNoteType(tabItems[Number(val)].noteType);
-                                            } else {
-                                                console.error(
-                                                    "Unexpected result in ChatNoteMain!!!!"
-                                                );
-                                                console.log(
-                                                    "tabItems[Number(val)].noteType:",
-                                                    tabItems[Number(val)].noteType
-                                                );
-                                                console.log(
-                                                    "tabItems[Number(val)]:",
-                                                    tabItems[Number(val)]
-                                                );
-                                            }
+                                            setCurrentNoteType(tabItems[Number(val)].noteType);
                                         }}
                                         aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}
@@ -518,9 +533,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         >
                                             {tabItems.map((tab, index) => (
                                                 <Tab
-                                                    key={tab.noteId}
+                                                    key={`tab-main-${index}-${tsBody}`}
                                                     sx={{
-                                                        my: "3px",
+                                                        chat: "3px",
                                                         flex: "none",
                                                         scrollSnapAlign: "start",
                                                         borderRadius: "5px",

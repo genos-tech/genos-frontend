@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MyNoteProps } from "../../types/notes";
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
 
 type updateTabFromMyNoteUpdateProps = {
     currentMyNote: MyNoteProps | null;
@@ -28,4 +28,62 @@ export const updateTabFromMyNoteUpdate = (props: updateTabFromMyNoteUpdateProps)
             }
         }
     }, [currentMyNote]);
+};
+
+type updateTabFromTaskNoteUpdateProps = {
+    currentTaskNote: TaskNoteProps | null;
+    setSelectedTabIndex: (value: number) => void;
+    tabItems: any[];
+    setTabItems: (value: any[]) => void;
+};
+export const updateTabFromTaskNoteUpdate = (props: updateTabFromTaskNoteUpdateProps) => {
+    const { currentTaskNote, setSelectedTabIndex, tabItems, setTabItems } = props;
+
+    useEffect(() => {
+        if (currentTaskNote) {
+            localStorage.setItem("lastOpenTaskNoteId", String(currentTaskNote.noteId));
+            if (tabItems.length === 0 || tabItems[0] === undefined) {
+                setSelectedTabIndex(0);
+                setTabItems([currentTaskNote]);
+            } else if (
+                tabItems.some(
+                    (item) =>
+                        `${item.noteType}-${item.noteId}` ===
+                        `${currentTaskNote.noteType}-${currentTaskNote.noteId}`
+                ) === false
+            ) {
+                setSelectedTabIndex(tabItems.length);
+                setTabItems([...tabItems, currentTaskNote]);
+            }
+        }
+    }, [currentTaskNote]);
+};
+
+type updateTabFromChatNoteUpdateProps = {
+    currentChatNote: ChatNoteProps | null;
+    setSelectedTabIndex: (value: number) => void;
+    tabItems: any[];
+    setTabItems: (value: any[]) => void;
+};
+export const updateTabFromChatNoteUpdate = (props: updateTabFromChatNoteUpdateProps) => {
+    const { currentChatNote, setSelectedTabIndex, tabItems, setTabItems } = props;
+
+    useEffect(() => {
+        if (currentChatNote) {
+            localStorage.setItem("lastOpenChatNoteId", String(currentChatNote.noteId));
+            if (tabItems.length === 0 || tabItems[0] === undefined) {
+                setSelectedTabIndex(0);
+                setTabItems([currentChatNote]);
+            } else if (
+                tabItems.some(
+                    (item) =>
+                        `${item.noteType}-${item.noteId}` ===
+                        `${currentChatNote.noteType}-${currentChatNote.noteId}`
+                ) === false
+            ) {
+                setSelectedTabIndex(tabItems.length);
+                setTabItems([...tabItems, currentChatNote]);
+            }
+        }
+    }, [currentChatNote]);
 };

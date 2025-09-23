@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MyNoteMetaTreeNode, MyNoteProps, NoteMetaProps } from "../../types/notes";
+import { MyNoteMetaTreeNode, MyNoteProps, MyNoteMetaProps } from "../../types/notes";
 
 function areArraysEqualByJSON<T>(arr1: T[], arr2: T[]): boolean {
     return JSON.stringify(arr1) === JSON.stringify(arr2);
@@ -38,8 +38,8 @@ type updataMyNoteChainProps = {
     myNoteMetaTree: MyNoteMetaTreeNode[];
     currentMyNoteChain?: MyNoteMetaTreeNode[];
     setCurrentMyNoteChain: (value: MyNoteMetaTreeNode[]) => void;
-    allNoteIdChains: Record<number, number[]>;
-    setAllNoteIdChains: (value: Record<number, number[]>) => void;
+    allNoteIdChains: Record<string, number[]>;
+    setAllNoteIdChains: (value: Record<string, number[]>) => void;
     tabItems: any[];
     selectedTabIndex: number;
 };
@@ -74,7 +74,8 @@ export const updataMyNoteChain = (props: updataMyNoteChainProps) => {
 
                 setAllNoteIdChains({
                     ...allNoteIdChains,
-                    [tabItems[selectedTabIndex].noteId]: chain.map((item) => item.noteId),
+                    [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
+                        chain.map((item) => item.noteId),
                 });
             }
         } else {
@@ -84,7 +85,7 @@ export const updataMyNoteChain = (props: updataMyNoteChainProps) => {
 };
 
 type initCurrentMyNoteChainProps = {
-    myNoteMeta: NoteMetaProps[];
+    myNoteMeta: MyNoteMetaProps[];
     currentMyNoteChain?: MyNoteMetaTreeNode[];
     setCurrentMyNoteChain: (value: MyNoteMetaTreeNode[]) => void;
 };

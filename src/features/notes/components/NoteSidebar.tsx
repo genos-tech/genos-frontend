@@ -42,16 +42,26 @@ type NoteSidebarProps = {
     myNoteMetaTree: MyNoteMetaTreeNode[];
     currentMyNote: MyNoteProps | null;
     setCurrentMyNote: (value: MyNoteProps) => void;
+    currentTaskNote: TaskNoteProps | null;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    currentChatNote: ChatNoteProps | null;
+    setCurrentChatNote: (value: ChatNoteProps) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
+    handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
+    handleCreateNewChatNote: (
+        parentNoteId: number | null,
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
     currentMyNoteChain?: MyNoteMetaTreeNode[];
     taskNoteMetaTree: TaskNoteMetaTreeNode[];
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
     chatNoteMetaTree: ChatNoteMetaTreeNode[];
-    setCurrentChatNote: (value: ChatNoteProps) => void;
     tabItems: any[];
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
-    allNoteIdChains: Record<number, number[]>;
+    allNoteIdChains: Record<string, number[]>;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
 };
@@ -63,13 +73,17 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         myNoteMetaTree,
         currentMyNote,
         setCurrentMyNote,
+        currentTaskNote,
+        setCurrentTaskNote,
+        currentChatNote,
+        setCurrentChatNote,
         handleCreateNewMyNote,
+        handleCreateNewTaskNote,
+        handleCreateNewChatNote,
         currentMyNoteChain,
         taskNoteMetaTree,
-        setCurrentTaskNote,
         currentTaskNoteChain,
         chatNoteMetaTree,
-        setCurrentChatNote,
         tabItems,
         currentChatNoteChain,
         allNoteIdChains,
@@ -82,6 +96,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         return JSON.stringify(objA) === JSON.stringify(objB);
     }
 
+    //////////////////////////
+    // My Note related
+    //////////////////////////
     const [tmpCurrentMyNoteChain, setTmpCurrentMyNoteChain] = useState<MyNoteMetaTreeNode[]>();
     const [tmpMyNoteMetaTree, setTmpMyNoteMetaTree] =
         useState<MyNoteMetaTreeNode[]>(myNoteMetaTree);
@@ -124,33 +141,101 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         setTmpMyNoteMetaTree(myNoteMetaTree);
     }, [currentMyNote]);
 
-    const [tsTaskNoteChainUpdated, setTsTaskNoteChainUpdated] = useState<string>(
-        getCurrentTimestamp()
-    );
+    //////////////////////////
+    // Task Note related
+    //////////////////////////
     const [tmpCurrentTaskNoteChain, setTmpCurrentTaskNoteChain] =
         useState<TaskNoteMetaTreeNode[]>();
+    const [tmpTaskNoteMetaTree, setTmpTaskNoteMetaTree] =
+        useState<TaskNoteMetaTreeNode[]>(taskNoteMetaTree);
     useEffect(() => {
         if (currentTaskNoteChain && currentTaskNoteChain.length > 0) {
             setTmpCurrentTaskNoteChain(currentTaskNoteChain);
         } else {
             setTmpCurrentTaskNoteChain([]);
         }
-        setTsTaskNoteChainUpdated(getCurrentTimestamp());
     }, [currentTaskNoteChain]);
 
-    const [tsChatNoteChainUpdated, setTsChatNoteChainUpdated] = useState<string>(
+    // Only when `taskNoteMetaTree` has been updated with new contents, refresh the Note Chain.
+    // `taskNoteMetaTree` has been always updated without any contents change. Is such case,
+    // no need to refresh it since it's the same as the tmp one.
+    const [tsTaskNoteTreeUpdated, setTsTaskNoteTreeUpdated] = useState<string>(
         getCurrentTimestamp()
     );
+    useEffect(() => {
+        if (areObjectsEqual(tmpTaskNoteMetaTree, taskNoteMetaTree) === false) {
+            setTmpTaskNoteMetaTree(taskNoteMetaTree);
+            // Set the timestamp for the key, but also with the index.
+            setTsTaskNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+        }
+    }, [taskNoteMetaTree]);
+
+    useEffect(() => {
+        // Update only the index prefix of the timestamp variable.
+        // Even if the `taskNoteMetaTree` isn't updated, we want to re-render the sidebar tree.
+        // The index prefix can achieve the re-rendering.
+        setTsTaskNoteTreeUpdated(String(selectedTabIndex) + tsTaskNoteTreeUpdated.slice(1));
+    }, [selectedTabIndex]);
+
+    useEffect(() => {
+        // Init timestamp after 1sec which needs to re-render the tree on the sidebar.
+        setTimeout(() => {
+            setTsTaskNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+        }, 1000); // wait Xms
+    }, []);
+
+    // When `currentTaskNote` is changed, refresh the Note Chain.
+    useEffect(() => {
+        setTmpTaskNoteMetaTree(taskNoteMetaTree);
+    }, [currentTaskNote]);
+
+    //////////////////////////
+    // Chat Note related
+    //////////////////////////
     const [tmpCurrentChatNoteChain, setTmpCurrentChatNoteChain] =
         useState<ChatNoteMetaTreeNode[]>();
+    const [tmpChatNoteMetaTree, setTmpChatNoteMetaTree] =
+        useState<ChatNoteMetaTreeNode[]>(chatNoteMetaTree);
     useEffect(() => {
         if (currentChatNoteChain && currentChatNoteChain.length > 0) {
             setTmpCurrentChatNoteChain(currentChatNoteChain);
         } else {
             setTmpCurrentChatNoteChain([]);
         }
-        setTsChatNoteChainUpdated(getCurrentTimestamp());
     }, [currentChatNoteChain]);
+
+    // Only when `chatNoteMetaTree` has been updated with new contents, refresh the Note Chain.
+    // `chatNoteMetaTree` has been always updated without any contents change. Is such case,
+    // no need to refresh it since it's the same as the tmp one.
+    const [tsChatNoteTreeUpdated, setTsChatNoteTreeUpdated] = useState<string>(
+        getCurrentTimestamp()
+    );
+    useEffect(() => {
+        if (areObjectsEqual(tmpChatNoteMetaTree, chatNoteMetaTree) === false) {
+            setTmpChatNoteMetaTree(chatNoteMetaTree);
+            // Set the timestamp for the key, but also with the index.
+            setTsChatNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+        }
+    }, [chatNoteMetaTree]);
+
+    useEffect(() => {
+        // Update only the index prefix of the timestamp variable.
+        // Even if the `chatNoteMetaTree` isn't updated, we want to re-render the sidebar tree.
+        // The index prefix can achieve the re-rendering.
+        setTsChatNoteTreeUpdated(String(selectedTabIndex) + tsChatNoteTreeUpdated.slice(1));
+    }, [selectedTabIndex]);
+
+    useEffect(() => {
+        // Init timestamp after 1sec which needs to re-render the tree on the sidebar.
+        setTimeout(() => {
+            setTsChatNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+        }, 1000); // wait Xms
+    }, []);
+
+    // When `currentChatNote` is changed, refresh the Note Chain.
+    useEffect(() => {
+        setTmpChatNoteMetaTree(chatNoteMetaTree);
+    }, [currentChatNote]);
 
     const LoadNote = async (noteType: number, noteId: number) => {
         if (noteType === 1) {
@@ -240,7 +325,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     ) => (
         <ListItemButton
             selected={
-                currentNoteType === 1 && node.noteId === currentMyNote?.noteId ? true : false
+                currentNoteType === noteType &&
+                node.noteId ===
+                    (noteType === 1
+                        ? currentMyNote?.noteId
+                        : noteType === 2
+                        ? currentTaskNote?.noteId
+                        : noteType === 3
+                        ? currentChatNote?.noteId
+                        : noteType === 4
+                        ? 0 // TODO: This is for shared notes.
+                        : 0)
+                    ? true
+                    : false
             }
             variant="plain"
             sx={{ my: "1px" }}
@@ -291,7 +388,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 (chainedNote) => chainedNote.noteId === node.noteId
                             ) ||
                             tabItems.some((tabNote) =>
-                                allNoteIdChains[tabNote.noteId]?.some(
+                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
                                     (chainedNoteId) => chainedNoteId === node.noteId
                                 )
                             )
@@ -334,9 +431,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     );
 
     const renderTaskNoteTree = (node: TaskNoteMetaTreeNode) => (
-        <Box key={`task-note-box-${node.noteId}-${tsTaskNoteChainUpdated}`}>
+        <Box key={`task-note-box-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
             {tmpCurrentTaskNoteChain && (
-                <ListItem nested key={`task-note-${node.noteId}-${tsTaskNoteChainUpdated}`}>
+                <ListItem nested key={`task-note-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
                     <NoteTreeToggler
                         // Expanding toggle when the target note is in the tab.
                         defaultExpanded={
@@ -344,7 +441,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 (chainedNote) => chainedNote.noteId === node.noteId
                             ) ||
                             tabItems.some((tabNote) =>
-                                allNoteIdChains[tabNote.noteId]?.some(
+                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
                                     (chainedNoteId) => chainedNoteId === node.noteId
                                 )
                             )
@@ -355,8 +452,30 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             innerRenderToggleListItemButton(open, setOpen, 2, node)
                         }
                     >
-                        {node.children.length > 0 && (
+                        {node.children.length > 0 && tmpCurrentTaskNoteChain && (
                             <List>{node.children.map((child) => renderTaskNoteTree(child))}</List>
+                        )}
+
+                        {node.children.length === 0 && (
+                            <Typography
+                                level="title-sm"
+                                component="button"
+                                onClick={() => {
+                                    handleCreateNewTaskNote(node.noteId, node.taskId);
+                                }}
+                                sx={{
+                                    ml: "25px",
+                                    background: "none",
+                                    border: "none",
+                                    padding: 0,
+                                    cursor: "pointer",
+                                    color: "inherit", // keeps normal text color
+                                    textAlign: "left",
+                                }}
+                                startDecorator={<AddIcon />}
+                            >
+                                Child Note
+                            </Typography>
                         )}
                     </NoteTreeToggler>
                 </ListItem>
@@ -365,9 +484,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     );
 
     const renderChatNoteTree = (node: ChatNoteMetaTreeNode) => (
-        <Box key={`chat-note-box-${node.noteId}-${tsChatNoteChainUpdated}`}>
+        <Box key={`chat-note-box-${node.noteId}-${tsChatNoteTreeUpdated}`}>
             {tmpCurrentChatNoteChain && (
-                <ListItem nested key={`chat-note-${node.noteId}-${tsChatNoteChainUpdated}`}>
+                <ListItem nested key={`chat-note-${node.noteId}-${tsChatNoteTreeUpdated}`}>
                     <NoteTreeToggler
                         // Expanding toggle when the target note is in the tab.
                         defaultExpanded={
@@ -375,7 +494,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 (chainedNote) => chainedNote.noteId === node.noteId
                             ) ||
                             tabItems.some((tabNote) =>
-                                allNoteIdChains[tabNote.noteId]?.some(
+                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
                                     (chainedNoteId) => chainedNoteId === node.noteId
                                 )
                             )
@@ -386,15 +505,42 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             innerRenderToggleListItemButton(open, setOpen, 3, node)
                         }
                     >
-                        {node.children.length > 0 && (
+                        {node.children.length > 0 && tmpCurrentChatNoteChain && (
                             <List>{node.children.map((child) => renderChatNoteTree(child))}</List>
+                        )}
+
+                        {node.children.length === 0 && (
+                            <Typography
+                                level="title-sm"
+                                component="button"
+                                onClick={() => {
+                                    handleCreateNewChatNote(
+                                        node.noteId,
+                                        node.chatType,
+                                        node.chatId,
+                                        node.isThread,
+                                        node.threadId
+                                    );
+                                }}
+                                sx={{
+                                    ml: "25px",
+                                    background: "none",
+                                    border: "none",
+                                    padding: 0,
+                                    cursor: "pointer",
+                                    color: "inherit", // keeps normal text color
+                                    textAlign: "left",
+                                }}
+                                startDecorator={<AddIcon />}
+                            >
+                                Child Note
+                            </Typography>
                         )}
                     </NoteTreeToggler>
                 </ListItem>
             )}
         </Box>
     );
-
     return (
         <Sheet
             className="TaskSidebar"
