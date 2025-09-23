@@ -69,7 +69,7 @@ type ChatNoteMainProps = {
         isThread: boolean,
         threadId: number
     ) => Promise<void>;
-    currentChatNoteChain: ChatNoteMetaTreeNode[];
+    currentChatNoteChain?: ChatNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
     isInChatPage: boolean;
 };

@@ -18,7 +18,7 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { ChatNoteProps, ChatNoteMetaTreeNode, NoteMetaProps } from "../../types/notes";
+import { ChatNoteProps, ChatNoteMetaTreeNode, ChatNoteMetaProps } from "../../types/notes";
 import { ChatNoteMain } from "../notes/components/ChatNoteMain";
 
 type ChatHomeProps = {
@@ -55,8 +55,8 @@ type ChatHomeProps = {
     setCurrentChatNote: (value: ChatNoteProps) => void;
     currentChatNoteTitle: string;
     setCurrentChatNoteTitle: (value: string) => void;
-    chatNoteMeta: NoteMetaProps[];
-    setChatNoteMeta: (value: NoteMetaProps[]) => void;
+    chatNoteMeta: ChatNoteMetaProps[];
+    setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
     tabItems: any[];
     setTabItems: (value: any[]) => void;
     selectedTabIndex: number;
