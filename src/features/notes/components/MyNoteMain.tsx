@@ -63,6 +63,7 @@ type MyNoteMainProps = {
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
     currentMyNoteChain: MyNoteMetaTreeNode[];
+    setCurrentNoteType: (value: number) => void;
 };
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
@@ -87,6 +88,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         setSelectedTabIndex,
         handleCreateNewMyNote,
         currentMyNoteChain,
+        setCurrentNoteType,
     } = props;
 
     const { accessToken } = useAuth();
@@ -202,7 +204,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
             setTabNotes([note]);
             setCurrentMyNote(note);
         } else {
-            // console.log("not four note in indexedDB:", note);
             setTabNotes([]);
         }
         setSelectedTabIndex(0);
@@ -231,7 +232,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabNotes[selectedTabIndex]) {
+        if (tabNotes[selectedTabIndex] && tabNotes[selectedTabIndex].noteType === 1) {
             setCurrentMyNote(tabNotes[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
@@ -240,7 +241,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     useEffect(() => {
         setTabNotes(
             tabNotes.map((u) =>
-                u.noteId === currentMyNote?.noteId ? { ...u, title: currentMyNoteTitle } : u
+                u.noteType === currentMyNote?.noteType && u.noteId === currentMyNote?.noteId
+                    ? { ...u, title: currentMyNoteTitle }
+                    : u
             )
         );
     }, [currentMyNoteTitle]);
@@ -413,9 +416,23 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         key={`tabs-${tabNotes.length}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            // console.log("move tab to:", val);
                                             setCurrentMyNote(tabNotes[Number(val)]);
                                             setSelectedTabIndex(Number(val));
+                                            if (tabNotes[Number(val)].noteType) {
+                                                setCurrentNoteType(tabNotes[Number(val)].noteType);
+                                            } else {
+                                                console.error(
+                                                    "Unexpected result in MyNoteMain!!!!"
+                                                );
+                                                console.log(
+                                                    "tabNotes[Number(val)].noteType:",
+                                                    tabNotes[Number(val)].noteType
+                                                );
+                                                console.log(
+                                                    "tabNotes[Number(val)]:",
+                                                    tabNotes[Number(val)]
+                                                );
+                                            }
                                         }}
                                         aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}

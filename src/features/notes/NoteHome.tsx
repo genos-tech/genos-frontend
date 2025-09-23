@@ -115,8 +115,6 @@ type NoteHomeProps = {
     setTabNotes: (value: any[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
-    newlyCreatedMyNotes: MyNoteProps[];
-    setNewlyCreatedMyNotes: (value: MyNoteProps[]) => void;
     currentMyNote: MyNoteProps | null;
     setCurrentMyNote: (value: MyNoteProps) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
@@ -171,8 +169,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         setTabNotes,
         selectedTabIndex,
         setSelectedTabIndex,
-        newlyCreatedMyNotes,
-        setNewlyCreatedMyNotes,
         currentMyNote,
         setCurrentMyNote,
         handleCreateNewMyNote,
@@ -355,18 +351,33 @@ export const NoteHome = (props: NoteHomeProps) => {
         }));
     };
 
+    function areArraysEqualByJSON<T>(arr1: T[], arr2: T[]): boolean {
+        return JSON.stringify(arr1) === JSON.stringify(arr2);
+    }
+
     useEffect(() => {
         if (currentMyNote) {
             const chain = findMyNoteChain(myNoteMetaTree, currentMyNote.noteId);
-            setCurrentMyNoteChain(chain || []);
-
             if (chain) {
+                if (
+                    currentMyNoteChain &&
+                    areArraysEqualByJSON(
+                        chain.map((item) => `${item.noteType}-${item.noteId}`),
+                        currentMyNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
+                    ) === false
+                ) {
+                    setCurrentMyNoteChain(chain || []);
+                }
+
                 addChain(
                     currentMyNote.noteId,
                     chain.map((item) => item.noteId)
                 );
             }
-            if (tabNotes.length === 0) setTabNotes([currentMyNote]);
+
+            if (tabNotes.length === 0) {
+                setTabNotes([currentMyNote]);
+            }
         } else {
             setCurrentMyNoteChain([]);
         }
@@ -375,16 +386,26 @@ export const NoteHome = (props: NoteHomeProps) => {
     useEffect(() => {
         if (currentTaskNote) {
             const chain = findTaskNoteChain(taskNoteMetaTree, currentTaskNote.noteId);
-            setCurrentTaskNoteChain(chain || []);
-
             if (chain) {
+                if (
+                    currentTaskNoteChain &&
+                    areArraysEqualByJSON(
+                        chain.map((item) => `${item.noteType}-${item.noteId}`),
+                        currentTaskNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
+                    ) === false
+                ) {
+                    setCurrentTaskNoteChain(chain || []);
+                }
+
                 addChain(
                     currentTaskNote.noteId,
                     chain.map((item) => item.noteId)
                 );
             }
 
-            if (tabNotes.length === 0) setTabNotes([currentTaskNote]);
+            if (tabNotes.length === 0) {
+                setTabNotes([currentTaskNote]);
+            }
         } else {
             setCurrentTaskNoteChain([]);
         }
@@ -393,16 +414,26 @@ export const NoteHome = (props: NoteHomeProps) => {
     useEffect(() => {
         if (currentChatNote) {
             const chain = findChatNoteChain(chatNoteMetaTree, currentChatNote.noteId);
-            setCurrentChatNoteChain(chain || []);
-
             if (chain) {
+                if (
+                    currentChatNoteChain &&
+                    areArraysEqualByJSON(
+                        chain.map((item) => `${item.noteType}-${item.noteId}`),
+                        currentChatNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
+                    ) === false
+                ) {
+                    setCurrentChatNoteChain(chain || []);
+                }
+
                 addChain(
                     currentChatNote.noteId,
                     chain.map((item) => item.noteId)
                 );
             }
 
-            if (tabNotes.length === 0) setTabNotes([currentChatNote]);
+            if (tabNotes.length === 0) {
+                setTabNotes([currentChatNote]);
+            }
         } else {
             setCurrentChatNoteChain([]);
         }
@@ -526,6 +557,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setSelectedTabIndex={setSelectedTabIndex}
                                         handleCreateNewMyNote={handleCreateNewMyNote}
                                         currentMyNoteChain={currentMyNoteChain}
+                                        setCurrentNoteType={setCurrentNoteType}
                                     />
                                 )}
                                 {currentNoteType === 2 && currentTaskNoteChain && (
@@ -550,6 +582,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setSelectedTabIndex={setSelectedTabIndex}
                                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                                         currentTaskNoteChain={currentTaskNoteChain}
+                                        setCurrentNoteType={setCurrentNoteType}
                                     />
                                 )}
                                 {currentNoteType === 3 && currentChatNoteChain && (
@@ -575,6 +608,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         handleCreateNewChatNote={handleCreateNewChatNote}
                                         currentChatNoteChain={currentChatNoteChain}
                                         isInChatPage={false}
+                                        setCurrentNoteType={setCurrentNoteType}
                                     />
                                 )}
                             </Box>

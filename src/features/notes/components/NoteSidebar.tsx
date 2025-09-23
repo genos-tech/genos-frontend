@@ -151,10 +151,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         if (noteType === 1) {
             const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
             if (note) {
-                setCurrentMyNote(note);
+                if (note.noteType === 1) {
+                    setCurrentMyNote(note);
+                }
             } else {
                 const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
-                if (!note.error) {
+                if (!note.error && note.noteType === 1) {
                     addNote(1, note);
                     setCurrentMyNote(note);
                 }
@@ -162,10 +164,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         } else if (noteType === 2) {
             const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
             if (note) {
-                setCurrentTaskNote(note);
+                if (note.noteType === 2) {
+                    setCurrentTaskNote(note);
+                }
             } else {
                 const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
-                if (!note.error) {
+                if (!note.error && note.noteType === 2) {
                     addNote(2, note);
                     setCurrentTaskNote(note);
                 }
@@ -173,10 +177,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         } else if (noteType === 3) {
             const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
             if (note) {
-                setCurrentChatNote(note);
+                if (note.noteType === 3) {
+                    setCurrentChatNote(note);
+                }
             } else {
                 const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
-                if (!note.error) {
+                if (!note.error && note.noteType === 3) {
                     addNote(3, note);
                     setCurrentChatNote(note);
                 }
@@ -209,7 +215,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                         ? true
                                         : false
                                 }
-                                variant="soft"
+                                variant="plain"
                                 sx={{ my: "1px" }}
                                 onClick={() => {
                                     setOpen(!open);
@@ -219,7 +225,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 }}
                             >
                                 <ListItemContent>
-                                    <Typography level="title-sm">{node.title}</Typography>
+                                    <Typography level="title-sm" sx={{ ml: "20px" }}>
+                                        {node.title}
+                                    </Typography>
                                 </ListItemContent>
                                 <KeyboardArrowDownIcon
                                     sx={[
@@ -292,7 +300,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                         ? true
                                         : false
                                 }
-                                variant="soft"
+                                variant="plain"
                                 sx={{ my: "1px" }}
                                 onClick={() => {
                                     setOpen(!open);
@@ -302,7 +310,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 }}
                             >
                                 <ListItemContent>
-                                    <Typography level="title-sm">{node.title}</Typography>
+                                    <Typography level="title-sm" sx={{ ml: "20px" }}>
+                                        {node.title}
+                                    </Typography>
                                 </ListItemContent>
                                 <KeyboardArrowDownIcon
                                     sx={[
@@ -353,7 +363,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                         ? true
                                         : false
                                 }
-                                variant="soft"
+                                variant="plain"
                                 sx={{ my: "1px" }}
                                 onClick={() => {
                                     setOpen(!open);
@@ -363,7 +373,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 }}
                             >
                                 <ListItemContent>
-                                    <Typography level="title-sm">{node.title}</Typography>
+                                    <Typography level="title-sm" sx={{ ml: "20px" }}>
+                                        {node.title}
+                                    </Typography>
                                 </ListItemContent>
                                 <KeyboardArrowDownIcon
                                     sx={[

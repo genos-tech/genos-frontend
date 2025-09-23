@@ -217,7 +217,8 @@ export const App = () => {
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
     const handleCreateNewMyNote = async (parentNoteId: number | null) => {
         const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedMyNotes.length + 1})`;
-        const newNote = await createEmptyMyNote(myself, parentNoteId, title, accessToken);
+        const _newNote = await createEmptyMyNote(myself, parentNoteId, title, accessToken);
+        const newNote: MyNoteProps = { noteType: 1, ..._newNote };
         if (tabNotes.length === 0 || tabNotes[0] === undefined) {
             setSelectedTabIndex(0);
             setTabNotes([newNote]);
@@ -231,6 +232,7 @@ export const App = () => {
         addNote(1, newNote);
         setMyNoteMeta([
             {
+                noteType: newNote.noteType,
                 noteId: newNote.noteId,
                 parentNoteId: newNote.parentNoteId,
                 title: newNote.title,
@@ -244,13 +246,14 @@ export const App = () => {
         const title = `${parentNoteId ? "Child" : "New"} Note (${
             newlyCreatedTaskNotes.length + 1
         })`;
-        const newNote = await createEmptyTaskNote(
+        const _newNote = await createEmptyTaskNote(
             myself,
             parentNoteId,
             taskId,
             title,
             accessToken
         );
+        const newNote: TaskNoteProps = { noteType: 2, ..._newNote };
         if (tabNotes.length === 0 || tabNotes[0] === undefined) {
             setSelectedTabIndex(0);
             setTabNotes([newNote]);
@@ -264,6 +267,7 @@ export const App = () => {
         addNote(2, newNote);
         setTaskNoteMeta([
             {
+                noteType: newNote.noteType,
                 noteId: newNote.noteId,
                 parentNoteId: newNote.parentNoteId,
                 title: newNote.title,
@@ -283,7 +287,7 @@ export const App = () => {
         const title = `${parentNoteId ? "Child" : "New"} Note (${
             newlyCreatedChatNotes.length + 1
         })`;
-        const newNote = await createEmptyChatNote(
+        const _newNote = await createEmptyChatNote(
             myself,
             parentNoteId,
             chatType,
@@ -293,6 +297,7 @@ export const App = () => {
             title,
             accessToken
         );
+        const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
         if (tabNotes.length === 0 || tabNotes[0] === undefined) {
             setSelectedTabIndex(0);
             setTabNotes([newNote]);
@@ -306,6 +311,7 @@ export const App = () => {
         addNote(3, newNote);
         setChatNoteMeta([
             {
+                noteType: newNote.noteType,
                 noteId: newNote.noteId,
                 parentNoteId: newNote.parentNoteId,
                 title: newNote.title,
@@ -329,7 +335,6 @@ export const App = () => {
             threadId,
             accessToken
         );
-
         if (chatNotes.length > 0) {
             const newNote = chatNotes[0];
             if (tabNotes.length === 0 || tabNotes[0] === undefined) {
@@ -346,7 +351,7 @@ export const App = () => {
             addNote(3, newNote);
         } else {
             const title = "New Note";
-            const newNote = await createEmptyChatNote(
+            const _newNote = await createEmptyChatNote(
                 myself,
                 null,
                 chatType,
@@ -356,6 +361,7 @@ export const App = () => {
                 title,
                 accessToken
             );
+            const newNote: ChatNoteProps = { noteType: 2, ..._newNote };
             if (tabNotes.length === 0 || tabNotes[0] === undefined) {
                 setSelectedTabIndex(0);
                 setTabNotes([newNote]);
@@ -369,6 +375,7 @@ export const App = () => {
             addNote(3, newNote);
             setChatNoteMeta([
                 {
+                    noteType: newNote.noteType,
                     noteId: newNote.noteId,
                     parentNoteId: newNote.parentNoteId,
                     title: newNote.title,
@@ -378,6 +385,10 @@ export const App = () => {
             ]);
         }
     };
+
+    // useEffect(() => {
+    //     console.log("tabNotes:", tabNotes);
+    // }, [tabNotes]);
 
     const getMyNoteMeta = async () => {
         const loadedNotes: NoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
@@ -747,8 +758,6 @@ export const App = () => {
                         setTabNotes={setTabNotes}
                         selectedTabIndex={selectedTabIndex}
                         setSelectedTabIndex={setSelectedTabIndex}
-                        newlyCreatedMyNotes={newlyCreatedMyNotes}
-                        setNewlyCreatedMyNotes={setNewlyCreatedMyNotes}
                         currentMyNote={currentMyNote}
                         setCurrentMyNote={setCurrentMyNote}
                         handleCreateNewMyNote={handleCreateNewMyNote}

@@ -71,6 +71,7 @@ type ChatNoteMainProps = {
     ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
     isInChatPage: boolean;
+    setCurrentNoteType: (value: number) => void;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -96,6 +97,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         handleCreateNewChatNote,
         currentChatNoteChain,
         isInChatPage,
+        setCurrentNoteType,
     } = props;
 
     const { accessToken } = useAuth();
@@ -242,7 +244,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabNotes[selectedTabIndex]) {
+        if (tabNotes[selectedTabIndex] && tabNotes[selectedTabIndex].noteType === 3) {
             setCurrentChatNote(tabNotes[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
@@ -251,7 +253,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     useEffect(() => {
         setTabNotes(
             tabNotes.map((u) =>
-                u.noteId === currentChatNote?.noteId ? { ...u, title: currentChatNoteTitle } : u
+                u.noteType === currentChatNote?.noteType && u.noteId === currentChatNote?.noteId
+                    ? { ...u, title: currentChatNoteTitle }
+                    : u
             )
         );
     }, [currentChatNoteTitle]);
@@ -483,9 +487,23 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         key={`tabs-${tabNotes.length}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            // console.log("move tab to:", val);
                                             setCurrentChatNote(tabNotes[Number(val)]);
                                             setSelectedTabIndex(Number(val));
+                                            if (tabNotes[Number(val)].noteType) {
+                                                setCurrentNoteType(tabNotes[Number(val)].noteType);
+                                            } else {
+                                                console.error(
+                                                    "Unexpected result in ChatNoteMain!!!!"
+                                                );
+                                                console.log(
+                                                    "tabNotes[Number(val)].noteType:",
+                                                    tabNotes[Number(val)].noteType
+                                                );
+                                                console.log(
+                                                    "tabNotes[Number(val)]:",
+                                                    tabNotes[Number(val)]
+                                                );
+                                            }
                                         }}
                                         aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}

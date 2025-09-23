@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Modal, ModalDialog, Stack, Button, Typography, Alert } from "@mui/joy";
 
 import { NoteMetaProps, TaskNoteProps } from "../../../types/notes";
-import { deleteNote } from "../services/deleteNote";
+import { deleteTaskNote } from "../services/deleteTaskNote";
 import { deleteData } from "../../../db/crud";
 import { STORES } from "../../../db/conf";
 import { UserProps } from "../../../types/admin";
@@ -44,7 +44,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
 
         if (childExist === false) {
             // Delete from backend
-            await deleteNote(myself, currentTaskNote.noteId, accessToken);
+            await deleteTaskNote(myself, currentTaskNote.noteId, accessToken);
             // Delete from indexedDB
             await deleteData({ storeName: STORES.TASK_NOTES, key: currentTaskNote.noteId });
             // Delete the deleted noteId from the meta object

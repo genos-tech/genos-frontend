@@ -3,7 +3,7 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 
-export const deleteNote = async (
+export const deleteMyNote = async (
     myself: UserProps,
     noteId: number,
     accessToken: string | null

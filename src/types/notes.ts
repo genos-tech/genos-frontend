@@ -1,6 +1,7 @@
 import { PartialBlock } from "@blocknote/core";
 
 export type NoteMetaProps = {
+    noteType: number;
     noteId: number;
     parentNoteId: number | null;
     title: string;
@@ -9,6 +10,7 @@ export type NoteMetaProps = {
 };
 
 export type MyNoteProps = {
+    noteType: number;
     teamId: string;
     ownerId: string;
     roleId: number;
@@ -25,6 +27,7 @@ export type MyNoteProps = {
 export type MyNoteMetaTreeNode = NoteMetaProps & { children: MyNoteMetaTreeNode[] };
 
 export type ChatNoteProps = {
+    noteType: number;
     teamId: string;
     ownerId: string;
     roleId: number;
@@ -45,6 +48,7 @@ export type ChatNoteProps = {
 export type ChatNoteMetaTreeNode = NoteMetaProps & { children: ChatNoteMetaTreeNode[] };
 
 export type TaskNoteProps = {
+    noteType: number;
     teamId: string;
     ownerId: string;
     roleId: number;

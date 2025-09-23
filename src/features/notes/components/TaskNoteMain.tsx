@@ -22,7 +22,6 @@ import {
 import { PartialBlock } from "@blocknote/core";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -63,6 +62,7 @@ type TaskNoteMainProps = {
     setSelectedTabIndex: (value: number) => void;
     handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
+    setCurrentNoteType: (value: number) => void;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -87,6 +87,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         setSelectedTabIndex,
         handleCreateNewTaskNote,
         currentTaskNoteChain,
+        setCurrentNoteType,
     } = props;
 
     const { accessToken } = useAuth();
@@ -202,7 +203,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             setTabNotes([note]);
             setCurrentTaskNote(note);
         } else {
-            // console.log("not four note in indexedDB:", note);
             setTabNotes([]);
         }
         setSelectedTabIndex(0);
@@ -231,7 +231,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabNotes[selectedTabIndex]) {
+        if (tabNotes[selectedTabIndex] && tabNotes[selectedTabIndex].noteType === 2) {
             setCurrentTaskNote(tabNotes[selectedTabIndex]);
         }
     }, [selectedTabIndex]);
@@ -240,7 +240,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     useEffect(() => {
         setTabNotes(
             tabNotes.map((u) =>
-                u.noteId === currentTaskNote?.noteId ? { ...u, title: currentTaskNoteTitle } : u
+                u.noteType === currentTaskNote?.noteType && u.noteId === currentTaskNote?.noteId
+                    ? { ...u, title: currentTaskNoteTitle }
+                    : u
             )
         );
     }, [currentTaskNoteTitle]);
@@ -396,9 +398,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         key={`tabs-${tabNotes.length}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            // console.log("move tab to:", val);
                                             setCurrentTaskNote(tabNotes[Number(val)]);
                                             setSelectedTabIndex(Number(val));
+                                            setCurrentNoteType(tabNotes[Number(val)].noteType);
                                         }}
                                         aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}
