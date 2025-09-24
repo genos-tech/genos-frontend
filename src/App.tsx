@@ -460,7 +460,7 @@ export const App = () => {
                 title,
                 accessToken
             );
-            const newNote: ChatNoteProps = { noteType: 2, ..._newNote };
+            const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
             // if (tabItems.length === 0 || tabItems[0] === undefined) {
             //     setSelectedTabIndex(0);
             //     setTabItems([newNote]);
