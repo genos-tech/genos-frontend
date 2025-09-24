@@ -47,7 +47,11 @@ type NoteSidebarProps = {
     currentChatNote: ChatNoteProps | null;
     setCurrentChatNote: (value: ChatNoteProps) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
-    handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
     handleCreateNewChatNote: (
         parentNoteId: number | null,
         chatType: number,
@@ -461,7 +465,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 level="title-sm"
                                 component="button"
                                 onClick={() => {
-                                    handleCreateNewTaskNote(node.noteId, node.taskId);
+                                    handleCreateNewTaskNote(
+                                        node.noteId,
+                                        node.projectId,
+                                        node.taskId
+                                    );
                                 }}
                                 sx={{
                                     ml: "25px",

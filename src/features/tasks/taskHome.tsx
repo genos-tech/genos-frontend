@@ -52,6 +52,8 @@ import {
     SearchTeamTasksResponse,
 } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
+import { TaskNoteMain } from "../notes/components/TaskNoteMain";
+import { TaskNoteMetaProps, TaskNoteMetaTreeNode, TaskNoteProps } from "../../types/notes";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
@@ -62,6 +64,7 @@ const taskTypes: TaskTypesProps = {
 type TaskHomeProps = {
     currentTeam: Team;
     setCurrentTeam: (value: Team) => void;
+    teamMembers: UserProps[];
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -73,11 +76,30 @@ type TaskHomeProps = {
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     unReadInboxItemCount: number;
     unReadChatAndActivityCounts: number;
+    currentTaskNote: TaskNoteProps | null;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    currentTaskNoteTitle: string;
+    setCurrentTaskNoteTitle: (value: string) => void;
+    currentNoteType: number;
+    setCurrentNoteType: (value: number) => void;
+    taskNoteMeta: TaskNoteMetaProps[];
+    setTaskNoteMeta: (value: TaskNoteMetaProps[]) => void;
+    tabItems: any[];
+    setTabItems: (value: any[]) => void;
+    selectedTabIndex: number;
+    setSelectedTabIndex: (value: number) => void;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
+    currentTaskNoteChain?: TaskNoteMetaTreeNode[];
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
         currentTeam,
         setCurrentTeam,
+        teamMembers,
         teamMemberProfiles,
         socket,
         myself,
@@ -89,6 +111,20 @@ export const TaskHome = (props: TaskHomeProps) => {
         setIsCommentUpdated,
         unReadInboxItemCount,
         unReadChatAndActivityCounts,
+        currentTaskNote,
+        setCurrentTaskNote,
+        currentTaskNoteTitle,
+        setCurrentTaskNoteTitle,
+        currentNoteType,
+        setCurrentNoteType,
+        taskNoteMeta,
+        setTaskNoteMeta,
+        tabItems,
+        setTabItems,
+        selectedTabIndex,
+        setSelectedTabIndex,
+        handleCreateNewTaskNote,
+        currentTaskNoteChain,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -97,7 +133,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
-    const [isTaskContentVisible, setIsTaskPreviewVisible] = useState(false);
+    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
+    const [isTaskChatVisible, setIsTaskChatVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState({
         flag: false,
         parentTaskId: null,
@@ -730,7 +767,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             </MenuItem>
                                                         </Menu>
                                                     </Dropdown>
-                                                    {(isTaskContentVisible === true ||
+                                                    {(isTaskPreviewVisible === true ||
                                                         isCreatingTask.flag === true) && (
                                                         <IconButton
                                                             size="sm"
@@ -838,7 +875,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 parentTaskId={isCreatingTask.parentTaskId}
                                                 rootTaskId={isCreatingTask.rootTaskId}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                isTaskContentVisible={isTaskContentVisible}
+                                                isTaskPreviewVisible={isTaskPreviewVisible}
                                                 isCreatingTask={isCreatingTask.flag}
                                             />
                                         </Box>
@@ -846,7 +883,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 </>
                             )}
 
-                            {isTaskContentVisible && currentPreviewTask && (
+                            {isTaskPreviewVisible && currentPreviewTask && (
                                 <>
                                     {/* Resizable Handle with MUI sx Styling */}
                                     <PanelResizeHandle
@@ -906,8 +943,75 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 isCommentUpdated={isCommentUpdated}
                                                 setIsCommentUpdated={setIsCommentUpdated}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                isTaskContentVisible={isTaskContentVisible}
+                                                isTaskPreviewVisible={isTaskPreviewVisible}
                                                 isCreatingTask={isCreatingTask.flag}
+                                                setIsTaskChatVisible={setIsTaskChatVisible}
+                                                handleCreateNewTaskNote={handleCreateNewTaskNote}
+                                            />
+                                        </Box>
+                                    </Panel>
+                                </>
+                            )}
+
+                            {isTaskChatVisible && currentTaskNoteChain && (
+                                <>
+                                    <PanelResizeHandle
+                                        style={{
+                                            width: "1px",
+                                            backgroundColor:
+                                                mode === "dark" ? "grey" : "lightgrey",
+                                            transition: "all 0.3s ease-in-out",
+                                            cursor: "col-resize",
+                                        }}
+                                        className="resize-handle"
+                                    />
+
+                                    <Panel
+                                        id={"7"}
+                                        order={7}
+                                        defaultSize={50}
+                                        minSize={50}
+                                        maxSize={100}
+                                    >
+                                        <Box
+                                            sx={{
+                                                px: { xs: 1, md: 2 },
+                                                pt: {
+                                                    xs: "calc(12px + var(--Header-height))",
+                                                    sm: "calc(12px + var(--Header-height))",
+                                                    md: 2,
+                                                },
+                                                pb: { xs: 2, sm: 2, md: 3 },
+                                                flex: 1,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                minWidth: 0,
+                                                height: "100dvh",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <TaskNoteMain
+                                                teamMemberProfiles={teamMemberProfiles}
+                                                socket={socket}
+                                                teamMembers={teamMembers}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                setOpeningService={setOpeningService}
+                                                setCurrentChat={setCurrentMainChat}
+                                                currentTaskNote={currentTaskNote}
+                                                setCurrentTaskNote={setCurrentTaskNote}
+                                                currentTaskNoteTitle={currentTaskNoteTitle}
+                                                setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
+                                                currentNoteType={currentNoteType}
+                                                taskNoteMeta={taskNoteMeta}
+                                                setTaskNoteMeta={setTaskNoteMeta}
+                                                tabItems={tabItems}
+                                                setTabItems={setTabItems}
+                                                selectedTabIndex={selectedTabIndex}
+                                                setSelectedTabIndex={setSelectedTabIndex}
+                                                handleCreateNewTaskNote={handleCreateNewTaskNote}
+                                                currentTaskNoteChain={currentTaskNoteChain}
+                                                setCurrentNoteType={setCurrentNoteType}
                                             />
                                         </Box>
                                     </Panel>

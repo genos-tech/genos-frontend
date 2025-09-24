@@ -6,8 +6,6 @@ import {
     Card,
     CardContent,
     IconButton,
-    Button,
-    Stack,
     Tabs,
     TabList,
     TabPanel,
@@ -66,6 +64,13 @@ type TaskTabBlockProps = {
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
+    setIsTaskHomeVisible?: (value: boolean) => void;
+    setIsTaskChatVisible?: (value: boolean) => void;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -88,6 +93,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         isCommentUpdated,
         setIsInEdit,
         setEditTargetComment,
+        setIsTaskHomeVisible,
+        setIsTaskChatVisible,
+        handleCreateNewTaskNote,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -386,12 +394,30 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         <>
                             <Box sx={{ flexGrow: 1 }} />
                             <IconButton
-                                sx={{ mr: "15px", px: "3px" }}
+                                sx={{ mr: "15px", mb: "3px", px: "3px" }}
                                 component="p"
                                 variant="soft"
                                 color="neutral"
                                 size="sm"
-                                onClick={() => {}}
+                                onClick={() => {
+                                    if (
+                                        setIsTaskHomeVisible &&
+                                        setIsTaskChatVisible &&
+                                        taskContents.project
+                                    ) {
+                                        setIsTaskHomeVisible(false);
+                                        setIsTaskChatVisible(true);
+                                        handleCreateNewTaskNote(
+                                            null,
+                                            taskContents.project.projectId,
+                                            currentPreviewTaskId
+                                        );
+                                    } else {
+                                        console.error(
+                                            "Can't parent note ID to create a child note. Project ID is not defined."
+                                        );
+                                    }
+                                }}
                             >
                                 <AddIcon />
                                 New Note

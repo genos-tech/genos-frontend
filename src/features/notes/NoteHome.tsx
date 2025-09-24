@@ -61,7 +61,11 @@ type NoteHomeProps = {
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
     currentTaskNote: TaskNoteProps | null;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
-    handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
     currentChatNote: ChatNoteProps | null;
     setCurrentChatNote: (value: ChatNoteProps) => void;
     handleCreateNewChatNote: (

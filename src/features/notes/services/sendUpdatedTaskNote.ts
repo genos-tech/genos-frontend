@@ -13,7 +13,7 @@ export const sendUpdatedTaskNote = async (
     try {
         const api = authApi(accessToken);
         if (api) {
-            const res = await api.put("/note/chat/", {
+            const res = await api.put("/note/task/", {
                 user_id: myself.userId,
                 note_id: updatedNote.noteId,
                 parent_note_id: updatedNote.parentNoteId,

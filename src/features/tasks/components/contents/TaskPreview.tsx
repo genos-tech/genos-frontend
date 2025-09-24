@@ -48,8 +48,14 @@ type TaskPreviewProps = {
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskContentVisible?: boolean;
+    isTaskPreviewVisible?: boolean;
     isCreatingTask?: boolean;
+    setIsTaskChatVisible?: (value: boolean) => void;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -78,8 +84,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         isCommentUpdated,
         setIsCommentUpdated,
         setIsTaskHomeVisible,
-        isTaskContentVisible,
+        isTaskPreviewVisible,
         isCreatingTask,
+        setIsTaskChatVisible,
+        handleCreateNewTaskNote,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -373,7 +381,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
-                isTaskContentVisible={isTaskContentVisible}
+                isTaskPreviewVisible={isTaskPreviewVisible}
                 isCreatingTask={isCreatingTask}
                 setCurrentTaskContent={setTmpCurrentTaskContent}
                 setTaskStatusUpdated={setTaskStatusUpdated}
@@ -470,6 +478,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 isCommentUpdated={isCommentUpdated}
                 setIsInEdit={setIsInEdit}
                 setEditTargetComment={setEditTargetComment}
+                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                setIsTaskChatVisible={setIsTaskChatVisible}
+                handleCreateNewTaskNote={handleCreateNewTaskNote}
             />
 
             <Divider sx={{ m: 2 }} />

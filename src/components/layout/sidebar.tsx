@@ -185,14 +185,14 @@ export const Sidebar = (props: SidebarProps) => {
                                         anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                     >
                                         <NotificationsIcon
-                                            color={openingService === 0 ? "warning" : "disabled"}
+                                            color={openingService === 0 ? "primary" : "disabled"}
                                             sx={{ fontSize: 24 }}
                                         />
                                     </Badge>
                                 )}
                                 {unReadInboxItemCount < 1 && (
                                     <NotificationsIcon
-                                        color={openingService === 0 ? "warning" : "disabled"}
+                                        color={openingService === 0 ? "primary" : "disabled"}
                                         sx={{ fontSize: 24 }}
                                     />
                                 )}
@@ -210,14 +210,14 @@ export const Sidebar = (props: SidebarProps) => {
                                         anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                     >
                                         <QuestionAnswerRoundedIcon
-                                            color={openingService === 1 ? "warning" : "disabled"}
+                                            color={openingService === 1 ? "primary" : "disabled"}
                                             sx={{ fontSize: 24 }}
                                         />
                                     </Badge>
                                 )}
                                 {unReadChatAndActivityCounts < 1 && (
                                     <QuestionAnswerRoundedIcon
-                                        color={openingService === 1 ? "warning" : "disabled"}
+                                        color={openingService === 1 ? "primary" : "disabled"}
                                         sx={{ fontSize: 24 }}
                                     />
                                 )}
@@ -228,7 +228,7 @@ export const Sidebar = (props: SidebarProps) => {
                         <ListItemButton onClick={handleMoveToTasks} title="Tasks">
                             <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                 <AssignmentRoundedIcon
-                                    color={openingService === 2 ? "warning" : "disabled"}
+                                    color={openingService === 2 ? "primary" : "disabled"}
                                     sx={{ fontSize: 24 }}
                                 />
                             </Box>
@@ -238,7 +238,7 @@ export const Sidebar = (props: SidebarProps) => {
                         <ListItemButton onClick={handleMoveToNote} title="Notes">
                             <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                 <NoteAltIcon
-                                    color={openingService === 3 ? "warning" : "disabled"}
+                                    color={openingService === 3 ? "primary" : "disabled"}
                                     sx={{ fontSize: 24 }}
                                 />
                             </Box>

@@ -128,7 +128,7 @@ type CreateTaskProps = {
     parentTaskId: number | null;
     rootTaskId: number | null;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskContentVisible?: boolean;
+    isTaskPreviewVisible?: boolean;
     isCreatingTask?: boolean;
 };
 
@@ -159,7 +159,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         parentTaskId,
         rootTaskId,
         setIsTaskHomeVisible,
-        isTaskContentVisible,
+        isTaskPreviewVisible,
         isCreatingTask,
     } = props;
     const { accessToken } = useAuth();
@@ -291,7 +291,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
-                isTaskContentVisible={isTaskContentVisible}
+                isTaskPreviewVisible={isTaskPreviewVisible}
                 isCreatingTask={isCreatingTask}
             />
 

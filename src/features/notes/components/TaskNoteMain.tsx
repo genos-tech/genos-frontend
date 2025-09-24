@@ -59,7 +59,11 @@ type TaskNoteMainProps = {
     setTabItems: (value: TaskNoteProps[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (value: number) => void;
-    handleCreateNewTaskNote: (parentNoteId: number | null, taskId: number) => Promise<void>;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
     currentTaskNoteChain: TaskNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
 };
@@ -155,6 +159,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                               noteType: newNote.noteType,
                               noteId: newNote.noteId,
                               parentNoteId: newNote.parentNoteId,
+                              projectId: newNote.projectId,
                               taskId: newNote.taskId,
                               title: newNote.title,
                               tsUpdated: newNote.tsUpdated,
@@ -370,6 +375,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             if (currentTaskNote) {
                                                                 handleCreateNewTaskNote(
                                                                     currentTaskNote.noteId,
+                                                                    currentTaskNote.projectId,
                                                                     currentTaskNote.taskId
                                                                 );
                                                             } else {
@@ -448,8 +454,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             maxWidth: "200px",
                                                         }}
                                                     >
-                                                        {tab.title.length > 20
-                                                            ? `${tab.title.slice(0, 20)}...`
+                                                        {tab.title.length > 19
+                                                            ? `${tab.title.slice(0, 19)}...`
                                                             : tab.title}
 
                                                         {tabItems.length > 1 && (

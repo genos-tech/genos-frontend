@@ -6,6 +6,7 @@ import { UserProps } from "../../../types/admin";
 export const createEmptyTaskNote = async (
     myself: UserProps,
     parentNoteId: number | null,
+    projectId: number,
     taskId: number,
     title: string,
     accessToken: string | null
@@ -25,6 +26,7 @@ export const createEmptyTaskNote = async (
                 team_id: myself.teamId,
                 user_id: myself.userId,
                 parent_note_id: parentNoteId,
+                project_id: projectId,
                 task_id: taskId,
                 title: title,
                 body: initBody,

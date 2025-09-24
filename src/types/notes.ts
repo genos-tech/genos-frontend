@@ -30,6 +30,7 @@ export type TaskNoteMetaProps = {
     noteType: number;
     noteId: number;
     parentNoteId: number | null;
+    projectId: number;
     taskId: number;
     title: string;
     tsUpdated: string;
@@ -43,6 +44,7 @@ export type TaskNoteProps = {
     roleId: number;
     noteId: number;
     parentNoteId: number | null;
+    projectId: number;
     taskId: number;
     title: string;
     body: PartialBlock[] | any[];

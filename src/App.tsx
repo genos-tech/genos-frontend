@@ -272,13 +272,18 @@ export const App = () => {
     const [taskNoteMeta, setTaskNoteMeta] = useState<TaskNoteMetaProps[]>([]);
     const [currentTaskNoteChain, setCurrentTaskNoteChain] = useState<TaskNoteMetaTreeNode[]>();
     const [newlyCreatedTaskNotes, setNewlyCreatedTaskNotes] = useState<TaskNoteProps[]>([]);
-    const handleCreateNewTaskNote = async (parentNoteId: number | null, taskId: number) => {
+    const handleCreateNewTaskNote = async (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => {
         const title = `${parentNoteId ? "Child" : "New"} Note (${
             newlyCreatedTaskNotes.length + 1
         })`;
         const _newNote = await createEmptyTaskNote(
             myself,
             parentNoteId,
+            projectId,
             taskId,
             title,
             accessToken
@@ -293,6 +298,7 @@ export const App = () => {
                 noteType: newNote.noteType,
                 noteId: newNote.noteId,
                 parentNoteId: newNote.parentNoteId,
+                projectId: newNote.projectId,
                 taskId: newNote.taskId,
                 title: newNote.title,
                 tsUpdated: newNote.tsUpdated,
@@ -777,6 +783,7 @@ export const App = () => {
                     <TaskHome
                         currentTeam={currentTeam}
                         setCurrentTeam={setCurrentTeam}
+                        teamMembers={teamMembers}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}
@@ -788,6 +795,20 @@ export const App = () => {
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                         unReadInboxItemCount={unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                        currentTaskNote={currentTaskNote}
+                        setCurrentTaskNote={setCurrentTaskNote}
+                        currentTaskNoteTitle={currentTaskNoteTitle}
+                        setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
+                        currentNoteType={currentNoteType}
+                        setCurrentNoteType={setCurrentNoteType}
+                        taskNoteMeta={taskNoteMeta}
+                        setTaskNoteMeta={setTaskNoteMeta}
+                        tabItems={tabItems}
+                        setTabItems={setTabItems}
+                        selectedTabIndex={selectedTabIndex}
+                        setSelectedTabIndex={setSelectedTabIndex}
+                        handleCreateNewTaskNote={handleCreateNewTaskNote}
+                        currentTaskNoteChain={currentTaskNoteChain}
                     />
                 ) : null}
 
