@@ -297,6 +297,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     };
 
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+
     return (
         <>
             {taskNoteMeta.length === 0 && (
@@ -598,6 +600,22 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                         setCurrentTaskNoteTitle(
                                                                             e.target.value
                                                                         );
+                                                                    }}
+                                                                    slotProps={{
+                                                                        input: {
+                                                                            ref: titleInputRef,
+                                                                            onKeyDown: (
+                                                                                e: React.KeyboardEvent<HTMLInputElement>
+                                                                            ) => {
+                                                                                if (
+                                                                                    e.key ===
+                                                                                    "Enter"
+                                                                                ) {
+                                                                                    e.preventDefault(); // stop form submission if inside <form>
+                                                                                    titleInputRef.current?.blur();
+                                                                                }
+                                                                            },
+                                                                        },
                                                                     }}
                                                                     onBlur={() => {
                                                                         setNoteUpdated(true);

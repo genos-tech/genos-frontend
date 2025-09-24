@@ -277,6 +277,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         }
     };
 
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+
     return (
         <>
             {myNoteMeta.length === 0 && (
@@ -523,6 +525,19 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         value={currentMyNoteTitle}
                                                         onChange={(e) => {
                                                             setCurrentMyNoteTitle(e.target.value);
+                                                        }}
+                                                        slotProps={{
+                                                            input: {
+                                                                ref: titleInputRef,
+                                                                onKeyDown: (
+                                                                    e: React.KeyboardEvent<HTMLInputElement>
+                                                                ) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault(); // stop form submission if inside <form>
+                                                                        titleInputRef.current?.blur();
+                                                                    }
+                                                                },
+                                                            },
                                                         }}
                                                         onBlur={() => {
                                                             setNoteUpdated(true);

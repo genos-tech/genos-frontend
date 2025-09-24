@@ -1,5 +1,5 @@
 import { alpha } from "@mui/system";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
     Box,
     Chip,
@@ -77,7 +77,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
     const { mode } = useColorScheme();
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
-
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
     return (
         <Box
             sx={{
@@ -147,6 +147,17 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 if (setTaskUpdated) {
                                     setTaskUpdated(true);
                                 }
+                            }}
+                            slotProps={{
+                                input: {
+                                    ref: titleInputRef,
+                                    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault(); // stop form submission if inside <form>
+                                            titleInputRef.current?.blur();
+                                        }
+                                    },
+                                },
                             }}
                             sx={{
                                 width: "100%",

@@ -300,6 +300,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     const [openSearchBox, setOpenSearchBox] = useState(false);
 
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+
     return (
         <>
             {chatNoteMeta.length === 0 && (
@@ -566,7 +568,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             }}
                                         >
                                             {tabItems.map((tab, index) => (
-                                                <>
+                                                <Box key={index}>
                                                     {isInChatPage === true &&
                                                         tab.noteType === 3 && (
                                                             <Tab
@@ -663,7 +665,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             </Box>
                                                         </Tab>
                                                     )}
-                                                </>
+                                                </Box>
                                             ))}
                                         </TabList>
 
@@ -697,6 +699,19 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             setCurrentChatNoteTitle(
                                                                 e.target.value
                                                             );
+                                                        }}
+                                                        slotProps={{
+                                                            input: {
+                                                                ref: titleInputRef,
+                                                                onKeyDown: (
+                                                                    e: React.KeyboardEvent<HTMLInputElement>
+                                                                ) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault(); // stop form submission if inside <form>
+                                                                        titleInputRef.current?.blur();
+                                                                    }
+                                                                },
+                                                            },
                                                         }}
                                                         onBlur={() => {
                                                             setNoteUpdated(true);

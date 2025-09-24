@@ -13,7 +13,6 @@ import {
     Stack,
     List,
     ListItem,
-    Chip,
     ListItemButton,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
@@ -116,7 +115,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
-    const [tabIndex, setTabIndex] = React.useState(1);
+    const [tabIndex, setTabIndex] = React.useState(0);
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         if (attachmentId > 0) {
@@ -274,7 +273,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     useEffect(() => {
         setImages([]);
         setTextFiles([]);
-        setTabIndex(1);
+        setTabIndex(0);
     }, [currentPreviewTaskId]);
 
     useEffect(() => {
