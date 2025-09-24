@@ -134,7 +134,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
-    const [isTaskChatVisible, setIsTaskChatVisible] = useState(false);
+    const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState({
         flag: false,
         parentTaskId: null,
@@ -945,15 +945,17 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                                 isCreatingTask={isCreatingTask.flag}
-                                                setIsTaskChatVisible={setIsTaskChatVisible}
+                                                setIsTaskNoteVisible={setIsTaskNoteVisible}
                                                 handleCreateNewTaskNote={handleCreateNewTaskNote}
+                                                setCurrentTaskNote={setCurrentTaskNote}
+                                                isTaskNoteVisible={isTaskNoteVisible}
                                             />
                                         </Box>
                                     </Panel>
                                 </>
                             )}
 
-                            {isTaskChatVisible && currentTaskNoteChain && (
+                            {isTaskNoteVisible && currentTaskNoteChain && (
                                 <>
                                     <PanelResizeHandle
                                         style={{
@@ -1012,6 +1014,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 handleCreateNewTaskNote={handleCreateNewTaskNote}
                                                 currentTaskNoteChain={currentTaskNoteChain}
                                                 setCurrentNoteType={setCurrentNoteType}
+                                                isInTaskPage={true}
+                                                setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                                isCreatingTask={isCreatingTask.flag}
+                                                isTaskPreviewVisible={isTaskPreviewVisible}
+                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
                                             />
                                         </Box>
                                     </Panel>

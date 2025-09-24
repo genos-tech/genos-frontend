@@ -24,7 +24,8 @@ type ThreadChatPaneHeaderProps = {
     setIsCreatingTask: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     currentPreviewTaskId: number;
-    setIsNoteVisible: (value: boolean) => void;
+    isChatNoteVisible: boolean;
+    setIsChatNoteVisible: (value: boolean) => void;
     handleCreateNewChatNoteIfNotExist: (
         chatType: number,
         chatId: number,
@@ -47,7 +48,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setIsCreatingTask,
         currentPreviewTask,
         currentPreviewTaskId,
-        setIsNoteVisible,
+        isChatNoteVisible,
+        setIsChatNoteVisible,
         handleCreateNewChatNoteIfNotExist,
     } = props;
     const { mode } = useColorScheme();
@@ -203,7 +205,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 true,
                                 thread.threadId
                             );
-                            setIsNoteVisible(true);
+                            setIsChatNoteVisible(true);
                             setIsMainChatVisible(false);
                             setIsThreadVisible(true);
                             setIsTaskPreviewVisible(false);
@@ -215,22 +217,24 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Close Thread" size="sm">
-                    <IconButton
-                        size="sm"
-                        variant="plain"
-                        color="neutral"
-                        onClick={() => {
-                            setIsMainChatVisible(true);
-                            setIsThreadVisible(false);
-                            // setIsTaskPreviewVisible(); // Not update, keep as it is !!!
-                            // setIsTaskCreationVisible(); // Not update, keep as it is !!!
-                            setCurrentThreadChat(dummyThreadChat);
-                        }}
-                    >
-                        <CancelIcon />
-                    </IconButton>
-                </Tooltip>
+                {isChatNoteVisible === false && (
+                    <Tooltip title="Close Thread" size="sm">
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            color="neutral"
+                            onClick={() => {
+                                setIsMainChatVisible(true);
+                                setIsThreadVisible(false);
+                                // setIsTaskPreviewVisible(); // Not update, keep as it is !!!
+                                // setIsTaskCreationVisible(); // Not update, keep as it is !!!
+                                setCurrentThreadChat(dummyThreadChat);
+                            }}
+                        >
+                            <CancelIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
             </Stack>
         </Stack>
     );

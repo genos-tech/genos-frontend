@@ -46,6 +46,7 @@ type TaskTitleBlockProps = {
     isCreatingTask?: boolean;
     setCurrentTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
+    isTaskNoteVisible?: boolean;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -71,6 +72,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         isCreatingTask,
         setCurrentTaskContent,
         setTaskStatusUpdated,
+        isTaskNoteVisible,
     } = props;
 
     const { mode } = useColorScheme();
@@ -240,7 +242,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 setIsTaskPreviewVisible(false);
                             }
                             // Open task-home when both task-preview and task-create-form are closed.
-                            if (isCreatingTask === false) {
+                            if (isCreatingTask === false && isTaskNoteVisible === false) {
                                 if (setIsTaskHomeVisible) {
                                     setIsTaskHomeVisible(true);
                                 }

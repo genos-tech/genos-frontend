@@ -3,20 +3,17 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 
-export const loadChatNotesByChatId = async (
+export const loadTaskNotes = async (
     myself: UserProps,
-    chatType: number,
-    chatId: number,
-    isThread: boolean,
-    threadId: number,
+    projectId: number,
+    taskId: number,
     accessToken: string | null
 ) => {
-    const strIsThread = isThread ? "True" : "False";
     try {
         const api = authApi(accessToken);
         if (api) {
-            const query: string = `team_id=${myself.teamId}&user_id=${myself.userId}&chat_type=${chatType}&chat_id=${chatId}&is_thread=${strIsThread}&thread_id=${threadId}`;
-            const res = await api.get(`/note/chat/?${query}`);
+            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&task_id=${taskId}`;
+            const res = await api.get(`/note/task/?${query}`);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

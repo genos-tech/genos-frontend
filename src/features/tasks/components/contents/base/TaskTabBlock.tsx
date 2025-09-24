@@ -10,6 +10,11 @@ import {
     TabList,
     TabPanel,
     ListItemDecorator,
+    Stack,
+    List,
+    ListItem,
+    Chip,
+    ListItemButton,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
 import CloseIcon from "@mui/icons-material/Close";
@@ -30,6 +35,7 @@ import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHoo
 import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
+import { TaskNoteProps } from "../../../../../types/notes";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -65,12 +71,15 @@ type TaskTabBlockProps = {
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    setIsTaskChatVisible?: (value: boolean) => void;
+    setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
         taskId: number
     ) => Promise<void>;
+    taskNotes: TaskNoteProps[];
+    setTaskNotes: (value: TaskNoteProps[]) => void;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -94,8 +103,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setIsInEdit,
         setEditTargetComment,
         setIsTaskHomeVisible,
-        setIsTaskChatVisible,
+        setIsTaskNoteVisible,
         handleCreateNewTaskNote,
+        taskNotes,
+        setTaskNotes,
+        setCurrentTaskNote,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -104,7 +116,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
-    const [tabIndex, setTabIndex] = React.useState(0);
+    const [tabIndex, setTabIndex] = React.useState(1);
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         if (attachmentId > 0) {
@@ -262,7 +274,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     useEffect(() => {
         setImages([]);
         setTextFiles([]);
-        setTabIndex(0);
+        setTabIndex(1);
     }, [currentPreviewTaskId]);
 
     useEffect(() => {
@@ -402,11 +414,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 onClick={() => {
                                     if (
                                         setIsTaskHomeVisible &&
-                                        setIsTaskChatVisible &&
+                                        setIsTaskNoteVisible &&
                                         taskContents.project
                                     ) {
                                         setIsTaskHomeVisible(false);
-                                        setIsTaskChatVisible(true);
+                                        setIsTaskNoteVisible(true);
                                         handleCreateNewTaskNote(
                                             null,
                                             taskContents.project.projectId,
@@ -437,7 +449,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 style={{ display: "none" }}
                             />
                             <IconButton
-                                sx={{ mr: "15px", px: "3px" }}
+                                sx={{ mr: "15px", mb: "3px", px: "3px" }}
                                 component="p"
                                 variant="soft"
                                 color="neutral"
@@ -504,7 +516,66 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </>
                     </TabPanel>
 
-                    <TabPanel value={1}>Notes-Content</TabPanel>
+                    <TabPanel value={1}>
+                        <Stack
+                            className="custom-scrollbar"
+                            direction="row"
+                            sx={{
+                                width: "100%",
+                                minHeight: "40px",
+                                maxHeight: "200px",
+                                overflowY: "scroll",
+                            }}
+                        >
+                            <ListItem nested sx={{ width: "100%" }}>
+                                <List sx={{ gap: 0.5 }}>
+                                    {taskNotes.map((taskNote, index) => {
+                                        return (
+                                            <ListItem
+                                                key={`listitem-${taskNote.noteType}-${taskNote.noteId}-${index}`}
+                                            >
+                                                <ListItemButton
+                                                    variant="soft"
+                                                    onClick={() => {
+                                                        if (
+                                                            setIsTaskHomeVisible &&
+                                                            setIsTaskNoteVisible
+                                                        ) {
+                                                            setIsTaskHomeVisible(false);
+                                                            setIsTaskNoteVisible(true);
+                                                            setCurrentTaskNote(taskNote);
+                                                        }
+                                                    }}
+                                                    sx={{
+                                                        justifyContent: "flex-start",
+                                                        alignItems: "center",
+                                                        borderRadius: "5px",
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        noWrap
+                                                        level="title-md"
+                                                        sx={{
+                                                            px: "10px",
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            whiteSpace: "nowrap",
+                                                            width: "100%",
+                                                            height: "30px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                        }}
+                                                    >
+                                                        {`${taskNote.title}`}
+                                                    </Typography>
+                                                </ListItemButton>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </List>
+                            </ListItem>
+                        </Stack>
+                    </TabPanel>
 
                     <TabPanel value={2}>
                         <Box

@@ -18,7 +18,12 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { ChatNoteProps, ChatNoteMetaTreeNode, ChatNoteMetaProps } from "../../types/notes";
+import {
+    ChatNoteProps,
+    ChatNoteMetaTreeNode,
+    ChatNoteMetaProps,
+    TaskNoteProps,
+} from "../../types/notes";
 import { ChatNoteMain } from "../notes/components/ChatNoteMain";
 
 type ChatHomeProps = {
@@ -76,6 +81,12 @@ type ChatHomeProps = {
     ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -123,6 +134,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         handleCreateNewChatNoteIfNotExist,
         currentChatNoteChain,
         setCurrentNoteType,
+        handleCreateNewTaskNote,
+        setCurrentTaskNote,
     } = props;
 
     const { mode } = useColorScheme();
@@ -132,7 +145,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [isThreadVisible, setIsThreadVisible] = useState(false); // Is Thread pane visible or not
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false); // Is task preview visible or not
     const [isTaskCreationVisible, setIsTaskCreationVisible] = useState(false); // Is task creation form visible or not
-    const [isNoteVisible, setIsNoteVisible] = useState(false); // Is task creation form visible or not
+    const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
+    const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
 
     const [isOpeningTask, setIsOpeningTask] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -507,7 +521,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setOpeningService={setOpeningService}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     currentPreviewTaskId={currentPreviewTaskId}
-                                                    setIsNoteVisible={setIsNoteVisible}
+                                                    isChatNoteVisible={isChatNoteVisible}
+                                                    setIsChatNoteVisible={setIsChatNoteVisible}
                                                     handleCreateNewChatNoteIfNotExist={
                                                         handleCreateNewChatNoteIfNotExist
                                                     }
@@ -585,6 +600,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     }
                                                     isCommentUpdated={isCommentUpdated}
                                                     setIsCommentUpdated={setIsCommentUpdated}
+                                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                                    handleCreateNewTaskNote={
+                                                        handleCreateNewTaskNote
+                                                    }
+                                                    setCurrentTaskNote={setCurrentTaskNote}
+                                                    isTaskNoteVisible={isTaskNoteVisible}
                                                 />
                                             </Box>
                                         </Panel>
@@ -719,7 +740,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                             currentPreviewTaskId={currentPreviewTaskId}
-                                            setIsNoteVisible={setIsNoteVisible}
+                                            isChatNoteVisible={isChatNoteVisible}
+                                            setIsChatNoteVisible={setIsChatNoteVisible}
                                             handleCreateNewChatNoteIfNotExist={
                                                 handleCreateNewChatNoteIfNotExist
                                             }
@@ -795,6 +817,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     }
                                                     isCommentUpdated={isCommentUpdated}
                                                     setIsCommentUpdated={setIsCommentUpdated}
+                                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                                    handleCreateNewTaskNote={
+                                                        handleCreateNewTaskNote
+                                                    }
+                                                    setCurrentTaskNote={setCurrentTaskNote}
+                                                    isTaskNoteVisible={isTaskNoteVisible}
                                                 />
                                             </Box>
                                         </Panel>
@@ -880,7 +908,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         )}
 
                         {/* p6 */}
-                        {isNoteVisible && (
+                        {isChatNoteVisible && (
                             <>
                                 {currentThreadChat && (
                                     <>
@@ -944,6 +972,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     currentChatNoteChain={currentChatNoteChain}
                                                     setCurrentNoteType={setCurrentNoteType}
                                                     isInChatPage={true}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsChatNoteVisible={setIsChatNoteVisible}
                                                 />
                                             </Box>
                                         </Panel>
@@ -1010,6 +1040,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     isCommentUpdated={isCommentUpdated}
                                     setIsCommentUpdated={setIsCommentUpdated}
+                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                    handleCreateNewTaskNote={handleCreateNewTaskNote}
+                                    setCurrentTaskNote={setCurrentTaskNote}
+                                    isTaskNoteVisible={isTaskNoteVisible}
                                 />
                             </Box>
                         </Panel>

@@ -40,7 +40,8 @@ type MessagesPaneProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     currentPreviewTaskId: number;
-    setIsNoteVisible: (value: boolean) => void;
+    isChatNoteVisible: boolean;
+    setIsChatNoteVisible: (value: boolean) => void;
     handleCreateNewChatNoteIfNotExist: (
         chatType: number,
         chatId: number,
@@ -72,7 +73,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         setOpeningService,
         setCurrentMainChat,
         currentPreviewTaskId,
-        setIsNoteVisible,
+        isChatNoteVisible,
+        setIsChatNoteVisible,
         handleCreateNewChatNoteIfNotExist,
     } = props;
 
@@ -224,7 +226,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setIsCreatingTask={setIsCreatingTask}
                         currentPreviewTask={currentPreviewTask}
                         currentPreviewTaskId={currentPreviewTaskId}
-                        setIsNoteVisible={setIsNoteVisible}
+                        isChatNoteVisible={isChatNoteVisible}
+                        setIsChatNoteVisible={setIsChatNoteVisible}
                         handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
                     />
 

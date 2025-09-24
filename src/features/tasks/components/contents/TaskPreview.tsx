@@ -22,6 +22,8 @@ import { AttachmentFileProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskProps, ProjectProps, TagListProps, TaskCommentProps } from "../../../../types/tasks";
 import { ChatProps } from "../../../../types/chat";
+import { TaskNoteProps } from "../../../../types/notes";
+import { loadTaskNotes } from "../../services/loadTaskNotes";
 
 type TaskPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -50,12 +52,14 @@ type TaskPreviewProps = {
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskPreviewVisible?: boolean;
     isCreatingTask?: boolean;
-    setIsTaskChatVisible?: (value: boolean) => void;
+    setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
         taskId: number
     ) => Promise<void>;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    isTaskNoteVisible: boolean;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -86,8 +90,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsTaskHomeVisible,
         isTaskPreviewVisible,
         isCreatingTask,
-        setIsTaskChatVisible,
+        setIsTaskNoteVisible,
         handleCreateNewTaskNote,
+        setCurrentTaskNote,
+        isTaskNoteVisible,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -299,6 +305,28 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         })();
     }, [isCommentUpdated, currentTaskId]);
 
+    // Get Task Notes
+    const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
+    useEffect(() => {
+        (async () => {
+            if (currentPreviewTask.project) {
+                const loadedTaskNotes: TaskNoteProps[] = await loadTaskNotes(
+                    myself,
+                    Number(currentPreviewTask.project.projectId),
+                    Number(currentPreviewTask.id),
+                    accessToken
+                );
+                if (loadedTaskNotes.length > 0) {
+                    setTaskNotes(loadedTaskNotes);
+                } else {
+                    setTaskNotes([]);
+                }
+            } else {
+                setTaskNotes([]);
+            }
+        })();
+    }, [isCommentUpdated, currentTaskId]);
+
     // Get team members
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -385,6 +413,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 isCreatingTask={isCreatingTask}
                 setCurrentTaskContent={setTmpCurrentTaskContent}
                 setTaskStatusUpdated={setTaskStatusUpdated}
+                isTaskNoteVisible={isTaskNoteVisible}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />
@@ -479,8 +508,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsInEdit={setIsInEdit}
                 setEditTargetComment={setEditTargetComment}
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
-                setIsTaskChatVisible={setIsTaskChatVisible}
+                setIsTaskNoteVisible={setIsTaskNoteVisible}
                 handleCreateNewTaskNote={handleCreateNewTaskNote}
+                taskNotes={taskNotes}
+                setTaskNotes={setTaskNotes}
+                setCurrentTaskNote={setCurrentTaskNote}
             />
 
             <Divider sx={{ m: 2 }} />

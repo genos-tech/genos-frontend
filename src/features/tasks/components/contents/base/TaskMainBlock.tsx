@@ -323,7 +323,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     <Typography
                                         noWrap
                                         sx={{
-                                            ml: "5px",
+                                            mx: "5px",
                                             overflow: "hidden",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",

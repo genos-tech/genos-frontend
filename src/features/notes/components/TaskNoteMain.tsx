@@ -17,6 +17,7 @@ import {
     Tab,
     Dropdown,
     MenuButton,
+    Tooltip,
 } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 import CloseIcon from "@mui/icons-material/Close";
@@ -26,6 +27,8 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
@@ -66,6 +69,11 @@ type TaskNoteMainProps = {
     ) => Promise<void>;
     currentTaskNoteChain: TaskNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
+    isInTaskPage: boolean;
+    setIsTaskNoteVisible?: (value: boolean) => void;
+    isCreatingTask?: boolean;
+    isTaskPreviewVisible?: boolean;
+    setIsTaskHomeVisible?: (value: boolean) => void;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -91,6 +99,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         handleCreateNewTaskNote,
         currentTaskNoteChain,
         setCurrentNoteType,
+        isInTaskPage,
+        setIsTaskNoteVisible,
+        isCreatingTask,
+        isTaskPreviewVisible,
+        setIsTaskHomeVisible,
     } = props;
 
     const { accessToken } = useAuth();
@@ -324,16 +337,21 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             width: "100%",
                                             height: "30px",
                                             mt: "10px",
-                                            mb: "3px",
+                                            mb: "5px",
                                         }}
                                     >
                                         <Breadcrumbs separator="›" aria-label="breadcrumbs">
-                                            <Typography
-                                                level="body-sm"
-                                                startDecorator={<AssignmentRoundedIcon />}
+                                            <IconButton
+                                                component="button"
+                                                variant="soft"
+                                                color="success"
+                                                sx={{
+                                                    fontSize: "14px",
+                                                }}
                                             >
+                                                <AssignmentRoundedIcon sx={{ fontSize: "20px" }} />
                                                 Task Notes
-                                            </Typography>
+                                            </IconButton>
                                             {currentTaskNoteChain.map((node) => (
                                                 <Typography
                                                     level="title-sm"
@@ -359,6 +377,44 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         </Breadcrumbs>
 
                                         <Stack direction={"row"}>
+                                            {isInTaskPage && currentTaskNote && (
+                                                <IconButton
+                                                    component="button"
+                                                    variant="plain"
+                                                    color="neutral"
+                                                    sx={{
+                                                        fontSize: "14px",
+                                                        paddingRight: "10px",
+                                                        height: "5px",
+                                                    }}
+                                                    onClick={() => {
+                                                        handleCreateNewTaskNote(
+                                                            currentTaskNote.noteId,
+                                                            currentTaskNote.projectId,
+                                                            currentTaskNote.taskId
+                                                        );
+                                                    }}
+                                                >
+                                                    <AddIcon />
+                                                    Child Note
+                                                </IconButton>
+                                            )}
+
+                                            {isInTaskPage && (
+                                                <Tooltip title="Open in Notes">
+                                                    <IconButton
+                                                        size="sm"
+                                                        color="neutral"
+                                                        variant="plain"
+                                                        sx={{ mb: "5px" }}
+                                                        onClick={() => {
+                                                            setOpeningService(3);
+                                                        }}
+                                                    >
+                                                        <OpenInNewIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
                                             <Dropdown>
                                                 <MenuButton
                                                     slots={{ root: IconButton }}
@@ -402,6 +458,33 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                     </MenuItem>
                                                 </Menu>
                                             </Dropdown>
+
+                                            {isInTaskPage === true && (
+                                                <Tooltip title="Close Notes">
+                                                    <IconButton
+                                                        size="sm"
+                                                        color="neutral"
+                                                        variant="plain"
+                                                        sx={{ mb: "5px" }}
+                                                        onClick={() => {
+                                                            if (setIsTaskNoteVisible) {
+                                                                setIsTaskNoteVisible(false);
+                                                            }
+
+                                                            // Open task-home (task table) when both task-preview and task-create-form are closed.
+                                                            if (
+                                                                isCreatingTask === false &&
+                                                                isTaskPreviewVisible === false &&
+                                                                setIsTaskHomeVisible
+                                                            ) {
+                                                                setIsTaskHomeVisible(true);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <CancelIcon />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
                                         </Stack>
                                         {currentTaskNote && (
                                             <ModalDeleteTaskNote
@@ -481,87 +564,204 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         </TabList>
 
                                         {tabItems.map((tabNote, index) => (
-                                            <TabPanel
-                                                key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
-                                                value={index}
-                                                sx={{
-                                                    paddingX: "5px",
-                                                    paddingTop: "0px",
-                                                    paddingBottom: "5px",
-                                                }}
-                                            >
-                                                <FormControl
-                                                    required
-                                                    sx={{
-                                                        mt: "10px",
-                                                        ml: "10px",
-                                                        justifyContent: "center",
-                                                        position: "absolute",
-                                                        zIndex: 100,
-                                                    }}
-                                                >
-                                                    <Input
-                                                        startDecorator={<NoteAltIcon />}
-                                                        key={"currentTaskNoteTitle"}
-                                                        variant="soft"
-                                                        placeholder="Note Title"
-                                                        value={currentTaskNoteTitle}
-                                                        onChange={(e) => {
-                                                            setCurrentTaskNoteTitle(
-                                                                e.target.value
-                                                            );
-                                                        }}
-                                                        onBlur={() => {
-                                                            setNoteUpdated(true);
-                                                        }}
+                                            <Box key={index}>
+                                                {isInTaskPage === true &&
+                                                    tabNote.noteType === 2 && (
+                                                        <TabPanel
+                                                            key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                                            value={index}
+                                                            sx={{
+                                                                paddingX: "5px",
+                                                                paddingTop: "0px",
+                                                                paddingBottom: "5px",
+                                                            }}
+                                                        >
+                                                            <FormControl
+                                                                required
+                                                                sx={{
+                                                                    mt: "10px",
+                                                                    ml: "10px",
+                                                                    justifyContent: "center",
+                                                                    position: "absolute",
+                                                                    zIndex: 100,
+                                                                }}
+                                                            >
+                                                                <Input
+                                                                    startDecorator={
+                                                                        <NoteAltIcon />
+                                                                    }
+                                                                    key={"currentTaskNoteTitle"}
+                                                                    variant="soft"
+                                                                    placeholder="Note Title"
+                                                                    value={currentTaskNoteTitle}
+                                                                    onChange={(e) => {
+                                                                        setCurrentTaskNoteTitle(
+                                                                            e.target.value
+                                                                        );
+                                                                    }}
+                                                                    onBlur={() => {
+                                                                        setNoteUpdated(true);
+                                                                    }}
+                                                                    sx={{
+                                                                        fontSize: "22px",
+                                                                        fontWeight: "bold",
+                                                                    }}
+                                                                />
+                                                            </FormControl>
+                                                            {noteBodySaved === true && (
+                                                                <Box
+                                                                    sx={{
+                                                                        position: "absolute",
+                                                                        mt: "12px",
+                                                                        ml: "335px",
+                                                                        zIndex: 100,
+                                                                    }}
+                                                                >
+                                                                    <Button
+                                                                        variant="outlined"
+                                                                        color="neutral"
+                                                                        size="sm"
+                                                                        startDecorator={
+                                                                            <CheckIcon
+                                                                                sx={{
+                                                                                    fontSize:
+                                                                                        "15px",
+                                                                                }}
+                                                                            />
+                                                                        }
+                                                                    >
+                                                                        Saved
+                                                                    </Button>
+                                                                </Box>
+                                                            )}
+                                                            {currentTaskNote && (
+                                                                <>
+                                                                    <BnTaskNoteEditor
+                                                                        teamMemberProfiles={
+                                                                            teamMemberProfiles
+                                                                        }
+                                                                        myself={myself}
+                                                                        setMyself={setMyself}
+                                                                        socket={socket}
+                                                                        teamMembers={teamMembers}
+                                                                        currentTaskNote={
+                                                                            currentTaskNote
+                                                                        }
+                                                                        body={body}
+                                                                        setBody={setBody}
+                                                                        setNoteBodyEdited={
+                                                                            setNoteBodyEdited
+                                                                        }
+                                                                        setNoteBodySaved={
+                                                                            setNoteBodySaved
+                                                                        }
+                                                                        setCurrentChat={
+                                                                            setCurrentChat
+                                                                        }
+                                                                        setOpeningService={
+                                                                            setOpeningService
+                                                                        }
+                                                                    />
+                                                                </>
+                                                            )}
+                                                        </TabPanel>
+                                                    )}
+                                                {isInTaskPage === false && (
+                                                    <TabPanel
+                                                        key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                                        value={index}
                                                         sx={{
-                                                            fontSize: "22px",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                    />
-                                                </FormControl>
-                                                {noteBodySaved === true && (
-                                                    <Box
-                                                        sx={{
-                                                            position: "absolute",
-                                                            mt: "12px",
-                                                            ml: "335px",
-                                                            zIndex: 100,
+                                                            paddingX: "5px",
+                                                            paddingTop: "0px",
+                                                            paddingBottom: "5px",
                                                         }}
                                                     >
-                                                        <Button
-                                                            variant="outlined"
-                                                            color="neutral"
-                                                            size="sm"
-                                                            startDecorator={
-                                                                <CheckIcon
-                                                                    sx={{ fontSize: "15px" }}
-                                                                />
-                                                            }
+                                                        <FormControl
+                                                            required
+                                                            sx={{
+                                                                mt: "10px",
+                                                                ml: "10px",
+                                                                justifyContent: "center",
+                                                                position: "absolute",
+                                                                zIndex: 100,
+                                                            }}
                                                         >
-                                                            Saved
-                                                        </Button>
-                                                    </Box>
+                                                            <Input
+                                                                startDecorator={<NoteAltIcon />}
+                                                                key={"currentTaskNoteTitle"}
+                                                                variant="soft"
+                                                                placeholder="Note Title"
+                                                                value={currentTaskNoteTitle}
+                                                                onChange={(e) => {
+                                                                    setCurrentTaskNoteTitle(
+                                                                        e.target.value
+                                                                    );
+                                                                }}
+                                                                onBlur={() => {
+                                                                    setNoteUpdated(true);
+                                                                }}
+                                                                sx={{
+                                                                    fontSize: "22px",
+                                                                    fontWeight: "bold",
+                                                                }}
+                                                            />
+                                                        </FormControl>
+                                                        {noteBodySaved === true && (
+                                                            <Box
+                                                                sx={{
+                                                                    position: "absolute",
+                                                                    mt: "12px",
+                                                                    ml: "335px",
+                                                                    zIndex: 100,
+                                                                }}
+                                                            >
+                                                                <Button
+                                                                    variant="outlined"
+                                                                    color="neutral"
+                                                                    size="sm"
+                                                                    startDecorator={
+                                                                        <CheckIcon
+                                                                            sx={{
+                                                                                fontSize: "15px",
+                                                                            }}
+                                                                        />
+                                                                    }
+                                                                >
+                                                                    Saved
+                                                                </Button>
+                                                            </Box>
+                                                        )}
+                                                        {currentTaskNote && (
+                                                            <>
+                                                                <BnTaskNoteEditor
+                                                                    teamMemberProfiles={
+                                                                        teamMemberProfiles
+                                                                    }
+                                                                    myself={myself}
+                                                                    setMyself={setMyself}
+                                                                    socket={socket}
+                                                                    teamMembers={teamMembers}
+                                                                    currentTaskNote={
+                                                                        currentTaskNote
+                                                                    }
+                                                                    body={body}
+                                                                    setBody={setBody}
+                                                                    setNoteBodyEdited={
+                                                                        setNoteBodyEdited
+                                                                    }
+                                                                    setNoteBodySaved={
+                                                                        setNoteBodySaved
+                                                                    }
+                                                                    setCurrentChat={setCurrentChat}
+                                                                    setOpeningService={
+                                                                        setOpeningService
+                                                                    }
+                                                                />
+                                                            </>
+                                                        )}
+                                                    </TabPanel>
                                                 )}
-                                                {currentTaskNote && (
-                                                    <>
-                                                        <BnTaskNoteEditor
-                                                            teamMemberProfiles={teamMemberProfiles}
-                                                            myself={myself}
-                                                            setMyself={setMyself}
-                                                            socket={socket}
-                                                            teamMembers={teamMembers}
-                                                            currentTaskNote={currentTaskNote}
-                                                            body={body}
-                                                            setBody={setBody}
-                                                            setNoteBodyEdited={setNoteBodyEdited}
-                                                            setNoteBodySaved={setNoteBodySaved}
-                                                            setCurrentChat={setCurrentChat}
-                                                            setOpeningService={setOpeningService}
-                                                        />
-                                                    </>
-                                                )}
-                                            </TabPanel>
+                                            </Box>
                                         ))}
                                     </Tabs>
                                 </Stack>

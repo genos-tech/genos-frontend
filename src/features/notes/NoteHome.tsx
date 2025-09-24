@@ -316,6 +316,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                                         currentTaskNoteChain={currentTaskNoteChain}
                                         setCurrentNoteType={setCurrentNoteType}
+                                        isInTaskPage={false}
                                     />
                                 )}
                                 {currentNoteType === 3 && currentChatNoteChain && (

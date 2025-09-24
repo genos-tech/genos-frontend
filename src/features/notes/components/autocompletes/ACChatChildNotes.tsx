@@ -57,7 +57,7 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
 
     return (
         <Autocomplete
-            placeholder={"Search"}
+            placeholder={"Search Child Notes"}
             open={openSearchBox}
             onOpen={() => {
                 setOpenSearchBox(true);

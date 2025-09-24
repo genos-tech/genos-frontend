@@ -776,6 +776,8 @@ export const App = () => {
                         handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
                         currentChatNoteChain={currentChatNoteChain}
                         setCurrentNoteType={setCurrentNoteType}
+                        handleCreateNewTaskNote={handleCreateNewTaskNote}
+                        setCurrentTaskNote={setCurrentTaskNote}
                     />
                 ) : null}
 

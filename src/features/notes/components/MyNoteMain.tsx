@@ -321,16 +321,21 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             width: "100%",
                                             height: "30px",
                                             mt: "10px",
-                                            mb: "3px",
+                                            mb: "5px",
                                         }}
                                     >
                                         <Breadcrumbs separator="›" aria-label="breadcrumbs">
-                                            <Typography
-                                                level="body-sm"
-                                                startDecorator={<WindowIcon />}
+                                            <IconButton
+                                                component="button"
+                                                variant="soft"
+                                                color="primary"
+                                                sx={{
+                                                    fontSize: "14px",
+                                                }}
                                             >
+                                                <WindowIcon sx={{ fontSize: "20px" }} />
                                                 My Notes
-                                            </Typography>
+                                            </IconButton>
                                             {currentMyNoteChain.map((node) => (
                                                 <Typography
                                                     level="title-sm"
@@ -348,8 +353,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         fontWeight: "bold",
                                                     }}
                                                 >
-                                                    {node.title.length > 20
-                                                        ? `${node.title.slice(0, 20)}...`
+                                                    {node.title.length > 19
+                                                        ? `${node.title.slice(0, 19)}...`
                                                         : node.title}
                                                 </Typography>
                                             ))}
@@ -464,8 +469,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                             maxWidth: "200px",
                                                         }}
                                                     >
-                                                        {tab.title.length > 20
-                                                            ? `${tab.title.slice(0, 20)}...`
+                                                        {tab.title.length > 19
+                                                            ? `${tab.title.slice(0, 19)}...`
                                                             : tab.title}
 
                                                         {tabItems.length > 1 && (
