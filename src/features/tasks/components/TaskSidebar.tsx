@@ -778,7 +778,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 <ListItem key={"listitem-createProject"}>
                                     <ListItemButton
                                         color="neutral"
-                                        variant="soft"
+                                        variant="plain"
                                         onClick={() => {
                                             setOpenCreateProject(true);
                                         }}

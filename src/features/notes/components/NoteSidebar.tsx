@@ -321,6 +321,28 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         </ListItemButton>
     );
 
+    const createChildNoteList = (node: any) => (
+        <List>
+            <Box key={`my-note-box-${node.noteId}-${tsMyNoteTreeUpdated}`}>
+                <ListItem nested key={`my-note-${node.noteId}-${tsMyNoteTreeUpdated}`}>
+                    <ListItemButton
+                        variant="plain"
+                        sx={{ my: "1px" }}
+                        onClick={() => {
+                            handleCreateNewMyNote(node.noteId);
+                        }}
+                    >
+                        <ListItemContent>
+                            <Typography level="title-sm" startDecorator={<AddIcon />}>
+                                Child Note
+                            </Typography>
+                        </ListItemContent>
+                    </ListItemButton>
+                </ListItem>
+            </Box>
+        </List>
+    );
+
     const innerRenderToggleListItemButton = (
         open: boolean,
         setOpen: (value: boolean) => void,
@@ -406,28 +428,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         {node.children.length > 0 && tmpCurrentMyNoteChain && (
                             <List>{node.children.map((child) => renderMyNoteTree(child))}</List>
                         )}
-
-                        {node.children.length === 0 && (
-                            <Typography
-                                level="title-sm"
-                                component="button"
-                                onClick={() => {
-                                    handleCreateNewMyNote(node.noteId);
-                                }}
-                                sx={{
-                                    ml: "25px",
-                                    background: "none",
-                                    border: "none",
-                                    padding: 0,
-                                    cursor: "pointer",
-                                    color: "inherit", // keeps normal text color
-                                    textAlign: "left",
-                                }}
-                                startDecorator={<AddIcon />}
-                            >
-                                Child Note
-                            </Typography>
-                        )}
+                        {node.children.length === 0 && createChildNoteList(node)}
                     </NoteTreeToggler>
                 </ListItem>
             )}
@@ -459,32 +460,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         {node.children.length > 0 && tmpCurrentTaskNoteChain && (
                             <List>{node.children.map((child) => renderTaskNoteTree(child))}</List>
                         )}
-
-                        {node.children.length === 0 && (
-                            <Typography
-                                level="title-sm"
-                                component="button"
-                                onClick={() => {
-                                    handleCreateNewTaskNote(
-                                        node.noteId,
-                                        node.projectId,
-                                        node.taskId
-                                    );
-                                }}
-                                sx={{
-                                    ml: "25px",
-                                    background: "none",
-                                    border: "none",
-                                    padding: 0,
-                                    cursor: "pointer",
-                                    color: "inherit", // keeps normal text color
-                                    textAlign: "left",
-                                }}
-                                startDecorator={<AddIcon />}
-                            >
-                                Child Note
-                            </Typography>
-                        )}
+                        {node.children.length === 0 && createChildNoteList(node)}
                     </NoteTreeToggler>
                 </ListItem>
             )}
@@ -516,34 +492,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         {node.children.length > 0 && tmpCurrentChatNoteChain && (
                             <List>{node.children.map((child) => renderChatNoteTree(child))}</List>
                         )}
-
-                        {node.children.length === 0 && (
-                            <Typography
-                                level="title-sm"
-                                component="button"
-                                onClick={() => {
-                                    handleCreateNewChatNote(
-                                        node.noteId,
-                                        node.chatType,
-                                        node.chatId,
-                                        node.isThread,
-                                        node.threadId
-                                    );
-                                }}
-                                sx={{
-                                    ml: "25px",
-                                    background: "none",
-                                    border: "none",
-                                    padding: 0,
-                                    cursor: "pointer",
-                                    color: "inherit", // keeps normal text color
-                                    textAlign: "left",
-                                }}
-                                startDecorator={<AddIcon />}
-                            >
-                                Child Note
-                            </Typography>
-                        )}
+                        {node.children.length === 0 && createChildNoteList(node)}
                     </NoteTreeToggler>
                 </ListItem>
             )}

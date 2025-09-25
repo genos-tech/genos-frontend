@@ -86,6 +86,12 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("teamName", "");
                 localStorage.setItem("lastOpenMyNoteId", "");
                 localStorage.setItem("lastOpenNoteType", "");
+                localStorage.setItem("lastChatType", "");
+                localStorage.setItem("lastDMChatId", "");
+                localStorage.setItem("lastGMChatId", "");
+                localStorage.setItem("lastPMChatId", "");
+                localStorage.setItem("lastPinnedChatId", "");
+                localStorage.setItem("lastProjectId", "");
                 setAccessToken(null);
                 navigate("/");
             } else {

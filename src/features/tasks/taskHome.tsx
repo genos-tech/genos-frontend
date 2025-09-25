@@ -263,7 +263,41 @@ export const TaskHome = (props: TaskHomeProps) => {
                         break;
                     }
                 } else {
-                    if (loadedTeamProjects[i].isJoined === true) {
+                    // If targetProjectId is not -1, set the target project as the current project
+                    if (targetProjectId !== -1) {
+                        if (loadedTeamProjects[i].projectId === targetProjectId) {
+                            setCurrentProject({
+                                projectId: loadedTeamProjects[i].projectId,
+                                projectName: loadedTeamProjects[i].projectName,
+                                projectTags: loadedTeamProjects[i].projectTags,
+                                systemUserId: loadedTeamProjects[i].systemUserId,
+                            });
+                            await updateSpecificTask(
+                                myself,
+                                loadedTeamProjects[i].projectId,
+                                accessToken
+                            );
+                            await fetchProjectTasks(loadedTeamProjects[i].projectId);
+                            break;
+                        }
+                    } else if (loadedTeamProjects[i].isJoined === true) {
+                        setCurrentProject({
+                            projectId: loadedTeamProjects[i].projectId,
+                            projectName: loadedTeamProjects[i].projectName,
+                            projectTags: loadedTeamProjects[i].projectTags,
+                            systemUserId: loadedTeamProjects[i].systemUserId,
+                        });
+                        await updateSpecificTask(
+                            myself,
+                            loadedTeamProjects[i].projectId,
+                            accessToken
+                        );
+                        await fetchProjectTasks(loadedTeamProjects[i].projectId);
+                        break;
+                    }
+
+                    // If not meeting any condition, set the last project as the current project
+                    if (i === loadedTeamProjects.length - 1) {
                         setCurrentProject({
                             projectId: loadedTeamProjects[i].projectId,
                             projectName: loadedTeamProjects[i].projectName,
@@ -287,7 +321,11 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     useEffect(() => {
         setCurrentTeamId(myself.teamId);
-        loadProjects(currentProject?.projectId || -1);
+        loadProjects(
+            localStorage.getItem("lastProjectId")
+                ? Number(localStorage.getItem("lastProjectId"))
+                : -1
+        );
     }, []);
 
     useEffect(() => {
@@ -305,6 +343,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     useEffect(() => {
         if (currentProject) {
             fetchProjectTasks(currentProject.projectId);
+            localStorage.setItem("lastProjectId", currentProject.projectId.toString());
         }
     }, [currentProject, isTaskUpdated]);
 
