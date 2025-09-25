@@ -371,8 +371,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         fontWeight: "bold",
                                                     }}
                                                 >
-                                                    {node.title.length > 20
-                                                        ? `${node.title.slice(0, 20)}...`
+                                                    {node.title.length > 19
+                                                        ? `${node.title.slice(0, 19)}...`
                                                         : node.title}
                                                 </Typography>
                                             ))}

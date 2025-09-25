@@ -606,10 +606,30 @@ export const App = () => {
         funcSetActivityMessages();
     }, []);
 
-    // Auto save task body every Nms if needed
     useEffect(() => {
         setTimeout(() => {
             funcSetAllChats();
+            if (currentMainChat) {
+                if (currentMainChat.chatType === 1 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "1");
+                    localStorage.setItem("lastDMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 2 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "2");
+                    localStorage.setItem("lastGMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 3 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "3");
+                    localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 4 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "4");
+                    localStorage.setItem(
+                        "lastPinnedChatId",
+                        currentMainChat.chatId.toString() || ""
+                    );
+                }
+            }
         }, 500); // wait 500ms
     }, [currentMainChat, currentSubChat]);
 

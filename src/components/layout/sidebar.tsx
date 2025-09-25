@@ -1,9 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
-import { GlobalStyles, Avatar, Box, Divider, List, ListItem, Sheet, Badge } from "@mui/joy";
+import {
+    GlobalStyles,
+    Avatar,
+    Box,
+    Divider,
+    List,
+    ListItem,
+    Sheet,
+    Badge,
+    Tooltip,
+} from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import AllInboxIcon from "@mui/icons-material/AllInbox";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
@@ -75,7 +85,7 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("customStatus", "");
                 localStorage.setItem("teamName", "");
                 localStorage.setItem("lastOpenMyNoteId", "");
-                localStorage.setItem("currentNoteType", "");
+                localStorage.setItem("lastOpenNoteType", "");
                 setAccessToken(null);
                 navigate("/");
             } else {
@@ -169,80 +179,92 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <ListItemButton onClick={handleMoveToInbox} title="Inbox">
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    p: "5px",
-                                }}
-                            >
-                                {unReadInboxItemCount > 0 && (
-                                    <Badge
-                                        badgeContent={unReadInboxItemCount}
-                                        color="primary"
-                                        size="sm"
-                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    >
-                                        <NotificationsIcon
+                        <Tooltip title="Inbox" placement="right-start">
+                            <ListItemButton onClick={handleMoveToInbox}>
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        p: "5px",
+                                    }}
+                                >
+                                    {unReadInboxItemCount > 0 && (
+                                        <Badge
+                                            badgeContent={unReadInboxItemCount}
+                                            color="primary"
+                                            size="sm"
+                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                        >
+                                            <AllInboxIcon
+                                                color={
+                                                    openingService === 0 ? "primary" : "disabled"
+                                                }
+                                                sx={{ fontSize: 24 }}
+                                            />
+                                        </Badge>
+                                    )}
+                                    {unReadInboxItemCount < 1 && (
+                                        <AllInboxIcon
                                             color={openingService === 0 ? "primary" : "disabled"}
                                             sx={{ fontSize: 24 }}
                                         />
-                                    </Badge>
-                                )}
-                                {unReadInboxItemCount < 1 && (
-                                    <NotificationsIcon
-                                        color={openingService === 0 ? "primary" : "disabled"}
-                                        sx={{ fontSize: 24 }}
-                                    />
-                                )}
-                            </Box>
-                        </ListItemButton>
+                                    )}
+                                </Box>
+                            </ListItemButton>
+                        </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <ListItemButton onClick={handleMoveToChat} title="Chats">
-                            <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                {unReadChatAndActivityCounts > 0 && (
-                                    <Badge
-                                        badgeContent={unReadChatAndActivityCounts}
-                                        color="primary"
-                                        size="sm"
-                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    >
+                        <Tooltip title="Chats" placement="right-start">
+                            <ListItemButton onClick={handleMoveToChat}>
+                                <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
+                                    {unReadChatAndActivityCounts > 0 && (
+                                        <Badge
+                                            badgeContent={unReadChatAndActivityCounts}
+                                            color="primary"
+                                            size="sm"
+                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                        >
+                                            <QuestionAnswerRoundedIcon
+                                                color={
+                                                    openingService === 1 ? "primary" : "disabled"
+                                                }
+                                                sx={{ fontSize: 24 }}
+                                            />
+                                        </Badge>
+                                    )}
+                                    {unReadChatAndActivityCounts < 1 && (
                                         <QuestionAnswerRoundedIcon
                                             color={openingService === 1 ? "primary" : "disabled"}
                                             sx={{ fontSize: 24 }}
                                         />
-                                    </Badge>
-                                )}
-                                {unReadChatAndActivityCounts < 1 && (
-                                    <QuestionAnswerRoundedIcon
-                                        color={openingService === 1 ? "primary" : "disabled"}
+                                    )}
+                                </Box>
+                            </ListItemButton>
+                        </Tooltip>
+                    </ListItem>
+                    <ListItem>
+                        <Tooltip title="Tasks" placement="right-start">
+                            <ListItemButton onClick={handleMoveToTasks}>
+                                <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
+                                    <AssignmentRoundedIcon
+                                        color={openingService === 2 ? "primary" : "disabled"}
                                         sx={{ fontSize: 24 }}
                                     />
-                                )}
-                            </Box>
-                        </ListItemButton>
+                                </Box>
+                            </ListItemButton>
+                        </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <ListItemButton onClick={handleMoveToTasks} title="Tasks">
-                            <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                <AssignmentRoundedIcon
-                                    color={openingService === 2 ? "primary" : "disabled"}
-                                    sx={{ fontSize: 24 }}
-                                />
-                            </Box>
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemButton onClick={handleMoveToNote} title="Notes">
-                            <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                <NoteAltIcon
-                                    color={openingService === 3 ? "primary" : "disabled"}
-                                    sx={{ fontSize: 24 }}
-                                />
-                            </Box>
-                        </ListItemButton>
+                        <Tooltip title="Notes" placement="right-start">
+                            <ListItemButton onClick={handleMoveToNote}>
+                                <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
+                                    <NoteAltIcon
+                                        color={openingService === 3 ? "primary" : "disabled"}
+                                        sx={{ fontSize: 24 }}
+                                    />
+                                </Box>
+                            </ListItemButton>
+                        </Tooltip>
                     </ListItem>
                 </List>
                 <List
@@ -256,15 +278,19 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <ListItemButton title="Settings">
-                            <SettingsRoundedIcon sx={{ fontSize: 24 }} />
-                        </ListItemButton>
+                        <Tooltip title="Settings" placement="right-start">
+                            <ListItemButton>
+                                <SettingsRoundedIcon sx={{ fontSize: 24 }} />
+                            </ListItemButton>
+                        </Tooltip>
                     </ListItem>
 
                     <ListItem sx={{ mt: 1 }}>
-                        <ListItemButton title="Sign out" onClick={handleLogout}>
-                            <LogoutRoundedIcon sx={{ fontSize: 24 }} />
-                        </ListItemButton>
+                        <Tooltip title="Sign out" placement="right-start">
+                            <ListItemButton onClick={handleLogout}>
+                                <LogoutRoundedIcon sx={{ fontSize: 24 }} />
+                            </ListItemButton>
+                        </Tooltip>
                     </ListItem>
                 </List>
             </Box>
@@ -272,9 +298,11 @@ export const Sidebar = (props: SidebarProps) => {
             <Divider />
 
             <Box onClick={() => setOpenUserProfile(true)} sx={{ pl: "12px" }}>
-                <Avatar variant="solid" size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
-                    {myself.userName[0].toUpperCase()}
-                </Avatar>
+                <Tooltip title="Open User Profile" placement="right-start">
+                    <Avatar variant="solid" size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
+                        {myself.userName[0].toUpperCase()}
+                    </Avatar>
+                </Tooltip>
                 <Box position="absolute" bottom={0} right={0} width={24} height={33}>
                     <PulseDot color={myself?.isOfflineForced !== "true" ? "#4caf50" : "#999"} />
                 </Box>

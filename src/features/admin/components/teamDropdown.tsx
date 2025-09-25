@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { IconButton, Menu, MenuItem, Dropdown, Avatar } from "@mui/joy";
+import { IconButton, Menu, MenuItem, Dropdown, Avatar, Tooltip } from "@mui/joy";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -163,19 +163,21 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
-                    <Avatar
-                        src={`${media_url}/${currentTeam.teamImgPath}`}
-                        variant="outlined"
-                        sx={{
-                            borderRadius: 4, // 0 for sharp square, or use theme radius values
-                            width: 34,
-                            height: 34,
-                        }}
-                    >
-                        {myself.teamName.slice(0, 2).toUpperCase()}
-                    </Avatar>
-                </IconButton>
+                <Tooltip title="Switch Team" placement="right-start">
+                    <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
+                        <Avatar
+                            src={`${media_url}/${currentTeam.teamImgPath}`}
+                            variant="outlined"
+                            sx={{
+                                borderRadius: 4, // 0 for sharp square, or use theme radius values
+                                width: 36,
+                                height: 36,
+                            }}
+                        >
+                            {myself.teamName.slice(0, 2).toUpperCase()}
+                        </Avatar>
+                    </IconButton>
+                </Tooltip>
                 <Menu
                     className="custom-scrollbar"
                     size="sm"

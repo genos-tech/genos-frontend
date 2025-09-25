@@ -32,7 +32,9 @@ type MessagesPaneProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     currentSubChat?: ChatProps;
+    currentThreadChat?: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
+    isThreadVisible: boolean;
     setIsMainChatVisible: (value: boolean) => void;
     setIsSubChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
@@ -62,7 +64,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setCurrentMainChat,
         setCurrentSubChat,
         currentSubChat,
+        currentThreadChat,
         setCurrentThreadChat,
+        isThreadVisible,
         setIsMainChatVisible,
         setIsSubChatVisible,
         setIsThreadVisible,
@@ -260,9 +264,15 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                         itemContent={(index, _, { isScrolling }) => {
                             const message = chatMessages[index];
                             const isYou = myself.userId === message.sender.userId;
+                            // Set True if the message is clicked from the Activity,
+                            // or, if the corresponding thread is opened.
                             const isFocused =
                                 message.messageIdWithChatId ===
-                                currentSubChat?.moveToSpecificIndex;
+                                    currentSubChat?.moveToSpecificIndex ||
+                                (isThreadVisible &&
+                                    currentThreadChat &&
+                                    message.messageId === currentThreadChat.threadId) ||
+                                false;
 
                             const dateSeparator =
                                 index === 0 ||

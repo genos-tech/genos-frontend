@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, List, Card, Stack, Typography, Badge } from "@mui/joy";
+import { Box, List, Card, Stack, Typography, Badge, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -111,14 +111,17 @@ export const InboxHome = (props: InboxHomeProps) => {
                             }}
                         >
                             {unReadInboxItemCount > 0 && (
-                                <Badge
-                                    badgeContent={unReadInboxItemCount}
-                                    color="primary"
-                                    size="sm"
-                                    sx={{ mt: "10px" }}
-                                >
+                                <>
                                     <Typography level="h4">Requests</Typography>
-                                </Badge>
+                                    <Chip
+                                        variant="solid"
+                                        color="primary"
+                                        size="sm"
+                                        sx={{ ml: "5px" }}
+                                    >
+                                        {unReadInboxItemCount}
+                                    </Chip>
+                                </>
                             )}
                             {unReadInboxItemCount < 1 && (
                                 <Typography level="h4" sx={{ mt: "10px" }}>

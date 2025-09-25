@@ -76,9 +76,9 @@ export const ChatList = (props: ChatListProps) => {
     const virtuosoPMRef = useRef<VirtuosoHandle | null>(null);
 
     const chatTypeLookup: { [key: number]: any } = {
-        1: virtuosoDMRef,
-        2: virtuosoGMRef,
-        3: virtuosoPMRef,
+        1: virtuosoDMRef, // DM
+        2: virtuosoGMRef, // GM
+        3: virtuosoPMRef, // PM
     };
     useScrollToBottomOnChatPaneChange(virtuosoDMRef as React.RefObject<VirtuosoHandle>, allChats);
     useScrollToBottomOnChatPaneChange(virtuosoGMRef as React.RefObject<VirtuosoHandle>, allChats);

@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
 
-import { defaultDmPartner } from "../features/chat/services/constants";
 import LoadInboxWorker from "../workers/loadInboxWorker.ts?worker";
 import LoadActivityHistoryWorker from "../workers/loadActivityHistoryWorker.ts?worker";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
 import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
 import LoadTeamMemberWorker from "../workers/loadTeamMembersWorker.ts?worker";
-import PopLatestChatWorker from "../workers/popLatestChatWorker.ts?worker";
 import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
 import PopSpecificMessagesWorker from "../workers/popSpecificMessagesWorker.ts?worker";
 import { UserProps } from "../types/admin";
 import { ChatProps, MessageProps } from "../types/chat";
+import { defaultChat } from "../features/chat/utils/defaults";
 
 export const loadInitialData = (
     myself: UserProps,
@@ -25,9 +24,7 @@ export const loadInitialData = (
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
     const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
     const [isTeamMembersLoaded, setIsTeamMembersLoaded] = useState<boolean | null>(false);
-    const [latestDmChatId, setLatestDmChatId] = useState<number | null>(null);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
-    const [InitialChatMessages, setInitialChatMessages] = useState<MessageProps[]>();
 
     // Load Inbox
     useEffect(() => {
@@ -142,102 +139,111 @@ export const loadInitialData = (
         }
     }, [myself, accessToken]);
 
-    // Fetch the latest DM Chat Id
-    useEffect(() => {
-        if (isDMHistoryLoaded) {
-            const popLatestDMChatWorker = new PopLatestChatWorker();
-            popLatestDMChatWorker.postMessage({ chatType: 1 });
-            popLatestDMChatWorker.onmessage = (event) => {
-                const latestDmChat: any = event.data;
-                if (latestDmChat === null) {
-                    setLatestDmChatId(-1);
-                } else {
-                    setLatestDmChatId(latestDmChat.chatId);
-                }
-            };
-            return () => {
-                popLatestDMChatWorker.terminate();
-            };
-        }
-    }, [isDMHistoryLoaded]);
-
-    // Fetch initial DM chat messages info after the DM history is loaded
-    useEffect(() => {
-        if (latestDmChatId !== null) {
-            if (latestDmChatId === -1) {
-                setInitialChatMessages([]);
-            } else {
-                const popSpecificMessagesWorker = new PopSpecificMessagesWorker();
-                popSpecificMessagesWorker.postMessage({
-                    chatId: latestDmChatId,
-                    chatType: 1,
-                });
-                popSpecificMessagesWorker.onmessage = (event) => {
-                    const fetchedMessages: MessageProps[] = event.data;
-                    if (fetchedMessages !== undefined) {
-                        setInitialChatMessages(fetchedMessages);
-                    } else {
-                        setInitialChatMessages([]);
-                        console.error("Failed due to fetchedMessages:", fetchedMessages);
-                    }
-                };
-                return () => {
-                    popSpecificMessagesWorker.terminate();
-                };
-            }
-        }
-    }, [latestDmChatId]);
-
     // Fetch initial DM chat info after the initial DM chat messages are loaded
     useEffect(() => {
-        if (InitialChatMessages !== undefined) {
-            if (InitialChatMessages.length > 0) {
-                const popSpecificChatWorker = new PopSpecificChatWorker();
-                popSpecificChatWorker.postMessage({
-                    chatId: latestDmChatId,
-                    chatType: 1,
-                });
-                popSpecificChatWorker.onmessage = (event) => {
-                    const fetchedChat: any = event.data;
-                    if (fetchedChat !== undefined && fetchedChat !== null) {
-                        const currentMainChat: ChatProps = {
-                            chatId: fetchedChat.chatId,
-                            chatName: fetchedChat.chatName,
-                            chatType: 1,
-                            dmPartnerUser: fetchedChat.dmPartnerUser,
-                            lastReadMessageId: fetchedChat.lastReadMessageId,
-                            messages: InitialChatMessages,
-                            latestMessage: InitialChatMessages[InitialChatMessages.length - 1],
-                            latestMessageText:
-                                InitialChatMessages[InitialChatMessages.length - 1].contentText,
-                            TSLastMessage: fetchedChat.TSLastMessage,
-                            project: fetchedChat.project,
-                        };
-                        setCurrentMainChat(currentMainChat);
-                        setIsInitialChatLoaded(true);
-                    } else {
-                        console.error("Failed due to fetchedChat is;", fetchedChat);
-                    }
-                };
-                return () => {
-                    popSpecificChatWorker.terminate();
-                };
-            } else {
-                const currentMainChat: ChatProps = {
-                    chatId: -1,
-                    chatName: "Origin",
-                    chatType: 1,
-                    dmPartnerUser: defaultDmPartner,
-                    latestMessageText: "",
-                    TSLastMessage: "",
-                    lastReadMessageId: -1,
-                    messages: [],
-                };
-                setCurrentMainChat(currentMainChat);
-                setIsInitialChatLoaded(true);
+        if (isDMHistoryLoaded && isGMHistoryLoaded && isPMHistoryLoaded) {
+            // Get the last chat type
+            const tmpLastChatType = localStorage.getItem("lastChatType");
+            const lastChatType =
+                tmpLastChatType && tmpLastChatType !== "" ? Number(tmpLastChatType) : -1;
+
+            if (lastChatType !== -1) {
+                // Get the last chat id
+                let lastChatId: number | null = null;
+                if (lastChatType === 1) {
+                    const tmpLastChatId = localStorage.getItem("lastDMChatId");
+                    lastChatId =
+                        tmpLastChatId && tmpLastChatId !== "" ? Number(tmpLastChatId) : null;
+                }
+                if (lastChatType === 2) {
+                    const tmpLastChatId = localStorage.getItem("lastGMChatId");
+                    lastChatId =
+                        tmpLastChatId && tmpLastChatId !== "" ? Number(tmpLastChatId) : null;
+                }
+                if (lastChatType === 3) {
+                    const tmpLastChatId = localStorage.getItem("lastPMChatId");
+                    lastChatId =
+                        tmpLastChatId && tmpLastChatId !== "" ? Number(tmpLastChatId) : null;
+                }
+                if (lastChatType === 4) {
+                    const tmpLastChatId = localStorage.getItem("lastPinnedChatId");
+                    lastChatId =
+                        tmpLastChatId && tmpLastChatId !== "" ? Number(tmpLastChatId) : null;
+                }
+
+                if (lastChatId !== null) {
+                    // Fetch the last chat info
+                    const popSpecificChatWorker = new PopSpecificChatWorker();
+                    popSpecificChatWorker.postMessage({
+                        chatId: lastChatId,
+                        chatType: lastChatType,
+                    });
+                    popSpecificChatWorker.onmessage = (event) => {
+                        const fetchedChat: any = event.data;
+                        if (
+                            fetchedChat.length !== 0 &&
+                            fetchedChat !== undefined &&
+                            fetchedChat !== null
+                        ) {
+                            // Fetch the last chat messages info
+                            const popSpecificMessagesWorker = new PopSpecificMessagesWorker();
+                            popSpecificMessagesWorker.postMessage({
+                                chatId: lastChatId,
+                                chatType: lastChatType,
+                            });
+                            popSpecificMessagesWorker.onmessage = (event) => {
+                                const fetchedMessages: MessageProps[] = event.data;
+                                if (fetchedMessages !== undefined) {
+                                    const currentMainChat: ChatProps = {
+                                        chatId: fetchedChat.chatId,
+                                        chatName: fetchedChat.chatName,
+                                        chatType: lastChatType,
+                                        dmPartnerUser: fetchedChat.dmPartnerUser,
+                                        lastReadMessageId: fetchedChat.lastReadMessageId,
+                                        messages: fetchedMessages,
+                                        latestMessage: fetchedMessages[fetchedMessages.length - 1],
+                                        latestMessageText:
+                                            fetchedMessages[fetchedMessages.length - 1]
+                                                .contentText,
+                                        TSLastMessage: fetchedChat.TSLastMessage,
+                                        project: fetchedChat.project,
+                                    };
+                                    setCurrentMainChat(currentMainChat);
+                                    setIsInitialChatLoaded(true);
+                                } else {
+                                    console.error(
+                                        "Failed due to fetchedMessages:",
+                                        fetchedMessages
+                                    );
+                                }
+                            };
+
+                            return () => {
+                                popSpecificChatWorker.terminate();
+                                popSpecificMessagesWorker.terminate();
+                            };
+                        } else {
+                            console.error(
+                                "Failed due to fetchedChat is null or undefined;",
+                                fetchedChat
+                            );
+                            setCurrentMainChat(defaultChat);
+                            setIsInitialChatLoaded(true);
+                            return () => {
+                                popSpecificChatWorker.terminate();
+                            };
+                        }
+                    };
+                } else {
+                    setCurrentMainChat(defaultChat);
+                    setIsInitialChatLoaded(true);
+                }
             }
+        } else {
+            setCurrentMainChat(defaultChat);
+            setIsInitialChatLoaded(true);
         }
-    }, [InitialChatMessages]);
+    }, [isDMHistoryLoaded, isGMHistoryLoaded, isPMHistoryLoaded]);
 
     // Set "isLoading" true after initialization is completed
     useEffect(() => {

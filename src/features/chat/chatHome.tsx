@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
-import { Box, Sheet } from "@mui/joy";
+import { Box, Sheet, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
@@ -397,7 +397,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setCurrentSubChat={setCurrentSubChat}
                                                 currentSubChat={currentSubChat}
+                                                currentThreadChat={currentThreadChat}
                                                 setCurrentThreadChat={setCurrentThreadChat}
+                                                isThreadVisible={isThreadVisible}
                                                 setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsSubChatVisible={setIsSubChatVisible}
                                                 setIsThreadVisible={setIsThreadVisible}
@@ -433,35 +435,66 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     maxSize={80}
                                     onResize={setMainChatPanelSize}
                                 >
-                                    <MessagesPane
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        currentWindowHeight={height}
-                                        paneSizePCT={mainChatPanelSize}
-                                        chat={currentMainChat}
-                                        subChat={currentSubChat ? currentSubChat : currentMainChat}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        teamMembers={teamMembers}
-                                        socket={socket}
-                                        currentMainChat={currentMainChat}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsOpeningTask={setIsOpeningTask}
-                                        setIsCreatingTask={setIsCreatingTask}
-                                        isSubChatVisible={isSubChatVisible}
-                                        setIsSubChatVisible={setIsSubChatVisible}
-                                        currentMainChatId={currentMainChatId}
-                                        setCurrentPreviewTask={setCurrentPreviewTask}
-                                        setOpeningService={setOpeningService}
-                                        funcSetAllChats={funcSetAllChats}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setCurrentProject={setCurrentProject}
-                                    />
+                                    {currentMainChat.chatId === -1 && (
+                                        <>
+                                            <Box
+                                                sx={{
+                                                    height: "100%",
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <IconButton
+                                                    component="button"
+                                                    variant="soft"
+                                                    color="neutral"
+                                                    sx={{
+                                                        fontSize: "15px",
+                                                        paddingRight: "10px",
+                                                    }}
+                                                >
+                                                    Choose a Chat from Sidebar
+                                                </IconButton>
+                                            </Box>
+                                        </>
+                                    )}
+                                    {currentMainChat.chatId !== -1 && (
+                                        <MessagesPane
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            currentWindowHeight={height}
+                                            paneSizePCT={mainChatPanelSize}
+                                            chat={currentMainChat}
+                                            subChat={
+                                                currentSubChat ? currentSubChat : currentMainChat
+                                            }
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            teamMembers={teamMembers}
+                                            socket={socket}
+                                            currentMainChat={currentMainChat}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setCurrentSubChat={setCurrentSubChat}
+                                            currentThreadChat={currentThreadChat}
+                                            setCurrentThreadChat={setCurrentThreadChat}
+                                            isThreadVisible={isThreadVisible}
+                                            setIsMainChatVisible={setIsMainChatVisible}
+                                            setIsThreadVisible={setIsThreadVisible}
+                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                            setIsOpeningTask={setIsOpeningTask}
+                                            setIsCreatingTask={setIsCreatingTask}
+                                            isSubChatVisible={isSubChatVisible}
+                                            setIsSubChatVisible={setIsSubChatVisible}
+                                            currentMainChatId={currentMainChatId}
+                                            setCurrentPreviewTask={setCurrentPreviewTask}
+                                            setOpeningService={setOpeningService}
+                                            funcSetAllChats={funcSetAllChats}
+                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            setCurrentProject={setCurrentProject}
+                                        />
+                                    )}
                                 </Panel>
                             </PanelGroup>
                         </Panel>

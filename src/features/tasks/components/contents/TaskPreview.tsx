@@ -457,6 +457,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskUpdated={setTaskUpdated}
                 setIsCreatingTask={setIsCreatingTask}
                 taskBodySaved={taskBodySaved}
+                setIsTaskHomeVisible={setIsTaskHomeVisible}
             />
 
             <TaskBodyBlock

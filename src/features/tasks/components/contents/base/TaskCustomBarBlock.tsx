@@ -12,6 +12,7 @@ type TaskCustomBarBlockProps = {
     setTaskStatusUpdated: (value: boolean) => void;
     setIsCreatingTask: (value: any) => void;
     taskBodySaved: boolean;
+    setIsTaskHomeVisible?: (value: boolean) => void;
 };
 export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
     const {
@@ -21,6 +22,7 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
         setTaskStatusUpdated,
         setIsCreatingTask,
         taskBodySaved,
+        setIsTaskHomeVisible,
     } = props;
 
     return (
@@ -129,6 +131,11 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                                 parentTaskId: currentTaskContent.id,
                                 rootTaskId: currentTaskContent.rootTaskId,
                             });
+
+                            // Close task-home when creating a sub task.
+                            if (setIsTaskHomeVisible) {
+                                setIsTaskHomeVisible(false);
+                            }
                         } else {
                             console.error("Task ID nod defined error.");
                         }

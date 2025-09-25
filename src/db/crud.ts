@@ -160,7 +160,7 @@ export const getSpecificDataWithIndex = async (props: any) => {
         return data;
     }
     if (props.storeName === STORES.PM_CHATS) {
-        const data = await _getDataWithIndex.gmChats(props.chatId);
+        const data = await _getDataWithIndex.pmChats(props.chatId);
         return data;
     }
 };
@@ -235,7 +235,6 @@ export const getTasksByMultipleStatus = async (projectId: number, statuses: stri
     );
     return results.flat();
 };
-
 
 export const getNote = async (teamId: string) => {
     const db = await openDB(DB_NAME, DB_VERSION);

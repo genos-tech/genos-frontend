@@ -297,7 +297,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             onClick={() => {
                 setOpen(!open);
                 setCurrentNoteType(noteType);
-                localStorage.setItem("currentNoteType", String(noteType));
+                localStorage.setItem("lastOpenNoteType", String(noteType));
             }}
         >
             {noteType === 1 && <WindowIcon />}
@@ -348,7 +348,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             onClick={() => {
                 setOpen(!open);
                 setCurrentNoteType(noteType);
-                localStorage.setItem("currentNoteType", String(noteType));
+                localStorage.setItem("lastOpenNoteType", String(noteType));
 
                 // Check if the note is in the tab already.
                 // If yes, move to the tab. If not, load the note and move.
@@ -607,7 +607,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             selected={currentNoteType === 0 ? true : false}
                             onClick={() => {
                                 setCurrentNoteType(0);
-                                localStorage.setItem("currentNoteType", "0");
+                                localStorage.setItem("lastOpenNoteType", "0");
                             }}
                         >
                             <HomeIcon />

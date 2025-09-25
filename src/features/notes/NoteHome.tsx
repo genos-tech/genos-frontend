@@ -144,7 +144,7 @@ export const NoteHome = (props: NoteHomeProps) => {
     const { mode } = useColorScheme();
 
     const popInitialNote = async () => {
-        const noteType: string | null = localStorage.getItem("currentNoteType");
+        const noteType: string | null = localStorage.getItem("lastOpenNoteType");
         const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
         const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
         const chatNoteId: string | null = localStorage.getItem("lastOpenChatNoteId");
