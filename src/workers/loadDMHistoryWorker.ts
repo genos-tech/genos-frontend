@@ -2,7 +2,7 @@ import { loadDMHistory } from "../features/chat/services/loadDMHistory";
 import { UserProps } from "../types/admin";
 import { ChatProps, MessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
-import { clearStore, addData, miniBatchInsertMessages } from "../db/crud";
+import { clearStore, addData, miniBatchInsert } from "../db/crud";
 
 const BATCH_SIZE = 1000;
 
@@ -32,7 +32,7 @@ self.onmessage = async (event) => {
                 data: {
                     chatId: dmChat.chatId,
                     chatName: dmChat.chatName,
-                    unread: dmChat.unread,
+                    lastReadMessageId: dmChat.lastReadMessageId,
                     chatType: 1,
                     dmPartnerUser: dmChat.dmPartnerUser,
                     latestMessage: dmChat.latestMessage,
@@ -44,10 +44,10 @@ self.onmessage = async (event) => {
 
             // Insert messages by mini-batch
             for (let i = 0; i < dmChat.messages.length; i += BATCH_SIZE) {
-                const miniBatchMessages: MessageProps[] = dmChat.messages.slice(i, i + BATCH_SIZE);
-                await miniBatchInsertMessages({
+                const miniBatch: MessageProps[] = dmChat.messages.slice(i, i + BATCH_SIZE);
+                await miniBatchInsert({
                     storeName: STORES.DM_MESSAGES,
-                    miniBatchMessages: miniBatchMessages,
+                    miniBatch: miniBatch,
                 });
             }
         }
@@ -56,6 +56,8 @@ self.onmessage = async (event) => {
     } else {
         self.postMessage("done");
     }
+
+    self.close(); // Terminates itself
 };
 
 export {};

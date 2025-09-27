@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     Modal,
     ModalDialog,
@@ -28,14 +28,17 @@ import { UserProfileBaseCountry } from "./sub/UserProfileBaseCountry";
 import { useAuth } from "../../../../context/AuthContext";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
-
 import { UserProfileStatus } from "./sub/UserProfileStatus";
 import { UserProfileRole } from "./sub/UserProfileRole";
+
+const base_url = import.meta.env.VITE_API_BASE_URL;
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type UserProfileProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    isYou: boolean;
     user?: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
@@ -47,6 +50,7 @@ export const UserProfile = (props: UserProfileProps) => {
         socket,
         setMyself,
         myself,
+        isYou,
         user,
         openUserProfile,
         setOpenUserProfile,
@@ -57,6 +61,69 @@ export const UserProfile = (props: UserProfileProps) => {
     const { accessToken } = useAuth();
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+
+    const [profileUser, setProfileUser] = useState<UserProps | undefined>(
+        isYou === true ? myself : user
+    );
+    useEffect(() => {
+        if (isYou === true) {
+            setProfileUser(myself);
+        } else {
+            setProfileUser(user);
+        }
+    }, [user, myself]);
+
+    // Profile image file upload manager
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const handleButtonClick = () => {
+        inputRef.current?.click();
+    };
+    const toProfileFileName = (originalFileName: string): string => {
+        // Get the extension (including dot, e.g. ".png")
+        const ext = originalFileName.substring(originalFileName.lastIndexOf("."));
+        // return `profile${ext}`;
+
+        // use always "jpg"
+        return `profile.jpg`;
+    };
+    const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFiles = event.target.files;
+        if (!selectedFiles || selectedFiles.length !== 1) return;
+
+        const tmpUserProfileImage = selectedFiles[0]; // original File
+
+        // NOTE: This is the static path and is referred from backend as well.
+        //       So, need to check backend when you need to change it.
+        const newName = toProfileFileName(tmpUserProfileImage.name);
+
+        // Create a new File instance with the existing file data but new name
+        const userProfileImage = new File([tmpUserProfileImage], newName, {
+            type: tmpUserProfileImage.type,
+            lastModified: tmpUserProfileImage.lastModified,
+        });
+
+        const formData = new FormData();
+        formData.append("user_profile_image", userProfileImage);
+        const uploadProfileImageResponse = await fetch(`${base_url}/user/profile/image/`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+        });
+
+        const uploadProfileImageData = await uploadProfileImageResponse.json();
+
+        if (!uploadProfileImageResponse.ok) {
+            throw new Error("Failed to upload user profile image.");
+        } else {
+            localStorage.setItem("avatarImgPath", uploadProfileImageData.profile_image_file_name);
+            setMyself({
+                ...myself,
+                avatarImgPath: uploadProfileImageData.profile_image_file_name,
+            });
+        }
+    };
 
     return (
         <>
@@ -88,7 +155,13 @@ export const UserProfile = (props: UserProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    My profile
+                                    {isYou === true
+                                        ? "My Profile"
+                                        : myself.userId !== profileUser?.userId
+                                        ? profileUser?.userName
+                                            ? `${profileUser?.userName}'s Profile`
+                                            : "Profile"
+                                        : "My Profile"}
                                 </Typography>
                             </Box>
                         </Box>
@@ -97,7 +170,6 @@ export const UserProfile = (props: UserProfileProps) => {
                             spacing={4}
                             sx={{
                                 display: "flex",
-                                maxWidth: "900px",
                                 mx: "auto",
                                 px: { xs: 2, md: 6 },
                                 py: { xs: 2, md: 3 },
@@ -106,33 +178,57 @@ export const UserProfile = (props: UserProfileProps) => {
                             <Card>
                                 <Stack
                                     direction="row"
-                                    spacing={3}
                                     sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
                                 >
-                                    <Avatar
-                                        sx={{ width: 100, height: 100, fontSize: "50px" }}
-                                        onClick={() => setOpenUserProfile(true)}
-                                        src={user?.avatarImgPath}
-                                    >
-                                        {user?.userName[0]}
-                                    </Avatar>
                                     <Box
-                                        position="absolute"
-                                        bottom={0}
-                                        right={0}
-                                        width={720}
-                                        height={400}
+                                        sx={{
+                                            pl: "20px",
+                                            pr: "40px",
+                                            position: "relative",
+                                            display: "inline-block",
+                                        }}
                                     >
-                                        <Tooltip title="EDIT(TBD)" sx={{ zIndex: 10001 }}>
-                                            <IconButton size="lg">
-                                                <EditIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <Avatar
+                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
+                                            onClick={() => setOpenUserProfile(true)}
+                                            src={`${media_url}/${profileUser?.avatarImgPath}`}
+                                        >
+                                            {profileUser?.userName[0]}
+                                        </Avatar>
+
+                                        {myself.userId === profileUser?.userId && (
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: 150, // adjust vertical position
+                                                    right: 30, // push it to the right side
+                                                }}
+                                            >
+                                                <input
+                                                    type="file"
+                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                                    multiple={false}
+                                                    ref={inputRef}
+                                                    onChange={handleSelectedFiles}
+                                                    style={{ display: "none" }}
+                                                />
+                                                <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
+                                                    <IconButton
+                                                        variant="soft"
+                                                        onClick={handleButtonClick}
+                                                    >
+                                                        <EditIcon sx={{ fontSize: "30px" }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        )}
                                     </Box>
+
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <UserProfileStatus
                                             myself={myself}
                                             setMyself={setMyself}
+                                            isYou={isYou}
                                             user={user}
                                             setShowEmojiPicker={setShowEmojiPicker}
                                             selectedEmoji={selectedEmoji}
@@ -142,7 +238,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         <Stack direction={"row"} spacing={2}>
                                             <Typography
                                                 component="a"
-                                                href={`mailto:${user?.userEmail}`}
+                                                href={`mailto:${profileUser?.userEmail}`}
                                                 startDecorator={
                                                     <EmailRoundedIcon fontSize="small" />
                                                 }
@@ -152,12 +248,13 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     cursor: "pointer",
                                                 }}
                                             >
-                                                {user?.userEmail}
+                                                {profileUser?.userEmail}
                                             </Typography>
                                             <Typography
                                                 startDecorator={
                                                     <LocalPhoneIcon fontSize="small" />
                                                 }
+                                                sx={{ userSelect: "text" }}
                                             >
                                                 +81 999-888-777
                                             </Typography>
@@ -172,8 +269,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     }}
                                                     disabled={true}
                                                 >
-                                                    <Typography fontWeight="bold">
-                                                        {user?.teamName}
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{ userSelect: "text" }}
+                                                    >
+                                                        {profileUser?.teamName}
                                                     </Typography>
                                                 </Button>
                                             </FormControl>
@@ -186,8 +286,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     }}
                                                     disabled={true}
                                                 >
-                                                    <Typography fontWeight="bold">
-                                                        {user?.teamId}
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{ userSelect: "text" }}
+                                                    >
+                                                        {profileUser?.teamId}
                                                     </Typography>
                                                 </Button>
                                             </FormControl>
@@ -196,7 +299,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 <UserProfileRole
                                                     myself={myself}
                                                     setMyself={setMyself}
-                                                    user={user}
+                                                    user={profileUser}
                                                 />
                                             </FormControl>
                                             <FormControl>
@@ -204,13 +307,13 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 <UserProfileBaseCountry
                                                     myself={myself}
                                                     setMyself={setMyself}
-                                                    user={user}
+                                                    user={profileUser}
                                                 />
                                             </FormControl>
                                         </Stack>
                                         <Stack direction="column" spacing={2}>
                                             <FormControl>
-                                                <FormLabel>Joined since</FormLabel>
+                                                <FormLabel>Since Joined</FormLabel>
                                                 <Button
                                                     variant="plain"
                                                     sx={{
@@ -218,11 +321,14 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     }}
                                                     disabled={true}
                                                 >
-                                                    <Typography fontWeight={"bold"}>
-                                                        {user &&
-                                                        user?.tsJoined !== "" &&
-                                                        user?.tsJoined !== "N/A"
-                                                            ? extractYYYYMMDD(user.tsJoined)
+                                                    <Typography
+                                                        fontWeight={"bold"}
+                                                        sx={{ userSelect: "text" }}
+                                                    >
+                                                        {profileUser &&
+                                                        profileUser?.tsJoined !== "" &&
+                                                        profileUser?.tsJoined !== "N/A"
+                                                            ? extractYYYYMMDD(profileUser.tsJoined)
                                                             : "N/A"}
                                                     </Typography>
                                                 </Button>
@@ -250,17 +356,17 @@ export const UserProfile = (props: UserProfileProps) => {
                                 }}
                                 onClick={() => {
                                     (async () => {
-                                        if (user) {
+                                        if (profileUser) {
                                             const chatId: number = await loadDMIdByUserId(
-                                                user,
-                                                user?.userId,
+                                                myself,
+                                                profileUser?.userId,
                                                 accessToken
                                             );
                                             await moveToDMChat(
                                                 socket,
                                                 chatId,
-                                                user?.userName,
-                                                user,
+                                                profileUser?.userName,
+                                                profileUser,
                                                 setCurrentMainChat
                                             );
                                             setOpeningService(1);

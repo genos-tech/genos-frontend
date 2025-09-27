@@ -49,10 +49,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setOpeningService,
     } = props;
 
-    let isYou: boolean = false;
-    if (chat.dmPartnerUser !== null) {
-        isYou = myself.userId === chat.dmPartnerUser.userId;
-    }
+    const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
 
     const switchSubToMain = () => {
         setCurrentMainChat(subChat);
@@ -85,11 +82,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     setCurrentMainChat={setCurrentMainChat}
-                    isOnline={
-                        chat.dmPartnerUser
-                            ? teamMemberProfiles[chat.dmPartnerUser.userId]?.isOnline || false
-                            : false
-                    }
                     chat={chat}
                     isYou={isYou}
                 />
@@ -99,7 +91,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     <Tooltip title="Create a new task" size="sm">
                         <IconButton
                             component="a"
-                            size="md"
+                            size="sm"
                             variant="outlined"
                             color="neutral"
                             onClick={() => {
@@ -109,6 +101,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 setIsTaskCreationVisible(true);
                                 setIsCreatingTask(true);
                             }}
+                            sx={{ px: "10px" }}
                         >
                             <PlaylistAddIcon />
                             New Task
@@ -128,33 +121,39 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     </Button>
                 )}
 
-                {isSubChatVisible ? (
-                    <div>
-                        <IconButton
-                            component="a"
-                            size="sm"
-                            variant="plain"
-                            color="neutral"
-                            onClick={() => swapChat()}
-                        >
-                            <SwapVertIcon />
-                        </IconButton>
-                        <IconButton
-                            component="a"
-                            size="sm"
-                            variant="plain"
-                            color="neutral"
-                            onClick={() => switchSubToMain()}
-                        >
-                            <CancelIcon />
-                        </IconButton>
-                    </div>
-                ) : (
-                    ""
-                )}
-                <IconButton component="a" size="sm" variant="plain" color="neutral">
-                    <MoreVertRoundedIcon />
-                </IconButton>
+                <Stack spacing={0} direction="row" sx={{ alignItems: "center" }}>
+                    {isSubChatVisible && (
+                        <div>
+                            <IconButton
+                                component="a"
+                                size="sm"
+                                variant="plain"
+                                color="neutral"
+                                onClick={() => swapChat()}
+                            >
+                                <SwapVertIcon />
+                            </IconButton>
+                        </div>
+                    )}
+
+                    <IconButton component="a" size="sm" variant="plain" color="neutral">
+                        <MoreVertRoundedIcon />
+                    </IconButton>
+
+                    {isSubChatVisible && (
+                        <div>
+                            <IconButton
+                                component="a"
+                                size="sm"
+                                variant="plain"
+                                color="neutral"
+                                onClick={() => switchSubToMain()}
+                            >
+                                <CancelIcon />
+                            </IconButton>
+                        </div>
+                    )}
+                </Stack>
             </Stack>
         </Stack>
     );

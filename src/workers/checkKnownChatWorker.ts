@@ -16,6 +16,8 @@ self.onmessage = async (event) => {
     }
 
     self.postMessage(isKnown);
+
+    self.close(); // Terminates itself
 };
 
 export {};

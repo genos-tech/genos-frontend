@@ -6,6 +6,7 @@ import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import CircleIcon from "@mui/icons-material/Circle";
 
 import { useAuth } from "../../../context/AuthContext";
 import { popSpecificMessages } from "../services/popSpecificMessages";
@@ -18,18 +19,27 @@ import {
     ChatProps,
     ThreadProps,
     ThreadMessageProps,
+    AllChatProps,
 } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
+import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
+
+// chatType = {1: DM, 2: GM, 3: PM, 4: Task Comment}
+// activityType = {1: message or comment, 2: reaction, 3: mention}
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
+    selectedActivityId: string;
+    setSelectedActivityId: (value: string) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     activity: ActivityMessageProps;
+    activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    currentMainChat: ChatProps;
+    allChats: AllChatProps[];
     currentSubChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
@@ -38,11 +48,9 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     setIsThreadVisible: (value: boolean) => void;
     isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
     isTaskCreationVisible: boolean;
     isSubChatVisible: boolean;
-    setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
@@ -50,12 +58,16 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
     const {
+        selectedActivityId,
+        setSelectedActivityId,
         teamMemberProfiles,
         socket,
         activity,
+        activityMessages,
+        setActivityMessages,
         myself,
         setMyself,
-        currentMainChat,
+        allChats,
         currentSubChat,
         setCurrentMainChat,
         setCurrentSubChat,
@@ -64,35 +76,78 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
         isTaskPreviewVisible,
         isTaskCreationVisible,
         isSubChatVisible,
-        setIsSubChatVisible,
         setOpeningService,
         setCurrentProject,
         setCurrentPreviewTaskId,
     } = props;
     const { accessToken } = useAuth();
-    const isYou = myself.userId === activity.dmPartnerUser?.userId;
 
-    const defineNewMessages = (messages: any, moveToSpecificIndex: string) => {
-        const newMessages: ChatProps = {
+    const isYou = myself.userId === activity.dmPartnerUserId;
+
+    const updateActivityReadStatus = () => {
+        if (accessToken && activity.activityId) {
+            const updateActivityReadStatusWorker = new UpdateActivityReadStatusWorker();
+            updateActivityReadStatusWorker.postMessage({
+                accessToken: accessToken,
+                activityId: activity.activityId,
+                isRead: true,
+                activityMessages: activityMessages,
+            });
+            updateActivityReadStatusWorker.onmessage = (event) => {
+                const data = event.data;
+                if (data.error) {
+                    console.error("Worker failed:", data.error);
+                } else {
+                    setActivityMessages(data);
+                }
+            };
+            return () => {
+                updateActivityReadStatusWorker.terminate();
+            };
+        }
+    };
+
+    const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
+        let chatType: number = activity.chatType;
+        if (activity.chatType === 4) {
+            chatType = 3;
+        }
+        const currentChat: AllChatProps = allChats.filter(
+            (chat) => chat.chatType === chatType && chat.chatId === activity.chatId
+        )[0];
+        const newChat: ChatProps = {
             chatId: activity.chatId,
             chatName: activity.chatName,
             chatType: activity.chatType,
-            dmPartnerUser: activity.dmPartnerUser,
-            unread: false,
+            dmPartnerUser: {
+                teamId: myself.teamId,
+                teamName: myself.teamName,
+                userId: activity.dmPartnerUserId,
+                userName: activity.dmPartnerUserName,
+                userEmail: activity.dmPartnerUserEmail,
+                avatarImgPath: "",
+                tsLastSeen: "",
+                tsJoined: "",
+            },
+            lastReadMessageId:
+                activity.messageId > currentChat.lastReadMessageId
+                    ? activity.messageId
+                    : currentChat.lastReadMessageId,
             messages: messages,
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
             TSLastMessage: activity.tsSent,
             moveToSpecificIndex: moveToSpecificIndex,
         };
-        return newMessages;
+        return newChat;
     };
 
     const onClickHandler = async () => {
+        setSelectedActivityId(activity.activityId);
+
         if (activity.isThread === false) {
             // Handling a non-thread message/comment
             if (activity.chatType !== 4) {
@@ -105,9 +160,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -125,9 +178,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentSubChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -147,11 +198,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, 3)
                         .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
-                            if (activity.project) {
-                                setCurrentProject(activity.project);
+                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
+                            if (activity.projectId) {
+                                setCurrentProject({
+                                    projectId: activity.projectId,
+                                    projectName: activity.projectName || "",
+                                    projectTags: [],
+                                });
                                 setCurrentPreviewTaskId(activity.taskId);
                                 setIsThreadVisible(false);
                                 setIsTaskPreviewVisible(true);
@@ -176,22 +229,39 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 accessToken
             );
             if (threadMessages && threadMessages.length > 0) {
+                console.log("thread activity:", activity);
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
                     chatName: activity.chatName,
                     threadId: activity.threadId,
                     chatType: activity.chatType,
-                    dmPartnerUser: activity.dmPartnerUser,
+                    dmPartnerUser: {
+                        teamId: myself.teamId,
+                        teamName: myself.teamName,
+                        userId: activity.dmPartnerUserId,
+                        userName: activity.dmPartnerUserName,
+                        userEmail: activity.dmPartnerUserEmail,
+                        avatarImgPath: "",
+                        tsLastSeen: "",
+                        tsJoined: "",
+                    },
                     taskId: activity.taskId,
-                    unread: false,
                     messages: threadMessages,
-                    project: activity.project,
+                    project: {
+                        projectId: activity.projectId || -1,
+                        projectName: activity.projectName || "",
+                        projectTags: [],
+                    },
                     TSLastMessage: getCurrentTimestamp(),
                     taskExist: threadMessages[0].taskExist,
                     moveToSpecificIndex: activity.threadMessageUniqueKey,
                 };
-                if (activity.project) {
-                    setCurrentProject(activity.project);
+                if (activity.projectId) {
+                    setCurrentProject({
+                        projectId: activity.projectId,
+                        projectName: activity.projectName || "",
+                        projectTags: [],
+                    });
                 }
                 if (newThread) {
                     setCurrentThreadChat(newThread);
@@ -208,9 +278,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -228,9 +296,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     toggleMessagesPane();
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
-                            setCurrentSubChat(
-                                defineNewMessages(messages, activity.messageUniqueKey)
-                            );
+                            setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
                                 if (isTaskCreationVisible || isTaskPreviewVisible) {
@@ -243,6 +309,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             }
 
             setIsThreadVisible(true);
+        }
+
+        if (activity.isRead === false) {
+            updateActivityReadStatus();
         }
     };
 
@@ -276,13 +346,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
-        groupEmojis(activity.reactions.allReactions)
+        groupEmojis(activity.reactions)
     );
     const displayed = groupedReactions.slice(0, 10);
     const hidden = groupedReactions.slice(10);
 
     useEffect(() => {
-        setGroupedReactions(groupEmojis(activity.reactions.allReactions));
+        setGroupedReactions(groupEmojis(activity.reactions));
     }, [activity]);
 
     return (
@@ -290,8 +360,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
                     onClick={onClickHandler}
-                    color="neutral"
-                    variant="outlined"
+                    color={selectedActivityId === activity.activityId ? "success" : "neutral"}
+                    variant={selectedActivityId === activity.activityId ? "soft" : "outlined"}
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                 >
                     <Stack direction="column">
@@ -304,14 +374,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             <Stack direction="row" spacing={1}>
                                 <div>
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser !== null && (
+                                        activity.dmPartnerUserId !== "" && (
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
+                                                isYou={isYou}
                                                 avatarUser={
-                                                    teamMemberProfiles[
-                                                        activity.dmPartnerUser.userId
-                                                    ]
+                                                    teamMemberProfiles[activity.dmPartnerUserId]
                                                 }
                                                 socket={socket}
                                                 setOpeningService={setOpeningService}
@@ -319,8 +388,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             />
                                         )}
                                     {activity.chatType === 1 &&
-                                        activity.dmPartnerUser === null && (
-                                            <Avatar size="sm">{activity.chatName[0]}</Avatar>
+                                        activity.dmPartnerUserId === "" && (
+                                            <Avatar size="sm">
+                                                {activity.chatName[0].toUpperCase()}
+                                            </Avatar>
                                         )}
                                     {activity.chatType === 2 && (
                                         <Avatar size="sm">
@@ -352,7 +423,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 <Box>
                                     {(activity.chatType === 3 || activity.chatType === 4) && (
                                         <>
-                                            {" "}
                                             <Chip
                                                 size="sm"
                                                 variant="soft"
@@ -379,6 +449,20 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         </>
                                     )}
 
+                                    {activity.activityType === 1 && (
+                                        <Chip
+                                            size="sm"
+                                            variant="outlined"
+                                            color="success"
+                                            sx={{
+                                                fontSize: "12px",
+                                                borderRadius: "4px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Reply
+                                        </Chip>
+                                    )}
                                     {activity.activityType === 2 && (
                                         <Chip
                                             size="sm"
@@ -445,51 +529,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 >
                                     {extractYYYYMMDDHHMM(activity.tsSent)}
                                 </Typography>
+                                {activity.isRead === false && (
+                                    <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+                                )}
                             </Stack>
                         </Stack>
 
-                        {activity.activityType === 1 && (
-                            <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="flex-start"
-                            >
-                                {activity.chatType !== 4 && (
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            paddingTop: 1,
-                                            display: "-webkit-box",
-                                            WebkitLineClamp: "2",
-                                            WebkitBoxOrient: "vertical",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        {activity.sender.userName} has replied
-                                    </Typography>
-                                )}
-                                {activity.chatType === 4 && (
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            paddingTop: 1,
-                                            display: "-webkit-box",
-                                            WebkitLineClamp: "2",
-                                            WebkitBoxOrient: "vertical",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        {activity.sender.userName} has left a comment
-                                    </Typography>
-                                )}
-                            </Stack>
-                        )}
-
-                        {activity.activityType === 2 && (
+                        {activity.activityType !== 2 && (
                             <Stack
                                 direction="row"
                                 justifyContent="space-between"
@@ -498,87 +544,137 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 <Typography
                                     level="body-sm"
                                     sx={{
-                                        paddingTop: 1,
+                                        marginBottom: 0.5,
+                                        ml: "45px",
+                                        fontWeight: "bold",
                                         display: "-webkit-box",
                                         WebkitLineClamp: "2",
                                         WebkitBoxOrient: "vertical",
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
-                                        fontWeight: "bold",
                                     }}
                                 >
-                                    {activity.latestReaction.senderName} has reacted{" "}
-                                    {activity.latestReaction.emoji}
+                                    {activity.firstLineContent}
                                 </Typography>
-
-                                <Box sx={{ paddingTop: 0.5 }}>
-                                    {displayed.map(({ senders, emoji, count }, index) => (
-                                        <Tooltip
-                                            key={`tooltip-${index}`}
-                                            title={
-                                                senders
-                                                    .slice(0, 5)
-                                                    .map((sender) => `${sender.userName} `)
-                                                    .join(" and ") +
-                                                (senders.length > 5 ? " and more" : "") +
-                                                " reacted"
-                                            }
-                                        >
-                                            <Chip
-                                                key={`emoji-chip-${emoji}-${index}`}
-                                                variant={
-                                                    senders.some((u) => u.userId === myself.userId)
-                                                        ? "solid"
-                                                        : "outlined"
-                                                }
-                                                color="neutral"
-                                                size="sm"
-                                                sx={{
-                                                    fontSize: "0.8rem",
-                                                    cursor: "pointer",
-                                                    px: 0.5,
-                                                    py: 0.5,
-                                                }}
-                                            >
-                                                {emoji}
-                                                {count}
-                                            </Chip>
-                                        </Tooltip>
-                                    ))}
-
-                                    {hidden.length > 0 && (
-                                        <Tooltip
-                                            title={hidden
-                                                .map(({ emoji, count }) => `${emoji} ${count}`)
-                                                .join(" ")}
-                                        >
-                                            <Chip
-                                                size="sm"
-                                                variant="plain"
-                                                sx={{ fontSize: "0.8rem" }}
-                                            >
-                                                +{hidden.length} more
-                                            </Chip>
-                                        </Tooltip>
-                                    )}
-                                </Box>
                             </Stack>
                         )}
 
-                        <Box sx={{ lineHeight: 0, textAlign: "right" }}>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: "2",
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                }}
-                            >
-                                {activity.firstLineContent}
-                            </Typography>
-                        </Box>
+                        {activity.activityType === 2 && (
+                            <>
+                                <Stack
+                                    direction="row"
+                                    justifyContent="space-between"
+                                    alignItems="flex-start"
+                                >
+                                    <Stack
+                                        direction="row"
+                                        justifyContent="space-between"
+                                        alignItems="flex-start"
+                                    >
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                paddingTop: 1.5,
+                                                ml: "45px",
+                                                fontWeight: "bold",
+                                                display: "-webkit-box",
+                                                WebkitLineClamp: "2",
+                                                WebkitBoxOrient: "vertical",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                            }}
+                                        >
+                                            {activity.latestReaction.sender.userName} has reacted
+                                        </Typography>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontSize: "25px",
+                                                pl: "10px",
+                                                display: "-webkit-box",
+                                                WebkitLineClamp: "2",
+                                                WebkitBoxOrient: "vertical",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                            }}
+                                        >
+                                            {activity.latestReaction.emoji}
+                                        </Typography>
+                                    </Stack>
+
+                                    <Box sx={{ paddingTop: 0.5 }}>
+                                        {displayed.map(({ senders, emoji, count }, index) => (
+                                            <Tooltip
+                                                key={`tooltip-${index}`}
+                                                title={
+                                                    senders
+                                                        .slice(0, 5)
+                                                        .map((sender) => `${sender.userName} `)
+                                                        .join(" and ") +
+                                                    (senders.length > 5 ? " and more" : "") +
+                                                    " reacted"
+                                                }
+                                            >
+                                                <Chip
+                                                    key={`emoji-chip-${emoji}-${index}`}
+                                                    variant={
+                                                        senders.some(
+                                                            (u) => u.userId === myself.userId
+                                                        )
+                                                            ? "solid"
+                                                            : "outlined"
+                                                    }
+                                                    color="neutral"
+                                                    size="sm"
+                                                    sx={{
+                                                        fontSize: "0.8rem",
+                                                        cursor: "pointer",
+                                                        px: 0.5,
+                                                        py: 0.5,
+                                                    }}
+                                                >
+                                                    {emoji}
+                                                    {count}
+                                                </Chip>
+                                            </Tooltip>
+                                        ))}
+
+                                        {hidden.length > 0 && (
+                                            <Tooltip
+                                                title={hidden
+                                                    .map(({ emoji, count }) => `${emoji} ${count}`)
+                                                    .join(" ")}
+                                            >
+                                                <Chip
+                                                    size="sm"
+                                                    variant="plain"
+                                                    sx={{ fontSize: "0.8rem" }}
+                                                >
+                                                    +{hidden.length} more
+                                                </Chip>
+                                            </Tooltip>
+                                        )}
+                                    </Box>
+                                </Stack>
+                                <Box sx={{ lineHeight: 0, textAlign: "right" }}>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            marginBottom: 0.5,
+                                            ml: "45px",
+                                            fontWeight: "bold",
+                                            display: "-webkit-box",
+                                            WebkitLineClamp: "2",
+                                            WebkitBoxOrient: "vertical",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                        }}
+                                    >
+                                        {activity.firstLineContent}
+                                    </Typography>
+                                </Box>
+                            </>
+                        )}
                     </Stack>
                 </ListItemButton>
             </ListItem>

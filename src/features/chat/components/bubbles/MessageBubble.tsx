@@ -28,6 +28,7 @@ type MessageBubbleProps = {
     variant: "sent" | "received";
     chat: ChatProps;
     message: MessageProps;
+    isScrolling: boolean;
     isFocused: boolean;
     isSimpleBubble: boolean;
     socket: Socket | null;
@@ -56,6 +57,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         variant,
         chat,
         message,
+        isScrolling,
         isFocused,
         isSimpleBubble,
         socket,
@@ -120,7 +122,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     rootMessageSenderId: message.sender.userId,
                     rootMessageReceiverId:
                         myself.userId === message.sender.userId
-                            ? chat.dmPartnerUser === null
+                            ? chat.dmPartnerUser.userId === ""
                                 ? null
                                 : chat.dmPartnerUser.userId
                             : myself.userId,
@@ -128,7 +130,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     threadMessage: message.content,
                     chatType: chat.chatType,
                     dmPartnerUserId:
-                        chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
+                        chat.dmPartnerUser.userId === "" ? null : chat.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
                     destCGName: chat.chatName,
@@ -136,7 +138,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     systemUserId: null,
                     taskId: message.taskId || null,
                     messageIdForPut: null,
-                    send_activity: false,
+                    sendActivity: false,
                 },
                 async (ack: any) => {
                     const newThreadMessage: ThreadMessageProps = {
@@ -151,7 +153,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             chat.chatType === 1
                                 ? myself.userId === message.sender.userId
                                     ? myself
-                                    : chat.dmPartnerUser || myself
+                                    : chat.dmPartnerUser
                                 : message.sender,
                         reactions: message.reactions,
                         taskId: message.taskId || null,
@@ -176,7 +178,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 chatType: chat.chatType,
                                 dmPartnerUser: chat.dmPartnerUser,
                                 taskId: message.taskId || null,
-                                unread: false,
                                 messages: threadMessages,
                                 project: message.project,
                                 TSLastMessage: getCurrentTimestamp(),
@@ -206,13 +207,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
     useEffect(() => {
         if (message.reactions) {
-            setReactions(message.reactions.allReactions);
+            setReactions(message.reactions);
         }
     }, []);
 
     useEffect(() => {
         if (message.reactions) {
-            setReactions(message.reactions.allReactions);
+            setReactions(message.reactions);
         }
     }, [message]);
 
@@ -235,9 +236,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         thread_id: -1,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? chat.dmPartnerUser?.userId
+                                ? chat.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
@@ -257,9 +259,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
@@ -279,9 +282,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: message.messageId,
                             message_id: 1,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
@@ -310,9 +314,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         thread_id: -1,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? chat.dmPartnerUser?.userId
+                                ? chat.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
@@ -331,9 +336,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
@@ -353,9 +359,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             thread_id: message.messageId,
                             message_id: 1,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? chat.dmPartnerUser?.userId
+                                    ? chat.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
@@ -369,12 +376,19 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         }
     }, [selectedEmoji]);
 
+    let numRepliesWithoutFirstMessage: number;
+    if (chat.chatType !== 3) {
+        numRepliesWithoutFirstMessage = message.numReplies - 1;
+    } else {
+        numRepliesWithoutFirstMessage = message.numReplies;
+    }
+
     return (
         <Box
             sx={{
                 maxWidth: "90%",
                 minWidth:
-                    (isSimpleBubble ? (message.numReplies > 0 ? 150 : 100) : 200) +
+                    (isSimpleBubble ? (numRepliesWithoutFirstMessage > 0 ? 150 : 100) : 200) +
                     (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
@@ -418,14 +432,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                   },
                             isFocused
                                 ? {
-                                      background: "#1c7fb1ff",
+                                      background: "#24c165d0",
                                   }
                                 : {
                                       background: "",
                                   },
                         ]}
                     >
-                        <Stack direction="column" spacing={1.5}>
+                        <Stack direction="column">
                             {showUnderBarOption === true && isSimpleBubble === true && (
                                 <Stack direction="row" spacing={0}>
                                     <BubbleUserName
@@ -443,23 +457,25 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     />
 
                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                        <EmojiReaction
-                                            socket={socket}
-                                            myself={myself}
-                                            chatType={chat.chatType}
-                                            chatName={chat.chatName}
-                                            dmPartnerUser={chat.dmPartnerUser}
-                                            message={message}
-                                            numReplies={message.numReplies}
-                                            isThread={false}
-                                            showUnderBarOption={showUnderBarOption}
-                                            reactions={reactions}
-                                            setReactions={setReactions}
-                                            setShowEmojiPicker={setShowEmojiPicker}
-                                            setUniqueReactionEmojiCount={
-                                                setUniqueReactionEmojiCount
-                                            }
-                                        />
+                                        {isScrolling !== true && (
+                                            <EmojiReaction
+                                                socket={socket}
+                                                myself={myself}
+                                                chatType={chat.chatType}
+                                                chatName={chat.chatName}
+                                                dmPartnerUser={chat.dmPartnerUser}
+                                                message={message}
+                                                numReplies={message.numReplies}
+                                                isThread={false}
+                                                showUnderBarOption={showUnderBarOption}
+                                                reactions={reactions}
+                                                setReactions={setReactions}
+                                                setShowEmojiPicker={setShowEmojiPicker}
+                                                setUniqueReactionEmojiCount={
+                                                    setUniqueReactionEmojiCount
+                                                }
+                                            />
+                                        )}
                                     </Box>
 
                                     <BubbleReplyButton replayHandler={replayHandler} />
@@ -476,6 +492,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     {(chat.chatType === 3 || chat.chatType === 4) &&
                                         message.sender.isSystemUser === true && (
                                             <BubbleOpenTaskButton
+                                                message={message}
                                                 taskId={message.taskId}
                                                 setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsThreadVisible={setIsThreadVisible}
@@ -483,6 +500,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                                                 setIsOpeningTask={setIsOpeningTask}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setCurrentProject={setCurrentProject}
                                             />
                                         )}
                                 </Stack>
@@ -498,12 +516,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
+                                                isYou={isSent}
                                                 avatarUser={
                                                     isSent
                                                         ? teamMemberProfiles[myself.userId]
                                                         : teamMemberProfiles[message.sender.userId]
                                                 }
                                                 socket={socket}
+                                                isForBubble={true}
                                                 chat={chat}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
@@ -529,23 +549,29 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             {showUnderBarOption === true && (
                                                 <>
                                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                                        <EmojiReaction
-                                                            socket={socket}
-                                                            myself={myself}
-                                                            chatType={chat.chatType}
-                                                            chatName={chat.chatName}
-                                                            dmPartnerUser={chat.dmPartnerUser}
-                                                            message={message}
-                                                            numReplies={message.numReplies}
-                                                            isThread={false}
-                                                            showUnderBarOption={showUnderBarOption}
-                                                            reactions={reactions}
-                                                            setReactions={setReactions}
-                                                            setShowEmojiPicker={setShowEmojiPicker}
-                                                            setUniqueReactionEmojiCount={
-                                                                setUniqueReactionEmojiCount
-                                                            }
-                                                        />
+                                                        {isScrolling !== true && (
+                                                            <EmojiReaction
+                                                                socket={socket}
+                                                                myself={myself}
+                                                                chatType={chat.chatType}
+                                                                chatName={chat.chatName}
+                                                                dmPartnerUser={chat.dmPartnerUser}
+                                                                message={message}
+                                                                numReplies={message.numReplies}
+                                                                isThread={false}
+                                                                showUnderBarOption={
+                                                                    showUnderBarOption
+                                                                }
+                                                                reactions={reactions}
+                                                                setReactions={setReactions}
+                                                                setShowEmojiPicker={
+                                                                    setShowEmojiPicker
+                                                                }
+                                                                setUniqueReactionEmojiCount={
+                                                                    setUniqueReactionEmojiCount
+                                                                }
+                                                            />
+                                                        )}
                                                     </Box>
 
                                                     <BubbleReplyButton
@@ -570,6 +596,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         chat.chatType === 4) &&
                                                         message.sender.isSystemUser === true && (
                                                             <BubbleOpenTaskButton
+                                                                message={message}
                                                                 taskId={message.taskId}
                                                                 setIsMainChatVisible={
                                                                     setIsMainChatVisible
@@ -586,6 +613,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 setIsOpeningTask={setIsOpeningTask}
                                                                 setCurrentPreviewTaskId={
                                                                     setCurrentPreviewTaskId
+                                                                }
+                                                                setCurrentProject={
+                                                                    setCurrentProject
                                                                 }
                                                             />
                                                         )}

@@ -16,6 +16,7 @@ import {
 } from "../../../../../../utils/dateUtils";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
+import { AvatarWithStatus } from "../../../../../../components/utils/avatarWithStatus";
 
 type TaskCommentBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -58,13 +59,13 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     useEffect(() => {
         if (comment.reactions) {
-            setReactions(comment.reactions.allReactions);
+            setReactions(comment.reactions);
         }
     }, []);
 
     useEffect(() => {
         if (comment.reactions) {
-            setReactions(comment.reactions.allReactions);
+            setReactions(comment.reactions);
         }
     }, [comment]);
 
@@ -86,6 +87,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         task_id: comment.taskId,
                         comment_id: comment.commentId,
                         comment_body: comment.commentBody,
+                        comment_sender_id: comment.senderId,
+                        comment_sender_name: comment.senderName,
                         reaction_emoji: selectedEmoji,
                     });
                 }
@@ -109,6 +112,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         task_id: comment.taskId,
                         comment_id: comment.commentId,
                         comment_body: comment.commentBody,
+                        comment_sender_id: comment.senderId,
+                        comment_sender_name: comment.senderName,
                         reaction_emoji: selectedEmoji,
                     });
                 }
@@ -146,11 +151,21 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 >
                     <Card
                         sx={{
-                            backgroundColor: mode === "dark" ? "black" : "rgba(177, 177, 177, 1)",
+                            backgroundColor:
+                                mode === "dark" ? "black" : "rgba(221, 221, 221, 0.45)",
                         }}
                     >
                         <Stack direction="row" spacing={1} alignItems="center">
-                            <Avatar size="sm">{comment.senderName[0]}</Avatar>
+                            <AvatarWithStatus
+                                myself={myself}
+                                setMyself={setMyself}
+                                isYou={myself.userId === comment.senderId ? true : false}
+                                avatarUser={teamMemberProfiles[comment.senderId]}
+                                socket={socket}
+                                isForBubble={true}
+                                setOpeningService={setOpeningService}
+                                setCurrentMainChat={setCurrentChat}
+                            />
                             <Typography level="title-md">{comment.senderName}</Typography>
                             <Typography
                                 level="body-sm"

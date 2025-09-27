@@ -128,6 +128,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const apiRef = useGridApiRef();
     const [currentDisplayingTasks, setCurrentDisplayingTasks] =
         useState<TaskTableProps[]>(ongoingTasks);
+    const [currentFilterName, setCurrentFilterName] = useState<string>("");
     const [predefinedFilters, setPredefinedFilters] =
         useState<FilterProps[]>(predefinedStatusFilters);
     const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);
@@ -268,8 +269,14 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                             return (
                                 <Button
                                     key={`${label}-${count}`}
-                                    onClick={() => apiRef.current?.setFilterModel(filterModel)}
-                                    variant="outlined"
+                                    onClick={() => {
+                                        apiRef.current?.setFilterModel(filterModel);
+                                        setCurrentFilterName(label);
+                                    }}
+                                    variant={
+                                        currentFilterName === label ? "contained" : "outlined"
+                                    }
+                                    color={currentFilterName === label ? "info" : "inherit"}
                                     sx={{
                                         color: mode === "dark" ? "white" : "Black",
                                         borderColor:
@@ -320,6 +327,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                 key={option.filterId}
                                 onClick={() => {
                                     setFilterBy(option.filterId);
+                                    setCurrentFilterName("");
                                 }}
                             >
                                 {option.name}
@@ -335,14 +343,17 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                     }}
                 >
                     <DataGrid
-                        onCellClick={(params) => {}}
-                        onCellDoubleClick={(params) => {
-                            setIsTaskPreviewVisible(true);
-                            setCurrentPreviewTaskId(Number(params.id));
-                        }}
-                        onRowClick={(params, event, detail) => {
+                        onCellClick={(params) => {
                             // setIsTaskPreviewVisible(true);
                             // setCurrentPreviewTaskId(Number(params.id));
+                        }}
+                        onCellDoubleClick={(params) => {
+                            // setIsTaskPreviewVisible(true);
+                            // setCurrentPreviewTaskId(Number(params.id));
+                        }}
+                        onRowClick={(params, event, detail) => {
+                            setIsTaskPreviewVisible(true);
+                            setCurrentPreviewTaskId(Number(params.id));
                         }}
                         className={className}
                         apiRef={apiRef}

@@ -1,8 +1,7 @@
 import { Socket } from "socket.io-client";
 import { alpha } from "@mui/system";
 import { useState, useEffect } from "react";
-import { Box, List, ListItem, Typography, Stack, Divider, Chip } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
+import { Box, List, ListItem, Typography, Stack, Divider, Chip, ListItemButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
@@ -75,7 +74,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
 
     return childTasks.length > 0 ? (
         <>
-            <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
+            <Typography level="h4" sx={{ mt: 1, mb: 1 }}>
                 Sub Tasks
             </Typography>
             <Stack
@@ -83,6 +82,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 direction="row"
                 sx={{
                     width: "100%",
+                    minHeight: "40px",
                     maxHeight: "200px",
                     overflowY: "scroll",
                 }}
@@ -96,6 +96,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                         <AvatarWithStatus
                                             myself={myself}
                                             setMyself={setMyself}
+                                            isYou={
+                                                myself.userId === assignee.userId ? true : false
+                                            }
                                             avatarUser={teamMemberProfiles[assignee.userId]}
                                             socket={socket}
                                             setOpeningService={setOpeningService}
@@ -113,13 +116,15 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     setCurrentPreviewTaskId(id);
                                                 }
                                             }}
+                                            sx={{
+                                                marginLeft: "10px",
+                                            }}
                                         >
                                             <Chip
                                                 key={`id-chip-${id}-${index}`} // pass the key directly
                                                 variant="outlined"
                                                 color="neutral"
                                                 sx={{
-                                                    marginX: "5px",
                                                     fontWeight: "bold",
                                                     borderRadius: "5px",
                                                 }}
@@ -196,7 +201,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     </List>
                 </ListItem>
             </Stack>
-            <Divider sx={{ mt: 2 }} />
+            <Divider sx={{ mt: 1, mb: 2 }} />
         </>
     ) : (
         <></>

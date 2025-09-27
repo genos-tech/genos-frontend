@@ -21,6 +21,7 @@ type ChatListProps = {
     chatType: number;
     currentActivityMessageType: number;
     activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
@@ -31,7 +32,6 @@ type ChatListProps = {
     setIsThreadVisible: (value: boolean) => void;
     isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
     isTaskCreationVisible: boolean;
     isSubChatVisible: boolean;
@@ -39,6 +39,7 @@ type ChatListProps = {
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    showOnlyUnreadItems: boolean;
 };
 
 export const ChatList = (props: ChatListProps) => {
@@ -49,6 +50,7 @@ export const ChatList = (props: ChatListProps) => {
         setMyself,
         chatType,
         activityMessages,
+        setActivityMessages,
         allChats,
         currentActivityMessageType,
         setCurrentMainChat,
@@ -60,7 +62,6 @@ export const ChatList = (props: ChatListProps) => {
         setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
         isTaskPreviewVisible,
         isTaskCreationVisible,
         isSubChatVisible,
@@ -68,57 +69,110 @@ export const ChatList = (props: ChatListProps) => {
         setOpeningService,
         setCurrentPreviewTaskId,
         setCurrentProject,
+        showOnlyUnreadItems,
     } = props;
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoPMRef = useRef<VirtuosoHandle | null>(null);
 
     const chatTypeLookup: { [key: number]: any } = {
-        1: virtuosoDMRef,
-        2: virtuosoGMRef,
-        3: virtuosoPMRef,
+        1: virtuosoDMRef, // DM
+        2: virtuosoGMRef, // GM
+        3: virtuosoPMRef, // PM
     };
     useScrollToBottomOnChatPaneChange(virtuosoDMRef as React.RefObject<VirtuosoHandle>, allChats);
     useScrollToBottomOnChatPaneChange(virtuosoGMRef as React.RefObject<VirtuosoHandle>, allChats);
     useScrollToBottomOnChatPaneChange(virtuosoPMRef as React.RefObject<VirtuosoHandle>, allChats);
 
+    const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(allChats);
+
+    const [selectedActivityId, setSelectedActivityId] = useState<string>("");
+
     const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
     useScrollToBottomOnNewActivity(
         virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
-        activityMessages
+        activityMessages,
+        true
     );
 
-    const [tmpActivityMessages, setTmpActivityMessages] =
-        useState<ActivityMessageProps[]>(activityMessages);
+    {
+        /* Not displaying the first message in a thread 
+                                because it's the same as its parent message */
+    }
+    const [tmpActivityMessages, setTmpActivityMessages] = useState<ActivityMessageProps[]>(
+        activityMessages.filter((item) => !(item.isThread === true && item.messageId === 1))
+    );
 
     useEffect(() => {
-        // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
-        if (currentActivityMessageType === 0) {
-            setTmpActivityMessages(activityMessages);
+        // Exclude the first thread message cause it's actually not a thread message.
+        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
+            (item) => !(item.isThread === true && item.messageId === 1)
+        );
+        if (tmpActivityMessages) {
+            // All activities
+            if (currentActivityMessageType === 0) {
+                setTmpActivityMessages(tmpActivityMessages);
+            }
+
+            // Thread activities
+            if (currentActivityMessageType === 1) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter(
+                        (item) =>
+                            item.activityType === 1 &&
+                            item.chatType !== 4 &&
+                            item.isThread === true
+                    )
+                );
+            }
+
+            // Task activities (Task Comment)
+            if (currentActivityMessageType === 2) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter(
+                        (item) => item.activityType === 1 && item.chatType === 4
+                    )
+                );
+            }
+
+            // Mention activities
+            if (currentActivityMessageType === 3) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter((item) => item.activityType === 3)
+                );
+            }
+
+            // Reaction activities
+            if (currentActivityMessageType === 4) {
+                setTmpActivityMessages(
+                    tmpActivityMessages.filter((item) => item.activityType === 2)
+                );
+            }
         }
-        if (currentActivityMessageType === 1) {
-            setTmpActivityMessages(
-                activityMessages.filter((item) => item.activityType === 1 && item.chatType !== 4)
+    }, [activityMessages, currentActivityMessageType, showOnlyUnreadItems]);
+
+    useEffect(() => {
+        if (showOnlyUnreadItems === true) {
+            setTmpActivityMessages(tmpActivityMessages.filter((item) => item.isRead === false));
+            setTmpAllChats(
+                allChats.filter(
+                    (item) =>
+                        item.lastReadMessageId <
+                        (item.latestMessage
+                            ? item.latestMessage.messageId
+                            : item.lastReadMessageId + 1)
+                )
             );
+        } else {
+            setTmpAllChats([...allChats]);
         }
-        if (currentActivityMessageType === 2) {
-            setTmpActivityMessages(
-                activityMessages.filter((item) => item.activityType === 1 && item.chatType === 4)
-            );
-        }
-        if (currentActivityMessageType === 3) {
-            setTmpActivityMessages(activityMessages.filter((item) => item.activityType === 3));
-        }
-        if (currentActivityMessageType === 4) {
-            setTmpActivityMessages(activityMessages.filter((item) => item.activityType === 2));
-        }
-    }, [activityMessages, currentActivityMessageType]);
+    }, [showOnlyUnreadItems, allChats]);
 
     return (
         <List
             size="sm"
             sx={{
-                py: 0,
+                p: 0,
                 "--ListItem-paddingY": "0.3rem",
                 "--ListItem-paddingX": "1rem",
                 overflowY: "auto",
@@ -126,17 +180,17 @@ export const ChatList = (props: ChatListProps) => {
             }}
             className="custom-scrollbar"
         >
-            {allChats.length > 0 && (
+            {chatType !== -1 && tmpAllChats.length > 0 && (
                 <Virtuoso
                     ref={chatTypeLookup[chatType]}
                     className="custom-scrollbar"
-                    style={{ height: "89dvh" }}
-                    totalCount={allChats.length}
+                    style={{ height: "93dvh" }}
+                    totalCount={tmpAllChats.length}
                     initialTopMostItemIndex={0}
                     atTopThreshold={64}
                     atBottomThreshold={128}
                     itemContent={(index) => {
-                        const chat = allChats[index];
+                        const chat = tmpAllChats[index];
                         return (
                             <div>
                                 <Stack direction="row">
@@ -154,8 +208,6 @@ export const ChatList = (props: ChatListProps) => {
                                         setIsMainChatVisible={setIsMainChatVisible}
                                         setIsThreadVisible={setIsThreadVisible}
                                         isThreadVisible={isThreadVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
                                         isTaskPreviewVisible={isTaskPreviewVisible}
                                         isTaskCreationVisible={isTaskCreationVisible}
                                         isSubChatVisible={isSubChatVisible}
@@ -170,11 +222,11 @@ export const ChatList = (props: ChatListProps) => {
                 />
             )}
 
-            {tmpActivityMessages.length > 0 && (
+            {chatType === -1 && tmpActivityMessages.length > 0 && (
                 <Virtuoso
                     ref={virtuosoActivityRef}
                     className="custom-scrollbar"
-                    style={{ height: "85dvh" }}
+                    style={{ height: "89dvh" }}
                     totalCount={tmpActivityMessages.length}
                     initialTopMostItemIndex={0}
                     atTopThreshold={64}
@@ -185,13 +237,17 @@ export const ChatList = (props: ChatListProps) => {
                             <div>
                                 <Stack direction="row">
                                     <ChatListItemForActivity
-                                        key={activityMessage.activityId}
+                                        key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                        selectedActivityId={selectedActivityId}
+                                        setSelectedActivityId={setSelectedActivityId}
                                         teamMemberProfiles={teamMemberProfiles}
                                         socket={socket}
                                         activity={activityMessage}
+                                        activityMessages={activityMessages}
+                                        setActivityMessages={setActivityMessages}
                                         myself={myself}
                                         setMyself={setMyself}
-                                        currentMainChat={currentMainChat}
+                                        allChats={allChats}
                                         currentSubChat={currentSubChat}
                                         setCurrentMainChat={setCurrentMainChat}
                                         setCurrentSubChat={setCurrentSubChat}
@@ -200,11 +256,9 @@ export const ChatList = (props: ChatListProps) => {
                                         setIsThreadVisible={setIsThreadVisible}
                                         isThreadVisible={isThreadVisible}
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
                                         isTaskPreviewVisible={isTaskPreviewVisible}
                                         isTaskCreationVisible={isTaskCreationVisible}
                                         isSubChatVisible={isSubChatVisible}
-                                        setIsSubChatVisible={setIsSubChatVisible}
                                         setOpeningService={setOpeningService}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setCurrentProject={setCurrentProject}

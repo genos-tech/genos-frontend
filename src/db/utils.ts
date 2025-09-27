@@ -6,6 +6,12 @@ export async function getAllStores(dbName: string): Promise<string[]> {
     return Array.from(db.objectStoreNames);
 }
 
+export async function checkNoteExists(storeName: string, noteId: number): Promise<boolean> {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const note = await db.get(storeName, noteId);
+    return note !== undefined;
+}
+
 export async function checkIsKnownDMChat(chatId: number): Promise<boolean> {
     const db = await openDB(DB_NAME, DB_VERSION);
     const dmChat = await db.get(STORES.DM_CHATS, chatId);

@@ -11,6 +11,7 @@ type Props = {
     setMyself: (value: UserProps) => void;
     openCreateTeam: boolean;
     setOpenCreateTeam: (value: boolean) => void;
+    setIsNewTeamCreated: (value: boolean) => void;
 };
 
 export const ModalCreateTeam: React.FC<Props> = ({
@@ -18,6 +19,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
     setMyself,
     openCreateTeam,
     setOpenCreateTeam,
+    setIsNewTeamCreated,
 }) => {
     const { accessToken } = useAuth();
 
@@ -51,6 +53,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
             } else {
                 setMyself({ ...myself, teamId: createTeamData.teamId });
                 setOpenCreateTeam(false);
+                setIsNewTeamCreated(true);
             }
         } catch (error) {
             const err_msg = `${error}`;

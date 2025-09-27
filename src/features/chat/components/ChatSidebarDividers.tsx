@@ -124,28 +124,17 @@ type ActivityDividerProps = {
 };
 export const ActivityDivider = (props: ActivityDividerProps) => {
     const { currentActivityMessageType, setCurrentActivityMessageType } = props;
-    const { mode } = useColorScheme();
 
     return (
         <Stack
             direction="column"
             spacing={1}
             sx={{
-                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.7,
                 justifyContent: "center",
                 alignItems: "center",
-                mt: "3px",
+                my: "3px",
             }}
         >
-            <Typography
-                component="h1"
-                sx={{
-                    fontSize: 14,
-                }}
-            >
-                Recent Activities
-            </Typography>
             <Stack direction={"row"} spacing={0.5} flexWrap="wrap">
                 <Button
                     component="p"

@@ -37,7 +37,7 @@ type EmojiReactionProps = {
     chatName: string;
     isThread: boolean;
     numReplies: number;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     message: MessageProps | ThreadMessageProps;
     showUnderBarOption: boolean;
     reactions: ReactionProps[];
@@ -100,9 +100,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                     thread_id: isThread === true ? message.threadId : message.messageId || -1,
                     message_id: message.messageId,
                     message_body: message.content,
+                    message_sender: message.sender,
                     dm_partner_user_id:
                         message.sender.userId === myself.userId
-                            ? dmPartnerUser?.userId
+                            ? dmPartnerUser.userId
                             : myself.userId,
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
@@ -121,9 +122,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         thread_id: message.threadId,
                         message_id: message.threadId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
+                                ? dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
@@ -143,9 +145,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         thread_id: message.messageId,
                         message_id: 1,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
+                                ? dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
@@ -169,9 +172,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                     thread_id: isThread === true ? message.threadId : message.messageId || -1,
                     message_id: message.messageId,
                     message_body: message.content,
+                    message_sender: message.sender,
                     dm_partner_user_id:
                         message.sender.userId === myself.userId
-                            ? dmPartnerUser?.userId
+                            ? dmPartnerUser.userId
                             : myself.userId,
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
@@ -189,9 +193,10 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         thread_id: message.threadId,
                         message_id: message.threadId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
+                                ? dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
@@ -210,10 +215,11 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         chat_id: message.chatId,
                         thread_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         message_id: 1,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? dmPartnerUser?.userId
+                                ? dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,

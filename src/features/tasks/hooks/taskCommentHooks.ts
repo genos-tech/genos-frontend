@@ -4,11 +4,12 @@ import { TaskCommentProps } from "../../../types/tasks";
 
 export const useScrollToBottomOnNewTaskComment = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
-    taskComments: TaskCommentProps[]
+    taskComments: TaskCommentProps[],
+    scrollToBottom: boolean
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
-        if (virtuoso === null) {
+        if (virtuoso === null || scrollToBottom === false) {
             return;
         } else {
             setTimeout(() => {

@@ -126,13 +126,13 @@ export const batchInsertMessages = async (props: any) => {
     await tx.done;
 };
 
-export const miniBatchInsertMessages = async (props: any) => {
+export const miniBatchInsert = async (props: any) => {
     const db = await openDB(DB_NAME, DB_VERSION);
     const tx = db.transaction(props.storeName, "readwrite");
     const store = tx.objectStore(props.storeName);
 
-    props.miniBatchMessages.forEach((message: any) => {
-        store.put(message);
+    props.miniBatch.forEach((miniBatch: any) => {
+        store.put(miniBatch);
     });
 
     await tx.done;
@@ -160,7 +160,7 @@ export const getSpecificDataWithIndex = async (props: any) => {
         return data;
     }
     if (props.storeName === STORES.PM_CHATS) {
-        const data = await _getDataWithIndex.gmChats(props.chatId);
+        const data = await _getDataWithIndex.pmChats(props.chatId);
         return data;
     }
 };
@@ -236,15 +236,23 @@ export const getTasksByMultipleStatus = async (projectId: number, statuses: stri
     return results.flat();
 };
 
+export const getNote = async (teamId: string) => {
+    const db = await openDB(DB_NAME, DB_VERSION);
+    const userInfoStore = db.transaction(STORES.USER_INFO).objectStore(STORES.USER_INFO);
+    const teamMembers = await userInfoStore.index(INDEX.USER_INFO).getAll(teamId);
+
+    return teamMembers;
+};
+
 export const getAllData = async (storeName: string) => {
     const db = await initDB();
     return db.getAll(storeName);
 };
 
-export const deleteData = async (storeName: string, id: string) => {
+export const deleteData = async (props: any) => {
     const db = await initDB();
-    const tx = db.transaction(storeName, "readwrite");
-    await tx.store.delete(id);
+    const tx = db.transaction(props.storeName, "readwrite");
+    await tx.store.delete(props.key);
     await tx.done;
 };
 

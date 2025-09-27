@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
-import { Input, Snackbar, Button, Stack, Typography, IconButton } from "@mui/joy";
+import { Input, Snackbar, Button, Stack, Typography, IconButton, Box } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { TaskProps } from "../../../../../../types/tasks";
-import { getDomainFromUrl } from "../../../../../../utils/urlHandler";
+import { getPageTitle } from "../../../../utils/getPageTitle";
 
 type GitHubURLManagerProps = {
     githubLink: { url: string; title: string };
     taskContents?: TaskProps;
     setTaskContents?: (value: TaskProps) => void;
-    isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const GitHubURLManager = (props: GitHubURLManagerProps) => {
-    const { githubLink, taskContents, setTaskContents, isPreviewMode, setTaskUpdated } = props;
+    const { githubLink, taskContents, setTaskContents, setTaskUpdated } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [prUrl, setPRUrl] = useState("");
     const [prTitle, setPRTitle] = useState("");
@@ -26,15 +25,22 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
     const handlePRSave = async () => {
         if (taskContents && setTaskContents) {
             if (isValidGitHubPR(prUrl)) {
+                let pageTitle: string;
                 if (prTitle === "") {
-                    setPRTitle(getDomainFromUrl(prUrl));
+                    pageTitle = await getPageTitle(prUrl);
+                    if (!pageTitle) {
+                        pageTitle = prUrl;
+                    }
+                } else {
+                    pageTitle = prTitle;
                 }
+
+                setPRTitle(pageTitle);
+                setPRError("");
                 setTaskContents({
                     ...taskContents,
-                    githubLink: { url: prUrl, title: prTitle },
+                    githubLink: { url: prUrl, title: pageTitle },
                 });
-                setPRTitle(prTitle);
-                setPRError("");
                 setIsEditing(false);
                 if (setTaskUpdated) {
                     setTaskUpdated(true);
@@ -56,6 +62,9 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                 setPRUrl(githubLink.url);
                 setPRTitle(githubLink.title);
             }
+        } else {
+            setPRUrl("");
+            setPRTitle("");
         }
     }, [taskContents]);
 
@@ -65,27 +74,35 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                 githubLink.url === null ||
                 githubLink.url === "" ||
                 isEditing === true) && (
-                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                     <GitHubIcon />
+                    <Box>
+                        <Typography>URL:</Typography>
+                    </Box>
                     <Input
-                        key={"prUrl"}
+                        key={"url"}
                         size="sm"
-                        placeholder="PR URL"
+                        placeholder="URL"
                         value={prUrl}
                         onChange={(e) => setPRUrl(e.target.value)}
                         type="url"
-                        sx={{ width: "150px", height: "30px" }}
+                        sx={{ width: "200px", height: "30px" }}
                     />
-                    <Input
-                        key={"prTitle"}
-                        size="sm"
-                        placeholder="PR Title"
-                        value={prTitle}
-                        onChange={(e) => {
-                            setPRTitle(e.target.value);
-                        }}
-                        sx={{ width: "150px", height: "30px" }}
-                    />
+                    {taskContents && (prTitle !== "" || isEditing === true) && (
+                        <>
+                            <Box>
+                                <Typography>Title:</Typography>
+                            </Box>
+                            <Input
+                                key={"title"}
+                                size="sm"
+                                placeholder="Title"
+                                value={prTitle}
+                                onChange={(e) => setPRTitle(e.target.value)}
+                                sx={{ width: "200px", height: "30px" }}
+                            />
+                        </>
+                    )}
                     {prError && (
                         <Snackbar
                             autoHideDuration={5000}
@@ -118,7 +135,14 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
             {isEditing === false && githubLink?.url && (
                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
                     <GitHubIcon />
-                    <Typography>
+                    <Typography
+                        sx={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "500px",
+                        }}
+                    >
                         <a href={githubLink.url} target="_blank" rel="noopener noreferrer">
                             {prTitle}
                         </a>

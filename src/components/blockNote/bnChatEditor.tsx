@@ -29,7 +29,6 @@ import {
     defaultBlockSpecs,
 } from "@blocknote/core";
 
-import { countBnLines } from "./services/countBnLines";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -140,7 +139,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 4, 0) * 30 + 200,
+                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
                 isSubChatVisible === true ? 290 : 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
@@ -168,8 +167,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     destCGName: chat.chatName,
                     destCGId: chat.chatId,
                     chatType: chat.chatType,
-                    dmPartnerUserId:
-                        chat.dmPartnerUser === null ? null : chat.dmPartnerUser.userId,
+                    dmPartnerUserId: chat.dmPartnerUser.userId,
                     taskId: null,
                     taskStatus: null,
                     systemUserId: null,
@@ -182,7 +180,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         chatType: chat.chatType,
                         systemUserId: chat.systemUserId,
                         dmPartnerUser: chat.dmPartnerUser,
-                        unread: false,
+                        lastReadMessageId: chat.lastReadMessageId + 1,
                         messages: [
                             ...chat.messages,
                             {
@@ -248,7 +246,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             systemUserId: chat.systemUserId,
                             chatType: chat.chatType,
                             dmPartnerUser: chat.dmPartnerUser,
-                            unread: false,
+                            lastReadMessageId:
+                                chat.messages[chat.messages.length - 1].messageId + 1,
                             latestMessage: latestMessage,
                             latestMessageText: contentText,
                             TSLastMessage: getCurrentTimestamp(),
@@ -267,6 +266,22 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         }
     };
 
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+            if (node.content[0]) {
+                if (node.content[0].text) {
+                    count += node.content[0].text.split("\n").length;
+                }
+            }
+        }
+        return count;
+    };
+
     return (
         <Box>
             <EmojiPicker
@@ -276,7 +291,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
-                    className="bn-chat-editor"
+                    className="bn-box"
                     editor={editor}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -284,7 +299,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                     data-changing-font-demo // custom font
                     onChange={() => {
                         const comments: any[] = editor.document;
-                        setNumEditorLines(Math.max(countBnLines(comments), 1));
+                        setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
                     }}
                     onKeyDown={async (event) => {
@@ -324,7 +339,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         disabled={editorDocLength < 2}
                         onClick={async () => sendingMessage()}
                     >
-                        <SendIcon />
+                        <SendIcon sx={{ mr: "3px" }} />
                         Send
                     </IconButton>
 
@@ -360,7 +375,6 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                 basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
                             />
-                            {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton
                                 key={"codeStyleButton"}
                                 basicTextStyle={"code"}

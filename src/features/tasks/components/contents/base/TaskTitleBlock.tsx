@@ -1,4 +1,5 @@
 import { alpha } from "@mui/system";
+import { useState, useRef } from "react";
 import {
     Box,
     Chip,
@@ -14,10 +15,13 @@ import {
 } from "@mui/joy";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CancelIcon from "@mui/icons-material/Cancel";
+import DeleteIcon from "@mui/icons-material/Delete";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import AddIcon from "@mui/icons-material/Add";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskProps } from "../../../../../types/tasks";
+import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 
 type TaskTitleBlockProps = {
     taskContents: TaskProps;
@@ -38,8 +42,11 @@ type TaskTitleBlockProps = {
     setIsTaskPreviewVisible?: (value: boolean) => void;
     setIsTaskCreationVisible?: (value: boolean) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskContentVisible?: boolean;
+    isTaskPreviewVisible?: boolean;
     isCreatingTask?: boolean;
+    setCurrentTaskContent?: (value: TaskProps) => void;
+    setTaskStatusUpdated?: (value: boolean) => void;
+    isTaskNoteVisible?: boolean;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -61,12 +68,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setIsTaskPreviewVisible,
         setIsTaskCreationVisible,
         setIsTaskHomeVisible,
-        isTaskContentVisible,
+        isTaskPreviewVisible,
         isCreatingTask,
+        setCurrentTaskContent,
+        setTaskStatusUpdated,
+        isTaskNoteVisible,
     } = props;
 
     const { mode } = useColorScheme();
-
+    const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
     return (
         <Box
             sx={{
@@ -137,6 +148,17 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     setTaskUpdated(true);
                                 }
                             }}
+                            slotProps={{
+                                input: {
+                                    ref: titleInputRef,
+                                    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault(); // stop form submission if inside <form>
+                                            titleInputRef.current?.blur();
+                                        }
+                                    },
+                                },
+                            }}
                             sx={{
                                 width: "100%",
                                 fontSize: "20px",
@@ -152,47 +174,17 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     variant="plain"
                     color="neutral"
                     onClick={() => {
-                        if (isPreviewMode === false && setIsCreatingTask) {
-                            setIsCreatingTask({
-                                flag: false,
-                                parentTaskId: null,
-                                rootTaskId: null,
-                            });
-                        }
-                        if (isPreviewMode === true && setTaskClosed) {
-                            setTaskClosed(true);
-                        }
-
-                        if (setIsMainChatVisible && isThreadVisible) {
-                            setIsMainChatVisible(true);
-                        }
-
-                        // setIsThreadVisible(); // Not update, keep as it is !!!
-                        if (setIsTaskPreviewVisible) {
-                            if (isPreviewMode === true) {
-                                setIsTaskPreviewVisible(false);
-                            }
-                            // Open task-home when both task-preview and task-create-form are closed.
-                            if (isCreatingTask === false) {
-                                if (setIsTaskHomeVisible) {
-                                    setIsTaskHomeVisible(true);
-                                }
-                            }
-                        }
-
-                        if (setIsTaskCreationVisible) {
-                            setIsTaskCreationVisible(false);
-                            // Open task-home when both task-preview and task-create-form are closed.
-                            if (isTaskContentVisible === false) {
-                                if (setIsTaskHomeVisible) {
-                                    setIsTaskHomeVisible(true);
-                                }
+                        if (isPreviewMode === true) {
+                            {
+                                setIsTaskHomeVisible && setIsTaskHomeVisible(false);
+                                setIsMainChatVisible && setIsMainChatVisible(false);
                             }
                         }
                     }}
                 >
-                    <CancelIcon />
+                    <OpenInNewIcon />
                 </IconButton>
+
                 <Dropdown>
                     <MenuButton
                         size="sm"
@@ -218,8 +210,78 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             <AddIcon />
                             New Tag
                         </MenuItem>
+                        {taskContents.status.status !== "Closed" && (
+                            <MenuItem
+                                onClick={() => {
+                                    setOpenDeleteTask(true);
+                                }}
+                                sx={{
+                                    color: "red",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                <DeleteIcon sx={{ color: "red" }} />
+                                Delete Task
+                            </MenuItem>
+                        )}
                     </Menu>
                 </Dropdown>
+
+                <IconButton
+                    size="sm"
+                    variant="plain"
+                    color="neutral"
+                    onClick={() => {
+                        if (isPreviewMode === false && setIsCreatingTask) {
+                            setIsCreatingTask({
+                                flag: false,
+                                parentTaskId: null,
+                                rootTaskId: null,
+                            });
+                        }
+                        if (isPreviewMode === true && setTaskClosed) {
+                            setTaskClosed(true);
+                        }
+
+                        if (setIsMainChatVisible) {
+                            setIsMainChatVisible(true);
+                        }
+
+                        // setIsThreadVisible(); // Not update, keep as it is !!!
+                        if (setIsTaskPreviewVisible) {
+                            if (isPreviewMode === true) {
+                                setIsTaskPreviewVisible(false);
+                            }
+                            // Open task-home when both task-preview and task-create-form are closed.
+                            if (isCreatingTask === false && isTaskNoteVisible === false) {
+                                if (setIsTaskHomeVisible) {
+                                    setIsTaskHomeVisible(true);
+                                }
+                            }
+                        }
+
+                        if (setIsTaskCreationVisible) {
+                            setIsTaskCreationVisible(false);
+                            // Open task-home when both task-preview and task-create-form are closed.
+                            if (isTaskPreviewVisible === false) {
+                                if (setIsTaskHomeVisible) {
+                                    setIsTaskHomeVisible(true);
+                                }
+                            }
+                        }
+                    }}
+                >
+                    <CancelIcon />
+                </IconButton>
+
+                <ModalDeleteTask
+                    openDeleteTask={openDeleteTask}
+                    setOpenDeleteTask={setOpenDeleteTask}
+                    currentTaskContent={taskContents}
+                    setCurrentTaskContent={setCurrentTaskContent}
+                    setTaskUpdated={setTaskUpdated}
+                    setTaskStatusUpdated={setTaskStatusUpdated}
+                />
 
                 {isPreviewMode === false && titleError && titleErrorOpen !== undefined && (
                     <Snackbar

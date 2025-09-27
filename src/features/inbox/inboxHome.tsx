@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, List, Card, Stack, Typography } from "@mui/joy";
+import { Box, List, Card, Stack, Typography, Badge, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { useScrollToBottomOnNewItem } from "./hooks/inboxHooks";
-import { InboxProps } from "../../types/common";
-import { UserProps } from "../../types/admin";
+import { InboxItemProps } from "../../types/common";
+import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { InboxBubble } from "./components/InboxBubble";
 import { ChatProps } from "../../types/chat";
 
 type InboxHomeProps = {
+    currentTeam: Team;
+    setCurrentTeam: (value: Team) => void;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     socket: Socket | null;
@@ -18,11 +20,15 @@ type InboxHomeProps = {
     openingService: number;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    inboxItems: InboxProps[];
+    inboxItems: InboxItemProps[];
+    unReadInboxItemCount: number;
+    unReadChatAndActivityCounts: number;
 };
 
 export const InboxHome = (props: InboxHomeProps) => {
     const {
+        currentTeam,
+        setCurrentTeam,
         teamMemberProfiles,
         myself,
         socket,
@@ -31,11 +37,13 @@ export const InboxHome = (props: InboxHomeProps) => {
         setOpeningService,
         setCurrentMainChat,
         inboxItems,
+        unReadInboxItemCount,
+        unReadChatAndActivityCounts,
     } = props;
     const boxRef = useRef<HTMLDivElement>(null);
 
-    const [activityInboxItems, setActivityInboxItems] = useState<InboxProps[]>([]);
-    const [requestInboxItems, setRequestInboxItems] = useState<InboxProps[]>([]);
+    const [activityInboxItems, setActivityInboxItems] = useState<InboxItemProps[]>([]);
+    const [requestInboxItems, setRequestInboxItems] = useState<InboxItemProps[]>([]);
 
     useEffect(() => {
         const box = boxRef.current;
@@ -54,6 +62,8 @@ export const InboxHome = (props: InboxHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
+                currentTeam={currentTeam}
+                setCurrentTeam={setCurrentTeam}
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
@@ -61,15 +71,18 @@ export const InboxHome = (props: InboxHomeProps) => {
                 openingService={openingService}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
+                unReadInboxItemCount={unReadInboxItemCount}
+                unReadChatAndActivityCounts={unReadChatAndActivityCounts}
             />
             <Stack sx={{ width: "100%" }}>
                 <Card
+                    className="Sidebar-overlay"
                     sx={{
                         height: "50px",
                         justifyContent: "center",
+                        borderRadius: "0",
                     }}
                     variant="soft"
-                    color="neutral"
                 >
                     <Typography level="h4">Inbox</Typography>
                 </Card>
@@ -97,14 +110,29 @@ export const InboxHome = (props: InboxHomeProps) => {
                                 alignItems: "center",
                             }}
                         >
-                            <Typography level="h4" sx={{ mt: "10px" }}>
-                                Requests
-                            </Typography>
+                            {unReadInboxItemCount > 0 && (
+                                <>
+                                    <Typography level="h4">Requests</Typography>
+                                    <Chip
+                                        variant="solid"
+                                        color="primary"
+                                        size="sm"
+                                        sx={{ ml: "5px" }}
+                                    >
+                                        {unReadInboxItemCount}
+                                    </Chip>
+                                </>
+                            )}
+                            {unReadInboxItemCount < 1 && (
+                                <Typography level="h4" sx={{ mt: "10px" }}>
+                                    Requests
+                                </Typography>
+                            )}
                         </Box>
                     </Stack>
 
                     <Stack direction={"row"} sx={{ height: "93dvh" }}>
-                        {/* For others inbox */}
+                        {/* General Items */}
                         <List
                             size="sm"
                             sx={{
@@ -127,6 +155,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = activityInboxItems[index];
                                     return (
                                         <InboxBubble
+                                            key={`inbox-general-items-bubble-${item.itemId}`}
                                             teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
                                             myself={myself}
@@ -140,7 +169,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             />
                         </List>
 
-                        {/* For request inbox */}
+                        {/* Request Items */}
                         <List
                             size="sm"
                             sx={{
@@ -163,6 +192,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                     const item = requestInboxItems[index];
                                     return (
                                         <InboxBubble
+                                            key={`inbox-request-bubble-${item.itemId}`}
                                             teamMemberProfiles={teamMemberProfiles}
                                             socket={socket}
                                             setMyself={setMyself}

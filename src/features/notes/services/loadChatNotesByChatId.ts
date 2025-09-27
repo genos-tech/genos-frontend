@@ -1,0 +1,31 @@
+import axios from "axios";
+
+import { authApi } from "../../../services/api";
+import { UserProps } from "../../../types/admin";
+
+export const loadChatNotesByChatId = async (
+    myself: UserProps,
+    chatType: number,
+    chatId: number,
+    isThread: boolean,
+    threadId: number,
+    accessToken: string | null
+) => {
+    const strIsThread = isThread ? "True" : "False";
+    try {
+        const api = authApi(accessToken);
+        if (api) {
+            const query: string = `team_id=${myself.teamId}&user_id=${myself.userId}&chat_type=${chatType}&chat_id=${chatId}&is_thread=${strIsThread}&thread_id=${threadId}`;
+            const res = await api.get(`/note/chat/?${query}`);
+            return res.data;
+        } else {
+            console.error("Unauthorized. Auth toke is not found.");
+        }
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            console.error("API error:", error.response?.status, error.response?.data);
+        } else {
+            console.error("Unexpected error:", error);
+        }
+    }
+};

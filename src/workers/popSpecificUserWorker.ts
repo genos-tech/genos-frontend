@@ -16,6 +16,8 @@ self.onmessage = async (event) => {
             self.postMessage(null);
         }
     }
+
+    self.close(); // Terminates itself
 };
 
 export {};

@@ -7,6 +7,7 @@ import { ChatProps } from "../../../../types/chat";
 import { PulseDot } from "../../../../components/utils/PulseDot";
 import { UserProfile } from "../../../admin/components/modals/UserProfile";
 import { UserProps } from "../../../../types/admin";
+import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
 
 type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -15,7 +16,6 @@ type HeaderUserNameProps = {
     setMyself: (value: UserProps) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    isOnline: boolean;
     chat: ChatProps;
     isYou: boolean;
 };
@@ -27,25 +27,40 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
         setMyself,
         setOpeningService,
         setCurrentMainChat,
-        isOnline,
         chat,
         isYou,
     } = props;
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
+    const headerUser: UserProps | undefined = teamMemberProfiles[chat.dmPartnerUser.userId];
+    let isOnline: boolean = headerUser
+        ? myself.userId === headerUser.userId
+            ? myself?.isOfflineForced !== "true"
+                ? true
+                : false
+            : headerUser.isOnline === true && headerUser.isOfflineForced !== "true"
+            ? true
+            : false
+        : false;
+
+    if (isYou === true) {
+        isOnline = myself.isOfflineForced !== "true" ? true : false;
+    }
 
     return (
         <>
             <div>
                 {chat.chatType === 1 ? (
-                    <Avatar
-                        src={chat.dmPartnerUser?.avatarImgPath}
-                        onClick={() => {
-                            setOpenUserProfile(true);
-                        }}
-                    >
-                        {chat.chatName[0]}
-                    </Avatar>
+                    <AvatarWithStatus
+                        myself={myself}
+                        setMyself={setMyself}
+                        isYou={isYou}
+                        avatarUser={headerUser}
+                        socket={socket}
+                        chat={chat}
+                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
+                    />
                 ) : (
                     <Avatar>
                         <GroupsIcon sx={{ fontSize: 32 }} />
@@ -82,30 +97,43 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         {isYou ? `${chat.chatName} (you)` : chat.chatName}
                     </Typography>
 
-                    {chat.dmPartnerUser !== null &&
-                        ((teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                            teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "") ||
-                            (myself.userId === chat.dmPartnerUser.userId &&
-                                myself.customStatus != "")) && (
+                    {/* show my own custom status */}
+                    {chat.dmPartnerUser.userId !== "" &&
+                        myself.userId === chat.dmPartnerUser.userId &&
+                        myself.customStatus != "" && (
                             <Chip
                                 component="h2"
                                 variant="outlined"
                                 size="md"
                                 sx={{ ml: "3px", borderRadius: "sm" }}
                             >
-                                {myself.userId === chat.dmPartnerUser.userId
-                                    ? myself.customStatus
-                                    : teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
+                                {myself.customStatus}
+                            </Chip>
+                        )}
+
+                    {/* show others custom status */}
+                    {chat.dmPartnerUser.userId !== "" &&
+                        myself.userId !== chat.dmPartnerUser.userId &&
+                        teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                        teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
+                            <Chip
+                                component="h2"
+                                variant="outlined"
+                                size="md"
+                                sx={{ ml: "3px", borderRadius: "sm" }}
+                            >
+                                {teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                             </Chip>
                         )}
                 </Stack>
             </div>
-            {chat.dmPartnerUser && (
+            {chat.dmPartnerUser.userId !== "" && (
                 <UserProfile
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
-                    user={teamMemberProfiles[chat.dmPartnerUser?.userId]}
+                    isYou={isYou}
+                    user={teamMemberProfiles[chat.dmPartnerUser.userId]}
                     openUserProfile={openUserProfile}
                     setOpenUserProfile={setOpenUserProfile}
                     setCurrentMainChat={setCurrentMainChat}

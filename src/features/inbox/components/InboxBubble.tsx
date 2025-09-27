@@ -4,15 +4,16 @@ import { Box, Chip, Typography, Card, Button, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../types/admin";
-import { InboxProps } from "../../../types/common";
+import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { useAuth } from "../../../context/AuthContext";
 import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
 import { ChatProps } from "../../../types/chat";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
-
-const item_body = [
+const requestNameLookUp: { [key: number]: string } = {
+    1: "team",
+    2: "project",
+};
+export const getItemBody = (requestType: number, targetName: UserProps) => [
     {
         type: "paragraph",
         props: {
@@ -21,7 +22,16 @@ const item_body = [
             backgroundColor: "default",
         },
         content: [
-            { text: "Your request to join the team has been approved.", type: "text", styles: {} },
+            {
+                text: `Request has been approved to join the ${requestNameLookUp[requestType]}: `,
+                type: "text",
+                styles: {},
+            },
+            {
+                text: targetName,
+                type: "text",
+                styles: { bold: true, textColor: "pink" },
+            },
         ],
         children: [],
     },
@@ -42,7 +52,7 @@ type InboxBubbleProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    inboxItem: InboxProps;
+    inboxItem: InboxItemProps;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
 };
@@ -58,130 +68,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     } = props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
-    const { accessToken } = useAuth();
     const [requestApproved, setRequestApproved] = useState<boolean>(false);
-
-    async function approveTeamJoin(itemId: number): Promise<void> {
-        try {
-            const approveTeamJoinResponse = await fetch(`${base_url}/team/join/fromInbox/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    team_id: myself.teamId,
-                    item_id: itemId,
-                }),
-            });
-
-            const approveTeamJoinData = await approveTeamJoinResponse.json();
-
-            if (!approveTeamJoinResponse.ok) {
-                throw new Error("Project Creation Failed");
-            } else {
-                const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    body: JSON.stringify({
-                        team_id: myself.teamId,
-                        sender_id: myself.userId,
-                        receiver_id: approveTeamJoinData.attendee,
-                        item_body: item_body,
-                        item_type: 0,
-                    }),
-                });
-
-                if (!sendInboxMessageResponse.ok) {
-                    throw new Error("Failed to send approved message");
-                } else {
-                    const updateInboxItemResponse = await fetch(`${base_url}/inbox/`, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify({
-                            team_id: myself.teamId,
-                            item_id: itemId,
-                            is_read: true,
-                        }),
-                    });
-
-                    if (!updateInboxItemResponse.ok) {
-                        throw new Error("Failed to update inbox item");
-                    }
-                }
-            }
-        } catch (error) {
-            const err_msg = `${error}`;
-            console.error(err_msg);
-        }
-    }
-
-    async function approveProjectJoin(itemId: number): Promise<void> {
-        try {
-            const approveTeamJoinResponse = await fetch(`${base_url}/project/join/fromInbox/`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                    team_id: myself.teamId,
-                    item_id: itemId,
-                }),
-            });
-
-            const approveTeamJoinData = await approveTeamJoinResponse.json();
-
-            if (!approveTeamJoinResponse.ok) {
-                throw new Error("Project Creation Failed");
-            } else {
-                const sendInboxMessageResponse = await fetch(`${base_url}/inbox/`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    body: JSON.stringify({
-                        team_id: myself.teamId,
-                        sender_id: myself.userId,
-                        receiver_id: approveTeamJoinData.attendee,
-                        item_body: item_body,
-                        item_type: 0,
-                    }),
-                });
-
-                if (!sendInboxMessageResponse.ok) {
-                    throw new Error("Failed to send approved message");
-                } else {
-                    const updateInboxItemResponse = await fetch(`${base_url}/inbox/`, {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify({
-                            team_id: myself.teamId,
-                            item_id: itemId,
-                            is_read: true,
-                        }),
-                    });
-
-                    if (!updateInboxItemResponse.ok) {
-                        throw new Error("Failed to update inbox item");
-                    }
-                }
-            }
-        } catch (error) {
-            const err_msg = `${error}`;
-            console.error(err_msg);
-        }
-    }
 
     return (
         <Box
@@ -259,6 +146,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     {(inboxItem.itemType === 1 || inboxItem.itemType === 2) &&
                         (inboxItem.isRead === true || requestApproved === true) && (
                             <Button
+                                key={`inbox-approved-button-${inboxItem.itemType}-${inboxItem.itemId}`}
                                 variant="outlined"
                                 color="neutral"
                                 size="sm"
@@ -272,15 +160,20 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         inboxItem.isRead === false &&
                         requestApproved === false && (
                             <Button
+                                key={`inbox-approve-button-${inboxItem.itemType}-${inboxItem.itemId}`}
                                 variant="soft"
                                 size="sm"
                                 sx={{ width: "100px", alignSelf: "flex-end" }}
                                 onClick={() => {
-                                    if (inboxItem.itemType === 1) {
-                                        approveTeamJoin(inboxItem.itemId);
+                                    if (socket && inboxItem.itemType === 1) {
+                                        socket.emit("approve_join_team_request", {
+                                            item_id: inboxItem.itemId,
+                                        });
                                     }
-                                    if (inboxItem.itemType === 2) {
-                                        approveProjectJoin(inboxItem.itemId);
+                                    if (socket && inboxItem.itemType === 2) {
+                                        socket.emit("approve_join_project_request", {
+                                            item_id: inboxItem.itemId,
+                                        });
                                     }
                                     setRequestApproved(true);
                                 }}

@@ -166,6 +166,24 @@
   opacity: 0.8;
 }
 
+.task-datagrid-dark .css-1f02in7-MuiInputBase-root-MuiInput-root {
+  background-color: #d4d4d44e !important;
+  border-radius: 1ch;
+}
+
+.task-datagrid-light .css-1f02in7-MuiInputBase-root-MuiInput-root {
+  background-color: #c5c5c571 !important;
+  border-radius: 1ch;
+}
+
+.task-datagrid-dark .css-yhoksd-MuiButtonBase-root-MuiButton-root {
+  color: white !important;
+}
+
+.task-datagrid-light .css-yhoksd-MuiButtonBase-root-MuiButton-root {
+  color: rgb(55, 55, 55) !important;
+}
+
 .task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-virtualScroller {
   background-color: #000000;
   opacity: 0.9;
@@ -246,10 +264,21 @@
   color: rgb(55, 55, 55);
 }
 
+.bn-message-bubble-box-light code {
+  background-color: #97979770 !important;
+  color: rgb(255, 0, 144);
+}
+
+
 .bn-message-bubble-box-light-me .bn-editor {
   background-color: transparent;
   padding: 1px;
   color: rgb(255, 255, 255);
+}
+
+.bn-message-bubble-box-light-me code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
 }
 
 
@@ -259,34 +288,62 @@
   /* color: black; */
 }
 
+.bn-message-bubble-box-dark code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}
+
 .bn-message-bubble-box-dark-me .bn-editor {
   background-color: transparent;
   padding: 1px;
   color: rgb(13, 13, 13);
 }
 
+.bn-message-bubble-box-dark-me code {
+  background-color: #ffffffce !important;
+  color: rgb(255, 0, 144);
+}
+
+
+
 /* editor */
+/* common code conf */
 .bn-editor code {
-  background-color: #474747 !important;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
   padding-left: 4px;
   padding-right: 4px;
   border-radius: 4px;
-  color: rgb(255, 255, 255);
 }
 
+/* code color&background color in the code block*/
+.bn-editor pre code.bn-inline-content {
+  color: inherit;
+  background-color: inherit !important;
+}
+
+/* code block background color */
 .bn-block-content[data-content-type=codeBlock] {
   background-color: #474747 !important;
 }
 
+.bn-message-bubble-box-light-me code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}
 
+/* editor */
 .bn-chat-editor-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
+  background-color: rgb(214, 214, 214);
   padding-top: 55px;
   height: var(--chat-editor-height, 200px);
   overflow: scroll;
   padding-left: 15px;
+}
+
+.bn-chat-editor-box-light code {
+  background-color: #97979770 !important;
+  color: rgb(255, 0, 144);
 }
 
 .bn-chat-editor-box-dark .bn-editor {
@@ -297,12 +354,33 @@
   padding-left: 15px;
 }
 
+.bn-chat-editor-box-dark code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}
+
+.bn-chat-editor-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-chat-editor-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+
 .bn-task-comment-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
+  background-color: rgb(214, 214, 214);
   padding-top: 55px;
   height: var(--task-comment-editor-height, 200px);
   overflow: scroll;
   padding-left: 15px;
+}
+
+.bn-task-comment-box-light code {
+  background-color: #97979770 !important;
+  color: rgb(255, 0, 144);
 }
 
 .bn-task-comment-box-dark .bn-editor {
@@ -313,12 +391,34 @@
   padding-left: 15px;
 }
 
+.bn-task-comment-box-dark code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}
+
+
+.bn-task-comment-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-task-comment-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+
 .bn-task-body-box-light .bn-editor {
-  background-color: rgb(159, 159, 159);
+  background-color: rgb(214, 214, 214);
   padding-top: 20px;
   padding-bottom: 20px;
   height: var(--task-body-editor-height, 500px);
   overflow-y: scroll;
+}
+
+.bn-task-body-box-light code {
+  background-color: #97979770 !important;
+  color: rgb(255, 0, 144);
 }
 
 .bn-task-body-box-dark .bn-editor {
@@ -327,6 +427,64 @@
   padding-bottom: 20px;
   height: var(--task-body-editor-height, 500px);
   overflow-y: scroll;
+}
+
+.bn-task-body-box-dark code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}
+
+.bn-task-body-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-task-body-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+
+.bn-note-body-box-light .bn-editor {
+  background-color: rgb(214, 214, 214);
+  padding-top: 50px;
+  padding-bottom: 20px;
+  height: 92dvh;
+  overflow-y: scroll;
+}
+
+.bn-note-body-box-light code {
+  background-color: #97979770 !important;
+  color: rgb(255, 0, 144);
+}
+
+.bn-note-body-box-dark .bn-editor {
+  background-color: #1f1f1f;
+  padding-top: 50px;
+  padding-bottom: 20px;
+  height: 92dvh;
+  overflow-y: scroll;
+}
+
+.bn-note-body-box-dark code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}
+
+.bn-note-body-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #909090 !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+.bn-note-body-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+  color: #9c9c9c !important;   /* placeholder text color */
+  opacity: 1 !important;       /* ensure it's not dimmed */
+}
+
+
+/* File name color uploaded in a Note */
+.bn-file-name-with-icon:hover {
+  color: #000000;
 }
 
 .bn-container {
@@ -339,39 +497,20 @@
   margin-inline: auto;
 }
 
-.bn-chat-editor::-webkit-scrollbar {
+.bn-box::-webkit-scrollbar {
   width: 8px;
 }
 
-.bn-chat-editor::-webkit-scrollbar-thumb {
+.bn-box::-webkit-scrollbar-thumb {
   background-color: #888;
   border-radius: 4px;
 }
 
-.bn-chat-editor::-webkit-scrollbar-thumb:hover {
+.bn-box::-webkit-scrollbar-thumb:hover {
   background-color: #555;
 }
 
-.bn-chat-editor {
-  scrollbar-width: thin;
-  /* Firefox */
-  scrollbar-color: #888 transparent;
-}
-
-.bn-task-editor::-webkit-scrollbar {
-  width: 8px;
-}
-
-.bn-task-editor::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 4px;
-}
-
-.bn-task-editor::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
-}
-
-.bn-task-editor {
+.bn-box {
   scrollbar-width: thin;
   /* Firefox */
   scrollbar-color: #888 transparent;
@@ -386,30 +525,15 @@ div[data-floating-ui-focusable] {
   max-height: 300px !important;
 }
 
-
-.bn-task-editor::-webkit-scrollbar {
-  width: 8px;
-}
-
-.bn-task-editor::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 4px;
-}
-
-.bn-task-editor::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
-}
-
-.bn-task-editor {
-  scrollbar-width: thin;
-  /* Firefox */
-  scrollbar-color: #888 transparent;
-}
-
 .task-comment-preview-light .bn-editor {
   color: black;
   background-color: transparent;
   padding-left: 20px;
+}
+
+.task-comment-preview-light code {
+  background-color: #adadad70 !important;
+  color: rgb(255, 0, 144);
 }
 
 .task-comment-preview-dark .bn-editor {
@@ -418,17 +542,34 @@ div[data-floating-ui-focusable] {
   padding-left: 20px;
 }
 
+.task-comment-preview-dark code {
+  background-color: #2f2f2f70 !important;
+  color: rgb(255, 140, 0);
+}
+
 .inbox-preview-light .bn-editor {
   color: black;
   background-color: transparent;
   padding-left: 20px;
 }
 
+.inbox-preview-light code {
+  background-color: #97979770 !important;
+  color: rgb(255, 0, 144);
+}
+
+
 .inbox-preview-dark .bn-editor {
   color: white;
   background-color: transparent;
   padding-left: 20px;
 }
+
+.inbox-preview-dark code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}
+
 
 .css-ljwjwd-JoyStack-root>:not(style)~:not(style) {
   margin-top: 5px !important;

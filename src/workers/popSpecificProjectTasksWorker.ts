@@ -9,6 +9,8 @@ self.onmessage = async (event) => {
     } else {
         self.postMessage([]);
     }
+
+    self.close(); // Terminates itself
 };
 
 export {};

@@ -1,14 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack } from "@mui/joy";
+import { Box, Sheet, Stack, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { ThreadMessageBubble } from "./components/bubbles/ThreadMessageBubble";
 import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader";
-import {
-    useScrollToBottomOnNewMessage,
-    useScrollToBottomOnChatChange,
-} from "./hooks/messageBubbleHooks";
+import { useScrollToBottomOnChatChange } from "./hooks/messageBubbleHooks";
 import { handleFileDrop } from "./services/handleFileDrop";
 import { handleAtTop } from "./services/handleBubblePositionAction";
 import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
@@ -17,7 +14,9 @@ import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadE
 import { UserProps } from "../../types/admin";
 import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
-import { getTimeDiffSeconds } from "../../utils/dateUtils";
+import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
+import { useAuth } from "../../context/AuthContext";
+import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -41,6 +40,14 @@ type MessagesPaneProps = {
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     currentPreviewTaskId: number;
+    isChatNoteVisible: boolean;
+    setIsChatNoteVisible: (value: boolean) => void;
+    handleCreateNewChatNoteIfNotExist: (
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -66,7 +73,12 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         setOpeningService,
         setCurrentMainChat,
         currentPreviewTaskId,
+        isChatNoteVisible,
+        setIsChatNoteVisible,
+        handleCreateNewChatNoteIfNotExist,
     } = props;
+
+    const { accessToken } = useAuth();
 
     const [threadMessages, setThreadMessages] = useState(thread.messages || []);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
@@ -82,18 +94,85 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     }, [thread]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    const [visibleRange, setVisibleRange] = useState({
+        startIndex: 0,
+        endIndex: 0,
+    });
 
-    useScrollToBottomOnNewMessage(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        thread,
-        targetMessageIndex
-    );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentThreadChatId,
+        visibleRange.endIndex,
+        threadMessages.length - 1,
         indexMap,
-        currentThreadChat.moveToSpecificIndex
+        currentThreadChat.moveToSpecificIndex,
+        currentThreadChat.notMove
     );
+
+    const updateReadStatus = (indexForLastReadMessageId: number) => {
+        if (accessToken && currentThreadChat.messages[indexForLastReadMessageId]) {
+            const updateReadStatusWorker = new UpdateReadStatusWorker();
+            const lastReadMessageId: number =
+                currentThreadChat.messages[indexForLastReadMessageId].messageId;
+            updateReadStatusWorker.postMessage({
+                accessToken: accessToken,
+                myself: myself,
+                chatType: currentThreadChat.chatType,
+                chatId: currentThreadChat.chatId,
+                isThread: true,
+                threadId: currentThreadChat.threadId,
+                lastReadMessageId: lastReadMessageId,
+            });
+            return () => {
+                updateReadStatusWorker.terminate();
+            };
+        }
+    };
+
+    const [tsLastReadStatusUpdated, setTsLastReadStatusUpdated] = useState<number>(Date.now());
+    const [indexLastReadStatusUpdated, setIndexLastReadStatusUpdated] = useState<number>(-1);
+    useEffect(() => {
+        setTimeout(() => {
+            // Update read-sta
+            // tus only when the main chat opens from the chat list,
+            // not from the chat activity or other with "moveToSpecificIndex" value.
+            let targetIndex: number;
+            if (currentThreadChat.moveToSpecificIndex === undefined) {
+                targetIndex = currentThreadChat.messages.length - 1;
+            } else if (
+                indexMap &&
+                indexMap[currentThreadChat.moveToSpecificIndex] &&
+                currentThreadChat.chatId ===
+                    Number(currentThreadChat.moveToSpecificIndex?.split("-")[0])
+            ) {
+                targetIndex = Number(indexMap[currentThreadChat.moveToSpecificIndex]);
+            } else {
+                targetIndex = -1;
+            }
+
+            if (targetIndex !== -1) {
+                updateReadStatus(targetIndex);
+                setIndexLastReadStatusUpdated(targetIndex);
+
+                const now = Date.now();
+                setTsLastReadStatusUpdated(now);
+            }
+        }, 1000); // wait N ms
+    }, [indexMap]);
+
+    useEffect(() => {
+        const intervalMs: number = 1000; // every X milliseconds
+        const now = Date.now();
+        if (
+            now - tsLastReadStatusUpdated >= intervalMs &&
+            visibleRange.endIndex > indexLastReadStatusUpdated
+        ) {
+            updateReadStatus(visibleRange.endIndex);
+            // Update timestamp
+            setTsLastReadStatusUpdated(now);
+            setIndexLastReadStatusUpdated(visibleRange.endIndex);
+        }
+    }, [visibleRange]);
 
     useEffect(() => {
         setTargetMessageIndex(threadMessages.length - 1);
@@ -113,6 +192,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
             }
         }, 300); // wait N ms
     }, [currentThreadChat]);
+
+    const [isScrolling, setIsScrolling] = useState(false);
 
     return (
         <>
@@ -145,12 +226,18 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setIsCreatingTask={setIsCreatingTask}
                         currentPreviewTask={currentPreviewTask}
                         currentPreviewTaskId={currentPreviewTaskId}
+                        isChatNoteVisible={isChatNoteVisible}
+                        setIsChatNoteVisible={setIsChatNoteVisible}
+                        handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
                     />
 
                     <Box sx={{ px: 0.3, my: 0.2 }}>
                         <Virtuoso
                             ref={virtuosoRef}
                             className="custom-scrollbar"
+                            context={{ isScrolling }}
+                            isScrolling={setIsScrolling}
+                            rangeChanged={setVisibleRange}
                             style={{
                                 height: calculateVirtuosoHight(
                                     currentWindowHeight,
@@ -162,12 +249,35 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             atTopThreshold={64}
                             atTopStateChange={handleAtTop}
                             atBottomThreshold={128}
-                            itemContent={(index) => {
+                            itemContent={(index, _, { isScrolling }) => {
                                 const message = threadMessages[index];
                                 const isYou = myself.userId === message.sender.userId;
                                 const isFocused =
                                     message.messageIdWithChatIdAndThreadId ===
                                     currentThreadChat.moveToSpecificIndex;
+
+                                const dateSeparator =
+                                    index === 0 ||
+                                    extractYYYYMMDD(threadMessages[index - 1].tsSent) !==
+                                        extractYYYYMMDD(threadMessages[index].tsSent) ? (
+                                        <div style={{ padding: "0.5rem 0" }}>
+                                            <div style={{ textAlign: "center", fontWeight: 300 }}>
+                                                <Chip variant="soft">
+                                                    <span
+                                                        style={{
+                                                            backgroundColor:
+                                                                "var(--alt-background)",
+                                                            border: "1px solid var(--border)",
+                                                            padding: "0.1rem 2rem",
+                                                            borderRadius: "0.5rem",
+                                                        }}
+                                                    >
+                                                        {extractMMDD(threadMessages[index].tsSent)}
+                                                    </span>
+                                                </Chip>
+                                            </div>
+                                        </div>
+                                    ) : null;
 
                                 let isSimpleBubble: boolean;
                                 isSimpleBubble = false;
@@ -191,7 +301,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                 paddingBottom = 0.3;
 
                                 if (message.reactions) {
-                                    if (message.reactions.allReactions.length > 0) {
+                                    if (message.reactions.length > 0) {
                                         paddingBottom = paddingBottom + 2.5;
                                     }
                                 }
@@ -202,6 +312,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
 
                                 return (
                                     <div>
+                                        {dateSeparator}
                                         <Stack
                                             direction="row"
                                             spacing={2}
@@ -220,6 +331,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 thread={thread}
                                                 variant={isYou ? "sent" : "received"}
                                                 message={message}
+                                                isScrolling={isScrolling}
                                                 isFocused={isFocused}
                                                 isSimpleBubble={isSimpleBubble}
                                                 setOpeningService={setOpeningService}
@@ -250,6 +362,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                 setIsInEdit={setIsInEdit}
                                 setCurrentChat={setCurrentMainChat}
                                 setOpeningService={setOpeningService}
+                                numEditorLines={numEditorLines}
+                                setNumEditorLines={setNumEditorLines}
                             />
                         )}
                         {isInEdit === false && (

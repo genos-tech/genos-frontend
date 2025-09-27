@@ -29,7 +29,6 @@ import {
     defaultBlockSpecs,
 } from "@blocknote/core";
 
-import { countBnLines } from "./services/countBnLines";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -140,7 +139,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 4, 0) * 30 + 200,
+                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
                 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
@@ -171,8 +170,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     threadId: thread.threadId,
                     threadMessage: editor.document,
                     chatType: thread.chatType,
-                    dmPartnerUserId:
-                        thread.dmPartnerUser === null ? null : thread.dmPartnerUser.userId,
+                    dmPartnerUserId: thread.dmPartnerUser.userId,
                     senderId: myself.userId,
                     senderName: myself.userName,
                     destCGName: thread.chatName,
@@ -189,7 +187,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         chatType: thread.chatType,
                         dmPartnerUser: thread.dmPartnerUser,
                         taskId: thread.taskId,
-                        unread: false,
                         messages: [
                             ...thread.messages,
                             {
@@ -237,6 +234,24 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         }
     };
 
+    const countLines = (nodes: any[]): number => {
+        let count = 0;
+        for (const node of nodes) {
+            count += 1; // count the current node itself
+            if (node.children?.length) {
+                count += countLines(node.children); // recursive call
+            }
+            if (node.content[0]) {
+                if (node.content[0].text) {
+                    if (node.content[0].text) {
+                        count += node.content[0].text.split("\n").length;
+                    }
+                }
+            }
+        }
+        return count;
+    };
+
     return (
         <Box>
             <EmojiPicker
@@ -246,7 +261,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
-                    className="bn-chat-editor"
+                    className="bn-box"
                     editor={editor}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -254,7 +269,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     data-changing-font-demo // custom font
                     onChange={() => {
                         const comments: any[] = editor.document;
-                        setNumEditorLines(Math.max(countBnLines(comments), 1));
+                        setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
                     }}
                     onKeyDown={(event) => {
@@ -294,7 +309,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         disabled={editorDocLength < 2}
                         onClick={sendingThreadMessage}
                     >
-                        <SendIcon />
+                        <SendIcon sx={{ mr: "3px" }} />
                         Send
                     </IconButton>
 

@@ -20,11 +20,11 @@ const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     };
 };
 
-type CreateTaskAttachmentBlockProps = {
+type TaskCreateAttachmentBlockProps = {
     taskContents: TaskProps;
     setTaskContents: (value: TaskProps) => void;
 };
-export const CreateTaskAttachmentBlock = (props: CreateTaskAttachmentBlockProps) => {
+export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps) => {
     const { taskContents, setTaskContents } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);

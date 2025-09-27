@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack } from "@mui/joy";
+import { Box, Sheet, Stack, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -17,7 +17,10 @@ import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
-import { getTimeDiffSeconds } from "../../utils/dateUtils";
+import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
+import { addChat } from "../../features/chat/services/addChat";
+import { useAuth } from "../../context/AuthContext";
+import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -32,7 +35,9 @@ type MessagesPaneProps = {
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
+    currentThreadChat?: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
+    isThreadVisible: boolean;
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskCreationVisible: (value: boolean) => void;
@@ -63,7 +68,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         currentMainChat,
         setCurrentMainChat,
         setCurrentSubChat,
+        currentThreadChat,
         setCurrentThreadChat,
+        isThreadVisible,
         setIsMainChatVisible,
         setIsTaskCreationVisible,
         setIsTaskPreviewVisible,
@@ -79,6 +86,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         setCurrentPreviewTaskId,
         setCurrentProject,
     } = props;
+    const { accessToken } = useAuth();
     const [chatMessages, setChatMessages] = useState(chat.messages);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
@@ -91,28 +99,108 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     }, [chat.messages]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
+    const [visibleRange, setVisibleRange] = useState({
+        startIndex: 0,
+        endIndex: 0,
+    });
 
-    // [Abolished] Move to the bottom of the chat we an user receive a new message
-    // useScrollToBottomOnNewMessage(
-    //     virtuosoRef as React.RefObject<VirtuosoHandle>,
-    //     chat,
-    //     targetMessageIndex
-    // );
     useScrollToBottomOnChatChange(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         currentMainChatId,
+        visibleRange.endIndex,
+        chatMessages.length - 1,
         indexMap,
-        currentMainChat.moveToSpecificIndex
+        currentMainChat.moveToSpecificIndex,
+        currentMainChat.notMove
     );
 
+    const updateReadStatus = (indexForLastReadMessageId: number) => {
+        if (accessToken && currentMainChat.messages[indexForLastReadMessageId]) {
+            const updateReadStatusWorker = new UpdateReadStatusWorker();
+            const lastReadMessageId: number =
+                currentMainChat.messages[indexForLastReadMessageId].messageId;
+
+            updateReadStatusWorker.postMessage({
+                accessToken: accessToken,
+                myself: myself,
+                chatType: currentMainChat.chatType,
+                chatId: currentMainChat.chatId,
+                isThread: false,
+                threadId: -1,
+                lastReadMessageId: lastReadMessageId,
+            });
+            updateReadStatusWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    if (chat.lastReadMessageId < lastReadMessageId) {
+                        const updatedChat = { ...chat, lastReadMessageId: lastReadMessageId };
+                        addChat(updatedChat, updatedChat.chatType);
+                        funcSetAllChats();
+                    } else {
+                        // console.log("Nothing to update read status...");
+                    }
+                } else {
+                    console.error("Failed to update read status");
+                }
+            };
+            return () => {
+                updateReadStatusWorker.terminate();
+            };
+        }
+    };
+
+    const [tsLastReadStatusUpdated, setTsLastReadStatusUpdated] = useState<number>(Date.now());
+    const [indexLastReadStatusUpdated, setIndexLastReadStatusUpdated] = useState<number>(-1);
     useEffect(() => {
-        setTargetMessageIndex(chatMessages.length - 1);
+        setTimeout(() => {
+            // Update read-sta
+            // tus only when the main chat opens from the chat list,
+            // not from the chat activity or other with "moveToSpecificIndex" value.
+            let targetIndex: number;
+            if (currentMainChat.moveToSpecificIndex === undefined) {
+                targetIndex = currentMainChat.messages.length - 1;
+            } else if (
+                indexMap &&
+                indexMap[currentMainChat.moveToSpecificIndex] &&
+                currentMainChat.chatId ===
+                    Number(currentMainChat.moveToSpecificIndex?.split("-")[0])
+            ) {
+                targetIndex = Number(indexMap[currentMainChat.moveToSpecificIndex]);
+            } else {
+                targetIndex = -1;
+            }
+
+            if (targetIndex !== -1) {
+                updateReadStatus(targetIndex);
+                setIndexLastReadStatusUpdated(targetIndex);
+
+                const now = Date.now();
+                setTsLastReadStatusUpdated(now);
+            }
+        }, 1000); // wait N ms
+    }, [indexMap]);
+
+    useEffect(() => {
+        const intervalMs: number = 500; // every X milliseconds
+        const now = Date.now();
+        if (
+            now - tsLastReadStatusUpdated >= intervalMs &&
+            visibleRange.endIndex + 1 > indexLastReadStatusUpdated
+        ) {
+            updateReadStatus(visibleRange.endIndex);
+            // Update timestamp
+            setTsLastReadStatusUpdated(now);
+            setIndexLastReadStatusUpdated(visibleRange.endIndex);
+        }
+    }, [visibleRange]);
+
+    useEffect(() => {
+        setTargetMessageIndex(currentMainChat.messages.length - 1);
         setIndexMap(
             Object.fromEntries(
-                chatMessages.map((message, idx) => [message.messageIdWithChatId, idx])
+                currentMainChat.messages.map((message, idx) => [message.messageIdWithChatId, idx])
             )
         );
-    }, [chatMessages]);
+    }, [currentMainChat]);
 
     useEffect(() => {
         setTimeout(() => {
@@ -120,9 +208,18 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 virtuosoRef.current?.scrollToIndex({
                     index: indexMap[currentMainChat.moveToSpecificIndex],
                 });
+            } else if (currentMainChat.notMove !== true) {
+                virtuosoRef.current?.scrollToIndex({
+                    index: "LAST",
+                });
+                if (currentMainChat.latestMessage) {
+                    updateReadStatus(currentMainChat.latestMessage.messageId);
+                }
             }
         }, 300); // wait N ms
     }, [currentMainChat]);
+
+    const [isScrolling, setIsScrolling] = useState(false);
 
     return (
         <div
@@ -157,6 +254,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     <Virtuoso
                         ref={virtuosoRef}
                         className="custom-scrollbar"
+                        context={{ isScrolling }}
+                        isScrolling={setIsScrolling}
+                        rangeChanged={setVisibleRange}
                         style={{
                             height:
                                 currentMainChat.chatType === 3 || currentMainChat.chatType === 4
@@ -174,12 +274,40 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         atTopThreshold={64}
                         atTopStateChange={handleAtTop}
                         atBottomThreshold={128}
-                        itemContent={(index) => {
+                        itemContent={(index, _, { isScrolling }) => {
                             const message = chatMessages[index];
                             const isYou = myself.userId === message.sender.userId;
+                            // Set True if the message is clicked from the Activity,
+                            // or, if the corresponding thread is opened.
                             const isFocused =
                                 message.messageIdWithChatId ===
-                                currentMainChat.moveToSpecificIndex;
+                                    currentMainChat.moveToSpecificIndex ||
+                                (isThreadVisible &&
+                                    currentThreadChat &&
+                                    message.messageId === currentThreadChat.threadId) ||
+                                false;
+
+                            const dateSeparator =
+                                index === 0 ||
+                                extractYYYYMMDD(chatMessages[index - 1].tsSent) !==
+                                    extractYYYYMMDD(chatMessages[index].tsSent) ? (
+                                    <div style={{ padding: "0.5rem 0" }}>
+                                        <div style={{ textAlign: "center", fontWeight: 300 }}>
+                                            <Chip variant="soft">
+                                                <span
+                                                    style={{
+                                                        backgroundColor: "var(--alt-background)",
+                                                        border: "1px solid var(--border)",
+                                                        padding: "0.1rem 2rem",
+                                                        borderRadius: "0.5rem",
+                                                    }}
+                                                >
+                                                    {extractMMDD(chatMessages[index].tsSent)}
+                                                </span>
+                                            </Chip>
+                                        </div>
+                                    </div>
+                                ) : null;
 
                             let isSimpleBubble: boolean;
                             isSimpleBubble = false;
@@ -204,9 +332,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             paddingTop = 0.3;
                             paddingBottom = 0.3;
 
-                            if (message.reactions && message.reactions.allReactions.length > 0) {
+                            let numRepliesWithoutFirstMessage: number;
+                            if (chat.chatType !== 3) {
+                                numRepliesWithoutFirstMessage = message.numReplies - 1;
+                            } else {
+                                numRepliesWithoutFirstMessage = message.numReplies;
+                            }
+
+                            if (message.reactions && message.reactions.length > 0) {
                                 paddingBottom = paddingBottom + 2.5;
-                            } else if (message.numReplies > 0) {
+                            } else if (numRepliesWithoutFirstMessage > 0) {
                                 paddingBottom = paddingBottom + 2.5;
                             }
 
@@ -216,6 +351,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
                             return (
                                 <div>
+                                    {dateSeparator}
                                     <Stack
                                         direction="row"
                                         spacing={2}
@@ -233,6 +369,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             variant={isYou ? "sent" : "received"}
                                             chat={chat}
                                             message={message}
+                                            isScrolling={isScrolling}
                                             isFocused={isFocused}
                                             isSimpleBubble={isSimpleBubble}
                                             socket={socket}
@@ -273,7 +410,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 isInEdit={isInEdit}
                                 setIsInEdit={setIsInEdit}
                                 setCurrentChat={setCurrentMainChat}
+                                isSubChatVisible={isSubChatVisible}
                                 setOpeningService={setOpeningService}
+                                numEditorLines={numEditorLines}
+                                setNumEditorLines={setNumEditorLines}
                             />
                         )}
                         {isInEdit === false && (

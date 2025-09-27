@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Socket } from "socket.io-client";
 import { Sheet, Divider } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 
-import { PreviewTaskAttachmentBlock } from "./base/PreviewTaskAttachmentBlock";
+import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskBodyPreviewBlock } from "./base/TaskBodyPreviewBlock";
-import { TaskPreviewCustomBar } from "./base/TaskPreviewCustomBar";
-import { TaskCommentBlock } from "./base/TaskCommentBlock";
+import { TaskBodyBlock } from "./base/TaskBodyBlock";
+import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
+import { TaskCommentEditorBlock } from "./base/TaskCommentEditorBlock";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -22,6 +22,8 @@ import { AttachmentFileProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskProps, ProjectProps, TagListProps, TaskCommentProps } from "../../../../types/tasks";
 import { ChatProps } from "../../../../types/chat";
+import { TaskNoteProps } from "../../../../types/notes";
+import { loadTaskNotes } from "../../services/loadTaskNotes";
 
 type TaskPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -45,11 +47,19 @@ type TaskPreviewProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskContentVisible?: boolean;
+    isTaskPreviewVisible?: boolean;
     isCreatingTask?: boolean;
+    setIsTaskNoteVisible?: (value: boolean) => void;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    isTaskNoteVisible: boolean;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -78,8 +88,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         isCommentUpdated,
         setIsCommentUpdated,
         setIsTaskHomeVisible,
-        isTaskContentVisible,
+        isTaskPreviewVisible,
         isCreatingTask,
+        setIsTaskNoteVisible,
+        handleCreateNewTaskNote,
+        setCurrentTaskNote,
+        isTaskNoteVisible,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -87,8 +101,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         currentPreviewTask.attachments
     );
     const [taskUpdated, setTaskUpdated] = useState(false);
+    const [startIntervalUpdatingTask, setStartIntervalUpdatingTask] = useState(false);
     const [taskStatusUpdated, setTaskStatusUpdated] = useState(false);
-    const [taskBodyUpdated, setTaskBodyUpdated] = useState(false);
+    const [taskBodyEdited, setTaskBodyEdited] = useState(false);
     const [taskBodySaved, setTaskBodySaved] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
@@ -104,6 +119,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     // Save initial task title to restore it when use input empty title
     const [initTaskTitle, setInitTaskTitle] = useState<string>(currentPreviewTask.title);
+
+    // For task comments
+    const [isInEdit, setIsInEdit] = useState<boolean>(false);
+    const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
 
     // Set the current preview task when the component is mounted
     useEffect(() => {
@@ -122,7 +141,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             socket,
             myself,
             newTaskContent,
-            taskBodyUpdated,
+            taskBodyEdited,
             taskStatusUpdated,
             accessToken
         );
@@ -152,7 +171,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setCurrentPreviewTask(currentPreviewTask);
             setCurrentTaskId(currentPreviewTask.id);
             setBody(currentPreviewTask.body || []);
-            setTaskBodyUpdated(false);
         } else {
             // Update only the tmpCurrentTaskContent when user updated the task content
             // (Not switched the previewing task)
@@ -160,7 +178,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setCurrentPreviewTask(newTaskContent);
         }
         setTaskUpdated(false);
+        setTaskBodySaved(true);
         setTaskStatusUpdated(false);
+        setTaskBodyEdited(false);
+        setStartIntervalUpdatingTask(false);
     };
 
     useEffect(() => {
@@ -170,22 +191,27 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [taskUpdated]);
 
+    useEffect(() => {
+        if (startIntervalUpdatingTask) {
+            sendUpdatedTask(false);
+        }
+    }, [startIntervalUpdatingTask]);
+
     // Auto save task body every Nms if needed
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (taskBodyUpdated === true) {
-                sendUpdatedTask(false);
-                setTaskBodySaved(true);
+            if (taskBodyEdited === true) {
+                setStartIntervalUpdatingTask(true);
             }
         }, 3000);
 
         // Clean up the interval when the component unmounts
         return () => clearInterval(intervalId);
-    }, [taskBodyUpdated]);
+    }, [taskBodyEdited]);
 
     // Update variables when an user change the target task
     useEffect(() => {
-        if (taskBodyUpdated) {
+        if (taskBodyEdited) {
             sendUpdatedTask(true);
         } else {
             setTmpCurrentTaskContent(currentPreviewTask);
@@ -210,7 +236,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     useEffect(() => {
         // Save task before the opening task preview is closed.
         if (taskClosed)
-            if (taskBodyUpdated) {
+            if (taskBodyEdited) {
                 const execute = async () => {
                     await sendUpdatedTask(false);
                     if (setIsTaskPreviewVisible) {
@@ -279,6 +305,28 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         })();
     }, [isCommentUpdated, currentTaskId]);
 
+    // Get Task Notes
+    const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
+    useEffect(() => {
+        (async () => {
+            if (currentPreviewTask.project) {
+                const loadedTaskNotes: TaskNoteProps[] = await loadTaskNotes(
+                    myself,
+                    Number(currentPreviewTask.project.projectId),
+                    Number(currentPreviewTask.id),
+                    accessToken
+                );
+                if (loadedTaskNotes.length > 0) {
+                    setTaskNotes(loadedTaskNotes);
+                } else {
+                    setTaskNotes([]);
+                }
+            } else {
+                setTaskNotes([]);
+            }
+        })();
+    }, [isCommentUpdated, currentTaskId]);
+
     // Get team members
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -322,15 +370,26 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [isOpenTagList]);
 
+    // This is for auto scrolling to the bottom when an user writes comment.
+    const [taskCommentLines, setTaskCommentLines] = useState(0);
+    const sheetRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const sheet = sheetRef.current;
+        if (sheet && taskCommentLines > 1) {
+            sheet.scrollTop = sheet.scrollHeight; // always scroll to bottom
+        }
+    }, [taskCommentLines]); // re-run whenever content changes
+
     return (
         <Sheet
+            ref={sheetRef}
             className="custom-scrollbar"
             variant="outlined"
             sx={{
                 minHeight: 500,
                 borderRadius: "sm",
                 p: 2,
-                overflowY: "scroll",
+                overflowY: "auto",
                 overflowX: "hidden",
             }}
         >
@@ -350,8 +409,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
-                isTaskContentVisible={isTaskContentVisible}
+                isTaskPreviewVisible={isTaskPreviewVisible}
                 isCreatingTask={isCreatingTask}
+                setCurrentTaskContent={setTmpCurrentTaskContent}
+                setTaskStatusUpdated={setTaskStatusUpdated}
+                isTaskNoteVisible={isTaskNoteVisible}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />
@@ -388,16 +450,18 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskPreviewCustomBar
+            <TaskCustomBarBlock
                 currentTaskContent={tmpCurrentTaskContent}
                 setCurrentTaskContent={setTmpCurrentTaskContent}
+                setTaskStatusUpdated={setTaskStatusUpdated}
                 setTaskUpdated={setTaskUpdated}
                 setIsCreatingTask={setIsCreatingTask}
                 taskBodySaved={taskBodySaved}
+                setIsTaskHomeVisible={setIsTaskHomeVisible}
             />
 
-            <TaskBodyPreviewBlock
-                key={`TaskBodyPreviewBlock-${tmpCurrentTaskContent.id}`}
+            <TaskBodyBlock
+                key={`TaskBodyBlock-${tmpCurrentTaskContent.id}`}
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
@@ -405,7 +469,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 teamMembers={teamMembers}
                 body={body}
                 setBody={setBody}
-                setTaskBodyUpdated={setTaskBodyUpdated}
+                setTaskBodyEdited={setTaskBodyEdited}
                 setTaskBodySaved={setTaskBodySaved}
                 setCurrentChat={setCurrentMainChat}
                 setOpeningService={setOpeningService}
@@ -425,7 +489,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setCurrentMainChat={setCurrentMainChat}
             />
 
-            <PreviewTaskAttachmentBlock
+            <TaskTabBlock
+                socket={socket}
+                myself={myself}
+                setMyself={setMyself}
+                teamMemberProfiles={teamMemberProfiles}
+                setCurrentChat={setCurrentMainChat}
+                setOpeningService={setOpeningService}
                 uploadedFiles={uploadedFiles}
                 setUploadedFiles={setUploadedFiles}
                 currentPreviewTaskId={currentPreviewTaskId}
@@ -434,11 +504,21 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskUpdated={setTaskUpdated}
                 setIsAttachmentDeleted={setIsAttachmentDeleted}
                 setDeletedAttachmentId={setDeletedAttachmentId}
+                taskComments={taskComments}
+                isCommentUpdated={isCommentUpdated}
+                setIsInEdit={setIsInEdit}
+                setEditTargetComment={setEditTargetComment}
+                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                setIsTaskNoteVisible={setIsTaskNoteVisible}
+                handleCreateNewTaskNote={handleCreateNewTaskNote}
+                taskNotes={taskNotes}
+                setTaskNotes={setTaskNotes}
+                setCurrentTaskNote={setCurrentTaskNote}
             />
 
             <Divider sx={{ m: 2 }} />
 
-            <TaskCommentBlock
+            <TaskCommentEditorBlock
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
                 setMyself={setMyself}
@@ -451,6 +531,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsCommentUpdated={setIsCommentUpdated}
                 setCurrentChat={setCurrentMainChat}
                 setOpeningService={setOpeningService}
+                taskCommentLines={taskCommentLines}
+                setTaskCommentLines={setTaskCommentLines}
+                isInEdit={isInEdit}
+                setIsInEdit={setIsInEdit}
+                editTargetComment={editTargetComment}
             />
         </Sheet>
     );

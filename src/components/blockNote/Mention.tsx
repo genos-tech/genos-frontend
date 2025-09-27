@@ -8,6 +8,8 @@ import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/UserProfile";
 
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
 // The Mention inline content
 export const CreateMentionSpec = (
     teamMemberProfiles: Record<string, UserProps>,
@@ -74,6 +76,7 @@ export const CreateMentionSpec = (
                             socket={socket}
                             myself={myself}
                             setMyself={setMyself}
+                            isYou={myself.userId === userId ? true : false}
                             user={teamMemberProfiles[userId]}
                             openUserProfile={openUserProfile}
                             setOpenUserProfile={setOpenUserProfile}
@@ -118,14 +121,15 @@ export const MentionMenuItems = (
                 {/* Avatar + Status Dot */}
                 <Box position="relative" width={32} height={32}>
                     <Avatar
-                        src={user.avatarImgPath}
+                        src={`${media_url}/${user.avatarImgPath}`}
                         alt={user.userName}
                         sx={{ width: 32, height: 32 }}
                     />
                     <Box position="absolute" bottom={0} right={0} width={10} height={10}>
                         <PulseDot
                             color={
-                                teamMemberProfiles[user.userId]?.isOnline === true
+                                teamMemberProfiles[user.userId]?.isOnline === true &&
+                                teamMemberProfiles[user.userId]?.isOfflineForced !== "true"
                                     ? "#4caf50"
                                     : "#999"
                             }

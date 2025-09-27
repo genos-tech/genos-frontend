@@ -1,7 +1,10 @@
 import { Box, Tooltip, IconButton } from "@mui/joy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { MessageProps } from "../../../../types/chat";
+import { ProjectProps } from "../../../../types/tasks";
 
 type BubbleReplyButtonTypes = {
+    message: MessageProps;
     taskId: number | null;
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
@@ -9,9 +12,11 @@ type BubbleReplyButtonTypes = {
     setIsTaskCreationVisible: (value: boolean) => void;
     setIsOpeningTask: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    setCurrentProject: (value: ProjectProps) => void;
 };
 export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
     const {
+        message,
         taskId,
         setIsMainChatVisible,
         setIsThreadVisible,
@@ -19,6 +24,7 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
         setIsTaskCreationVisible,
         setIsOpeningTask,
         setCurrentPreviewTaskId,
+        setCurrentProject,
     } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
@@ -37,6 +43,10 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                             setIsTaskPreviewVisible(true);
                             setIsTaskCreationVisible(false);
                             setCurrentPreviewTaskId(taskId);
+
+                            if (message.project) {
+                                setCurrentProject(message.project);
+                            }
 
                             setIsOpeningTask(true);
                         }

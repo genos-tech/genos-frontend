@@ -8,7 +8,9 @@ self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;
     const accessToken: string = event.data.accessToken;
 
-    await clearStore(STORES.USER_INFO);
+    // Should keep user's past info because it'll be updated when the user is logging in.
+    // If offline, the data is not updated, but still need the user info.
+    // await clearStore(STORES.USER_INFO);
 
     // Load data from backend
     const memberList: TaskTableProps[] = await loadTeamMembers(myself, accessToken);
@@ -23,6 +25,8 @@ self.onmessage = async (event) => {
 
     // Send finish a message
     self.postMessage("done");
+
+    self.close(); // Terminates itself
 };
 
 export {};

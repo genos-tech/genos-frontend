@@ -1,6 +1,5 @@
 import { Socket } from "socket.io-client";
 import { Box, Button, Stack } from "@mui/joy";
-import CircleIcon from "@mui/icons-material/Circle";
 
 import { ShowEmojiReaction } from "../../../../components/emojiInput/ShowEmojiReaction";
 import { UserProps } from "../../../../types/admin";
@@ -12,7 +11,7 @@ type BubbleUnderBarTypes = {
     myself: UserProps;
     chatType: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     message: MessageProps | ThreadMessageProps;
     numReplies: number;
     isSent: boolean;
@@ -42,6 +41,13 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         replayHandler,
         isThread = false,
     } = props;
+
+    let numRepliesWithoutFirstMessage: number;
+    if (chatType !== 3) {
+        numRepliesWithoutFirstMessage = numReplies - 1;
+    } else {
+        numRepliesWithoutFirstMessage = numReplies;
+    }
 
     return (
         <Box sx={{ paddingBottom: "3px", marginBottom: "1px", position: "relative" }}>
@@ -74,7 +80,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                     />
                 </Box>
 
-                {isThread == false && numReplies > 0 && (
+                {isThread == false && numRepliesWithoutFirstMessage > 0 && (
                     <Button
                         component="a"
                         size="sm"
@@ -94,15 +100,15 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             },
                         }}
                     >
-                        {/* TODO: read/unread for thread replies */}
-                        {numReplies == 1 ? (
+                        {numRepliesWithoutFirstMessage == 1 ? (
                             <Box sx={{ color: "neutral.plainColor" }}>
-                                <CircleIcon sx={{ fontSize: 10 }} color="primary" />
-                                &nbsp;
-                                {numReplies} reply
+                                {/* <CircleIcon sx={{ fontSize: 10 }} color="primary" /> */}
+                                &nbsp; 1 reply
                             </Box>
                         ) : (
-                            <Box sx={{ color: "neutral.plainColor" }}>{numReplies} replies</Box>
+                            <Box sx={{ color: "neutral.plainColor" }}>
+                                {numRepliesWithoutFirstMessage} replies
+                            </Box>
                         )}
                     </Button>
                 )}

@@ -25,12 +25,17 @@ export const useScrollToBottomOnNewMessage = (
 export const useScrollToBottomOnChatChange = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
     currentMainChatId: number,
+    visibleRangeEnd: number,
+    maxIndex: number,
     indexMap?: { [k: string]: any },
-    moveToSpecificIndex?: string
+    moveToSpecificIndex?: string,
+    notMove?: boolean
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
-        if (virtuoso === null) {
+        // `notMove === true && visibleRangeEnd < maxIndex - 3`: Even if `notMove===true`,
+        // scrolling to the LAST when an user is around in the last/latest message.
+        if (virtuoso === null || (notMove === true && visibleRangeEnd < maxIndex - 3)) {
             return;
         } else {
             setTimeout(() => {
@@ -70,11 +75,12 @@ export const useScrollToBottomOnChatPaneChange = (
 
 export const useScrollToBottomOnNewActivity = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
-    activityMessages: ActivityMessageProps[]
+    activityMessages: ActivityMessageProps[],
+    notMove: boolean
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
-        if (virtuoso === null) {
+        if (virtuoso === null || notMove === true) {
             return;
         } else {
             setTimeout(() => {

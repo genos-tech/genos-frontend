@@ -87,6 +87,8 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     task_id: comment.taskId,
                     comment_id: comment.commentId,
                     comment_body: comment.commentBody,
+                    comment_sender_id: comment.senderId,
+                    comment_sender_name: comment.senderName,
                     reaction_emoji: selectedEmoji,
                 });
             }
@@ -111,6 +113,8 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     task_id: comment.taskId,
                     comment_id: comment.commentId,
                     comment_body: comment.commentBody,
+                    comment_sender_id: comment.senderId,
+                    comment_sender_name: comment.senderName,
                     reaction_emoji: selectedEmoji,
                 });
             }

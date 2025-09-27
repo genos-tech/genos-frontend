@@ -120,6 +120,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <AvatarWithStatus
                             myself={myself}
                             setMyself={setMyself}
+                            isYou={myself.userId === assignee.userId ? true : false}
                             avatarUser={teamMemberProfiles[assignee.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
@@ -143,6 +144,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <AvatarWithStatus
                             myself={myself}
                             setMyself={setMyself}
+                            isYou={myself.userId === reporter.userId ? true : false}
                             avatarUser={teamMemberProfiles[reporter.userId]}
                             socket={socket}
                             setOpeningService={setOpeningService}
@@ -247,7 +249,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             githubLink={taskContents.githubLink}
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
-                            isPreviewMode={isPreviewMode}
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
@@ -256,7 +257,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             generalLink={taskContents.generalLink}
                             taskContents={taskContents}
                             setTaskContents={setTaskContents}
-                            isPreviewMode={isPreviewMode}
                             setTaskUpdated={setTaskUpdated}
                         />
                     </ListItem>
@@ -272,6 +272,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <AvatarWithStatus
                                     myself={myself}
                                     setMyself={setMyself}
+                                    isYou={myself.userId === assignee.userId ? true : false}
                                     avatarUser={teamMemberProfiles[assignee.userId]}
                                     socket={socket}
                                     setOpeningService={setOpeningService}
@@ -322,7 +323,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     <Typography
                                         noWrap
                                         sx={{
-                                            ml: "5px",
+                                            mx: "5px",
                                             overflow: "hidden",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",

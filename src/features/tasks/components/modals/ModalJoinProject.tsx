@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
 
 import { UserProps } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -45,7 +44,6 @@ export const ModalJoinProject: React.FC<Props> = ({
                 socket.emit(
                     "join_project_request",
                     {
-                        teamId: myself.teamId,
                         joiningProjectId: openJoinProject.projectId,
                         joiningProjectName: openJoinProject.projectName,
                     },
@@ -67,7 +65,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     {
                                         text: openJoinProject.projectName,
                                         type: "text",
-                                        styles: { code: true },
+                                        styles: { bold: true, textColor: "pink" },
                                     },
                                     {
                                         text: ".",

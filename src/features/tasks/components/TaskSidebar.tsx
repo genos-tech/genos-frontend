@@ -69,7 +69,7 @@ function Toggler({
 
 type TaskSidebarProps = {
     myself: UserProps;
-    setMyself: (value: UserProps) => void;
+    loadProjects: (value: number) => void;
     setIsDashboardVisible: (value: boolean) => void;
     setTaskTableVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
@@ -77,7 +77,6 @@ type TaskSidebarProps = {
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
-    setOpenCreateTeam: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
@@ -93,7 +92,7 @@ type TaskSidebarProps = {
 export const TaskSidebar = (props: TaskSidebarProps) => {
     const {
         myself,
-        setMyself,
+        loadProjects,
         setIsDashboardVisible,
         setTaskTableVisible,
         setIsTaskPreviewVisible,
@@ -101,7 +100,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setCurrentProject,
         currentPreviewTaskId,
         setCurrentPreviewTaskId,
-        setOpenCreateTeam,
         setOpenCreateProject,
         setOpenJoinProject,
         setIsTaskHomeVisible,
@@ -447,6 +445,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             systemUserId: systemUserId,
                                                         });
                                                         setCurrentPreviewTaskId(taskId);
+                                                        setIsTaskPreviewVisible(true);
                                                     }}
                                                     sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 >
@@ -544,30 +543,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                             )}
                         >
                             <List sx={{ gap: 0.5 }}>
-                                <ListItem key={"listitem-createProject"}>
-                                    <ListItemButton
-                                        color="neutral"
-                                        variant="soft"
-                                        onClick={() => {
-                                            setOpenCreateProject(true);
-                                        }}
-                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
-                                    >
-                                        <AddIcon />
-                                        <Typography
-                                            noWrap
-                                            sx={{
-                                                fontSize: "15px",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                                width: "100%", // take full width of button
-                                            }}
-                                        >
-                                            New Project
-                                        </Typography>
-                                    </ListItemButton>
-                                </ListItem>
                                 {teamProjects.map(
                                     (
                                         {
@@ -602,6 +577,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                     projectTags: projectTags,
                                                                     systemUserId: systemUserId,
                                                                 });
+                                                                loadProjects(projectId);
                                                             }}
                                                             sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                         >
@@ -799,6 +775,30 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         )}
                                     </List>
                                 </Toggler>
+                                <ListItem key={"listitem-createProject"}>
+                                    <ListItemButton
+                                        color="neutral"
+                                        variant="plain"
+                                        onClick={() => {
+                                            setOpenCreateProject(true);
+                                        }}
+                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
+                                    >
+                                        <AddIcon />
+                                        <Typography
+                                            noWrap
+                                            sx={{
+                                                fontSize: "15px",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                width: "100%", // take full width of button
+                                            }}
+                                        >
+                                            New Project
+                                        </Typography>
+                                    </ListItemButton>
+                                </ListItem>
                             </List>
                         </Toggler>
                     </ListItem>

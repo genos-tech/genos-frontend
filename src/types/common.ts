@@ -14,7 +14,7 @@ export type ReactionProps = {
     tsSent: string;
 };
 
-export type InboxProps = {
+export type InboxItemProps = {
     itemId: number;
     itemBody: PartialBlock[] | any[];
     itemType: number;

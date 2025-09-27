@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
-import { Box, Sheet } from "@mui/joy";
+import { Box, Sheet, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
@@ -8,7 +8,7 @@ import { ThreadPane } from "./ThreadChatPane";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { MessagesPane } from "./MainChatPane";
 import { MessagesSubPane } from "./SubChatPane";
-import { UserProps } from "../../types/admin";
+import { Team, UserProps } from "../../types/admin";
 import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
@@ -18,8 +18,17 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
+import {
+    ChatNoteProps,
+    ChatNoteMetaTreeNode,
+    ChatNoteMetaProps,
+    TaskNoteProps,
+} from "../../types/notes";
+import { ChatNoteMain } from "../notes/components/ChatNoteMain";
 
 type ChatHomeProps = {
+    currentTeam: Team;
+    setCurrentTeam: (value: Team) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -28,6 +37,7 @@ type ChatHomeProps = {
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
     currentMainChat: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     currentSubChat: ChatProps | undefined;
@@ -39,12 +49,50 @@ type ChatHomeProps = {
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
     funcSetAllChats: () => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
+    unReadInboxItemCount: number;
+    unReadChatCounts?: Record<string, number>;
+    unReadActivityMessageCounts: number;
+    unReadChatAndActivityCounts: number;
+    currentNoteType: number;
+    currentChatNote: ChatNoteProps | null;
+    setCurrentChatNote: (value: ChatNoteProps) => void;
+    currentChatNoteTitle: string;
+    setCurrentChatNoteTitle: (value: string) => void;
+    chatNoteMeta: ChatNoteMetaProps[];
+    setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
+    tabItems: any[];
+    setTabItems: (value: any[]) => void;
+    selectedTabIndex: number;
+    setSelectedTabIndex: (value: number) => void;
+    handleCreateNewChatNote: (
+        parentNoteId: number | null,
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
+    handleCreateNewChatNoteIfNotExist: (
+        chatType: number,
+        chatId: number,
+        isThread: boolean,
+        threadId: number
+    ) => Promise<void>;
+    currentChatNoteChain?: ChatNoteMetaTreeNode[];
+    setCurrentNoteType: (value: number) => void;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number
+    ) => Promise<void>;
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
     const {
+        currentTeam,
+        setCurrentTeam,
         teamMemberProfiles,
         socket,
         myself,
@@ -53,6 +101,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         currentChatPaneType,
         setCurrentChatPaneType,
         activityMessages,
+        setActivityMessages,
         currentMainChat,
         setCurrentMainChat,
         currentSubChat,
@@ -66,6 +115,27 @@ export const ChatHome = (props: ChatHomeProps) => {
         funcSetAllChats,
         isCommentUpdated,
         setIsCommentUpdated,
+        unReadInboxItemCount,
+        unReadChatCounts,
+        unReadActivityMessageCounts,
+        unReadChatAndActivityCounts,
+        currentNoteType,
+        currentChatNote,
+        setCurrentChatNote,
+        currentChatNoteTitle,
+        setCurrentChatNoteTitle,
+        chatNoteMeta,
+        setChatNoteMeta,
+        tabItems,
+        setTabItems,
+        selectedTabIndex,
+        setSelectedTabIndex,
+        handleCreateNewChatNote,
+        handleCreateNewChatNoteIfNotExist,
+        currentChatNoteChain,
+        setCurrentNoteType,
+        handleCreateNewTaskNote,
+        setCurrentTaskNote,
     } = props;
 
     const { mode } = useColorScheme();
@@ -75,6 +145,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [isThreadVisible, setIsThreadVisible] = useState(false); // Is Thread pane visible or not
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false); // Is task preview visible or not
     const [isTaskCreationVisible, setIsTaskCreationVisible] = useState(false); // Is task creation form visible or not
+    const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
+    const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
 
     const [isOpeningTask, setIsOpeningTask] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -198,6 +270,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
+                currentTeam={currentTeam}
+                setCurrentTeam={setCurrentTeam}
                 teamMemberProfiles={teamMemberProfiles}
                 socket={socket}
                 myself={myself}
@@ -205,10 +279,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                 openingService={openingService}
                 setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
+                unReadInboxItemCount={unReadInboxItemCount}
+                unReadChatAndActivityCounts={unReadChatAndActivityCounts}
             />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
-                <Panel id={"1"} order={1} minSize={10} maxSize={30}>
+                <Panel id={"1"} order={1} minSize={20} maxSize={30}>
                     <Box
                         sx={{
                             height: "100%",
@@ -236,6 +312,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 currentChatPaneType={currentChatPaneType}
                                 setCurrentChatPaneType={setCurrentChatPaneType}
                                 activityMessages={activityMessages}
+                                setActivityMessages={setActivityMessages}
                                 allChats={allChats}
                                 setAllChats={setAllChats}
                                 setCurrentMainChat={setCurrentMainChat}
@@ -250,12 +327,13 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 setIsThreadVisible={setIsThreadVisible}
                                 isThreadVisible={isThreadVisible}
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                setIsTaskCreationVisible={setIsTaskCreationVisible}
                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                 isTaskCreationVisible={isTaskCreationVisible}
                                 setOpeningService={setOpeningService}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
+                                unReadChatCounts={unReadChatCounts}
+                                unReadActivityMessageCounts={unReadActivityMessageCounts}
                             />
                         </Sheet>
                     </Box>
@@ -273,6 +351,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                         when close right -> MainChat-ThreadChat
                     MainChat-ThreadChat-TaskCreation (p5)
                         when close right -> MainChat-ThreadChat
+                    ThreadChat-NoteView (p6)
+                        when close right -> MainChat-ThreadChat
+
+                Only Task Preview (p7)
                  */}
 
                 {isMainChatVisible && (
@@ -315,7 +397,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setCurrentSubChat={setCurrentSubChat}
                                                 currentSubChat={currentSubChat}
+                                                currentThreadChat={currentThreadChat}
                                                 setCurrentThreadChat={setCurrentThreadChat}
+                                                isThreadVisible={isThreadVisible}
                                                 setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsSubChatVisible={setIsSubChatVisible}
                                                 setIsThreadVisible={setIsThreadVisible}
@@ -351,35 +435,66 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     maxSize={80}
                                     onResize={setMainChatPanelSize}
                                 >
-                                    <MessagesPane
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        currentWindowHeight={height}
-                                        paneSizePCT={mainChatPanelSize}
-                                        chat={currentMainChat}
-                                        subChat={currentSubChat ? currentSubChat : currentMainChat}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        teamMembers={teamMembers}
-                                        socket={socket}
-                                        currentMainChat={currentMainChat}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsOpeningTask={setIsOpeningTask}
-                                        setIsCreatingTask={setIsCreatingTask}
-                                        isSubChatVisible={isSubChatVisible}
-                                        setIsSubChatVisible={setIsSubChatVisible}
-                                        currentMainChatId={currentMainChatId}
-                                        setCurrentPreviewTask={setCurrentPreviewTask}
-                                        setOpeningService={setOpeningService}
-                                        funcSetAllChats={funcSetAllChats}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setCurrentProject={setCurrentProject}
-                                    />
+                                    {currentMainChat.chatId === -1 && (
+                                        <>
+                                            <Box
+                                                sx={{
+                                                    height: "100%",
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <IconButton
+                                                    component="button"
+                                                    variant="soft"
+                                                    color="neutral"
+                                                    sx={{
+                                                        fontSize: "15px",
+                                                        paddingRight: "10px",
+                                                    }}
+                                                >
+                                                    Choose a Chat from Sidebar
+                                                </IconButton>
+                                            </Box>
+                                        </>
+                                    )}
+                                    {currentMainChat.chatId !== -1 && (
+                                        <MessagesPane
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            currentWindowHeight={height}
+                                            paneSizePCT={mainChatPanelSize}
+                                            chat={currentMainChat}
+                                            subChat={
+                                                currentSubChat ? currentSubChat : currentMainChat
+                                            }
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            teamMembers={teamMembers}
+                                            socket={socket}
+                                            currentMainChat={currentMainChat}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setCurrentSubChat={setCurrentSubChat}
+                                            currentThreadChat={currentThreadChat}
+                                            setCurrentThreadChat={setCurrentThreadChat}
+                                            isThreadVisible={isThreadVisible}
+                                            setIsMainChatVisible={setIsMainChatVisible}
+                                            setIsThreadVisible={setIsThreadVisible}
+                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                            setIsOpeningTask={setIsOpeningTask}
+                                            setIsCreatingTask={setIsCreatingTask}
+                                            isSubChatVisible={isSubChatVisible}
+                                            setIsSubChatVisible={setIsSubChatVisible}
+                                            currentMainChatId={currentMainChatId}
+                                            setCurrentPreviewTask={setCurrentPreviewTask}
+                                            setOpeningService={setOpeningService}
+                                            funcSetAllChats={funcSetAllChats}
+                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            setCurrentProject={setCurrentProject}
+                                        />
+                                    )}
                                 </Panel>
                             </PanelGroup>
                         </Panel>
@@ -439,6 +554,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setOpeningService={setOpeningService}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     currentPreviewTaskId={currentPreviewTaskId}
+                                                    isChatNoteVisible={isChatNoteVisible}
+                                                    setIsChatNoteVisible={setIsChatNoteVisible}
+                                                    handleCreateNewChatNoteIfNotExist={
+                                                        handleCreateNewChatNoteIfNotExist
+                                                    }
                                                 />
                                             </Box>
                                         </Panel>
@@ -513,6 +633,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     }
                                                     isCommentUpdated={isCommentUpdated}
                                                     setIsCommentUpdated={setIsCommentUpdated}
+                                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                                    handleCreateNewTaskNote={
+                                                        handleCreateNewTaskNote
+                                                    }
+                                                    setCurrentTaskNote={setCurrentTaskNote}
+                                                    isTaskNoteVisible={isTaskNoteVisible}
                                                 />
                                             </Box>
                                         </Panel>
@@ -584,7 +710,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }
-                                                    isNewProjectCreated={isNewProjectCreated}
                                                     isNewTagCreated={isNewTagCreated}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
@@ -648,6 +773,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
                                             currentPreviewTaskId={currentPreviewTaskId}
+                                            isChatNoteVisible={isChatNoteVisible}
+                                            setIsChatNoteVisible={setIsChatNoteVisible}
+                                            handleCreateNewChatNoteIfNotExist={
+                                                handleCreateNewChatNoteIfNotExist
+                                            }
                                         />
                                     </Box>
                                 </Panel>
@@ -720,6 +850,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     }
                                                     isCommentUpdated={isCommentUpdated}
                                                     setIsCommentUpdated={setIsCommentUpdated}
+                                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                                    handleCreateNewTaskNote={
+                                                        handleCreateNewTaskNote
+                                                    }
+                                                    setCurrentTaskNote={setCurrentTaskNote}
+                                                    isTaskNoteVisible={isTaskNoteVisible}
                                                 />
                                             </Box>
                                         </Panel>
@@ -728,7 +864,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             </>
                         )}
 
-                        {/* p6 */}
+                        {/* p5 */}
                         {isTaskCreationVisible && (
                             <>
                                 {currentThreadChat && (
@@ -791,7 +927,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }
-                                                    isNewProjectCreated={isNewProjectCreated}
                                                     isNewTagCreated={isNewTagCreated}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
@@ -804,6 +939,147 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 )}
                             </>
                         )}
+
+                        {/* p6 */}
+                        {isChatNoteVisible && (
+                            <>
+                                {currentThreadChat && (
+                                    <>
+                                        <PanelResizeHandle
+                                            style={{
+                                                width: "1px",
+                                                backgroundColor:
+                                                    mode === "dark" ? "black" : "white",
+                                                transition: "all 0.3s ease-in-out",
+                                                cursor: "col-resize",
+                                            }}
+                                            className="chat-resize-handle"
+                                        />
+
+                                        <Panel id={"9"} order={9} minSize={30} maxSize={70}>
+                                            <Box
+                                                sx={{
+                                                    px: { xs: 1, md: 2 },
+                                                    pt: {
+                                                        xs: "calc(12px + var(--Header-height))",
+                                                        sm: "calc(12px + var(--Header-height))",
+                                                        md: 2,
+                                                    },
+                                                    pb: { xs: 2, sm: 2, md: 3 },
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    minWidth: 0,
+                                                    height: "100dvh",
+                                                    gap: 1,
+                                                    ml: "1px",
+                                                    boxShadow: "0 0 0 1px grey",
+                                                    borderColor:
+                                                        mode === "dark" ? "black" : "white",
+                                                }}
+                                            >
+                                                <ChatNoteMain
+                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    socket={socket}
+                                                    teamMembers={teamMembers}
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    currentChatNote={currentChatNote}
+                                                    setCurrentChatNote={setCurrentChatNote}
+                                                    currentChatNoteTitle={currentChatNoteTitle}
+                                                    setCurrentChatNoteTitle={
+                                                        setCurrentChatNoteTitle
+                                                    }
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentChat={setCurrentMainChat}
+                                                    currentNoteType={currentNoteType}
+                                                    chatNoteMeta={chatNoteMeta}
+                                                    setChatNoteMeta={setChatNoteMeta}
+                                                    tabItems={tabItems}
+                                                    setTabItems={setTabItems}
+                                                    selectedTabIndex={selectedTabIndex}
+                                                    setSelectedTabIndex={setSelectedTabIndex}
+                                                    handleCreateNewChatNote={
+                                                        handleCreateNewChatNote
+                                                    }
+                                                    currentChatNoteChain={currentChatNoteChain}
+                                                    setCurrentNoteType={setCurrentNoteType}
+                                                    isInChatPage={true}
+                                                    setIsMainChatVisible={setIsMainChatVisible}
+                                                    setIsChatNoteVisible={setIsChatNoteVisible}
+                                                />
+                                            </Box>
+                                        </Panel>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </>
+                )}
+
+                {/* p7 */}
+                {isMainChatVisible === false && isTaskPreviewVisible && currentPreviewTask && (
+                    <>
+                        <PanelResizeHandle
+                            style={{
+                                width: "1px",
+                                backgroundColor: mode === "dark" ? "black" : "white",
+                                transition: "all 0.3s ease-in-out",
+                                cursor: "col-resize",
+                            }}
+                            className="chat-resize-handle"
+                        />
+
+                        <Panel id={"10"} order={10} minSize={30} maxSize={70}>
+                            <Box
+                                sx={{
+                                    px: { xs: 1, md: 2 },
+                                    pt: {
+                                        xs: "calc(12px + var(--Header-height))",
+                                        sm: "calc(12px + var(--Header-height))",
+                                        md: 2,
+                                    },
+                                    pb: { xs: 2, sm: 2, md: 3 },
+                                    flex: 1,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    minWidth: 0,
+                                    height: "100dvh",
+                                    gap: 1,
+                                    ml: "1px",
+                                    boxShadow: "0 0 0 1px grey",
+                                    borderColor: mode === "dark" ? "black" : "white",
+                                }}
+                            >
+                                <TaskPreview
+                                    teamMemberProfiles={teamMemberProfiles}
+                                    socket={socket}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    setCurrentProject={setCurrentProject}
+                                    currentPreviewTask={currentPreviewTask}
+                                    setIsMainChatVisible={setIsMainChatVisible}
+                                    setIsThreadVisible={setIsThreadVisible}
+                                    isThreadVisible={isThreadVisible}
+                                    setIsCreatingTask={setIsCreatingTask}
+                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                    setCurrentPreviewTask={setCurrentPreviewTask}
+                                    setOpenCreateProject={setOpenCreateProject}
+                                    setOpenCreateTag={setOpenCreateTag}
+                                    setCurrentMainChat={setCurrentMainChat}
+                                    setOpeningService={setOpeningService}
+                                    currentPreviewTaskId={currentPreviewTaskId}
+                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                    isCommentUpdated={isCommentUpdated}
+                                    setIsCommentUpdated={setIsCommentUpdated}
+                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                    handleCreateNewTaskNote={handleCreateNewTaskNote}
+                                    setCurrentTaskNote={setCurrentTaskNote}
+                                    isTaskNoteVisible={isTaskNoteVisible}
+                                />
+                            </Box>
+                        </Panel>
                     </>
                 )}
 

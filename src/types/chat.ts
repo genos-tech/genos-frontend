@@ -9,8 +9,8 @@ export type AllChatProps = {
     chatId: number;
     chatName: string;
     systemUserId?: string;
-    dmPartnerUser: UserProps | null;
-    unread: boolean | true;
+    dmPartnerUser: UserProps;
+    lastReadMessageId: number;
     latestMessage?: MessageProps;
     latestMessageText: string;
     TSLastMessage: string;
@@ -22,8 +22,8 @@ export type ChatProps = {
     chatId: number;
     chatName: string;
     systemUserId?: string;
-    dmPartnerUser: UserProps | null;
-    unread: boolean | true;
+    dmPartnerUser: UserProps;
+    lastReadMessageId: number;
     messages: MessageProps[];
     latestMessage?: MessageProps;
     latestMessageText: string;
@@ -31,6 +31,7 @@ export type ChatProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     moveToSpecificIndex?: string;
+    notMove?: boolean;
 };
 
 // Thread Props
@@ -40,43 +41,46 @@ export type ThreadProps = {
     chatName: string;
     systemUserId?: string;
     threadId: number;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     taskId: number | null;
-    unread: boolean | true;
     messages: ThreadMessageProps[];
     TSLastMessage: string;
     project?: ProjectProps;
     taskExist?: boolean;
     moveToSpecificIndex?: string;
+    notMove?: boolean;
 };
 
-// Message Props
+// Activity Message Props
 export type ActivityMessageProps = {
     activityId: string;
     activityType: number;
     chatType: number;
     chatId: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUserId: string;
+    dmPartnerUserName: string;
+    dmPartnerUserEmail: string;
     isThread: boolean;
     threadId: number;
     messageId: number;
     messageUniqueKey: string;
     threadMessageUniqueKey: string;
     taskId: number;
-    project?: ProjectProps;
+    projectId?: number;
+    projectName?: string;
     firstLineContent: string;
     latestReaction: {
         emoji: string;
-        senderName: string;
+        sender: UserProps;
         tsSent: string;
     };
-    sender: UserProps;
-    reactions: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    senderId: string;
+    receiver: UserProps;
+    reactions: ReactionProps[];
     tsSent: string;
+    mentionedUserIds?: [];
+    isRead: boolean;
 };
 
 export type MessageProps = {
@@ -92,7 +96,7 @@ export type MessageProps = {
     tsUpdated: string;
     isLiked?: boolean | false;
     numReplies: number;
-    unreadThread?: boolean | true;
+    isReadThread?: boolean | true;
     attachment?: {
         fileName: string;
         type: string;
@@ -102,10 +106,7 @@ export type MessageProps = {
     taskId: number | null;
     taskStatus: string | null;
     project?: ProjectProps;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
     threadId?: number;
 };
 
@@ -130,10 +131,7 @@ export type ThreadMessageProps = {
     };
     project?: ProjectProps;
     taskExist?: boolean;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
 };
 
 export type NewMessageProps = {
@@ -144,11 +142,12 @@ export type NewMessageProps = {
     systemUserId?: string;
     messageId: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;
     sender: UserProps;
+    receiver: UserProps;
     tsSent: string;
     tsUpdated: string;
     isLiked?: boolean | false;
@@ -162,10 +161,8 @@ export type NewMessageProps = {
     taskStatus: string | null;
     project?: ProjectProps;
     isEdited: boolean;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
+    lastReadMessageId: number;
 };
 
 export type NewThreadMessageProps = {
@@ -177,11 +174,12 @@ export type NewThreadMessageProps = {
     threadId: number;
     messageId: number;
     chatName: string;
-    dmPartnerUser: UserProps | null;
+    dmPartnerUser: UserProps;
     isThread: boolean;
     content: PartialBlock[] | any[];
     contentText: string;
     sender: UserProps;
+    receiver: UserProps;
     taskId: number | null;
     tsSent: string;
     tsUpdated: string;
@@ -194,10 +192,7 @@ export type NewThreadMessageProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     isEdited: boolean;
-    reactions?: {
-        myReactions: ReactionProps[];
-        allReactions: ReactionProps[];
-    };
+    reactions?: ReactionProps[];
 };
 
 // Other Props

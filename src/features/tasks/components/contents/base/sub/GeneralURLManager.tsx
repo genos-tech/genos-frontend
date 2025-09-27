@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
-import { Input, Snackbar, Button, Stack, Typography, IconButton } from "@mui/joy";
+import { Input, Snackbar, Button, Stack, Typography, Box, IconButton } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 
 import { TaskProps } from "../../../../../../types/tasks";
-import { getDomainFromUrl } from "../../../../../../utils/urlHandler";
+import { getPageTitle } from "../../../../utils/getPageTitle";
 
 type GeneralURLManagerProps = {
     generalLink: { url: string; title: string };
     taskContents?: TaskProps;
     setTaskContents?: (value: TaskProps) => void;
-    isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const GeneralURLManager = (props: GeneralURLManagerProps) => {
-    const { generalLink, taskContents, setTaskContents, isPreviewMode, setTaskUpdated } = props;
+    const { generalLink, taskContents, setTaskContents, setTaskUpdated } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [url, setUrl] = useState("");
     const [title, setTitle] = useState("");
@@ -30,15 +29,22 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
     const handleSave = async () => {
         if (taskContents && setTaskContents) {
             if (isValidUrl(url)) {
+                let pageTitle: string;
                 if (title === "") {
-                    setTitle(getDomainFromUrl(url));
+                    pageTitle = await getPageTitle(url);
+                    if (!pageTitle) {
+                        pageTitle = url;
+                    }
+                } else {
+                    pageTitle = title;
                 }
+
+                setTitle(pageTitle);
+                setError("");
                 setTaskContents({
                     ...taskContents,
-                    generalLink: { url: url, title: title },
+                    generalLink: { url: url, title: pageTitle },
                 });
-                setTitle(title);
-                setError("");
                 setIsEditing(false);
                 if (setTaskUpdated) {
                     setTaskUpdated(true);
@@ -60,6 +66,9 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                 setUrl(generalLink.url);
                 setTitle(generalLink.title);
             }
+        } else {
+            setUrl("");
+            setTitle("");
         }
     }, [taskContents]);
 
@@ -69,8 +78,11 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                 generalLink.url === null ||
                 generalLink.url === "" ||
                 isEditing === true) && (
-                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                     <LinkIcon />
+                    <Box>
+                        <Typography>URL:</Typography>
+                    </Box>
                     <Input
                         key={"url"}
                         size="sm"
@@ -78,16 +90,23 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         type="url"
-                        sx={{ width: "150px", height: "30px" }}
+                        sx={{ width: "200px", height: "30px" }}
                     />
-                    <Input
-                        key={"title"}
-                        size="sm"
-                        placeholder="Title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        sx={{ width: "150px", height: "30px" }}
-                    />
+                    {taskContents && (title !== "" || isEditing === true) && (
+                        <>
+                            <Box>
+                                <Typography>Title:</Typography>
+                            </Box>
+                            <Input
+                                key={"title"}
+                                size="sm"
+                                placeholder="Title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                sx={{ width: "200px", height: "30px" }}
+                            />
+                        </>
+                    )}
                     {error && (
                         <Snackbar
                             autoHideDuration={5000}
@@ -120,7 +139,14 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
             {isEditing === false && generalLink?.url && (
                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
                     <LinkIcon />
-                    <Typography>
+                    <Typography
+                        sx={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "500px",
+                        }}
+                    >
                         <a href={generalLink.url} target="_blank" rel="noopener noreferrer">
                             {title}
                         </a>

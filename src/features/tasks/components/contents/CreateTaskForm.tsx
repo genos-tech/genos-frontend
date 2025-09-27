@@ -5,9 +5,9 @@ import { PartialBlock } from "@blocknote/core";
 
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskBodyEditBlock } from "./base/TaskBodyEditBlock";
-import { CreateTaskFooter } from "./base/CreateTaskFooter";
-import { CreateTaskAttachmentBlock } from "./base/CreateTaskAttachmentBlock";
+import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
+import { TaskCreateFooter } from "./base/TaskCreateFooter";
+import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import {
     updateTaskTitle,
     updateTaskBody,
@@ -121,7 +121,6 @@ type CreateTaskProps = {
     currentProject: ProjectProps | null;
     setCurrentProject: (value: ProjectProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
-    isNewProjectCreated: boolean;
     isNewTagCreated: boolean;
     setIsNewTaskCreated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
@@ -129,7 +128,7 @@ type CreateTaskProps = {
     parentTaskId: number | null;
     rootTaskId: number | null;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskContentVisible?: boolean;
+    isTaskPreviewVisible?: boolean;
     isCreatingTask?: boolean;
 };
 
@@ -160,7 +159,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         parentTaskId,
         rootTaskId,
         setIsTaskHomeVisible,
-        isTaskContentVisible,
+        isTaskPreviewVisible,
         isCreatingTask,
     } = props;
     const { accessToken } = useAuth();
@@ -292,7 +291,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                 setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
-                isTaskContentVisible={isTaskContentVisible}
+                isTaskPreviewVisible={isTaskPreviewVisible}
                 isCreatingTask={isCreatingTask}
             />
 
@@ -328,7 +327,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskBodyEditBlock
+            <TaskCreateBodyBlock
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
                 setMyself={setMyself}
@@ -342,14 +341,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
             <Divider sx={{ m: 2 }} />
 
-            <CreateTaskAttachmentBlock
+            <TaskCreateAttachmentBlock
                 taskContents={taskContents}
                 setTaskContents={setTaskContents}
             />
 
             <Divider sx={{ m: 2 }} />
 
-            <CreateTaskFooter
+            <TaskCreateFooter
                 socket={socket}
                 myself={myself}
                 accessToken={accessToken}

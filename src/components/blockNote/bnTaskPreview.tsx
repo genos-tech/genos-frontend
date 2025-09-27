@@ -44,7 +44,7 @@ type BnTaskPreviewProps = {
     teamMembers: UserProps[];
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
-    setTaskBodyUpdated?: (value: boolean) => void;
+    setTaskBodyEdited?: (value: boolean) => void;
     setTaskBodySaved?: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
@@ -58,7 +58,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         teamMembers,
         body,
         setBody,
-        setTaskBodyUpdated,
+        setTaskBodyEdited,
         setTaskBodySaved,
         setCurrentChat,
         setOpeningService,
@@ -153,6 +153,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
             }
+            if (node.content[0]) {
+                if (node.content[0].text) {
+                    count += node.content[0].text.split("\n").length;
+                }
+            }
         }
         return count;
     };
@@ -163,8 +168,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 5, 0) * 30 + 300,
-                800
+                Math.max(numEditorLines - 13, 0) * 20 + 500,
+                1000
             );
             editorRef.current.style.setProperty("--task-body-editor-height", `${dynamicHeight}px`);
         }
@@ -186,7 +191,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         <Box>
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
-                    className="bn-task-editor"
+                    className="bn-box"
                     editor={editor}
                     sideMenu={true} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -202,8 +207,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
                         setBody(editor.document);
-                        if (setTaskBodyUpdated) {
-                            setTaskBodyUpdated(true);
+                        if (setTaskBodyEdited) {
+                            setTaskBodyEdited(true);
                             if (setTaskBodySaved) {
                                 setTaskBodySaved(false);
                             }

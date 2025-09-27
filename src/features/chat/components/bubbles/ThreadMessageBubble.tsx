@@ -24,6 +24,7 @@ type threadMessageBubbleProps = {
     thread: ThreadProps;
     variant: "sent" | "received";
     message: ThreadMessageProps;
+    isScrolling: boolean;
     isFocused: boolean;
     isSimpleBubble: boolean;
     setOpeningService: (service: number) => void;
@@ -43,6 +44,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         thread,
         variant,
         message,
+        isScrolling,
         isFocused,
         isSimpleBubble,
         setOpeningService,
@@ -63,13 +65,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
     useEffect(() => {
         if (message.reactions) {
-            setReactions(message.reactions.allReactions);
+            setReactions(message.reactions);
         }
     }, []);
 
     useEffect(() => {
         if (message.reactions) {
-            setReactions(message.reactions.allReactions);
+            setReactions(message.reactions);
         }
     }, [message]);
 
@@ -92,9 +94,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         thread_id: message.threadId,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? thread.dmPartnerUser?.userId
+                                ? thread.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
@@ -114,9 +117,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? thread.dmPartnerUser?.userId
+                                    ? thread.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
@@ -145,9 +149,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         thread_id: message.threadId,
                         message_id: message.messageId,
                         message_body: message.content,
+                        message_sender: message.sender,
                         dm_partner_user_id:
                             message.sender.userId === myself.userId
-                                ? thread.dmPartnerUser?.userId
+                                ? thread.dmPartnerUser.userId
                                 : myself.userId,
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
@@ -166,9 +171,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             thread_id: -1,
                             message_id: message.threadId,
                             message_body: message.content,
+                            message_sender: message.sender,
                             dm_partner_user_id:
                                 message.sender.userId === myself.userId
-                                    ? thread.dmPartnerUser?.userId
+                                    ? thread.dmPartnerUser.userId
                                     : myself.userId,
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
@@ -231,7 +237,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                   },
                             isFocused
                                 ? {
-                                      background: "#1c7fb1ff",
+                                      background: "#24c165d0",
                                   }
                                 : {
                                       background: "",
@@ -256,23 +262,25 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     />
 
                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                        <EmojiReaction
-                                            socket={socket}
-                                            myself={myself}
-                                            chatType={thread.chatType}
-                                            chatName={thread.chatName}
-                                            dmPartnerUser={thread.dmPartnerUser}
-                                            message={message}
-                                            numReplies={0}
-                                            isThread={true}
-                                            showUnderBarOption={showUnderBarOption}
-                                            reactions={reactions}
-                                            setReactions={setReactions}
-                                            setShowEmojiPicker={setShowEmojiPicker}
-                                            setUniqueReactionEmojiCount={
-                                                setUniqueReactionEmojiCount
-                                            }
-                                        />
+                                        {isScrolling !== true && (
+                                            <EmojiReaction
+                                                socket={socket}
+                                                myself={myself}
+                                                chatType={thread.chatType}
+                                                chatName={thread.chatName}
+                                                dmPartnerUser={thread.dmPartnerUser}
+                                                message={message}
+                                                numReplies={0}
+                                                isThread={true}
+                                                showUnderBarOption={showUnderBarOption}
+                                                reactions={reactions}
+                                                setReactions={setReactions}
+                                                setShowEmojiPicker={setShowEmojiPicker}
+                                                setUniqueReactionEmojiCount={
+                                                    setUniqueReactionEmojiCount
+                                                }
+                                            />
+                                        )}
                                     </Box>
 
                                     {/* 
@@ -298,12 +306,14 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             <AvatarWithStatus
                                                 myself={myself}
                                                 setMyself={setMyself}
+                                                isYou={isSent}
                                                 avatarUser={
                                                     isSent
                                                         ? teamMemberProfiles[myself.userId]
                                                         : teamMemberProfiles[message.sender.userId]
                                                 }
                                                 socket={socket}
+                                                isForBubble={true}
                                                 thread={thread}
                                                 setOpeningService={setOpeningService}
                                                 setCurrentMainChat={setCurrentMainChat}
@@ -329,23 +339,31 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             {showUnderBarOption === true && (
                                                 <>
                                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
-                                                        <EmojiReaction
-                                                            socket={socket}
-                                                            myself={myself}
-                                                            chatType={thread.chatType}
-                                                            chatName={thread.chatName}
-                                                            dmPartnerUser={thread.dmPartnerUser}
-                                                            message={message}
-                                                            numReplies={0}
-                                                            isThread={true}
-                                                            showUnderBarOption={showUnderBarOption}
-                                                            reactions={reactions}
-                                                            setReactions={setReactions}
-                                                            setShowEmojiPicker={setShowEmojiPicker}
-                                                            setUniqueReactionEmojiCount={
-                                                                setUniqueReactionEmojiCount
-                                                            }
-                                                        />
+                                                        {isScrolling !== true && (
+                                                            <EmojiReaction
+                                                                socket={socket}
+                                                                myself={myself}
+                                                                chatType={thread.chatType}
+                                                                chatName={thread.chatName}
+                                                                dmPartnerUser={
+                                                                    thread.dmPartnerUser
+                                                                }
+                                                                message={message}
+                                                                numReplies={0}
+                                                                isThread={true}
+                                                                showUnderBarOption={
+                                                                    showUnderBarOption
+                                                                }
+                                                                reactions={reactions}
+                                                                setReactions={setReactions}
+                                                                setShowEmojiPicker={
+                                                                    setShowEmojiPicker
+                                                                }
+                                                                setUniqueReactionEmojiCount={
+                                                                    setUniqueReactionEmojiCount
+                                                                }
+                                                            />
+                                                        )}
                                                     </Box>
                                                     {message.sender.userId === myself.userId && (
                                                         <BubbleThreadEditButton

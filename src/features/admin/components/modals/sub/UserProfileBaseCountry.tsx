@@ -32,7 +32,9 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
 
     const [openCountryEditor, setOpenCountryEditor] = useState(false);
     const [isCountryUpdated, setIsCountryUpdated] = useState(false);
-    const [countryValue, setCountryValue] = useState("Set Your Country");
+    const [countryValue, setCountryValue] = useState(
+        myself.userId !== user?.userId ? "Not Set" : "Set Your Role"
+    );
     useEffect(() => {
         if (isCountryUpdated === false && openCountryEditor === false) {
             if (
@@ -43,7 +45,7 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
             ) {
                 setCountryValue(user.baseCountry);
             } else {
-                setCountryValue("Set Your Country");
+                setCountryValue(myself.userId !== user?.userId ? "Not Set" : "Set Your Role");
             }
         }
     }, [user, isCountryUpdated]);
@@ -76,6 +78,7 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                         value={defaultCountry}
                         isOptionEqualToValue={(option, value) => option.code === value.code}
                         renderOption={(props, option) => {
+                            // @ts-ignore
                             const { key, ..._props } = props;
                             return (
                                 <AutocompleteOption key={option.code} {..._props}>
@@ -137,7 +140,9 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                     variant="plain"
                     color="neutral"
                     onClick={() => {
-                        setOpenCountryEditor(true);
+                        if (myself.userId === user?.userId) {
+                            setOpenCountryEditor(true);
+                        }
                     }}
                     sx={{
                         width: "400px",

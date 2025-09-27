@@ -49,10 +49,12 @@ type BnTaskCommentEditorProps = {
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
-    isCommentUpdated: boolean;
-    setIsCommentUpdated: (value: boolean) => void;
+    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
+    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
+    taskCommentLines: number;
+    setTaskCommentLines: (value: number) => void;
 };
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
@@ -70,6 +72,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setIsCommentUpdated,
         setCurrentChat,
         setOpeningService,
+        taskCommentLines,
+        setTaskCommentLines,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -141,6 +145,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
             }
+            if (node.content[0]) {
+                if (node.content[0].text) {
+                    count += node.content[0].text.split("\n").length;
+                }
+            }
         }
         return count;
     };
@@ -152,13 +161,17 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 5, 0) * 30 + 200,
-                500
+                Math.max(numEditorLines - 8, 0) * 20 + 200,
+                800
             );
             editorRef.current.style.setProperty(
                 "--task-comment-editor-height",
                 `${dynamicHeight}px`
             );
+        }
+
+        if (numEditorLines !== taskCommentLines) {
+            setTaskCommentLines(numEditorLines);
         }
     }, [numEditorLines]);
 
@@ -169,7 +182,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (isCommentUpdated && task.id) {
+        if (isCommentUpdated && isCommentUpdated.isUpdate === true && task.id) {
             setTaskComments([
                 ...taskComments,
                 {
@@ -184,7 +197,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 },
             ]);
             editor.replaceBlocks(editor.document, []);
-            setIsCommentUpdated(false);
+            setIsCommentUpdated({ isUpdate: false, scrollToBottom: false });
         }
     }, [isCommentUpdated, taskComments]);
 
@@ -205,7 +218,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         comment_body: editor.document,
                     },
                     (ack: any) => {
-                        setIsCommentUpdated(true);
+                        setIsCommentUpdated({ isUpdate: true, scrollToBottom: true });
                     }
                 );
 
@@ -229,6 +242,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         taskId: task.id,
                         systemUserId: task.project.systemUserId,
                         messageIdForPut: null,
+                        sendActivity: false,
                     });
                 }
             }
@@ -256,7 +270,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             />
             <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
                 <BlockNoteView
-                    className="bn-chat-editor"
+                    className="bn-box"
                     editor={editor}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -309,7 +323,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         disabled={editorDocLength < 2}
                         onClick={sendComment}
                     >
-                        <SendIcon />
+                        <SendIcon sx={{ mr: "3px" }} />
                         Send
                     </IconButton>
 
