@@ -105,7 +105,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openCreateGM, setOpenCreateGM] = useState(false);
-    const [onlyUnread, setOnlyUnread] = useState(false);
+    const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
 
     // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
     const [currentActivityMessageType, setCurrentActivityMessageType] = useState<number>(0);
@@ -400,8 +400,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     </Stack>
 
                     <Switch
-                        checked={onlyUnread}
-                        onChange={() => setOnlyUnread(!onlyUnread)}
+                        checked={showOnlyUnreadItems}
+                        onChange={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
                         slotProps={{
                             track: {
                                 children: (
@@ -409,7 +409,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         component="span"
                                         level="inherit"
                                         sx={{
-                                            ml: onlyUnread ? "6px" : "22px",
+                                            ml: showOnlyUnreadItems ? "6px" : "22px",
                                             fontWeight: "bold",
                                         }}
                                     >
@@ -478,7 +478,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
-                            onlyUnread={onlyUnread}
+                            showOnlyUnreadItems={showOnlyUnreadItems}
                         />
                     </>
                 )}
@@ -510,7 +510,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
-                            onlyUnread={onlyUnread}
+                            showOnlyUnreadItems={showOnlyUnreadItems}
                         />
                     </>
                 )}
@@ -542,10 +542,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
-                            onlyUnread={onlyUnread}
+                            showOnlyUnreadItems={showOnlyUnreadItems}
                         />
                     </>
                 )}
+                {/* For Pinned Messages */}
                 {currentChatPaneType === 4 && <>{}</>}
                 {currentChatPaneType === 5 && (
                     <>
@@ -579,7 +580,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setOpeningService={setOpeningService}
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
-                            onlyUnread={onlyUnread}
+                            showOnlyUnreadItems={showOnlyUnreadItems}
                         />
                     </>
                 )}

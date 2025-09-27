@@ -39,7 +39,7 @@ type ChatListProps = {
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    onlyUnread: boolean;
+    showOnlyUnreadItems: boolean;
 };
 
 export const ChatList = (props: ChatListProps) => {
@@ -69,7 +69,7 @@ export const ChatList = (props: ChatListProps) => {
         setOpeningService,
         setCurrentPreviewTaskId,
         setCurrentProject,
-        onlyUnread,
+        showOnlyUnreadItems,
     } = props;
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
@@ -109,17 +109,24 @@ export const ChatList = (props: ChatListProps) => {
             (item) => !(item.isThread === true && item.messageId === 1)
         );
         if (tmpActivityMessages) {
-            // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
+            // All activities
             if (currentActivityMessageType === 0) {
                 setTmpActivityMessages(tmpActivityMessages);
             }
+
+            // Thread activities
             if (currentActivityMessageType === 1) {
                 setTmpActivityMessages(
                     tmpActivityMessages.filter(
-                        (item) => item.activityType === 1 && item.chatType !== 4
+                        (item) =>
+                            item.activityType === 1 &&
+                            item.chatType !== 4 &&
+                            item.isThread === true
                     )
                 );
             }
+
+            // Task activities (Task Comment)
             if (currentActivityMessageType === 2) {
                 setTmpActivityMessages(
                     tmpActivityMessages.filter(
@@ -127,21 +134,25 @@ export const ChatList = (props: ChatListProps) => {
                     )
                 );
             }
+
+            // Mention activities
             if (currentActivityMessageType === 3) {
                 setTmpActivityMessages(
                     tmpActivityMessages.filter((item) => item.activityType === 3)
                 );
             }
+
+            // Reaction activities
             if (currentActivityMessageType === 4) {
                 setTmpActivityMessages(
                     tmpActivityMessages.filter((item) => item.activityType === 2)
                 );
             }
         }
-    }, [activityMessages, currentActivityMessageType, onlyUnread]);
+    }, [activityMessages, currentActivityMessageType, showOnlyUnreadItems]);
 
     useEffect(() => {
-        if (onlyUnread === true) {
+        if (showOnlyUnreadItems === true) {
             setTmpActivityMessages(tmpActivityMessages.filter((item) => item.isRead === false));
             setTmpAllChats(
                 allChats.filter(
@@ -155,7 +166,7 @@ export const ChatList = (props: ChatListProps) => {
         } else {
             setTmpAllChats([...allChats]);
         }
-    }, [onlyUnread, allChats]);
+    }, [showOnlyUnreadItems, allChats]);
 
     return (
         <List
@@ -232,7 +243,7 @@ export const ChatList = (props: ChatListProps) => {
                                         teamMemberProfiles={teamMemberProfiles}
                                         socket={socket}
                                         activity={activityMessage}
-                                        activityMessages={tmpActivityMessages}
+                                        activityMessages={activityMessages}
                                         setActivityMessages={setActivityMessages}
                                         myself={myself}
                                         setMyself={setMyself}

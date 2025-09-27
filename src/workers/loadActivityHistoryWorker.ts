@@ -14,7 +14,7 @@ self.onmessage = async (event) => {
 
     // Load data from backend
     const activityHistory: ActivityMessageProps[] | undefined = await loadActivityHistory(
-        myself.teamId,
+        myself,
         accessToken
     );
 

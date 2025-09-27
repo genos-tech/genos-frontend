@@ -375,7 +375,6 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                 basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
                             />
-                            {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton
                                 key={"codeStyleButton"}
                                 basicTextStyle={"code"}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Input, Snackbar, Button, Stack, Typography, IconButton } from "@mui/joy";
+import { Input, Snackbar, Button, Stack, Typography, Box, IconButton } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 
@@ -78,8 +78,11 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                 generalLink.url === null ||
                 generalLink.url === "" ||
                 isEditing === true) && (
-                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                     <LinkIcon />
+                    <Box>
+                        <Typography>URL:</Typography>
+                    </Box>
                     <Input
                         key={"url"}
                         size="sm"
@@ -87,17 +90,22 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         type="url"
-                        sx={{ width: "150px", height: "30px" }}
+                        sx={{ width: "200px", height: "30px" }}
                     />
                     {taskContents && (title !== "" || isEditing === true) && (
-                        <Input
-                            key={"title"}
-                            size="sm"
-                            placeholder="Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            sx={{ width: "150px", height: "30px" }}
-                        />
+                        <>
+                            <Box>
+                                <Typography>Title:</Typography>
+                            </Box>
+                            <Input
+                                key={"title"}
+                                size="sm"
+                                placeholder="Title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                sx={{ width: "200px", height: "30px" }}
+                            />
+                        </>
                     )}
                     {error && (
                         <Snackbar
@@ -131,7 +139,14 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
             {isEditing === false && generalLink?.url && (
                 <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
                     <LinkIcon />
-                    <Typography>
+                    <Typography
+                        sx={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "500px",
+                        }}
+                    >
                         <a href={generalLink.url} target="_blank" rel="noopener noreferrer">
                             {title}
                         </a>
