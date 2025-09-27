@@ -170,6 +170,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [openCreateTag, setOpenCreateTag] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
 
+    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
+
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
     const [teamTaskOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
@@ -248,6 +250,8 @@ export const TaskHome = (props: TaskHomeProps) => {
         // Set the current project to one of the joining project.
         // TODO: should set "last-opened-project" using cache(localstorage)
         if (loadedTeamProjects.length > 0) {
+            setTeamProjects([...loadedTeamProjects]);
+
             for (let i = 0; i < loadedTeamProjects.length; i++) {
                 if (targetProjectId !== -1 && currentProject) {
                     if (
@@ -465,6 +469,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
                                     setFilterBy={setFilterBy}
                                     setSelectedTagForFiltering={setSelectedTagForFiltering}
+                                    teamProjects={teamProjects}
                                 />
                             </Panel>
 
@@ -1084,6 +1089,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
                                     setFilterBy={setFilterBy}
                                     setSelectedTagForFiltering={setSelectedTagForFiltering}
+                                    teamProjects={teamProjects}
                                 />
                             </Panel>
 

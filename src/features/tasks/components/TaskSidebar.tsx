@@ -87,6 +87,7 @@ type TaskSidebarProps = {
     setIsTaskHomeVisible: (value: boolean) => void;
     setFilterBy: (value: number) => void;
     setSelectedTagForFiltering: (value: string) => void;
+    teamProjects: ProjectProps[];
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -105,6 +106,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setIsTaskHomeVisible,
         setFilterBy,
         setSelectedTagForFiltering,
+        teamProjects,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -176,18 +178,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     useEffect(() => {
         updateRecentTasks();
     }, [currentPreviewTaskId]);
-
-    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
-    const updateTeamProjects = () => {
-        (async () => {
-            const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
-            setTeamProjects([...loadedTeamProjects]);
-        })();
-    };
-
-    useEffect(() => {
-        updateTeamProjects();
-    }, [currentProject]);
 
     useEffect(() => {
         updateProjectTags();
@@ -521,7 +511,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 <ListItemButton
                                     onClick={() => {
                                         setOpen(!open);
-                                        updateTeamProjects();
                                     }}
                                 >
                                     <WorkIcon />
@@ -694,7 +683,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         <ListItemButton
                                             onClick={() => {
                                                 setOpen(!open);
-                                                updateTeamProjects();
                                             }}
                                         >
                                             <ListItemContent>
