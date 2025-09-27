@@ -259,28 +259,22 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 setIsTaskPreviewVisible(false);
                             }
                             // Open task-home when both task-preview and task-create-form are closed.
-                            if (
-                                isCreatingTask &&
-                                isCreatingTask.flag === false &&
-                                isTaskNoteVisible === false
-                            ) {
+                            if (isCreatingTask.flag === false && isTaskNoteVisible === false) {
                                 if (setIsTaskHomeVisible) {
                                     setIsTaskHomeVisible(true);
                                 }
                             }
                         }
 
-                        if (setIsCreatingTask) {
-                            setIsCreatingTask({
-                                flag: false,
-                                parentTaskId: null,
-                                rootTaskId: null,
-                            });
-                            // Open task-home when both task-preview and task-create-form are closed.
-                            if (isTaskPreviewVisible === false) {
-                                if (setIsTaskHomeVisible) {
-                                    setIsTaskHomeVisible(true);
-                                }
+                        setIsCreatingTask({
+                            flag: false,
+                            parentTaskId: null,
+                            rootTaskId: null,
+                        });
+                        // Open task-home when both task-preview and task-create-form are closed.
+                        if (isTaskPreviewVisible === false) {
+                            if (setIsTaskHomeVisible) {
+                                setIsTaskHomeVisible(true);
                             }
                         }
                     }}

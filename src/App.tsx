@@ -602,9 +602,9 @@ export const App = () => {
     }, [inboxItems]);
 
     ///////////////////////
-    // Hooks
+    // Other Hooks
     ///////////////////////
-    // Common
+    // Common Hooks
     wsHook({
         socket: socketInstance,
         accessToken: accessToken,
@@ -623,7 +623,7 @@ export const App = () => {
         funcSetInboxItems: funcSetInboxItems,
     });
 
-    // Initialization
+    // Initialization Hooks
     useEffect(() => {
         funcSetInboxItems();
         funcSetAllChats();
@@ -717,7 +717,7 @@ export const App = () => {
         }
     }, [socketInstance]);
 
-    // Chat Related
+    // Chat Related Hooks
     useEffect(() => {
         setTimeout(() => {
             funcSetAllChats();
@@ -744,6 +744,15 @@ export const App = () => {
             }
         }, 500); // wait 500ms
     }, [currentMainChat, currentSubChat]);
+
+    // Task Related Hooks
+    useEffect(() => {
+        // If the thread chat is visible and has a task id, set the current preview task id.
+        // This happens when someone created a task in the thread chat.
+        if (currentThreadChat && currentThreadChat.taskId !== null && isThreadVisible === true) {
+            setCurrentPreviewTaskId(currentThreadChat.taskId);
+        }
+    }, [currentThreadChat]);
 
     return isLoading || currentMainChat === undefined ? (
         <InitialLoad

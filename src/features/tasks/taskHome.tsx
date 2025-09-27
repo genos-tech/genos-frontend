@@ -884,7 +884,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 </>
                             )}
 
-                            {isCreatingTask.flag && (
+                            {isCreatingTask.flag === true && (
                                 <>
                                     {/* Resizable Handle with MUI sx Styling */}
                                     <PanelResizeHandle

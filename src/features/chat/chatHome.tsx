@@ -656,7 +656,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         )}
 
                         {/* p3 */}
-                        {isCreatingTask && (
+                        {isCreatingTask.flag === true && (
                             <>
                                 {currentMainChat && (
                                     <>
@@ -868,7 +868,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         )}
 
                         {/* p5 */}
-                        {isCreatingTask && (
+                        {isCreatingTask.flag === true && (
                             <>
                                 {currentThreadChat && (
                                     <>
@@ -1019,70 +1019,73 @@ export const ChatHome = (props: ChatHomeProps) => {
                 )}
 
                 {/* p7 */}
-                {isMainChatVisible === false && isTaskPreviewVisible && currentPreviewTask && (
-                    <>
-                        <PanelResizeHandle
-                            style={{
-                                width: "1px",
-                                backgroundColor: mode === "dark" ? "black" : "white",
-                                transition: "all 0.3s ease-in-out",
-                                cursor: "col-resize",
-                            }}
-                            className="chat-resize-handle"
-                        />
-
-                        <Panel id={"10"} order={10} minSize={30} maxSize={70}>
-                            <Box
-                                sx={{
-                                    px: { xs: 1, md: 2 },
-                                    pt: {
-                                        xs: "calc(12px + var(--Header-height))",
-                                        sm: "calc(12px + var(--Header-height))",
-                                        md: 2,
-                                    },
-                                    pb: { xs: 2, sm: 2, md: 3 },
-                                    flex: 1,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    minWidth: 0,
-                                    height: "100dvh",
-                                    gap: 1,
-                                    ml: "1px",
-                                    boxShadow: "0 0 0 1px grey",
-                                    borderColor: mode === "dark" ? "black" : "white",
+                {isMainChatVisible === false &&
+                    isTaskPreviewVisible &&
+                    currentPreviewTask &&
+                    isThreadVisible === false && (
+                        <>
+                            <PanelResizeHandle
+                                style={{
+                                    width: "1px",
+                                    backgroundColor: mode === "dark" ? "black" : "white",
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
                                 }}
-                            >
-                                <TaskPreview
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    socket={socket}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    setCurrentProject={setCurrentProject}
-                                    currentPreviewTask={currentPreviewTask}
-                                    setIsMainChatVisible={setIsMainChatVisible}
-                                    setIsThreadVisible={setIsThreadVisible}
-                                    isThreadVisible={isThreadVisible}
-                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                    isCreatingTask={isCreatingTask}
-                                    setIsCreatingTask={setIsCreatingTask}
-                                    setCurrentPreviewTask={setCurrentPreviewTask}
-                                    setOpenCreateProject={setOpenCreateProject}
-                                    setOpenCreateTag={setOpenCreateTag}
-                                    setCurrentMainChat={setCurrentMainChat}
-                                    setOpeningService={setOpeningService}
-                                    currentPreviewTaskId={currentPreviewTaskId}
-                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                    isCommentUpdated={isCommentUpdated}
-                                    setIsCommentUpdated={setIsCommentUpdated}
-                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
-                                    handleCreateNewTaskNote={handleCreateNewTaskNote}
-                                    setCurrentTaskNote={setCurrentTaskNote}
-                                    isTaskNoteVisible={isTaskNoteVisible}
-                                />
-                            </Box>
-                        </Panel>
-                    </>
-                )}
+                                className="chat-resize-handle"
+                            />
+
+                            <Panel id={"10"} order={10} minSize={30} maxSize={70}>
+                                <Box
+                                    sx={{
+                                        px: { xs: 1, md: 2 },
+                                        pt: {
+                                            xs: "calc(12px + var(--Header-height))",
+                                            sm: "calc(12px + var(--Header-height))",
+                                            md: 2,
+                                        },
+                                        pb: { xs: 2, sm: 2, md: 3 },
+                                        flex: 1,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        minWidth: 0,
+                                        height: "100dvh",
+                                        gap: 1,
+                                        ml: "1px",
+                                        boxShadow: "0 0 0 1px grey",
+                                        borderColor: mode === "dark" ? "black" : "white",
+                                    }}
+                                >
+                                    <TaskPreview
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        socket={socket}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        setCurrentProject={setCurrentProject}
+                                        currentPreviewTask={currentPreviewTask}
+                                        setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        isThreadVisible={isThreadVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                        isCreatingTask={isCreatingTask}
+                                        setIsCreatingTask={setIsCreatingTask}
+                                        setCurrentPreviewTask={setCurrentPreviewTask}
+                                        setOpenCreateProject={setOpenCreateProject}
+                                        setOpenCreateTag={setOpenCreateTag}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setOpeningService={setOpeningService}
+                                        currentPreviewTaskId={currentPreviewTaskId}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        isCommentUpdated={isCommentUpdated}
+                                        setIsCommentUpdated={setIsCommentUpdated}
+                                        setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                        handleCreateNewTaskNote={handleCreateNewTaskNote}
+                                        setCurrentTaskNote={setCurrentTaskNote}
+                                        isTaskNoteVisible={isTaskNoteVisible}
+                                    />
+                                </Box>
+                            </Panel>
+                        </>
+                    )}
 
                 {/* Modal for creating a new project */}
                 <ModalCreateProject
