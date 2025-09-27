@@ -482,6 +482,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
+                currentPreviewTaskId={currentPreviewTaskId}
                 currentTaskContent={tmpCurrentTaskContent}
                 setCurrentProject={setCurrentProject}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}

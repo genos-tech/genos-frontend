@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Box, List, ListItem, Typography, Stack, Divider, Chip, ListItemButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
@@ -17,6 +16,7 @@ type TaskSubTasksBlockProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    currentPreviewTaskId: number;
     currentTaskContent: TaskProps;
     setCurrentProject: (value: ProjectProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
@@ -29,6 +29,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         socket,
         myself,
         setMyself,
+        currentPreviewTaskId,
         currentTaskContent,
         setCurrentProject,
         setCurrentPreviewTaskId,
@@ -37,32 +38,19 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
-    const [parentTask, setParentTask] = useState<TaskProps>();
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
 
     useEffect(() => {
         (async () => {
-            if (currentTaskContent.project && currentTaskContent.parentTaskId) {
-                const parentTask: TaskProps[] = await loadSpecificTask(
-                    myself,
-                    currentTaskContent.project.projectId,
-                    currentTaskContent.parentTaskId,
-                    accessToken
-                );
-                if (parentTask.length == 1) {
-                    setParentTask(parentTask[0]);
-                } else {
-                    setParentTask(undefined);
-                }
-            }
-
-            if (currentTaskContent.project && currentTaskContent.id) {
+            // Get the child tasks if exist
+            if (currentTaskContent.project && currentPreviewTaskId === currentTaskContent.id) {
                 const childTasks: TaskProps[] = await loadSpecificChildTasks(
                     myself,
                     currentTaskContent.project.projectId,
                     currentTaskContent.id,
                     accessToken
                 );
+
                 if (childTasks.length > 0) {
                     setChildTasks(childTasks);
                 } else {
