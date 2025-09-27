@@ -27,7 +27,6 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { loadTeamTaskList } from "../services/loadTaskSearchList";
-import { loadTeamProjects } from "../services/loadTeamProjects";
 import { loadProjectTags } from "../services/loadProjectTags";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
@@ -163,15 +162,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
     const updateRecentTasks = () => {
+        const TOP_N = 20;
         (async () => {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
                 -1,
                 "open,wip,pending",
-                100,
+                TOP_N,
                 accessToken
             );
-            setRecentTasks([...loadedTeamTasks.slice(0, 20)]);
+            setRecentTasks([...loadedTeamTasks.slice(0, TOP_N)]);
         })();
     };
 
@@ -389,7 +389,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 <ListItemButton
                                     onClick={() => {
                                         setOpen(!open);
-                                        updateRecentTasks();
                                         setIsDashboardVisible(false);
                                     }}
                                 >

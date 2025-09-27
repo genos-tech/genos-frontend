@@ -2,7 +2,7 @@ import { UserProps } from "../../../types/admin";
 import { ThreadMessageProps } from "../../../types/chat";
 import LoadProjectTasksWorker from "../../../workers/loadProjectTasksWorker.ts?worker";
 
-export const updateSpecificTask = (
+export const loadProjectTasks = (
     myself: UserProps,
     projectId: number,
     accessToken: string | null

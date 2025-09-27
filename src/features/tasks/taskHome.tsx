@@ -31,7 +31,7 @@ import { TaskPreview } from "./components/contents/TaskPreview";
 import { ProjectTaskTable } from "./components/table/TaskTable";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { loadSpecificTask } from "./services/loadSpecificTask";
-import { updateSpecificTask } from "./services/updateSpecificTask";
+import { loadProjectTasks } from "./services/loadProjectTasks";
 import { loadTeamProjects } from "./services/loadTeamProjects";
 import { loadTeamTaskList } from "./services/loadTaskSearchList";
 import { ModalCreateTag } from "./components/modals/ModalCreateTag";
@@ -258,7 +258,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         loadedTeamProjects[i].projectId === targetProjectId ||
                         myself.teamId !== currentTeamId
                     ) {
-                        await updateSpecificTask(
+                        await loadProjectTasks(
                             myself,
                             loadedTeamProjects[i].projectId,
                             accessToken
@@ -276,7 +276,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 projectTags: loadedTeamProjects[i].projectTags,
                                 systemUserId: loadedTeamProjects[i].systemUserId,
                             });
-                            await updateSpecificTask(
+                            await loadProjectTasks(
                                 myself,
                                 loadedTeamProjects[i].projectId,
                                 accessToken
@@ -291,7 +291,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             projectTags: loadedTeamProjects[i].projectTags,
                             systemUserId: loadedTeamProjects[i].systemUserId,
                         });
-                        await updateSpecificTask(
+                        await loadProjectTasks(
                             myself,
                             loadedTeamProjects[i].projectId,
                             accessToken
@@ -308,7 +308,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                             projectTags: loadedTeamProjects[i].projectTags,
                             systemUserId: loadedTeamProjects[i].systemUserId,
                         });
-                        await updateSpecificTask(
+                        await loadProjectTasks(
                             myself,
                             loadedTeamProjects[i].projectId,
                             accessToken
