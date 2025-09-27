@@ -17,7 +17,8 @@ export const updateReadStatus = async (
         const api = authApi(accessToken);
         if (api) {
             const res = await api.put("/chat/read/", {
-                user: myself.userId,
+                team_id: myself.teamId,
+                user_id: myself.userId,
                 chat_type: chatType,
                 chat_id: chatId,
                 is_thread: isThread,
