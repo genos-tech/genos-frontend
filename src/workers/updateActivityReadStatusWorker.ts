@@ -2,9 +2,11 @@ import axios from "axios";
 
 import { authApi } from "../services/api";
 import { ActivityMessageProps } from "../types/chat";
+import { UserProps } from "../types/admin";
 
 self.onmessage = async (event) => {
     const accessToken: string = event.data.accessToken;
+    const myself: UserProps = event.data.myself;
     const activityId: string = event.data.activityId;
     const isRead: boolean = event.data.isRead;
     const activityMessages: ActivityMessageProps[] = event.data.activityMessages;
@@ -12,7 +14,8 @@ self.onmessage = async (event) => {
     try {
         const api = authApi(accessToken);
         if (api) {
-            await api.put("/chat/activity/", {
+            await api.put("/chat/activity/read/", {
+                user: myself.userId,
                 activity_id: activityId,
                 is_read: isRead,
             });

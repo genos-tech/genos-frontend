@@ -92,6 +92,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             const updateActivityReadStatusWorker = new UpdateActivityReadStatusWorker();
             updateActivityReadStatusWorker.postMessage({
                 accessToken: accessToken,
+                myself: myself,
                 activityId: activity.activityId,
                 isRead: true,
                 activityMessages: activityMessages,
