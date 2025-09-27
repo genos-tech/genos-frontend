@@ -16,7 +16,8 @@ self.onmessage = async (event) => {
         const api = authApi(accessToken);
         if (api) {
             await api.put("/chat/read/", {
-                user: myself.userId,
+                team_id: myself.teamId,
+                user_id: myself.userId,
                 chat_type: chatType,
                 chat_id: chatId,
                 is_thread: isThread,
