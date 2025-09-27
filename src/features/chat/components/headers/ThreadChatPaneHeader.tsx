@@ -19,9 +19,17 @@ type ThreadChatPaneHeaderProps = {
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
-    setIsTaskCreationVisible: (value: boolean) => void;
-    setIsOpeningTask: (value: boolean) => void;
-    setIsCreatingTask: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
+    setIsOpeningTask?: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     currentPreviewTaskId: number;
     isChatNoteVisible: boolean;
@@ -43,7 +51,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setIsThreadVisible,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
-        setIsTaskCreationVisible,
+        isCreatingTask,
         setIsOpeningTask,
         setIsCreatingTask,
         currentPreviewTask,
@@ -159,9 +167,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     setIsMainChatVisible(true);
                                     setIsThreadVisible(true);
                                     setIsTaskPreviewVisible(false);
-                                    setIsTaskCreationVisible(true);
-
-                                    setIsCreatingTask(true);
+                                    setIsCreatingTask({
+                                        flag: true,
+                                        parentTaskId: null,
+                                        rootTaskId: null,
+                                    });
                                 }}
                                 sx={{ px: "10px" }}
                             >
@@ -183,8 +193,14 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 setIsMainChatVisible(true);
                                 setIsThreadVisible(true);
                                 setIsTaskPreviewVisible(true);
-                                setIsTaskCreationVisible(false);
-                                setIsOpeningTask(true);
+                                setIsCreatingTask({
+                                    flag: false,
+                                    parentTaskId: null,
+                                    rootTaskId: null,
+                                });
+                                if (setIsOpeningTask) {
+                                    setIsOpeningTask(true);
+                                }
                             }}
                         >
                             <OpenInNewIcon />
@@ -209,8 +225,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             setIsMainChatVisible(false);
                             setIsThreadVisible(true);
                             setIsTaskPreviewVisible(false);
-                            setIsTaskCreationVisible(false);
-                            setIsOpeningTask(false);
+                            setIsCreatingTask({ ...isCreatingTask, flag: false });
+                            if (setIsOpeningTask) {
+                                setIsOpeningTask(false);
+                            }
                         }}
                     >
                         <NoteAltIcon />
@@ -226,8 +244,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             onClick={() => {
                                 setIsMainChatVisible(true);
                                 setIsThreadVisible(false);
-                                // setIsTaskPreviewVisible(); // Not update, keep as it is !!!
-                                // setIsTaskCreationVisible(); // Not update, keep as it is !!!
                                 setCurrentThreadChat(dummyThreadChat);
                             }}
                         >

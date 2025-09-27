@@ -10,7 +10,7 @@ type TaskCustomBarBlockProps = {
     setCurrentTaskContent: (value: TaskProps) => void;
     setTaskUpdated: (value: boolean) => void;
     setTaskStatusUpdated: (value: boolean) => void;
-    setIsCreatingTask: (value: any) => void;
+    setIsCreatingTask?: (value: any) => void;
     taskBodySaved: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
 };
@@ -126,11 +126,13 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                             currentTaskContent.id !== undefined &&
                             currentTaskContent.rootTaskId != null
                         ) {
-                            setIsCreatingTask({
-                                flag: true,
-                                parentTaskId: currentTaskContent.id,
-                                rootTaskId: currentTaskContent.rootTaskId,
-                            });
+                            if (setIsCreatingTask) {
+                                setIsCreatingTask({
+                                    flag: true,
+                                    parentTaskId: currentTaskContent.id,
+                                    rootTaskId: currentTaskContent.rootTaskId,
+                                });
+                            }
 
                             // Close task-home when creating a sub task.
                             if (setIsTaskHomeVisible) {

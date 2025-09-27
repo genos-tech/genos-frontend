@@ -18,11 +18,17 @@ type TaskCreateFooterProps = {
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
-    setIsMainChatVisible?: (value: boolean) => void;
-    setIsThreadVisible?: (value: boolean) => void;
     setIsTaskPreviewVisible?: (value: boolean) => void;
-    setIsTaskCreationVisible?: (value: boolean) => void;
-    setIsCreatingTask?: (value: any) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
 };
@@ -39,10 +45,8 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
-        setIsMainChatVisible,
-        setIsThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
+        isCreatingTask,
         setIsCreatingTask,
         setCurrentPreviewTaskId,
         setCurrentProject,
@@ -78,7 +82,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         taskContents: taskContents,
                         currentMainChat: currentMainChat,
                         currentThreadChat: currentThreadChat,
-                        isThreadVisible: isThreadVisible,
+                        isThreadVisible: isThreadVisible || false,
                         accessToken: accessToken || "",
                         setIsSubmitted: setIsSubmitted,
                         setTitleError: setTitleError,
@@ -90,17 +94,15 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         setCurrentProject(taskContents.project);
                     }
 
-                    // if (setIsMainChatVisible) {
-                    //     setIsMainChatVisible(); // Keep as it is
-                    // }
-                    // if (setIsThreadVisible) {
-                    //     setIsThreadVisible(false); // Keep as it is
-                    // }
                     if (setIsTaskPreviewVisible) {
                         setIsTaskPreviewVisible(true);
                     }
-                    if (setIsTaskCreationVisible) {
-                        setIsTaskCreationVisible(false);
+                    if (setIsCreatingTask) {
+                        setIsCreatingTask({
+                            flag: false,
+                            parentTaskId: null,
+                            rootTaskId: null,
+                        });
                     }
                 }}
                 disabled={taskTitle === "" || taskContents.project?.projectId === null}

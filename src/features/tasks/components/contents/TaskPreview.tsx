@@ -36,9 +36,17 @@ type TaskPreviewProps = {
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
-    setIsCreatingTask: (value: any) => void;
     setIsTaskPreviewVisible?: (value: boolean) => void;
-    setIsTaskCreationVisible?: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
     isTaskUpdated?: boolean;
@@ -51,7 +59,6 @@ type TaskPreviewProps = {
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskPreviewVisible?: boolean;
-    isCreatingTask?: boolean;
     setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
@@ -75,7 +82,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
+        isCreatingTask,
         setCurrentPreviewTask,
         setOpenCreateProject,
         setOpenCreateTag,
@@ -89,7 +96,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsCommentUpdated,
         setIsTaskHomeVisible,
         isTaskPreviewVisible,
-        isCreatingTask,
         setIsTaskNoteVisible,
         handleCreateNewTaskNote,
         setCurrentTaskNote,
@@ -407,7 +413,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setIsThreadVisible={setIsThreadVisible}
                 isThreadVisible={isThreadVisible}
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                 isTaskPreviewVisible={isTaskPreviewVisible}
                 isCreatingTask={isCreatingTask}

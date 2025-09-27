@@ -73,8 +73,8 @@ type ChatNoteMainProps = {
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
     isInChatPage: boolean;
-    setIsMainChatVisible?: (value: boolean) => void;
-    setIsChatNoteVisible?: (value: boolean) => void;
+    setIsMainChatVisible: (value: boolean) => void;
+    setIsChatNoteVisible: (value: boolean) => void;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -507,9 +507,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                         variant="plain"
                                                         sx={{ mb: "5px" }}
                                                         onClick={() => {
-                                                            if (setIsChatNoteVisible) {
-                                                                setIsChatNoteVisible(false);
-                                                            }
+                                                            setIsChatNoteVisible(false);
 
                                                             // Open main chat pane
                                                             if (setIsMainChatVisible) {

@@ -52,7 +52,7 @@ type ChatHomeProps = {
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     unReadInboxItemCount: number;
-    unReadChatCounts?: Record<string, number>;
+    unReadChatCounts: Record<string, number>;
     unReadActivityMessageCounts: number;
     unReadChatAndActivityCounts: number;
     currentNoteType: number;
@@ -87,6 +87,40 @@ type ChatHomeProps = {
         taskId: number
     ) => Promise<void>;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
+    isTaskPreviewVisible: boolean;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
+    isChatNoteVisible: boolean;
+    setIsChatNoteVisible: (value: boolean) => void;
+    isTaskNoteVisible: boolean;
+    setIsTaskNoteVisible: (value: boolean) => void;
+    currentProject: ProjectProps | null;
+    setCurrentProject: (value: ProjectProps | null) => void;
+    currentPreviewTaskId: number;
+    setCurrentPreviewTaskId: (value: number) => void;
+    currentPreviewTask: TaskProps | undefined;
+    setCurrentPreviewTask: (value: TaskProps | undefined) => void;
+    setOpenCreateProject: (value: boolean) => void;
+    setOpenCreateTag: (value: boolean) => void;
+    isNewTagCreated: boolean;
+    setIsNewTagCreated: (value: boolean) => void;
+    openCreateProject: boolean;
+    openCreateTag: boolean;
+    isMainChatVisible: boolean;
+    setIsMainChatVisible: (value: boolean) => void;
+    isSubChatVisible: boolean;
+    setIsSubChatVisible: (value: boolean) => void;
+    isThreadVisible: boolean;
+    setIsThreadVisible: (value: boolean) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -136,28 +170,39 @@ export const ChatHome = (props: ChatHomeProps) => {
         setCurrentNoteType,
         handleCreateNewTaskNote,
         setCurrentTaskNote,
+        isTaskPreviewVisible,
+        setIsTaskPreviewVisible,
+        isCreatingTask,
+        setIsCreatingTask,
+        isChatNoteVisible,
+        setIsChatNoteVisible,
+        isTaskNoteVisible,
+        setIsTaskNoteVisible,
+        currentProject,
+        setCurrentProject,
+        currentPreviewTaskId,
+        setCurrentPreviewTaskId,
+        currentPreviewTask,
+        setCurrentPreviewTask,
+        setOpenCreateProject,
+        setOpenCreateTag,
+        isNewTagCreated,
+        setIsNewTagCreated,
+        openCreateProject,
+        openCreateTag,
+        isMainChatVisible,
+        setIsMainChatVisible,
+        isSubChatVisible,
+        setIsSubChatVisible,
+        isThreadVisible,
+        setIsThreadVisible,
     } = props;
 
+    // Common
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
-    const [isMainChatVisible, setIsMainChatVisible] = useState(true); // Is Main chat pane visible or not
-    const [isSubChatVisible, setIsSubChatVisible] = useState(false); // Is Sub chat in the main chat pane visible or not
-    const [isThreadVisible, setIsThreadVisible] = useState(false); // Is Thread pane visible or not
-    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false); // Is task preview visible or not
-    const [isTaskCreationVisible, setIsTaskCreationVisible] = useState(false); // Is task creation form visible or not
-    const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
-    const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
 
-    const [isOpeningTask, setIsOpeningTask] = useState(false);
-    const [isCreatingTask, setIsCreatingTask] = useState(false);
-    const [openCreateProject, setOpenCreateProject] = useState(false);
-    const [openCreateTag, setOpenCreateTag] = useState(false);
-    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
-    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
-    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
-    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
-    const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
-
+    // Chat Related
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
     const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
     const [currentThreadChatId, setCurrentThreadChatId] = useState<number>(-1);
@@ -202,7 +247,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                     setCurrentPreviewTask(loadedTask[0]);
                     if (isTaskPreviewVisible) {
                         setIsTaskPreviewVisible(true);
-                        setIsCreatingTask(false);
                     }
                 }
             })();
@@ -214,36 +258,6 @@ export const ChatHome = (props: ChatHomeProps) => {
             setCurrentThreadChatId(Number(currentPreviewTask.id));
         }
     }, [currentPreviewTask]);
-
-    ////////////////////////////////////////////////////////////////////
-    // useEffect(() => {
-    //     console.log("currentMainChat Updated:", currentMainChat);
-    // }, [currentMainChat]);
-
-    // useEffect(() => {
-    //     console.log("initLoad Updated:", initLoad);
-    // }, [initLoad]);
-
-    // useEffect(() => {
-    //     console.log("isSubChatVisible Updated:", isSubChatVisible);
-    // }, [isSubChatVisible]);
-
-    // useEffect(() => {
-    //     console.log("isThreadVisible Updated:", isThreadVisible);
-    // }, [isThreadVisible]);
-
-    // useEffect(() => {
-    //     console.log("currentThreadChat is updated:", currentThreadChat)
-    // }, [currentThreadChat]);
-
-    // useEffect(() => {
-    //     console.log("currentThreadChat Updated:", currentThreadChat);
-    // }, [currentThreadChat]);
-
-    // useEffect(() => {
-    //     console.log("currentMainChat Updated:", currentMainChat);
-    // }, [currentMainChat]);
-    ////////////////////////////////////////////////////////////////////
 
     /////////////////// NEED FOR MAIN/SUB Chat Pane height ////////////////////
     const [mainChatPanelSize, setMainChatPanelSize] = useState(50);
@@ -328,7 +342,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 isThreadVisible={isThreadVisible}
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 isTaskPreviewVisible={isTaskPreviewVisible}
-                                isTaskCreationVisible={isTaskCreationVisible}
+                                isCreatingTask={isCreatingTask}
+                                setIsCreatingTask={setIsCreatingTask}
                                 setOpeningService={setOpeningService}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
@@ -404,8 +419,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setIsSubChatVisible={setIsSubChatVisible}
                                                 setIsThreadVisible={setIsThreadVisible}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                                setIsOpeningTask={setIsOpeningTask}
+                                                isCreatingTask={isCreatingTask}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
@@ -481,10 +495,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             isThreadVisible={isThreadVisible}
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
-                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                            setIsOpeningTask={setIsOpeningTask}
+                                            isCreatingTask={isCreatingTask}
                                             setIsCreatingTask={setIsCreatingTask}
+                                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                             isSubChatVisible={isSubChatVisible}
                                             setIsSubChatVisible={setIsSubChatVisible}
                                             currentMainChatId={currentMainChatId}
@@ -545,10 +558,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                         setIsTaskPreviewVisible
                                                     }
                                                     isTaskPreviewVisible={isTaskPreviewVisible}
-                                                    setIsTaskCreationVisible={
-                                                        setIsTaskCreationVisible
-                                                    }
-                                                    setIsOpeningTask={setIsOpeningTask}
+                                                    isCreatingTask={isCreatingTask}
                                                     setIsCreatingTask={setIsCreatingTask}
                                                     currentPreviewTask={currentPreviewTask}
                                                     setOpeningService={setOpeningService}
@@ -615,13 +625,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}
-                                                    setIsCreatingTask={setIsCreatingTask}
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
                                                     }
-                                                    setIsTaskCreationVisible={
-                                                        setIsTaskCreationVisible
-                                                    }
+                                                    isCreatingTask={isCreatingTask}
+                                                    setIsCreatingTask={setIsCreatingTask}
                                                     setCurrentPreviewTask={setCurrentPreviewTask}
                                                     setOpenCreateProject={setOpenCreateProject}
                                                     setOpenCreateTag={setOpenCreateTag}
@@ -648,7 +656,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         )}
 
                         {/* p3 */}
-                        {isTaskCreationVisible && (
+                        {isCreatingTask && (
                             <>
                                 {currentMainChat && (
                                     <>
@@ -699,10 +707,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
                                                     }
-                                                    setIsTaskCreationVisible={
-                                                        setIsTaskCreationVisible
-                                                    }
-                                                    setIsOpeningTask={setIsOpeningTask}
+                                                    isCreatingTask={isCreatingTask}
+                                                    setIsCreatingTask={setIsCreatingTask}
                                                     setOpenCreateProject={setOpenCreateProject}
                                                     setOpenCreateTag={setOpenCreateTag}
                                                     currentProject={currentProject}
@@ -766,8 +772,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                             isTaskPreviewVisible={isTaskPreviewVisible}
-                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                            setIsOpeningTask={setIsOpeningTask}
+                                            isCreatingTask={isCreatingTask}
                                             setIsCreatingTask={setIsCreatingTask}
                                             currentPreviewTask={currentPreviewTask}
                                             setOpeningService={setOpeningService}
@@ -832,13 +837,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
                                                     isThreadVisible={isThreadVisible}
-                                                    setIsCreatingTask={setIsCreatingTask}
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
                                                     }
-                                                    setIsTaskCreationVisible={
-                                                        setIsTaskCreationVisible
-                                                    }
+                                                    isCreatingTask={isCreatingTask}
+                                                    setIsCreatingTask={setIsCreatingTask}
                                                     setCurrentPreviewTask={setCurrentPreviewTask}
                                                     setOpenCreateProject={setOpenCreateProject}
                                                     setOpenCreateTag={setOpenCreateTag}
@@ -865,7 +868,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         )}
 
                         {/* p5 */}
-                        {isTaskCreationVisible && (
+                        {isCreatingTask && (
                             <>
                                 {currentThreadChat && (
                                     <>
@@ -916,10 +919,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
                                                     }
-                                                    setIsTaskCreationVisible={
-                                                        setIsTaskCreationVisible
-                                                    }
-                                                    setIsOpeningTask={setIsOpeningTask}
+                                                    isCreatingTask={isCreatingTask}
+                                                    setIsCreatingTask={setIsCreatingTask}
                                                     setOpenCreateProject={setOpenCreateProject}
                                                     setOpenCreateTag={setOpenCreateTag}
                                                     currentProject={currentProject}
@@ -1061,9 +1062,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setIsMainChatVisible={setIsMainChatVisible}
                                     setIsThreadVisible={setIsThreadVisible}
                                     isThreadVisible={isThreadVisible}
-                                    setIsCreatingTask={setIsCreatingTask}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                    isCreatingTask={isCreatingTask}
+                                    setIsCreatingTask={setIsCreatingTask}
                                     setCurrentPreviewTask={setCurrentPreviewTask}
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenCreateTag={setOpenCreateTag}
@@ -1089,7 +1090,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                     openCreateProject={openCreateProject}
                     setOpenCreateProject={setOpenCreateProject}
                     setCurrentProject={setCurrentProject}
-                    setIsNewProjectCreated={setIsNewProjectCreated}
                 />
 
                 {/* Modal for creating a new tag */}

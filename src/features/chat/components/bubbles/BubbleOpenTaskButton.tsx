@@ -9,8 +9,16 @@ type BubbleReplyButtonTypes = {
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
-    setIsOpeningTask: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
 };
@@ -21,8 +29,8 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
         setIsMainChatVisible,
         setIsThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
-        setIsOpeningTask,
+        isCreatingTask,
+        setIsCreatingTask,
         setCurrentPreviewTaskId,
         setCurrentProject,
     } = props;
@@ -41,14 +49,12 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                             setIsMainChatVisible(true);
                             setIsThreadVisible(false);
                             setIsTaskPreviewVisible(true);
-                            setIsTaskCreationVisible(false);
+                            setIsCreatingTask({ ...isCreatingTask, flag: false });
                             setCurrentPreviewTaskId(taskId);
 
                             if (message.project) {
                                 setCurrentProject(message.project);
                             }
-
-                            setIsOpeningTask(true);
                         }
                     }}
                 >

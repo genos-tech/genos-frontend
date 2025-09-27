@@ -113,8 +113,16 @@ type CreateTaskProps = {
     setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
-    setIsTaskCreationVisible?: (value: boolean) => void;
-    setIsCreatingTask?: (value: any) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     setIsOpeningTask?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
@@ -129,7 +137,6 @@ type CreateTaskProps = {
     rootTaskId: number | null;
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskPreviewVisible?: boolean;
-    isCreatingTask?: boolean;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -145,7 +152,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
+        isCreatingTask,
         setIsOpeningTask,
         setIsCreatingTask,
         setOpenCreateProject,
@@ -160,7 +167,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         rootTaskId,
         setIsTaskHomeVisible,
         isTaskPreviewVisible,
-        isCreatingTask,
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
@@ -289,7 +295,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsMainChatVisible={setIsMainChatVisible}
                 isThreadVisible={isThreadVisible}
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                 isTaskPreviewVisible={isTaskPreviewVisible}
                 isCreatingTask={isCreatingTask}
@@ -360,10 +365,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 setIsSubmitted={setIsSubmitted}
                 setTitleError={setTitleError}
                 setTitleErrorOpen={setTitleErrorOpen}
-                setIsMainChatVisible={setIsMainChatVisible}
-                setIsThreadVisible={setIsThreadVisible}
+                isCreatingTask={isCreatingTask}
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                setIsTaskCreationVisible={setIsTaskCreationVisible}
                 setIsCreatingTask={setIsCreatingTask}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                 setCurrentProject={setCurrentProject}

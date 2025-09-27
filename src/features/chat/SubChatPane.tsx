@@ -39,9 +39,16 @@ type MessagesPaneProps = {
     setIsSubChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
-    setIsOpeningTask: (value: boolean) => void;
-    setIsCreatingTask: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     currentSubChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
@@ -71,8 +78,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setIsSubChatVisible,
         setIsThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
-        setIsOpeningTask,
+        isCreatingTask,
         setIsCreatingTask,
         currentSubChatId,
         setCurrentPreviewTask,
@@ -237,7 +243,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     setIsSubChatVisible={setIsSubChatVisible}
                     setIsThreadVisible={setIsThreadVisible}
                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    setIsTaskCreationVisible={setIsTaskCreationVisible}
+                    isCreatingTask={isCreatingTask}
                     setIsCreatingTask={setIsCreatingTask}
                     setOpeningService={setOpeningService}
                 />
@@ -363,12 +369,12 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             setIsMainChatVisible={setIsMainChatVisible}
                                             setIsThreadVisible={setIsThreadVisible}
                                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                            setIsTaskCreationVisible={setIsTaskCreationVisible}
+                                            isCreatingTask={isCreatingTask}
+                                            setIsCreatingTask={setIsCreatingTask}
                                             setCurrentThreadChat={setCurrentThreadChat}
                                             setCurrentPreviewTask={setCurrentPreviewTask}
                                             setOpeningService={setOpeningService}
                                             setCurrentMainChat={setCurrentMainChat}
-                                            setIsOpeningTask={setIsOpeningTask}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                             setCurrentProject={setCurrentProject}
                                             setIsInEdit={setIsInEdit}

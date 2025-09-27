@@ -14,14 +14,13 @@ type BubbleUnderBarTypes = {
     dmPartnerUser: UserProps;
     message: MessageProps | ThreadMessageProps;
     numReplies: number;
-    isSent: boolean;
     showUnderBarOption: boolean;
     reactions: ReactionProps[];
     setReactions: (value: ReactionProps[]) => void;
     setUniqueReactionEmojiCount: (value: number) => void;
     setShowEmojiPicker: (value: boolean) => void;
     replayHandler?: () => void;
-    isThread?: boolean;
+    isThread: boolean;
 };
 export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
     const {
@@ -32,14 +31,13 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         dmPartnerUser,
         message,
         numReplies,
-        isSent,
         showUnderBarOption,
         reactions,
         setReactions,
         setUniqueReactionEmojiCount,
         setShowEmojiPicker,
         replayHandler,
-        isThread = false,
+        isThread,
     } = props;
 
     let numRepliesWithoutFirstMessage: number;

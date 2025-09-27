@@ -50,6 +50,7 @@ import {
     updateTabFromTaskNoteUpdate,
 } from "./hooks/notes/tab";
 import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "./utils/note";
+import { ProjectProps, TaskProps } from "./types/tasks";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -127,50 +128,28 @@ export const App = () => {
     // Need to run if you delete IndexedDB database
     initDB();
 
-    // Common & Admin
+    ///////////////////////
+    // Common
+    ///////////////////////
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself();
-    const [currentTeamId, setCurrentTeamId] = useState("");
-    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
-    const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, UserProps>>({});
     const [isLoading, setIsLoading] = useState(true);
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
 
-    // {0: Inbox, 1: Chat, 2: Tasks, 3: Notes}
+    // openingService = {0: Inbox, 1: Chat, 2: Tasks, 3: Notes}
     const [openingService, setOpeningService] = useState<number>(
         Number(localStorage.getItem("openingService") || "1")
     );
 
-    // {1: DM, 2: GM, 3: PM, 4: Pin, 5: Activity}
+    // chatType = {1: DM, 2: GM, 3: PM, 4: Pin, 5: Activity}
     const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
         Number(localStorage.getItem("currentChatPaneType") || "1")
     );
 
-    // 0: Home, 1: personal note, 2: task note, 3: chat note
+    // noteType = {0: Home, 1: personal note, 2: task note, 3: chat note}
     const [currentNoteType, setCurrentNoteType] = useState<number>(
         Number(localStorage.getItem("currentNoteType") || "1")
     );
-
-    const funcSetTeamMembers = async () => {
-        const teamMembers: UserProps[] = await popTeamMembers(myself);
-        if (teamMembers) {
-            setTeamMembers(teamMembers);
-        }
-    };
-
-    const [currentTeam, setCurrentTeam] = useState<Team>({
-        teamId: myself.teamId,
-        teamName: myself.teamName,
-        teamEmail: "",
-        teamOwnerId: "",
-        teamImgPath: localStorage.getItem("teamImgPath") || undefined,
-    });
-    const initCurrentTeam = async () => {
-        const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
-        if (findTeamRes && findTeamRes.exist === true) {
-            setCurrentTeam(findTeamRes.teamDetails);
-        }
-    };
 
     const sendHeartBeat = () => {
         if (socketInstance) {
@@ -196,18 +175,140 @@ export const App = () => {
         }
     };
 
-    // Task
+    ///////////////////////
+    // Team Related
+    ///////////////////////
+    const [currentTeamId, setCurrentTeamId] = useState("");
+    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
+    const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, UserProps>>({});
+
+    const funcSetTeamMembers = async () => {
+        const teamMembers: UserProps[] = await popTeamMembers(myself);
+        if (teamMembers) {
+            setTeamMembers(teamMembers);
+        }
+    };
+
+    const [currentTeam, setCurrentTeam] = useState<Team>({
+        teamId: myself.teamId,
+        teamName: myself.teamName,
+        teamEmail: "",
+        teamOwnerId: "",
+        teamImgPath: localStorage.getItem("teamImgPath") || undefined,
+    });
+    const initCurrentTeam = async () => {
+        const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
+        if (findTeamRes && findTeamRes.exist === true) {
+            setCurrentTeam(findTeamRes.teamDetails);
+        }
+    };
+
+    ///////////////////////
+    // Chat Related
+    ///////////////////////
+    const [isMainChatVisible, setIsMainChatVisible] = useState(true); // Is Main chat pane visible or not
+    const [isSubChatVisible, setIsSubChatVisible] = useState(false); // Is Sub chat in the main chat pane visible or not
+    const [isThreadVisible, setIsThreadVisible] = useState(false); // Is Thread pane visible or not
+    const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
+    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
+    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
+    const [allChats, setAllChats] = useState<AllChatProps[]>([]);
+    const funcSetAllChats = async () => {
+        const _allChats: AllChatProps[] = await popAllChats();
+        if (_allChats) {
+            setAllChats(_allChats);
+            setUnReadChatCounts(countUnreadChats(_allChats));
+        }
+    };
+    const [unReadChatCounts, setUnReadChatCounts] = useState<Record<string, number>>({});
+    const countUnreadChats = (chats: AllChatProps[]): Record<string, number> => {
+        return chats.reduce<Record<string, number>>((acc, chat) => {
+            if (chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId) {
+                acc[chat.chatType] = (acc[chat.chatType] ?? 0) + 1;
+            }
+            return acc;
+        }, {});
+    };
+
+    useEffect(() => {
+        setUnReadChatCounts(countUnreadChats(allChats));
+    }, [allChats]);
+
+    // Activity variables
+    const [activityMessages, setActivityMessages] = useState<ActivityMessageProps[]>([]);
+    const funcSetActivityMessages = async () => {
+        const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
+        if (activityMessages) {
+            setActivityMessages(activityMessages);
+            setUnReadActivityMessageCounts(countUnreadActivityMessages(activityMessages));
+        }
+    };
+    const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
+    const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
+    const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
+        return activityMessages.reduce<number>((acc, activity) => {
+            if (activity.isRead === false) {
+                acc += 1;
+            }
+            return acc;
+        }, 0);
+    };
+    useEffect(() => {
+        // Exclude the first thread message cause it's actually not a thread message.
+        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
+            (item) => !(item.isThread === true && item.messageId === 1)
+        );
+        setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
+    }, [activityMessages]);
+    useEffect(() => {
+        if (unReadChatCounts) {
+            // 1: DM, 2: GM, 3: PM
+            setUnReadChatAndActivityCounts(
+                (unReadChatCounts[1] || 0 + unReadChatCounts[2] || 0 + unReadChatCounts[3] || 0) +
+                    unReadActivityMessageCounts
+            );
+        }
+    }, [unReadChatCounts, unReadActivityMessageCounts]);
+
+    ///////////////////////
+    // Project Related
+    ///////////////////////
+    const [openCreateProject, setOpenCreateProject] = useState(false);
+    const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
+
+    ///////////////////////
+    // Task Related
+    ///////////////////////
+    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false); // Is task preview visible or not
+    const [isCreatingTask, setIsCreatingTask] = useState<{
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }>({
+        flag: false,
+        parentTaskId: null,
+        rootTaskId: null,
+    });
+    const [openCreateTag, setOpenCreateTag] = useState(false);
+    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
+    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
+    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
         isUpdate: false,
         scrollToBottom: true,
     });
 
-    // Note common
+    ///////////////////////
+    // Note Related
+    ///////////////////////
+    // Common
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
     const [tabItems, setTabItems] = useState<any[]>([]);
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
+    const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
+    const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
 
-    // My Note related
+    // My Note Related
     const [currentMyNote, setCurrentMyNote] = useState<MyNoteProps | null>(null);
     const [currentMyNoteTitle, setCurrentMyNoteTitle] = useState<string>("");
     const [myNoteMeta, setMyNoteMeta] = useState<MyNoteMetaProps[]>([]);
@@ -266,7 +367,7 @@ export const App = () => {
         selectedTabIndex: selectedTabIndex,
     });
 
-    // Task Note related
+    // Task Note Related
     const [currentTaskNote, setCurrentTaskNote] = useState<TaskNoteProps | null>(null);
     const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>("");
     const [taskNoteMeta, setTaskNoteMeta] = useState<TaskNoteMetaProps[]>([]);
@@ -340,7 +441,7 @@ export const App = () => {
         selectedTabIndex: selectedTabIndex,
     });
 
-    // Chat Note related
+    // Chat Note Related
     const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
     const [currentChatNoteTitle, setCurrentChatNoteTitle] = useState<string>("");
     const [chatNoteMeta, setChatNoteMeta] = useState<ChatNoteMetaProps[]>([]);
@@ -436,15 +537,6 @@ export const App = () => {
         );
         if (chatNotes.length > 0) {
             const newNote = chatNotes[0];
-            // if (tabItems.length === 0 || tabItems[0] === undefined) {
-            //     setSelectedTabIndex(0);
-            //     setTabItems([newNote]);
-            // } else {
-            //     if (tabItems.some((note) => note.noteId === newNote.noteId) === false) {
-            //         setTabItems([...tabItems, newNote]);
-            //     }
-            //     setSelectedTabIndex(tabItems.length);
-            // }
             setCurrentChatNote(newNote);
             setCurrentChatNoteTitle(newNote.title);
             addNote(3, newNote);
@@ -461,13 +553,6 @@ export const App = () => {
                 accessToken
             );
             const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
-            // if (tabItems.length === 0 || tabItems[0] === undefined) {
-            //     setSelectedTabIndex(0);
-            //     setTabItems([newNote]);
-            // } else {
-            //     setSelectedTabIndex(tabItems.length);
-            //     setTabItems([...tabItems, newNote]);
-            // }
             setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
             setCurrentChatNote(newNote);
             setCurrentChatNoteTitle(title);
@@ -489,13 +574,9 @@ export const App = () => {
         }
     };
 
-    // ======================
-
-    // useEffect(() => {
-    //     console.log("tabItems:", tabItems);
-    // }, [tabItems]);
-
-    // Inbox variables
+    ///////////////////////
+    // Inbox Related
+    ///////////////////////
     const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
     const [unReadInboxItemCount, setUnReadInboxItemCount] = useState<number>(0);
     const countUnReadInboxItem = (inboxItems: InboxItemProps[]): number => {
@@ -520,68 +601,10 @@ export const App = () => {
         );
     }, [inboxItems]);
 
-    // Chat variables
-    const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
-    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
-    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
-    const [allChats, setAllChats] = useState<AllChatProps[]>([]);
-    const funcSetAllChats = async () => {
-        const _allChats: AllChatProps[] = await popAllChats();
-        if (_allChats) {
-            setAllChats(_allChats);
-            setUnReadChatCounts(countUnreadChats(_allChats));
-        }
-    };
-    const [unReadChatCounts, setUnReadChatCounts] = useState<Record<string, number>>();
-    const countUnreadChats = (chats: AllChatProps[]): Record<string, number> => {
-        return chats.reduce<Record<string, number>>((acc, chat) => {
-            if (chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId) {
-                acc[chat.chatType] = (acc[chat.chatType] ?? 0) + 1;
-            }
-            return acc;
-        }, {});
-    };
-    useEffect(() => {
-        setUnReadChatCounts(countUnreadChats(allChats));
-    }, [allChats]);
-
-    // Activity variables
-    const [activityMessages, setActivityMessages] = useState<ActivityMessageProps[]>([]);
-    const funcSetActivityMessages = async () => {
-        const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
-        if (activityMessages) {
-            setActivityMessages(activityMessages);
-            setUnReadActivityMessageCounts(countUnreadActivityMessages(activityMessages));
-        }
-    };
-    const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
-    const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
-    const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
-        return activityMessages.reduce<number>((acc, activity) => {
-            if (activity.isRead === false) {
-                acc += 1;
-            }
-            return acc;
-        }, 0);
-    };
-    useEffect(() => {
-        // Exclude the first thread message cause it's actually not a thread message.
-        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
-            (item) => !(item.isThread === true && item.messageId === 1)
-        );
-        setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
-    }, [activityMessages]);
-    useEffect(() => {
-        if (unReadChatCounts) {
-            // 1: DM, 2: GM, 3: PM
-            setUnReadChatAndActivityCounts(
-                (unReadChatCounts[1] || 0 + unReadChatCounts[2] || 0 + unReadChatCounts[3] || 0) +
-                    unReadActivityMessageCounts
-            );
-        }
-    }, [unReadChatCounts, unReadActivityMessageCounts]);
-
-    // Common Hooks
+    ///////////////////////
+    // Hooks
+    ///////////////////////
+    // Common
     wsHook({
         socket: socketInstance,
         accessToken: accessToken,
@@ -600,47 +623,12 @@ export const App = () => {
         funcSetInboxItems: funcSetInboxItems,
     });
 
+    // Initialization
     useEffect(() => {
         funcSetInboxItems();
         funcSetAllChats();
         funcSetActivityMessages();
     }, []);
-
-    useEffect(() => {
-        setTimeout(() => {
-            funcSetAllChats();
-            if (currentMainChat) {
-                if (currentMainChat.chatType === 1 && currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "1");
-                    localStorage.setItem("lastDMChatId", currentMainChat.chatId.toString() || "");
-                }
-                if (currentMainChat.chatType === 2 && currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "2");
-                    localStorage.setItem("lastGMChatId", currentMainChat.chatId.toString() || "");
-                }
-                if (currentMainChat.chatType === 3 && currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "3");
-                    localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
-                }
-                if (currentMainChat.chatType === 4 && currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "4");
-                    localStorage.setItem(
-                        "lastPinnedChatId",
-                        currentMainChat.chatId.toString() || ""
-                    );
-                }
-            }
-        }, 500); // wait 500ms
-    }, [currentMainChat, currentSubChat]);
-
-    useEffect(() => {
-        initCurrentTeam();
-
-        if (myself.teamId !== currentTeamId) {
-            setIsLoading(true);
-            setCurrentTeamId(myself.teamId);
-        }
-    }, [myself]);
 
     useEffect(() => {
         if (isLoading === false) {
@@ -668,6 +656,12 @@ export const App = () => {
     }, [myself, accessToken, currentTeamId, socketInstance]);
 
     useEffect(() => {
+        initCurrentTeam();
+        if (myself.teamId !== currentTeamId) {
+            setCurrentTeamId(myself.teamId);
+            setIsLoading(true);
+        }
+
         if (myself.userId !== "") {
             const popTeamUsersWorker = new PopTeamUsersWorker();
 
@@ -722,6 +716,34 @@ export const App = () => {
             };
         }
     }, [socketInstance]);
+
+    // Chat Related
+    useEffect(() => {
+        setTimeout(() => {
+            funcSetAllChats();
+            if (currentMainChat) {
+                if (currentMainChat.chatType === 1 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "1");
+                    localStorage.setItem("lastDMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 2 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "2");
+                    localStorage.setItem("lastGMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 3 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "3");
+                    localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 4 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "4");
+                    localStorage.setItem(
+                        "lastPinnedChatId",
+                        currentMainChat.chatId.toString() || ""
+                    );
+                }
+            }
+        }, 500); // wait 500ms
+    }, [currentMainChat, currentSubChat]);
 
     return isLoading || currentMainChat === undefined ? (
         <InitialLoad
@@ -798,6 +820,32 @@ export const App = () => {
                         setCurrentNoteType={setCurrentNoteType}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         setCurrentTaskNote={setCurrentTaskNote}
+                        isTaskPreviewVisible={isTaskPreviewVisible}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        isCreatingTask={isCreatingTask}
+                        setIsCreatingTask={setIsCreatingTask}
+                        isChatNoteVisible={isChatNoteVisible}
+                        setIsChatNoteVisible={setIsChatNoteVisible}
+                        isTaskNoteVisible={isTaskNoteVisible}
+                        setIsTaskNoteVisible={setIsTaskNoteVisible}
+                        currentProject={currentProject}
+                        setCurrentProject={setCurrentProject}
+                        currentPreviewTaskId={currentPreviewTaskId}
+                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        currentPreviewTask={currentPreviewTask}
+                        setCurrentPreviewTask={setCurrentPreviewTask}
+                        setOpenCreateProject={setOpenCreateProject}
+                        setOpenCreateTag={setOpenCreateTag}
+                        isNewTagCreated={isNewTagCreated}
+                        setIsNewTagCreated={setIsNewTagCreated}
+                        openCreateProject={openCreateProject}
+                        openCreateTag={openCreateTag}
+                        isMainChatVisible={isMainChatVisible}
+                        setIsMainChatVisible={setIsMainChatVisible}
+                        isSubChatVisible={isSubChatVisible}
+                        setIsSubChatVisible={setIsSubChatVisible}
+                        isThreadVisible={isThreadVisible}
+                        setIsThreadVisible={setIsThreadVisible}
                     />
                 ) : null}
 
@@ -831,6 +879,14 @@ export const App = () => {
                         setSelectedTabIndex={setSelectedTabIndex}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         currentTaskNoteChain={currentTaskNoteChain}
+                        currentTeamId={currentTeamId}
+                        setCurrentTeamId={setCurrentTeamId}
+                        isTaskPreviewVisible={isTaskPreviewVisible}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        isTaskNoteVisible={isTaskNoteVisible}
+                        setIsTaskNoteVisible={setIsTaskNoteVisible}
+                        isCreatingTask={isCreatingTask}
+                        setIsCreatingTask={setIsCreatingTask}
                     />
                 ) : null}
 
@@ -874,17 +930,18 @@ export const App = () => {
                         setCurrentChatNote={setCurrentChatNote}
                         handleCreateNewChatNote={handleCreateNewChatNote}
                         currentMyNoteChain={currentMyNoteChain}
-                        setCurrentMyNoteChain={setCurrentMyNoteChain}
                         currentTaskNoteChain={currentTaskNoteChain}
-                        setCurrentTaskNoteChain={setCurrentTaskNoteChain}
                         currentChatNoteChain={currentChatNoteChain}
-                        setCurrentChatNoteChain={setCurrentChatNoteChain}
                         unReadInboxItemCount={unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                         myNoteMetaTree={myNoteMetaTree}
                         taskNoteMetaTree={taskNoteMetaTree}
                         chatNoteMetaTree={chatNoteMetaTree}
                         allNoteIdChains={allNoteIdChains}
+                        isCreatingTask={isCreatingTask}
+                        setIsMainChatVisible={setIsMainChatVisible}
+                        setIsTaskNoteVisible={setIsTaskNoteVisible}
+                        setIsChatNoteVisible={setIsChatNoteVisible}
                     />
                 ) : null}
             </CssVarsProvider>

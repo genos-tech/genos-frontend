@@ -94,6 +94,22 @@ type TaskHomeProps = {
         taskId: number
     ) => Promise<void>;
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
+    currentTeamId: string;
+    setCurrentTeamId: (value: string) => void;
+    isTaskPreviewVisible: boolean;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    isTaskNoteVisible: boolean;
+    setIsTaskNoteVisible: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -125,21 +141,25 @@ export const TaskHome = (props: TaskHomeProps) => {
         setSelectedTabIndex,
         handleCreateNewTaskNote,
         currentTaskNoteChain,
+        currentTeamId,
+        setCurrentTeamId,
+        isTaskPreviewVisible,
+        setIsTaskPreviewVisible,
+        isTaskNoteVisible,
+        setIsTaskNoteVisible,
+        isCreatingTask,
+        setIsCreatingTask,
     } = props;
+
+    // Common
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
-    const [currentTeamId, setCurrentTeamId] = useState("");
+    // Task Related
     const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
-    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
-    const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
-    const [isCreatingTask, setIsCreatingTask] = useState({
-        flag: false,
-        parentTaskId: null,
-        rootTaskId: null,
-    });
+
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
@@ -920,7 +940,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 rootTaskId={isCreatingTask.rootTaskId}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                 isTaskPreviewVisible={isTaskPreviewVisible}
-                                                isCreatingTask={isCreatingTask.flag}
+                                                isCreatingTask={isCreatingTask}
                                             />
                                         </Box>
                                     </Panel>
@@ -988,7 +1008,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsCommentUpdated={setIsCommentUpdated}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                 isTaskPreviewVisible={isTaskPreviewVisible}
-                                                isCreatingTask={isCreatingTask.flag}
+                                                isCreatingTask={isCreatingTask}
                                                 setIsTaskNoteVisible={setIsTaskNoteVisible}
                                                 handleCreateNewTaskNote={handleCreateNewTaskNote}
                                                 setCurrentTaskNote={setCurrentTaskNote}
@@ -1060,7 +1080,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setCurrentNoteType={setCurrentNoteType}
                                                 isInTaskPage={true}
                                                 setIsTaskNoteVisible={setIsTaskNoteVisible}
-                                                isCreatingTask={isCreatingTask.flag}
+                                                isCreatingTask={isCreatingTask}
                                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                             />

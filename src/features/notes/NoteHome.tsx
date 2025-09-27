@@ -76,17 +76,22 @@ type NoteHomeProps = {
         threadId: number
     ) => Promise<void>;
     currentMyNoteChain?: MyNoteMetaTreeNode[];
-    setCurrentMyNoteChain: (value: MyNoteMetaTreeNode[]) => void;
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
-    setCurrentTaskNoteChain: (value: TaskNoteMetaTreeNode[]) => void;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
-    setCurrentChatNoteChain: (value: ChatNoteMetaTreeNode[]) => void;
     unReadInboxItemCount: number;
     unReadChatAndActivityCounts: number;
     myNoteMetaTree: MyNoteMetaTreeNode[];
     taskNoteMetaTree: TaskNoteMetaTreeNode[];
     chatNoteMetaTree: ChatNoteMetaTreeNode[];
     allNoteIdChains: Record<string, number[]>;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsMainChatVisible: (value: boolean) => void;
+    setIsTaskNoteVisible: (value: boolean) => void;
+    setIsChatNoteVisible: (value: boolean) => void;
 };
 export const NoteHome = (props: NoteHomeProps) => {
     const {
@@ -128,17 +133,18 @@ export const NoteHome = (props: NoteHomeProps) => {
         setCurrentChatNote,
         handleCreateNewChatNote,
         currentMyNoteChain,
-        setCurrentMyNoteChain,
         currentTaskNoteChain,
-        setCurrentTaskNoteChain,
         currentChatNoteChain,
-        setCurrentChatNoteChain,
         unReadInboxItemCount,
         unReadChatAndActivityCounts,
         myNoteMetaTree,
         taskNoteMetaTree,
         chatNoteMetaTree,
         allNoteIdChains,
+        isCreatingTask,
+        setIsMainChatVisible,
+        setIsTaskNoteVisible,
+        setIsChatNoteVisible,
     } = props;
 
     const { mode } = useColorScheme();
@@ -317,6 +323,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         currentTaskNoteChain={currentTaskNoteChain}
                                         setCurrentNoteType={setCurrentNoteType}
                                         isInTaskPage={false}
+                                        isCreatingTask={isCreatingTask}
+                                        setIsTaskNoteVisible={setIsTaskNoteVisible}
                                     />
                                 )}
                                 {currentNoteType === 3 && currentChatNoteChain && (
@@ -343,6 +351,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         currentChatNoteChain={currentChatNoteChain}
                                         isInChatPage={false}
                                         setCurrentNoteType={setCurrentNoteType}
+                                        setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsChatNoteVisible={setIsChatNoteVisible}
                                     />
                                 )}
                             </Box>

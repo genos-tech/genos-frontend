@@ -17,7 +17,7 @@ type uploadTaskProps = {
     taskContents: TaskProps;
     currentMainChat?: ChatProps;
     currentThreadChat?: ThreadProps;
-    isThreadVisible?: boolean;
+    isThreadVisible: boolean;
     accessToken: string;
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;

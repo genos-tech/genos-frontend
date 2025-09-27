@@ -39,7 +39,16 @@ type ChatListItemProps = ListItemButtonProps & {
     setIsThreadVisible: (value: boolean) => void;
     isThreadVisible: boolean;
     isTaskPreviewVisible: boolean;
-    isTaskCreationVisible: boolean;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
@@ -61,7 +70,8 @@ export const ChatListItem = (props: ChatListItemProps) => {
         setIsThreadVisible,
         isThreadVisible,
         isTaskPreviewVisible,
-        isTaskCreationVisible,
+        isCreatingTask,
+        setIsCreatingTask,
         isSubChatVisible,
         setIsSubChatVisible,
         setOpeningService,
@@ -110,7 +120,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                     // Switch Thread to Main
                     if (isThreadVisible) {
                         setIsMainChatVisible(true);
-                        if (isTaskCreationVisible || isTaskPreviewVisible) {
+                        if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                             setIsThreadVisible(false);
                         }
                     }
@@ -131,7 +141,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                         setCurrentSubChat(defineNewChat(messages));
                         if (isThreadVisible) {
                             setIsMainChatVisible(true);
-                            if (isTaskCreationVisible || isTaskPreviewVisible) {
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                 setIsThreadVisible(false);
                             }
                         }
@@ -143,7 +153,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                         setCurrentSubChat(defineNewChat(messages));
                         if (isThreadVisible) {
                             setIsMainChatVisible(true);
-                            if (isTaskCreationVisible || isTaskPreviewVisible) {
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                 setIsThreadVisible(false);
                             }
                         }

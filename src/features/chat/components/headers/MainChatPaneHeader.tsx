@@ -24,8 +24,16 @@ type MainChatPaneHeaderProps = {
     setIsSubChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
-    setIsCreatingTask: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     setOpeningService: (value: number) => void;
 };
 
@@ -44,7 +52,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setIsMainChatVisible,
         setIsThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
+        isCreatingTask,
         setIsCreatingTask,
         setOpeningService,
     } = props;
@@ -98,8 +106,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 setIsMainChatVisible(true);
                                 setIsThreadVisible(false);
                                 setIsTaskPreviewVisible(false);
-                                setIsTaskCreationVisible(true);
-                                setIsCreatingTask(true);
+                                setIsCreatingTask({
+                                    flag: true,
+                                    parentTaskId: null,
+                                    rootTaskId: null,
+                                });
                             }}
                             sx={{ px: "10px" }}
                         >

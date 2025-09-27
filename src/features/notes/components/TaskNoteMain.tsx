@@ -70,8 +70,12 @@ type TaskNoteMainProps = {
     currentTaskNoteChain: TaskNoteMetaTreeNode[];
     setCurrentNoteType: (value: number) => void;
     isInTaskPage: boolean;
-    setIsTaskNoteVisible?: (value: boolean) => void;
-    isCreatingTask?: boolean;
+    setIsTaskNoteVisible: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
     isTaskPreviewVisible?: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
 };
@@ -469,13 +473,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         variant="plain"
                                                         sx={{ mb: "5px" }}
                                                         onClick={() => {
-                                                            if (setIsTaskNoteVisible) {
-                                                                setIsTaskNoteVisible(false);
-                                                            }
+                                                            setIsTaskNoteVisible(false);
 
                                                             // Open task-home (task table) when both task-preview and task-create-form are closed.
                                                             if (
-                                                                isCreatingTask === false &&
+                                                                isCreatingTask.flag === false &&
                                                                 isTaskPreviewVisible === false &&
                                                                 setIsTaskHomeVisible
                                                             ) {

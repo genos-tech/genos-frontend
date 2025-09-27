@@ -49,7 +49,16 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
-    isTaskCreationVisible: boolean;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     isSubChatVisible: boolean;
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
@@ -77,7 +86,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         isThreadVisible,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
-        isTaskCreationVisible,
+        isCreatingTask,
+        setIsCreatingTask,
         isSubChatVisible,
         setOpeningService,
         setCurrentProject,
@@ -164,7 +174,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
-                                if (isTaskCreationVisible || isTaskPreviewVisible) {
+                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                     setIsThreadVisible(false);
                                 }
                             }
@@ -182,7 +192,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
-                                if (isTaskCreationVisible || isTaskPreviewVisible) {
+                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                     setIsThreadVisible(false);
                                 }
                             }
@@ -212,7 +222,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             }
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
-                                if (isTaskCreationVisible || isTaskPreviewVisible) {
+                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                     setIsThreadVisible(false);
                                 }
                             }
@@ -282,7 +292,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
-                                if (isTaskCreationVisible || isTaskPreviewVisible) {
+                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                     setIsThreadVisible(false);
                                 }
                             }
@@ -300,7 +310,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
                             if (isThreadVisible) {
                                 setIsMainChatVisible(true);
-                                if (isTaskCreationVisible || isTaskPreviewVisible) {
+                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                     setIsThreadVisible(false);
                                 }
                             }

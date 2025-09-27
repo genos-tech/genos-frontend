@@ -61,7 +61,16 @@ type ChatSidebarProps = {
     isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
-    isTaskCreationVisible: boolean;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
@@ -93,7 +102,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         isThreadVisible,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
-        isTaskCreationVisible,
+        isCreatingTask,
+        setIsCreatingTask,
         isSubChatVisible,
         setIsSubChatVisible,
         setOpeningService,
@@ -173,7 +183,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         // Switch Thread to Main
                         if (isThreadVisible) {
                             setIsMainChatVisible(true);
-                            if (isTaskCreationVisible || isTaskPreviewVisible) {
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                                 setIsThreadVisible(false);
                             }
                         }
@@ -472,7 +482,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
-                            isTaskCreationVisible={isTaskCreationVisible}
+                            isCreatingTask={isCreatingTask}
+                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}
@@ -504,7 +515,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
-                            isTaskCreationVisible={isTaskCreationVisible}
+                            isCreatingTask={isCreatingTask}
+                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}
@@ -536,7 +548,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
-                            isTaskCreationVisible={isTaskCreationVisible}
+                            isCreatingTask={isCreatingTask}
+                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}
@@ -574,7 +587,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
-                            isTaskCreationVisible={isTaskCreationVisible}
+                            isCreatingTask={isCreatingTask}
+                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}

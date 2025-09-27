@@ -27,7 +27,11 @@ type TaskTitleBlockProps = {
     taskContents: TaskProps;
     taskTitle: string;
     setTaskTitle: (value: string) => void;
-    setIsCreatingTask?: (value: any) => void;
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     setTaskClosed?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
@@ -40,10 +44,13 @@ type TaskTitleBlockProps = {
     setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
-    setIsTaskCreationVisible?: (value: boolean) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskPreviewVisible?: boolean;
-    isCreatingTask?: boolean;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
     setCurrentTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
     isTaskNoteVisible?: boolean;
@@ -66,7 +73,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
         setIsTaskHomeVisible,
         isTaskPreviewVisible,
         isCreatingTask,
@@ -253,15 +259,23 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 setIsTaskPreviewVisible(false);
                             }
                             // Open task-home when both task-preview and task-create-form are closed.
-                            if (isCreatingTask === false && isTaskNoteVisible === false) {
+                            if (
+                                isCreatingTask &&
+                                isCreatingTask.flag === false &&
+                                isTaskNoteVisible === false
+                            ) {
                                 if (setIsTaskHomeVisible) {
                                     setIsTaskHomeVisible(true);
                                 }
                             }
                         }
 
-                        if (setIsTaskCreationVisible) {
-                            setIsTaskCreationVisible(false);
+                        if (setIsCreatingTask) {
+                            setIsCreatingTask({
+                                flag: false,
+                                parentTaskId: null,
+                                rootTaskId: null,
+                            });
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (isTaskPreviewVisible === false) {
                                 if (setIsTaskHomeVisible) {

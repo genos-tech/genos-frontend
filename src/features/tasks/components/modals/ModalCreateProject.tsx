@@ -14,7 +14,7 @@ type Props = {
     openCreateProject: boolean;
     setOpenCreateProject: (value: boolean) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    setIsNewProjectCreated: (value: boolean) => void;
+    setIsNewProjectCreated?: (value: boolean) => void;
 };
 
 export const ModalCreateProject: React.FC<Props> = ({
@@ -108,7 +108,9 @@ export const ModalCreateProject: React.FC<Props> = ({
                                     systemUserId: createProjectData.project_system_user,
                                 });
                                 setOpenCreateProject(false);
-                                setIsNewProjectCreated(true);
+                                if (setIsNewProjectCreated) {
+                                    setIsNewProjectCreated(true);
+                                }
                             } else {
                                 console.error("Failed to add me and/or system_user to the team");
                             }

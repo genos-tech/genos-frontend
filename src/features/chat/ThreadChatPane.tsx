@@ -32,10 +32,17 @@ type MessagesPaneProps = {
     currentThreadChatId: number;
     setIsMainChatVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     isTaskPreviewVisible: boolean;
-    setIsOpeningTask: (value: boolean) => void;
-    setIsCreatingTask: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -55,6 +62,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         teamMemberProfiles,
         currentWindowHeight,
         thread,
+        isCreatingTask,
         myself,
         setMyself,
         teamMembers,
@@ -66,8 +74,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         setIsMainChatVisible,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
-        setIsTaskCreationVisible,
-        setIsOpeningTask,
         setIsCreatingTask,
         currentPreviewTask,
         setOpeningService,
@@ -221,8 +227,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setIsThreadVisible={setIsThreadVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         isTaskPreviewVisible={isTaskPreviewVisible}
-                        setIsTaskCreationVisible={setIsTaskCreationVisible}
-                        setIsOpeningTask={setIsOpeningTask}
+                        isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
                         currentPreviewTask={currentPreviewTask}
                         currentPreviewTaskId={currentPreviewTaskId}

@@ -35,12 +35,20 @@ type MessageBubbleProps = {
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setCurrentThreadChat: (value: ThreadProps) => void;
-    setIsTaskCreationVisible: (value: boolean) => void;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setIsOpeningTask: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setIsInEdit: (value: boolean) => void;
@@ -65,11 +73,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setIsThreadVisible,
         setCurrentPreviewTask,
         setIsTaskPreviewVisible,
-        setIsTaskCreationVisible,
+        isCreatingTask,
+        setIsCreatingTask,
         setCurrentThreadChat,
         setOpeningService,
         setCurrentMainChat,
-        setIsOpeningTask,
         setCurrentPreviewTaskId,
         setCurrentProject,
         setIsInEdit,
@@ -104,7 +112,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setIsMainChatVisible(true);
         setIsThreadVisible(true);
         setIsTaskPreviewVisible(false);
-        setIsTaskCreationVisible(false);
+        setIsCreatingTask({ ...isCreatingTask, flag: false });
 
         if (message.taskId) {
             setCurrentPreviewTaskId(message.taskId);
@@ -497,8 +505,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsThreadVisible={setIsThreadVisible}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setIsTaskCreationVisible={setIsTaskCreationVisible}
-                                                setIsOpeningTask={setIsOpeningTask}
+                                                isCreatingTask={isCreatingTask}
+                                                setIsCreatingTask={setIsCreatingTask}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setCurrentProject={setCurrentProject}
                                             />
@@ -607,10 +615,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 setIsTaskPreviewVisible={
                                                                     setIsTaskPreviewVisible
                                                                 }
-                                                                setIsTaskCreationVisible={
-                                                                    setIsTaskCreationVisible
+                                                                isCreatingTask={isCreatingTask}
+                                                                setIsCreatingTask={
+                                                                    setIsCreatingTask
                                                                 }
-                                                                setIsOpeningTask={setIsOpeningTask}
                                                                 setCurrentPreviewTaskId={
                                                                     setCurrentPreviewTaskId
                                                                 }
@@ -650,7 +658,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             message={message}
                             numReplies={message.numReplies}
                             isThread={false}
-                            isSent={isSent}
                             showUnderBarOption={showUnderBarOption}
                             reactions={reactions}
                             setReactions={setReactions}

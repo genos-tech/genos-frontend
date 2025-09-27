@@ -411,7 +411,6 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             message={message}
                             numReplies={0}
                             isThread={true}
-                            isSent={isSent}
                             showUnderBarOption={showUnderBarOption}
                             reactions={reactions}
                             setReactions={setReactions}
