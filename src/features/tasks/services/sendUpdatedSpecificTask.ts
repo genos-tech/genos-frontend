@@ -70,6 +70,7 @@ export const sendUpdatedSpecificTask = async (
                         taskStatus: updatedTask.status.status,
                         systemUserId: updatedTask.project.systemUserId,
                         messageIdForPut: null,
+                        isPrivate: updatedTask.project.isPrivate,
                     });
 
                     // Send a thread message only when the task status is updated.

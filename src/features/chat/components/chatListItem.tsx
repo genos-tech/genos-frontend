@@ -16,6 +16,7 @@ import CircleIcon from "@mui/icons-material/Circle";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { addChat } from "../services/addChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
@@ -100,6 +101,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             TSLastMessage: chat.TSLastMessage,
             systemUserId: chat.systemUserId,
             project: chat.project,
+            isPrivate: chat.isPrivate,
         };
         return newMessages;
     };
@@ -206,7 +208,16 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     )}
                                 </div>
 
-                                <Typography noWrap level="title-sm" sx={{ pt: "3px", pl: "5px" }}>
+                                <Typography
+                                    noWrap
+                                    level="title-sm"
+                                    sx={{ pt: "3px", pl: "5px" }}
+                                    startDecorator={
+                                        chat.isPrivate ? (
+                                            <LockOutlineIcon sx={{ fontSize: "16px" }} />
+                                        ) : undefined
+                                    }
+                                >
                                     {isYou ? `${chat.chatName} (you)` : chat.chatName}
                                 </Typography>
 

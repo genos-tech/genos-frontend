@@ -15,6 +15,7 @@ export type AllChatProps = {
     latestMessageText: string;
     TSLastMessage: string;
     project?: ProjectProps;
+    isPrivate?: boolean;
 };
 
 export type ChatProps = {
@@ -32,6 +33,7 @@ export type ChatProps = {
     taskExist?: boolean;
     moveToSpecificIndex?: string;
     notMove?: boolean;
+    isPrivate?: boolean;
 };
 
 // Thread Props
@@ -49,6 +51,7 @@ export type ThreadProps = {
     taskExist?: boolean;
     moveToSpecificIndex?: string;
     notMove?: boolean;
+    isPrivate?: boolean;
 };
 
 // Activity Message Props
@@ -139,6 +142,7 @@ export type NewMessageProps = {
     isReactionUpdated: boolean;
     chatType: number;
     chatId: number;
+    isPrivate?: boolean;
     systemUserId?: string;
     messageId: number;
     chatName: string;
@@ -202,6 +206,7 @@ export type SearchListProps = {
     name: string;
     email: string | null;
     dmPartnerUserId: string;
+    isPrivate: boolean;
 };
 
 export type LoadSearchListResponse = {

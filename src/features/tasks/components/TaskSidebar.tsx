@@ -82,6 +82,7 @@ type TaskSidebarProps = {
         flag: boolean;
         projectId: number;
         projectName: string;
+        isPrivate: boolean;
         systemUserId: string;
     }) => void;
     setIsTaskHomeVisible: (value: boolean) => void;
@@ -506,6 +507,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
                     <ListItem nested>
                         <Toggler
+                            key={`toggler-TeamProjects`}
                             defaultExpanded={true}
                             renderToggle={({ open, setOpen }) => (
                                 <ListItemButton
@@ -547,7 +549,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         return (
                                             isJoined === true && (
                                                 <Toggler
-                                                    key={`toggler-TeamProjects-${index}`}
+                                                    key={`toggler-TeamProjects-${projectId}-${index}`}
                                                     defaultExpanded={false}
                                                     renderToggle={({ open, setOpen }) => (
                                                         <ListItemButton
@@ -689,8 +691,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                     defaultExpanded={false}
                                     renderToggle={({ open, setOpen }) => (
                                         <ListItemButton
-                                            color="neutral"
-                                            variant="soft"
                                             onClick={() => {
                                                 setOpen(!open);
                                             }}
@@ -726,16 +726,20 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 >
                                     <List sx={{ gap: 0.5 }}>
                                         {teamProjects.map(
-                                            ({
-                                                projectId,
-                                                projectName,
-                                                systemUserId,
-                                                isJoined,
-                                            }) => {
+                                            (
+                                                {
+                                                    projectId,
+                                                    projectName,
+                                                    isPrivate,
+                                                    systemUserId,
+                                                    isJoined,
+                                                },
+                                                index
+                                            ) => {
                                                 return (
                                                     isJoined === false && (
                                                         <ListItem
-                                                            key={`listitem-team-project-${projectId}`}
+                                                            key={`listitem-team-project-${projectId}-${index}`}
                                                         >
                                                             <ListItemButton
                                                                 color={"neutral"}
@@ -750,6 +754,10 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                         flag: true,
                                                                         projectId: projectId,
                                                                         projectName: projectName,
+                                                                        isPrivate:
+                                                                            isPrivate !== undefined
+                                                                                ? isPrivate
+                                                                                : true,
                                                                         systemUserId:
                                                                             systemUserId || "",
                                                                     });
@@ -772,6 +780,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                         width: "100%", // take full width of button
                                                                         ml: "35px",
                                                                     }}
+                                                                    startDecorator={
+                                                                        isPrivate ? (
+                                                                            <LockOutlineIcon
+                                                                                sx={{
+                                                                                    fontSize:
+                                                                                        "16px",
+                                                                                }}
+                                                                            />
+                                                                        ) : undefined
+                                                                    }
                                                                 >
                                                                     {projectName}
                                                                 </Typography>

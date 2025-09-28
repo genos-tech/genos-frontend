@@ -207,6 +207,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     taskStatus: null,
                     systemUserId: null,
                     messageIdForPut: thread.threadId,
+                    isPrivate: thread.isPrivate,
                 });
             }
         }

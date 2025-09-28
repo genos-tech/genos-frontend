@@ -93,7 +93,6 @@ type TaskHomeProps = {
         taskId: number
     ) => Promise<void>;
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
-    currentTeamId: string;
     setCurrentTeamId: (value: string) => void;
     isTaskPreviewVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
@@ -145,7 +144,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         setSelectedTabIndex,
         handleCreateNewTaskNote,
         currentTaskNoteChain,
-        currentTeamId,
         setCurrentTeamId,
         isTaskPreviewVisible,
         setIsTaskPreviewVisible,
@@ -188,8 +186,9 @@ export const TaskHome = (props: TaskHomeProps) => {
         flag: boolean;
         projectId: number;
         projectName: string;
+        isPrivate: boolean;
         systemUserId: string;
-    }>({ flag: false, projectId: -1, projectName: "", systemUserId: "" });
+    }>({ flag: false, projectId: -1, projectName: "", isPrivate: true, systemUserId: "" });
     const [openDeleteProject, setOpenDeleteProject] = useState<{
         flag: boolean;
         projectId: number;
@@ -1123,6 +1122,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                         myself={myself}
                         openJoinProject={openJoinProject}
                         setOpenJoinProject={setOpenJoinProject}
+                        setCurrentProject={setCurrentProject}
+                        loadProjects={loadProjects}
                     />
 
                     {/* Modal for deleting a project */}

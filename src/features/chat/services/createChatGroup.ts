@@ -19,6 +19,7 @@ const createGroupMessage = [
 const moveToGMChat = async (
     chatId: number,
     chatName: string,
+    isPrivate: boolean,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
@@ -33,6 +34,7 @@ const moveToGMChat = async (
             latestMessage: fetchedMessages[fetchedMessages.length - 1],
             latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
+            isPrivate: isPrivate,
         };
         setCurrentMainChat(newChat);
     } else {
@@ -44,6 +46,7 @@ const addGMChatAndMessage = async (
     myself: UserProps,
     data: CreateGMResponse,
     allChats: AllChatProps[],
+    isPrivate: boolean,
     setAllChats: (chat: AllChatProps[]) => void,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
@@ -71,6 +74,7 @@ const addGMChatAndMessage = async (
         latestMessage: newMessage,
         latestMessageText: "Has created",
         TSLastMessage: getCurrentTimestamp(),
+        isPrivate: isPrivate,
     };
 
     await addChat(newChat, 2);
@@ -87,10 +91,11 @@ const addGMChatAndMessage = async (
             latestMessage: newChat.latestMessage,
             latestMessageText: newChat.latestMessageText,
             TSLastMessage: getCurrentTimestamp(),
+            isPrivate: isPrivate,
         },
     ]);
 
-    moveToGMChat(newChat.chatId, newChat.chatName, setCurrentMainChat);
+    moveToGMChat(newChat.chatId, newChat.chatName, isPrivate, setCurrentMainChat);
 };
 
 export const createChatGroup = async (
@@ -135,11 +140,12 @@ export const createChatGroup = async (
                     taskStatus: null,
                     systemUserId: null,
                     messageIdForPut: null,
+                    isPrivate: isPrivate,
                 });
             }
         );
 
-        addGMChatAndMessage(myself, data, allChats, setAllChats, setCurrentMainChat);
+        addGMChatAndMessage(myself, data, allChats, isPrivate, setAllChats, setCurrentMainChat);
         setOpen(false);
         setCreateCGErrorMessage("");
         setGroupName("");

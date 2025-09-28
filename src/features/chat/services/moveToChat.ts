@@ -28,7 +28,9 @@ export const moveToDMChat = async (
 
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 1);
     if (fetchedMessages) {
-        setCurrentMainChat(defineNewChat(chatId, chatName, 1, dmPartnerUser, fetchedMessages));
+        setCurrentMainChat(
+            defineNewChat(chatId, chatName, 1, dmPartnerUser, fetchedMessages, false)
+        );
     } else {
         console.error("Failed to fetch thread DM fetchedMessages:", fetchedMessages);
     }
@@ -37,12 +39,15 @@ export const moveToDMChat = async (
 export const moveToGMChat = async (
     chatId: number,
     chatName: string,
+    isPrivate: boolean,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
         console.log("move to gm:", fetchedMessages[fetchedMessages.length - 1]);
-        setCurrentMainChat(defineNewChat(chatId, chatName, 2, defaultDmPartner, fetchedMessages));
+        setCurrentMainChat(
+            defineNewChat(chatId, chatName, 2, defaultDmPartner, fetchedMessages, isPrivate)
+        );
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
     }
@@ -59,6 +64,7 @@ export const moveToSelectedChat = async (
     chatId: number,
     chatName: string,
     chatType: number,
+    isPrivate: boolean,
     dmPartnerUser: UserProps,
     allChats: AllChatProps[],
     setCurrentMainChat: (value: ChatProps) => void,
@@ -108,6 +114,7 @@ export const moveToSelectedChat = async (
                         latestMessage: message,
                         latestMessageText: chatType === 1 ? "Has joined" : "Has created",
                         TSLastMessage: getCurrentTimestamp(),
+                        isPrivate: chatType === 2 ? isPrivate : false,
                     };
 
                     await addChat(chat, chat.chatType);
@@ -121,7 +128,7 @@ export const moveToSelectedChat = async (
             if (chatType === 1) {
                 moveToDMChat(socket, chatId, chatName, dmPartnerUser, setCurrentMainChat);
             } else {
-                moveToGMChat(chatId, chatName, setCurrentMainChat);
+                moveToGMChat(chatId, chatName, isPrivate, setCurrentMainChat);
             }
         }
     } catch (error) {

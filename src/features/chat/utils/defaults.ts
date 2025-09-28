@@ -19,4 +19,5 @@ export const defaultChat: ChatProps = {
     TSLastMessage: "",
     lastReadMessageId: -1,
     messages: [],
+    isPrivate: false,
 };

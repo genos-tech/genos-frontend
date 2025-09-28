@@ -207,6 +207,7 @@ export const loadInitialData = (
                                                 .contentText,
                                         TSLastMessage: fetchedChat.TSLastMessage,
                                         project: fetchedChat.project,
+                                        isPrivate: fetchedChat.isPrivate,
                                     };
                                     setCurrentMainChat(currentMainChat);
                                     setIsInitialChatLoaded(true);

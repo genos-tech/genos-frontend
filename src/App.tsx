@@ -52,8 +52,8 @@ import {
 import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "./utils/note";
 import { ProjectProps, TaskProps } from "./types/tasks";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
-import { loadProjectTags } from "./features/tasks/services/loadProjectTags";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
+import { areObjectsEqual } from "./utils/objectHandler";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -984,7 +984,6 @@ export const App = () => {
                         setSelectedTabIndex={setSelectedTabIndex}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         currentTaskNoteChain={currentTaskNoteChain}
-                        currentTeamId={currentTeamId}
                         setCurrentTeamId={setCurrentTeamId}
                         isTaskPreviewVisible={isTaskPreviewVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}

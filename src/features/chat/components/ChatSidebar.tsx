@@ -132,6 +132,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             TSLastMessage: lastChat.TSLastMessage,
             systemUserId: lastChat.systemUserId,
             project: lastChat.project,
+            isPrivate: lastChat.isPrivate,
         };
         return newMessages;
     };

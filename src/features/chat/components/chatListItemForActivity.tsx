@@ -152,6 +152,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             latestMessageText: messages[messages.length - 1].contentText,
             TSLastMessage: activity.tsSent,
             moveToSpecificIndex: moveToSpecificIndex,
+            isPrivate: currentChat.isPrivate,
         };
         return newChat;
     };

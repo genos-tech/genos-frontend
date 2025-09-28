@@ -63,6 +63,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             value.id,
                             value.name,
                             value.type === "Group" ? 2 : 1,
+                            value.isPrivate,
                             value.dmPartnerUser,
                             allChats,
                             setCurrentMainChat,
@@ -117,7 +118,13 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 }}
                 isOptionEqualToValue={(option, value) => option.name === value.name}
                 getOptionLabel={(option) =>
-                    option.type === "People" ? `${option.name} | ${option.email}` : option.name
+                    option.type === "People"
+                        ? option.email === myself.userEmail
+                            ? `${option.name} (You) - ${option.email}`
+                            : `${option.name} - ${option.email}`
+                        : option.isPrivate
+                        ? `🔒 ${option.name}`
+                        : option.name
                 }
                 options={options}
                 loading={loading}

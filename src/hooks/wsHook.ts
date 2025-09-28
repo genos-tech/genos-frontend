@@ -128,6 +128,7 @@ export const wsHook = (props: wsHookProps) => {
             TSLastMessage: newMessage.tsSent,
             project: newMessage.project,
             notMove: true,
+            isPrivate: newMessage.isPrivate,
         };
     };
 

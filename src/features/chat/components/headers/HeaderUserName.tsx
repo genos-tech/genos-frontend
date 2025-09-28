@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 import { useState } from "react";
 import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
 import GroupsIcon from "@mui/icons-material/Groups";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { ChatProps } from "../../../../types/chat";
 import { PulseDot } from "../../../../components/utils/PulseDot";
@@ -72,6 +73,11 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     <Typography
                         component="h2"
                         noWrap
+                        startDecorator={
+                            chat.isPrivate ? (
+                                <LockOutlineIcon sx={{ fontSize: "22px" }} />
+                            ) : undefined
+                        }
                         endDecorator={
                             chat.chatType === 1 ? (
                                 <Chip

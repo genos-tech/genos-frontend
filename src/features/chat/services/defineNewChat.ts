@@ -6,7 +6,8 @@ export const defineNewChat = (
     chatName: string,
     chatType: number,
     dmPartnerUser: UserProps,
-    messages: MessageProps[]
+    messages: MessageProps[],
+    isPrivate: boolean
 ) => {
     const newChat: ChatProps = {
         chatId: chatId,
@@ -18,6 +19,7 @@ export const defineNewChat = (
         latestMessage: messages[messages.length - 1],
         latestMessageText: messages[messages.length - 1].contentText,
         TSLastMessage: messages[messages.length - 1].tsSent,
+        isPrivate: isPrivate,
     };
     return newChat;
 };

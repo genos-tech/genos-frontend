@@ -224,6 +224,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         taskStatus: taskCreateData.status,
                                         systemUserId: taskContents.project.systemUserId,
                                         messageIdForPut: currentThreadChat.threadId,
+                                        isPrivate: currentMainChat.isPrivate,
                                     });
 
                                     socket.emit("thread_message", {

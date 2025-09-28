@@ -172,6 +172,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 taskStatus: message.taskStatus,
                 systemUserId: null,
                 messageIdForPut: message.messageId,
+                isPrivate: chat.isPrivate,
             });
         }
     };
