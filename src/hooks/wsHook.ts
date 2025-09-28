@@ -87,10 +87,13 @@ export const wsHook = (props: wsHookProps) => {
         const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
         let _chatName: string;
         let _dmPartnerUser: UserProps;
+
         if (myself.userId === newMessage.sender.userId) {
+            // If the new DM message is from myself, the chat name will be the dm partner's name.
             _chatName = newMessage.dmPartnerUser.userName;
             _dmPartnerUser = newMessage.dmPartnerUser;
         } else {
+            // If the new DM message is from someone else, the chat name will be the sender's name.
             _chatName = newMessage.sender.userName;
             _dmPartnerUser = newMessage.sender;
         }
@@ -507,11 +510,13 @@ export const wsHook = (props: wsHookProps) => {
 
                                         // But only if the messageId = 1, make a new DM chat because
                                         // the new DM chat is just created by the user.
-                                        const newDMChat = await makeDMUpdatedChat({
-                                            ...newMessage,
-                                            lastReadMessageId: newMessage.lastReadMessageId + 1,
-                                        });
                                         if (newMessage.messageId === 1) {
+                                            const newDMChat = await makeDMUpdatedChat({
+                                                ...newMessage,
+                                                lastReadMessageId:
+                                                    newMessage.lastReadMessageId + 1,
+                                            });
+
                                             // Update chat sidebar if the message not reaction-related.
                                             if (newMessage.isReactionUpdated === false) {
                                                 await updateAllChat(newDMChat, newChatMessage);

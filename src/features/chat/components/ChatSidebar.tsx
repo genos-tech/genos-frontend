@@ -37,7 +37,6 @@ import {
 } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { popSpecificMessages } from "../services/popSpecificMessages";
-import { addChat } from "../services/addChat";
 import { defaultChat } from "../utils/defaults";
 
 type ChatSidebarProps = {
