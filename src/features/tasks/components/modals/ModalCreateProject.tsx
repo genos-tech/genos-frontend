@@ -1,11 +1,22 @@
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
+import {
+    Modal,
+    ModalDialog,
+    Alert,
+    Stack,
+    Button,
+    Input,
+    Typography,
+    Checkbox,
+    Box,
+} from "@mui/joy";
 
 import { signUp } from "../../../admin/services/signup";
 import { joinTeam } from "../../../admin/services/joinTeam";
 import { UserProps, SignUpResponse } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
+import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -27,6 +38,7 @@ export const ModalCreateProject: React.FC<Props> = ({
     const { accessToken } = useAuth();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [isPrivate, setIsPrivate] = useState(true);
     const [projectName, setProjectName] = useState("");
     const handleCreateProject = () => {
         if (projectName.trim()) {
@@ -36,14 +48,17 @@ export const ModalCreateProject: React.FC<Props> = ({
     async function createProject(): Promise<void> {
         try {
             // Signup for a system user for the new project
-            const _signup = async (username: string, email: string, password: string) => {
+            const _signup = async (projectEmail: string, password: string) => {
+                // Step-1: Create a system user for the new project.
                 const signUpRes: SignUpResponse = await signUp(
-                    username,
-                    email,
+                    projectName,
+                    projectEmail,
                     password,
                     true,
                     setErrorMessage
                 );
+
+                // Step-2: If the system user is created successfully, create the project.
                 if (signUpRes) {
                     const createProjectResponse = await fetch(`${base_url}/project/`, {
                         method: "POST",
@@ -56,6 +71,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                             project_name: projectName,
                             owner: myself.userId,
                             project_system_user: signUpRes.user.id,
+                            is_private: isPrivate,
                         }),
                     });
 
@@ -65,6 +81,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                         console.error(createProjectData);
                         throw new Error(createProjectData.hint || "Project Creation Failed");
                     } else {
+                        // Step-3: Join the project.
                         const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
                             method: "POST",
                             headers: {
@@ -86,6 +103,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 joinProjectData.hint || "Failed to join the created project"
                             );
                         } else {
+                            // Step-4: Join the team for the system user.
                             const prjJoinTeamRes = await joinTeam(
                                 accessToken,
                                 myself.teamId,
@@ -93,6 +111,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 setErrorMessage
                             );
 
+                            // Step-5: Join the team for the user.
                             const meJoinTeamRes = await joinTeam(
                                 accessToken,
                                 myself.teamId,
@@ -121,8 +140,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                 }
             };
             _signup(
-                projectName,
-                `${projectName}-${myself.teamId}@origin.tech`,
+                `${myself.teamId}-${replaceSpacesWithUnderscore(projectName)}@origin.tech`,
                 `${projectName}-Bad-Password-Need-Secure-One`
             );
         } catch (error) {
@@ -152,10 +170,20 @@ export const ModalCreateProject: React.FC<Props> = ({
                         }}
                         sx={{ mt: 1 }}
                     />
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Checkbox
+                            label="🔒 Private Project"
+                            color="neutral"
+                            variant="soft"
+                            checked={isPrivate}
+                            onChange={(e) => setIsPrivate(e.target.checked)}
+                            sx={{ mt: 1 }}
+                        />
+                    </Box>
                     {errorMessage && errorMessage !== "" && (
                         <Alert color="danger">{errorMessage}</Alert>
                     )}
-                    <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
+                    <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
                         <Button
                             component="button"
                             color="danger"

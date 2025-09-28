@@ -24,6 +24,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import MoreVert from "@mui/icons-material/MoreVert";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { TaskSidebar } from "./components/TaskSidebar";
 import { TaskDashboard } from "./components/dashboard//TaskDashboard";
@@ -31,8 +32,6 @@ import { TaskPreview } from "./components/contents/TaskPreview";
 import { ProjectTaskTable } from "./components/table/TaskTable";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { loadSpecificTask } from "./services/loadSpecificTask";
-import { loadProjectTasks } from "./services/loadProjectTasks";
-import { loadTeamProjects } from "./services/loadTeamProjects";
 import { loadTeamTaskList } from "./services/loadTaskSearchList";
 import { ModalCreateTag } from "./components/modals/ModalCreateTag";
 import { ModalCreateProject } from "./components/modals/ModalCreateProject";
@@ -110,6 +109,11 @@ type TaskHomeProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
+    teamProjects: ProjectProps[];
+    setTeamProjects: (value: ProjectProps[]) => void;
+    loadProjects: (value: number) => Promise<void>;
+    currentProject: ProjectProps | null;
+    setCurrentProject: (value: ProjectProps | null) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -149,6 +153,11 @@ export const TaskHome = (props: TaskHomeProps) => {
         setIsTaskNoteVisible,
         isCreatingTask,
         setIsCreatingTask,
+        teamProjects,
+        setTeamProjects,
+        loadProjects,
+        currentProject,
+        setCurrentProject,
     } = props;
 
     // Common
@@ -162,7 +171,6 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
-    const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
     const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
     const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
@@ -189,8 +197,6 @@ export const TaskHome = (props: TaskHomeProps) => {
     }>({ flag: false, projectId: -1, projectName: "" });
     const [openCreateTag, setOpenCreateTag] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
-
-    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -263,93 +269,19 @@ export const TaskHome = (props: TaskHomeProps) => {
         setDeletedTasks(DeletedTasks);
     };
 
-    const loadProjects = async (targetProjectId: number) => {
-        // Load the latest project as initial process
-        const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
-
-        // Set the current project to one of the joining project.
-        // TODO: should set "last-opened-project" using cache(localstorage)
-        if (loadedTeamProjects.length > 0) {
-            setTeamProjects([...loadedTeamProjects]);
-
-            for (let i = 0; i < loadedTeamProjects.length; i++) {
-                if (targetProjectId !== -1 && currentProject) {
-                    if (
-                        loadedTeamProjects[i].projectId === targetProjectId ||
-                        myself.teamId !== currentTeamId
-                    ) {
-                        await loadProjectTasks(
-                            myself,
-                            loadedTeamProjects[i].projectId,
-                            accessToken
-                        );
-                        await fetchProjectTasks(loadedTeamProjects[i].projectId);
-                        break;
-                    }
-                } else {
-                    // If targetProjectId is not -1, set the target project as the current project
-                    if (targetProjectId !== -1) {
-                        if (loadedTeamProjects[i].projectId === targetProjectId) {
-                            setCurrentProject({
-                                projectId: loadedTeamProjects[i].projectId,
-                                projectName: loadedTeamProjects[i].projectName,
-                                projectTags: loadedTeamProjects[i].projectTags,
-                                systemUserId: loadedTeamProjects[i].systemUserId,
-                            });
-                            await loadProjectTasks(
-                                myself,
-                                loadedTeamProjects[i].projectId,
-                                accessToken
-                            );
-                            await fetchProjectTasks(loadedTeamProjects[i].projectId);
-                            break;
-                        }
-                    } else if (loadedTeamProjects[i].isJoined === true) {
-                        setCurrentProject({
-                            projectId: loadedTeamProjects[i].projectId,
-                            projectName: loadedTeamProjects[i].projectName,
-                            projectTags: loadedTeamProjects[i].projectTags,
-                            systemUserId: loadedTeamProjects[i].systemUserId,
-                        });
-                        await loadProjectTasks(
-                            myself,
-                            loadedTeamProjects[i].projectId,
-                            accessToken
-                        );
-                        await fetchProjectTasks(loadedTeamProjects[i].projectId);
-                        break;
-                    }
-
-                    // If not meeting any condition, set the last project as the current project
-                    if (i === loadedTeamProjects.length - 1) {
-                        setCurrentProject({
-                            projectId: loadedTeamProjects[i].projectId,
-                            projectName: loadedTeamProjects[i].projectName,
-                            projectTags: loadedTeamProjects[i].projectTags,
-                            systemUserId: loadedTeamProjects[i].systemUserId,
-                        });
-                        await loadProjectTasks(
-                            myself,
-                            loadedTeamProjects[i].projectId,
-                            accessToken
-                        );
-                        await fetchProjectTasks(loadedTeamProjects[i].projectId);
-                        break;
-                    }
-                }
-            }
-        } else {
-            setCurrentProject(null);
-        }
-    };
-
     useEffect(() => {
         setCurrentTeamId(myself.teamId);
-        loadProjects(
-            localStorage.getItem("lastProjectId")
-                ? Number(localStorage.getItem("lastProjectId"))
-                : -1
-        );
+
+        (async () => {
+            await loadProjects(
+                localStorage.getItem("lastProjectId")
+                    ? Number(localStorage.getItem("lastProjectId"))
+                    : -1
+            );
+            if (currentProject) {
+                fetchProjectTasks(currentProject.projectId);
+            }
+        })();
     }, []);
 
     useEffect(() => {
@@ -358,7 +290,13 @@ export const TaskHome = (props: TaskHomeProps) => {
             isNewProjectCreated === true ||
             isNewTaskCreated === true
         ) {
-            loadProjects(currentProject?.projectId || -1);
+            (async () => {
+                await loadProjects(currentProject?.projectId || -1);
+                if (currentProject) {
+                    fetchProjectTasks(currentProject.projectId);
+                }
+            })();
+
             setIsNewTeamCreated(false);
             setIsNewProjectCreated(false);
         }
@@ -540,6 +478,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     justifyContent: "space-between",
                                                 }}
                                             >
+                                                {currentProject.isPrivate === true ? (
+                                                    <LockOutlineIcon sx={{ fontSize: "26px" }} />
+                                                ) : null}
                                                 <Typography
                                                     level="h2"
                                                     component="h1"
@@ -941,6 +882,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                                 isCreatingTask={isCreatingTask}
+                                                teamProjects={teamProjects}
+                                                setTeamProjects={setTeamProjects}
                                             />
                                         </Box>
                                     </Panel>
@@ -1013,6 +956,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 handleCreateNewTaskNote={handleCreateNewTaskNote}
                                                 setCurrentTaskNote={setCurrentTaskNote}
                                                 isTaskNoteVisible={isTaskNoteVisible}
+                                                teamProjects={teamProjects}
+                                                setTeamProjects={setTeamProjects}
                                             />
                                         </Box>
                                     </Panel>
@@ -1186,6 +1131,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                         openDeleteProject={openDeleteProject}
                         setOpenDeleteProject={setOpenDeleteProject}
                         setCurrentProject={setCurrentProject}
+                        teamProjects={teamProjects}
+                        setTeamProjects={setTeamProjects}
                     />
 
                     {/* Modal for creating a new tag */}

@@ -103,12 +103,14 @@ export const createChatGroup = async (
     setGroupName: (e: string) => void,
     setAllChats: (chat: AllChatProps[]) => void,
     setCurrentMainChat: (chat: ChatProps) => void,
-    accessToken: string
+    accessToken: string,
+    isPrivate: boolean
 ) => {
     const data: CreateGMResponse = await createGMChat(
         accessToken,
         myself,
         chatName,
+        isPrivate,
         setCreateCGErrorMessage
     );
 

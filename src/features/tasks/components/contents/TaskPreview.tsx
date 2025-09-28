@@ -67,6 +67,8 @@ type TaskPreviewProps = {
     ) => Promise<void>;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
     isTaskNoteVisible: boolean;
+    teamProjects: ProjectProps[];
+    setTeamProjects: (value: ProjectProps[]) => void;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -100,6 +102,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         handleCreateNewTaskNote,
         setCurrentTaskNote,
         isTaskNoteVisible,
+        teamProjects,
+        setTeamProjects,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -352,7 +356,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     }, []);
 
     // Get team projects
-    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
     const [isOpenProjectList, setIsOpenProjectList] = useState(false);
     useEffect(() => {
         updateProjectOptions({

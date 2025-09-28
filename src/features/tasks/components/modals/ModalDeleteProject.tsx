@@ -18,6 +18,8 @@ type Props = {
         projectName: string;
     }) => void;
     setCurrentProject: (value: ProjectProps | null) => void;
+    teamProjects: ProjectProps[];
+    setTeamProjects: (value: ProjectProps[]) => void;
 };
 
 export const ModalDeleteProject: React.FC<Props> = ({
@@ -25,6 +27,8 @@ export const ModalDeleteProject: React.FC<Props> = ({
     openDeleteProject,
     setOpenDeleteProject,
     setCurrentProject,
+    teamProjects,
+    setTeamProjects,
 }) => {
     const { accessToken } = useAuth();
 
@@ -42,6 +46,11 @@ export const ModalDeleteProject: React.FC<Props> = ({
                 if (res.status === 204) {
                     setCurrentProject(null);
                     setOpenDeleteProject(disableOpenDeleteModalParams);
+                    setTeamProjects(
+                        teamProjects.filter(
+                            (project) => project.projectId !== openDeleteProject.projectId
+                        )
+                    );
                 } else if (res.status === 200) {
                     setErrorMessage(res.data.message);
                 }

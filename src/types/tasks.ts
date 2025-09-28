@@ -26,6 +26,7 @@ export type ProjectProps = {
     projectId: number;
     projectName: string;
     projectTags: TagListProps[];
+    isPrivate?: boolean;
     isJoined?: boolean;
     systemUserId?: string;
 };

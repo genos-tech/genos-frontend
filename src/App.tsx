@@ -51,6 +51,9 @@ import {
 } from "./hooks/notes/tab";
 import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "./utils/note";
 import { ProjectProps, TaskProps } from "./types/tasks";
+import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
+import { loadProjectTags } from "./features/tasks/services/loadProjectTags";
+import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -273,8 +276,101 @@ export const App = () => {
     ///////////////////////
     // Project Related
     ///////////////////////
+    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
     const [openCreateProject, setOpenCreateProject] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
+    const loadProjects = async (targetProjectId: number) => {
+        // Load the latest project as initial process
+        const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
+
+        // Set the current project to one of the joining project.
+        // TODO: should set "last-opened-project" using cache(localstorage)
+        if (loadedTeamProjects.length > 0) {
+            setTeamProjects([...loadedTeamProjects]);
+
+            for (let i = 0; i < loadedTeamProjects.length; i++) {
+                if (targetProjectId !== -1 && currentProject) {
+                    if (
+                        loadedTeamProjects[i].projectId === targetProjectId ||
+                        myself.teamId !== currentTeamId
+                    ) {
+                        await loadProjectTasks(
+                            myself,
+                            loadedTeamProjects[i].projectId,
+                            accessToken
+                        );
+                        break;
+                    }
+                } else {
+                    // If targetProjectId is not -1, set the target project as the current project
+                    if (targetProjectId !== -1) {
+                        if (loadedTeamProjects[i].projectId === targetProjectId) {
+                            setCurrentProject({
+                                projectId: loadedTeamProjects[i].projectId,
+                                projectName: loadedTeamProjects[i].projectName,
+                                projectTags: loadedTeamProjects[i].projectTags,
+                                isPrivate: loadedTeamProjects[i].isPrivate,
+                                systemUserId: loadedTeamProjects[i].systemUserId,
+                            });
+                            await loadProjectTasks(
+                                myself,
+                                loadedTeamProjects[i].projectId,
+                                accessToken
+                            );
+                            break;
+                        }
+                    } else if (loadedTeamProjects[i].isJoined === true) {
+                        setCurrentProject({
+                            projectId: loadedTeamProjects[i].projectId,
+                            projectName: loadedTeamProjects[i].projectName,
+                            projectTags: loadedTeamProjects[i].projectTags,
+                            isPrivate: loadedTeamProjects[i].isPrivate,
+                            systemUserId: loadedTeamProjects[i].systemUserId,
+                        });
+                        await loadProjectTasks(
+                            myself,
+                            loadedTeamProjects[i].projectId,
+                            accessToken
+                        );
+                        break;
+                    }
+
+                    // If not meeting any condition, set the last project as the current project
+                    if (i === loadedTeamProjects.length - 1) {
+                        setCurrentProject({
+                            projectId: loadedTeamProjects[i].projectId,
+                            projectName: loadedTeamProjects[i].projectName,
+                            projectTags: loadedTeamProjects[i].projectTags,
+                            isPrivate: loadedTeamProjects[i].isPrivate,
+                            systemUserId: loadedTeamProjects[i].systemUserId,
+                        });
+                        await loadProjectTasks(
+                            myself,
+                            loadedTeamProjects[i].projectId,
+                            accessToken
+                        );
+                        break;
+                    }
+                }
+            }
+        } else {
+            setCurrentProject(null);
+        }
+    };
+
+    useEffect(() => {
+        // If isPrivate is undefined, set the current project to the project
+        //  with the same project id in the team projects
+        // console.log("currentProject", currentProject);
+        if (currentProject && currentProject.isPrivate === undefined) {
+            const targetProject: ProjectProps | undefined = teamProjects.find(
+                (project) => project.projectId === currentProject.projectId
+            );
+            if (targetProject) {
+                setCurrentProject(targetProject);
+            }
+        }
+    }, [currentProject]);
 
     ///////////////////////
     // Task Related
@@ -896,6 +992,11 @@ export const App = () => {
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
+                        teamProjects={teamProjects}
+                        setTeamProjects={setTeamProjects}
+                        loadProjects={loadProjects}
+                        currentProject={currentProject}
+                        setCurrentProject={setCurrentProject}
                     />
                 ) : null}
 

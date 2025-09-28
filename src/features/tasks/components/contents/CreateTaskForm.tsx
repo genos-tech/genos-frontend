@@ -137,6 +137,8 @@ type CreateTaskProps = {
     rootTaskId: number | null;
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskPreviewVisible?: boolean;
+    teamProjects: ProjectProps[];
+    setTeamProjects: (value: ProjectProps[]) => void;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -167,6 +169,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         rootTaskId,
         setIsTaskHomeVisible,
         isTaskPreviewVisible,
+        teamProjects,
+        setTeamProjects,
     } = props;
     const { accessToken } = useAuth();
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
@@ -245,7 +249,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     }, []);
 
     // Get team projects
-    const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
     const [isOpenProjectList, setIsOpenProjectList] = useState(false);
     useEffect(() => {
         updateProjectOptions({

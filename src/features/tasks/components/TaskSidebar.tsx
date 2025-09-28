@@ -25,6 +25,7 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useColorScheme } from "@mui/joy/styles";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { loadTeamTaskList } from "../services/loadTaskSearchList";
 import { loadProjectTags } from "../services/loadProjectTags";
@@ -68,7 +69,7 @@ function Toggler({
 
 type TaskSidebarProps = {
     myself: UserProps;
-    loadProjects: (value: number) => void;
+    loadProjects: (value: number) => Promise<void>;
     setIsDashboardVisible: (value: boolean) => void;
     setTaskTableVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
@@ -537,6 +538,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                             projectId,
                                             projectName,
                                             projectTags,
+                                            isPrivate,
                                             systemUserId,
                                             isJoined,
                                         },
@@ -563,12 +565,19 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                     projectId: projectId,
                                                                     projectName: projectName,
                                                                     projectTags: projectTags,
+                                                                    isPrivate: isPrivate,
                                                                     systemUserId: systemUserId,
                                                                 });
-                                                                loadProjects(projectId);
+
+                                                                (async () => {
+                                                                    await loadProjects(projectId);
+                                                                })();
                                                             }}
                                                             sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                         >
+                                                            {isPrivate === true ? (
+                                                                <LockOutlineIcon />
+                                                            ) : null}
                                                             <Typography
                                                                 noWrap
                                                                 sx={{
@@ -680,13 +689,25 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                     defaultExpanded={false}
                                     renderToggle={({ open, setOpen }) => (
                                         <ListItemButton
+                                            color="neutral"
+                                            variant="soft"
                                             onClick={() => {
                                                 setOpen(!open);
                                             }}
                                         >
                                             <ListItemContent>
-                                                <Typography level="title-sm">
-                                                    Other Projects
+                                                <Typography
+                                                    noWrap
+                                                    sx={{
+                                                        fontSize: "15px",
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
+                                                        width: "100%", // take full width of button
+                                                    }}
+                                                    startDecorator={<AddIcon />}
+                                                >
+                                                    Join Project
                                                 </Typography>
                                             </ListItemContent>
                                             <KeyboardArrowDownIcon
@@ -749,7 +770,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                                         textOverflow: "ellipsis",
                                                                         whiteSpace: "nowrap",
                                                                         width: "100%", // take full width of button
-                                                                        ml: "20px",
+                                                                        ml: "35px",
                                                                     }}
                                                                 >
                                                                     {projectName}
@@ -771,7 +792,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                         }}
                                         sx={{ overflow: "hidden" }} // ensure children don't overflow
                                     >
-                                        <AddIcon />
                                         <Typography
                                             noWrap
                                             sx={{
@@ -781,6 +801,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                 whiteSpace: "nowrap",
                                                 width: "100%", // take full width of button
                                             }}
+                                            startDecorator={<AddIcon />}
                                         >
                                             New Project
                                         </Typography>

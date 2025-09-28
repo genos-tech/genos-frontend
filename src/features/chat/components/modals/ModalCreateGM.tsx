@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
+import {
+    Modal,
+    ModalDialog,
+    Alert,
+    Stack,
+    Button,
+    Input,
+    Typography,
+    Checkbox,
+    Box,
+} from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { createChatGroup } from "../../services/createChatGroup";
@@ -28,6 +38,7 @@ export const ModalCreateGM: React.FC<Props> = ({
 }) => {
     const { accessToken } = useAuth();
 
+    const [isPrivate, setIsPrivate] = useState(true);
     const [CreateCGErrorMessage, setCreateCGErrorMessage] = useState<string | null>(null);
     const [chatName, setGroupName] = useState("");
     const handleCreateGroup = () => {
@@ -42,7 +53,8 @@ export const ModalCreateGM: React.FC<Props> = ({
                 setGroupName,
                 setAllChats,
                 setCurrentMainChat,
-                accessToken ? accessToken : ""
+                accessToken ? accessToken : "",
+                isPrivate
             );
         }
     };
@@ -63,6 +75,16 @@ export const ModalCreateGM: React.FC<Props> = ({
                         }}
                         sx={{ mt: 1 }}
                     />
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Checkbox
+                            label="🔒 Private Project"
+                            color="neutral"
+                            variant="soft"
+                            checked={isPrivate}
+                            onChange={(e) => setIsPrivate(e.target.checked)}
+                            sx={{ mt: 1 }}
+                        />
+                    </Box>
                     {CreateCGErrorMessage && CreateCGErrorMessage !== "" && (
                         <Alert color="danger">{CreateCGErrorMessage}</Alert>
                     )}

@@ -2,21 +2,26 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
+import { replaceSpacesWithUnderscore } from "../../../utils/stringHelper";
 
 export const createGMChat = async (
     accessToken: string | null,
     myself: UserProps,
     chatName: string,
+    isPrivate: boolean,
     setErrorMessage?: (value: string) => void
 ) => {
     try {
         const api = authApi(accessToken);
         if (api) {
             const res = await api.post("/gm/create/", {
-                group_email: `${chatName}@origin.tech`,
+                group_email: `${myself.teamId}-${replaceSpacesWithUnderscore(
+                    chatName
+                )}@origin.tech`,
                 group_name: chatName,
                 owner_user: myself.userId,
                 owner_team: myself.teamId,
+                is_private: isPrivate,
             });
             return res.data;
         } else {
