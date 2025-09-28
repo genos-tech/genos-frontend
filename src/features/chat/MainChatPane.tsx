@@ -56,7 +56,7 @@ type MessagesPaneProps = {
     currentMainChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
-    funcSetAllChats: () => void;
+    funcSetAllChats: () => Promise<void>;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
 };
@@ -256,6 +256,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                     setIsCreatingTask={setIsCreatingTask}
                     setOpeningService={setOpeningService}
+                    funcSetAllChats={funcSetAllChats}
                 />
 
                 <Box sx={{ px: 0.3, my: 0.2 }}>

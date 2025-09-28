@@ -52,7 +52,7 @@ type MessagesPaneProps = {
     currentSubChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     setOpeningService: (value: number) => void;
-    funcSetAllChats: () => void;
+    funcSetAllChats: () => Promise<void>;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
 };
@@ -249,6 +249,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     isCreatingTask={isCreatingTask}
                     setIsCreatingTask={setIsCreatingTask}
                     setOpeningService={setOpeningService}
+                    funcSetAllChats={funcSetAllChats}
                 />
 
                 <Box sx={{ px: 0.3, my: 0.2 }}>

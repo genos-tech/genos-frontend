@@ -208,6 +208,7 @@ export const loadInitialData = (
                                         TSLastMessage: fetchedChat.TSLastMessage,
                                         project: fetchedChat.project,
                                         isPrivate: fetchedChat.isPrivate,
+                                        profileImagePath: fetchedChat.profileImagePath,
                                     };
                                     setCurrentMainChat(currentMainChat);
                                     setIsInitialChatLoaded(true);

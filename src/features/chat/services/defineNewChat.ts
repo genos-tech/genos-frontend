@@ -7,7 +7,8 @@ export const defineNewChat = (
     chatType: number,
     dmPartnerUser: UserProps,
     messages: MessageProps[],
-    isPrivate: boolean
+    isPrivate: boolean,
+    profileImagePath?: string
 ) => {
     const newChat: ChatProps = {
         chatId: chatId,
@@ -20,6 +21,7 @@ export const defineNewChat = (
         latestMessageText: messages[messages.length - 1].contentText,
         TSLastMessage: messages[messages.length - 1].tsSent,
         isPrivate: isPrivate,
+        profileImagePath: profileImagePath,
     };
     return newChat;
 };

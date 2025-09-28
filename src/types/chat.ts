@@ -16,6 +16,7 @@ export type AllChatProps = {
     TSLastMessage: string;
     project?: ProjectProps;
     isPrivate?: boolean;
+    profileImagePath?: string;
 };
 
 export type ChatProps = {
@@ -34,6 +35,7 @@ export type ChatProps = {
     moveToSpecificIndex?: string;
     notMove?: boolean;
     isPrivate?: boolean;
+    profileImagePath?: string;
 };
 
 // Thread Props
@@ -52,6 +54,15 @@ export type ThreadProps = {
     moveToSpecificIndex?: string;
     notMove?: boolean;
     isPrivate?: boolean;
+};
+
+export type GMProfileProps = {
+    gmId: number;
+    gmName: string;
+    ownerUserId: string;
+    profileImagePath: string;
+    isPrivate: boolean;
+    tsCreatedAt: string;
 };
 
 // Activity Message Props

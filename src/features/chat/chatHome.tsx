@@ -48,7 +48,7 @@ type ChatHomeProps = {
     setOpeningService: (service: number) => void;
     allChats: AllChatProps[];
     setAllChats: (chat: AllChatProps[]) => void;
-    funcSetAllChats: () => void;
+    funcSetAllChats: () => Promise<void>;
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     unReadInboxItemCount: number;
@@ -121,6 +121,8 @@ type ChatHomeProps = {
     setIsSubChatVisible: (value: boolean) => void;
     isThreadVisible: boolean;
     setIsThreadVisible: (value: boolean) => void;
+    teamProjects: ProjectProps[];
+    setTeamProjects: (value: ProjectProps[]) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -196,6 +198,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         setIsSubChatVisible,
         isThreadVisible,
         setIsThreadVisible,
+        teamProjects,
+        setTeamProjects,
     } = props;
 
     // Common
@@ -350,6 +354,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 setCurrentProject={setCurrentProject}
                                 unReadChatCounts={unReadChatCounts}
                                 unReadActivityMessageCounts={unReadActivityMessageCounts}
+                                funcSetAllChats={funcSetAllChats}
                             />
                         </Sheet>
                     </Box>
@@ -619,6 +624,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setOpeningService={setOpeningService}
                                     parentTaskId={null}
                                     rootTaskId={null}
+                                    teamProjects={teamProjects}
+                                    setTeamProjects={setTeamProjects}
                                 />
                             </Box>
                         </Panel>
@@ -686,6 +693,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     handleCreateNewTaskNote={handleCreateNewTaskNote}
                                     setCurrentTaskNote={setCurrentTaskNote}
                                     isTaskNoteVisible={isTaskNoteVisible}
+                                    teamProjects={teamProjects}
+                                    setTeamProjects={setTeamProjects}
                                 />
                             </Box>
                         </Panel>

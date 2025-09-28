@@ -49,6 +49,7 @@ type ChatListProps = {
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     showOnlyUnreadItems: boolean;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const ChatList = (props: ChatListProps) => {
@@ -80,6 +81,7 @@ export const ChatList = (props: ChatListProps) => {
         setCurrentPreviewTaskId,
         setCurrentProject,
         showOnlyUnreadItems,
+        funcSetAllChats,
     } = props;
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
@@ -225,6 +227,7 @@ export const ChatList = (props: ChatListProps) => {
                                         setIsSubChatVisible={setIsSubChatVisible}
                                         setOpeningService={setOpeningService}
                                         chatType={chatType}
+                                        funcSetAllChats={funcSetAllChats}
                                     />
                                 </Stack>
                             </div>

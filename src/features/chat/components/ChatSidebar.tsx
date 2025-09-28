@@ -78,6 +78,7 @@ type ChatSidebarProps = {
     setCurrentProject: (value: ProjectProps) => void;
     unReadChatCounts?: Record<string, number>;
     unReadActivityMessageCounts: number;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -111,6 +112,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         setCurrentProject,
         unReadChatCounts,
         unReadActivityMessageCounts,
+        funcSetAllChats,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -139,6 +141,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             systemUserId: lastChat.systemUserId,
             project: lastChat.project,
             isPrivate: lastChat.isPrivate,
+            profileImagePath: lastChat.profileImagePath,
         };
         return newMessages;
     };
@@ -507,6 +510,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
+                            funcSetAllChats={funcSetAllChats}
                         />
                     </>
                 )}
@@ -540,6 +544,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
+                            funcSetAllChats={funcSetAllChats}
                         />
                     </>
                 )}
@@ -573,6 +578,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
+                            funcSetAllChats={funcSetAllChats}
                         />
                     </>
                 )}
@@ -612,6 +618,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
+                            funcSetAllChats={funcSetAllChats}
                         />
                     </>
                 )}

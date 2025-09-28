@@ -47,7 +47,7 @@ type BnChatEditorProps = {
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
     isSubChatVisible: boolean;
-    funcSetAllChats: () => void;
+    funcSetAllChats: () => Promise<void>;
     setOpeningService: (value: number) => void;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
@@ -219,6 +219,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         },
                         latestMessageText: contentText,
                         TSLastMessage: getCurrentTimestamp(),
+                        profileImagePath: chat.profileImagePath,
                     };
                     setCurrentChat(updatedChat);
 
@@ -251,6 +252,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             latestMessage: latestMessage,
                             latestMessageText: contentText,
                             TSLastMessage: getCurrentTimestamp(),
+                            profileImagePath: chat.profileImagePath,
                         };
 
                         if (newChat) {

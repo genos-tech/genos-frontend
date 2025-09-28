@@ -39,6 +39,7 @@ self.onmessage = async (event) => {
                 latestMessageText: gmChat.latestMessageText,
                 TSLastMessage: gmChat.TSLastMessage,
                 isPrivate: gmChat.isPrivate,
+                profileImagePath: gmChat.profileImagePath,
             },
         });
 

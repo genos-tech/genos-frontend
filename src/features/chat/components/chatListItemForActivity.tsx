@@ -153,6 +153,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             TSLastMessage: activity.tsSent,
             moveToSpecificIndex: moveToSpecificIndex,
             isPrivate: currentChat.isPrivate,
+            profileImagePath: currentChat.profileImagePath,
         };
         return newChat;
     };

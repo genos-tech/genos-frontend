@@ -34,6 +34,7 @@ type SubChatPaneHeaderProps = {
         rootTaskId: number | null;
     }) => void;
     setOpeningService: (value: number) => void;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
@@ -53,6 +54,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         isCreatingTask,
         setIsCreatingTask,
         setOpeningService,
+        funcSetAllChats,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
@@ -85,6 +87,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     setCurrentMainChat={setCurrentMainChat}
                     chat={subChat}
                     isYou={isYou}
+                    funcSetAllChats={funcSetAllChats}
                 />
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>

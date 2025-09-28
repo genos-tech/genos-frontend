@@ -38,7 +38,7 @@ type wsHookProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (chat: ThreadProps) => void;
-    funcSetAllChats: () => void;
+    funcSetAllChats: () => Promise<void>;
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     isLoading: boolean;
     funcSetActivityMessages: () => void;
@@ -75,6 +75,7 @@ export const wsHook = (props: wsHookProps) => {
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
             TSLastMessage: newChatMessage.tsSent,
+            profileImagePath: currentChat.profileImagePath,
         };
 
         if (newChat) {

@@ -983,6 +983,8 @@ export const App = () => {
                         setIsSubChatVisible={setIsSubChatVisible}
                         isThreadVisible={isThreadVisible}
                         setIsThreadVisible={setIsThreadVisible}
+                        teamProjects={teamProjects}
+                        setTeamProjects={setTeamProjects}
                     />
                 ) : null}
 

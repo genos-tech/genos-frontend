@@ -30,6 +30,7 @@ type MainChatPaneHeaderProps = {
         rootTaskId: number | null;
     }) => void;
     setOpeningService: (value: number) => void;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
@@ -49,6 +50,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setIsTaskPreviewVisible,
         setIsCreatingTask,
         setOpeningService,
+        funcSetAllChats,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
@@ -90,6 +92,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     setCurrentMainChat={setCurrentMainChat}
                     chat={chat}
                     isYou={isYou}
+                    funcSetAllChats={funcSetAllChats}
                 />
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>

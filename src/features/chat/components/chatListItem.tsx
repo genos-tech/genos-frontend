@@ -13,7 +13,6 @@ import {
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import CircleIcon from "@mui/icons-material/Circle";
-import GroupsIcon from "@mui/icons-material/Groups";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
@@ -25,6 +24,7 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
+import { GMAvatar } from "./GMAvatar";
 
 type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
@@ -54,6 +54,7 @@ type ChatListItemProps = ListItemButtonProps & {
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
     chatType: number;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
@@ -77,6 +78,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
         setIsSubChatVisible,
         setOpeningService,
         chatType,
+        funcSetAllChats,
     } = props;
 
     const selected =
@@ -102,6 +104,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             systemUserId: chat.systemUserId,
             project: chat.project,
             isPrivate: chat.isPrivate,
+            profileImagePath: chat.profileImagePath,
         };
         return newMessages;
     };
@@ -197,9 +200,17 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         <Avatar size="sm">{chat.chatName[0].toUpperCase()}</Avatar>
                                     )}
                                     {chatType === 2 && (
-                                        <Avatar size="sm">
-                                            <GroupsIcon />
-                                        </Avatar>
+                                        <GMAvatar
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            isYou={isYou}
+                                            socket={socket}
+                                            gmChat={chat}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            funcSetAllChats={funcSetAllChats}
+                                        />
                                     )}
                                     {chatType === 3 && (
                                         <Avatar size="sm">

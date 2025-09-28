@@ -1,14 +1,13 @@
 import { Socket } from "socket.io-client";
-import { useState } from "react";
 import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
 import GroupsIcon from "@mui/icons-material/Groups";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { ChatProps } from "../../../../types/chat";
 import { PulseDot } from "../../../../components/utils/PulseDot";
-import { UserProfile } from "../../../admin/components/modals/UserProfile";
 import { UserProps } from "../../../../types/admin";
 import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
+import { GMAvatar } from "../GMAvatar";
 
 type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -19,6 +18,7 @@ type HeaderUserNameProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     chat: ChatProps;
     isYou: boolean;
+    funcSetAllChats: () => Promise<void>;
 };
 export const HeaderUserName = (props: HeaderUserNameProps) => {
     const {
@@ -30,9 +30,9 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
         setCurrentMainChat,
         chat,
         isYou,
+        funcSetAllChats,
     } = props;
 
-    const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const headerUser: UserProps | undefined = teamMemberProfiles[chat.dmPartnerUser.userId];
     let isOnline: boolean = headerUser
         ? myself.userId === headerUser.userId
@@ -63,9 +63,20 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         setCurrentMainChat={setCurrentMainChat}
                     />
                 ) : (
-                    <Avatar>
-                        <GroupsIcon sx={{ fontSize: 32 }} />
-                    </Avatar>
+                    // <Avatar>
+                    //     <GroupsIcon sx={{ fontSize: 32 }} />
+                    // </Avatar>
+                    <GMAvatar
+                        teamMemberProfiles={teamMemberProfiles}
+                        myself={myself}
+                        setMyself={setMyself}
+                        isYou={isYou}
+                        socket={socket}
+                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
+                        gmChat={chat}
+                        funcSetAllChats={funcSetAllChats}
+                    />
                 )}
             </div>
             <div>
@@ -133,19 +144,6 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         )}
                 </Stack>
             </div>
-            {chat.dmPartnerUser.userId !== "" && (
-                <UserProfile
-                    socket={socket}
-                    myself={myself}
-                    setMyself={setMyself}
-                    isYou={isYou}
-                    user={teamMemberProfiles[chat.dmPartnerUser.userId]}
-                    openUserProfile={openUserProfile}
-                    setOpenUserProfile={setOpenUserProfile}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setOpeningService={setOpeningService}
-                />
-            )}
         </>
     );
 };

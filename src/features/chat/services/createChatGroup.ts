@@ -17,16 +17,15 @@ const createGroupMessage = [
 ];
 
 const moveToGMChat = async (
-    chatId: number,
-    chatName: string,
+    chat: AllChatProps,
     isPrivate: boolean,
     setCurrentMainChat: (chat: ChatProps) => void
 ) => {
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
+    const fetchedMessages: MessageProps[] = await popSpecificMessages(chat.chatId, 2);
     if (fetchedMessages && fetchedMessages.length !== 0) {
         const newChat: ChatProps = {
-            chatId: chatId,
-            chatName: chatName,
+            chatId: chat.chatId,
+            chatName: chat.chatName,
             chatType: 2,
             dmPartnerUser: defaultDmPartner,
             lastReadMessageId: fetchedMessages[fetchedMessages.length - 1].messageId,
@@ -35,6 +34,7 @@ const moveToGMChat = async (
             latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText,
             TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
             isPrivate: isPrivate,
+            profileImagePath: chat.profileImagePath,
         };
         setCurrentMainChat(newChat);
     } else {
@@ -95,7 +95,7 @@ const addGMChatAndMessage = async (
         },
     ]);
 
-    moveToGMChat(newChat.chatId, newChat.chatName, isPrivate, setCurrentMainChat);
+    moveToGMChat(newChat, isPrivate, setCurrentMainChat);
 };
 
 export const createChatGroup = async (
