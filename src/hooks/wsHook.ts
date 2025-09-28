@@ -686,7 +686,7 @@ export const wsHook = (props: wsHookProps) => {
                 console.log("activity_message:", message);
 
                 let tmpNewActivityMessage: ActivityMessageProps = message;
-                let newActivityMessage: ActivityMessageProps;
+                let newActivityMessage: ActivityMessageProps | undefined;
 
                 if (tmpNewActivityMessage) {
                     // If it's a common thread message, task comment, or mention activity.
@@ -697,6 +697,7 @@ export const wsHook = (props: wsHookProps) => {
                         if (tmpNewActivityMessage.senderId !== myself.userId) {
                             //Update `activityType` if the myself is in the `mentionedUserIds`.
                             // By default, WS returns with activityType = 1 (common message, not mention nor reaction)
+                            let doUpdateActivityMessage = false;
                             if (
                                 tmpNewActivityMessage.mentionedUserIds &&
                                 isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
@@ -707,26 +708,28 @@ export const wsHook = (props: wsHookProps) => {
                                     ...tmpNewActivityMessage,
                                     activityType: activityType,
                                 };
-                                if (newActivityMessage) {
-                                    await addActivityMessage(newActivityMessage);
-                                    funcSetActivityMessages();
-                                }
+                                doUpdateActivityMessage = true;
                             } else if (tmpNewActivityMessage.isThread === true) {
                                 console.log("thread replay from others");
                                 newActivityMessage = tmpNewActivityMessage;
-                                if (newActivityMessage) {
-                                    await addActivityMessage(newActivityMessage);
-                                    funcSetActivityMessages();
-                                }
+                                doUpdateActivityMessage = true;
+                            } else if (tmpNewActivityMessage.chatType === 2) {
+                                console.log("GM message from others");
+                                newActivityMessage = tmpNewActivityMessage;
+                                doUpdateActivityMessage = true;
                             } else if (tmpNewActivityMessage.chatType === 4) {
                                 console.log("task comment from others");
                                 newActivityMessage = tmpNewActivityMessage;
-                                if (newActivityMessage) {
-                                    await addActivityMessage(newActivityMessage);
-                                    funcSetActivityMessages();
-                                }
+                                doUpdateActivityMessage = true;
                             } else {
+                                newActivityMessage = undefined;
                                 console.log("[IGNORE] Common message or mention but not to me");
+                            }
+
+                            // Update the activity message in the indexedDB
+                            if (doUpdateActivityMessage && newActivityMessage) {
+                                await addActivityMessage(newActivityMessage);
+                                funcSetActivityMessages();
                             }
                         } else {
                             console.log("[IGNORE] Thread or mention from me");

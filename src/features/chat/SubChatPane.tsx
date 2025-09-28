@@ -95,7 +95,12 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
 
     useEffect(() => {
-        setChatMessages(subChat.messages);
+        // For DM chat, remove the first message because it is the "has joined" message.
+        if (subChat.chatType === 1) {
+            setChatMessages(subChat.messages.slice(1));
+        } else {
+            setChatMessages(subChat.messages);
+        }
     }, [subChat.messages]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);

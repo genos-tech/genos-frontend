@@ -455,7 +455,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                     color="neutral"
                                                     sx={{
                                                         fontSize: "15px",
-                                                        paddingRight: "10px",
+                                                        padding: "10px",
                                                     }}
                                                 >
                                                     Choose a Chat from Sidebar
