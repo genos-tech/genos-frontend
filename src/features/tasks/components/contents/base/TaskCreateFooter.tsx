@@ -19,11 +19,6 @@ type TaskCreateFooterProps = {
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
     setIsTaskPreviewVisible?: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
     setIsCreatingTask: (value: {
         flag: boolean;
         parentTaskId: number | null;
@@ -46,7 +41,6 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         setTitleError,
         setTitleErrorOpen,
         setIsTaskPreviewVisible,
-        isCreatingTask,
         setIsCreatingTask,
         setCurrentPreviewTaskId,
         setCurrentProject,

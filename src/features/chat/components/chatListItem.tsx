@@ -117,12 +117,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
                     setCurrentMainChat(newChat);
                     addChat(newChat, chat.chatType);
 
-                    // Switch Thread to Main
-                    if (isThreadVisible) {
-                        setIsMainChatVisible(true);
-                        if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                            setIsThreadVisible(false);
-                        }
+                    setIsMainChatVisible(true);
+
+                    if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                        setIsThreadVisible(false);
                     }
                 })
                 .catch((error) => console.error(error));
@@ -139,11 +137,9 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 popSpecificMessages(chat.chatId, chat.chatType)
                     .then((messages) => {
                         setCurrentSubChat(defineNewChat(messages));
-                        if (isThreadVisible) {
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
+                        setIsMainChatVisible(true);
+                        if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                            setIsThreadVisible(false);
                         }
                     })
                     .catch((error) => console.error(error));
@@ -151,11 +147,9 @@ export const ChatListItem = (props: ChatListItemProps) => {
                 popSpecificMessages(chat.chatId, chat.chatType)
                     .then((messages) => {
                         setCurrentSubChat(defineNewChat(messages));
-                        if (isThreadVisible) {
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
+                        setIsMainChatVisible(true);
+                        if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                            setIsThreadVisible(false);
                         }
                     })
                     .catch((error) => console.error(error));

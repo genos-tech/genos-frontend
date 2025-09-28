@@ -96,7 +96,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     const [chatMessages, setChatMessages] = useState(chat.messages);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
-    const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
     const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
 
@@ -200,7 +199,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     }, [visibleRange]);
 
     useEffect(() => {
-        setTargetMessageIndex(currentMainChat.messages.length - 1);
         setIndexMap(
             Object.fromEntries(
                 currentMainChat.messages.map((message, idx) => [message.messageIdWithChatId, idx])
@@ -251,7 +249,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     setIsSubChatVisible={setIsSubChatVisible}
                     setIsThreadVisible={setIsThreadVisible}
                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    isCreatingTask={isCreatingTask}
                     setIsCreatingTask={setIsCreatingTask}
                     setOpeningService={setOpeningService}
                 />
@@ -393,7 +390,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                             setIsInEdit={setIsInEdit}
                                             setEditTargetMessage={setEditTargetMessage}
                                             currentMessageIndex={index}
-                                            setTargetMessageIndex={setTargetMessageIndex}
                                         />
                                     </Stack>
                                 </div>

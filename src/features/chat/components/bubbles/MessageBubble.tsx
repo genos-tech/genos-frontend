@@ -54,7 +54,6 @@ type MessageBubbleProps = {
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: MessageProps) => void;
     currentMessageIndex: number;
-    setTargetMessageIndex: (value: number) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -83,7 +82,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setIsInEdit,
         setEditTargetMessage,
         currentMessageIndex,
-        setTargetMessageIndex,
     } = props;
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
@@ -493,8 +491,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             message={message}
                                             setIsInEdit={setIsInEdit}
                                             setEditTargetMessage={setEditTargetMessage}
-                                            currentMessageIndex={currentMessageIndex}
-                                            setTargetMessageIndex={setTargetMessageIndex}
                                         />
                                     )}
                                     {(chat.chatType === 3 || chat.chatType === 4) &&
@@ -591,12 +587,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                             setIsInEdit={setIsInEdit}
                                                             setEditTargetMessage={
                                                                 setEditTargetMessage
-                                                            }
-                                                            currentMessageIndex={
-                                                                currentMessageIndex
-                                                            }
-                                                            setTargetMessageIndex={
-                                                                setTargetMessageIndex
                                                             }
                                                         />
                                                     )}

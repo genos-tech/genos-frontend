@@ -3,7 +3,7 @@ import { Tooltip, Stack, Typography, IconButton, Chip } from "@mui/joy";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ReplyIcon from "@mui/icons-material/Reply";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import { useColorScheme } from "@mui/joy/styles";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 
@@ -190,7 +190,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         <IconButton
                             size="sm"
                             onClick={() => {
-                                setIsMainChatVisible(true);
+                                setIsMainChatVisible(false);
                                 setIsThreadVisible(true);
                                 setIsTaskPreviewVisible(true);
                                 setIsCreatingTask({
@@ -203,7 +203,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 }
                             }}
                         >
-                            <OpenInNewIcon />
+                            <AssignmentRoundedIcon />
                         </IconButton>
                     </Tooltip>
                 )}
@@ -235,22 +235,20 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
 
-                {isChatNoteVisible === false && (
-                    <Tooltip title="Close Thread" size="sm">
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            color="neutral"
-                            onClick={() => {
-                                setIsMainChatVisible(true);
-                                setIsThreadVisible(false);
-                                setCurrentThreadChat(dummyThreadChat);
-                            }}
-                        >
-                            <CancelIcon />
-                        </IconButton>
-                    </Tooltip>
-                )}
+                <Tooltip title="Close Thread" size="sm">
+                    <IconButton
+                        size="sm"
+                        variant="plain"
+                        color="neutral"
+                        onClick={() => {
+                            setIsMainChatVisible(true);
+                            setIsThreadVisible(false);
+                            setCurrentThreadChat(dummyThreadChat);
+                        }}
+                    >
+                        <CancelIcon />
+                    </IconButton>
+                </Tooltip>
             </Stack>
         </Stack>
     );

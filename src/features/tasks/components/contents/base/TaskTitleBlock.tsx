@@ -12,6 +12,7 @@ import {
     MenuButton,
     Menu,
     MenuItem,
+    Tooltip,
 } from "@mui/joy";
 import MoreVert from "@mui/icons-material/MoreVert";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -175,21 +176,22 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </FormControl>
                 </Box>
 
-                <IconButton
-                    size="sm"
-                    variant="plain"
-                    color="neutral"
-                    onClick={() => {
-                        if (isPreviewMode === true) {
-                            {
+                {isPreviewMode === true && (
+                    <Tooltip title="Expand">
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            color="neutral"
+                            onClick={() => {
                                 setIsTaskHomeVisible && setIsTaskHomeVisible(false);
                                 setIsMainChatVisible && setIsMainChatVisible(false);
-                            }
-                        }
-                    }}
-                >
-                    <OpenInNewIcon />
-                </IconButton>
+                                setIsThreadVisible && setIsThreadVisible(false);
+                            }}
+                        >
+                            <OpenInNewIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
 
                 <Dropdown>
                     <MenuButton

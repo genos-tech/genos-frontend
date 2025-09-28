@@ -172,11 +172,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
                             setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
-                            if (isThreadVisible) {
-                                setIsMainChatVisible(true);
-                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                    setIsThreadVisible(false);
-                                }
+                            setIsMainChatVisible(true);
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                                setIsThreadVisible(false);
                             }
                         })
                         .catch((error) => console.error(error));
@@ -190,11 +188,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
                             setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
-                            if (isThreadVisible) {
-                                setIsMainChatVisible(true);
-                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                    setIsThreadVisible(false);
-                                }
+                            setIsMainChatVisible(true);
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                                setIsThreadVisible(false);
                             }
                         })
                         .catch((error) => console.error(error));
@@ -220,11 +216,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 setIsThreadVisible(false);
                                 setIsTaskPreviewVisible(true);
                             }
-                            if (isThreadVisible) {
-                                setIsMainChatVisible(true);
-                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                    setIsThreadVisible(false);
-                                }
+                            setIsMainChatVisible(true);
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                                setIsThreadVisible(false);
                             }
                         })
                         .catch((error) => console.error(error));
@@ -290,11 +284,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
                             setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
-                            if (isThreadVisible) {
-                                setIsMainChatVisible(true);
-                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                    setIsThreadVisible(false);
-                                }
+                            setIsMainChatVisible(true);
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                                setIsThreadVisible(false);
                             }
                         })
                         .catch((error) => console.error(error));
@@ -308,11 +300,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     popSpecificMessages(activity.chatId, activity.chatType)
                         .then((messages) => {
                             setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
-                            if (isThreadVisible) {
-                                setIsMainChatVisible(true);
-                                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                    setIsThreadVisible(false);
-                                }
+                            setIsMainChatVisible(true);
+                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                                setIsThreadVisible(false);
                             }
                         })
                         .catch((error) => console.error(error));

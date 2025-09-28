@@ -91,7 +91,6 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const [chatMessages, setChatMessages] = useState(subChat.messages);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
-    const [targetMessageIndex, setTargetMessageIndex] = useState<number>(chatMessages.length - 1);
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
     const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
 
@@ -196,7 +195,6 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
 
     useEffect(() => {
         if (currentSubChat) {
-            setTargetMessageIndex(currentSubChat.messages.length - 1);
             setIndexMap(
                 Object.fromEntries(
                     currentSubChat.messages.map((message, idx) => [
@@ -380,7 +378,6 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                             setIsInEdit={setIsInEdit}
                                             setEditTargetMessage={setEditTargetMessage}
                                             currentMessageIndex={index}
-                                            setTargetMessageIndex={setTargetMessageIndex}
                                         />
                                     </Stack>
                                 </div>
