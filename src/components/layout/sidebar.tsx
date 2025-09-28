@@ -92,6 +92,9 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("lastPMChatId", "");
                 localStorage.setItem("lastPinnedChatId", "");
                 localStorage.setItem("lastProjectId", "");
+                localStorage.setItem("lastOpenChatNoteId", "");
+                localStorage.setItem("lastOpenTaskNoteId", "");
+                localStorage.setItem("currentMainChatId", "");
                 setAccessToken(null);
                 navigate("/");
             } else {

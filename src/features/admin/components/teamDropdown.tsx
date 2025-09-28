@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { IconButton, Menu, MenuItem, Dropdown, Avatar, Tooltip } from "@mui/joy";
+import { IconButton, Menu, MenuItem, Dropdown, Avatar, Tooltip, Box } from "@mui/joy";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -213,7 +213,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     </MenuItem>
 
                     {myself.userId === currentTeam.teamOwnerId && (
-                        <>
+                        <Box>
                             <input
                                 type="file"
                                 accept=".jpg,.jpeg,.png,image/jpeg,image/png"
@@ -234,7 +234,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                 <EditIcon />
                                 Edit Team Profile
                             </MenuItem>
-                        </>
+                        </Box>
                     )}
                 </Menu>
             </Dropdown>
