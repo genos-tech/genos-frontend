@@ -703,19 +703,8 @@ export const wsHook = (props: wsHookProps) => {
                             ) {
                                 console.log("Me mentioned");
                                 const activityType = 3;
-                                const chatType = tmpNewActivityMessage.chatType;
-                                const chatId = tmpNewActivityMessage.chatId;
-                                const threadId = tmpNewActivityMessage.threadId;
-                                const messageId = tmpNewActivityMessage.messageId;
-                                let newActivityId: string;
-                                if (tmpNewActivityMessage.isThread === true) {
-                                    newActivityId = `${activityType}-${chatType}-${chatId}-${threadId}-${messageId}`;
-                                } else {
-                                    newActivityId = `${activityType}-${chatType}-${chatId}-${messageId}`;
-                                }
                                 newActivityMessage = {
                                     ...tmpNewActivityMessage,
-                                    activityId: newActivityId,
                                     activityType: activityType,
                                 };
                                 if (newActivityMessage) {
