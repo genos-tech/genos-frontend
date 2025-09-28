@@ -68,7 +68,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     },
                                     content: [
                                         {
-                                            text: "Sent a request to join the project: ",
+                                            text: "Has sent a request to join the project: ",
                                             type: "text",
                                             styles: {},
                                         },
@@ -184,8 +184,8 @@ export const ModalJoinProject: React.FC<Props> = ({
                         }
                     >
                         {openJoinProject.isPrivate === true
-                            ? "Sending a request to join"
-                            : "Join the project"}
+                            ? "Make a request to join -"
+                            : "Join the project -"}
                         <Typography level="h3" color="primary" sx={{ ml: 1 }}>
                             {openJoinProject.projectName}
                         </Typography>

@@ -51,9 +51,7 @@ export const InboxHome = (props: InboxHomeProps) => {
             box.scrollTop = box.scrollHeight;
         }
         setActivityInboxItems(inboxItems.filter((item) => item.itemType === 0));
-        setRequestInboxItems(
-            inboxItems.filter((item) => item.itemType === 1 || item.itemType === 2)
-        );
+        setRequestInboxItems(inboxItems.filter((item) => item.itemType !== 0));
     }, [inboxItems]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);

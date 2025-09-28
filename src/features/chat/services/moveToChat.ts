@@ -121,7 +121,7 @@ export const moveToSelectedChat = async (
                     await addMessage(message, chat.chatType);
 
                     setCurrentMainChat({ ...chat, messages: [message] });
-                    setAllChats([...allChats, chat]);
+                    setAllChats([chat, ...allChats]);
                 }
             );
         } else {

@@ -38,6 +38,7 @@ import {
 import { toggleMessagesPane } from "../../../utils";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { defaultChat } from "../utils/defaults";
+import { ModalJoinGM } from "./modals/ModalJoinGM";
 
 type ChatSidebarProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -115,6 +116,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openCreateGM, setOpenCreateGM] = useState(false);
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
+    const [openJoinGM, setOpenJoinGM] = useState({
+        flag: false,
+        chatId: -1,
+        chatName: "",
+    });
 
     // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
     const [currentActivityMessageType, setCurrentActivityMessageType] = useState<number>(0);
@@ -215,6 +221,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     setCurrentMainChat={setCurrentMainChat}
                     allChats={allChats}
                     setAllChats={setAllChats}
+                    setOpenJoinGM={setOpenJoinGM}
+                />
+
+                <ModalJoinGM
+                    socket={socket}
+                    myself={myself}
+                    openJoinGM={openJoinGM}
+                    setOpenJoinGM={setOpenJoinGM}
                 />
 
                 <Stack direction="row" alignItems="center" sx={{ mt: "7px", overflowX: "clip" }}>

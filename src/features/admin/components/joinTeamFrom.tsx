@@ -146,7 +146,7 @@ export const JoinTeam = () => {
                 joiningTeamId: targetTeamDetails.teamId,
                 joiningTeamName: targetTeamDetails.teamName,
             });
-            setSearchMessage("Sent a request to join the team!");
+            setSearchMessage("Has sent a request to join the team!");
             setFoundTeamDetails(undefined);
         } else {
             console.error("userId is not found in your localStorage");

@@ -207,6 +207,7 @@ export type SearchListProps = {
     email: string | null;
     dmPartnerUserId: string;
     isPrivate: boolean;
+    isJoined: boolean;
 };
 
 export type LoadSearchListResponse = {

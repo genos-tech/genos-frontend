@@ -122,6 +122,21 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 Project Request
                             </Chip>
                         )}
+                        {inboxItem.itemType === 3 && (
+                            <Chip
+                                key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
+                                variant="soft"
+                                color="neutral"
+                                sx={{
+                                    marginRight: "auto",
+                                    borderRadius: "5px",
+                                    fontWeight: "bold",
+                                }}
+                                size="md"
+                            >
+                                GM Request
+                            </Chip>
+                        )}
 
                         <Typography level="body-xs" fontWeight="bold">
                             {extractYYYYMMDDHHMM(inboxItem.tsSent)}
@@ -143,7 +158,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         />
                     )}
 
-                    {(inboxItem.itemType === 1 || inboxItem.itemType === 2) &&
+                    {(inboxItem.itemType === 1 ||
+                        inboxItem.itemType === 2 ||
+                        inboxItem.itemType === 3) &&
                         (inboxItem.isRead === true || requestApproved === true) && (
                             <Button
                                 key={`inbox-approved-button-${inboxItem.itemType}-${inboxItem.itemId}`}
@@ -156,7 +173,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 Approved
                             </Button>
                         )}
-                    {(inboxItem.itemType === 1 || inboxItem.itemType === 2) &&
+                    {(inboxItem.itemType === 1 ||
+                        inboxItem.itemType === 2 ||
+                        inboxItem.itemType === 3) &&
                         inboxItem.isRead === false &&
                         requestApproved === false && (
                             <Button
@@ -172,6 +191,11 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     }
                                     if (socket && inboxItem.itemType === 2) {
                                         socket.emit("approve_join_project_request", {
+                                            item_id: inboxItem.itemId,
+                                        });
+                                    }
+                                    if (socket && inboxItem.itemType === 3) {
+                                        socket.emit("approve_join_gm_request", {
                                             item_id: inboxItem.itemId,
                                         });
                                     }

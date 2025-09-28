@@ -53,7 +53,6 @@ import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "./utils/n
 import { ProjectProps, TaskProps } from "./types/tasks";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
-import { areObjectsEqual } from "./utils/objectHandler";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -691,9 +690,7 @@ export const App = () => {
     };
     useEffect(() => {
         setUnReadInboxItemCount(
-            countUnReadInboxItem(
-                inboxItems.filter((item) => item.itemType === 1 || item.itemType === 2)
-            )
+            countUnReadInboxItem(inboxItems.filter((item) => item.itemType !== 1))
         );
     }, [inboxItems]);
 
