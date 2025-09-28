@@ -12,7 +12,7 @@ import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { emptyDmPartnerUser } from "../../../utils/defaultProps";
 
 const createGroupMessage = [
-    { type: "paragraph", content: [{ type: "text", text: "Created this group", styles: {} }] },
+    { type: "paragraph", content: [{ type: "text", text: "Has created", styles: {} }] },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 
@@ -53,7 +53,7 @@ const addGMChatAndMessage = async (
         chatId: data.chatId,
         messageId: 1,
         content: createGroupMessage,
-        contentText: "Created this group",
+        contentText: "Has created",
         sender: myself,
         tsSent: getCurrentTimestamp(),
         tsUpdated: getCurrentTimestamp(),
@@ -69,7 +69,7 @@ const addGMChatAndMessage = async (
         dmPartnerUser: defaultDmPartner,
         lastReadMessageId: -1,
         latestMessage: newMessage,
-        latestMessageText: "Created this group",
+        latestMessageText: "Has created",
         TSLastMessage: getCurrentTimestamp(),
     };
 

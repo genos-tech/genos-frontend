@@ -110,7 +110,7 @@ export const JoinTeam = () => {
                     const initMessageBody = [
                         {
                             type: "paragraph",
-                            content: [{ type: "text", text: "Joined", styles: {} }],
+                            content: [{ type: "text", text: "Has joined", styles: {} }],
                         },
                         { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
                     ];

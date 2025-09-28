@@ -49,7 +49,7 @@ export const moveToGMChat = async (
 };
 
 const joinedMessage = [
-    { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },
+    { type: "paragraph", content: [{ type: "text", text: "Has joined", styles: {} }] },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 
@@ -91,7 +91,7 @@ export const moveToSelectedChat = async (
                         chatId: chatId,
                         messageId: 1,
                         content: joinedMessage,
-                        contentText: "joined",
+                        contentText: chatType === 1 ? "Has joined" : "Has created",
                         sender: myself,
                         tsSent: getCurrentTimestamp(),
                         tsUpdated: getCurrentTimestamp(),
@@ -106,7 +106,7 @@ export const moveToSelectedChat = async (
                         dmPartnerUser: dmPartnerUser,
                         lastReadMessageId: -1,
                         latestMessage: message,
-                        latestMessageText: "joined",
+                        latestMessageText: chatType === 1 ? "Has joined" : "Has created",
                         TSLastMessage: getCurrentTimestamp(),
                     };
 

@@ -42,7 +42,10 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
 
             if (createDmRes && createDmRes.dm_exists === false) {
                 const initMessageBody = [
-                    { type: "paragraph", content: [{ type: "text", text: "Joined", styles: {} }] },
+                    {
+                        type: "paragraph",
+                        content: [{ type: "text", text: "Has joined", styles: {} }],
+                    },
                     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
                 ];
 

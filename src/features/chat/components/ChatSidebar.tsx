@@ -135,7 +135,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         };
         return newMessages;
     };
-    const onChatIconClickHandler = (chatType: number) => {
+    const onChatIconClickedHandler = (chatType: number) => {
         localStorage.setItem("lastChatType", chatType.toString());
         let lastChat: AllChatProps | undefined = undefined;
         let lastChatId: number = -1;
@@ -166,7 +166,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             //     lastChatId = parseInt(lastChatIdStr);
             //     lastChat = allChats.filter((chat) => chat.chatId === lastChatId)[0];
             // }
-            setCurrentMainChat(defaultChat);
             console.log("TBD to move pinned chat");
         }
 
@@ -189,6 +188,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     }
                 })
                 .catch((error) => console.error(error));
+        } else {
+            setCurrentMainChat(defaultChat);
+            // console.log("No chat found. Setting to default chat.");
         }
     };
 
@@ -234,7 +236,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         onClick={() => {
                                             setCurrentChatPaneType(1);
                                             localStorage.setItem("currentChatPaneType", "1");
-                                            onChatIconClickHandler(1);
+                                            onChatIconClickedHandler(1);
                                         }}
                                     >
                                         <PersonIcon />
@@ -251,7 +253,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     onClick={() => {
                                         setCurrentChatPaneType(1);
                                         localStorage.setItem("currentChatPaneType", "1");
-                                        onChatIconClickHandler(1);
+                                        onChatIconClickedHandler(1);
                                     }}
                                 >
                                     <PersonIcon />
@@ -276,7 +278,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         onClick={() => {
                                             setCurrentChatPaneType(2);
                                             localStorage.setItem("currentChatPaneType", "2");
-                                            onChatIconClickHandler(2);
+                                            onChatIconClickedHandler(2);
                                         }}
                                     >
                                         <GroupsIcon />
@@ -285,7 +287,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             </Tooltip>
                         )}
                         {!(unReadChatCounts && (unReadChatCounts[2] || 0) > 0) && (
-                            <Tooltip title="DM Chats" sx={{ zIndex: "10020" }} placement="top">
+                            <Tooltip title="GM Chats" sx={{ zIndex: "10020" }} placement="top">
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 2 ? "solid" : "soft"}
@@ -293,7 +295,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     onClick={() => {
                                         setCurrentChatPaneType(2);
                                         localStorage.setItem("currentChatPaneType", "2");
-                                        onChatIconClickHandler(2);
+                                        onChatIconClickedHandler(2);
                                     }}
                                 >
                                     <GroupsIcon />
@@ -322,7 +324,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         onClick={() => {
                                             setCurrentChatPaneType(3);
                                             localStorage.setItem("currentChatPaneType", "3");
-                                            onChatIconClickHandler(3);
+                                            onChatIconClickedHandler(3);
                                         }}
                                     >
                                         <AccountTreeIcon />
@@ -343,7 +345,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     onClick={() => {
                                         setCurrentChatPaneType(3);
                                         localStorage.setItem("currentChatPaneType", "3");
-                                        onChatIconClickHandler(3);
+                                        onChatIconClickedHandler(3);
                                     }}
                                 >
                                     <AccountTreeIcon />
@@ -360,7 +362,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 onClick={() => {
                                     setCurrentChatPaneType(4);
                                     localStorage.setItem("currentChatPaneType", "4");
-                                    onChatIconClickHandler(4);
+                                    onChatIconClickedHandler(4);
                                 }}
                             >
                                 <PushPinIcon />
