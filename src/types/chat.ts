@@ -11,7 +11,7 @@ export type AllChatProps = {
     systemUserId?: string;
     dmPartnerUser: UserProps;
     lastReadMessageId: number;
-    latestMessage?: MessageProps;
+    latestMessage: MessageProps;
     latestMessageText: string;
     TSLastMessage: string;
     project?: ProjectProps;
@@ -26,7 +26,7 @@ export type ChatProps = {
     dmPartnerUser: UserProps;
     lastReadMessageId: number;
     messages: MessageProps[];
-    latestMessage?: MessageProps;
+    latestMessage: MessageProps;
     latestMessageText: string;
     TSLastMessage: string;
     project?: ProjectProps;
@@ -97,9 +97,7 @@ export type MessageProps = {
     sender: UserProps;
     tsSent: string;
     tsUpdated: string;
-    isLiked?: boolean | false;
     numReplies: number;
-    isReadThread?: boolean | true;
     attachment?: {
         fileName: string;
         type: string;
@@ -126,7 +124,6 @@ export type ThreadMessageProps = {
     taskId: number | null;
     tsSent: string;
     tsUpdated: string;
-    isLiked?: boolean | false;
     attachment?: {
         fileName: string;
         type: string;
@@ -154,7 +151,6 @@ export type NewMessageProps = {
     receiver: UserProps;
     tsSent: string;
     tsUpdated: string;
-    isLiked?: boolean | false;
     numReplies: number;
     attachment?: {
         fileName: string;
@@ -187,7 +183,6 @@ export type NewThreadMessageProps = {
     taskId: number | null;
     tsSent: string;
     tsUpdated: string;
-    isLiked?: boolean | false;
     attachment?: {
         fileName: string;
         type: string;

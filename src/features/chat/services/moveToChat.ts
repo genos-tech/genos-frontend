@@ -69,7 +69,8 @@ export const moveToSelectedChat = async (
     allChats: AllChatProps[],
     setCurrentMainChat: (value: ChatProps) => void,
     setAllChats: (value: AllChatProps[]) => void,
-    setOpenSearchBox: (value: boolean) => void
+    setOpenSearchBox: (value: boolean) => void,
+    setCurrentChatPaneType: (value: number) => void
 ) => {
     try {
         const isKnownChat: boolean = await checkKnownChat(chatId, chatType);
@@ -131,6 +132,8 @@ export const moveToSelectedChat = async (
                 moveToGMChat(chatId, chatName, isPrivate, setCurrentMainChat);
             }
         }
+
+        setCurrentChatPaneType(chatType);
     } catch (error) {
         console.error("Worker error:", error);
     }

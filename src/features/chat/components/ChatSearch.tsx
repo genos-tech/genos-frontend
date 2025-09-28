@@ -19,6 +19,7 @@ type ChatSearchProps = {
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
     setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
+    setCurrentChatPaneType: (value: number) => void;
 };
 
 export const ChatSearch = (props: ChatSearchProps) => {
@@ -31,6 +32,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
         allChats,
         setAllChats,
         setOpenJoinGM,
+        setCurrentChatPaneType,
     } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<SearchListProps[]>([]);
@@ -75,7 +77,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                 allChats,
                                 setCurrentMainChat,
                                 setAllChats,
-                                setOpenSearchBox
+                                setOpenSearchBox,
+                                setCurrentChatPaneType
                             );
                         } else {
                             // Joining a new DM -> value.id = -1.

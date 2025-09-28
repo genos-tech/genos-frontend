@@ -222,6 +222,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     allChats={allChats}
                     setAllChats={setAllChats}
                     setOpenJoinGM={setOpenJoinGM}
+                    setCurrentChatPaneType={setCurrentChatPaneType}
                 />
 
                 <ModalJoinGM

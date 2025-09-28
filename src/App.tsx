@@ -216,10 +216,45 @@ export const App = () => {
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const funcSetAllChats = async () => {
-        const _allChats: AllChatProps[] = await popAllChats();
-        if (_allChats) {
-            setAllChats(_allChats);
-            setUnReadChatCounts(countUnreadChats(_allChats));
+        const rawAllChats: AllChatProps[] = await popAllChats();
+        if (rawAllChats) {
+            // Exclude the chats that have not any messages except the first message, which is "Has joined".
+            const allChatsWithoutInitialDMChat = rawAllChats.filter(
+                (chat) => !(chat.chatType === 1 && chat.latestMessage.messageId <= 1)
+            );
+
+            // But only if the current main chat is the chat without no messages, keep the chat displayed.
+            // This happens when the user searched the DM chat and is trying to start the initial DM chat.
+            const initialDMChatIdx = rawAllChats.findIndex(
+                (chat) =>
+                    chat.chatType === 1 &&
+                    currentMainChat?.chatId === chat.chatId &&
+                    chat.latestMessage.messageId <= 1
+            );
+            let finalAllChats: AllChatProps[];
+            if (initialDMChatIdx !== -1) {
+                // If the initial DM chat has only one message, set the current timestamp as the latest
+                // message's tsSent. This needs to not show the time that the chat was actually created,
+                // which is the past time. So set the current timestamp as the tsSent.
+                const initialDMChat = rawAllChats[initialDMChatIdx];
+                finalAllChats = [
+                    {
+                        ...initialDMChat,
+                        latestMessage: {
+                            ...initialDMChat.latestMessage,
+                            tsSent: getCurrentTimestamp(),
+                        },
+                    },
+                    ...allChatsWithoutInitialDMChat,
+                ];
+            } else {
+                finalAllChats = allChatsWithoutInitialDMChat;
+            }
+
+            setAllChats(finalAllChats);
+
+            // No need to count the init chat.
+            setUnReadChatCounts(countUnreadChats(allChatsWithoutInitialDMChat));
         }
     };
     const [unReadChatCounts, setUnReadChatCounts] = useState<Record<string, number>>({});
