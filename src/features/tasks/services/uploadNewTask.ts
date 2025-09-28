@@ -210,7 +210,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                     (currentMainChat.chatType === 1 ||
                                         currentMainChat.chatType === 2) &&
                                     currentThreadChat.threadId !== null &&
-                                    currentThreadChat.threadId !== -1
+                                    currentThreadChat.threadId !== 0
                                 ) {
                                     // Not update message_body, just update task_id here.
                                     socket.emit("message", {

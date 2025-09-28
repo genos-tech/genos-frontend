@@ -131,7 +131,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 chatType: currentMainChat.chatType,
                 chatId: currentMainChat.chatId,
                 isThread: false,
-                threadId: -1,
+                threadId: 0,
                 lastReadMessageId: lastReadMessageId,
             });
             updateReadStatusWorker.onmessage = (event) => {

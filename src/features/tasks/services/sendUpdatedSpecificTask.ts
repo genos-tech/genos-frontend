@@ -82,7 +82,7 @@ export const sendUpdatedSpecificTask = async (
                             rootMessageTSSent: "",
                             rootMessageSenderId: null,
                             rootMessageReceiverId: null,
-                            threadId: null,
+                            threadId: 0,
                             threadMessage: updatedTaskThreadMessage,
                             chatType: 3,
                             dmPartnerUserId: null,
