@@ -3,6 +3,7 @@ import axios from "axios";
 import { authApi } from "../services/api";
 import { ActivityMessageProps } from "../types/chat";
 import { UserProps } from "../types/admin";
+import { addActivityMessage } from "../features/chat/services/addActivityMessage";
 
 self.onmessage = async (event) => {
     const accessToken: string = event.data.accessToken;
@@ -24,10 +25,14 @@ self.onmessage = async (event) => {
             const updatedMessages = [...activityMessages]; // make a shallow copy
             const index = updatedMessages.findIndex((item) => item.activityId === activityId);
             if (index !== -1) {
-                updatedMessages[index] = {
+                const readActivityMessage = {
                     ...updatedMessages[index],
                     isRead: true,
                 };
+                updatedMessages[index] = readActivityMessage;
+
+                // Update the activity message in the indexedDB
+                await addActivityMessage(readActivityMessage);
             }
             self.postMessage(updatedMessages);
         } else {
