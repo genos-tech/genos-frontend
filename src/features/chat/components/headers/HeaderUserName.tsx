@@ -1,6 +1,5 @@
 import { Socket } from "socket.io-client";
-import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
-import GroupsIcon from "@mui/icons-material/Groups";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { ChatProps } from "../../../../types/chat";
@@ -8,6 +7,7 @@ import { PulseDot } from "../../../../components/utils/PulseDot";
 import { UserProps } from "../../../../types/admin";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../GMAvatar";
+import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 
 type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -62,10 +62,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
                     />
-                ) : (
-                    // <Avatar>
-                    //     <GroupsIcon sx={{ fontSize: 32 }} />
-                    // </Avatar>
+                ) : chat.chatType === 2 ? (
                     <GMAvatar
                         teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
@@ -75,6 +72,18 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
                         gmChat={chat}
+                        funcSetAllChats={funcSetAllChats}
+                    />
+                ) : (
+                    <ProjectAvatar
+                        teamMemberProfiles={teamMemberProfiles}
+                        myself={myself}
+                        setMyself={setMyself}
+                        isYou={isYou}
+                        socket={socket}
+                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
+                        pmChat={chat}
                         funcSetAllChats={funcSetAllChats}
                     />
                 )}
