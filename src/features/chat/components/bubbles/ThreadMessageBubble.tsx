@@ -7,7 +7,7 @@ import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
-import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";

@@ -10,7 +10,7 @@ import CircleIcon from "@mui/icons-material/Circle";
 
 import { useAuth } from "../../../context/AuthContext";
 import { popSpecificMessages } from "../services/popSpecificMessages";
-import { AvatarWithStatus } from "../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
 import { UserProps } from "../../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { ProjectProps } from "../../../types/tasks";

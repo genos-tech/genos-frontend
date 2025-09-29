@@ -9,7 +9,7 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps, ProjectProps } from "../../../../../types/tasks";
 import { ChatProps } from "../../../../../types/chat";
-import { AvatarWithStatus } from "../../../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 
 type TaskSubTasksBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;

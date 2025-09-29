@@ -19,7 +19,7 @@ import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { addChat } from "../services/addChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
-import { AvatarWithStatus } from "../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";

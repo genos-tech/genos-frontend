@@ -6,7 +6,7 @@ import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import { ChatProps } from "../../../../types/chat";
 import { PulseDot } from "../../../../components/utils/PulseDot";
 import { UserProps } from "../../../../types/admin";
-import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../GMAvatar";
 
 type HeaderUserNameProps = {

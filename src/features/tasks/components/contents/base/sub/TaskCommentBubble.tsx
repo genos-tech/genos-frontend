@@ -16,7 +16,7 @@ import {
 } from "../../../../../../utils/dateUtils";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
-import { AvatarWithStatus } from "../../../../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../../../components/common/avatarWithStatus";
 
 type TaskCommentBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
