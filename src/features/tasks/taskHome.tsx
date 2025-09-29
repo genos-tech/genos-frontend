@@ -115,6 +115,9 @@ type TaskHomeProps = {
     ongoingTasks: TaskTableProps[];
     closedTasks: TaskTableProps[];
     deletedTasks: TaskTableProps[];
+    setOngoingTasks: (value: TaskTableProps[]) => void;
+    setClosedTasks: (value: TaskTableProps[]) => void;
+    setDeletedTasks: (value: TaskTableProps[]) => void;
     setIsNewProjectCreated: (value: boolean) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
@@ -174,6 +177,9 @@ export const TaskHome = (props: TaskHomeProps) => {
         ongoingTasks,
         closedTasks,
         deletedTasks,
+        setOngoingTasks,
+        setClosedTasks,
+        setDeletedTasks,
         setIsNewProjectCreated,
         currentPreviewTaskId,
         setCurrentPreviewTaskId,
@@ -304,6 +310,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setSelectedTagForFiltering={setSelectedTagForFiltering}
                                     teamProjects={teamProjects}
                                     loadProjectsAndTasks={loadProjectsAndTasks}
+                                    setOngoingTasks={setOngoingTasks}
+                                    setClosedTasks={setClosedTasks}
+                                    setDeletedTasks={setDeletedTasks}
                                 />
                             </Panel>
 
@@ -938,6 +947,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setSelectedTagForFiltering={setSelectedTagForFiltering}
                                     teamProjects={teamProjects}
                                     loadProjectsAndTasks={loadProjectsAndTasks}
+                                    setOngoingTasks={setOngoingTasks}
+                                    setClosedTasks={setClosedTasks}
+                                    setDeletedTasks={setDeletedTasks}
                                 />
                             </Panel>
 

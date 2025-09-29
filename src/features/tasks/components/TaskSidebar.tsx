@@ -31,7 +31,12 @@ import { loadTeamTaskList } from "../services/loadTaskSearchList";
 import { loadProjectTags } from "../services/loadProjectTags";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
-import { ProjectProps, TagListProps, SearchTeamTasksResponse } from "../../../types/tasks";
+import {
+    ProjectProps,
+    TagListProps,
+    SearchTeamTasksResponse,
+    TaskTableProps,
+} from "../../../types/tasks";
 
 function Toggler({
     defaultExpanded,
@@ -89,6 +94,9 @@ type TaskSidebarProps = {
     setSelectedTagForFiltering: (value: string) => void;
     teamProjects: ProjectProps[];
     loadProjectsAndTasks: (value: number) => Promise<void>;
+    setOngoingTasks: (value: TaskTableProps[]) => void;
+    setClosedTasks: (value: TaskTableProps[]) => void;
+    setDeletedTasks: (value: TaskTableProps[]) => void;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -108,6 +116,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setSelectedTagForFiltering,
         teamProjects,
         loadProjectsAndTasks,
+        setOngoingTasks,
+        setClosedTasks,
+        setDeletedTasks,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -563,6 +574,11 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             onClick={() => {
                                                                 setOpen(!open);
                                                                 setIsTaskHomeVisible(true);
+
+                                                                // Reset the task table...
+                                                                setOngoingTasks([]);
+                                                                setClosedTasks([]);
+                                                                setDeletedTasks([]);
 
                                                                 (async () => {
                                                                     await loadProjectsAndTasks(

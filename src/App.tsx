@@ -456,21 +456,22 @@ export const App = () => {
     const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
     const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
     const fetchProjectTasks = async (projectId: number) => {
-        const BaseTasks: TaskTableProps[] = await popSpecificProjectTasks(
+        const _onGoingTasks: TaskTableProps[] = await popSpecificProjectTasks(
             projectId,
             taskTypes.ongoing.statuses
         );
-        const ClosedTasks: TaskTableProps[] = await popSpecificProjectTasks(
+        const _closedTasks: TaskTableProps[] = await popSpecificProjectTasks(
             projectId,
             taskTypes.closed.statuses
         );
-        const DeletedTasks: TaskTableProps[] = await popSpecificProjectTasks(
+        const _deletedTasks: TaskTableProps[] = await popSpecificProjectTasks(
             projectId,
             taskTypes.deleted.statuses
         );
-        setOnGoingTasks(BaseTasks);
-        setClosedTasks(ClosedTasks);
-        setDeletedTasks(DeletedTasks);
+        // Update the task table only the tasks whit tsUpdated is larger than the previous one.
+        setOnGoingTasks(_onGoingTasks);
+        setClosedTasks(_closedTasks);
+        setDeletedTasks(_deletedTasks);
     };
 
     useEffect(() => {
@@ -1191,8 +1192,11 @@ export const App = () => {
                         isTaskUpdated={isTaskUpdated}
                         setIsTaskUpdated={setIsTaskUpdated}
                         ongoingTasks={ongoingTasks}
+                        setOngoingTasks={setOnGoingTasks}
                         closedTasks={closedTasks}
+                        setClosedTasks={setClosedTasks}
                         deletedTasks={deletedTasks}
+                        setDeletedTasks={setDeletedTasks}
                         setIsNewProjectCreated={setIsNewProjectCreated}
                         currentPreviewTaskId={currentPreviewTaskId}
                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
