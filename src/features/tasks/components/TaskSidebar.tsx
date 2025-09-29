@@ -69,7 +69,6 @@ function Toggler({
 
 type TaskSidebarProps = {
     myself: UserProps;
-    loadProjects: (value: number) => Promise<void>;
     setIsDashboardVisible: (value: boolean) => void;
     setTaskTableVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
@@ -89,12 +88,12 @@ type TaskSidebarProps = {
     setFilterBy: (value: number) => void;
     setSelectedTagForFiltering: (value: string) => void;
     teamProjects: ProjectProps[];
+    loadProjectsAndTasks: (value: number) => Promise<void>;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
     const {
         myself,
-        loadProjects,
         setIsDashboardVisible,
         setTaskTableVisible,
         setIsTaskPreviewVisible,
@@ -108,6 +107,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setFilterBy,
         setSelectedTagForFiltering,
         teamProjects,
+        loadProjectsAndTasks,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -563,16 +563,20 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                                             onClick={() => {
                                                                 setOpen(!open);
                                                                 setIsTaskHomeVisible(true);
-                                                                setCurrentProject({
-                                                                    projectId: projectId,
-                                                                    projectName: projectName,
-                                                                    projectTags: projectTags,
-                                                                    isPrivate: isPrivate,
-                                                                    systemUserId: systemUserId,
-                                                                });
 
                                                                 (async () => {
-                                                                    await loadProjects(projectId);
+                                                                    await loadProjectsAndTasks(
+                                                                        projectId
+                                                                    );
+                                                                    // This will be executed in the loadProjectsAndTasks,
+                                                                    // but somehow this needs to update the task table...
+                                                                    setCurrentProject({
+                                                                        projectId: projectId,
+                                                                        projectName: projectName,
+                                                                        projectTags: projectTags,
+                                                                        isPrivate: isPrivate,
+                                                                        systemUserId: systemUserId,
+                                                                    });
                                                                 })();
                                                             }}
                                                             sx={{ overflow: "hidden" }} // ensure children don't overflow

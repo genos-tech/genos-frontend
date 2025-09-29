@@ -19,7 +19,6 @@ type uploadTaskProps = {
     currentThreadChat?: ThreadProps;
     isThreadVisible: boolean;
     accessToken: string;
-    setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
@@ -34,7 +33,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
         currentThreadChat,
         isThreadVisible,
         accessToken,
-        setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
         setCurrentPreviewTaskId,
@@ -257,8 +255,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                 } else {
                     console.error("socket not found");
                 }
-
-                setIsSubmitted(true);
             }
         } catch (error) {
             console.error(error);

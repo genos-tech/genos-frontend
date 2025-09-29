@@ -91,13 +91,24 @@
   background: transparent;
 }
 
-.MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
+.task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
   background: #626262;
   border-radius: 10px;
 }
 
-.MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
+.task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9c9c9c;
+  border-radius: 10px;
+}
+
+
+.task-datagrid-dark .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
+  background: #404040; 
+  border-radius: 10px;
+}
+
+.task-datagrid-dark .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #777777;
   border-radius: 10px;
 }
 
@@ -189,16 +200,11 @@
   opacity: 0.9;
 }
 
-.task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-scrollbar {
-  background-color: #161616;
-  opacity: 0;
-}
-
-.task-datagrid-dark .MuiDataGrid-footerContainer {
+/* .task-datagrid-dark .MuiDataGrid-footerContainer {
   background-color: #161616;
   color: white;
   font-weight: bold;
-}
+} */
 
 .task-datagrid-dark .MuiDataGrid-footerContainer .MuiTablePagination-root {
   background-color: #161616;

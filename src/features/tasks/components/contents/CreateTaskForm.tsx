@@ -110,7 +110,6 @@ type CreateTaskProps = {
     currentThreadChat?: ThreadProps;
     chatType: number;
     setIsMainChatVisible?: (value: boolean) => void;
-    setIsThreadVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
     isCreatingTask: {
@@ -151,7 +150,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         currentThreadChat,
         chatType,
         setIsMainChatVisible,
-        setIsThreadVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
         isCreatingTask,

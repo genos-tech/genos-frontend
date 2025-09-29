@@ -50,9 +50,11 @@ import {
     updateTabFromTaskNoteUpdate,
 } from "./hooks/notes/tab";
 import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "./utils/note";
-import { ProjectProps, TaskProps } from "./types/tasks";
+import { ProjectProps, TaskProps, TaskTableProps, TaskTypesProps } from "./types/tasks";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
+import { popSpecificProjectTasks } from "./features/chat/services/popSpecificProjectTasks";
+import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -211,8 +213,9 @@ export const App = () => {
     ///////////////////////
     const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
     const [openCreateProject, setOpenCreateProject] = useState(false);
+    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
-    const loadProjects = async (targetProjectId: number = -1) => {
+    const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
 
@@ -296,8 +299,7 @@ export const App = () => {
 
     useEffect(() => {
         // If isPrivate is undefined, set the current project to the project
-        //  with the same project id in the team projects
-        // console.log("currentProject", currentProject);
+        // with the same project id in the team projects
         if (currentProject && currentProject.isPrivate === undefined) {
             const targetProject: ProjectProps | undefined = teamProjects.find(
                 (project) => project.projectId === currentProject.projectId
@@ -309,7 +311,13 @@ export const App = () => {
     }, [currentProject]);
 
     useEffect(() => {
-        loadProjects();
+        (async () => {
+            await loadProjectsAndTasks(
+                localStorage.getItem("lastProjectId")
+                    ? Number(localStorage.getItem("lastProjectId"))
+                    : -1
+            );
+        })();
     }, [myself]);
 
     ///////////////////////
@@ -428,13 +436,155 @@ export const App = () => {
         rootTaskId: null,
     });
     const [openCreateTag, setOpenCreateTag] = useState(false);
+    const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
+    const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
         isUpdate: false,
         scrollToBottom: true,
     });
+
+    const taskTypes: TaskTypesProps = {
+        ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
+        closed: { id: 2, statuses: ["Closed"], name: "Closed" },
+        deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
+    };
+
+    const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
+    const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
+    const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
+    const fetchProjectTasks = async (projectId: number) => {
+        const BaseTasks: TaskTableProps[] = await popSpecificProjectTasks(
+            projectId,
+            taskTypes.ongoing.statuses
+        );
+        const ClosedTasks: TaskTableProps[] = await popSpecificProjectTasks(
+            projectId,
+            taskTypes.closed.statuses
+        );
+        const DeletedTasks: TaskTableProps[] = await popSpecificProjectTasks(
+            projectId,
+            taskTypes.deleted.statuses
+        );
+        setOnGoingTasks(BaseTasks);
+        setClosedTasks(ClosedTasks);
+        setDeletedTasks(DeletedTasks);
+    };
+
+    useEffect(() => {
+        (async () => {
+            if (currentProject) {
+                fetchProjectTasks(currentProject.projectId);
+                localStorage.setItem("lastProjectId", currentProject.projectId.toString());
+            }
+        })();
+    }, [currentProject]);
+
+    useEffect(() => {
+        (async () => {
+            if (currentProject && (isNewProjectCreated === true || isNewTaskCreated === true)) {
+                fetchProjectTasks(currentProject.projectId);
+                localStorage.setItem("lastProjectId", currentProject.projectId.toString());
+            }
+        })();
+    }, [isNewProjectCreated, isNewTaskCreated]);
+
+    useEffect(() => {
+        if (currentProject && currentPreviewTaskId !== -1) {
+            (async () => {
+                const loadedTask: TaskProps[] = await loadSpecificTask(
+                    myself,
+                    currentProject.projectId,
+                    currentPreviewTaskId,
+                    accessToken
+                );
+
+                // No need to update the current preview task when a new tag is created.
+                if (isNewTagCreated === false) {
+                    setCurrentPreviewTask(loadedTask[0]);
+                }
+
+                setIsTaskPreviewVisible(true);
+
+                // Add a new ongoing task
+                if (isNewTaskCreated === true) {
+                    setOnGoingTasks((prev) => [
+                        ...prev,
+                        {
+                            id: String(loadedTask[0].id) || null,
+                            title: loadedTask[0].title || "",
+                            priority: loadedTask[0].priority.priority || null,
+                            effortLevel: loadedTask[0].effortLevel.level || null,
+                            createdDate: loadedTask[0].createdDate || null,
+                            updatedAt: loadedTask[0].updatedAt || null,
+                            dueDate: loadedTask[0].dueDate || null,
+                            daysLeft: loadedTask[0].daysLeft || null,
+                            status: loadedTask[0].status.status || null,
+                            assigneeId: loadedTask[0].assignee.userId || null,
+                            assigneeEmail: loadedTask[0].assignee.userEmail || null,
+                            assigneeName: loadedTask[0].assignee.userName || null,
+                            assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
+                            parentTaskId: String(loadedTask[0].parentTaskId) || null,
+                            threadId: loadedTask[0].threadId || null,
+                            tags: loadedTask[0].tags || [],
+                            concatTags: loadedTask[0].concatTags || null,
+                            teamId: myself.teamId || null,
+                            projectId: loadedTask[0].project?.projectId || null,
+                        },
+                    ]);
+                }
+                setIsNewTaskCreated(false);
+            })();
+        }
+    }, [currentPreviewTaskId, isNewTaskCreated]);
+
+    useEffect(() => {
+        // Update an ongoing task
+        if (isTaskUpdated && currentPreviewTask) {
+            setOnGoingTasks((prevTasks) =>
+                prevTasks.map((task) =>
+                    task.id === String(currentPreviewTask.id)
+                        ? {
+                              id: String(currentPreviewTask.id) || null,
+                              title: currentPreviewTask.title || null,
+                              priority: currentPreviewTask.priority.priority || null,
+                              effortLevel: currentPreviewTask.effortLevel.level || null,
+                              createdDate: currentPreviewTask.createdDate || null,
+                              updatedAt: currentPreviewTask.updatedAt || null,
+                              dueDate: currentPreviewTask.dueDate || null,
+                              daysLeft: currentPreviewTask.daysLeft || null,
+                              status: currentPreviewTask.status.status || null,
+                              assigneeId: currentPreviewTask.assignee.userId || null,
+                              assigneeEmail: currentPreviewTask.assignee.userEmail || null,
+                              assigneeName: currentPreviewTask.assignee.userName || null,
+                              assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
+                              parentTaskId: String(currentPreviewTask.parentTaskId) || null,
+                              threadId: currentPreviewTask.threadId || null,
+                              tags: currentPreviewTask.tags || [],
+                              concatTags: currentPreviewTask.concatTags || null,
+                              teamId: myself.teamId || null,
+                              projectId: currentPreviewTask.project?.projectId || null,
+                          }
+                        : task
+                )
+            );
+            setIsTaskUpdated(false);
+        }
+    }, [isTaskUpdated, currentPreviewTask]);
+
+    useEffect(() => {
+        if (isNewTaskCreated === true) {
+            (async () => {
+                await loadProjectsAndTasks(
+                    localStorage.getItem("lastProjectId")
+                        ? Number(localStorage.getItem("lastProjectId"))
+                        : -1
+                );
+            })();
+        }
+    }, [isNewTaskCreated]);
 
     ///////////////////////
     // Note Related
@@ -1026,7 +1176,6 @@ export const App = () => {
                         setSelectedTabIndex={setSelectedTabIndex}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         currentTaskNoteChain={currentTaskNoteChain}
-                        setCurrentTeamId={setCurrentTeamId}
                         isTaskPreviewVisible={isTaskPreviewVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         isTaskNoteVisible={isTaskNoteVisible}
@@ -1035,9 +1184,26 @@ export const App = () => {
                         setIsCreatingTask={setIsCreatingTask}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
-                        loadProjects={loadProjects}
+                        loadProjectsAndTasks={loadProjectsAndTasks}
                         currentProject={currentProject}
                         setCurrentProject={setCurrentProject}
+                        setIsNewTaskCreated={setIsNewTaskCreated}
+                        isTaskUpdated={isTaskUpdated}
+                        setIsTaskUpdated={setIsTaskUpdated}
+                        ongoingTasks={ongoingTasks}
+                        closedTasks={closedTasks}
+                        deletedTasks={deletedTasks}
+                        setIsNewProjectCreated={setIsNewProjectCreated}
+                        currentPreviewTaskId={currentPreviewTaskId}
+                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        currentPreviewTask={currentPreviewTask}
+                        setCurrentPreviewTask={setCurrentPreviewTask}
+                        openCreateProject={openCreateProject}
+                        setOpenCreateProject={setOpenCreateProject}
+                        openCreateTag={openCreateTag}
+                        setOpenCreateTag={setOpenCreateTag}
+                        isNewTagCreated={isNewTagCreated}
+                        setIsNewTagCreated={setIsNewTagCreated}
                     />
                 ) : null}
 

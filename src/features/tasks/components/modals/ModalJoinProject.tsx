@@ -34,7 +34,7 @@ type Props = {
         systemUserId: string;
     }) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    loadProjects: (value: number) => Promise<void>;
+    loadProjectsAndTasks: (value: number) => Promise<void>;
 };
 export const ModalJoinProject: React.FC<Props> = ({
     socket,
@@ -42,7 +42,7 @@ export const ModalJoinProject: React.FC<Props> = ({
     openJoinProject,
     setOpenJoinProject,
     setCurrentProject,
-    loadProjects,
+    loadProjectsAndTasks,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -144,8 +144,9 @@ export const ModalJoinProject: React.FC<Props> = ({
                             isPrivate: openJoinProject.isPrivate,
                             projectTags: [],
                         });
+                        console.log(5);
                         (async () => {
-                            await loadProjects(openJoinProject.projectId);
+                            await loadProjectsAndTasks(openJoinProject.projectId);
                         })();
                     }
                 }

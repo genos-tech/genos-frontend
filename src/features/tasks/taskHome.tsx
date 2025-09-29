@@ -31,14 +31,11 @@ import { TaskDashboard } from "./components/dashboard//TaskDashboard";
 import { TaskPreview } from "./components/contents/TaskPreview";
 import { ProjectTaskTable } from "./components/table/TaskTable";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
-import { loadSpecificTask } from "./services/loadSpecificTask";
 import { loadTeamTaskList } from "./services/loadTaskSearchList";
 import { ModalCreateTag } from "./components/modals/ModalCreateTag";
 import { ModalCreateProject } from "./components/modals/ModalCreateProject";
 import { ModalJoinProject } from "./components/modals/ModalJoinProject";
 import { ModalDeleteProject } from "./components/modals/ModalDeleteProject";
-import { ModalCreateTeam } from "../admin/components/modals/ModalCreateTeam";
-import { popSpecificProjectTasks } from "../chat/services/popSpecificProjectTasks";
 import { Sidebar } from "../../components/layout/sidebar";
 import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -93,7 +90,6 @@ type TaskHomeProps = {
         taskId: number
     ) => Promise<void>;
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
-    setCurrentTeamId: (value: string) => void;
     isTaskPreviewVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskNoteVisible: boolean;
@@ -110,9 +106,26 @@ type TaskHomeProps = {
     }) => void;
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
-    loadProjects: (value: number) => Promise<void>;
+    loadProjectsAndTasks: (value: number) => Promise<void>;
     currentProject: ProjectProps | null;
     setCurrentProject: (value: ProjectProps | null) => void;
+    setIsNewTaskCreated: (value: boolean) => void;
+    isTaskUpdated: boolean;
+    setIsTaskUpdated: (value: boolean) => void;
+    ongoingTasks: TaskTableProps[];
+    closedTasks: TaskTableProps[];
+    deletedTasks: TaskTableProps[];
+    setIsNewProjectCreated: (value: boolean) => void;
+    currentPreviewTaskId: number;
+    setCurrentPreviewTaskId: (value: number) => void;
+    currentPreviewTask?: TaskProps;
+    setCurrentPreviewTask: (value: TaskProps | undefined) => void;
+    openCreateProject: boolean;
+    setOpenCreateProject: (value: boolean) => void;
+    openCreateTag: boolean;
+    setOpenCreateTag: (value: boolean) => void;
+    isNewTagCreated: boolean;
+    setIsNewTagCreated: (value: boolean) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -144,7 +157,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         setSelectedTabIndex,
         handleCreateNewTaskNote,
         currentTaskNoteChain,
-        setCurrentTeamId,
         isTaskPreviewVisible,
         setIsTaskPreviewVisible,
         isTaskNoteVisible,
@@ -153,9 +165,26 @@ export const TaskHome = (props: TaskHomeProps) => {
         setIsCreatingTask,
         teamProjects,
         setTeamProjects,
-        loadProjects,
+        loadProjectsAndTasks,
         currentProject,
         setCurrentProject,
+        setIsNewTaskCreated,
+        isTaskUpdated,
+        setIsTaskUpdated,
+        ongoingTasks,
+        closedTasks,
+        deletedTasks,
+        setIsNewProjectCreated,
+        currentPreviewTaskId,
+        setCurrentPreviewTaskId,
+        currentPreviewTask,
+        setCurrentPreviewTask,
+        openCreateProject,
+        setOpenCreateProject,
+        openCreateTag,
+        setOpenCreateTag,
+        isNewTagCreated,
+        setIsNewTagCreated,
     } = props;
 
     // Common
@@ -167,21 +196,9 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
 
-    const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
-    const [isTaskUpdated, setIsTaskUpdated] = useState(false);
     const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
     const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
-    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
-    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
-    const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
-    const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
-    const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
     const [displayTaskType, setDisplayTaskType] = useState<TaskType>(taskTypes.ongoing);
-
-    const [openCreateTeam, setOpenCreateTeam] = useState(false);
-    const [isNewTeamCreated, setIsNewTeamCreated] = useState(false);
-    const [openCreateProject, setOpenCreateProject] = useState(false);
-    const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [openJoinProject, setOpenJoinProject] = useState<{
         flag: boolean;
         projectId: number;
@@ -194,8 +211,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         projectId: number;
         projectName: string;
     }>({ flag: false, projectId: -1, projectName: "" });
-    const [openCreateTag, setOpenCreateTag] = useState(false);
-    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -250,144 +265,6 @@ export const TaskHome = (props: TaskHomeProps) => {
     }
     // =======================================================================
 
-    const fetchProjectTasks = async (projectId: number) => {
-        const BaseTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.ongoing.statuses
-        );
-        const ClosedTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.closed.statuses
-        );
-        const DeletedTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.deleted.statuses
-        );
-        setOnGoingTasks(BaseTasks);
-        setClosedTasks(ClosedTasks);
-        setDeletedTasks(DeletedTasks);
-    };
-
-    useEffect(() => {
-        setCurrentTeamId(myself.teamId);
-
-        (async () => {
-            await loadProjects(
-                localStorage.getItem("lastProjectId")
-                    ? Number(localStorage.getItem("lastProjectId"))
-                    : -1
-            );
-            if (currentProject) {
-                fetchProjectTasks(currentProject.projectId);
-            }
-        })();
-    }, []);
-
-    useEffect(() => {
-        if (
-            isNewTeamCreated === true ||
-            isNewProjectCreated === true ||
-            isNewTaskCreated === true
-        ) {
-            (async () => {
-                await loadProjects(currentProject?.projectId || -1);
-                if (currentProject) {
-                    fetchProjectTasks(currentProject.projectId);
-                }
-            })();
-
-            setIsNewTeamCreated(false);
-            setIsNewProjectCreated(false);
-        }
-    }, [isNewTeamCreated, isNewProjectCreated, isNewTaskCreated]);
-
-    useEffect(() => {
-        if (currentProject) {
-            fetchProjectTasks(currentProject.projectId);
-            localStorage.setItem("lastProjectId", currentProject.projectId.toString());
-        }
-    }, [currentProject, isTaskUpdated]);
-
-    useEffect(() => {
-        if (currentProject && currentPreviewTaskId !== -1) {
-            (async () => {
-                const loadedTask: TaskProps[] = await loadSpecificTask(
-                    myself,
-                    currentProject.projectId,
-                    currentPreviewTaskId,
-                    accessToken
-                );
-
-                // Avoid double update it
-                if (isNewTagCreated === false) {
-                    setCurrentPreviewTask(loadedTask[0]);
-                }
-
-                if (isNewTaskCreated) {
-                    setIsTaskPreviewVisible(true);
-                    setOnGoingTasks((prev) => [
-                        ...prev,
-                        {
-                            id: String(loadedTask[0].id) || null,
-                            title: loadedTask[0].title || "",
-                            priority: loadedTask[0].priority.priority || null,
-                            effortLevel: loadedTask[0].effortLevel.level || null,
-                            createdDate: loadedTask[0].createdDate || null,
-                            updatedAt: loadedTask[0].updatedAt || null,
-                            dueDate: loadedTask[0].dueDate || null,
-                            daysLeft: loadedTask[0].daysLeft || null,
-                            status: loadedTask[0].status.status || null,
-                            assigneeId: loadedTask[0].assignee.userId || null,
-                            assigneeEmail: loadedTask[0].assignee.userEmail || null,
-                            assigneeName: loadedTask[0].assignee.userName || null,
-                            assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
-                            parentTaskId: String(loadedTask[0].parentTaskId) || null,
-                            threadId: loadedTask[0].threadId || null,
-                            tags: loadedTask[0].tags || [],
-                            concatTags: loadedTask[0].concatTags || null,
-                            teamId: myself.teamId || null,
-                            projectId: loadedTask[0].project?.projectId || null,
-                        },
-                    ]);
-                    setIsNewTaskCreated(false);
-                }
-            })();
-        }
-    }, [currentPreviewTaskId, isNewTaskCreated]);
-
-    useEffect(() => {
-        if (isTaskUpdated && currentPreviewTask) {
-            setOnGoingTasks((prevTasks) =>
-                prevTasks.map((task) =>
-                    task.id === String(currentPreviewTask.id)
-                        ? {
-                              id: String(currentPreviewTask.id) || null,
-                              title: currentPreviewTask.title || null,
-                              priority: currentPreviewTask.priority.priority || null,
-                              effortLevel: currentPreviewTask.effortLevel.level || null,
-                              createdDate: currentPreviewTask.createdDate || null,
-                              updatedAt: currentPreviewTask.updatedAt || null,
-                              dueDate: currentPreviewTask.dueDate || null,
-                              daysLeft: currentPreviewTask.daysLeft || null,
-                              status: currentPreviewTask.status.status || null,
-                              assigneeId: currentPreviewTask.assignee.userId || null,
-                              assigneeEmail: currentPreviewTask.assignee.userEmail || null,
-                              assigneeName: currentPreviewTask.assignee.userName || null,
-                              assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
-                              parentTaskId: String(currentPreviewTask.parentTaskId) || null,
-                              threadId: currentPreviewTask.threadId || null,
-                              tags: currentPreviewTask.tags || [],
-                              concatTags: currentPreviewTask.concatTags || null,
-                              teamId: myself.teamId || null,
-                              projectId: currentPreviewTask.project?.projectId || null,
-                          }
-                        : task
-                )
-            );
-            setIsTaskUpdated(false);
-        }
-    }, [isTaskUpdated, currentPreviewTask]);
-
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
@@ -413,7 +290,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                             <Panel id={"1"} order={1} defaultSize={10} minSize={10} maxSize={25}>
                                 <TaskSidebar
                                     myself={myself}
-                                    loadProjects={loadProjects}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
@@ -427,6 +303,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setFilterBy={setFilterBy}
                                     setSelectedTagForFiltering={setSelectedTagForFiltering}
                                     teamProjects={teamProjects}
+                                    loadProjectsAndTasks={loadProjectsAndTasks}
                                 />
                             </Panel>
 
@@ -477,9 +354,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     justifyContent: "space-between",
                                                 }}
                                             >
-                                                {currentProject.isPrivate === true ? (
-                                                    <LockOutlineIcon sx={{ fontSize: "26px" }} />
-                                                ) : null}
                                                 <Typography
                                                     level="h2"
                                                     component="h1"
@@ -489,6 +363,16 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         justifyContent: "center", // horizontal centering
                                                         gap: "8px", // space between text and dropdown (optional)
                                                     }}
+                                                    startDecorator={
+                                                        currentProject.isPrivate === true ? (
+                                                            <LockOutlineIcon
+                                                                sx={{
+                                                                    mt: "3px",
+                                                                    fontSize: "26px",
+                                                                }}
+                                                            />
+                                                        ) : null
+                                                    }
                                                 >
                                                     {currentProject.projectName}
                                                     <Dropdown>
@@ -1040,7 +924,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                             <Panel id={"5"} order={5} minSize={5} maxSize={30}>
                                 <TaskSidebar
                                     myself={myself}
-                                    loadProjects={loadProjects}
                                     setIsDashboardVisible={setIsDashboardVisible}
                                     setTaskTableVisible={setTaskTableVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
@@ -1054,6 +937,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setFilterBy={setFilterBy}
                                     setSelectedTagForFiltering={setSelectedTagForFiltering}
                                     teamProjects={teamProjects}
+                                    loadProjectsAndTasks={loadProjectsAndTasks}
                                 />
                             </Panel>
 
@@ -1099,15 +983,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                     )}
 
                     {/* Modal for creating a new project */}
-                    <ModalCreateTeam
-                        myself={myself}
-                        setMyself={setMyself}
-                        openCreateTeam={openCreateTeam}
-                        setOpenCreateTeam={setOpenCreateTeam}
-                        setIsNewTeamCreated={setIsNewTeamCreated}
-                    />
-
-                    {/* Modal for creating a new project */}
                     <ModalCreateProject
                         myself={myself}
                         openCreateProject={openCreateProject}
@@ -1123,7 +998,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         openJoinProject={openJoinProject}
                         setOpenJoinProject={setOpenJoinProject}
                         setCurrentProject={setCurrentProject}
-                        loadProjects={loadProjects}
+                        loadProjectsAndTasks={loadProjectsAndTasks}
                     />
 
                     {/* Modal for deleting a project */}

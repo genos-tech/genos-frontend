@@ -45,6 +45,32 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         setCurrentPreviewTaskId,
         setCurrentProject,
     } = props;
+
+    const DoUploadNewTask = async () => {
+        await uploadNewTask({
+            socket: socket,
+            myself: myself,
+            taskContents: taskContents,
+            currentMainChat: currentMainChat,
+            currentThreadChat: currentThreadChat,
+            isThreadVisible: isThreadVisible || false,
+            accessToken: accessToken || "",
+            setTitleError: setTitleError,
+            setTitleErrorOpen: setTitleErrorOpen,
+            setCurrentPreviewTaskId: setCurrentPreviewTaskId,
+        });
+
+        if (taskContents.project) {
+            setCurrentProject(taskContents.project);
+        }
+
+        if (setIsTaskPreviewVisible) {
+            setIsTaskPreviewVisible(true);
+        }
+
+        setIsSubmitted(true);
+    };
+
     return (
         <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
             <Button
@@ -69,35 +95,8 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 type="submit"
                 variant="solid"
                 color="primary"
-                onClick={async () => {
-                    await uploadNewTask({
-                        socket: socket,
-                        myself: myself,
-                        taskContents: taskContents,
-                        currentMainChat: currentMainChat,
-                        currentThreadChat: currentThreadChat,
-                        isThreadVisible: isThreadVisible || false,
-                        accessToken: accessToken || "",
-                        setIsSubmitted: setIsSubmitted,
-                        setTitleError: setTitleError,
-                        setTitleErrorOpen: setTitleErrorOpen,
-                        setCurrentPreviewTaskId: setCurrentPreviewTaskId,
-                    });
-
-                    if (taskContents.project) {
-                        setCurrentProject(taskContents.project);
-                    }
-
-                    if (setIsTaskPreviewVisible) {
-                        setIsTaskPreviewVisible(true);
-                    }
-                    if (setIsCreatingTask) {
-                        setIsCreatingTask({
-                            flag: false,
-                            parentTaskId: null,
-                            rootTaskId: null,
-                        });
-                    }
+                onClick={() => {
+                    DoUploadNewTask();
                 }}
                 disabled={taskTitle === "" || taskContents.project?.projectId === null}
             >

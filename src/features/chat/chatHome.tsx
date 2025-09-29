@@ -609,7 +609,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     currentThreadChat={currentThreadChat}
                                     chatType={currentThreadChat?.chatType || -1}
                                     setIsMainChatVisible={setIsMainChatVisible}
-                                    setIsThreadVisible={setIsThreadVisible}
                                     isThreadVisible={isThreadVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     isCreatingTask={isCreatingTask}
