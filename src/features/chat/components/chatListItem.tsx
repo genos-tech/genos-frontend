@@ -13,18 +13,18 @@ import {
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import CircleIcon from "@mui/icons-material/Circle";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { addChat } from "../services/addChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
-import { AvatarWithStatus } from "../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 import { GMAvatar } from "./GMAvatar";
+import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
 type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
@@ -213,9 +213,17 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         />
                                     )}
                                     {chatType === 3 && (
-                                        <Avatar size="sm">
-                                            <AccountTreeIcon />
-                                        </Avatar>
+                                        <ProjectAvatar
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            isYou={isYou}
+                                            socket={socket}
+                                            pmChat={chat}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            funcSetAllChats={funcSetAllChats}
+                                        />
                                     )}
                                 </div>
 

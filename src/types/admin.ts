@@ -73,3 +73,12 @@ export type CreateDMResponse = {
     user_1_id: string;
     user_2_id: string;
 };
+
+export type ProjectProfileProps = {
+    projectId: number;
+    projectName: string;
+    ownerUserId: string;
+    profileImagePath: string;
+    isPrivate: boolean;
+    tsCreatedAt: string;
+};

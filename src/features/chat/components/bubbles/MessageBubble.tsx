@@ -17,7 +17,7 @@ import { TaskProps, ProjectProps } from "../../../../types/tasks";
 import { ReactionProps } from "../../../../types/common";
 import { useAuth } from "../../../../context/AuthContext";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
-import { AvatarWithStatus } from "../../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 

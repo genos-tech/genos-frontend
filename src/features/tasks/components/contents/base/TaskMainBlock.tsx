@@ -18,7 +18,7 @@ import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { TaskProps, ProjectProps, TagListProps } from "../../../../../types/tasks";
 import { ChatProps } from "../../../../../types/chat";
 import { UserProps } from "../../../../../types/admin";
-import { AvatarWithStatus } from "../../../../../components/utils/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
 
 type TaskMainBlockProps = {

@@ -17,33 +17,33 @@ import EditIcon from "@mui/icons-material/Edit";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 
-import { UserProps } from "../../../../types/admin";
-import { AllChatProps, GMProfileProps } from "../../../../types/chat";
-import { useAuth } from "../../../../context/AuthContext";
-import { addChat } from "../../services/addChat";
-import { loadGMProfile } from "../../services/loadGMProfile";
-import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { UserProps, ProjectProfileProps } from "../../../types/admin";
+import { AllChatProps } from "../../../types/chat";
+import { useAuth } from "../../../context/AuthContext";
+import { addChat } from "../../../features/chat/services/addChat";
+import { loadProjectProfile } from "../../../services/loadProjectProfile";
+import { extractYYYYMMDD } from "../../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
-type ModalGMProfileProps = {
+type ModalProjectProfileProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
-    gmChat: AllChatProps;
-    openModalGMProfile: boolean;
-    setOpenModalGMProfile: (value: boolean) => void;
+    pmChat: AllChatProps;
+    openModalProjectProfile: boolean;
+    setOpenModalProjectProfile: (value: boolean) => void;
     funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
 };
-export const ModalGMProfile = (props: ModalGMProfileProps) => {
+export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const {
         teamMemberProfiles,
         myself,
-        gmChat,
-        openModalGMProfile,
-        setOpenModalGMProfile,
+        pmChat,
+        openModalProjectProfile,
+        setOpenModalProjectProfile,
         funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
@@ -51,7 +51,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
     const { accessToken } = useAuth();
 
-    const [gmProfile, setGmProfile] = useState<GMProfileProps | null>(null);
+    const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
 
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -59,55 +59,64 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         inputRef.current?.click();
     };
     const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFiles = event.target.files;
-        if (!selectedFiles || selectedFiles.length !== 1) return;
+        if (pmChat.project) {
+            const selectedFiles = event.target.files;
+            if (!selectedFiles || selectedFiles.length !== 1) return;
 
-        const tmpGMProfileImage = selectedFiles[0]; // original File
+            const tmpProjectProfileImage = selectedFiles[0]; // original File
 
-        // Create a new File instance with the existing file data but new name
-        const imageFileName = "profile.jpg";
-        const userProfileImage = new File([tmpGMProfileImage], imageFileName, {
-            type: tmpGMProfileImage.type,
-            lastModified: tmpGMProfileImage.lastModified,
-        });
+            // Create a new File instance with the existing file data but new name
+            const imageFileName = "profile.jpg";
+            const userProfileImage = new File([tmpProjectProfileImage], imageFileName, {
+                type: tmpProjectProfileImage.type,
+                lastModified: tmpProjectProfileImage.lastModified,
+            });
 
-        const formData = new FormData();
-        formData.append("profile_image", userProfileImage);
-        formData.append("gm_id", gmChat.chatId.toString());
-        const uploadProfileImageResponse = await fetch(`${base_url}/gm/profile/image/`, {
-            method: "PUT",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
+            const formData = new FormData();
+            formData.append("profile_image", userProfileImage);
+            formData.append("project_id", pmChat.project.projectId.toString());
+            const uploadProfileImageResponse = await fetch(`${base_url}/project/profile/image/`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData,
+            });
 
-        const uploadProfileImageData = await uploadProfileImageResponse.json();
+            const uploadProfileImageData = await uploadProfileImageResponse.json();
 
-        if (!uploadProfileImageResponse.ok) {
-            throw new Error("Failed to upload user profile image.");
-        } else {
-            addChat(
-                { ...gmChat, profileImagePath: uploadProfileImageData.profile_image_file_name },
-                gmChat.chatType
-            );
-            await funcSetAllChats();
+            if (!uploadProfileImageResponse.ok) {
+                throw new Error("Failed to upload user profile image.");
+            } else {
+                console.log(
+                    "uploadProfileImageData:",
+                    uploadProfileImageData.profile_image_file_name
+                );
+                addChat(
+                    {
+                        ...pmChat,
+                        profileImagePath: uploadProfileImageData.profile_image_file_name,
+                    },
+                    pmChat.chatType
+                );
+                await funcSetAllChats();
+            }
         }
     };
 
-    const loadGMProfileData = async () => {
-        const gmProfile = await loadGMProfile(myself.teamId, gmChat.chatId, accessToken);
-        setGmProfile(gmProfile);
+    const loadProjectProfileData = async () => {
+        const projectProfile = await loadProjectProfile(myself.teamId, pmChat.chatId, accessToken);
+        setProjectProfile(projectProfile);
     };
     useEffect(() => {
-        loadGMProfileData();
-    }, [openModalGMProfile]);
+        loadProjectProfileData();
+    }, [openModalProjectProfile]);
 
     return (
         <>
             <Modal
-                open={openModalGMProfile}
-                onClose={() => setOpenModalGMProfile(false)}
+                open={openModalProjectProfile}
+                onClose={() => setOpenModalProjectProfile(false)}
                 sx={{ zIndex: 10001 }}
             >
                 <ModalDialog>
@@ -128,7 +137,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    {gmChat.chatName}'s Profile in GM
+                                    {pmChat.chatName}'s Profile in Project
                                 </Typography>
                             </Box>
                         </Box>
@@ -157,7 +166,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     >
                                         <Avatar
                                             sx={{ width: 180, height: 180, fontSize: "50px" }}
-                                            src={`${media_url}/${gmChat.profileImagePath}`}
+                                            src={`${media_url}/${pmChat.profileImagePath}`}
                                         >
                                             <GroupsIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
@@ -180,7 +189,13 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
                                                 <IconButton
                                                     variant="soft"
-                                                    onClick={handleButtonClick}
+                                                    onClick={() => {
+                                                        if (pmChat.project) {
+                                                            handleButtonClick();
+                                                        } else {
+                                                            console.error("Project not found");
+                                                        }
+                                                    }}
                                                 >
                                                     <EditIcon sx={{ fontSize: "30px" }} />
                                                 </IconButton>
@@ -200,9 +215,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
                                                         onClick={() => {
-                                                            if (gmProfile?.ownerUserId) {
+                                                            if (projectProfile?.ownerUserId) {
                                                                 setAvatarUserId(
-                                                                    gmProfile.ownerUserId
+                                                                    projectProfile.ownerUserId
                                                                 );
                                                                 setOpenUserProfile(true);
                                                             }
@@ -215,9 +230,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 fontSize: "20px",
                                                             }}
                                                         >
-                                                            {gmProfile
+                                                            {projectProfile
                                                                 ? teamMemberProfiles[
-                                                                      gmProfile?.ownerUserId
+                                                                      projectProfile?.ownerUserId
                                                                   ]?.userName
                                                                 : "N/A"}
                                                         </Typography>
@@ -227,9 +242,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 <Typography
                                                     component="a"
                                                     href={`mailto:${
-                                                        gmProfile
+                                                        projectProfile
                                                             ? teamMemberProfiles[
-                                                                  gmProfile?.ownerUserId
+                                                                  projectProfile?.ownerUserId
                                                               ]?.userEmail
                                                             : "N/A"
                                                     }`}
@@ -243,9 +258,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         pt: "28px",
                                                     }}
                                                 >
-                                                    {gmProfile
+                                                    {projectProfile
                                                         ? teamMemberProfiles[
-                                                              gmProfile?.ownerUserId
+                                                              projectProfile?.ownerUserId
                                                           ]?.userEmail
                                                         : "N/A"}
                                                 </Typography>
@@ -264,7 +279,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             fontWeight={"bold"}
                                                             sx={{ userSelect: "text" }}
                                                         >
-                                                            {gmProfile?.isPrivate ? "Yes" : "No"}
+                                                            {projectProfile?.isPrivate
+                                                                ? "Yes"
+                                                                : "No"}
                                                         </Typography>
                                                     </Button>
                                                 </FormControl>
@@ -283,9 +300,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             fontWeight={"bold"}
                                                             sx={{ userSelect: "text" }}
                                                         >
-                                                            {gmProfile?.tsCreatedAt
+                                                            {projectProfile?.tsCreatedAt
                                                                 ? extractYYYYMMDD(
-                                                                      gmProfile.tsCreatedAt
+                                                                      projectProfile.tsCreatedAt
                                                                   )
                                                                 : "N/A"}
                                                         </Typography>
