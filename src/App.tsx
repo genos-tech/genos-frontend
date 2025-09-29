@@ -998,6 +998,17 @@ export const App = () => {
                 sendHeartBeat();
             }, 60_000);
 
+            // Load the latest team projects
+            (async () => {
+                const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(
+                    myself,
+                    accessToken
+                );
+                if (loadedTeamProjects && loadedTeamProjects.length > 0) {
+                    setTeamProjects([...loadedTeamProjects]);
+                }
+            })();
+
             return () => {
                 clearInterval(intervalId);
             };
