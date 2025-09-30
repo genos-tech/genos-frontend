@@ -23,6 +23,7 @@ import {
     ChatNoteMetaTreeNode,
     ChatNoteMetaProps,
     TaskNoteProps,
+    TaskNoteMetaProps,
 } from "../../types/notes";
 import { ChatNoteMain } from "../notes/components/ChatNoteMain";
 
@@ -58,8 +59,6 @@ type ChatHomeProps = {
     currentNoteType: number;
     currentChatNote: ChatNoteProps | null;
     setCurrentChatNote: (value: ChatNoteProps) => void;
-    currentChatNoteTitle: string;
-    setCurrentChatNoteTitle: (value: string) => void;
     chatNoteMeta: ChatNoteMetaProps[];
     setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
     tabItems: any[];
@@ -123,6 +122,7 @@ type ChatHomeProps = {
     setIsThreadVisible: (value: boolean) => void;
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
+    taskNoteMeta: TaskNoteMetaProps[];
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -158,8 +158,6 @@ export const ChatHome = (props: ChatHomeProps) => {
         currentNoteType,
         currentChatNote,
         setCurrentChatNote,
-        currentChatNoteTitle,
-        setCurrentChatNoteTitle,
         chatNoteMeta,
         setChatNoteMeta,
         tabItems,
@@ -200,6 +198,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         setIsThreadVisible,
         teamProjects,
         setTeamProjects,
+        taskNoteMeta,
     } = props;
 
     // Common
@@ -694,6 +693,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     isTaskNoteVisible={isTaskNoteVisible}
                                     teamProjects={teamProjects}
                                     setTeamProjects={setTeamProjects}
+                                    taskNoteMeta={taskNoteMeta}
                                 />
                             </Box>
                         </Panel>
@@ -743,8 +743,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setMyself={setMyself}
                                     currentChatNote={currentChatNote}
                                     setCurrentChatNote={setCurrentChatNote}
-                                    currentChatNoteTitle={currentChatNoteTitle}
-                                    setCurrentChatNoteTitle={setCurrentChatNoteTitle}
                                     setOpeningService={setOpeningService}
                                     setCurrentChat={setCurrentMainChat}
                                     currentNoteType={currentNoteType}

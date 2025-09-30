@@ -22,7 +22,7 @@ import { AttachmentFileProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskProps, ProjectProps, TagListProps, TaskCommentProps } from "../../../../types/tasks";
 import { ChatProps } from "../../../../types/chat";
-import { TaskNoteProps } from "../../../../types/notes";
+import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
 import { loadTaskNotes } from "../../services/loadTaskNotes";
 
 type TaskPreviewProps = {
@@ -69,6 +69,7 @@ type TaskPreviewProps = {
     isTaskNoteVisible: boolean;
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
+    taskNoteMeta: TaskNoteMetaProps[];
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -104,6 +105,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         isTaskNoteVisible,
         teamProjects,
         setTeamProjects,
+        taskNoteMeta,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -335,7 +337,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskNotes([]);
             }
         })();
-    }, [isCommentUpdated, currentTaskId]);
+    }, [isCommentUpdated, currentTaskId, taskNoteMeta]);
 
     // Get team members
     const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);

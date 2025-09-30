@@ -34,7 +34,7 @@ import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHoo
 import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
-import { TaskNoteProps } from "../../../../../types/notes";
+import { TaskNoteMetaProps, TaskNoteProps } from "../../../../../types/notes";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;

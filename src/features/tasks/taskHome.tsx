@@ -74,8 +74,6 @@ type TaskHomeProps = {
     unReadChatAndActivityCounts: number;
     currentTaskNote: TaskNoteProps | null;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
-    currentTaskNoteTitle: string;
-    setCurrentTaskNoteTitle: (value: string) => void;
     currentNoteType: number;
     setCurrentNoteType: (value: number) => void;
     taskNoteMeta: TaskNoteMetaProps[];
@@ -148,8 +146,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         unReadChatAndActivityCounts,
         currentTaskNote,
         setCurrentTaskNote,
-        currentTaskNoteTitle,
-        setCurrentTaskNoteTitle,
         currentNoteType,
         setCurrentNoteType,
         taskNoteMeta,
@@ -850,6 +846,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 isTaskNoteVisible={isTaskNoteVisible}
                                                 teamProjects={teamProjects}
                                                 setTeamProjects={setTeamProjects}
+                                                taskNoteMeta={taskNoteMeta}
                                             />
                                         </Box>
                                     </Panel>
@@ -903,8 +900,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setCurrentChat={setCurrentMainChat}
                                                 currentTaskNote={currentTaskNote}
                                                 setCurrentTaskNote={setCurrentTaskNote}
-                                                currentTaskNoteTitle={currentTaskNoteTitle}
-                                                setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
                                                 currentNoteType={currentNoteType}
                                                 taskNoteMeta={taskNoteMeta}
                                                 setTaskNoteMeta={setTaskNoteMeta}

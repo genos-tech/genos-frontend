@@ -53,8 +53,6 @@ type ChatNoteMainProps = {
     currentNoteType: number;
     currentChatNote: ChatNoteProps | null;
     setCurrentChatNote: (value: ChatNoteProps) => void;
-    currentChatNoteTitle: string;
-    setCurrentChatNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
     chatNoteMeta: ChatNoteMetaProps[];
@@ -86,8 +84,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setMyself,
         currentChatNote,
         setCurrentChatNote,
-        currentChatNoteTitle,
-        setCurrentChatNoteTitle,
         setOpeningService,
         setCurrentChat,
         currentNoteType,
@@ -107,28 +103,11 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     const { accessToken } = useAuth();
 
-    const breadcrumbsRef = useRef<HTMLDivElement>(null);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (breadcrumbsRef.current && !breadcrumbsRef.current.contains(event.target as Node)) {
-                handleClose();
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
     const [noteUpdated, setNoteUpdated] = useState(false);
     const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
+    const [currentChatNoteTitle, setCurrentChatNoteTitle] = useState<string>(
+        currentChatNote?.title || ""
+    );
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
@@ -137,9 +116,18 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
         if (currentChatNote) {
+            let newNoteTitle = currentChatNoteTitle;
+
+            // If the note title is empty, use the note original title.
+            // (not updating the title to empty)
+            if (currentChatNoteTitle === "") {
+                newNoteTitle = currentChatNote.title;
+                setCurrentChatNoteTitle(newNoteTitle);
+            }
+
             const newNote: ChatNoteProps = {
                 ...currentChatNote,
-                title: currentChatNoteTitle,
+                title: newNoteTitle,
                 body: body || [],
             };
             // Send the update note to the backend
@@ -158,7 +146,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                 tabItems.map((item) =>
                     item.noteType === currentChatNote?.noteType &&
                     item.noteId === currentChatNote?.noteId
-                        ? { ...item, title: currentChatNoteTitle }
+                        ? { ...item, title: newNoteTitle }
                         : item
                 )
             );

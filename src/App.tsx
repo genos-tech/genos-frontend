@@ -593,13 +593,15 @@ export const App = () => {
     // Common
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
     const [tabItems, setTabItems] = useState<any[]>([]);
+    useEffect(() => {
+        console.log("tabItems", tabItems);
+    }, [tabItems]);
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
     const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
 
     // My Note Related
     const [currentMyNote, setCurrentMyNote] = useState<MyNoteProps | null>(null);
-    const [currentMyNoteTitle, setCurrentMyNoteTitle] = useState<string>("");
     const [myNoteMeta, setMyNoteMeta] = useState<MyNoteMetaProps[]>([]);
     const [currentMyNoteChain, setCurrentMyNoteChain] = useState<MyNoteMetaTreeNode[]>();
     const [newlyCreatedMyNotes, setNewlyCreatedMyNotes] = useState<MyNoteProps[]>([]);
@@ -609,7 +611,6 @@ export const App = () => {
         const newNote: MyNoteProps = { noteType: 1, ..._newNote };
         setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
         setCurrentMyNote(newNote);
-        setCurrentMyNoteTitle(title);
         addNote(1, newNote);
         setMyNoteMeta([
             {
@@ -658,7 +659,6 @@ export const App = () => {
 
     // Task Note Related
     const [currentTaskNote, setCurrentTaskNote] = useState<TaskNoteProps | null>(null);
-    const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>("");
     const [taskNoteMeta, setTaskNoteMeta] = useState<TaskNoteMetaProps[]>([]);
     const [currentTaskNoteChain, setCurrentTaskNoteChain] = useState<TaskNoteMetaTreeNode[]>();
     const [newlyCreatedTaskNotes, setNewlyCreatedTaskNotes] = useState<TaskNoteProps[]>([]);
@@ -681,7 +681,6 @@ export const App = () => {
         const newNote: TaskNoteProps = { noteType: 2, ..._newNote };
         setNewlyCreatedTaskNotes([...newlyCreatedTaskNotes, newNote]);
         setCurrentTaskNote(newNote);
-        setCurrentTaskNoteTitle(title);
         addNote(2, newNote);
         setTaskNoteMeta([
             {
@@ -732,7 +731,6 @@ export const App = () => {
 
     // Chat Note Related
     const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
-    const [currentChatNoteTitle, setCurrentChatNoteTitle] = useState<string>("");
     const [chatNoteMeta, setChatNoteMeta] = useState<ChatNoteMetaProps[]>([]);
     const [currentChatNoteChain, setCurrentChatNoteChain] = useState<ChatNoteMetaTreeNode[]>();
     const [newlyCreatedChatNotes, setNewlyCreatedChatNotes] = useState<ChatNoteProps[]>([]);
@@ -759,7 +757,6 @@ export const App = () => {
         const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
         setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
         setCurrentChatNote(newNote);
-        setCurrentChatNoteTitle(title);
         addNote(3, newNote);
         setChatNoteMeta([
             {
@@ -827,7 +824,6 @@ export const App = () => {
         if (chatNotes.length > 0) {
             const newNote = chatNotes[0];
             setCurrentChatNote(newNote);
-            setCurrentChatNoteTitle(newNote.title);
             addNote(3, newNote);
         } else {
             const title = "New Note";
@@ -844,7 +840,6 @@ export const App = () => {
             const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
             setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
             setCurrentChatNote(newNote);
-            setCurrentChatNoteTitle(title);
             addNote(3, newNote);
             setChatNoteMeta([
                 {
@@ -1113,8 +1108,6 @@ export const App = () => {
                         currentNoteType={currentNoteType}
                         currentChatNote={currentChatNote}
                         setCurrentChatNote={setCurrentChatNote}
-                        currentChatNoteTitle={currentChatNoteTitle}
-                        setCurrentChatNoteTitle={setCurrentChatNoteTitle}
                         chatNoteMeta={chatNoteMeta}
                         setChatNoteMeta={setChatNoteMeta}
                         tabItems={tabItems}
@@ -1155,6 +1148,7 @@ export const App = () => {
                         setIsThreadVisible={setIsThreadVisible}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
+                        taskNoteMeta={taskNoteMeta}
                     />
                 ) : null}
 
@@ -1176,8 +1170,6 @@ export const App = () => {
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                         currentTaskNote={currentTaskNote}
                         setCurrentTaskNote={setCurrentTaskNote}
-                        currentTaskNoteTitle={currentTaskNoteTitle}
-                        setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
                         currentNoteType={currentNoteType}
                         setCurrentNoteType={setCurrentNoteType}
                         taskNoteMeta={taskNoteMeta}
@@ -1236,12 +1228,6 @@ export const App = () => {
                         setCurrentMainChat={setCurrentMainChat}
                         currentNoteType={currentNoteType}
                         setCurrentNoteType={setCurrentNoteType}
-                        currentMyNoteTitle={currentMyNoteTitle}
-                        setCurrentMyNoteTitle={setCurrentMyNoteTitle}
-                        currentTaskNoteTitle={currentTaskNoteTitle}
-                        setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
-                        currentChatNoteTitle={currentChatNoteTitle}
-                        setCurrentChatNoteTitle={setCurrentChatNoteTitle}
                         myNoteMeta={myNoteMeta}
                         setMyNoteMeta={setMyNoteMeta}
                         taskNoteMeta={taskNoteMeta}

@@ -52,8 +52,6 @@ type TaskNoteMainProps = {
     currentNoteType: number;
     currentTaskNote: TaskNoteProps | null;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
-    currentTaskNoteTitle: string;
-    setCurrentTaskNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
     taskNoteMeta: TaskNoteMetaProps[];
@@ -89,8 +87,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         setMyself,
         currentTaskNote,
         setCurrentTaskNote,
-        currentTaskNoteTitle,
-        setCurrentTaskNoteTitle,
         setOpeningService,
         setCurrentChat,
         currentNoteType,
@@ -112,28 +108,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     const { accessToken } = useAuth();
 
-    const breadcrumbsRef = useRef<HTMLDivElement>(null);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (breadcrumbsRef.current && !breadcrumbsRef.current.contains(event.target as Node)) {
-                handleClose();
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
     const [noteUpdated, setNoteUpdated] = useState(false);
     const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
+    const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>(
+        currentTaskNote?.title || ""
+    );
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
@@ -142,9 +121,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
         if (currentTaskNote) {
+            let newNoteTitle = currentTaskNoteTitle;
+
+            // If the note title is empty, use the note original title.
+            // (not updating the title to empty)
+            if (currentTaskNoteTitle === "") {
+                newNoteTitle = currentTaskNote.title;
+                setCurrentTaskNoteTitle(newNoteTitle);
+            }
+
             const newNote: TaskNoteProps = {
                 ...currentTaskNote,
-                title: currentTaskNoteTitle,
+                title: newNoteTitle,
                 body: body || [],
             };
             // Send the update note to the backend
@@ -163,7 +151,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                 tabItems.map((item) =>
                     item.noteType === currentTaskNote?.noteType &&
                     item.noteId === currentTaskNote?.noteId
-                        ? { ...item, title: currentTaskNoteTitle }
+                        ? { ...item, title: newNoteTitle }
                         : item
                 )
             );

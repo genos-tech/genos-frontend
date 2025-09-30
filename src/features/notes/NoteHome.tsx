@@ -40,12 +40,6 @@ type NoteHomeProps = {
     setCurrentMainChat: (value: ChatProps) => void;
     currentNoteType: number;
     setCurrentNoteType: (value: number) => void;
-    currentMyNoteTitle: string;
-    setCurrentMyNoteTitle: (value: string) => void;
-    currentTaskNoteTitle: string;
-    setCurrentTaskNoteTitle: (value: string) => void;
-    currentChatNoteTitle: string;
-    setCurrentChatNoteTitle: (value: string) => void;
     myNoteMeta: MyNoteMetaProps[];
     setMyNoteMeta: (value: MyNoteMetaProps[]) => void;
     taskNoteMeta: TaskNoteMetaProps[];
@@ -107,12 +101,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         setCurrentMainChat,
         currentNoteType,
         setCurrentNoteType,
-        currentMyNoteTitle,
-        setCurrentMyNoteTitle,
-        currentTaskNoteTitle,
-        setCurrentTaskNoteTitle,
-        currentChatNoteTitle,
-        setCurrentChatNoteTitle,
         myNoteMeta,
         setMyNoteMeta,
         taskNoteMeta,
@@ -284,8 +272,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         currentNoteType={currentNoteType}
                                         currentMyNote={currentMyNote}
                                         setCurrentMyNote={setCurrentMyNote}
-                                        currentMyNoteTitle={currentMyNoteTitle}
-                                        setCurrentMyNoteTitle={setCurrentMyNoteTitle}
                                         setOpeningService={setOpeningService}
                                         setCurrentChat={setCurrentMainChat}
                                         myNoteMeta={myNoteMeta} // TODO: Use the correct note based on noteType
@@ -309,8 +295,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         currentNoteType={currentNoteType}
                                         currentTaskNote={currentTaskNote}
                                         setCurrentTaskNote={setCurrentTaskNote}
-                                        currentTaskNoteTitle={currentTaskNoteTitle}
-                                        setCurrentTaskNoteTitle={setCurrentTaskNoteTitle}
                                         setOpeningService={setOpeningService}
                                         setCurrentChat={setCurrentMainChat}
                                         taskNoteMeta={taskNoteMeta}
@@ -336,8 +320,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setMyself={setMyself}
                                         currentChatNote={currentChatNote}
                                         setCurrentChatNote={setCurrentChatNote}
-                                        currentChatNoteTitle={currentChatNoteTitle}
-                                        setCurrentChatNoteTitle={setCurrentChatNoteTitle}
                                         setOpeningService={setOpeningService}
                                         setCurrentChat={setCurrentMainChat}
                                         currentNoteType={currentNoteType}

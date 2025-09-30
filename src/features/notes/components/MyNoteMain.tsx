@@ -51,8 +51,6 @@ type MyNoteMainProps = {
     currentNoteType: number;
     currentMyNote: MyNoteProps | null;
     setCurrentMyNote: (value: MyNoteProps) => void;
-    currentMyNoteTitle: string;
-    setCurrentMyNoteTitle: (value: string) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
     myNoteMeta: MyNoteMetaProps[];
@@ -75,8 +73,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         setMyself,
         currentMyNote,
         setCurrentMyNote,
-        currentMyNoteTitle,
-        setCurrentMyNoteTitle,
         setOpeningService,
         setCurrentChat,
         currentNoteType,
@@ -93,28 +89,11 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     const { accessToken } = useAuth();
 
-    const breadcrumbsRef = useRef<HTMLDivElement>(null);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (breadcrumbsRef.current && !breadcrumbsRef.current.contains(event.target as Node)) {
-                handleClose();
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
-        };
-    }, []);
-
     const [noteUpdated, setNoteUpdated] = useState(false);
     const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
+    const [currentMyNoteTitle, setCurrentMyNoteTitle] = useState<string>(
+        currentMyNote?.title || ""
+    );
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
@@ -123,9 +102,18 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
         if (currentMyNote) {
+            let newNoteTitle = currentMyNoteTitle;
+
+            // If the note title is empty, use the note original title.
+            // (not updating the title to empty)
+            if (currentMyNoteTitle === "") {
+                newNoteTitle = currentMyNote.title;
+                setCurrentMyNoteTitle(newNoteTitle);
+            }
+
             const newNote: MyNoteProps = {
                 ...currentMyNote,
-                title: currentMyNoteTitle,
+                title: newNoteTitle,
                 body: body || [],
             };
             // Send the update note to the backend
@@ -144,7 +132,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                 tabItems.map((item) =>
                     item.noteType === currentMyNote?.noteType &&
                     item.noteId === currentMyNote?.noteId
-                        ? { ...item, title: currentMyNoteTitle }
+                        ? { ...item, title: newNoteTitle }
                         : item
                 )
             );
