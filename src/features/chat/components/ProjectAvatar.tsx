@@ -1,12 +1,12 @@
+import { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
 import { Box, Avatar } from "@mui/joy";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
-import { AllChatProps, ChatProps } from "../../types/chat";
-import { UserProps } from "../../types/admin";
+import { AllChatProps, ChatProps } from "../../../types/chat";
+import { UserProps } from "../../../types/admin";
 import { ModalProjectProfile } from "./modals/ModalProjectProfile";
-import { UserProfile } from "../../features/admin/components/modals/UserProfile";
-import { Socket } from "socket.io-client";
+import { UserProfile } from "../../../features/admin/components/modals/UserProfile";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 

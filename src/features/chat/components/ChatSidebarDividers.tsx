@@ -51,7 +51,7 @@ export const GMDivider = (props: GMDividerProps) => {
                     fontSize: 14,
                 }}
             >
-                Group Messages
+                GM Chats
             </Typography>
             <IconButton
                 component="a"

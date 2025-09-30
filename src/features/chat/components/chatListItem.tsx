@@ -24,7 +24,7 @@ import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 import { GMAvatar } from "./GMAvatar";
-import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { ProjectAvatar } from "./ProjectAvatar";
 
 type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;

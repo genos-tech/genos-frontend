@@ -237,7 +237,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                 <Stack direction="row" alignItems="center" sx={{ mt: "7px", overflowX: "clip" }}>
                     {/* Centered buttons */}
-                    <Stack direction="row" spacing={2} justifyContent="center" flexGrow={1}>
+                    <Stack direction="row" spacing={1} justifyContent="center" flexGrow={1}>
                         {/* For DM */}
                         {unReadChatCounts && (unReadChatCounts[1] || 0) > 0 && (
                             <Tooltip title="DM Chats" sx={{ zIndex: "10020" }} placement="top">
@@ -250,7 +250,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <IconButton
                                         component="p"
-                                        variant={currentChatPaneType === 1 ? "solid" : "soft"}
+                                        variant={currentChatPaneType === 1 ? "solid" : "plain"}
                                         size="sm"
                                         onClick={() => {
                                             setCurrentChatPaneType(1);
@@ -267,7 +267,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             <Tooltip title="DM Chats" sx={{ zIndex: "10020" }} placement="top">
                                 <IconButton
                                     component="p"
-                                    variant={currentChatPaneType === 1 ? "solid" : "soft"}
+                                    variant={currentChatPaneType === 1 ? "solid" : "plain"}
                                     size="sm"
                                     onClick={() => {
                                         setCurrentChatPaneType(1);
@@ -292,7 +292,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <IconButton
                                         component="p"
-                                        variant={currentChatPaneType === 2 ? "solid" : "soft"}
+                                        variant={currentChatPaneType === 2 ? "solid" : "plain"}
                                         size="sm"
                                         onClick={() => {
                                             setCurrentChatPaneType(2);
@@ -309,7 +309,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             <Tooltip title="GM Chats" sx={{ zIndex: "10020" }} placement="top">
                                 <IconButton
                                     component="p"
-                                    variant={currentChatPaneType === 2 ? "solid" : "soft"}
+                                    variant={currentChatPaneType === 2 ? "solid" : "plain"}
                                     size="sm"
                                     onClick={() => {
                                         setCurrentChatPaneType(2);
@@ -338,7 +338,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <IconButton
                                         component="p"
-                                        variant={currentChatPaneType === 3 ? "solid" : "soft"}
+                                        variant={currentChatPaneType === 3 ? "solid" : "plain"}
                                         size="sm"
                                         onClick={() => {
                                             setCurrentChatPaneType(3);
@@ -359,7 +359,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             >
                                 <IconButton
                                     component="p"
-                                    variant={currentChatPaneType === 3 ? "solid" : "soft"}
+                                    variant={currentChatPaneType === 3 ? "solid" : "plain"}
                                     size="sm"
                                     onClick={() => {
                                         setCurrentChatPaneType(3);
@@ -376,7 +376,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         <Tooltip title="Pinned Chats" sx={{ zIndex: "10020" }} placement="top">
                             <IconButton
                                 component="p"
-                                variant={currentChatPaneType === 4 ? "solid" : "soft"}
+                                variant={currentChatPaneType === 4 ? "solid" : "plain"}
                                 size="sm"
                                 onClick={() => {
                                     setCurrentChatPaneType(4);
@@ -400,7 +400,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 >
                                     <IconButton
                                         component="p"
-                                        variant={currentChatPaneType === 5 ? "solid" : "soft"}
+                                        variant={currentChatPaneType === 5 ? "solid" : "plain"}
                                         size="sm"
                                         onClick={() => {
                                             setCurrentChatPaneType(5);
@@ -416,7 +416,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             <Tooltip title="Activities" sx={{ zIndex: "10020" }} placement="top">
                                 <IconButton
                                     component="p"
-                                    variant={currentChatPaneType === 5 ? "solid" : "soft"}
+                                    variant={currentChatPaneType === 5 ? "solid" : "plain"}
                                     size="sm"
                                     onClick={() => {
                                         setCurrentChatPaneType(5);
@@ -474,7 +474,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 }}
                             >
                                 <AddIcon />
-                                Group Message
+                                GM Chats
                             </MenuItem>
                         </Menu>
                     </Dropdown>

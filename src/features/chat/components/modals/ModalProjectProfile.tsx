@@ -14,15 +14,15 @@ import {
     Tooltip,
 } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
-import GroupsIcon from "@mui/icons-material/Groups";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 
-import { UserProps, ProjectProfileProps } from "../../../types/admin";
-import { AllChatProps } from "../../../types/chat";
-import { useAuth } from "../../../context/AuthContext";
-import { addChat } from "../../../features/chat/services/addChat";
-import { loadProjectProfile } from "../../../services/loadProjectProfile";
-import { extractYYYYMMDD } from "../../../utils/dateUtils";
+import { UserProps, ProjectProfileProps } from "../../../../types/admin";
+import { AllChatProps } from "../../../../types/chat";
+import { useAuth } from "../../../../context/AuthContext";
+import { addChat } from "../../services/addChat";
+import { loadProjectProfile } from "../../../../services/loadProjectProfile";
+import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -88,10 +88,6 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             if (!uploadProfileImageResponse.ok) {
                 throw new Error("Failed to upload user profile image.");
             } else {
-                console.log(
-                    "uploadProfileImageData:",
-                    uploadProfileImageData.profile_image_file_name
-                );
                 addChat(
                     {
                         ...pmChat,
@@ -168,7 +164,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             sx={{ width: 180, height: 180, fontSize: "50px" }}
                                             src={`${media_url}/${pmChat.profileImagePath}`}
                                         >
-                                            <GroupsIcon sx={{ fontSize: 100 }} />
+                                            <AccountTreeIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
 
                                         <Box

@@ -7,7 +7,7 @@ import { PulseDot } from "../../../../components/utils/PulseDot";
 import { UserProps } from "../../../../types/admin";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../GMAvatar";
-import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { ProjectAvatar } from "../ProjectAvatar";
 
 type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;
