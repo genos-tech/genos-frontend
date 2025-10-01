@@ -216,6 +216,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         project_name: task.project?.projectName,
                         task_id: task.id,
                         comment_body: editor.document,
+                        is_private: task.project?.isPrivate || false,
                     },
                     (ack: any) => {
                         setIsCommentUpdated({ isUpdate: true, scrollToBottom: true });

@@ -46,6 +46,7 @@ type BnUpdateTaskCommentEditorProps = {
     projectId?: number;
     projectName?: string;
     taskId?: number;
+    isPrivate?: boolean;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
@@ -69,6 +70,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         teamMembers,
         projectId,
         projectName,
+        isPrivate,
         taskId,
         setTaskUpdated,
         taskComments,
@@ -233,6 +235,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         task_id: taskId,
                         comment_id: targetComment.commentId,
                         comment_body: editor.document,
+                        is_private: isPrivate || false,
                     },
                     (ack: any) => {
                         setIsCommentUpdated({ isUpdate: true, scrollToBottom: true });

@@ -422,6 +422,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         key={`tabs-${tabItems.length}-${selectedTabIndex}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
+                                            console.log(
+                                                `${selectedTabIndex} -> ${val} (from TaskNoteMain)`
+                                            );
                                             loadNote(
                                                 tabItems[Number(val)].noteType,
                                                 tabItems[Number(val)].noteId,
@@ -440,280 +443,157 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             }}
                                         >
                                             {tabItems.map((tab, index) => (
-                                                <Tab
-                                                    key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
-                                                    sx={{
-                                                        task: "3px",
-                                                        flex: "none",
-                                                        scrollSnapAlign: "start",
-                                                        borderRadius: "5px",
-                                                    }}
-                                                    variant="soft"
-                                                >
-                                                    <Box
+                                                <Box>
+                                                    <Tab
+                                                        key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
                                                         sx={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            height: "20px",
-                                                            maxWidth: "200px",
+                                                            task: "3px",
+                                                            flex: "none",
+                                                            scrollSnapAlign: "start",
+                                                            borderRadius: "5px",
                                                         }}
+                                                        variant="soft"
                                                     >
-                                                        {tab.title.length > 19
-                                                            ? `${tab.title.slice(0, 19)}...`
-                                                            : tab.title}
+                                                        <Box
+                                                            sx={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                height: "20px",
+                                                                maxWidth: "200px",
+                                                            }}
+                                                        >
+                                                            {tab.title.length > 19
+                                                                ? `${tab.title.slice(0, 19)}...`
+                                                                : tab.title}
 
-                                                        {tabItems.length > 1 && (
-                                                            <IconButton
-                                                                component="span"
-                                                                size="sm"
-                                                                variant="plain"
-                                                                color="neutral"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleCloseTab(
-                                                                        index,
-                                                                        Number(tab.noteId)
-                                                                    );
-                                                                }}
-                                                                sx={{ ml: 1 }}
-                                                            >
-                                                                <CloseIcon />
-                                                            </IconButton>
-                                                        )}
-                                                    </Box>
-                                                </Tab>
+                                                            {tabItems.length > 1 && (
+                                                                <IconButton
+                                                                    component="span"
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    color="neutral"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleCloseTab(
+                                                                            index,
+                                                                            Number(tab.noteId)
+                                                                        );
+                                                                    }}
+                                                                    sx={{ ml: 1 }}
+                                                                >
+                                                                    <CloseIcon />
+                                                                </IconButton>
+                                                            )}
+                                                        </Box>
+                                                    </Tab>
+                                                </Box>
                                             ))}
                                         </TabList>
 
                                         {tabItems.map((tabNote, index) => (
                                             <Box key={index}>
-                                                {isInTaskPage === true &&
-                                                    tabNote.noteType === 2 && (
-                                                        <TabPanel
-                                                            key={`tab-note-body-${tabNote.noteId}-${selectedTabIndex}-${tsBody}`}
-                                                            value={index}
-                                                            sx={{
-                                                                paddingX: "5px",
-                                                                paddingTop: "0px",
-                                                                paddingBottom: "5px",
-                                                            }}
-                                                        >
-                                                            <FormControl
-                                                                required
-                                                                sx={{
-                                                                    mt: "10px",
-                                                                    ml: "10px",
-                                                                    justifyContent: "center",
-                                                                    position: "absolute",
-                                                                    zIndex: 100,
-                                                                }}
-                                                            >
-                                                                <Input
-                                                                    startDecorator={
-                                                                        <NoteAltIcon />
-                                                                    }
-                                                                    key={"currentTaskNoteTitle"}
-                                                                    variant="soft"
-                                                                    placeholder="Note Title"
-                                                                    value={currentTaskNoteTitle}
-                                                                    onChange={(e) => {
-                                                                        setCurrentTaskNoteTitle(
-                                                                            e.target.value
-                                                                        );
-                                                                    }}
-                                                                    slotProps={{
-                                                                        input: {
-                                                                            ref: titleInputRef,
-                                                                            onKeyDown: (
-                                                                                e: React.KeyboardEvent<HTMLInputElement>
-                                                                            ) => {
-                                                                                if (
-                                                                                    e.key ===
-                                                                                    "Enter"
-                                                                                ) {
-                                                                                    e.preventDefault(); // stop form submission if inside <form>
-                                                                                    titleInputRef.current?.blur();
-                                                                                }
-                                                                            },
-                                                                        },
-                                                                    }}
-                                                                    onBlur={() => {
-                                                                        setNoteUpdated(true);
-                                                                    }}
-                                                                    sx={{
-                                                                        fontSize: "22px",
-                                                                        fontWeight: "bold",
-                                                                    }}
-                                                                />
-                                                            </FormControl>
-                                                            {noteBodySaved === true && (
-                                                                <Box
-                                                                    sx={{
-                                                                        position: "absolute",
-                                                                        mt: "12px",
-                                                                        ml: "335px",
-                                                                        zIndex: 100,
-                                                                    }}
-                                                                >
-                                                                    <Button
-                                                                        variant="outlined"
-                                                                        color="neutral"
-                                                                        size="sm"
-                                                                        startDecorator={
-                                                                            <CheckIcon
-                                                                                sx={{
-                                                                                    fontSize:
-                                                                                        "15px",
-                                                                                }}
-                                                                            />
-                                                                        }
-                                                                    >
-                                                                        Saved
-                                                                    </Button>
-                                                                </Box>
-                                                            )}
-                                                            {currentTaskNote && (
-                                                                <>
-                                                                    <BnTaskNoteEditor
-                                                                        teamMemberProfiles={
-                                                                            teamMemberProfiles
-                                                                        }
-                                                                        myself={myself}
-                                                                        setMyself={setMyself}
-                                                                        socket={socket}
-                                                                        teamMembers={teamMembers}
-                                                                        currentTaskNote={
-                                                                            currentTaskNote
-                                                                        }
-                                                                        body={body}
-                                                                        setBody={setBody}
-                                                                        setNoteBodyEdited={
-                                                                            setNoteBodyEdited
-                                                                        }
-                                                                        setNoteBodySaved={
-                                                                            setNoteBodySaved
-                                                                        }
-                                                                        setCurrentChat={
-                                                                            setCurrentChat
-                                                                        }
-                                                                        setOpeningService={
-                                                                            setOpeningService
-                                                                        }
-                                                                    />
-                                                                </>
-                                                            )}
-                                                        </TabPanel>
-                                                    )}
-                                                {isInTaskPage === false && (
-                                                    <TabPanel
-                                                        key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                                        value={index}
+                                                <TabPanel
+                                                    key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                                    value={index}
+                                                    sx={{
+                                                        paddingX: "5px",
+                                                        paddingTop: "0px",
+                                                        paddingBottom: "5px",
+                                                    }}
+                                                >
+                                                    <FormControl
+                                                        required
                                                         sx={{
-                                                            paddingX: "5px",
-                                                            paddingTop: "0px",
-                                                            paddingBottom: "5px",
+                                                            mt: "10px",
+                                                            ml: "10px",
+                                                            justifyContent: "center",
+                                                            position: "absolute",
+                                                            zIndex: 100,
                                                         }}
                                                     >
-                                                        <FormControl
-                                                            required
+                                                        <Input
+                                                            startDecorator={<NoteAltIcon />}
+                                                            key={"currentTaskNoteTitle"}
+                                                            variant="soft"
+                                                            placeholder="Note Title"
+                                                            value={currentTaskNoteTitle}
+                                                            onChange={(e) => {
+                                                                setCurrentTaskNoteTitle(
+                                                                    e.target.value
+                                                                );
+                                                            }}
+                                                            slotProps={{
+                                                                input: {
+                                                                    ref: titleInputRef,
+                                                                    onKeyDown: (
+                                                                        e: React.KeyboardEvent<HTMLInputElement>
+                                                                    ) => {
+                                                                        if (e.key === "Enter") {
+                                                                            e.preventDefault(); // stop form submission if inside <form>
+                                                                            titleInputRef.current?.blur();
+                                                                        }
+                                                                    },
+                                                                },
+                                                            }}
+                                                            onBlur={() => {
+                                                                setNoteUpdated(true);
+                                                            }}
                                                             sx={{
-                                                                mt: "10px",
-                                                                ml: "10px",
-                                                                justifyContent: "center",
+                                                                fontSize: "22px",
+                                                                fontWeight: "bold",
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                    {noteBodySaved === true && (
+                                                        <Box
+                                                            sx={{
                                                                 position: "absolute",
+                                                                mt: "12px",
+                                                                ml: "335px",
                                                                 zIndex: 100,
                                                             }}
                                                         >
-                                                            <Input
-                                                                startDecorator={<NoteAltIcon />}
-                                                                key={"currentTaskNoteTitle"}
-                                                                variant="soft"
-                                                                placeholder="Note Title"
-                                                                value={currentTaskNoteTitle}
-                                                                onChange={(e) => {
-                                                                    setCurrentTaskNoteTitle(
-                                                                        e.target.value
-                                                                    );
-                                                                }}
-                                                                slotProps={{
-                                                                    input: {
-                                                                        ref: titleInputRef,
-                                                                        onKeyDown: (
-                                                                            e: React.KeyboardEvent<HTMLInputElement>
-                                                                        ) => {
-                                                                            if (
-                                                                                e.key === "Enter"
-                                                                            ) {
-                                                                                e.preventDefault(); // stop form submission if inside <form>
-                                                                                titleInputRef.current?.blur();
-                                                                            }
-                                                                        },
-                                                                    },
-                                                                }}
-                                                                onBlur={() => {
-                                                                    setNoteUpdated(true);
-                                                                }}
-                                                                sx={{
-                                                                    fontSize: "22px",
-                                                                    fontWeight: "bold",
-                                                                }}
-                                                            />
-                                                        </FormControl>
-                                                        {noteBodySaved === true && (
-                                                            <Box
-                                                                sx={{
-                                                                    position: "absolute",
-                                                                    mt: "12px",
-                                                                    ml: "335px",
-                                                                    zIndex: 100,
-                                                                }}
+                                                            <Button
+                                                                variant="outlined"
+                                                                color="neutral"
+                                                                size="sm"
+                                                                startDecorator={
+                                                                    <CheckIcon
+                                                                        sx={{
+                                                                            fontSize: "15px",
+                                                                        }}
+                                                                    />
+                                                                }
                                                             >
-                                                                <Button
-                                                                    variant="outlined"
-                                                                    color="neutral"
-                                                                    size="sm"
-                                                                    startDecorator={
-                                                                        <CheckIcon
-                                                                            sx={{
-                                                                                fontSize: "15px",
-                                                                            }}
-                                                                        />
-                                                                    }
-                                                                >
-                                                                    Saved
-                                                                </Button>
-                                                            </Box>
-                                                        )}
-                                                        {currentTaskNote && (
-                                                            <>
-                                                                <BnTaskNoteEditor
-                                                                    teamMemberProfiles={
-                                                                        teamMemberProfiles
-                                                                    }
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    socket={socket}
-                                                                    teamMembers={teamMembers}
-                                                                    currentTaskNote={
-                                                                        currentTaskNote
-                                                                    }
-                                                                    body={body}
-                                                                    setBody={setBody}
-                                                                    setNoteBodyEdited={
-                                                                        setNoteBodyEdited
-                                                                    }
-                                                                    setNoteBodySaved={
-                                                                        setNoteBodySaved
-                                                                    }
-                                                                    setCurrentChat={setCurrentChat}
-                                                                    setOpeningService={
-                                                                        setOpeningService
-                                                                    }
-                                                                />
-                                                            </>
-                                                        )}
-                                                    </TabPanel>
-                                                )}
+                                                                Saved
+                                                            </Button>
+                                                        </Box>
+                                                    )}
+                                                    {currentTaskNote && (
+                                                        <>
+                                                            <BnTaskNoteEditor
+                                                                teamMemberProfiles={
+                                                                    teamMemberProfiles
+                                                                }
+                                                                myself={myself}
+                                                                setMyself={setMyself}
+                                                                socket={socket}
+                                                                teamMembers={teamMembers}
+                                                                currentTaskNote={currentTaskNote}
+                                                                body={body}
+                                                                setBody={setBody}
+                                                                setNoteBodyEdited={
+                                                                    setNoteBodyEdited
+                                                                }
+                                                                setNoteBodySaved={setNoteBodySaved}
+                                                                setCurrentChat={setCurrentChat}
+                                                                setOpeningService={
+                                                                    setOpeningService
+                                                                }
+                                                            />
+                                                        </>
+                                                    )}
+                                                </TabPanel>
                                             </Box>
                                         ))}
                                     </Tabs>

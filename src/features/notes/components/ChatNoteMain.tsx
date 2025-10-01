@@ -486,104 +486,48 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         >
                                             {tabItems.map((tab, index) => (
                                                 <Box key={index}>
-                                                    {isInChatPage === true &&
-                                                        tab.noteType === 3 && (
-                                                            <Tab
-                                                                key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
-                                                                sx={{
-                                                                    chat: "3px",
-                                                                    flex: "none",
-                                                                    scrollSnapAlign: "start",
-                                                                    borderRadius: "5px",
-                                                                }}
-                                                                variant="soft"
-                                                            >
-                                                                <Box
-                                                                    sx={{
-                                                                        display: "flex",
-                                                                        alignItems: "center",
-                                                                        height: "20px",
-                                                                        maxWidth: "200px",
-                                                                    }}
-                                                                >
-                                                                    {tab.title.length > 19
-                                                                        ? `${tab.title.slice(
-                                                                              0,
-                                                                              19
-                                                                          )}...`
-                                                                        : tab.title}
-
-                                                                    {tabItems.length > 1 && (
-                                                                        <IconButton
-                                                                            component="span"
-                                                                            size="sm"
-                                                                            variant="plain"
-                                                                            color="neutral"
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
-                                                                                handleCloseTab(
-                                                                                    index,
-                                                                                    Number(
-                                                                                        tab.noteId
-                                                                                    )
-                                                                                );
-                                                                            }}
-                                                                            sx={{ ml: 1 }}
-                                                                        >
-                                                                            <CloseIcon />
-                                                                        </IconButton>
-                                                                    )}
-                                                                </Box>
-                                                            </Tab>
-                                                        )}
-
-                                                    {isInChatPage === false && (
-                                                        <Tab
-                                                            key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
+                                                    <Tab
+                                                        key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
+                                                        sx={{
+                                                            chat: "3px",
+                                                            flex: "none",
+                                                            scrollSnapAlign: "start",
+                                                            borderRadius: "5px",
+                                                        }}
+                                                        variant="soft"
+                                                    >
+                                                        <Box
                                                             sx={{
-                                                                chat: "3px",
-                                                                flex: "none",
-                                                                scrollSnapAlign: "start",
-                                                                borderRadius: "5px",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                height: "20px",
+                                                                maxWidth: "200px",
                                                             }}
-                                                            variant="soft"
                                                         >
-                                                            <Box
-                                                                sx={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    height: "20px",
-                                                                    maxWidth: "200px",
-                                                                }}
-                                                            >
-                                                                {tab.title.length > 19
-                                                                    ? `${tab.title.slice(
-                                                                          0,
-                                                                          19
-                                                                      )}...`
-                                                                    : tab.title}
+                                                            {tab.title.length > 19
+                                                                ? `${tab.title.slice(0, 19)}...`
+                                                                : tab.title}
 
-                                                                {tabItems.length > 1 && (
-                                                                    <IconButton
-                                                                        component="span"
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        color="neutral"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleCloseTab(
-                                                                                index,
-                                                                                Number(tab.noteId)
-                                                                            );
-                                                                        }}
-                                                                        sx={{ ml: 1 }}
-                                                                    >
-                                                                        <CloseIcon />
-                                                                    </IconButton>
-                                                                )}
-                                                            </Box>
-                                                        </Tab>
-                                                    )}
+                                                            {tabItems.length > 1 && (
+                                                                <IconButton
+                                                                    component="span"
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    color="neutral"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleCloseTab(
+                                                                            index,
+                                                                            Number(tab.noteId)
+                                                                        );
+                                                                    }}
+                                                                    sx={{ ml: 1 }}
+                                                                >
+                                                                    <CloseIcon />
+                                                                </IconButton>
+                                                            )}
+                                                        </Box>
+                                                    </Tab>
                                                 </Box>
                                             ))}
                                         </TabList>

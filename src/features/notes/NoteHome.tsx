@@ -26,7 +26,6 @@ import { getData } from "../../db/crud";
 import { STORES } from "../../db/conf";
 import { ChatNoteMain } from "./components/ChatNoteMain";
 import { TaskNoteMain } from "./components/TaskNoteMain";
-import { useAuth } from "../../context/AuthContext";
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -135,7 +134,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         setIsChatNoteVisible,
         loadNote,
     } = props;
-    const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
     const popInitialNote = async () => {
@@ -259,6 +257,36 @@ export const NoteHome = (props: NoteHomeProps) => {
                     {currentNoteType !== 0 && (
                         <Panel id={"2"} order={2} minSize={50} maxSize={85}>
                             <Box sx={{ paddingX: 1, height: "100dvh" }}>
+                                {/* No chat selected */}
+                                {currentMyNoteChain === undefined &&
+                                    currentTaskNoteChain === undefined &&
+                                    currentChatNoteChain === undefined && (
+                                        <>
+                                            <Box
+                                                sx={{
+                                                    height: "100%",
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <IconButton
+                                                    component="button"
+                                                    variant="soft"
+                                                    color="neutral"
+                                                    sx={{
+                                                        fontSize: "15px",
+                                                        padding: "10px",
+                                                    }}
+                                                >
+                                                    Choose a Note from Sidebar
+                                                </IconButton>
+                                            </Box>
+                                        </>
+                                    )}
+
+                                {/* My Note selected */}
                                 {currentNoteType === 1 && currentMyNoteChain && (
                                     <MyNoteMain
                                         teamMemberProfiles={teamMemberProfiles}
@@ -280,6 +308,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         loadNote={loadNote}
                                     />
                                 )}
+
+                                {/* Task Note selected */}
                                 {currentNoteType === 2 && currentTaskNoteChain && (
                                     <TaskNoteMain
                                         teamMemberProfiles={teamMemberProfiles}
@@ -304,6 +334,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         loadNote={loadNote}
                                     />
                                 )}
+
+                                {/* Chat Note selected */}
                                 {currentNoteType === 3 && currentChatNoteChain && (
                                     <ChatNoteMain
                                         teamMemberProfiles={teamMemberProfiles}

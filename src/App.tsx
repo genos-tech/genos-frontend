@@ -329,6 +329,7 @@ export const App = () => {
     const [isMainChatVisible, setIsMainChatVisible] = useState(true); // Is Main chat pane visible or not
     const [isSubChatVisible, setIsSubChatVisible] = useState(false); // Is Sub chat in the main chat pane visible or not
     const [isThreadVisible, setIsThreadVisible] = useState(false); // Is Thread pane visible or not
+    const [isThreadTaskVisible, setIsThreadTaskVisible] = useState(false); // Is task preview visible or not
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
@@ -428,7 +429,7 @@ export const App = () => {
     ///////////////////////
     // Task Related
     ///////////////////////
-    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false); // Is task preview visible or not
+    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
     const [isCreatingTask, setIsCreatingTask] = useState<{
         flag: boolean;
         parentTaskId: number | null;
@@ -596,6 +597,7 @@ export const App = () => {
     // Common
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
     const [tabItems, setTabItems] = useState<any[]>([]);
+    const [tmpTabItems, setTmpTabItems] = useState<any[]>([]);
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
     const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
@@ -962,6 +964,35 @@ export const App = () => {
         funcSetInboxItems: funcSetInboxItems,
     });
 
+    useEffect(() => {
+        if (openingService === 0) {
+            // Keep the tabItems when an user changes the page from Notes to other pages.
+            setTmpTabItems(tabItems);
+            setTabItems([]);
+        } else if (openingService === 1) {
+            // Keep the tabItems when an user changes the page from Notes to other pages.
+            setTmpTabItems(tabItems);
+            setTabItems([]);
+
+            // Initialize the task visibility.
+            setIsTaskPreviewVisible(false);
+
+            // Initialize the chat note visibility.
+            setIsChatNoteVisible(false);
+        } else if (openingService === 2) {
+            // Keep the tabItems when an user changes the page from Notes to other pages.
+            setTmpTabItems(tabItems);
+            setTabItems([]);
+
+            // Initialize the chat note visibility.
+            setIsTaskNoteVisible(false);
+        } else if (openingService === 3) {
+            // Keep the tabItems when an user changes the page from Notes to other pages.
+            setTmpTabItems([]);
+            setTabItems(tmpTabItems);
+        }
+    }, [openingService]);
+
     // Initialization Hooks
     useEffect(() => {
         funcSetInboxItems();
@@ -1175,8 +1206,8 @@ export const App = () => {
                         currentChatNoteChain={currentChatNoteChain}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         setCurrentTaskNote={setCurrentTaskNote}
-                        isTaskPreviewVisible={isTaskPreviewVisible}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        isTaskPreviewVisible={isThreadTaskVisible}
+                        setIsTaskPreviewVisible={setIsThreadTaskVisible}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
                         isChatNoteVisible={isChatNoteVisible}

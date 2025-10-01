@@ -63,6 +63,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     teamMembers={teamMembers}
                     projectId={task.project?.projectId}
                     projectName={task.project?.projectName}
+                    isPrivate={task.project?.isPrivate}
                     taskId={task.id}
                     taskComments={taskComments}
                     setTaskComments={setTaskComments}
