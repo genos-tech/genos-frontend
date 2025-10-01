@@ -55,6 +55,9 @@ import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
 import { popSpecificProjectTasks } from "./features/chat/services/popSpecificProjectTasks";
 import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
+import { getData } from "./db/crud";
+import { loadSpecificNote } from "./features/notes/services/loadSpecificNote";
+import { STORES } from "./db/conf";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -596,6 +599,63 @@ export const App = () => {
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
     const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
+    const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
+        const targetTabIndex: number =
+            nextTabIndex !== -1
+                ? nextTabIndex
+                : tabItems.findIndex(
+                      (note) => note.noteType === noteType && note.noteId === noteId
+                  );
+        if (noteType === 1) {
+            const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
+            if (note) {
+                if (note.noteType === 1) {
+                    setCurrentMyNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            } else {
+                const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
+                if (!note.error && note.noteType === 1) {
+                    addNote(1, note);
+                    setCurrentMyNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            }
+            setCurrentNoteType(1);
+        } else if (noteType === 2) {
+            const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
+            if (note) {
+                if (note.noteType === 2) {
+                    setCurrentTaskNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            } else {
+                const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
+                if (!note.error && note.noteType === 2) {
+                    addNote(2, note);
+                    setCurrentTaskNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            }
+            setCurrentNoteType(2);
+        } else if (noteType === 3) {
+            const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
+            if (note) {
+                if (note.noteType === 3) {
+                    setCurrentChatNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            } else {
+                const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
+                if (!note.error && note.noteType === 3) {
+                    addNote(3, note);
+                    setCurrentChatNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            }
+            setCurrentNoteType(3);
+        }
+    };
 
     // My Note Related
     const [currentMyNote, setCurrentMyNote] = useState<MyNoteProps | null>(null);
@@ -1110,11 +1170,9 @@ export const App = () => {
                         tabItems={tabItems}
                         setTabItems={setTabItems}
                         selectedTabIndex={selectedTabIndex}
-                        setSelectedTabIndex={setSelectedTabIndex}
                         handleCreateNewChatNote={handleCreateNewChatNote}
                         handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
                         currentChatNoteChain={currentChatNoteChain}
-                        setCurrentNoteType={setCurrentNoteType}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         setCurrentTaskNote={setCurrentTaskNote}
                         isTaskPreviewVisible={isTaskPreviewVisible}
@@ -1146,6 +1204,7 @@ export const App = () => {
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
                         taskNoteMeta={taskNoteMeta}
+                        loadNote={loadNote}
                     />
                 ) : null}
 
@@ -1208,6 +1267,7 @@ export const App = () => {
                         setOpenCreateTag={setOpenCreateTag}
                         isNewTagCreated={isNewTagCreated}
                         setIsNewTagCreated={setIsNewTagCreated}
+                        loadNote={loadNote}
                     />
                 ) : null}
 
@@ -1234,7 +1294,6 @@ export const App = () => {
                         tabItems={tabItems}
                         setTabItems={setTabItems}
                         selectedTabIndex={selectedTabIndex}
-                        setSelectedTabIndex={setSelectedTabIndex}
                         currentMyNote={currentMyNote}
                         setCurrentMyNote={setCurrentMyNote}
                         handleCreateNewMyNote={handleCreateNewMyNote}
@@ -1257,6 +1316,7 @@ export const App = () => {
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setIsChatNoteVisible={setIsChatNoteVisible}
+                        loadNote={loadNote}
                     />
                 ) : null}
             </CssVarsProvider>

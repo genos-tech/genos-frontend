@@ -26,8 +26,6 @@ import { getData } from "../../db/crud";
 import { STORES } from "../../db/conf";
 import { ChatNoteMain } from "./components/ChatNoteMain";
 import { TaskNoteMain } from "./components/TaskNoteMain";
-import { addNote } from "./services/addNote";
-import { loadSpecificNote } from "./services/loadSpecificNote";
 import { useAuth } from "../../context/AuthContext";
 
 type NoteHomeProps = {
@@ -52,7 +50,6 @@ type NoteHomeProps = {
     tabItems: any[];
     setTabItems: (value: any[]) => void;
     selectedTabIndex: number;
-    setSelectedTabIndex: (value: number) => void;
     currentMyNote: MyNoteProps | null;
     setCurrentMyNote: (value: MyNoteProps) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
@@ -89,6 +86,7 @@ type NoteHomeProps = {
     setIsMainChatVisible: (value: boolean) => void;
     setIsTaskNoteVisible: (value: boolean) => void;
     setIsChatNoteVisible: (value: boolean) => void;
+    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
 };
 export const NoteHome = (props: NoteHomeProps) => {
     const {
@@ -113,7 +111,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         tabItems,
         setTabItems,
         selectedTabIndex,
-        setSelectedTabIndex,
         currentMyNote,
         setCurrentMyNote,
         handleCreateNewMyNote,
@@ -136,6 +133,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         setIsMainChatVisible,
         setIsTaskNoteVisible,
         setIsChatNoteVisible,
+        loadNote,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -177,64 +175,6 @@ export const NoteHome = (props: NoteHomeProps) => {
     useEffect(() => {
         popInitialNote();
     }, []);
-
-    const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
-        const targetTabIndex: number =
-            nextTabIndex !== -1
-                ? nextTabIndex
-                : tabItems.findIndex(
-                      (note) => note.noteType === noteType && note.noteId === noteId
-                  );
-        if (noteType === 1) {
-            const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 1) {
-                    setCurrentMyNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            } else {
-                const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
-                if (!note.error && note.noteType === 1) {
-                    addNote(1, note);
-                    setCurrentMyNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            }
-            setCurrentNoteType(1);
-        } else if (noteType === 2) {
-            const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 2) {
-                    setCurrentTaskNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            } else {
-                const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
-                if (!note.error && note.noteType === 2) {
-                    addNote(2, note);
-                    setCurrentTaskNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            }
-            setCurrentNoteType(2);
-        } else if (noteType === 3) {
-            const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 3) {
-                    setCurrentChatNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            } else {
-                const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
-                if (!note.error && note.noteType === 3) {
-                    addNote(3, note);
-                    setCurrentChatNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            }
-            setCurrentNoteType(3);
-        }
-    };
 
     return (
         <CssVarsProvider disableTransitionOnChange>

@@ -127,6 +127,7 @@ type TaskHomeProps = {
     setOpenCreateTag: (value: boolean) => void;
     isNewTagCreated: boolean;
     setIsNewTagCreated: (value: boolean) => void;
+    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -187,6 +188,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         setOpenCreateTag,
         isNewTagCreated,
         setIsNewTagCreated,
+        loadNote,
     } = props;
 
     // Common
@@ -899,22 +901,20 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 setOpeningService={setOpeningService}
                                                 setCurrentChat={setCurrentMainChat}
                                                 currentTaskNote={currentTaskNote}
-                                                setCurrentTaskNote={setCurrentTaskNote}
                                                 currentNoteType={currentNoteType}
                                                 taskNoteMeta={taskNoteMeta}
                                                 setTaskNoteMeta={setTaskNoteMeta}
                                                 tabItems={tabItems}
                                                 setTabItems={setTabItems}
                                                 selectedTabIndex={selectedTabIndex}
-                                                setSelectedTabIndex={setSelectedTabIndex}
                                                 handleCreateNewTaskNote={handleCreateNewTaskNote}
                                                 currentTaskNoteChain={currentTaskNoteChain}
-                                                setCurrentNoteType={setCurrentNoteType}
                                                 isInTaskPage={true}
                                                 setIsTaskNoteVisible={setIsTaskNoteVisible}
                                                 isCreatingTask={isCreatingTask}
                                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                loadNote={loadNote}
                                             />
                                         </Box>
                                     </Panel>

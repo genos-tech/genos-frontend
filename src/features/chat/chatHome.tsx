@@ -64,7 +64,6 @@ type ChatHomeProps = {
     tabItems: any[];
     setTabItems: (value: any[]) => void;
     selectedTabIndex: number;
-    setSelectedTabIndex: (value: number) => void;
     handleCreateNewChatNote: (
         parentNoteId: number | null,
         chatType: number,
@@ -79,7 +78,6 @@ type ChatHomeProps = {
         threadId: number
     ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
-    setCurrentNoteType: (value: number) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
@@ -123,6 +121,7 @@ type ChatHomeProps = {
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
     taskNoteMeta: TaskNoteMetaProps[];
+    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -163,11 +162,9 @@ export const ChatHome = (props: ChatHomeProps) => {
         tabItems,
         setTabItems,
         selectedTabIndex,
-        setSelectedTabIndex,
         handleCreateNewChatNote,
         handleCreateNewChatNoteIfNotExist,
         currentChatNoteChain,
-        setCurrentNoteType,
         handleCreateNewTaskNote,
         setCurrentTaskNote,
         isTaskPreviewVisible,
@@ -199,6 +196,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         teamProjects,
         setTeamProjects,
         taskNoteMeta,
+        loadNote,
     } = props;
 
     // Common
@@ -751,13 +749,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     tabItems={tabItems}
                                     setTabItems={setTabItems}
                                     selectedTabIndex={selectedTabIndex}
-                                    setSelectedTabIndex={setSelectedTabIndex}
                                     handleCreateNewChatNote={handleCreateNewChatNote}
                                     currentChatNoteChain={currentChatNoteChain}
-                                    setCurrentNoteType={setCurrentNoteType}
                                     isInChatPage={true}
                                     setIsMainChatVisible={setIsMainChatVisible}
                                     setIsChatNoteVisible={setIsChatNoteVisible}
+                                    loadNote={loadNote}
                                 />
                             </Box>
                         </Panel>
