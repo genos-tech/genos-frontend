@@ -542,6 +542,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                         ) {
                                                             setIsTaskHomeVisible(false);
                                                             setIsTaskNoteVisible(true);
+                                                            console.log(6)
                                                             setCurrentTaskNote(taskNote);
                                                         }
                                                     }}

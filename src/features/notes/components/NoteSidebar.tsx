@@ -18,8 +18,6 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AddIcon from "@mui/icons-material/Add";
 import ShareIcon from "@mui/icons-material/Share";
 
-import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from "../../../types/admin";
 import {
     ChatNoteMetaTreeNode,
     ChatNoteProps,
@@ -28,24 +26,17 @@ import {
     TaskNoteMetaTreeNode,
     TaskNoteProps,
 } from "../../../types/notes";
-import { loadSpecificNote } from "../services/loadSpecificNote";
-import { addNote } from "../services/addNote";
-import { getData } from "../../../db/crud";
-import { STORES } from "../../../db/conf";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { NoteTreeToggler } from "./sub/NoteTreeToggler";
 
 type NoteSidebarProps = {
-    myself: UserProps;
+    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
     currentNoteType: number;
     setCurrentNoteType: (value: number) => void;
     myNoteMetaTree: MyNoteMetaTreeNode[];
     currentMyNote: MyNoteProps | null;
-    setCurrentMyNote: (value: MyNoteProps) => void;
     currentTaskNote: TaskNoteProps | null;
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
     currentChatNote: ChatNoteProps | null;
-    setCurrentChatNote: (value: ChatNoteProps) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
@@ -67,20 +58,16 @@ type NoteSidebarProps = {
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
     allNoteIdChains: Record<string, number[]>;
     selectedTabIndex: number;
-    setSelectedTabIndex: (value: number) => void;
 };
 export const NoteSidebar = (props: NoteSidebarProps) => {
     const {
-        myself,
+        loadNote,
         currentNoteType,
         setCurrentNoteType,
         myNoteMetaTree,
         currentMyNote,
-        setCurrentMyNote,
         currentTaskNote,
-        setCurrentTaskNote,
         currentChatNote,
-        setCurrentChatNote,
         handleCreateNewMyNote,
         handleCreateNewTaskNote,
         handleCreateNewChatNote,
@@ -92,9 +79,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         currentChatNoteChain,
         allNoteIdChains,
         selectedTabIndex,
-        setSelectedTabIndex,
     } = props;
-    const { accessToken } = useAuth();
 
     function areObjectsEqual(objA: object, objB: object): boolean {
         return JSON.stringify(objA) === JSON.stringify(objB);
@@ -241,49 +226,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         setTmpChatNoteMetaTree(chatNoteMetaTree);
     }, [currentChatNote]);
 
-    const LoadNote = async (noteType: number, noteId: number) => {
-        if (noteType === 1) {
-            const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 1) {
-                    setCurrentMyNote(note);
-                }
-            } else {
-                const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
-                if (!note.error && note.noteType === 1) {
-                    addNote(1, note);
-                    setCurrentMyNote(note);
-                }
-            }
-        } else if (noteType === 2) {
-            const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 2) {
-                    setCurrentTaskNote(note);
-                }
-            } else {
-                const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
-                if (!note.error && note.noteType === 2) {
-                    addNote(2, note);
-                    setCurrentTaskNote(note);
-                }
-            }
-        } else if (noteType === 3) {
-            const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 3) {
-                    setCurrentChatNote(note);
-                }
-            } else {
-                const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
-                if (!note.error && note.noteType === 3) {
-                    addNote(3, note);
-                    setCurrentChatNote(note);
-                }
-            }
-        }
-    };
-
     const outerRenderToggleListItemButton = (
         typo: string,
         open: boolean,
@@ -305,7 +247,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             {noteType === 3 && <QuestionAnswerRoundedIcon />}
             {noteType === 4 && <ShareIcon />}
             <ListItemContent>
-                <Typography level="title-sm">{typo}</Typography>
+                <Typography
+                    level="title-sm"
+                    sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                    {typo}
+                </Typography>
             </ListItemContent>
             <KeyboardArrowDownIcon
                 sx={[
@@ -329,7 +276,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         variant="plain"
                         sx={{ my: "1px" }}
                         onClick={() => {
-                            handleCreateNewMyNote(node.noteId);
+                            if (node.noteType === 1) {
+                                handleCreateNewMyNote(node.noteId);
+                            } else if (node.noteType === 2) {
+                                handleCreateNewTaskNote(node.noteId, node.projectId, node.taskId);
+                            } else if (node.noteType === 3) {
+                                handleCreateNewChatNote(
+                                    node.noteId,
+                                    node.chatType,
+                                    node.chatId,
+                                    node.isThread,
+                                    node.threadId
+                                );
+                            }
                         }}
                     >
                         <ListItemContent>
@@ -371,21 +330,19 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 setOpen(!open);
                 setCurrentNoteType(noteType);
                 localStorage.setItem("lastOpenNoteType", String(noteType));
-
-                // Check if the note is in the tab already.
-                // If yes, move to the tab. If not, load the note and move.
-                const targetTabIndex: number = tabItems.findIndex(
-                    (note) => note.noteType === node.noteType && note.noteId === node.noteId
-                );
-                if (targetTabIndex === -1) {
-                    LoadNote(noteType, node.noteId);
-                } else {
-                    setSelectedTabIndex(targetTabIndex);
-                }
+                loadNote(noteType, node.noteId, -1);
             }}
         >
             <ListItemContent>
-                <Typography level="title-sm" sx={{ ml: "20px" }}>
+                <Typography
+                    level="title-sm"
+                    sx={{
+                        ml: "20px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                    }}
+                >
                     {node.title}
                 </Typography>
             </ListItemContent>

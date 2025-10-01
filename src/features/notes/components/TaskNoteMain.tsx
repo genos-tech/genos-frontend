@@ -39,9 +39,6 @@ import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
-import { getData } from "../../../db/crud";
-import { STORES } from "../../../db/conf";
-import { loadSpecificNote } from "../services/loadSpecificNote";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -51,7 +48,6 @@ type TaskNoteMainProps = {
     setMyself: (me: UserProps) => void;
     currentNoteType: number;
     currentTaskNote: TaskNoteProps | null;
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
     taskNoteMeta: TaskNoteMetaProps[];
@@ -59,14 +55,12 @@ type TaskNoteMainProps = {
     tabItems: TaskNoteProps[];
     setTabItems: (value: TaskNoteProps[]) => void;
     selectedTabIndex: number;
-    setSelectedTabIndex: (value: number) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
         taskId: number
     ) => Promise<void>;
     currentTaskNoteChain: TaskNoteMetaTreeNode[];
-    setCurrentNoteType: (value: number) => void;
     isInTaskPage: boolean;
     setIsTaskNoteVisible: (value: boolean) => void;
     isCreatingTask: {
@@ -76,6 +70,7 @@ type TaskNoteMainProps = {
     };
     isTaskPreviewVisible?: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
+    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -86,7 +81,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         myself,
         setMyself,
         currentTaskNote,
-        setCurrentTaskNote,
         setOpeningService,
         setCurrentChat,
         currentNoteType,
@@ -95,15 +89,14 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         tabItems,
         setTabItems,
         selectedTabIndex,
-        setSelectedTabIndex,
         handleCreateNewTaskNote,
         currentTaskNoteChain,
-        setCurrentNoteType,
         isInTaskPage,
         setIsTaskNoteVisible,
         isCreatingTask,
         isTaskPreviewVisible,
         setIsTaskHomeVisible,
+        loadNote,
     } = props;
 
     const { accessToken } = useAuth();
@@ -117,6 +110,25 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
     const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
+
+    // Auto save note body every Nms if needed
+    useEffect(() => {
+        if (startIntervalUpdatingNote) {
+            updateNote();
+        }
+    }, [startIntervalUpdatingNote]);
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (noteBodyEdited === true) {
+                setStartIntervalUpdatingNote(true);
+            }
+        }, 3000);
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, [noteBodyEdited]);
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
@@ -151,7 +163,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                 tabItems.map((item) =>
                     item.noteType === currentTaskNote?.noteType &&
                     item.noteId === currentTaskNote?.noteId
-                        ? { ...item, title: newNoteTitle }
+                        ? newNote
                         : item
                 )
             );
@@ -182,114 +194,27 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     }, [noteUpdated]);
 
     useEffect(() => {
-        if (startIntervalUpdatingNote) {
-            updateNote();
-        }
-    }, [startIntervalUpdatingNote]);
-
-    // Auto save note body every Nms if needed
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (noteBodyEdited === true) {
-                setStartIntervalUpdatingNote(true);
-            }
-        }, 3000);
-
-        // Clean up the interval when the component unmounts
-        return () => clearInterval(intervalId);
-    }, [noteBodyEdited]);
-
-    // Tab management
-    const [isUpdatingTabContents, setIsUpdatingTabContents] = useState(true);
-
-    useEffect(() => {
         if (currentTaskNote) {
             setBody(currentTaskNote.body);
-            setTsBody(getCurrentTimestamp()); // This must be executed together with "setBody" !!!!
+            setTsBody(getCurrentTimestamp());
             setCurrentTaskNoteTitle(currentTaskNote.title);
-
-            if (
-                isUpdatingTabContents === true &&
-                (tabItems.length === 0 ||
-                    (tabItems.length > 0 &&
-                        tabItems.some((note) => note.noteId === currentTaskNote.noteId)) === false)
-            ) {
-                // Add the clicked note to the tab.
-                setTabItems([...tabItems, currentTaskNote]);
-                // Also, update the index to the clicked note.
-                setSelectedTabIndex(tabItems.length); // switch to new tab
-            } else {
-                // Update the index when an user click a note in the sidebar
-                setSelectedTabIndex(
-                    tabItems.findIndex((note) => note.noteId === currentTaskNote.noteId)
-                );
-            }
-
-            setIsUpdatingTabContents(true);
         }
     }, [currentTaskNote]);
 
-    const setNote = async (noteId: number) => {
-        const note: TaskNoteProps = await getData({
-            storeName: STORES.TASK_NOTES,
-            key: noteId,
-        });
-        if (note) {
-            setTabItems([note]);
-            setCurrentTaskNote(note);
-        } else {
-            setTabItems([]);
-        }
-        setSelectedTabIndex(0);
+    const handleCloseTab = async (tabIndex: number, closingNoteId: number) => {
+        const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
+        const nextTabIndex = Math.max(tabIndex - 1, 0);
+        setTabItems(tabItems.filter((t) => t.noteId !== closingNoteId));
+        await loadNote(
+            tabItems[indexOfNextNote].noteType,
+            tabItems[indexOfNextNote].noteId,
+            nextTabIndex
+        );
     };
-
-    const handleCloseTab = (closedNoteId: number) => {
-        if (tabItems.length > 1) {
-            setTabItems(tabItems.filter((t) => t.noteId !== closedNoteId));
-            if (selectedTabIndex >= tabItems.length - 1) {
-                setSelectedTabIndex(tabItems.length - 2); // fallback to previous tab
-            } else {
-                setIsUpdatingTabContents(false);
-            }
-        } else if (taskNoteMeta.length > 0) {
-            setNote(taskNoteMeta[0].noteId);
-        }
-    };
-
-    useEffect(() => {
-        if (isUpdatingTabContents === false) {
-            if (tabItems[selectedTabIndex]) {
-                setCurrentTaskNote(tabItems[selectedTabIndex]);
-            }
-        }
-    }, [isUpdatingTabContents]);
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 1) {
-            setCurrentTaskNote(tabItems[selectedTabIndex]);
-        }
     }, [selectedTabIndex]);
-
-    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
-
-    const LoadNote = async (noteId: number) => {
-        const note: TaskNoteProps = await getData({
-            storeName: STORES.TASK_NOTES,
-            key: noteId,
-        });
-        if (note) {
-            setCurrentTaskNote(note);
-        } else {
-            const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
-            if (!note.error) {
-                addNote(2, note);
-                setCurrentTaskNote(note);
-            }
-        }
-    };
-
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     return (
         <>
@@ -323,6 +248,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         <>
                             {currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
+                                    {/* Note Header */}
                                     <Stack
                                         direction="row"
                                         alignItems="center"
@@ -351,7 +277,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                     level="title-sm"
                                                     component="button"
                                                     onClick={() => {
-                                                        LoadNote(node.noteId);
+                                                        loadNote(2, node.noteId, -1);
                                                     }}
                                                     sx={{
                                                         background: "none",
@@ -487,17 +413,20 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 setTaskNoteMeta={setTaskNoteMeta}
                                                 currentTaskNote={currentTaskNote}
                                                 handleCloseTab={handleCloseTab}
+                                                currentTabIndex={selectedTabIndex}
                                             />
                                         )}
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabItems.length}`}
+                                        key={`tabs-${tabItems.length}-${selectedTabIndex}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            setCurrentTaskNote(tabItems[Number(val)]);
-                                            setSelectedTabIndex(Number(val));
-                                            setCurrentNoteType(tabItems[Number(val)].noteType);
+                                            loadNote(
+                                                tabItems[Number(val)].noteType,
+                                                tabItems[Number(val)].noteId,
+                                                Number(val)
+                                            );
                                         }}
                                         aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}
@@ -512,7 +441,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         >
                                             {tabItems.map((tab, index) => (
                                                 <Tab
-                                                    key={`tab-main-${index}-${tsBody}`}
+                                                    key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
                                                     sx={{
                                                         task: "3px",
                                                         flex: "none",
@@ -542,6 +471,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleCloseTab(
+                                                                        index,
                                                                         Number(tab.noteId)
                                                                     );
                                                                 }}
@@ -560,7 +490,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 {isInTaskPage === true &&
                                                     tabNote.noteType === 2 && (
                                                         <TabPanel
-                                                            key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                                            key={`tab-note-body-${tabNote.noteId}-${selectedTabIndex}-${tsBody}`}
                                                             value={index}
                                                             sx={{
                                                                 paddingX: "5px",
@@ -704,6 +634,21 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                     setCurrentTaskNoteTitle(
                                                                         e.target.value
                                                                     );
+                                                                }}
+                                                                slotProps={{
+                                                                    input: {
+                                                                        ref: titleInputRef,
+                                                                        onKeyDown: (
+                                                                            e: React.KeyboardEvent<HTMLInputElement>
+                                                                        ) => {
+                                                                            if (
+                                                                                e.key === "Enter"
+                                                                            ) {
+                                                                                e.preventDefault(); // stop form submission if inside <form>
+                                                                                titleInputRef.current?.blur();
+                                                                            }
+                                                                        },
+                                                                    },
                                                                 }}
                                                                 onBlur={() => {
                                                                     setNoteUpdated(true);

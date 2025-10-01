@@ -39,9 +39,6 @@ import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteChatNote } from "../modals/ModalDeleteChatNote";
-import { getData } from "../../../db/crud";
-import { STORES } from "../../../db/conf";
-import { loadSpecificNote } from "../services/loadSpecificNote";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 type ChatNoteMainProps = {
@@ -60,7 +57,6 @@ type ChatNoteMainProps = {
     tabItems: ChatNoteProps[];
     setTabItems: (value: ChatNoteProps[]) => void;
     selectedTabIndex: number;
-    setSelectedTabIndex: (value: number) => void;
     handleCreateNewChatNote: (
         parentNoteId: number | null,
         chatType: number,
@@ -69,10 +65,10 @@ type ChatNoteMainProps = {
         threadId: number
     ) => Promise<void>;
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
-    setCurrentNoteType: (value: number) => void;
     isInChatPage: boolean;
     setIsMainChatVisible: (value: boolean) => void;
     setIsChatNoteVisible: (value: boolean) => void;
+    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -92,13 +88,12 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         tabItems,
         setTabItems,
         selectedTabIndex,
-        setSelectedTabIndex,
         handleCreateNewChatNote,
         currentChatNoteChain,
-        setCurrentNoteType,
         isInChatPage,
         setIsMainChatVisible,
         setIsChatNoteVisible,
+        loadNote,
     } = props;
 
     const { accessToken } = useAuth();
@@ -112,6 +107,26 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
     const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
+    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
+    const [openSearchBox, setOpenSearchBox] = useState(false);
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Auto save note body every Nms if needed
+    useEffect(() => {
+        if (startIntervalUpdatingNote) {
+            updateNote();
+        }
+    }, [startIntervalUpdatingNote]);
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (noteBodyEdited === true) {
+                setStartIntervalUpdatingNote(true);
+            }
+        }, 3000);
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, [noteBodyEdited]);
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
@@ -146,7 +161,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                 tabItems.map((item) =>
                     item.noteType === currentChatNote?.noteType &&
                     item.noteId === currentChatNote?.noteId
-                        ? { ...item, title: newNoteTitle }
+                        ? newNote
                         : item
                 )
             );
@@ -179,116 +194,27 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     }, [noteUpdated]);
 
     useEffect(() => {
-        if (startIntervalUpdatingNote) {
-            updateNote();
-        }
-    }, [startIntervalUpdatingNote]);
-
-    // Auto save note body every Nms if needed
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (noteBodyEdited === true) {
-                setStartIntervalUpdatingNote(true);
-            }
-        }, 3000);
-
-        // Clean up the interval when the component unmounts
-        return () => clearInterval(intervalId);
-    }, [noteBodyEdited]);
-
-    // Tab management
-    const [isUpdatingTabContents, setIsUpdatingTabContents] = useState(true);
-
-    useEffect(() => {
         if (currentChatNote) {
             setBody(currentChatNote.body);
-            setTsBody(getCurrentTimestamp()); // This must be executed together with "setBody" !!!!
+            setTsBody(getCurrentTimestamp());
             setCurrentChatNoteTitle(currentChatNote.title);
-
-            if (
-                isUpdatingTabContents === true &&
-                (tabItems.length === 0 ||
-                    (tabItems.length > 0 &&
-                        tabItems.some((note) => note.noteId === currentChatNote.noteId)) === false)
-            ) {
-                // Add the clicked note to the tab.
-                setTabItems([...tabItems, currentChatNote]);
-                // Also, update the index to the clicked note.
-                setSelectedTabIndex(tabItems.length); // switch to new tab
-            } else {
-                // Update the index when an user click a note in the sidebar
-                setSelectedTabIndex(
-                    tabItems.findIndex((note) => note.noteId === currentChatNote.noteId)
-                );
-            }
-
-            setIsUpdatingTabContents(true);
         }
     }, [currentChatNote]);
 
-    const setNote = async (noteId: number) => {
-        const note: ChatNoteProps = await getData({
-            storeName: STORES.TASK_NOTES,
-            key: noteId,
-        });
-        if (note) {
-            setTabItems([note]);
-            setCurrentChatNote(note);
-        } else {
-            setTabItems([]);
-        }
-        setSelectedTabIndex(0);
+    const handleCloseTab = async (tabIndex: number, closingNoteId: number) => {
+        const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
+        const nextTabIndex = Math.max(tabIndex - 1, 0);
+        setTabItems(tabItems.filter((t) => t.noteId !== closingNoteId));
+        await loadNote(
+            tabItems[indexOfNextNote].noteType,
+            tabItems[indexOfNextNote].noteId,
+            nextTabIndex
+        );
     };
-
-    const handleCloseTab = (closedNoteId: number) => {
-        if (tabItems.length > 1) {
-            setTabItems(tabItems.filter((t) => t.noteId !== closedNoteId));
-            if (selectedTabIndex >= tabItems.length - 1) {
-                setSelectedTabIndex(tabItems.length - 2); // fallback to previous tab
-            } else {
-                setIsUpdatingTabContents(false);
-            }
-        } else if (chatNoteMeta.length > 0) {
-            setNote(chatNoteMeta[0].noteId);
-        }
-    };
-
-    useEffect(() => {
-        if (isUpdatingTabContents === false) {
-            if (tabItems[selectedTabIndex]) {
-                setCurrentChatNote(tabItems[selectedTabIndex]);
-            }
-        }
-    }, [isUpdatingTabContents]);
 
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 1) {
-            setCurrentChatNote(tabItems[selectedTabIndex]);
-        }
     }, [selectedTabIndex]);
-
-    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
-
-    const LoadNote = async (noteId: number) => {
-        const note: ChatNoteProps = await getData({
-            storeName: STORES.TASK_NOTES,
-            key: noteId,
-        });
-        if (note) {
-            setCurrentChatNote(note);
-        } else {
-            const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
-            if (!note.error) {
-                addNote(3, note);
-                setCurrentChatNote(note);
-            }
-        }
-    };
-
-    const [openSearchBox, setOpenSearchBox] = useState(false);
-
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     return (
         <>
@@ -322,6 +248,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         <>
                             {currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
+                                    {/* Note Header */}
                                     <Stack
                                         direction="row"
                                         alignItems="center"
@@ -375,7 +302,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                 level="title-sm"
                                                                 component="button"
                                                                 onClick={() => {
-                                                                    LoadNote(node.noteId);
+                                                                    loadNote(3, node.noteId, -1);
                                                                 }}
                                                                 sx={{
                                                                     background: "none",
@@ -517,6 +444,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     setChatNoteMeta={setChatNoteMeta}
                                                     currentChatNote={currentChatNote}
                                                     handleCloseTab={handleCloseTab}
+                                                    currentTabIndex={selectedTabIndex}
                                                 />
                                             )}
                                         </Stack>
@@ -530,17 +458,20 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 setChatNoteMeta={setChatNoteMeta}
                                                 currentChatNote={currentChatNote}
                                                 handleCloseTab={handleCloseTab}
+                                                currentTabIndex={selectedTabIndex}
                                             />
                                         )}
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabItems.length}`}
+                                        key={`tabs-${tabItems.length}-${selectedTabIndex}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            setCurrentChatNote(tabItems[Number(val)]);
-                                            setSelectedTabIndex(Number(val));
-                                            setCurrentNoteType(tabItems[Number(val)].noteType);
+                                            loadNote(
+                                                tabItems[Number(val)].noteType,
+                                                tabItems[Number(val)].noteId,
+                                                Number(val)
+                                            );
                                         }}
                                         aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}
@@ -558,7 +489,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     {isInChatPage === true &&
                                                         tab.noteType === 3 && (
                                                             <Tab
-                                                                key={`tab-main-${index}-${tsBody}`}
+                                                                key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
                                                                 sx={{
                                                                     chat: "3px",
                                                                     flex: "none",
@@ -591,6 +522,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 handleCloseTab(
+                                                                                    index,
                                                                                     Number(
                                                                                         tab.noteId
                                                                                     )
@@ -607,7 +539,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
                                                     {isInChatPage === false && (
                                                         <Tab
-                                                            key={`tab-main-${index}-${tsBody}`}
+                                                            key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
                                                             sx={{
                                                                 chat: "3px",
                                                                 flex: "none",
@@ -640,6 +572,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                             handleCloseTab(
+                                                                                index,
                                                                                 Number(tab.noteId)
                                                                             );
                                                                         }}
@@ -657,7 +590,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
                                         {tabItems.map((tabNote, index) => (
                                             <TabPanel
-                                                key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
+                                                key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                                                 value={index}
                                                 sx={{
                                                     paddingX: "5px",

@@ -16,7 +16,8 @@ type Props = {
     taskNoteMeta: TaskNoteMetaProps[];
     setTaskNoteMeta: (value: TaskNoteMetaProps[]) => void;
     currentTaskNote: TaskNoteProps;
-    handleCloseTab: (value: number) => void;
+    handleCloseTab: (tabIndex: number, closingNoteId: number) => void;
+    currentTabIndex: number;
 };
 
 export const ModalDeleteTaskNote: React.FC<Props> = ({
@@ -27,6 +28,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
     setTaskNoteMeta,
     currentTaskNote,
     handleCloseTab,
+    currentTabIndex,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
             await deleteData({ storeName: STORES.TASK_NOTES, key: currentTaskNote.noteId });
             // Delete the deleted noteId from the meta object
             setTaskNoteMeta(taskNoteMeta.filter((note) => note.noteId !== currentTaskNote.noteId));
-            handleCloseTab(currentTaskNote.noteId);
+            handleCloseTab(currentTabIndex, currentTaskNote.noteId);
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {

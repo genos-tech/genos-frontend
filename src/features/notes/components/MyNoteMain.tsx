@@ -38,9 +38,6 @@ import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
-import { getData } from "../../../db/crud";
-import { STORES } from "../../../db/conf";
-import { loadSpecificNote } from "../services/loadSpecificNote";
 
 type MyNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -50,7 +47,6 @@ type MyNoteMainProps = {
     setMyself: (me: UserProps) => void;
     currentNoteType: number;
     currentMyNote: MyNoteProps | null;
-    setCurrentMyNote: (value: MyNoteProps) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
     myNoteMeta: MyNoteMetaProps[];
@@ -58,10 +54,9 @@ type MyNoteMainProps = {
     tabItems: MyNoteProps[];
     setTabItems: (value: MyNoteProps[]) => void;
     selectedTabIndex: number;
-    setSelectedTabIndex: (value: number) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
     currentMyNoteChain: MyNoteMetaTreeNode[];
-    setCurrentNoteType: (value: number) => void;
+    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
 };
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
@@ -72,7 +67,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         myself,
         setMyself,
         currentMyNote,
-        setCurrentMyNote,
         setOpeningService,
         setCurrentChat,
         currentNoteType,
@@ -81,10 +75,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         tabItems,
         setTabItems,
         selectedTabIndex,
-        setSelectedTabIndex,
         handleCreateNewMyNote,
         currentMyNoteChain,
-        setCurrentNoteType,
+        loadNote,
     } = props;
 
     const { accessToken } = useAuth();
@@ -98,6 +91,25 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
     const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
+    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Auto save note body every Nms if needed
+    useEffect(() => {
+        if (startIntervalUpdatingNote) {
+            updateNote();
+        }
+    }, [startIntervalUpdatingNote]);
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (noteBodyEdited === true) {
+                setStartIntervalUpdatingNote(true);
+            }
+        }, 3000);
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, [noteBodyEdited]);
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
@@ -132,7 +144,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                 tabItems.map((item) =>
                     item.noteType === currentMyNote?.noteType &&
                     item.noteId === currentMyNote?.noteId
-                        ? { ...item, title: newNoteTitle }
+                        ? newNote
                         : item
                 )
             );
@@ -161,111 +173,27 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     }, [noteUpdated]);
 
     useEffect(() => {
-        if (startIntervalUpdatingNote) {
-            updateNote();
-        }
-    }, [startIntervalUpdatingNote]);
-
-    // Auto save note body every Nms if needed
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (noteBodyEdited === true) {
-                setStartIntervalUpdatingNote(true);
-            }
-        }, 3000);
-
-        // Clean up the interval when the component unmounts
-        return () => clearInterval(intervalId);
-    }, [noteBodyEdited]);
-
-    // Tab management
-    const [isUpdatingTabContents, setIsUpdatingTabContents] = useState(true);
-
-    useEffect(() => {
         if (currentMyNote) {
             setBody(currentMyNote.body);
-            setTsBody(getCurrentTimestamp()); // This must be executed together with "setBody" !!!!
+            setTsBody(getCurrentTimestamp());
             setCurrentMyNoteTitle(currentMyNote.title);
-
-            if (
-                isUpdatingTabContents === true &&
-                (tabItems.length === 0 ||
-                    (tabItems.length > 0 &&
-                        tabItems.some((note) => note.noteId === currentMyNote.noteId)) === false)
-            ) {
-                // Add the clicked note to the tab.
-                setTabItems([...tabItems, currentMyNote]);
-                // Also, update the index to the clicked note.
-                setSelectedTabIndex(tabItems.length); // switch to new tab
-            } else {
-                // Update the index when an user click a note in the sidebar
-                setSelectedTabIndex(
-                    tabItems.findIndex((note) => note.noteId === currentMyNote.noteId)
-                );
-            }
-
-            setIsUpdatingTabContents(true);
         }
     }, [currentMyNote]);
 
-    const setNote = async (noteId: number) => {
-        const note: MyNoteProps = await getData({
-            storeName: STORES.PERSONAL_NOTES,
-            key: noteId,
-        });
-        if (note) {
-            setTabItems([note]);
-            setCurrentMyNote(note);
-        } else {
-            setTabItems([]);
-        }
-        setSelectedTabIndex(0);
+    const handleCloseTab = async (tabIndex: number, closingNoteId: number) => {
+        const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
+        const nextTabIndex = Math.max(tabIndex - 1, 0);
+        setTabItems(tabItems.filter((t) => t.noteId !== closingNoteId));
+        await loadNote(
+            tabItems[indexOfNextNote].noteType,
+            tabItems[indexOfNextNote].noteId,
+            nextTabIndex
+        );
     };
-
-    const handleCloseTab = (closedNoteId: number) => {
-        if (tabItems.length > 1) {
-            setTabItems(tabItems.filter((t) => t.noteId !== closedNoteId));
-            if (selectedTabIndex >= tabItems.length - 1) {
-                setSelectedTabIndex(tabItems.length - 2); // fallback to previous tab
-            } else {
-                setIsUpdatingTabContents(false);
-            }
-        } else if (myNoteMeta.length > 0) {
-            setNote(myNoteMeta[0].noteId);
-        }
-    };
-
-    useEffect(() => {
-        if (isUpdatingTabContents === false) {
-            if (tabItems[selectedTabIndex]) {
-                setCurrentMyNote(tabItems[selectedTabIndex]);
-            }
-        }
-    }, [isUpdatingTabContents]);
-
+    // Reset note body saved status when the selected tab index changes
     useEffect(() => {
         setNoteBodySaved(false);
-        if (tabItems[selectedTabIndex] && tabItems[selectedTabIndex].noteType === 1) {
-            setCurrentMyNote(tabItems[selectedTabIndex]);
-        }
     }, [selectedTabIndex]);
-
-    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
-
-    const LoadNote = async (noteId: number) => {
-        const note: MyNoteProps = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
-        if (note) {
-            setCurrentMyNote(note);
-        } else {
-            const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
-            if (!note.error) {
-                addNote(1, note);
-                setCurrentMyNote(note);
-            }
-        }
-    };
-
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     return (
         <>
@@ -303,6 +231,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         <>
                             {currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
+                                    {/* Note Header */}
                                     <Stack
                                         direction="row"
                                         alignItems="center"
@@ -331,7 +260,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     level="title-sm"
                                                     component="button"
                                                     onClick={() => {
-                                                        LoadNote(node.noteId);
+                                                        loadNote(1, node.noteId, -1);
                                                     }}
                                                     sx={{
                                                         background: "none",
@@ -417,17 +346,20 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 setMyNoteMeta={setMyNoteMeta}
                                                 currentMyNote={currentMyNote}
                                                 handleCloseTab={handleCloseTab}
+                                                currentTabIndex={selectedTabIndex}
                                             />
                                         )}
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabItems.length}`}
+                                        key={`tabs-${tabItems.length}-${selectedTabIndex}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            setCurrentMyNote(tabItems[Number(val)]);
-                                            setSelectedTabIndex(Number(val));
-                                            setCurrentNoteType(tabItems[Number(val)].noteType);
+                                            loadNote(
+                                                tabItems[Number(val)].noteType,
+                                                tabItems[Number(val)].noteId,
+                                                Number(val)
+                                            );
                                         }}
                                         aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}
@@ -442,7 +374,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         >
                                             {tabItems.map((tab, index) => (
                                                 <Tab
-                                                    key={`tab-main-${index}-${tsBody}`}
+                                                    key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
                                                     sx={{
                                                         my: "3px",
                                                         flex: "none",
@@ -472,6 +404,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleCloseTab(
+                                                                        index,
                                                                         Number(tab.noteId)
                                                                     );
                                                                 }}
@@ -487,7 +420,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
                                         {tabItems.map((tabNote, index) => (
                                             <TabPanel
-                                                key={`tab-note-body-${tabNote.noteId}-${tsBody}`}
+                                                key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                                                 value={index}
                                                 sx={{
                                                     paddingX: "5px",

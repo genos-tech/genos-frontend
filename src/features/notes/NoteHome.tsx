@@ -26,6 +26,9 @@ import { getData } from "../../db/crud";
 import { STORES } from "../../db/conf";
 import { ChatNoteMain } from "./components/ChatNoteMain";
 import { TaskNoteMain } from "./components/TaskNoteMain";
+import { addNote } from "./services/addNote";
+import { loadSpecificNote } from "./services/loadSpecificNote";
+import { useAuth } from "../../context/AuthContext";
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -134,7 +137,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         setIsTaskNoteVisible,
         setIsChatNoteVisible,
     } = props;
-
+    const { accessToken } = useAuth();
     const { mode } = useColorScheme();
 
     const popInitialNote = async () => {
@@ -175,6 +178,64 @@ export const NoteHome = (props: NoteHomeProps) => {
         popInitialNote();
     }, []);
 
+    const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
+        const targetTabIndex: number =
+            nextTabIndex !== -1
+                ? nextTabIndex
+                : tabItems.findIndex(
+                      (note) => note.noteType === noteType && note.noteId === noteId
+                  );
+        if (noteType === 1) {
+            const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
+            if (note) {
+                if (note.noteType === 1) {
+                    setCurrentMyNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            } else {
+                const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
+                if (!note.error && note.noteType === 1) {
+                    addNote(1, note);
+                    setCurrentMyNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            }
+            setCurrentNoteType(1);
+        } else if (noteType === 2) {
+            const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
+            if (note) {
+                if (note.noteType === 2) {
+                    setCurrentTaskNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            } else {
+                const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
+                if (!note.error && note.noteType === 2) {
+                    addNote(2, note);
+                    setCurrentTaskNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            }
+            setCurrentNoteType(2);
+        } else if (noteType === 3) {
+            const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
+            if (note) {
+                if (note.noteType === 3) {
+                    setCurrentChatNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            } else {
+                const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
+                if (!note.error && note.noteType === 3) {
+                    addNote(3, note);
+                    setCurrentChatNote(note);
+                    setSelectedTabIndex(targetTabIndex);
+                }
+            }
+            setCurrentNoteType(3);
+        }
+    };
+
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
@@ -195,16 +256,13 @@ export const NoteHome = (props: NoteHomeProps) => {
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} order={1} minSize={15} maxSize={25}>
                         <NoteSidebar
-                            myself={myself}
+                            loadNote={loadNote}
                             currentNoteType={currentNoteType}
                             setCurrentNoteType={setCurrentNoteType}
                             myNoteMetaTree={myNoteMetaTree}
                             currentMyNote={currentMyNote}
-                            setCurrentMyNote={setCurrentMyNote}
                             currentTaskNote={currentTaskNote}
-                            setCurrentTaskNote={setCurrentTaskNote}
                             currentChatNote={currentChatNote}
-                            setCurrentChatNote={setCurrentChatNote}
                             handleCreateNewMyNote={handleCreateNewMyNote}
                             handleCreateNewTaskNote={handleCreateNewTaskNote}
                             handleCreateNewChatNote={handleCreateNewChatNote}
@@ -216,7 +274,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                             currentChatNoteChain={currentChatNoteChain}
                             allNoteIdChains={allNoteIdChains}
                             selectedTabIndex={selectedTabIndex}
-                            setSelectedTabIndex={setSelectedTabIndex}
                         />
                     </Panel>
 
@@ -271,7 +328,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setMyself={setMyself}
                                         currentNoteType={currentNoteType}
                                         currentMyNote={currentMyNote}
-                                        setCurrentMyNote={setCurrentMyNote}
                                         setOpeningService={setOpeningService}
                                         setCurrentChat={setCurrentMainChat}
                                         myNoteMeta={myNoteMeta} // TODO: Use the correct note based on noteType
@@ -279,10 +335,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         tabItems={tabItems}
                                         setTabItems={setTabItems}
                                         selectedTabIndex={selectedTabIndex}
-                                        setSelectedTabIndex={setSelectedTabIndex}
                                         handleCreateNewMyNote={handleCreateNewMyNote}
                                         currentMyNoteChain={currentMyNoteChain}
-                                        setCurrentNoteType={setCurrentNoteType}
+                                        loadNote={loadNote}
                                     />
                                 )}
                                 {currentNoteType === 2 && currentTaskNoteChain && (
@@ -294,7 +349,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setMyself={setMyself}
                                         currentNoteType={currentNoteType}
                                         currentTaskNote={currentTaskNote}
-                                        setCurrentTaskNote={setCurrentTaskNote}
                                         setOpeningService={setOpeningService}
                                         setCurrentChat={setCurrentMainChat}
                                         taskNoteMeta={taskNoteMeta}
@@ -302,13 +356,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         tabItems={tabItems}
                                         setTabItems={setTabItems}
                                         selectedTabIndex={selectedTabIndex}
-                                        setSelectedTabIndex={setSelectedTabIndex}
                                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                                         currentTaskNoteChain={currentTaskNoteChain}
-                                        setCurrentNoteType={setCurrentNoteType}
                                         isInTaskPage={false}
                                         isCreatingTask={isCreatingTask}
                                         setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                        loadNote={loadNote}
                                     />
                                 )}
                                 {currentNoteType === 3 && currentChatNoteChain && (
@@ -319,8 +372,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         myself={myself}
                                         setMyself={setMyself}
                                         currentChatNote={currentChatNote}
-                                        setCurrentChatNote={setCurrentChatNote}
                                         setOpeningService={setOpeningService}
+                                        setCurrentChatNote={setCurrentChatNote}
                                         setCurrentChat={setCurrentMainChat}
                                         currentNoteType={currentNoteType}
                                         chatNoteMeta={chatNoteMeta}
@@ -328,13 +381,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         tabItems={tabItems}
                                         setTabItems={setTabItems}
                                         selectedTabIndex={selectedTabIndex}
-                                        setSelectedTabIndex={setSelectedTabIndex}
                                         handleCreateNewChatNote={handleCreateNewChatNote}
                                         currentChatNoteChain={currentChatNoteChain}
                                         isInChatPage={false}
-                                        setCurrentNoteType={setCurrentNoteType}
                                         setIsMainChatVisible={setIsMainChatVisible}
                                         setIsChatNoteVisible={setIsChatNoteVisible}
+                                        loadNote={loadNote}
                                     />
                                 )}
                             </Box>

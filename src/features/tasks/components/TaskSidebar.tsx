@@ -375,7 +375,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         >
                             <DashboardIcon />
                             <ListItemContent>
-                                <Typography level="title-sm">Dashboard</Typography>
+                                <Typography
+                                    level="title-sm"
+                                    sx={{
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    Dashboard
+                                </Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
@@ -390,7 +399,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         >
                             <TableChartIcon />
                             <ListItemContent>
-                                <Typography level="title-sm">Task Table</Typography>
+                                <Typography
+                                    level="title-sm"
+                                    sx={{
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    Task Table
+                                </Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
@@ -407,7 +425,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 >
                                     <AssignmentRoundedIcon />
                                     <ListItemContent>
-                                        <Typography level="title-sm">Recents</Typography>
+                                        <Typography
+                                            level="title-sm"
+                                            sx={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            Recents
+                                        </Typography>
                                     </ListItemContent>
                                     <KeyboardArrowDownIcon
                                         sx={[
@@ -528,7 +555,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 >
                                     <WorkIcon />
                                     <ListItemContent>
-                                        <Typography level="title-sm">Projects</Typography>
+                                        <Typography
+                                            level="title-sm"
+                                            sx={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            Projects
+                                        </Typography>
                                     </ListItemContent>
                                     <KeyboardArrowDownIcon
                                         sx={[
@@ -860,7 +896,16 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 >
                                     <FreeCancellationIcon />
                                     <ListItemContent>
-                                        <Typography level="title-sm">To-Do (TBD)</Typography>
+                                        <Typography
+                                            level="title-sm"
+                                            sx={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            To-Do (TBD)
+                                        </Typography>
                                     </ListItemContent>
                                     <KeyboardArrowDownIcon
                                         sx={[

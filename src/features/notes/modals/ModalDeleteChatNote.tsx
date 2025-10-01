@@ -16,7 +16,8 @@ type Props = {
     chatNoteMeta: ChatNoteMetaProps[];
     setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
     currentChatNote: ChatNoteProps;
-    handleCloseTab: (value: number) => void;
+    handleCloseTab: (tabIndex: number, closingNoteId: number) => void;
+    currentTabIndex: number;
 };
 
 export const ModalDeleteChatNote: React.FC<Props> = ({
@@ -27,6 +28,7 @@ export const ModalDeleteChatNote: React.FC<Props> = ({
     setChatNoteMeta,
     currentChatNote,
     handleCloseTab,
+    currentTabIndex,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export const ModalDeleteChatNote: React.FC<Props> = ({
             await deleteData({ storeName: STORES.CHAT_NOTES, key: currentChatNote.noteId });
             // Delete the deleted noteId from the meta object
             setChatNoteMeta(chatNoteMeta.filter((note) => note.noteId !== currentChatNote.noteId));
-            handleCloseTab(currentChatNote.noteId);
+            handleCloseTab(currentTabIndex, currentChatNote.noteId);
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {

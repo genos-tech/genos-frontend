@@ -593,9 +593,6 @@ export const App = () => {
     // Common
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
     const [tabItems, setTabItems] = useState<any[]>([]);
-    useEffect(() => {
-        console.log("tabItems", tabItems);
-    }, [tabItems]);
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
     const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);

@@ -16,9 +16,9 @@ type Props = {
     myNoteMeta: MyNoteMetaProps[];
     setMyNoteMeta: (value: MyNoteMetaProps[]) => void;
     currentMyNote: MyNoteProps;
-    handleCloseTab: (value: number) => void;
+    handleCloseTab: (tabIndex: number, closingNoteId: number) => void;
+    currentTabIndex: number;
 };
-
 export const ModalDeleteMyNote: React.FC<Props> = ({
     myself,
     openDeleteNote,
@@ -27,6 +27,7 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
     setMyNoteMeta,
     currentMyNote,
     handleCloseTab,
+    currentTabIndex,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -47,7 +48,7 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
             await deleteData({ storeName: STORES.PERSONAL_NOTES, key: currentMyNote.noteId });
             // Delete the deleted noteId from the meta object
             setMyNoteMeta(myNoteMeta.filter((note) => note.noteId !== currentMyNote.noteId));
-            handleCloseTab(currentMyNote.noteId);
+            handleCloseTab(currentTabIndex, currentMyNote.noteId);
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {
