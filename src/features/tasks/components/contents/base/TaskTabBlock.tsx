@@ -405,9 +405,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         <>
                             <Box sx={{ flexGrow: 1 }} />
                             <IconButton
-                                sx={{ mr: "15px", mb: "3px", px: "3px" }}
+                                sx={{ mr: "23px", mb: "3px", px: "5px" }}
                                 component="p"
-                                variant="soft"
+                                variant="plain"
                                 color="neutral"
                                 size="sm"
                                 onClick={() => {

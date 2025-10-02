@@ -781,6 +781,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <Panel
                                 id={"9"}
                                 order={9}
+                                defaultSize={70}
                                 minSize={30}
                                 maxSize={80}
                                 onResize={setMainChatPanelSize}

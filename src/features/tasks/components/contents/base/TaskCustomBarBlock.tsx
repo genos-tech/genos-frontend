@@ -114,7 +114,7 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             {currentTaskContent.status.status !== "Deleted" && (
                 <IconButton
                     component="p"
-                    variant="outlined"
+                    variant="plain"
                     size="sm"
                     sx={{
                         fontSize: "14px",

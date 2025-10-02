@@ -101,7 +101,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         <IconButton
                             component="a"
                             size="sm"
-                            variant="outlined"
+                            variant="plain"
                             color="neutral"
                             onClick={() => {
                                 setIsMainChatVisible(true);

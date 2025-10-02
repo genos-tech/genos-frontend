@@ -70,6 +70,7 @@ type TaskPreviewProps = {
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
     taskNoteMeta: TaskNoteMetaProps[];
+    setIsTaskVisibleInNote?: (value: boolean) => void;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -106,6 +107,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         teamProjects,
         setTeamProjects,
         taskNoteMeta,
+        setIsTaskVisibleInNote,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -424,6 +426,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setCurrentTaskContent={setTmpCurrentTaskContent}
                 setTaskStatusUpdated={setTaskStatusUpdated}
                 isTaskNoteVisible={isTaskNoteVisible}
+                setIsTaskVisibleInNote={setIsTaskVisibleInNote}
             />
 
             <Divider sx={{ mt: 1, mb: 1 }} />

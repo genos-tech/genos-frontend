@@ -755,6 +755,7 @@ export const App = () => {
     const [taskNoteMeta, setTaskNoteMeta] = useState<TaskNoteMetaProps[]>([]);
     const [currentTaskNoteChain, setCurrentTaskNoteChain] = useState<TaskNoteMetaTreeNode[]>();
     const [newlyCreatedTaskNotes, setNewlyCreatedTaskNotes] = useState<TaskNoteProps[]>([]);
+    const [isTaskVisibleInNote, setIsTaskVisibleInNote] = useState(false);
     const handleCreateNewTaskNote = async (
         parentNoteId: number | null,
         projectId: number,
@@ -1419,6 +1420,25 @@ export const App = () => {
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setIsChatNoteVisible={setIsChatNoteVisible}
                         loadNote={loadNote}
+                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
+                        isTaskVisibleInNote={isTaskVisibleInNote}
+                        setCurrentProject={setCurrentProject}
+                        currentPreviewTask={currentPreviewTask}
+                        setIsThreadVisible={setIsThreadVisible}
+                        isThreadVisible={isThreadVisible}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        setIsCreatingTask={setIsCreatingTask}
+                        setCurrentPreviewTask={setCurrentPreviewTask}
+                        setOpenCreateProject={setOpenCreateProject}
+                        setOpenCreateTag={setOpenCreateTag}
+                        currentPreviewTaskId={currentPreviewTaskId}
+                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        isCommentUpdated={isTaskCommentUpdated}
+                        setIsCommentUpdated={setIsTaskCommentUpdated}
+                        setCurrentTaskNote={setCurrentTaskNote}
+                        isTaskNoteVisible={isTaskNoteVisible}
+                        teamProjects={teamProjects}
+                        setTeamProjects={setTeamProjects}
                     />
                 ) : null}
             </CssVarsProvider>

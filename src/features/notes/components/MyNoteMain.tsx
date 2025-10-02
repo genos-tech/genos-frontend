@@ -284,7 +284,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 <IconButton
                                                     component="button"
                                                     size="sm"
-                                                    variant="outlined"
+                                                    variant="plain"
                                                     color="neutral"
                                                     onClick={() => {
                                                         handleCreateNewMyNote(null);

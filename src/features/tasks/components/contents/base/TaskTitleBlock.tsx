@@ -55,6 +55,7 @@ type TaskTitleBlockProps = {
     setCurrentTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
     isTaskNoteVisible?: boolean;
+    setIsTaskVisibleInNote?: (value: boolean) => void;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -80,6 +81,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setCurrentTaskContent,
         setTaskStatusUpdated,
         isTaskNoteVisible,
+        setIsTaskVisibleInNote,
     } = props;
 
     const { mode } = useColorScheme();
@@ -106,7 +108,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     }}
                 >
                     {isPreviewMode && (
-                        <Box>
+                        <>
                             <Chip
                                 key={`task-title-block-${taskContents.id}`}
                                 variant="soft"
@@ -119,27 +121,25 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             >
                                 ID: {taskContents.id || "N/A"}
                             </Chip>
-                        </Box>
-                    )}
-                    {isPreviewMode && (
-                        <Chip
-                            key={`task-title-block-status-${taskContents.status.status}`}
-                            size="lg"
-                            variant="soft"
-                            sx={{
-                                backgroundColor: taskContents.status.color
-                                    ? alpha(
-                                          taskContents.status.color,
-                                          mode === "dark" ? 0.5 : 0.75
-                                      )
-                                    : "transparent",
-                                color: taskContents.status.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                        >
-                            {taskContents.status.status || "Open"}
-                        </Chip>
+                            <Chip
+                                key={`task-title-block-status-${taskContents.status.status}`}
+                                size="lg"
+                                variant="soft"
+                                sx={{
+                                    backgroundColor: taskContents.status.color
+                                        ? alpha(
+                                              taskContents.status.color,
+                                              mode === "dark" ? 0.5 : 0.75
+                                          )
+                                        : "transparent",
+                                    color: taskContents.status.textColor,
+                                    fontWeight: "bold",
+                                    borderRadius: "5px",
+                                }}
+                            >
+                                {taskContents.status.status || "Open"}
+                            </Chip>
+                        </>
                     )}
                     <FormControl required sx={{ width: "100%" }}>
                         <Input
@@ -176,7 +176,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </FormControl>
                 </Box>
 
-                {isPreviewMode === true && (
+                {/* If the task is visible in the task note, do not show the expand button. */}
+                {isPreviewMode === true && setIsTaskVisibleInNote === undefined && (
                     <Tooltip title="Expand">
                         <IconButton
                             size="sm"
@@ -278,6 +279,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             if (setIsTaskHomeVisible) {
                                 setIsTaskHomeVisible(true);
                             }
+                        }
+
+                        // Close the task preview when the task is visible in the task note.
+                        if (setIsTaskVisibleInNote) {
+                            setIsTaskVisibleInNote(false);
                         }
                     }}
                 >

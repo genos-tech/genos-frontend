@@ -1,3 +1,4 @@
+import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 import { useState, useEffect, useRef } from "react";
 import {
@@ -18,6 +19,7 @@ import {
     Dropdown,
     MenuButton,
     Tooltip,
+    Chip,
 } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
 import CloseIcon from "@mui/icons-material/Close";
@@ -29,6 +31,7 @@ import MoreVert from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
@@ -39,6 +42,8 @@ import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
+import { TaskProps } from "../../../types/tasks";
+import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -71,6 +76,9 @@ type TaskNoteMainProps = {
     isTaskPreviewVisible?: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
+    setIsTaskVisibleInNote: (value: boolean) => void;
+    currentPreviewTask?: TaskProps;
+    setCurrentPreviewTask: (value: TaskProps) => void;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -97,8 +105,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         isTaskPreviewVisible,
         setIsTaskHomeVisible,
         loadNote,
+        setIsTaskVisibleInNote,
+        currentPreviewTask,
+        setCurrentPreviewTask,
     } = props;
 
+    const { mode } = useColorScheme();
     const { accessToken } = useAuth();
 
     const [noteUpdated, setNoteUpdated] = useState(false);
@@ -186,6 +198,25 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             );
         }
     };
+
+    const [currentTask, setCurrentTask] = useState<TaskProps | undefined>(currentPreviewTask);
+    const setPreviewTask = async (projectId: number, taskId: number) => {
+        const loadedTask: TaskProps[] = await loadSpecificTask(
+            myself,
+            projectId,
+            taskId,
+            accessToken
+        );
+        if (loadedTask.length === 1) {
+            setCurrentPreviewTask(loadedTask[0]);
+            setCurrentTask(loadedTask[0]);
+        }
+    };
+    useEffect(() => {
+        if (currentTaskNote) {
+            setPreviewTask(currentTaskNote.projectId, currentTaskNote.taskId);
+        }
+    }, [currentTaskNote]);
 
     useEffect(() => {
         if (noteUpdated) {
@@ -334,6 +365,75 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         <OpenInNewIcon />
                                                     </IconButton>
                                                 </Tooltip>
+                                            )}
+
+                                            {isInTaskPage === false && (
+                                                <>
+                                                    {currentTask && (
+                                                        <>
+                                                            <Chip
+                                                                key={`task-status-${currentTask.status.status}`}
+                                                                size="md"
+                                                                variant="soft"
+                                                                sx={{
+                                                                    mt: "3px",
+                                                                    mr: "5px",
+                                                                    height: "30px",
+                                                                    backgroundColor: currentTask
+                                                                        .status.color
+                                                                        ? alpha(
+                                                                              currentTask.status
+                                                                                  .color,
+                                                                              mode === "dark"
+                                                                                  ? 0.5
+                                                                                  : 0.75
+                                                                          )
+                                                                        : "transparent",
+                                                                    color: currentTask.status
+                                                                        .textColor,
+                                                                    fontWeight: "bold",
+                                                                    borderRadius: "5px",
+                                                                }}
+                                                            >
+                                                                {currentTask.status.status ||
+                                                                    "Open"}
+                                                            </Chip>
+                                                            <Chip
+                                                                key={`task-title-${currentTask.id}`}
+                                                                sx={{
+                                                                    mt: "3px",
+                                                                    mr: "5px",
+                                                                    height: "30px",
+                                                                    borderRadius: "5px",
+                                                                    fontWeight: "bold",
+                                                                }}
+                                                                size="md"
+                                                            >
+                                                                Title:{" "}
+                                                                {currentTask.title.length > 19
+                                                                    ? currentTask.title.slice(
+                                                                          0,
+                                                                          19
+                                                                      ) + "..."
+                                                                    : currentTask.title || "N/A"}
+                                                            </Chip>
+                                                        </>
+                                                    )}
+
+                                                    <Tooltip title="Open Task">
+                                                        <IconButton
+                                                            size="sm"
+                                                            color="neutral"
+                                                            variant="plain"
+                                                            sx={{ mb: "5px" }}
+                                                            onClick={() => {
+                                                                setIsTaskVisibleInNote(true);
+                                                            }}
+                                                        >
+                                                            <OpenInNewIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </>
                                             )}
                                             <Dropdown>
                                                 <MenuButton
