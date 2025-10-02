@@ -218,7 +218,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     return (
         <>
-            {taskNoteMeta.length === 0 && (
+            {(taskNoteMeta.length === 0 || currentTaskNote === null) && (
                 <Box
                     sx={{
                         height: "100%",

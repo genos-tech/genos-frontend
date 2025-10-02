@@ -50,10 +50,8 @@ type NoteHomeProps = {
     setTabItems: (value: any[]) => void;
     selectedTabIndex: number;
     currentMyNote: MyNoteProps | null;
-    setCurrentMyNote: (value: MyNoteProps) => void;
     handleCreateNewMyNote: (parentNoteId: number | null) => Promise<void>;
     currentTaskNote: TaskNoteProps | null;
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
@@ -111,10 +109,8 @@ export const NoteHome = (props: NoteHomeProps) => {
         setTabItems,
         selectedTabIndex,
         currentMyNote,
-        setCurrentMyNote,
         handleCreateNewMyNote,
         currentTaskNote,
-        setCurrentTaskNote,
         handleCreateNewTaskNote,
         currentChatNote,
         setCurrentChatNote,
@@ -135,44 +131,6 @@ export const NoteHome = (props: NoteHomeProps) => {
         loadNote,
     } = props;
     const { mode } = useColorScheme();
-
-    const popInitialNote = async () => {
-        const noteType: string | null = localStorage.getItem("lastOpenNoteType");
-        const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
-        const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
-        const chatNoteId: string | null = localStorage.getItem("lastOpenChatNoteId");
-        if (noteType) {
-            if (Number(noteType) === 1 && myNoteId) {
-                const note: MyNoteProps = await getData({
-                    storeName: STORES.PERSONAL_NOTES,
-                    key: Number(myNoteId),
-                });
-                if (note) {
-                    setCurrentMyNote(note);
-                }
-            } else if (Number(noteType) === 2 && taskNoteId) {
-                const note: TaskNoteProps = await getData({
-                    storeName: STORES.TASK_NOTES,
-                    key: Number(taskNoteId),
-                });
-                if (note) {
-                    setCurrentTaskNote(note);
-                }
-            } else if (Number(noteType) === 3 && chatNoteId) {
-                const note: ChatNoteProps = await getData({
-                    storeName: STORES.CHAT_NOTES,
-                    key: Number(chatNoteId),
-                });
-                if (note) {
-                    setCurrentChatNote(note);
-                }
-            }
-        }
-    };
-
-    useEffect(() => {
-        popInitialNote();
-    }, []);
 
     return (
         <CssVarsProvider disableTransitionOnChange>
@@ -257,35 +215,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                     {currentNoteType !== 0 && (
                         <Panel id={"2"} order={2} minSize={50} maxSize={85}>
                             <Box sx={{ paddingX: 1, height: "100dvh" }}>
-                                {/* No chat selected */}
-                                {currentMyNoteChain === undefined &&
-                                    currentTaskNoteChain === undefined &&
-                                    currentChatNoteChain === undefined && (
-                                        <>
-                                            <Box
-                                                sx={{
-                                                    height: "100%",
-                                                    display: "flex",
-                                                    justifyContent: "center",
-                                                    alignItems: "center",
-                                                    width: "100%",
-                                                }}
-                                            >
-                                                <IconButton
-                                                    component="button"
-                                                    variant="soft"
-                                                    color="neutral"
-                                                    sx={{
-                                                        fontSize: "15px",
-                                                        padding: "10px",
-                                                    }}
-                                                >
-                                                    Choose a Note from Sidebar
-                                                </IconButton>
-                                            </Box>
-                                        </>
-                                    )}
-
                                 {/* My Note selected */}
                                 {currentNoteType === 1 && currentMyNoteChain && (
                                     <MyNoteMain

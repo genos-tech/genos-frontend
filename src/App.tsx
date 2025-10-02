@@ -659,6 +659,40 @@ export const App = () => {
         }
     };
 
+    const popInitialNote = async () => {
+        const noteType: string | null = localStorage.getItem("lastOpenNoteType");
+        const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
+        const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
+        const chatNoteId: string | null = localStorage.getItem("lastOpenChatNoteId");
+        if (noteType) {
+            if (Number(noteType) === 1 && myNoteId) {
+                const note: MyNoteProps = await getData({
+                    storeName: STORES.PERSONAL_NOTES,
+                    key: Number(myNoteId),
+                });
+                if (note) {
+                    setCurrentMyNote(note);
+                }
+            } else if (Number(noteType) === 2 && taskNoteId) {
+                const note: TaskNoteProps = await getData({
+                    storeName: STORES.TASK_NOTES,
+                    key: Number(taskNoteId),
+                });
+                if (note) {
+                    setCurrentTaskNote(note);
+                }
+            } else if (Number(noteType) === 3 && chatNoteId) {
+                const note: ChatNoteProps = await getData({
+                    storeName: STORES.CHAT_NOTES,
+                    key: Number(chatNoteId),
+                });
+                if (note) {
+                    setCurrentChatNote(note);
+                }
+            }
+        }
+    };
+
     // My Note Related
     const [currentMyNote, setCurrentMyNote] = useState<MyNoteProps | null>(null);
     const [myNoteMeta, setMyNoteMeta] = useState<MyNoteMetaProps[]>([]);
@@ -965,10 +999,37 @@ export const App = () => {
     });
 
     useEffect(() => {
+        // Reset note variables when the team changes
+        setTabItems([]);
+        setTmpTabItems([]);
+        setCurrentMyNote(null);
+        setCurrentTaskNote(null);
+        setCurrentChatNote(null);
+        setCurrentChatNoteChain(undefined);
+        setCurrentMyNoteChain(undefined);
+        setCurrentTaskNoteChain(undefined);
+        setAllNoteIdChains({});
+        setMyNoteMeta([]);
+        setTaskNoteMeta([]);
+        setChatNoteMeta([]);
+        setMyNoteMetaTree([]);
+        setTaskNoteMetaTree([]);
+        setChatNoteMetaTree([]);
+        setNewlyCreatedMyNotes([]);
+        setNewlyCreatedTaskNotes([]);
+        setNewlyCreatedChatNotes([]);
+    }, [currentTeamId]);
+
+    useEffect(() => {
         if (openingService === 0) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             setTmpTabItems(tabItems);
             setTabItems([]);
+
+            // Init all notes
+            setCurrentMyNote(null);
+            setCurrentTaskNote(null);
+            setCurrentChatNote(null);
         } else if (openingService === 1) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             setTmpTabItems(tabItems);
@@ -979,6 +1040,11 @@ export const App = () => {
 
             // Initialize the chat note visibility.
             setIsChatNoteVisible(false);
+
+            // Init all notes
+            setCurrentMyNote(null);
+            setCurrentTaskNote(null);
+            setCurrentChatNote(null);
         } else if (openingService === 2) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             setTmpTabItems(tabItems);
@@ -986,10 +1052,16 @@ export const App = () => {
 
             // Initialize the chat note visibility.
             setIsTaskNoteVisible(false);
+
+            // Init all notes
+            setCurrentMyNote(null);
+            setCurrentTaskNote(null);
+            setCurrentChatNote(null);
         } else if (openingService === 3) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             setTmpTabItems([]);
             setTabItems(tmpTabItems);
+            popInitialNote();
         }
     }, [openingService]);
 
@@ -998,6 +1070,7 @@ export const App = () => {
         funcSetInboxItems();
         funcSetAllChats();
         funcSetActivityMessages();
+        popInitialNote();
     }, []);
 
     useEffect(() => {
@@ -1326,10 +1399,8 @@ export const App = () => {
                         setTabItems={setTabItems}
                         selectedTabIndex={selectedTabIndex}
                         currentMyNote={currentMyNote}
-                        setCurrentMyNote={setCurrentMyNote}
                         handleCreateNewMyNote={handleCreateNewMyNote}
                         currentTaskNote={currentTaskNote}
-                        setCurrentTaskNote={setCurrentTaskNote}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         currentChatNote={currentChatNote}
                         setCurrentChatNote={setCurrentChatNote}

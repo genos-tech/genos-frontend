@@ -218,7 +218,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     return (
         <>
-            {chatNoteMeta.length === 0 && (
+            {(chatNoteMeta.length === 0 || currentChatNote === null) && (
                 <Box
                     sx={{
                         height: "100%",

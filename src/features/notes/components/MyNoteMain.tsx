@@ -197,7 +197,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     return (
         <>
-            {myNoteMeta.length === 0 && (
+            {(myNoteMeta.length === 0 || currentMyNote === null) && (
                 <Box
                     sx={{
                         height: "100%",
