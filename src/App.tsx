@@ -1373,6 +1373,7 @@ export const App = () => {
                         isNewTagCreated={isNewTagCreated}
                         setIsNewTagCreated={setIsNewTagCreated}
                         loadNote={loadNote}
+                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                     />
                 ) : null}
 

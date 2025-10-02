@@ -128,6 +128,7 @@ type TaskHomeProps = {
     isNewTagCreated: boolean;
     setIsNewTagCreated: (value: boolean) => void;
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
+    setIsTaskVisibleInNote: (value: boolean) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -189,6 +190,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         isNewTagCreated,
         setIsNewTagCreated,
         loadNote,
+        setIsTaskVisibleInNote,
     } = props;
 
     // Common
@@ -915,6 +917,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                 loadNote={loadNote}
+                                                setIsTaskVisibleInNote={setIsTaskVisibleInNote}
+                                                setCurrentPreviewTask={setCurrentPreviewTask}
                                             />
                                         </Box>
                                     </Panel>
