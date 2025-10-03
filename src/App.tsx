@@ -472,7 +472,6 @@ export const App = () => {
             projectId,
             taskTypes.deleted.statuses
         );
-        // Update the task table only the tasks whit tsUpdated is larger than the previous one.
         setOnGoingTasks(_onGoingTasks);
         setClosedTasks(_closedTasks);
         setDeletedTasks(_deletedTasks);
@@ -548,6 +547,7 @@ export const App = () => {
     useEffect(() => {
         // Update an ongoing task
         if (isTaskUpdated && currentPreviewTask) {
+            console.log(ongoingTasks[2]);
             setOnGoingTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === String(currentPreviewTask.id)
@@ -565,10 +565,13 @@ export const App = () => {
                               assigneeEmail: currentPreviewTask.assignee.userEmail || null,
                               assigneeName: currentPreviewTask.assignee.userName || null,
                               assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
-                              parentTaskId: String(currentPreviewTask.parentTaskId) || null,
+                              parentTaskId: currentPreviewTask.parentTaskId
+                                  ? String(currentPreviewTask.parentTaskId)
+                                  : null,
+                              rootTaskId: currentPreviewTask.rootTaskId,
                               threadId: currentPreviewTask.threadId || null,
                               tags: currentPreviewTask.tags || [],
-                              concatTags: currentPreviewTask.concatTags || null,
+                              concatTags: currentPreviewTask.concatTags || "//",
                               teamId: myself.teamId || null,
                               projectId: currentPreviewTask.project?.projectId || null,
                           }

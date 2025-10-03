@@ -126,8 +126,9 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const { mode } = useColorScheme();
     const className = `task-datagrid-${mode}`;
     const apiRef = useGridApiRef();
-    const [currentDisplayingTasks, setCurrentDisplayingTasks] =
-        useState<TaskTableProps[]>(ongoingTasks);
+    const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>(
+        ongoingTasks.filter((task) => task.parentTaskId === null)
+    );
     const [currentFilterName, setCurrentFilterName] = useState<string>("");
     const [predefinedFilters, setPredefinedFilters] =
         useState<FilterProps[]>(predefinedStatusFilters);
@@ -237,13 +238,13 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
 
     useEffect(() => {
         if (displayTaskType.id === 1) {
-            setCurrentDisplayingTasks(ongoingTasks);
+            setCurrentDisplayingTasks(ongoingTasks.filter((task) => task.parentTaskId === null));
             setPredefinedFilters(predefinedStatusFilters);
         } else if (displayTaskType.id === 2) {
-            setCurrentDisplayingTasks(closedTasks);
+            setCurrentDisplayingTasks(closedTasks.filter((task) => task.parentTaskId === null));
             updateTagOptions();
         } else if (displayTaskType.id === 3) {
-            setCurrentDisplayingTasks(deletedTasks);
+            setCurrentDisplayingTasks(deletedTasks.filter((task) => task.parentTaskId === null));
             updateTagOptions();
         }
     }, [displayTaskType, currentProject, ongoingTasks, closedTasks, deletedTasks]);
