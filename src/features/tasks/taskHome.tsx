@@ -26,7 +26,7 @@ import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
-import { TaskSidebar } from "./components/TaskSidebar";
+import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 import { TaskDashboard } from "./components/dashboard//TaskDashboard";
 import { TaskPreview } from "./components/contents/TaskPreview";
 import { ProjectTaskTable } from "./components/table/TaskTable";
@@ -302,6 +302,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 <TaskSidebar
                                     myself={myself}
                                     setIsDashboardVisible={setIsDashboardVisible}
+                                    taskTableVisible={isTaskTableVisible}
                                     setTaskTableVisible={setTaskTableVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     currentProject={currentProject}
@@ -944,6 +945,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 <TaskSidebar
                                     myself={myself}
                                     setIsDashboardVisible={setIsDashboardVisible}
+                                    taskTableVisible={isTaskTableVisible}
                                     setTaskTableVisible={setTaskTableVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     currentProject={currentProject}

@@ -131,6 +131,38 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         setTmpMyNoteMetaTree(myNoteMetaTree);
     }, [currentMyNote]);
 
+    const renderMyNoteTree = (node: MyNoteMetaTreeNode) => (
+        <Box key={`my-note-box-${node.noteId}-${tsMyNoteTreeUpdated}`}>
+            {tmpCurrentMyNoteChain && (
+                <ListItem nested key={`my-note-${node.noteId}-${tsMyNoteTreeUpdated}`}>
+                    <NoteTreeToggler
+                        // Expanding toggle when the target note is in the tab.
+                        defaultExpanded={
+                            tmpCurrentMyNoteChain.some(
+                                (chainedNote) => chainedNote.noteId === node.noteId
+                            ) ||
+                            tabItems.some((tabNote) =>
+                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
+                                    (chainedNoteId) => chainedNoteId === node.noteId
+                                )
+                            )
+                                ? true
+                                : false
+                        }
+                        renderToggle={({ open, setOpen }) =>
+                            innerRenderToggleListItemButton(open, setOpen, 1, node)
+                        }
+                    >
+                        {node.children.length > 0 && tmpCurrentMyNoteChain && (
+                            <List>{node.children.map((child) => renderMyNoteTree(child))}</List>
+                        )}
+                        {node.children.length === 0 && createChildNoteList(node)}
+                    </NoteTreeToggler>
+                </ListItem>
+            )}
+        </Box>
+    );
+
     //////////////////////////
     // Task Note related
     //////////////////////////
@@ -178,6 +210,38 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     useEffect(() => {
         setTmpTaskNoteMetaTree(taskNoteMetaTree);
     }, [currentTaskNote]);
+
+    const renderTaskNoteTree = (node: TaskNoteMetaTreeNode) => (
+        <Box key={`task-note-box-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
+            {tmpCurrentTaskNoteChain && (
+                <ListItem nested key={`task-note-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
+                    <NoteTreeToggler
+                        // Expanding toggle when the target note is in the tab.
+                        defaultExpanded={
+                            tmpCurrentTaskNoteChain.some(
+                                (chainedNote) => chainedNote.noteId === node.noteId
+                            ) ||
+                            tabItems.some((tabNote) =>
+                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
+                                    (chainedNoteId) => chainedNoteId === node.noteId
+                                )
+                            )
+                                ? true
+                                : false
+                        }
+                        renderToggle={({ open, setOpen }) =>
+                            innerRenderToggleListItemButton(open, setOpen, 2, node)
+                        }
+                    >
+                        {node.children.length > 0 && tmpCurrentTaskNoteChain && (
+                            <List>{node.children.map((child) => renderTaskNoteTree(child))}</List>
+                        )}
+                        {node.children.length === 0 && createChildNoteList(node)}
+                    </NoteTreeToggler>
+                </ListItem>
+            )}
+        </Box>
+    );
 
     //////////////////////////
     // Chat Note related
@@ -227,6 +291,41 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         setTmpChatNoteMetaTree(chatNoteMetaTree);
     }, [currentChatNote]);
 
+    const renderChatNoteTree = (node: ChatNoteMetaTreeNode) => (
+        <Box key={`chat-note-box-${node.noteId}-${tsChatNoteTreeUpdated}`}>
+            {tmpCurrentChatNoteChain && (
+                <ListItem nested key={`chat-note-${node.noteId}-${tsChatNoteTreeUpdated}`}>
+                    <NoteTreeToggler
+                        // Expanding toggle when the target note is in the tab.
+                        defaultExpanded={
+                            tmpCurrentChatNoteChain.some(
+                                (chainedNote) => chainedNote.noteId === node.noteId
+                            ) ||
+                            tabItems.some((tabNote) =>
+                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
+                                    (chainedNoteId) => chainedNoteId === node.noteId
+                                )
+                            )
+                                ? true
+                                : false
+                        }
+                        renderToggle={({ open, setOpen }) =>
+                            innerRenderToggleListItemButton(open, setOpen, 3, node)
+                        }
+                    >
+                        {node.children.length > 0 && tmpCurrentChatNoteChain && (
+                            <List>{node.children.map((child) => renderChatNoteTree(child))}</List>
+                        )}
+                        {node.children.length === 0 && createChildNoteList(node)}
+                    </NoteTreeToggler>
+                </ListItem>
+            )}
+        </Box>
+    );
+
+    //////////////////////////
+    // Common
+    //////////////////////////
     const outerRenderToggleListItemButton = (
         typo: string,
         open: boolean,
@@ -361,101 +460,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         </ListItemButton>
     );
 
-    const renderMyNoteTree = (node: MyNoteMetaTreeNode) => (
-        <Box key={`my-note-box-${node.noteId}-${tsMyNoteTreeUpdated}`}>
-            {tmpCurrentMyNoteChain && (
-                <ListItem nested key={`my-note-${node.noteId}-${tsMyNoteTreeUpdated}`}>
-                    <NoteTreeToggler
-                        // Expanding toggle when the target note is in the tab.
-                        defaultExpanded={
-                            tmpCurrentMyNoteChain.some(
-                                (chainedNote) => chainedNote.noteId === node.noteId
-                            ) ||
-                            tabItems.some((tabNote) =>
-                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
-                                    (chainedNoteId) => chainedNoteId === node.noteId
-                                )
-                            )
-                                ? true
-                                : false
-                        }
-                        renderToggle={({ open, setOpen }) =>
-                            innerRenderToggleListItemButton(open, setOpen, 1, node)
-                        }
-                    >
-                        {node.children.length > 0 && tmpCurrentMyNoteChain && (
-                            <List>{node.children.map((child) => renderMyNoteTree(child))}</List>
-                        )}
-                        {node.children.length === 0 && createChildNoteList(node)}
-                    </NoteTreeToggler>
-                </ListItem>
-            )}
-        </Box>
-    );
-
-    const renderTaskNoteTree = (node: TaskNoteMetaTreeNode) => (
-        <Box key={`task-note-box-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
-            {tmpCurrentTaskNoteChain && (
-                <ListItem nested key={`task-note-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
-                    <NoteTreeToggler
-                        // Expanding toggle when the target note is in the tab.
-                        defaultExpanded={
-                            tmpCurrentTaskNoteChain.some(
-                                (chainedNote) => chainedNote.noteId === node.noteId
-                            ) ||
-                            tabItems.some((tabNote) =>
-                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
-                                    (chainedNoteId) => chainedNoteId === node.noteId
-                                )
-                            )
-                                ? true
-                                : false
-                        }
-                        renderToggle={({ open, setOpen }) =>
-                            innerRenderToggleListItemButton(open, setOpen, 2, node)
-                        }
-                    >
-                        {node.children.length > 0 && tmpCurrentTaskNoteChain && (
-                            <List>{node.children.map((child) => renderTaskNoteTree(child))}</List>
-                        )}
-                        {node.children.length === 0 && createChildNoteList(node)}
-                    </NoteTreeToggler>
-                </ListItem>
-            )}
-        </Box>
-    );
-
-    const renderChatNoteTree = (node: ChatNoteMetaTreeNode) => (
-        <Box key={`chat-note-box-${node.noteId}-${tsChatNoteTreeUpdated}`}>
-            {tmpCurrentChatNoteChain && (
-                <ListItem nested key={`chat-note-${node.noteId}-${tsChatNoteTreeUpdated}`}>
-                    <NoteTreeToggler
-                        // Expanding toggle when the target note is in the tab.
-                        defaultExpanded={
-                            tmpCurrentChatNoteChain.some(
-                                (chainedNote) => chainedNote.noteId === node.noteId
-                            ) ||
-                            tabItems.some((tabNote) =>
-                                allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
-                                    (chainedNoteId) => chainedNoteId === node.noteId
-                                )
-                            )
-                                ? true
-                                : false
-                        }
-                        renderToggle={({ open, setOpen }) =>
-                            innerRenderToggleListItemButton(open, setOpen, 3, node)
-                        }
-                    >
-                        {node.children.length > 0 && tmpCurrentChatNoteChain && (
-                            <List>{node.children.map((child) => renderChatNoteTree(child))}</List>
-                        )}
-                        {node.children.length === 0 && createChildNoteList(node)}
-                    </NoteTreeToggler>
-                </ListItem>
-            )}
-        </Box>
-    );
     return (
         <Sheet
             className="TaskSidebar"

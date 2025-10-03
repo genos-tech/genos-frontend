@@ -1,0 +1,124 @@
+import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import LoginIcon from "@mui/icons-material/Login";
+
+import { ProjectProps } from "../../../../../types/tasks";
+import { Toggler } from "../common";
+
+type JoinProjectListItemProps = {
+    teamProjects: ProjectProps[];
+    currentProject: ProjectProps | null;
+    setOpenJoinProject: (value: {
+        flag: boolean;
+        projectId: number;
+        projectName: string;
+        isPrivate: boolean;
+        systemUserId: string;
+    }) => void;
+};
+export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
+    const { teamProjects, currentProject, setOpenJoinProject } = props;
+
+    return (
+        <Toggler
+            key="toggler-OtherProjects"
+            defaultExpanded={false}
+            renderToggle={({ open, setOpen }) => (
+                <ListItemButton
+                    onClick={() => {
+                        setOpen(!open);
+                    }}
+                >
+                    <ListItemContent>
+                        <Typography
+                            noWrap
+                            sx={{
+                                fontSize: "15px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                width: "100%", // take full width of button
+                            }}
+                            startDecorator={<LoginIcon />}
+                        >
+                            Join Project
+                        </Typography>
+                    </ListItemContent>
+                    <KeyboardArrowDownIcon
+                        sx={[
+                            open
+                                ? {
+                                      transform: "rotate(180deg)",
+                                  }
+                                : {
+                                      transform: "none",
+                                  },
+                        ]}
+                    />
+                </ListItemButton>
+            )}
+        >
+            <List sx={{ gap: 0.5 }}>
+                {teamProjects.map(
+                    ({ projectId, projectName, isPrivate, systemUserId, isJoined }, index) => {
+                        return (
+                            isJoined === false && (
+                                <ListItem key={`listitem-team-project-${projectId}-${index}`}>
+                                    <ListItemButton
+                                        color={"neutral"}
+                                        variant={
+                                            projectId === currentProject?.projectId
+                                                ? "solid"
+                                                : "plain"
+                                        }
+                                        onClick={() => {
+                                            setOpenJoinProject({
+                                                flag: true,
+                                                projectId: projectId,
+                                                projectName: projectName,
+                                                isPrivate:
+                                                    isPrivate !== undefined ? isPrivate : true,
+                                                systemUserId: systemUserId || "",
+                                            });
+                                        }}
+                                        sx={{
+                                            overflow: "hidden",
+                                        }} // ensure children don't overflow
+                                    >
+                                        <Typography
+                                            noWrap
+                                            sx={{
+                                                color:
+                                                    projectId === currentProject?.projectId
+                                                        ? "white"
+                                                        : "neutral-500",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                width: "100%", // take full width of button
+                                                ml: "35px",
+                                            }}
+                                            startDecorator={
+                                                isPrivate ? (
+                                                    <LockOutlineIcon
+                                                        sx={{
+                                                            fontSize: "16px",
+                                                        }}
+                                                    />
+                                                ) : undefined
+                                            }
+                                        >
+                                            {projectName}
+                                        </Typography>
+                                    </ListItemButton>
+                                </ListItem>
+                            )
+                        );
+                    }
+                )}
+            </List>
+        </Toggler>
+    );
+};
