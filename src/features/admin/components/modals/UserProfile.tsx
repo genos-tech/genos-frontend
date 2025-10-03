@@ -379,23 +379,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                 <QuestionAnswerRoundedIcon />
                                 &nbsp;DM
                             </IconButton>
-                            <IconButton
-                                component="button"
-                                variant="outlined"
-                                size="sm"
-                                sx={{
-                                    fontSize: "16px",
-                                    paddingX: "7px",
-                                    paddingY: "3px",
-                                    ml: 1,
-                                }}
-                                onClick={() => {
-                                    setOpenUserProfile(false);
-                                }}
-                            >
-                                <PhoneInTalkRoundedIcon />
-                                &nbsp;Call (TBD)
-                            </IconButton>
                         </Box>
                     </Box>
                 </ModalDialog>

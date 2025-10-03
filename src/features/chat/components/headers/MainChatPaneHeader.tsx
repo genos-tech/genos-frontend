@@ -120,18 +120,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </IconButton>
                     </Tooltip>
                 )}
-                {chat.chatType !== 3 && chat.chatType !== 4 && (
-                    <Button
-                        component="a"
-                        startDecorator={<PhoneInTalkRoundedIcon />}
-                        color="neutral"
-                        variant="outlined"
-                        size="sm"
-                        sx={{ display: { xs: "none", md: "inline-flex" } }}
-                    >
-                        Call (TBD)
-                    </Button>
-                )}
 
                 <Stack spacing={0} direction="row" sx={{ alignItems: "center" }}>
                     {isSubChatVisible && (
