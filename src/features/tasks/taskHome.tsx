@@ -253,17 +253,19 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     useEffect(() => {
         (async () => {
-            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
-                myself,
-                currentProject?.projectId || -1,
-                displayTaskType.statuses.join(","),
-                -1,
-                accessToken
-            );
+            if (currentProject && currentProject.projectId) {
+                const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+                    myself,
+                    currentProject.projectId,
+                    displayTaskType.statuses.join(","),
+                    -1,
+                    accessToken
+                );
 
-            setTeamTaskOptions([...loadedTeamTasks]);
+                setTeamTaskOptions([...loadedTeamTasks]);
+            }
         })();
-    }, [displayTaskType, currentProject]);
+    }, [displayTaskType]);
 
     function onChangeHandler(value: any) {
         if (value !== null) {

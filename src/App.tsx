@@ -1096,12 +1096,14 @@ export const App = () => {
 
     useEffect(() => {
         if (accessToken) {
-            if (socketInstance === null || myself.teamId !== currentTeamId) {
-                setSocketInstance(socket(accessToken));
+            console.log("Connecting WS");
+            const _socket = socket(accessToken);
+            if (_socket && (socketInstance === null || myself.teamId !== currentTeamId)) {
+                setSocketInstance(_socket);
                 console.log("Finished connecting WS");
             }
         }
-    }, [myself, accessToken, currentTeamId, socketInstance]);
+    }, [myself]);
 
     useEffect(() => {
         initCurrentTeam();
@@ -1158,17 +1160,6 @@ export const App = () => {
             const intervalId = setInterval(() => {
                 sendHeartBeat();
             }, 60_000);
-
-            // Load the latest team projects
-            (async () => {
-                const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(
-                    myself,
-                    accessToken
-                );
-                if (loadedTeamProjects && loadedTeamProjects.length > 0) {
-                    setTeamProjects([...loadedTeamProjects]);
-                }
-            })();
 
             return () => {
                 clearInterval(intervalId);

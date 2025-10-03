@@ -225,7 +225,7 @@ export const loadInitialData = (
                                 popSpecificMessagesWorker.terminate();
                             };
                         } else {
-                            console.error(
+                            console.warn(
                                 "Failed due to fetchedChat is null or undefined;",
                                 fetchedChat
                             );

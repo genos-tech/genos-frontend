@@ -196,10 +196,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         updateProjectTags();
     }, [myself]);
 
-    useEffect(() => {
-        updateProjectTags();
-    }, []);
-
     return (
         <Sheet
             className="TaskSidebar"

@@ -214,7 +214,7 @@ export const wsHook = (props: wsHookProps) => {
 
     useEffect(() => {
         if (socket === null) {
-            console.error("socket is null");
+            console.warn("socket is null");
             return;
         }
 
@@ -224,7 +224,7 @@ export const wsHook = (props: wsHookProps) => {
 
         socket.on("disconnect", (reason, details) => {
             // the reason of the disconnection, for example "transport error"
-            console.error("WS disconnected");
+            console.warn("WS disconnected");
             console.log(reason);
         });
 
