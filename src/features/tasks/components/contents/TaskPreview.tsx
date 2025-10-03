@@ -63,7 +63,8 @@ type TaskPreviewProps = {
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
-        taskId: number
+        taskId: number,
+        title?: string
     ) => Promise<void>;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
     isTaskNoteVisible: boolean;

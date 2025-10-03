@@ -63,7 +63,8 @@ type TaskNoteMainProps = {
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
-        taskId: number
+        taskId: number,
+        title?: string
     ) => Promise<void>;
     currentTaskNoteChain: TaskNoteMetaTreeNode[];
     isInTaskPage: boolean;

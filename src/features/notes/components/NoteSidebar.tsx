@@ -41,7 +41,8 @@ type NoteSidebarProps = {
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
-        taskId: number
+        taskId: number,
+        title?: string
     ) => Promise<void>;
     handleCreateNewChatNote: (
         parentNoteId: number | null,

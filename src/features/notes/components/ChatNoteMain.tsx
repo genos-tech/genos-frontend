@@ -242,7 +242,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                 </Box>
             )}
 
-            {chatNoteMeta.length > 0 && (
+            {!(chatNoteMeta.length === 0 || currentChatNote === null) &&
+                chatNoteMeta.length > 0 && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
                     {body && (
                         <>
@@ -302,7 +303,11 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                 level="title-sm"
                                                                 component="button"
                                                                 onClick={() => {
-                                                                    loadNote(3, node.noteId, -1);
+                                                                        loadNote(
+                                                                            3,
+                                                                            node.noteId,
+                                                                            -1
+                                                                        );
                                                                 }}
                                                                 sx={{
                                                                     background: "none",
@@ -505,7 +510,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             }}
                                                         >
                                                             {tab.title.length > 19
-                                                                ? `${tab.title.slice(0, 19)}...`
+                                                                    ? `${tab.title.slice(
+                                                                          0,
+                                                                          19
+                                                                      )}...`
                                                                 : tab.title}
 
                                                             {tabItems.length > 1 && (
@@ -611,7 +619,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 {currentChatNote && (
                                                     <>
                                                         <BnChatNoteEditor
-                                                            teamMemberProfiles={teamMemberProfiles}
+                                                                teamMemberProfiles={
+                                                                    teamMemberProfiles
+                                                                }
                                                             myself={myself}
                                                             setMyself={setMyself}
                                                             socket={socket}
@@ -619,10 +629,14 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             currentChatNote={currentChatNote}
                                                             body={body}
                                                             setBody={setBody}
-                                                            setNoteBodyEdited={setNoteBodyEdited}
+                                                                setNoteBodyEdited={
+                                                                    setNoteBodyEdited
+                                                                }
                                                             setNoteBodySaved={setNoteBodySaved}
                                                             setCurrentChat={setCurrentChat}
-                                                            setOpeningService={setOpeningService}
+                                                                setOpeningService={
+                                                                    setOpeningService
+                                                                }
                                                         />
                                                     </>
                                                 )}

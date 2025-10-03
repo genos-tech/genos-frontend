@@ -54,7 +54,8 @@ type NoteHomeProps = {
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
-        taskId: number
+        taskId: number,
+        title?: string
     ) => Promise<void>;
     currentChatNote: ChatNoteProps | null;
     setCurrentChatNote: (value: ChatNoteProps) => void;
@@ -191,7 +192,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                 />
                 <PanelGroup direction="horizontal">
-                    <Panel id={"1"} order={1} minSize={15} maxSize={25}>
+                    <Panel id={"1"} order={1} minSize={10} maxSize={25}>
                         <NoteSidebar
                             loadNote={loadNote}
                             currentNoteType={currentNoteType}
@@ -225,7 +226,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     />
 
                     {currentNoteType === 0 && (
-                        <Panel id={"2"} order={2} minSize={50} maxSize={85}>
+                        <Panel id={"2"} order={2} minSize={35} maxSize={85}>
                             <Box sx={{ paddingX: 1, height: "100dvh" }}>
                                 <Stack
                                     direction="row"
@@ -254,7 +255,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     )}
 
                     {currentNoteType !== 0 && (
-                        <Panel id={"3"} order={3} minSize={50} maxSize={85}>
+                        <Panel id={"3"} order={3} minSize={35} maxSize={85}>
                             <Box sx={{ paddingX: 1, height: "100dvh" }}>
                                 {/* My Note selected */}
                                 {currentNoteType === 1 && currentMyNoteChain && (
@@ -373,7 +374,18 @@ export const NoteHome = (props: NoteHomeProps) => {
                     )}
 
                     {currentTaskNoteChain && isTaskVisibleInNote && currentPreviewTask && (
-                        <Panel id={"3"} order={3} minSize={50} maxSize={85}>
+                        <>
+                            <PanelResizeHandle
+                                style={{
+                                    width: "1px",
+                                    backgroundColor: mode === "dark" ? "grey" : "lightgrey",
+                                    transition: "all 0.3s ease-in-out",
+                                    cursor: "col-resize",
+                                }}
+                                className="resize-handle"
+                            />
+
+                            <Panel id={"4"} order={4} minSize={35} maxSize={85}>
                             <Box
                                 sx={{
                                     px: { xs: 1, md: 2 },
@@ -427,6 +439,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 />
                             </Box>
                         </Panel>
+                        </>
                     )}
                 </PanelGroup>
 

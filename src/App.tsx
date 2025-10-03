@@ -759,17 +759,19 @@ export const App = () => {
     const handleCreateNewTaskNote = async (
         parentNoteId: number | null,
         projectId: number,
-        taskId: number
+        taskId: number,
+        title?: string
     ) => {
-        const title = `${parentNoteId ? "Child" : "New"} Note (${
-            newlyCreatedTaskNotes.length + 1
-        })`;
+        const _title =
+            title && title.length > 0
+                ? title
+                : `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedTaskNotes.length + 1})`;
         const _newNote = await createEmptyTaskNote(
             myself,
             parentNoteId,
             projectId,
             taskId,
-            title,
+            _title,
             accessToken
         );
         const newNote: TaskNoteProps = { noteType: 2, ..._newNote };

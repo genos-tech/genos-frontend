@@ -81,7 +81,8 @@ type ChatHomeProps = {
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
-        taskId: number
+        taskId: number,
+        title?: string
     ) => Promise<void>;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
     isTaskPreviewVisible: boolean;

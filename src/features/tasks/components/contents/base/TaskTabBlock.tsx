@@ -74,7 +74,8 @@ type TaskTabBlockProps = {
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
-        taskId: number
+        taskId: number,
+        title?: string
     ) => Promise<void>;
     taskNotes: TaskNoteProps[];
     setTaskNotes: (value: TaskNoteProps[]) => void;
@@ -421,7 +422,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         handleCreateNewTaskNote(
                                             null,
                                             taskContents.project.projectId,
-                                            currentPreviewTaskId
+                                            currentPreviewTaskId,
+                                            taskContents.title
                                         );
                                     } else {
                                         console.error(
@@ -542,7 +544,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                         ) {
                                                             setIsTaskHomeVisible(false);
                                                             setIsTaskNoteVisible(true);
-                                                            console.log(6)
                                                             setCurrentTaskNote(taskNote);
                                                         }
                                                     }}
