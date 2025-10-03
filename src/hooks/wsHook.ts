@@ -734,7 +734,7 @@ export const wsHook = (props: wsHookProps) => {
                                 funcSetActivityMessages();
                             }
                         } else {
-                            console.log("[IGNORE] Thread or mention from me");
+                            console.log("[IGNORE] Thread, task comment or mention from myself");
                         }
                     } else {
                         // If it's a reaction activity, add the activity
