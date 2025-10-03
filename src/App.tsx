@@ -479,7 +479,7 @@ export const App = () => {
 
     useEffect(() => {
         (async () => {
-            if (currentProject) {
+            if (currentProject && currentProject.projectId) {
                 fetchProjectTasks(currentProject.projectId);
                 localStorage.setItem("lastProjectId", currentProject.projectId.toString());
             }

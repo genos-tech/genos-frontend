@@ -13,11 +13,9 @@ import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "../.
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
-import { loadSpecificTask } from "../tasks/services/loadSpecificTask";
 import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
-import { useAuth } from "../../context/AuthContext";
 import {
     ChatNoteProps,
     ChatNoteMetaTreeNode,
@@ -202,7 +200,6 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     // Common
     const { mode } = useColorScheme();
-    const { accessToken } = useAuth();
 
     // Chat Related
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
@@ -232,28 +229,6 @@ export const ChatHome = (props: ChatHomeProps) => {
             setCurrentThreadChatId(currentThreadChatId);
         }
     }, [currentThreadChat]);
-
-    useEffect(() => {
-        if (currentProject && currentProject.projectId && currentPreviewTaskId !== -1) {
-            (async () => {
-                const loadedTask: TaskProps[] = await loadSpecificTask(
-                    myself,
-                    currentProject.projectId,
-                    currentPreviewTaskId,
-                    accessToken
-                );
-                if (loadedTask.length > 0) {
-                    if (currentThreadChat) {
-                        setCurrentThreadChat({ ...currentThreadChat, taskExist: true });
-                    }
-                    setCurrentPreviewTask(loadedTask[0]);
-                    if (isTaskPreviewVisible) {
-                        setIsTaskPreviewVisible(true);
-                    }
-                }
-            })();
-        }
-    }, [isThreadVisible, currentPreviewTaskId, isTaskPreviewVisible, currentProject]);
 
     useEffect(() => {
         if (currentPreviewTask) {
