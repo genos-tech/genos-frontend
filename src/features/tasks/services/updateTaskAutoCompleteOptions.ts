@@ -2,7 +2,7 @@ import { loadTeamProjects } from "../services/loadTeamProjects";
 import { loadProjectTags } from "../services/loadProjectTags";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps, TagListProps } from "../../../types/tasks";
-import { loadTeamMembers } from "../../admin/services/loadTeamMembers";
+import LoadTeamMemberWorker from "../../../workers/loadTeamMembersWorker.ts?worker";
 
 // update team members options
 type UpdateTeamMembersOptions = {
@@ -12,10 +12,18 @@ type UpdateTeamMembersOptions = {
 };
 export const updateTeamMembersOptions = async (props: UpdateTeamMembersOptions) => {
     const { myself, accessToken, setTeamMembers } = props;
-    const loadedTeamMembers: UserProps[] = await loadTeamMembers(myself, accessToken);
-    if (loadedTeamMembers.length > 0) {
-        setTeamMembers(loadedTeamMembers);
-    }
+    const loadTeamMembersWorker = new LoadTeamMemberWorker();
+    loadTeamMembersWorker.postMessage({ myself: myself, accessToken: accessToken });
+    loadTeamMembersWorker.onmessage = (event) => {
+        if (event.data) {
+            setTeamMembers(event.data);
+        } else {
+            console.error("Failed to load team members");
+        }
+    };
+    return () => {
+        loadTeamMembersWorker.terminate();
+    };
 };
 
 // update Project options

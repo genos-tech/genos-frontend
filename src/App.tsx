@@ -547,7 +547,6 @@ export const App = () => {
     useEffect(() => {
         // Update an ongoing task
         if (isTaskUpdated && currentPreviewTask) {
-            console.log(ongoingTasks[2]);
             setOnGoingTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === String(currentPreviewTask.id)
@@ -1251,6 +1250,7 @@ export const App = () => {
                         myself={myself}
                         setMyself={setMyself}
                         teamMembers={teamMembers}
+                        setTeamMembers={setTeamMembers}
                         currentChatPaneType={currentChatPaneType}
                         setCurrentChatPaneType={setCurrentChatPaneType}
                         activityMessages={activityMessages}
@@ -1320,9 +1320,10 @@ export const App = () => {
 
                 {openingService === 2 ? (
                     <TaskHome
+                        teamMembers={teamMembers}
+                        setTeamMembers={setTeamMembers}
                         currentTeam={currentTeam}
                         setCurrentTeam={setCurrentTeam}
-                        teamMembers={teamMembers}
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         myself={myself}

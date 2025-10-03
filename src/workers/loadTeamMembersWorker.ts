@@ -24,7 +24,7 @@ self.onmessage = async (event) => {
     }
 
     // Send finish a message
-    self.postMessage("done");
+    self.postMessage(memberList);
 
     self.close(); // Terminates itself
 };

@@ -102,6 +102,8 @@ const taskContentTemplate: PartialBlock[] = [
 ];
 
 type CreateTaskProps = {
+    teamMembers: UserProps[];
+    setTeamMembers: (value: UserProps[]) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -142,6 +144,8 @@ type CreateTaskProps = {
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
     const {
+        teamMembers,
+        setTeamMembers,
         teamMemberProfiles,
         socket,
         myself,
@@ -229,7 +233,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [titleError, setTitleError] = useState("");
 
     // Get team members
-    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
     useEffect(() => {
         updateTeamMembersOptions({
@@ -238,13 +241,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             setTeamMembers: setTeamMembers,
         });
     }, [myself, isOpenTeamMembersList]);
-    useEffect(() => {
-        updateTeamMembersOptions({
-            myself: myself,
-            accessToken: accessToken,
-            setTeamMembers: setTeamMembers,
-        });
-    }, []);
 
     // Get team projects
     const [isOpenProjectList, setIsOpenProjectList] = useState(false);

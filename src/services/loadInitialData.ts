@@ -127,7 +127,7 @@ export const loadInitialData = (
             const loadTeamMembersWorker = new LoadTeamMemberWorker();
             loadTeamMembersWorker.postMessage({ myself: myself, accessToken: accessToken });
             loadTeamMembersWorker.onmessage = (event) => {
-                if (event.data === "done") {
+                if (event.data) {
                     setIsTeamMembersLoaded(true);
                 } else {
                     console.error("Failed initial team member loading");

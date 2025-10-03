@@ -7,10 +7,10 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 import { getTaskColumns } from "./TaskTableFormat";
 import { loadProjectTags } from "../../services/loadProjectTags";
-import { loadTeamMembers } from "../../../admin/services/loadTeamMembers";
 import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps, TagListProps, TaskType, ProjectProps } from "../../../../types/tasks";
+import { popTeamMembers } from "../../../chat/services/popTeamMembers";
 
 const options = [
     { name: "Group By Status", filterId: 1 },
@@ -92,6 +92,8 @@ const predefinedEffortLevelFilters: FilterProps[] = [
 ];
 
 type ProjectTaskTableProps = {
+    teamMembers: UserProps[];
+    setTeamMembers: (value: UserProps[]) => void;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     currentProject: ProjectProps | null;
@@ -109,6 +111,8 @@ type ProjectTaskTableProps = {
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const {
+        teamMembers,
+        setTeamMembers,
         teamMemberProfiles,
         myself,
         currentProject,
@@ -135,15 +139,13 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);
     const { accessToken } = useAuth();
 
-    // Get team members
-    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     // Update Project and Tag list
     const getTeamMembers = () => {
         // Load the latest project as initial process
         (async () => {
-            const loadedTeamMembers: UserProps[] = await loadTeamMembers(myself, accessToken);
-            if (loadedTeamMembers.length > 0) {
-                setTeamMembers(loadedTeamMembers);
+            const poppedTeamMembers: UserProps[] = await popTeamMembers(myself);
+            if (poppedTeamMembers.length > 0) {
+                setTeamMembers(poppedTeamMembers);
             }
         })();
     };

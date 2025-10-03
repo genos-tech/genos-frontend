@@ -26,6 +26,8 @@ import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
 import { loadTaskNotes } from "../../services/loadTaskNotes";
 
 type TaskPreviewProps = {
+    teamMembers: UserProps[];
+    setTeamMembers: (value: UserProps[]) => void;
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -76,6 +78,8 @@ type TaskPreviewProps = {
 
 export const TaskPreview = (props: TaskPreviewProps) => {
     const {
+        teamMembers,
+        setTeamMembers,
         teamMemberProfiles,
         socket,
         myself,
@@ -343,7 +347,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     }, [isCommentUpdated, currentTaskId, taskNoteMeta]);
 
     // Get team members
-    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
     useEffect(() => {
         updateTeamMembersOptions({
@@ -352,13 +355,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setTeamMembers: setTeamMembers,
         });
     }, [isOpenTeamMembersList]);
-    useEffect(() => {
-        updateTeamMembersOptions({
-            myself: myself,
-            accessToken: accessToken,
-            setTeamMembers: setTeamMembers,
-        });
-    }, []);
 
     // Get team projects
     const [isOpenProjectList, setIsOpenProjectList] = useState(false);

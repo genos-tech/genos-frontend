@@ -33,6 +33,7 @@ type ChatHomeProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     teamMembers: UserProps[];
+    setTeamMembers: (value: UserProps[]) => void;
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
     activityMessages: ActivityMessageProps[];
@@ -132,6 +133,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         myself,
         setMyself,
         teamMembers,
+        setTeamMembers,
         currentChatPaneType,
         setCurrentChatPaneType,
         activityMessages,
@@ -574,6 +576,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 }}
                             >
                                 <CreateTaskForm
+                                    teamMembers={teamMembers}
+                                    setTeamMembers={setTeamMembers}
                                     teamMemberProfiles={teamMemberProfiles}
                                     socket={socket}
                                     myself={myself}
@@ -640,6 +644,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 }}
                             >
                                 <TaskPreview
+                                    teamMembers={teamMembers}
+                                    setTeamMembers={setTeamMembers}
                                     teamMemberProfiles={teamMemberProfiles}
                                     socket={socket}
                                     myself={myself}

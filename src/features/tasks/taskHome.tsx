@@ -58,9 +58,10 @@ const taskTypes: TaskTypesProps = {
 };
 
 type TaskHomeProps = {
+    teamMembers: UserProps[];
+    setTeamMembers: (value: UserProps[]) => void;
     currentTeam: Team;
     setCurrentTeam: (value: Team) => void;
-    teamMembers: UserProps[];
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
@@ -133,9 +134,10 @@ type TaskHomeProps = {
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
+        teamMembers,
+        setTeamMembers,
         currentTeam,
         setCurrentTeam,
-        teamMembers,
         teamMemberProfiles,
         socket,
         myself,
@@ -689,6 +691,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             {isTaskTableVisible === true && (
                                                 <>
                                                     <ProjectTaskTable
+                                                        teamMembers={teamMembers}
+                                                        setTeamMembers={setTeamMembers}
                                                         teamMemberProfiles={teamMemberProfiles}
                                                         myself={myself}
                                                         currentProject={currentProject}
@@ -752,6 +756,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <CreateTaskForm
+                                                teamMembers={teamMembers}
+                                                setTeamMembers={setTeamMembers}
                                                 teamMemberProfiles={teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
@@ -823,6 +829,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                             }}
                                         >
                                             <TaskPreview
+                                                teamMembers={teamMembers}
+                                                setTeamMembers={setTeamMembers}
                                                 teamMemberProfiles={teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
