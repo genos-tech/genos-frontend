@@ -46,6 +46,7 @@ import {
     TaskType,
     TaskTypesProps,
     SearchTeamTasksResponse,
+    TaskMetaTreeNode,
 } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { TaskNoteMain } from "../notes/components/TaskNoteMain";
@@ -76,13 +77,11 @@ type TaskHomeProps = {
     currentTaskNote: TaskNoteProps | null;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
     currentNoteType: number;
-    setCurrentNoteType: (value: number) => void;
     taskNoteMeta: TaskNoteMetaProps[];
     setTaskNoteMeta: (value: TaskNoteMetaProps[]) => void;
     tabItems: any[];
     setTabItems: (value: any[]) => void;
     selectedTabIndex: number;
-    setSelectedTabIndex: (value: number) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
         projectId: number,
@@ -131,6 +130,8 @@ type TaskHomeProps = {
     setIsNewTagCreated: (value: boolean) => void;
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
     setIsTaskVisibleInNote: (value: boolean) => void;
+    taskMetaTree: TaskMetaTreeNode[];
+    currentTaskChain?: TaskMetaTreeNode[];
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -152,13 +153,11 @@ export const TaskHome = (props: TaskHomeProps) => {
         currentTaskNote,
         setCurrentTaskNote,
         currentNoteType,
-        setCurrentNoteType,
         taskNoteMeta,
         setTaskNoteMeta,
         tabItems,
         setTabItems,
         selectedTabIndex,
-        setSelectedTabIndex,
         handleCreateNewTaskNote,
         currentTaskNoteChain,
         isTaskPreviewVisible,
@@ -194,6 +193,8 @@ export const TaskHome = (props: TaskHomeProps) => {
         setIsNewTagCreated,
         loadNote,
         setIsTaskVisibleInNote,
+        taskMetaTree,
+        currentTaskChain,
     } = props;
 
     // Common
@@ -205,6 +206,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
     const [isTaskTableVisible, setTaskTableVisible] = useState(true);
 
+    const [currentFilterName, setCurrentFilterName] = useState<string>("");
     const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
     const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
     const [displayTaskType, setDisplayTaskType] = useState<TaskType>(taskTypes.ongoing);
@@ -298,7 +300,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
                     {currentProject && (
                         <>
-                            <Panel id={"1"} order={1} defaultSize={10} minSize={10} maxSize={25}>
+                            <Panel id={"1"} order={1} defaultSize={10} minSize={10} maxSize={30}>
                                 <TaskSidebar
                                     myself={myself}
                                     setIsDashboardVisible={setIsDashboardVisible}
@@ -319,6 +321,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOngoingTasks={setOngoingTasks}
                                     setClosedTasks={setClosedTasks}
                                     setDeletedTasks={setDeletedTasks}
+                                    taskMetaTree={taskMetaTree}
+                                    currentTaskChain={currentTaskChain}
+                                    setCurrentFilterName={setCurrentFilterName}
+                                    setIsCreatingTask={setIsCreatingTask}
                                 />
                             </Panel>
 
@@ -337,7 +343,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         className="resize-handle"
                                     />
 
-                                    <Panel id={"2"} order={2} minSize={40} maxSize={100}>
+                                    <Panel id={"2"} order={2} minSize={30} maxSize={80}>
                                         <Box
                                             component="main"
                                             className="MainContent"
@@ -717,6 +723,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         selectedTagForFiltering={
                                                             selectedTagForFiltering
                                                         }
+                                                        currentFilterName={currentFilterName}
+                                                        setCurrentFilterName={setCurrentFilterName}
                                                     />
                                                 </>
                                             )}
@@ -740,7 +748,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     />
 
                                     {/* right pane */}
-                                    <Panel id={"4"} order={4} minSize={30} maxSize={100}>
+                                    <Panel id={"4"} order={4} minSize={30} maxSize={80}>
                                         <Box
                                             sx={{
                                                 px: { xs: 1, md: 2 },
@@ -811,8 +819,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         id={"3"}
                                         order={3}
                                         defaultSize={50}
-                                        minSize={50}
-                                        maxSize={100}
+                                        minSize={30}
+                                        maxSize={80}
                                     >
                                         <Box
                                             sx={{
@@ -962,6 +970,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     setOngoingTasks={setOngoingTasks}
                                     setClosedTasks={setClosedTasks}
                                     setDeletedTasks={setDeletedTasks}
+                                    taskMetaTree={taskMetaTree}
+                                    currentTaskChain={currentTaskChain}
+                                    setCurrentFilterName={setCurrentFilterName}
+                                    setIsCreatingTask={setIsCreatingTask}
                                 />
                             </Panel>
 

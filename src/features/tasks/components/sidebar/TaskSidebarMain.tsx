@@ -11,6 +11,7 @@ import {
     TagListProps,
     SearchTeamTasksResponse,
     TaskTableProps,
+    TaskMetaTreeNode,
 } from "../../../../types/tasks";
 import { TaskSidebarSearchBox } from "./SearchBox";
 import { TaskTableListItem } from "./TaskTableListItem";
@@ -44,6 +45,14 @@ type TaskSidebarProps = {
     setOngoingTasks: (value: TaskTableProps[]) => void;
     setClosedTasks: (value: TaskTableProps[]) => void;
     setDeletedTasks: (value: TaskTableProps[]) => void;
+    taskMetaTree: TaskMetaTreeNode[];
+    currentTaskChain?: TaskMetaTreeNode[];
+    setCurrentFilterName: (value: string) => void;
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -67,6 +76,10 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         setOngoingTasks,
         setClosedTasks,
         setDeletedTasks,
+        taskMetaTree,
+        currentTaskChain,
+        setCurrentFilterName,
+        setIsCreatingTask,
     } = props;
     const { accessToken } = useAuth();
 
@@ -233,6 +246,13 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         setOpenJoinProject={setOpenJoinProject}
                         setSelectedTagForFiltering={setSelectedTagForFiltering}
                         setFilterBy={setFilterBy}
+                        taskMetaTree={taskMetaTree}
+                        currentTaskChain={currentTaskChain}
+                        currentPreviewTaskId={currentPreviewTaskId}
+                        setCurrentFilterName={setCurrentFilterName}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        setIsCreatingTask={setIsCreatingTask}
                     />
                 </List>
             </Box>

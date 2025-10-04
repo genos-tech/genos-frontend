@@ -10,13 +10,13 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
     return (
         <ListItem key={"listitem-createProject"}>
             <ListItemButton
-                color="neutral"
-                variant="plain"
+                color="primary"
                 onClick={() => {
                     setOpenCreateProject(true);
                 }}
                 sx={{ overflow: "hidden" }} // ensure children don't overflow
             >
+                <AddIcon />
                 <Typography
                     noWrap
                     sx={{
@@ -26,7 +26,6 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
                         whiteSpace: "nowrap",
                         width: "100%", // take full width of button
                     }}
-                    startDecorator={<AddIcon />}
                 >
                     New Project
                 </Typography>

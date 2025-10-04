@@ -107,6 +107,8 @@ type ProjectTaskTableProps = {
     filterBy: number;
     setSelectedTagForFiltering: (value: string | undefined) => void;
     selectedTagForFiltering: string | undefined;
+    currentFilterName: string;
+    setCurrentFilterName: (value: string) => void;
 };
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
@@ -126,6 +128,8 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         filterBy,
         setSelectedTagForFiltering,
         selectedTagForFiltering,
+        currentFilterName,
+        setCurrentFilterName,
     } = props;
     const { mode } = useColorScheme();
     const className = `task-datagrid-${mode}`;
@@ -133,7 +137,6 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>(
         ongoingTasks.filter((task) => task.parentTaskId === null)
     );
-    const [currentFilterName, setCurrentFilterName] = useState<string>("");
     const [predefinedFilters, setPredefinedFilters] =
         useState<FilterProps[]>(predefinedStatusFilters);
     const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);

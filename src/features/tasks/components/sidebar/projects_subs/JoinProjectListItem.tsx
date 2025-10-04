@@ -27,10 +27,12 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
             defaultExpanded={false}
             renderToggle={({ open, setOpen }) => (
                 <ListItemButton
+                    color="primary"
                     onClick={() => {
                         setOpen(!open);
                     }}
                 >
+                    <LoginIcon />
                     <ListItemContent>
                         <Typography
                             noWrap
@@ -41,7 +43,6 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                 whiteSpace: "nowrap",
                                 width: "100%", // take full width of button
                             }}
-                            startDecorator={<LoginIcon />}
                         >
                             Join Project
                         </Typography>

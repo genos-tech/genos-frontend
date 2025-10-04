@@ -14,7 +14,8 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
     return (
         <ListItem>
             <ListItemButton
-                variant={taskTableVisible === true ? "solid" : "plain"}
+                color="primary"
+                variant={taskTableVisible === true ? "outlined" : "plain"}
                 onClick={() => {
                     setTaskTableVisible(true);
                     setIsDashboardVisible(false);

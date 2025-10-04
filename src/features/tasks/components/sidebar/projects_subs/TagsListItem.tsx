@@ -3,6 +3,7 @@ import { List, ListItem, ListItemContent, Typography, Chip } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useColorScheme } from "@mui/joy/styles";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 
 import { ProjectProps } from "../../../../../types/tasks";
 import { Toggler } from "../common";
@@ -12,9 +13,16 @@ type TagsListItemProps = {
     currentProject: ProjectProps | null;
     setSelectedTagForFiltering: (value: string) => void;
     setFilterBy: (value: number) => void;
+    setCurrentFilterName: (value: string) => void;
 };
 export const TagsListItem = (props: TagsListItemProps) => {
-    const { projectId, currentProject, setSelectedTagForFiltering, setFilterBy } = props;
+    const {
+        projectId,
+        currentProject,
+        setSelectedTagForFiltering,
+        setFilterBy,
+        setCurrentFilterName,
+    } = props;
     const { mode } = useColorScheme();
 
     return (
@@ -23,6 +31,8 @@ export const TagsListItem = (props: TagsListItemProps) => {
             defaultExpanded={false}
             renderToggle={({ open, setOpen }) => (
                 <ListItemButton
+                    color="neutral"
+                    sx={{ ml: "45px", mr: "8px", pl: "30px" }}
                     onClick={() => {
                         setOpen(!open);
                     }}
@@ -31,20 +41,17 @@ export const TagsListItem = (props: TagsListItemProps) => {
                         <Typography
                             level="title-sm"
                             sx={{
-                                ml: "35px",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
                             }}
+                            startDecorator={<LocalOfferIcon />}
                         >
                             Tags
                         </Typography>
                     </ListItemContent>
                     <KeyboardArrowDownIcon
                         sx={[
-                            {
-                                mr: "8px",
-                            },
                             open
                                 ? {
                                       transform: "rotate(180deg)",
@@ -69,9 +76,13 @@ export const TagsListItem = (props: TagsListItemProps) => {
                                         onClick={() => {
                                             setSelectedTagForFiltering(`/${tagName}/`);
                                             setFilterBy(2);
+                                            setCurrentFilterName(tagName);
                                         }}
                                         sx={{
                                             overflow: "hidden",
+                                            ml: "45px",
+                                            mr: "8px",
+                                            pl: "20px",
                                         }}
                                     >
                                         <Chip
@@ -88,8 +99,7 @@ export const TagsListItem = (props: TagsListItemProps) => {
                                                 ),
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
-                                                padding: "4px",
-                                                ml: "70px",
+                                                padding: "1px 4px",
                                             }}
                                             size="sm"
                                         >

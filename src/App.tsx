@@ -50,7 +50,14 @@ import {
     updateTabFromTaskNoteUpdate,
 } from "./hooks/notes/tab";
 import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "./utils/note";
-import { ProjectProps, TaskProps, TaskTableProps, TaskTypesProps } from "./types/tasks";
+import {
+    ProjectProps,
+    TaskMetaProps,
+    TaskMetaTreeNode,
+    TaskProps,
+    TaskTableProps,
+    TaskTypesProps,
+} from "./types/tasks";
 import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
 import { popSpecificProjectTasks } from "./features/chat/services/popSpecificProjectTasks";
@@ -58,6 +65,9 @@ import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
 import { getData } from "./db/crud";
 import { loadSpecificNote } from "./features/notes/services/loadSpecificNote";
 import { STORES } from "./db/conf";
+import { buildTaskTree } from "./features/tasks/utils/buildTaskTree";
+import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
+import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -450,12 +460,35 @@ export const App = () => {
         scrollToBottom: true,
     });
 
+    // Task sidebar related
+    const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
+    const [currentTaskChain, setCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
+    const [newlyCreatedTasks, setNewlyCreatedTasks] = useState<TaskProps[]>([]);
+    const handleCreateNewTask = async (parentNoteId: number | null) => {
+        console.log("create new task");
+    };
+    const getTaskMeta = async () => {
+        const loadedTaskMeta: TaskMetaProps[] = await loadTaskMeta(myself, accessToken);
+        if (loadedTaskMeta.length > 0) {
+            setTaskMeta(loadedTaskMeta);
+        }
+    };
+    const [taskMetaTree, setTaskMetaTree] = useState<TaskMetaTreeNode[]>(buildTaskTree(taskMeta));
+    useEffect(() => {
+        setTaskMetaTree(buildTaskTree(taskMeta));
+    }, [taskMeta]);
+    initCurrentTaskChain({
+        taskMeta: taskMeta,
+        currentTaskChain: currentTaskChain,
+        setCurrentTaskChain: setCurrentTaskChain,
+    });
+
+    // Task table related
     const taskTypes: TaskTypesProps = {
         ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
         closed: { id: 2, statuses: ["Closed"], name: "Closed" },
         deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
     };
-
     const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
     const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
     const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
@@ -1087,6 +1120,9 @@ export const App = () => {
             // Load all team users
             funcSetTeamMembers();
 
+            // Load task metadata
+            getTaskMeta();
+
             // Load note metadata
             getMyNoteMeta();
             getTaskNoteMeta();
@@ -1329,13 +1365,11 @@ export const App = () => {
                         currentTaskNote={currentTaskNote}
                         setCurrentTaskNote={setCurrentTaskNote}
                         currentNoteType={currentNoteType}
-                        setCurrentNoteType={setCurrentNoteType}
                         taskNoteMeta={taskNoteMeta}
                         setTaskNoteMeta={setTaskNoteMeta}
                         tabItems={tabItems}
                         setTabItems={setTabItems}
                         selectedTabIndex={selectedTabIndex}
-                        setSelectedTabIndex={setSelectedTabIndex}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         currentTaskNoteChain={currentTaskNoteChain}
                         isTaskPreviewVisible={isTaskPreviewVisible}
@@ -1371,6 +1405,8 @@ export const App = () => {
                         setIsNewTagCreated={setIsNewTagCreated}
                         loadNote={loadNote}
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
+                        taskMetaTree={taskMetaTree}
+                        currentTaskChain={currentTaskChain}
                     />
                 ) : null}
 
@@ -1381,6 +1417,7 @@ export const App = () => {
                         teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
                         teamMembers={teamMembers}
+                        setTeamMembers={setTeamMembers}
                         myself={myself}
                         setMyself={setMyself}
                         openingService={openingService}

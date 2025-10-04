@@ -32,6 +32,7 @@ type NoteHomeProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     teamMembers: UserProps[];
+    setTeamMembers: (value: UserProps[]) => void;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     openingService: number;
@@ -115,6 +116,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         teamMemberProfiles,
         socket,
         teamMembers,
+        setTeamMembers,
         myself,
         setMyself,
         openingService,
@@ -310,6 +312,8 @@ export const NoteHome = (props: NoteHomeProps) => {
 
                                         {isTaskVisibleInNote && currentPreviewTask && (
                                             <TaskPreview
+                                                teamMembers={teamMembers}
+                                                setTeamMembers={setTeamMembers}
                                                 teamMemberProfiles={teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
@@ -407,6 +411,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 }}
                             >
                                 <TaskPreview
+                                    teamMembers={teamMembers}
+                                    setTeamMembers={setTeamMembers}
                                     teamMemberProfiles={teamMemberProfiles}
                                     socket={socket}
                                     myself={myself}

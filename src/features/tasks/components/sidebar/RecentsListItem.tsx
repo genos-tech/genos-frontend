@@ -31,6 +31,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                 defaultExpanded={false}
                 renderToggle={({ open, setOpen }) => (
                     <ListItemButton
+                        color="primary"
                         onClick={() => {
                             setOpen(!open);
                             setIsDashboardVisible(false);

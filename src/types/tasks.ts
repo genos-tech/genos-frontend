@@ -167,3 +167,16 @@ export type ImageSizeProps = {
     width: number;
     height: number;
 };
+
+
+export type TaskMetaProps = {
+    taskId: number;
+    parentTaskId: number | null;
+    project: ProjectProps;
+    title: string;
+    status: TaskStatusProps;
+    tsUpdated: string;
+    error?: string;
+};
+
+export type TaskMetaTreeNode = TaskMetaProps & { children: TaskMetaTreeNode[] };

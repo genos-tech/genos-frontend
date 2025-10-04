@@ -2,10 +2,10 @@ import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import WorkIcon from "@mui/icons-material/Work";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { useColorScheme } from "@mui/joy/styles";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
-import { ProjectProps, TaskTableProps } from "../../../../types/tasks";
+import { ProjectProps, TaskMetaTreeNode, TaskTableProps } from "../../../../types/tasks";
 import { Toggler } from "./common";
 import { OngoingsListItem } from "./projects_subs/OngoingsListItem";
 import { TagsListItem } from "./projects_subs/TagsListItem";
@@ -31,6 +31,17 @@ type ProjectsListItemProps = {
     }) => void;
     setSelectedTagForFiltering: (value: string) => void;
     setFilterBy: (value: number) => void;
+    taskMetaTree: TaskMetaTreeNode[];
+    currentTaskChain?: TaskMetaTreeNode[];
+    currentPreviewTaskId: number;
+    setCurrentFilterName: (value: string) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
+    setIsCreatingTask: (value: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    }) => void;
 };
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
     const {
@@ -46,8 +57,14 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
         setOpenJoinProject,
         setSelectedTagForFiltering,
         setFilterBy,
+        taskMetaTree,
+        currentTaskChain,
+        currentPreviewTaskId,
+        setCurrentFilterName,
+        setIsTaskPreviewVisible,
+        setCurrentPreviewTaskId,
+        setIsCreatingTask,
     } = props;
-    const { mode } = useColorScheme();
 
     return (
         <ListItem nested>
@@ -56,6 +73,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                 defaultExpanded={true}
                 renderToggle={({ open, setOpen }) => (
                     <ListItemButton
+                        color="primary"
                         onClick={() => {
                             setOpen(!open);
                         }}
@@ -87,7 +105,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                     </ListItemButton>
                 )}
             >
-                <List sx={{ gap: 0.5 }}>
+                <List>
                     {teamProjects.map(
                         (
                             {
@@ -137,6 +155,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 }}
                                                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >
+                                                <AccountTreeIcon />
                                                 {isPrivate === true ? <LockOutlineIcon /> : null}
                                                 <Typography
                                                     noWrap
@@ -169,12 +188,16 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                     >
                                         <List>
                                             <OngoingsListItem
-                                                projectId={projectId}
-                                                currentProject={currentProject}
-                                                setSelectedTagForFiltering={
-                                                    setSelectedTagForFiltering
-                                                }
-                                                setFilterBy={setFilterBy}
+                                                currentProjectId={projectId}
+                                                projectTags={projectTags}
+                                                taskMetaTree={taskMetaTree}
+                                                currentTaskChain={currentTaskChain}
+                                                currentPreviewTaskId={currentPreviewTaskId}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                                setCurrentProject={setCurrentProject}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setIsCreatingTask={setIsCreatingTask}
+                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
                                             />
                                             <TagsListItem
                                                 projectId={projectId}
@@ -183,6 +206,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     setSelectedTagForFiltering
                                                 }
                                                 setFilterBy={setFilterBy}
+                                                setCurrentFilterName={setCurrentFilterName}
                                             />
                                         </List>
                                     </Toggler>
