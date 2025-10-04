@@ -17,7 +17,6 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
-import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 
 import { moveToDMChat } from "../../../chat/services/moveToChat";

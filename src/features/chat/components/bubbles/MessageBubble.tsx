@@ -189,7 +189,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 TSLastMessage: getCurrentTimestamp(),
                                 taskExist: threadMessages[0].taskExist,
                             };
-                            if (message.project) {
+                            if (message.project && message.project.projectId) {
                                 setCurrentProject(message.project);
                             }
                             if (newThread) {

@@ -1,65 +1,68 @@
-import { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
 import { Box, Avatar } from "@mui/joy";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import GroupsIcon from "@mui/icons-material/Groups";
 
-import { AllChatProps, ChatProps } from "../../../types/chat";
-import { UserProps } from "../../../types/admin";
-import { ModalProjectProfile } from "./modals/ModalProjectProfile";
-import { UserProfile } from "../../../features/admin/components/modals/UserProfile";
+import { AllChatProps, ChatProps } from "../../types/chat";
+import { UserProps } from "../../types/admin";
+import { ModalGMProfile } from "../../features/chat/components/modals/ModalGMProfile";
+import { UserProfile } from "../../features/admin/components/modals/UserProfile";
+import { Socket } from "socket.io-client";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
-type ProjectAvatarProps = {
+type GMAvatarProps = {
     socket: Socket | null;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    avatarSize?: number;
     isYou: boolean;
-    pmChat: AllChatProps;
+    gmChat: AllChatProps;
     funcSetAllChats: () => Promise<void>;
     setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (service: number) => void;
 };
-export const ProjectAvatar = (props: ProjectAvatarProps) => {
+export const GMAvatar = (props: GMAvatarProps) => {
     const {
         socket,
         teamMemberProfiles,
         myself,
         setMyself,
+        avatarSize,
         isYou,
-        pmChat,
+        gmChat,
         funcSetAllChats,
         setCurrentMainChat,
         setOpeningService,
     } = props;
-    const [openModalProjectProfile, setOpenModalProjectProfile] = useState<boolean>(false);
+    const [openModalGMProfile, setOpenModalGMProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
+    const _avatarSize = avatarSize || 32;
 
     return (
         <div>
             <Box
                 position="relative"
-                width={32}
-                height={32}
-                onClick={() => setOpenModalProjectProfile(true)}
+                width={_avatarSize}
+                height={_avatarSize}
+                onClick={() => setOpenModalGMProfile(true)}
             >
                 <Avatar
                     size="sm"
-                    sx={{ width: 32, height: 32 }}
-                    src={`${media_url}/${pmChat.profileImagePath}`}
+                    sx={{ width: _avatarSize, height: _avatarSize }}
+                    src={`${media_url}/${gmChat.profileImagePath}`}
                 >
-                    <AccountTreeIcon sx={{ fontSize: 22 }} />
+                    <GroupsIcon sx={{ fontSize: 26 }} />
                 </Avatar>
             </Box>
 
-            <ModalProjectProfile
+            <ModalGMProfile
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
-                pmChat={pmChat}
-                openModalProjectProfile={openModalProjectProfile}
-                setOpenModalProjectProfile={setOpenModalProjectProfile}
+                gmChat={gmChat}
+                openModalGMProfile={openModalGMProfile}
+                setOpenModalGMProfile={setOpenModalGMProfile}
                 funcSetAllChats={funcSetAllChats}
                 setAvatarUserId={setAvatarUserId}
                 setOpenUserProfile={setOpenUserProfile}

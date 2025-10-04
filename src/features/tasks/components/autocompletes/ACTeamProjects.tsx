@@ -41,12 +41,16 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         },
                         tags: [],
                     });
-                    setCurrentProject({
-                        projectId: value.projectId,
-                        projectName: value.projectName,
-                        projectTags: [],
-                        systemUserId: value.systemUserId,
-                    });
+                    if (value.projectId) {
+                        setCurrentProject({
+                            projectId: value.projectId,
+                            projectName: value.projectName,
+                            projectTags: [],
+                            systemUserId: value.systemUserId,
+                        });
+                    } else {
+                        console.error("Failed to set the current project");
+                    }
                     if (setTaskUpdated) {
                         setTaskUpdated(true);
                     }

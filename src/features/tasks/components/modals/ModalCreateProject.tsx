@@ -119,7 +119,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 setErrorMessage
                             );
 
-                            if (prjJoinTeamRes && meJoinTeamRes) {
+                            if (prjJoinTeamRes && meJoinTeamRes && createProjectData.project_id) {
                                 setCurrentProject({
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,

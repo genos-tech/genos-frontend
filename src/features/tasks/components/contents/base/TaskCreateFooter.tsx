@@ -63,8 +63,10 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
             setCurrentPreviewTaskId: setCurrentPreviewTaskId,
         });
 
-        if (taskContents.project) {
+        if (taskContents.project && taskContents.project.projectId) {
             setCurrentProject(taskContents.project);
+        } else {
+            console.error("Failed to set the current project");
         }
 
         if (setIsTaskPreviewVisible) {

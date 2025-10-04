@@ -34,7 +34,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../types/admin";
-import { ChatProps } from "../../../types/chat";
+import { AllChatProps, ChatProps } from "../../../types/chat";
 import { BnTaskNoteEditor } from "../../../components/blockNote/bnTaskNoteEditor";
 import { TaskNoteMetaProps, TaskNoteProps, TaskNoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedTaskNote } from "../services/sendUpdatedTaskNote";
@@ -42,8 +42,9 @@ import { useAuth } from "../../../context/AuthContext";
 import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
-import { TaskProps } from "../../../types/tasks";
+import { ProjectProps, TaskProps } from "../../../types/tasks";
 import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
+import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -80,6 +81,9 @@ type TaskNoteMainProps = {
     setIsTaskVisibleInNote: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     setCurrentPreviewTask: (value: TaskProps) => void;
+    allChats: AllChatProps[];
+    setCurrentMainChat: (chat: ChatProps) => void;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -109,6 +113,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         setIsTaskVisibleInNote,
         currentPreviewTask,
         setCurrentPreviewTask,
+        allChats,
+        setCurrentMainChat,
+        funcSetAllChats,
     } = props;
 
     const { mode } = useColorScheme();
@@ -248,6 +255,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         setNoteBodySaved(false);
     }, [selectedTabIndex]);
 
+    const pmChat = allChats.find(
+        (chat) =>
+            chat.chatType === 3 && currentTaskNote && chat.chatId === currentTaskNote.projectId
+    );
+
     return (
         <>
             {(taskNoteMeta.length === 0 || currentTaskNote === null) && (
@@ -372,6 +384,28 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 <>
                                                     {currentTask && (
                                                         <>
+                                                            {pmChat && (
+                                                                <Box sx={{ mt: "2px" }}>
+                                                                    <ProjectAvatar
+                                                                        teamMemberProfiles={
+                                                                            teamMemberProfiles
+                                                                        }
+                                                                        myself={myself}
+                                                                        setMyself={setMyself}
+                                                                        socket={socket}
+                                                                        pmChat={pmChat}
+                                                                        setOpeningService={
+                                                                            setOpeningService
+                                                                        }
+                                                                        setCurrentMainChat={
+                                                                            setCurrentMainChat
+                                                                        }
+                                                                        funcSetAllChats={
+                                                                            funcSetAllChats
+                                                                        }
+                                                                    />
+                                                                </Box>
+                                                            )}
                                                             {currentTask.id && (
                                                                 <Chip
                                                                     key={`task-note-task-id${currentTask.id}`}
@@ -379,7 +413,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                     color="neutral"
                                                                     sx={{
                                                                         mt: "3px",
-                                                                        mr: "5px",
+                                                                        mx: "5px",
                                                                         height: "30px",
                                                                         borderRadius: "5px",
                                                                         fontWeight: "bold",

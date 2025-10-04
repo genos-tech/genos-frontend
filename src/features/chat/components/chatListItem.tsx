@@ -23,8 +23,8 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { GMAvatar } from "./GMAvatar";
-import { ProjectAvatar } from "./ProjectAvatar";
+import { GMAvatar } from "../../../components/common/GMAvatar";
+import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
 type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
@@ -209,7 +209,6 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             teamMemberProfiles={teamMemberProfiles}
                                             myself={myself}
                                             setMyself={setMyself}
-                                            isYou={isYou}
                                             socket={socket}
                                             pmChat={chat}
                                             setOpeningService={setOpeningService}

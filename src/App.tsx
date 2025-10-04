@@ -286,7 +286,10 @@ export const App = () => {
                             );
                             break;
                         }
-                    } else if (loadedTeamProjects[i].isJoined === true) {
+                    } else if (
+                        loadedTeamProjects[i].isJoined === true &&
+                        loadedTeamProjects[i].projectId
+                    ) {
                         setCurrentProject({
                             projectId: loadedTeamProjects[i].projectId,
                             projectName: loadedTeamProjects[i].projectName,
@@ -304,7 +307,7 @@ export const App = () => {
                 }
 
                 // If not meeting any condition, set the last project as the current project
-                if (i === loadedTeamProjects.length - 1) {
+                if (i === loadedTeamProjects.length - 1 && loadedTeamProjects[i].projectId) {
                     setCurrentProject({
                         projectId: loadedTeamProjects[i].projectId,
                         projectName: loadedTeamProjects[i].projectName,
@@ -316,8 +319,6 @@ export const App = () => {
                     break;
                 }
             }
-        } else {
-            setCurrentProject(null);
         }
     };
 
@@ -1145,8 +1146,10 @@ export const App = () => {
             // Initialize the task visibility.
             setIsTaskPreviewVisible(false);
 
-            // // Initialize the chat note visibility.
-            // setIsChatNoteVisible(false);
+            // Initialize the chat note visibility.
+            if (tabItems.filter((item) => item.noteType === 3).length === 0) {
+                setIsChatNoteVisible(false);
+            }
 
             // Init all notes
             setCurrentMyNote(null);
@@ -1486,6 +1489,8 @@ export const App = () => {
                         currentTaskChain={currentTaskChain}
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
+                        allChats={allChats}
+                        funcSetAllChats={funcSetAllChats}
                     />
                 ) : null}
 
@@ -1520,6 +1525,8 @@ export const App = () => {
                         currentChatNote={currentChatNote}
                         setCurrentChatNote={setCurrentChatNote}
                         handleCreateNewChatNote={handleCreateNewChatNote}
+                        currentProject={currentProject}
+                        allChats={allChats}
                         currentMyNoteChain={currentMyNoteChain}
                         currentTaskNoteChain={currentTaskNoteChain}
                         currentChatNoteChain={currentChatNoteChain}
@@ -1554,6 +1561,7 @@ export const App = () => {
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
                         moveToSpecificChat={moveToSpecificChat}
+                        funcSetAllChats={funcSetAllChats}
                     />
                 ) : null}
             </CssVarsProvider>

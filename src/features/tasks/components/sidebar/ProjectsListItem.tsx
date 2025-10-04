@@ -140,18 +140,24 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     setClosedTasks([]);
                                                     setDeletedTasks([]);
 
-                                                    (async () => {
-                                                        await loadProjectsAndTasks(projectId);
-                                                        // This will be executed in the loadProjectsAndTasks,
-                                                        // but somehow this needs to update the task table...
-                                                        setCurrentProject({
-                                                            projectId: projectId,
-                                                            projectName: projectName,
-                                                            projectTags: projectTags,
-                                                            isPrivate: isPrivate,
-                                                            systemUserId: systemUserId,
-                                                        });
-                                                    })();
+                                                    if (projectId) {
+                                                        (async () => {
+                                                            await loadProjectsAndTasks(projectId);
+                                                            // This will be executed in the loadProjectsAndTasks,
+                                                            // but somehow this needs to update the task table...
+                                                            setCurrentProject({
+                                                                projectId: projectId,
+                                                                projectName: projectName,
+                                                                projectTags: projectTags,
+                                                                isPrivate: isPrivate,
+                                                                systemUserId: systemUserId,
+                                                            });
+                                                        })();
+                                                    } else {
+                                                        console.error(
+                                                            "Failed to set the current project"
+                                                        );
+                                                    }
                                                 }}
                                                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >

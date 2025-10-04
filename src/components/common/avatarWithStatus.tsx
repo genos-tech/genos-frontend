@@ -13,6 +13,7 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 type AvatarWithStatusProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
+    avatarSize?: number;
     isYou: boolean;
     avatarUser?: UserProps;
     socket: Socket | null;
@@ -26,6 +27,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     const {
         myself,
         setMyself,
+        avatarSize,
         isYou,
         avatarUser,
         socket,
@@ -36,7 +38,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         setCurrentMainChat,
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
-
+    const _avatarSize = avatarSize || 32;
     let isOnline: boolean;
     isOnline = avatarUser
         ? myself.userId === avatarUser.userId
@@ -67,14 +69,14 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         <div>
             <Box
                 position="relative"
-                width={32}
-                height={32}
+                width={_avatarSize}
+                height={_avatarSize}
                 onClick={() => setOpenUserProfile(true)}
             >
                 {chat && (
                     <Avatar
                         size="sm"
-                        sx={{ width: 32, height: 32 }}
+                        sx={{ width: _avatarSize, height: _avatarSize }}
                         src={`${media_url}/${avatarImg}`}
                     >
                         {chat.chatType === 1 || isForBubble === true
@@ -85,7 +87,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 {thread && (
                     <Avatar
                         size="sm"
-                        sx={{ width: 32, height: 32 }}
+                        sx={{ width: _avatarSize, height: _avatarSize }}
                         src={`${media_url}/${avatarImg}`}
                     >
                         {thread.chatType === 1 || isForBubble === true
@@ -96,7 +98,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 {chat === undefined && thread === undefined && (
                     <Avatar
                         size="sm"
-                        sx={{ width: 32, height: 32 }}
+                        sx={{ width: _avatarSize, height: _avatarSize }}
                         src={`${media_url}/${avatarImg}`}
                     >
                         {avatarUser?.userName[0].toUpperCase()}

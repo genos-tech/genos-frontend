@@ -74,14 +74,18 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                 <ListItem key={`recent-task-${taskId}`}>
                                     <ListItemButton
                                         onClick={() => {
-                                            setCurrentProject({
-                                                projectId: projectId,
-                                                projectName: projectName,
-                                                projectTags: [],
-                                                systemUserId: systemUserId,
-                                            });
-                                            setCurrentPreviewTaskId(taskId);
-                                            setIsTaskPreviewVisible(true);
+                                            if (projectId) {
+                                                setCurrentProject({
+                                                    projectId: projectId,
+                                                    projectName: projectName,
+                                                    projectTags: [],
+                                                    systemUserId: systemUserId,
+                                                });
+                                                setCurrentPreviewTaskId(taskId);
+                                                setIsTaskPreviewVisible(true);
+                                            } else {
+                                                console.error("Failed to set the current project");
+                                            }
                                         }}
                                         sx={{ overflow: "hidden" }} // ensure children don't overflow
                                     >

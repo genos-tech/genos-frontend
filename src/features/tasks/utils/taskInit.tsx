@@ -48,12 +48,16 @@ export default function TaskInit(props: TaskInitProps) {
             if (!createProjectResponse.ok) {
                 throw new Error("Project Creation Failed");
             } else {
-                setCurrentProject({
-                    projectId: createProjectData.project_id,
-                    projectName: createProjectData.project_name,
-                    projectTags: [],
-                    systemUserId: createProjectData.project_system_user,
-                });
+                if (createProjectData.project_id) {
+                    setCurrentProject({
+                        projectId: createProjectData.project_id,
+                        projectName: createProjectData.project_name,
+                        projectTags: [],
+                        systemUserId: createProjectData.project_system_user,
+                    });
+                } else {
+                    console.error("Failed to create the project");
+                }
             }
         } catch (error) {
             const err_msg = `${error}`;

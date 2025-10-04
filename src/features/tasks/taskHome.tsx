@@ -38,7 +38,7 @@ import { ModalJoinProject } from "./components/modals/ModalJoinProject";
 import { ModalDeleteProject } from "./components/modals/ModalDeleteProject";
 import { Sidebar } from "../../components/layout/sidebar";
 import { Team, UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
+import { AllChatProps, ChatProps } from "../../types/chat";
 import {
     ProjectProps,
     TaskTableProps,
@@ -51,6 +51,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { TaskNoteMain } from "../notes/components/TaskNoteMain";
 import { TaskNoteMetaProps, TaskNoteMetaTreeNode, TaskNoteProps } from "../../types/notes";
+import { ProjectAvatar } from "../../components/common/ProjectAvatar";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
@@ -134,6 +135,8 @@ type TaskHomeProps = {
     currentTaskChain?: TaskMetaTreeNode[];
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
+    allChats: AllChatProps[];
+    funcSetAllChats: () => Promise<void>;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -199,6 +202,8 @@ export const TaskHome = (props: TaskHomeProps) => {
         currentTaskChain,
         initialEmptyTaskId,
         setInitialEmptyTaskId,
+        allChats,
+        funcSetAllChats,
     } = props;
 
     // Common
@@ -273,6 +278,10 @@ export const TaskHome = (props: TaskHomeProps) => {
     }
     // =======================================================================
 
+    const pmChat = allChats.find(
+        (chat) => chat.chatType === 3 && currentProject && chat.chatId === currentProject.projectId
+    );
+
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
@@ -293,7 +302,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 />
 
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
-                    {currentProject && currentProject.projectId && (
+                    {currentProject && (
                         <>
                             <Panel id={"1"} order={1} defaultSize={10} minSize={10} maxSize={30}>
                                 <TaskSidebar
@@ -323,624 +332,732 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 />
                             </Panel>
 
-                            {/* left pane (task-home) */}
-                            {isTaskHomeVisible === true && (
+                            {currentProject.projectId && (
                                 <>
-                                    {/* Resizable Handle with MUI sx Styling */}
-                                    <PanelResizeHandle
-                                        style={{
-                                            width: "1px",
-                                            backgroundColor:
-                                                mode === "dark" ? "grey" : "lightgrey",
-                                            transition: "all 0.3s ease-in-out",
-                                            cursor: "col-resize",
-                                        }}
-                                        className="resize-handle"
-                                    />
-
-                                    <Panel id={"2"} order={2} minSize={30} maxSize={80}>
-                                        <Box
-                                            component="main"
-                                            className="MainContent"
-                                            sx={{
-                                                px: { xs: 1, md: 2 },
-                                                pt: {
-                                                    xs: "calc(12px + var(--Header-height))",
-                                                    sm: "calc(12px + var(--Header-height))",
-                                                    md: 3,
-                                                },
-                                                pb: { xs: 2, sm: 2, md: 3 },
-                                                flex: 1,
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                minWidth: 0,
-                                                height: "100dvh",
-                                                overflow: "hidden",
-                                                gap: 1,
-                                            }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    display: "flex",
-                                                    mb: 1,
-                                                    gap: 1,
-                                                    flexDirection: { xs: "column", sm: "row" },
-                                                    alignItems: { xs: "start", sm: "center" },
-                                                    flexWrap: "wrap",
-                                                    justifyContent: "space-between",
+                                    {/* left pane (task-home) */}
+                                    {isTaskHomeVisible === true && (
+                                        <>
+                                            {/* Resizable Handle with MUI sx Styling */}
+                                            <PanelResizeHandle
+                                                style={{
+                                                    width: "1px",
+                                                    backgroundColor:
+                                                        mode === "dark" ? "grey" : "lightgrey",
+                                                    transition: "all 0.3s ease-in-out",
+                                                    cursor: "col-resize",
                                                 }}
-                                            >
-                                                <Typography
-                                                    level="h2"
-                                                    component="h1"
+                                                className="resize-handle"
+                                            />
+
+                                            <Panel id={"2"} order={2} minSize={30} maxSize={80}>
+                                                <Box
+                                                    component="main"
+                                                    className="MainContent"
                                                     sx={{
+                                                        px: { xs: 1, md: 2 },
+                                                        pt: {
+                                                            xs: "calc(12px + var(--Header-height))",
+                                                            sm: "calc(12px + var(--Header-height))",
+                                                            md: 3,
+                                                        },
+                                                        pb: { xs: 2, sm: 2, md: 3 },
+                                                        flex: 1,
                                                         display: "flex",
-                                                        alignItems: "center", // vertical centering
-                                                        justifyContent: "center", // horizontal centering
-                                                        gap: "8px", // space between text and dropdown (optional)
+                                                        flexDirection: "column",
+                                                        minWidth: 0,
+                                                        height: "100dvh",
+                                                        overflow: "hidden",
+                                                        gap: 1,
                                                     }}
-                                                    startDecorator={
-                                                        currentProject.isPrivate === true ? (
-                                                            <LockOutlineIcon
-                                                                sx={{
-                                                                    mt: "3px",
-                                                                    fontSize: "26px",
-                                                                }}
-                                                            />
-                                                        ) : null
-                                                    }
                                                 >
-                                                    {currentProject.projectName}
-                                                    <Dropdown>
-                                                        <MenuButton
-                                                            slots={{ root: IconButton }}
-                                                            slotProps={{
-                                                                root: { color: "neutral" },
-                                                            }}
-                                                        >
-                                                            <Chip
-                                                                variant="outlined"
-                                                                color={
-                                                                    displayTaskType.id === 1
-                                                                        ? "primary"
-                                                                        : displayTaskType.id === 2
-                                                                        ? "success"
-                                                                        : displayTaskType.id === 3
-                                                                        ? "danger"
-                                                                        : "neutral"
-                                                                }
-                                                                sx={{
-                                                                    fontWeight: "bold",
-                                                                    borderRadius: "5px",
-                                                                }}
-                                                                size="lg"
-                                                            >
-                                                                {displayTaskType.name}
-                                                            </Chip>
-                                                        </MenuButton>
-                                                        <Menu size="sm">
-                                                            <MenuItem
-                                                                onClick={() => {
-                                                                    setDisplayTaskType(
-                                                                        taskTypes.ongoing
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <Chip
-                                                                    variant="outlined"
-                                                                    color="primary"
-                                                                    sx={{
-                                                                        borderRadius: "5px",
-                                                                    }}
-                                                                    size="lg"
-                                                                >
-                                                                    {taskTypes.ongoing.name}
-                                                                </Chip>
-                                                            </MenuItem>
-                                                            <MenuItem
-                                                                onClick={() => {
-                                                                    setDisplayTaskType(
-                                                                        taskTypes.closed
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <Chip
-                                                                    variant="outlined"
-                                                                    color="success"
-                                                                    sx={{
-                                                                        borderRadius: "5px",
-                                                                    }}
-                                                                    size="lg"
-                                                                >
-                                                                    {taskTypes.closed.name}
-                                                                </Chip>
-                                                            </MenuItem>
-                                                            <MenuItem
-                                                                onClick={() => {
-                                                                    setDisplayTaskType(
-                                                                        taskTypes.deleted
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <Chip
-                                                                    variant="outlined"
-                                                                    color="danger"
-                                                                    sx={{
-                                                                        borderRadius: "5px",
-                                                                    }}
-                                                                    size="lg"
-                                                                >
-                                                                    {taskTypes.deleted.name}
-                                                                </Chip>
-                                                            </MenuItem>
-                                                        </Menu>
-                                                    </Dropdown>
-                                                </Typography>
-
-                                                <Box sx={{ width: "50%" }}>
-                                                    <Autocomplete
-                                                        key={`ac-project-tags-${currentPreviewTaskId}`}
-                                                        sx={{ width: "100%" }}
-                                                        placeholder={"Search"}
-                                                        variant="soft"
-                                                        open={openSearch}
-                                                        onOpen={() => {
-                                                            setOpenSearch(true);
-                                                            // Reset the team task search options to load them again
-                                                            setTeamTaskOptions([]);
-                                                        }}
-                                                        onClose={() => {
-                                                            setOpenSearch(false);
-                                                        }}
-                                                        isOptionEqualToValue={(option, value) =>
-                                                            option.taskId === value.taskId
-                                                        }
-                                                        getOptionLabel={(option) => option.title}
-                                                        renderTags={(tags, getTagProps) =>
-                                                            tags.map((item, index) => {
-                                                                const { key, ...tagProps } =
-                                                                    getTagProps({ index }); // spread the 'key'
-                                                                return (
-                                                                    <Chip
-                                                                        key={`ac-taskhome-search-task-chip-${key}`}
-                                                                        variant="soft"
-                                                                        sx={{
-                                                                            backgroundColor: alpha(
-                                                                                item.status
-                                                                                    .color ||
-                                                                                    "#0044c2",
-                                                                                mode === "dark"
-                                                                                    ? 0.5
-                                                                                    : 0.75
-                                                                            ),
-                                                                            color: item.status
-                                                                                .textColor,
-                                                                            fontWeight: "bold",
-                                                                            borderRadius: "5px",
-                                                                        }}
-                                                                        size="sm"
-                                                                    >
-                                                                        {item.status.status}
-                                                                    </Chip>
-                                                                );
-                                                            })
-                                                        }
-                                                        renderOption={(props, option) => (
-                                                            <AutocompleteOption
-                                                                {...props}
-                                                                key={`ac-taskhome-search-task-${option.taskId}`}
-                                                            >
-                                                                <ListItemContent
-                                                                    sx={{
-                                                                        fontSize: "sm",
-                                                                        overflow: "hidden",
-                                                                        textOverflow: "ellipsis",
-                                                                        whiteSpace: "nowrap",
-                                                                        width: "100%", // take full width of button
-                                                                    }}
-                                                                >
-                                                                    <Chip
-                                                                        key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
-                                                                        variant="outlined"
-                                                                        color="neutral"
-                                                                        size="sm"
-                                                                    >
-                                                                        ID:{option.taskId}
-                                                                    </Chip>
-                                                                    <Chip
-                                                                        key={`ac-taskhome-search-task-chip-${option.taskId}`}
-                                                                        variant="soft"
-                                                                        sx={{
-                                                                            backgroundColor: alpha(
-                                                                                option.status
-                                                                                    .color ||
-                                                                                    "#0044c2",
-                                                                                mode === "dark"
-                                                                                    ? 0.5
-                                                                                    : 0.75
-                                                                            ),
-                                                                            color: option.status
-                                                                                .textColor,
-                                                                            fontWeight: "bold",
-                                                                            borderRadius: "5px",
-                                                                            m: "3px",
-                                                                        }}
-                                                                        size="sm"
-                                                                    >
-                                                                        {option.status.status}
-                                                                    </Chip>
-                                                                    {option.title}
-                                                                </ListItemContent>
-                                                            </AutocompleteOption>
-                                                        )}
-                                                        options={teamTaskSearchOptions}
-                                                        loading={loading}
-                                                        endDecorator={
-                                                            loading ? (
-                                                                <CircularProgress
-                                                                    size="sm"
-                                                                    sx={{
-                                                                        bgcolor:
-                                                                            "background.surface",
-                                                                    }}
-                                                                />
-                                                            ) : null
-                                                        }
-                                                        slotProps={{
-                                                            listbox: {
-                                                                sx: {
-                                                                    zIndex: 10020,
-                                                                },
-                                                            },
-                                                        }}
-                                                        onChange={(event, value) =>
-                                                            onChangeHandler(value)
-                                                        }
-                                                        size="sm"
-                                                        startDecorator={<SearchRoundedIcon />}
-                                                        aria-label="Search"
-                                                        groupBy={(option) =>
-                                                            option.status.status || "N/A"
-                                                        }
-                                                    />
-                                                </Box>
-
-                                                <Box>
-                                                    <IconButton
-                                                        component="p"
-                                                        variant="outlined"
-                                                        size="sm"
+                                                    <Box
                                                         sx={{
-                                                            fontSize: "15px",
-                                                            paddingRight: "10px",
-                                                        }}
-                                                        onClick={() => {
-                                                            setIsCreatingTask({
-                                                                flag: true,
-                                                                parentTaskId: null,
-                                                                rootTaskId: null,
-                                                            });
+                                                            display: "flex",
+                                                            mb: 1,
+                                                            gap: 1,
+                                                            flexDirection: {
+                                                                xs: "column",
+                                                                sm: "row",
+                                                            },
+                                                            alignItems: {
+                                                                xs: "start",
+                                                                sm: "center",
+                                                            },
+                                                            flexWrap: "wrap",
+                                                            justifyContent: "space-between",
                                                         }}
                                                     >
-                                                        <AddIcon />
-                                                        Task
-                                                    </IconButton>
-                                                    <Dropdown>
-                                                        <MenuButton
-                                                            slots={{ root: IconButton }}
-                                                            slotProps={{
-                                                                root: { color: "neutral" },
+                                                        <Typography
+                                                            level="h2"
+                                                            component="h1"
+                                                            sx={{
+                                                                display: "flex",
+                                                                alignItems: "center", // vertical centering
+                                                                justifyContent: "center", // horizontal centering
                                                             }}
+                                                            startDecorator={
+                                                                <>
+                                                                    {pmChat && (
+                                                                        <ProjectAvatar
+                                                                            avatarSize={40}
+                                                                            teamMemberProfiles={
+                                                                                teamMemberProfiles
+                                                                            }
+                                                                            myself={myself}
+                                                                            setMyself={setMyself}
+                                                                            socket={socket}
+                                                                            pmChat={pmChat}
+                                                                            setOpeningService={
+                                                                                setOpeningService
+                                                                            }
+                                                                            setCurrentMainChat={
+                                                                                setCurrentMainChat
+                                                                            }
+                                                                            funcSetAllChats={
+                                                                                funcSetAllChats
+                                                                            }
+                                                                        />
+                                                                    )}
+                                                                    {currentProject.isPrivate ===
+                                                                    true ? (
+                                                                        <LockOutlineIcon
+                                                                            sx={{
+                                                                                mt: "3px",
+                                                                                fontSize: "26px",
+                                                                            }}
+                                                                        />
+                                                                    ) : null}
+                                                                </>
+                                                            }
                                                         >
-                                                            <MoreVert />
-                                                        </MenuButton>
-                                                        <Menu size="sm">
-                                                            <MenuItem
-                                                                onClick={() => {
-                                                                    setOpenCreateProject(true);
+                                                            {currentProject.projectName}
+                                                            <Dropdown>
+                                                                <MenuButton
+                                                                    slots={{ root: IconButton }}
+                                                                    slotProps={{
+                                                                        root: { color: "neutral" },
+                                                                    }}
+                                                                >
+                                                                    <Chip
+                                                                        variant="outlined"
+                                                                        color={
+                                                                            displayTaskType.id ===
+                                                                            1
+                                                                                ? "primary"
+                                                                                : displayTaskType.id ===
+                                                                                  2
+                                                                                ? "success"
+                                                                                : displayTaskType.id ===
+                                                                                  3
+                                                                                ? "danger"
+                                                                                : "neutral"
+                                                                        }
+                                                                        sx={{
+                                                                            ml: "8px",
+                                                                            fontWeight: "bold",
+                                                                            borderRadius: "5px",
+                                                                        }}
+                                                                        size="lg"
+                                                                    >
+                                                                        {displayTaskType.name}
+                                                                    </Chip>
+                                                                </MenuButton>
+                                                                <Menu size="sm">
+                                                                    <MenuItem
+                                                                        onClick={() => {
+                                                                            setDisplayTaskType(
+                                                                                taskTypes.ongoing
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Chip
+                                                                            variant="outlined"
+                                                                            color="primary"
+                                                                            sx={{
+                                                                                borderRadius:
+                                                                                    "5px",
+                                                                            }}
+                                                                            size="lg"
+                                                                        >
+                                                                            {
+                                                                                taskTypes.ongoing
+                                                                                    .name
+                                                                            }
+                                                                        </Chip>
+                                                                    </MenuItem>
+                                                                    <MenuItem
+                                                                        onClick={() => {
+                                                                            setDisplayTaskType(
+                                                                                taskTypes.closed
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Chip
+                                                                            variant="outlined"
+                                                                            color="success"
+                                                                            sx={{
+                                                                                borderRadius:
+                                                                                    "5px",
+                                                                            }}
+                                                                            size="lg"
+                                                                        >
+                                                                            {taskTypes.closed.name}
+                                                                        </Chip>
+                                                                    </MenuItem>
+                                                                    <MenuItem
+                                                                        onClick={() => {
+                                                                            setDisplayTaskType(
+                                                                                taskTypes.deleted
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Chip
+                                                                            variant="outlined"
+                                                                            color="danger"
+                                                                            sx={{
+                                                                                borderRadius:
+                                                                                    "5px",
+                                                                            }}
+                                                                            size="lg"
+                                                                        >
+                                                                            {
+                                                                                taskTypes.deleted
+                                                                                    .name
+                                                                            }
+                                                                        </Chip>
+                                                                    </MenuItem>
+                                                                </Menu>
+                                                            </Dropdown>
+                                                        </Typography>
+
+                                                        <Box sx={{ width: "50%" }}>
+                                                            <Autocomplete
+                                                                key={`ac-project-tags-${currentPreviewTaskId}`}
+                                                                sx={{ width: "100%" }}
+                                                                placeholder={"Search"}
+                                                                variant="soft"
+                                                                open={openSearch}
+                                                                onOpen={() => {
+                                                                    setOpenSearch(true);
+                                                                    // Reset the team task search options to load them again
+                                                                    setTeamTaskOptions([]);
                                                                 }}
-                                                            >
-                                                                <AddIcon />
-                                                                New Project
-                                                            </MenuItem>
-                                                            <MenuItem
-                                                                onClick={() => {
-                                                                    setOpenCreateTag(true);
+                                                                onClose={() => {
+                                                                    setOpenSearch(false);
                                                                 }}
-                                                            >
-                                                                <AddIcon />
-                                                                New Tag
-                                                            </MenuItem>
-                                                            <MenuItem
+                                                                isOptionEqualToValue={(
+                                                                    option,
+                                                                    value
+                                                                ) =>
+                                                                    option.taskId === value.taskId
+                                                                }
+                                                                getOptionLabel={(option) =>
+                                                                    option.title
+                                                                }
+                                                                renderTags={(tags, getTagProps) =>
+                                                                    tags.map((item, index) => {
+                                                                        const {
+                                                                            key,
+                                                                            ...tagProps
+                                                                        } = getTagProps({ index }); // spread the 'key'
+                                                                        return (
+                                                                            <Chip
+                                                                                key={`ac-taskhome-search-task-chip-${key}`}
+                                                                                variant="soft"
+                                                                                sx={{
+                                                                                    backgroundColor:
+                                                                                        alpha(
+                                                                                            item
+                                                                                                .status
+                                                                                                .color ||
+                                                                                                "#0044c2",
+                                                                                            mode ===
+                                                                                                "dark"
+                                                                                                ? 0.5
+                                                                                                : 0.75
+                                                                                        ),
+                                                                                    color: item
+                                                                                        .status
+                                                                                        .textColor,
+                                                                                    fontWeight:
+                                                                                        "bold",
+                                                                                    borderRadius:
+                                                                                        "5px",
+                                                                                }}
+                                                                                size="sm"
+                                                                            >
+                                                                                {
+                                                                                    item.status
+                                                                                        .status
+                                                                                }
+                                                                            </Chip>
+                                                                        );
+                                                                    })
+                                                                }
+                                                                renderOption={(props, option) => (
+                                                                    <AutocompleteOption
+                                                                        {...props}
+                                                                        key={`ac-taskhome-search-task-${option.taskId}`}
+                                                                    >
+                                                                        <ListItemContent
+                                                                            sx={{
+                                                                                fontSize: "sm",
+                                                                                overflow: "hidden",
+                                                                                textOverflow:
+                                                                                    "ellipsis",
+                                                                                whiteSpace:
+                                                                                    "nowrap",
+                                                                                width: "100%", // take full width of button
+                                                                            }}
+                                                                        >
+                                                                            <Chip
+                                                                                key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
+                                                                                variant="outlined"
+                                                                                color="neutral"
+                                                                                size="sm"
+                                                                            >
+                                                                                ID:{option.taskId}
+                                                                            </Chip>
+                                                                            <Chip
+                                                                                key={`ac-taskhome-search-task-chip-${option.taskId}`}
+                                                                                variant="soft"
+                                                                                sx={{
+                                                                                    backgroundColor:
+                                                                                        alpha(
+                                                                                            option
+                                                                                                .status
+                                                                                                .color ||
+                                                                                                "#0044c2",
+                                                                                            mode ===
+                                                                                                "dark"
+                                                                                                ? 0.5
+                                                                                                : 0.75
+                                                                                        ),
+                                                                                    color: option
+                                                                                        .status
+                                                                                        .textColor,
+                                                                                    fontWeight:
+                                                                                        "bold",
+                                                                                    borderRadius:
+                                                                                        "5px",
+                                                                                    m: "3px",
+                                                                                }}
+                                                                                size="sm"
+                                                                            >
+                                                                                {
+                                                                                    option.status
+                                                                                        .status
+                                                                                }
+                                                                            </Chip>
+                                                                            {option.title}
+                                                                        </ListItemContent>
+                                                                    </AutocompleteOption>
+                                                                )}
+                                                                options={teamTaskSearchOptions}
+                                                                loading={loading}
+                                                                endDecorator={
+                                                                    loading ? (
+                                                                        <CircularProgress
+                                                                            size="sm"
+                                                                            sx={{
+                                                                                bgcolor:
+                                                                                    "background.surface",
+                                                                            }}
+                                                                        />
+                                                                    ) : null
+                                                                }
+                                                                slotProps={{
+                                                                    listbox: {
+                                                                        sx: {
+                                                                            zIndex: 10020,
+                                                                        },
+                                                                    },
+                                                                }}
+                                                                onChange={(event, value) =>
+                                                                    onChangeHandler(value)
+                                                                }
+                                                                size="sm"
+                                                                startDecorator={
+                                                                    <SearchRoundedIcon />
+                                                                }
+                                                                aria-label="Search"
+                                                                groupBy={(option) =>
+                                                                    option.status.status || "N/A"
+                                                                }
+                                                            />
+                                                        </Box>
+
+                                                        <Box>
+                                                            <IconButton
+                                                                component="p"
+                                                                variant="outlined"
+                                                                size="sm"
+                                                                sx={{
+                                                                    fontSize: "15px",
+                                                                    paddingRight: "10px",
+                                                                }}
                                                                 onClick={() => {
-                                                                    setOpenDeleteProject({
+                                                                    setIsCreatingTask({
                                                                         flag: true,
-                                                                        projectId:
-                                                                            currentProject.projectId,
-                                                                        projectName:
-                                                                            currentProject.projectName,
+                                                                        parentTaskId: null,
+                                                                        rootTaskId: null,
                                                                     });
                                                                 }}
-                                                                sx={{
-                                                                    color: "red",
-                                                                    fontWeight: "bold",
-                                                                }}
                                                             >
-                                                                <DeleteIcon
-                                                                    sx={{ color: "red" }}
-                                                                />
-                                                                Delete Project
-                                                            </MenuItem>
-                                                        </Menu>
-                                                    </Dropdown>
-                                                    {(isTaskPreviewVisible === true ||
-                                                        isCreatingTask.flag === true) && (
-                                                        <IconButton
-                                                            size="sm"
-                                                            variant="plain"
-                                                            color="neutral"
-                                                            onClick={() => {
-                                                                setIsTaskHomeVisible(false);
-                                                            }}
-                                                        >
-                                                            <CancelIcon />
-                                                        </IconButton>
+                                                                <AddIcon />
+                                                                Task
+                                                            </IconButton>
+                                                            <Dropdown>
+                                                                <MenuButton
+                                                                    slots={{ root: IconButton }}
+                                                                    slotProps={{
+                                                                        root: { color: "neutral" },
+                                                                    }}
+                                                                >
+                                                                    <MoreVert />
+                                                                </MenuButton>
+                                                                <Menu size="sm">
+                                                                    <MenuItem
+                                                                        onClick={() => {
+                                                                            setOpenCreateProject(
+                                                                                true
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <AddIcon />
+                                                                        New Project
+                                                                    </MenuItem>
+                                                                    <MenuItem
+                                                                        onClick={() => {
+                                                                            setOpenCreateTag(true);
+                                                                        }}
+                                                                    >
+                                                                        <AddIcon />
+                                                                        New Tag
+                                                                    </MenuItem>
+                                                                    <MenuItem
+                                                                        onClick={() => {
+                                                                            setOpenDeleteProject({
+                                                                                flag: true,
+                                                                                projectId:
+                                                                                    currentProject.projectId,
+                                                                                projectName:
+                                                                                    currentProject.projectName,
+                                                                            });
+                                                                        }}
+                                                                        sx={{
+                                                                            color: "red",
+                                                                            fontWeight: "bold",
+                                                                        }}
+                                                                    >
+                                                                        <DeleteIcon
+                                                                            sx={{ color: "red" }}
+                                                                        />
+                                                                        Delete Project
+                                                                    </MenuItem>
+                                                                </Menu>
+                                                            </Dropdown>
+                                                            {(isTaskPreviewVisible === true ||
+                                                                isCreatingTask.flag === true) && (
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    color="neutral"
+                                                                    onClick={() => {
+                                                                        setIsTaskHomeVisible(
+                                                                            false
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <CancelIcon />
+                                                                </IconButton>
+                                                            )}
+                                                        </Box>
+                                                    </Box>
+
+                                                    {isDashboardVisible === true && (
+                                                        <>
+                                                            <TaskDashboard />
+                                                        </>
+                                                    )}
+                                                    {isTaskTableVisible === true && (
+                                                        <>
+                                                            <ProjectTaskTable
+                                                                teamMembers={teamMembers}
+                                                                setTeamMembers={setTeamMembers}
+                                                                teamMemberProfiles={
+                                                                    teamMemberProfiles
+                                                                }
+                                                                myself={myself}
+                                                                currentProject={currentProject}
+                                                                ongoingTasks={ongoingTasks}
+                                                                closedTasks={closedTasks}
+                                                                deletedTasks={deletedTasks}
+                                                                setIsTaskPreviewVisible={
+                                                                    setIsTaskPreviewVisible
+                                                                }
+                                                                setCurrentPreviewTaskId={
+                                                                    setCurrentPreviewTaskId
+                                                                }
+                                                                displayTaskType={displayTaskType}
+                                                                setFilterBy={setFilterBy}
+                                                                filterBy={filterBy}
+                                                                setSelectedTagForFiltering={
+                                                                    setSelectedTagForFiltering
+                                                                }
+                                                                selectedTagForFiltering={
+                                                                    selectedTagForFiltering
+                                                                }
+                                                                currentFilterName={
+                                                                    currentFilterName
+                                                                }
+                                                                setCurrentFilterName={
+                                                                    setCurrentFilterName
+                                                                }
+                                                            />
+                                                        </>
                                                     )}
                                                 </Box>
-                                            </Box>
+                                            </Panel>
+                                        </>
+                                    )}
 
-                                            {isDashboardVisible === true && (
-                                                <>
-                                                    <TaskDashboard />
-                                                </>
-                                            )}
-                                            {isTaskTableVisible === true && (
-                                                <>
-                                                    <ProjectTaskTable
+                                    {isCreatingTask.flag === true && (
+                                        <>
+                                            {/* Resizable Handle with MUI sx Styling */}
+                                            <PanelResizeHandle
+                                                style={{
+                                                    width: "1px",
+                                                    backgroundColor:
+                                                        mode === "dark" ? "grey" : "lightgrey",
+                                                    transition: "all 0.3s ease-in-out",
+                                                    cursor: "col-resize",
+                                                }}
+                                                className="resize-handle"
+                                            />
+
+                                            {/* right pane */}
+                                            <Panel id={"4"} order={4} minSize={30} maxSize={80}>
+                                                <Box
+                                                    sx={{
+                                                        px: { xs: 1, md: 2 },
+                                                        pt: {
+                                                            xs: "calc(12px + var(--Header-height))",
+                                                            sm: "calc(12px + var(--Header-height))",
+                                                            md: 2,
+                                                        },
+                                                        pb: { xs: 2, sm: 2, md: 3 },
+                                                        flex: 1,
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        minWidth: 0,
+                                                        height: "100dvh",
+                                                        gap: 1,
+                                                    }}
+                                                >
+                                                    <CreateTaskForm
                                                         teamMembers={teamMembers}
                                                         setTeamMembers={setTeamMembers}
                                                         teamMemberProfiles={teamMemberProfiles}
+                                                        socket={socket}
                                                         myself={myself}
-                                                        currentProject={currentProject}
-                                                        ongoingTasks={ongoingTasks}
-                                                        closedTasks={closedTasks}
-                                                        deletedTasks={deletedTasks}
+                                                        setMyself={setMyself}
+                                                        currentMainChat={undefined}
+                                                        currentThreadChat={undefined}
+                                                        chatType={-1}
                                                         setIsTaskPreviewVisible={
                                                             setIsTaskPreviewVisible
                                                         }
+                                                        setIsCreatingTask={setIsCreatingTask}
+                                                        setOpenCreateProject={setOpenCreateProject}
+                                                        setOpenCreateTag={setOpenCreateTag}
+                                                        currentProject={currentProject}
+                                                        setCurrentProject={setCurrentProject}
                                                         setCurrentPreviewTaskId={
                                                             setCurrentPreviewTaskId
                                                         }
-                                                        displayTaskType={displayTaskType}
-                                                        setFilterBy={setFilterBy}
-                                                        filterBy={filterBy}
-                                                        setSelectedTagForFiltering={
-                                                            setSelectedTagForFiltering
+                                                        isNewTagCreated={isNewTagCreated}
+                                                        setIsNewTaskCreated={setIsNewTaskCreated}
+                                                        setCurrentMainChat={setCurrentMainChat}
+                                                        setOpeningService={setOpeningService}
+                                                        parentTaskId={isCreatingTask.parentTaskId}
+                                                        rootTaskId={isCreatingTask.rootTaskId}
+                                                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                                        isCreatingTask={isCreatingTask}
+                                                        teamProjects={teamProjects}
+                                                        setTeamProjects={setTeamProjects}
+                                                        initialEmptyTaskId={initialEmptyTaskId}
+                                                        setInitialEmptyTaskId={
+                                                            setInitialEmptyTaskId
                                                         }
-                                                        selectedTagForFiltering={
-                                                            selectedTagForFiltering
-                                                        }
-                                                        currentFilterName={currentFilterName}
-                                                        setCurrentFilterName={setCurrentFilterName}
                                                     />
-                                                </>
-                                            )}
-                                        </Box>
-                                    </Panel>
-                                </>
-                            )}
+                                                </Box>
+                                            </Panel>
+                                        </>
+                                    )}
 
-                            {isCreatingTask.flag === true && (
-                                <>
-                                    {/* Resizable Handle with MUI sx Styling */}
-                                    <PanelResizeHandle
-                                        style={{
-                                            width: "1px",
-                                            backgroundColor:
-                                                mode === "dark" ? "grey" : "lightgrey",
-                                            transition: "all 0.3s ease-in-out",
-                                            cursor: "col-resize",
-                                        }}
-                                        className="resize-handle"
-                                    />
-
-                                    {/* right pane */}
-                                    <Panel id={"4"} order={4} minSize={30} maxSize={80}>
-                                        <Box
-                                            sx={{
-                                                px: { xs: 1, md: 2 },
-                                                pt: {
-                                                    xs: "calc(12px + var(--Header-height))",
-                                                    sm: "calc(12px + var(--Header-height))",
-                                                    md: 2,
-                                                },
-                                                pb: { xs: 2, sm: 2, md: 3 },
-                                                flex: 1,
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                minWidth: 0,
-                                                height: "100dvh",
-                                                gap: 1,
-                                            }}
-                                        >
-                                            <CreateTaskForm
-                                                teamMembers={teamMembers}
-                                                setTeamMembers={setTeamMembers}
-                                                teamMemberProfiles={teamMemberProfiles}
-                                                socket={socket}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                currentMainChat={undefined}
-                                                currentThreadChat={undefined}
-                                                chatType={-1}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setIsCreatingTask={setIsCreatingTask}
-                                                setOpenCreateProject={setOpenCreateProject}
-                                                setOpenCreateTag={setOpenCreateTag}
-                                                currentProject={currentProject}
-                                                setCurrentProject={setCurrentProject}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                isNewTagCreated={isNewTagCreated}
-                                                setIsNewTaskCreated={setIsNewTaskCreated}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setOpeningService={setOpeningService}
-                                                parentTaskId={isCreatingTask.parentTaskId}
-                                                rootTaskId={isCreatingTask.rootTaskId}
-                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                isTaskPreviewVisible={isTaskPreviewVisible}
-                                                isCreatingTask={isCreatingTask}
-                                                teamProjects={teamProjects}
-                                                setTeamProjects={setTeamProjects}
-                                                initialEmptyTaskId={initialEmptyTaskId}
-                                                setInitialEmptyTaskId={setInitialEmptyTaskId}
+                                    {isTaskPreviewVisible && currentPreviewTask && (
+                                        <>
+                                            {/* Resizable Handle with MUI sx Styling */}
+                                            <PanelResizeHandle
+                                                style={{
+                                                    width: "1px",
+                                                    backgroundColor:
+                                                        mode === "dark" ? "grey" : "lightgrey",
+                                                    transition: "all 0.3s ease-in-out",
+                                                    cursor: "col-resize",
+                                                }}
+                                                className="resize-handle"
                                             />
-                                        </Box>
-                                    </Panel>
-                                </>
-                            )}
 
-                            {isTaskPreviewVisible && currentPreviewTask && (
-                                <>
-                                    {/* Resizable Handle with MUI sx Styling */}
-                                    <PanelResizeHandle
-                                        style={{
-                                            width: "1px",
-                                            backgroundColor:
-                                                mode === "dark" ? "grey" : "lightgrey",
-                                            transition: "all 0.3s ease-in-out",
-                                            cursor: "col-resize",
-                                        }}
-                                        className="resize-handle"
-                                    />
+                                            {/* right pane */}
+                                            <Panel
+                                                id={"3"}
+                                                order={3}
+                                                defaultSize={50}
+                                                minSize={30}
+                                                maxSize={80}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        px: { xs: 1, md: 2 },
+                                                        pt: {
+                                                            xs: "calc(12px + var(--Header-height))",
+                                                            sm: "calc(12px + var(--Header-height))",
+                                                            md: 2,
+                                                        },
+                                                        pb: { xs: 2, sm: 2, md: 3 },
+                                                        flex: 1,
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        minWidth: 0,
+                                                        height: "100dvh",
+                                                        gap: 1,
+                                                    }}
+                                                >
+                                                    <TaskPreview
+                                                        teamMembers={teamMembers}
+                                                        setTeamMembers={setTeamMembers}
+                                                        teamMemberProfiles={teamMemberProfiles}
+                                                        socket={socket}
+                                                        myself={myself}
+                                                        setMyself={setMyself}
+                                                        setCurrentProject={setCurrentProject}
+                                                        currentPreviewTask={currentPreviewTask}
+                                                        setIsCreatingTask={setIsCreatingTask}
+                                                        setIsTaskPreviewVisible={
+                                                            setIsTaskPreviewVisible
+                                                        }
+                                                        setCurrentPreviewTask={
+                                                            setCurrentPreviewTask
+                                                        }
+                                                        setOpenCreateProject={setOpenCreateProject}
+                                                        setOpenCreateTag={setOpenCreateTag}
+                                                        isTaskUpdated={isTaskUpdated}
+                                                        setIsTaskUpdated={setIsTaskUpdated}
+                                                        setCurrentMainChat={setCurrentMainChat}
+                                                        setOpeningService={setOpeningService}
+                                                        currentPreviewTaskId={currentPreviewTaskId}
+                                                        setCurrentPreviewTaskId={
+                                                            setCurrentPreviewTaskId
+                                                        }
+                                                        isCommentUpdated={isCommentUpdated}
+                                                        setIsCommentUpdated={setIsCommentUpdated}
+                                                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                                        isCreatingTask={isCreatingTask}
+                                                        setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                                        handleCreateNewTaskNote={
+                                                            handleCreateNewTaskNote
+                                                        }
+                                                        setCurrentTaskNote={setCurrentTaskNote}
+                                                        isTaskNoteVisible={isTaskNoteVisible}
+                                                        teamProjects={teamProjects}
+                                                        setTeamProjects={setTeamProjects}
+                                                        taskNoteMeta={taskNoteMeta}
+                                                    />
+                                                </Box>
+                                            </Panel>
+                                        </>
+                                    )}
 
-                                    {/* right pane */}
-                                    <Panel
-                                        id={"3"}
-                                        order={3}
-                                        defaultSize={50}
-                                        minSize={30}
-                                        maxSize={80}
-                                    >
-                                        <Box
-                                            sx={{
-                                                px: { xs: 1, md: 2 },
-                                                pt: {
-                                                    xs: "calc(12px + var(--Header-height))",
-                                                    sm: "calc(12px + var(--Header-height))",
-                                                    md: 2,
-                                                },
-                                                pb: { xs: 2, sm: 2, md: 3 },
-                                                flex: 1,
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                minWidth: 0,
-                                                height: "100dvh",
-                                                gap: 1,
-                                            }}
-                                        >
-                                            <TaskPreview
-                                                teamMembers={teamMembers}
-                                                setTeamMembers={setTeamMembers}
-                                                teamMemberProfiles={teamMemberProfiles}
-                                                socket={socket}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                setCurrentProject={setCurrentProject}
-                                                currentPreviewTask={currentPreviewTask}
-                                                setIsCreatingTask={setIsCreatingTask}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setCurrentPreviewTask={setCurrentPreviewTask}
-                                                setOpenCreateProject={setOpenCreateProject}
-                                                setOpenCreateTag={setOpenCreateTag}
-                                                isTaskUpdated={isTaskUpdated}
-                                                setIsTaskUpdated={setIsTaskUpdated}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setOpeningService={setOpeningService}
-                                                currentPreviewTaskId={currentPreviewTaskId}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                isCommentUpdated={isCommentUpdated}
-                                                setIsCommentUpdated={setIsCommentUpdated}
-                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                isTaskPreviewVisible={isTaskPreviewVisible}
-                                                isCreatingTask={isCreatingTask}
-                                                setIsTaskNoteVisible={setIsTaskNoteVisible}
-                                                handleCreateNewTaskNote={handleCreateNewTaskNote}
-                                                setCurrentTaskNote={setCurrentTaskNote}
-                                                isTaskNoteVisible={isTaskNoteVisible}
-                                                teamProjects={teamProjects}
-                                                setTeamProjects={setTeamProjects}
-                                                taskNoteMeta={taskNoteMeta}
+                                    {isTaskNoteVisible && currentTaskNoteChain && (
+                                        <>
+                                            <PanelResizeHandle
+                                                style={{
+                                                    width: "1px",
+                                                    backgroundColor:
+                                                        mode === "dark" ? "grey" : "lightgrey",
+                                                    transition: "all 0.3s ease-in-out",
+                                                    cursor: "col-resize",
+                                                }}
+                                                className="resize-handle"
                                             />
-                                        </Box>
-                                    </Panel>
-                                </>
-                            )}
 
-                            {isTaskNoteVisible && currentTaskNoteChain && (
-                                <>
-                                    <PanelResizeHandle
-                                        style={{
-                                            width: "1px",
-                                            backgroundColor:
-                                                mode === "dark" ? "grey" : "lightgrey",
-                                            transition: "all 0.3s ease-in-out",
-                                            cursor: "col-resize",
-                                        }}
-                                        className="resize-handle"
-                                    />
-
-                                    <Panel
-                                        id={"7"}
-                                        order={7}
-                                        defaultSize={50}
-                                        minSize={50}
-                                        maxSize={100}
-                                    >
-                                        <Box
-                                            sx={{
-                                                px: { xs: 1, md: 2 },
-                                                pt: {
-                                                    xs: "calc(12px + var(--Header-height))",
-                                                    sm: "calc(12px + var(--Header-height))",
-                                                    md: 2,
-                                                },
-                                                pb: { xs: 2, sm: 2, md: 3 },
-                                                flex: 1,
-                                                display: "flex",
-                                                flexDirection: "column",
-                                                minWidth: 0,
-                                                height: "100dvh",
-                                                gap: 1,
-                                            }}
-                                        >
-                                            <TaskNoteMain
-                                                teamMemberProfiles={teamMemberProfiles}
-                                                socket={socket}
-                                                teamMembers={teamMembers}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
-                                                setCurrentChat={setCurrentMainChat}
-                                                currentTaskNote={currentTaskNote}
-                                                currentNoteType={currentNoteType}
-                                                taskNoteMeta={taskNoteMeta}
-                                                setTaskNoteMeta={setTaskNoteMeta}
-                                                tabItems={tabItems}
-                                                setTabItems={setTabItems}
-                                                selectedTabIndex={selectedTabIndex}
-                                                handleCreateNewTaskNote={handleCreateNewTaskNote}
-                                                currentTaskNoteChain={currentTaskNoteChain}
-                                                isInTaskPage={true}
-                                                setIsTaskNoteVisible={setIsTaskNoteVisible}
-                                                isCreatingTask={isCreatingTask}
-                                                isTaskPreviewVisible={isTaskPreviewVisible}
-                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                loadNote={loadNote}
-                                                setIsTaskVisibleInNote={setIsTaskVisibleInNote}
-                                                setCurrentPreviewTask={setCurrentPreviewTask}
-                                            />
-                                        </Box>
-                                    </Panel>
+                                            <Panel
+                                                id={"7"}
+                                                order={7}
+                                                defaultSize={50}
+                                                minSize={50}
+                                                maxSize={100}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        px: { xs: 1, md: 2 },
+                                                        pt: {
+                                                            xs: "calc(12px + var(--Header-height))",
+                                                            sm: "calc(12px + var(--Header-height))",
+                                                            md: 2,
+                                                        },
+                                                        pb: { xs: 2, sm: 2, md: 3 },
+                                                        flex: 1,
+                                                        display: "flex",
+                                                        flexDirection: "column",
+                                                        minWidth: 0,
+                                                        height: "100dvh",
+                                                        gap: 1,
+                                                    }}
+                                                >
+                                                    <TaskNoteMain
+                                                        teamMemberProfiles={teamMemberProfiles}
+                                                        socket={socket}
+                                                        teamMembers={teamMembers}
+                                                        myself={myself}
+                                                        setMyself={setMyself}
+                                                        setOpeningService={setOpeningService}
+                                                        setCurrentChat={setCurrentMainChat}
+                                                        currentTaskNote={currentTaskNote}
+                                                        currentNoteType={currentNoteType}
+                                                        taskNoteMeta={taskNoteMeta}
+                                                        setTaskNoteMeta={setTaskNoteMeta}
+                                                        tabItems={tabItems}
+                                                        setTabItems={setTabItems}
+                                                        selectedTabIndex={selectedTabIndex}
+                                                        handleCreateNewTaskNote={
+                                                            handleCreateNewTaskNote
+                                                        }
+                                                        currentTaskNoteChain={currentTaskNoteChain}
+                                                        isInTaskPage={true}
+                                                        setIsTaskNoteVisible={setIsTaskNoteVisible}
+                                                        isCreatingTask={isCreatingTask}
+                                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                        loadNote={loadNote}
+                                                        setIsTaskVisibleInNote={
+                                                            setIsTaskVisibleInNote
+                                                        }
+                                                        setCurrentPreviewTask={
+                                                            setCurrentPreviewTask
+                                                        }
+                                                        allChats={allChats}
+                                                        setCurrentMainChat={setCurrentMainChat}
+                                                        funcSetAllChats={funcSetAllChats}
+                                                    />
+                                                </Box>
+                                            </Panel>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </>

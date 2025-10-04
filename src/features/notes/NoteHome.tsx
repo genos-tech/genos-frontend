@@ -8,7 +8,7 @@ import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
-import { ChatProps } from "../../types/chat";
+import { AllChatProps, ChatProps } from "../../types/chat";
 import { MyNoteMain } from "./components/MyNoteMain";
 import {
     MyNoteMetaProps,
@@ -109,6 +109,9 @@ type NoteHomeProps = {
     setTeamProjects: (value: ProjectProps[]) => void;
     setCurrentProject: (value: ProjectProps) => void;
     moveToSpecificChat: (chatType: number, chatId: number, threadId: number) => void;
+    currentProject: ProjectProps | null;
+    allChats: AllChatProps[];
+    funcSetAllChats: () => Promise<void>;
 };
 export const NoteHome = (props: NoteHomeProps) => {
     const {
@@ -158,6 +161,8 @@ export const NoteHome = (props: NoteHomeProps) => {
         setIsTaskVisibleInNote,
         isTaskVisibleInNote,
         setCurrentProject,
+        currentProject,
+        allChats,
         currentPreviewTask,
         setIsThreadVisible,
         isThreadVisible,
@@ -175,6 +180,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         teamProjects,
         setTeamProjects,
         moveToSpecificChat,
+        funcSetAllChats,
     } = props;
     const { mode } = useColorScheme();
 
@@ -310,6 +316,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                             loadNote={loadNote}
                                             setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                                             setCurrentPreviewTask={setCurrentPreviewTask}
+                                            allChats={allChats}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            funcSetAllChats={funcSetAllChats}
                                         />
 
                                         {isTaskVisibleInNote && currentPreviewTask && (
@@ -374,6 +383,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setIsChatNoteVisible={setIsChatNoteVisible}
                                         loadNote={loadNote}
                                         moveToSpecificChat={moveToSpecificChat}
+                                        allChats={allChats}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        funcSetAllChats={funcSetAllChats}
                                     />
                                 )}
                             </Box>

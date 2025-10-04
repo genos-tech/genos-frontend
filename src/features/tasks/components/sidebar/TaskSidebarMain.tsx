@@ -85,7 +85,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
-    const [teamTaskSearchOptions, setTeamTaskSearchOptions] = useState<SearchTeamTasksResponse[]>([]);
+    const [teamTaskSearchOptions, setTeamTaskSearchOptions] = useState<SearchTeamTasksResponse[]>(
+        []
+    );
     const loading = openSearch && teamTaskSearchOptions.length === 0;
     useEffect(() => {
         let active = true;
@@ -117,13 +119,15 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     // =======================================================================
 
     const updateProjectTags = async () => {
-        if (currentProject) {
+        if (currentProject && currentProject.projectId) {
             const loadedProjectTags: TagListProps[] = await loadProjectTags(
                 myself,
                 currentProject.projectId,
                 accessToken
             );
             setCurrentProject({ ...currentProject, projectTags: loadedProjectTags });
+        } else {
+            console.error("Failed to set the current project");
         }
     };
 

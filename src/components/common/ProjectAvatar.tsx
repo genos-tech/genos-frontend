@@ -1,65 +1,65 @@
-import { useEffect, useState } from "react";
-import { Box, Avatar } from "@mui/joy";
-import GroupsIcon from "@mui/icons-material/Groups";
-
-import { AllChatProps, ChatProps } from "../../../types/chat";
-import { UserProps } from "../../../types/admin";
-import { ModalGMProfile } from "./modals/ModalGMProfile";
-import { UserProfile } from "../../admin/components/modals/UserProfile";
 import { Socket } from "socket.io-client";
+import { useState } from "react";
+import { Box, Avatar } from "@mui/joy";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+
+import { AllChatProps, ChatProps } from "../../types/chat";
+import { UserProps } from "../../types/admin";
+import { ModalProjectProfile } from "../../features/chat/components/modals/ModalProjectProfile";
+import { UserProfile } from "../../features/admin/components/modals/UserProfile";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
-type GMAvatarProps = {
+type ProjectAvatarProps = {
     socket: Socket | null;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    isYou: boolean;
-    gmChat: AllChatProps;
+    avatarSize?: number;
+    pmChat: AllChatProps;
     funcSetAllChats: () => Promise<void>;
     setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (service: number) => void;
 };
-export const GMAvatar = (props: GMAvatarProps) => {
+export const ProjectAvatar = (props: ProjectAvatarProps) => {
     const {
         socket,
         teamMemberProfiles,
         myself,
         setMyself,
-        isYou,
-        gmChat,
+        avatarSize,
+        pmChat,
         funcSetAllChats,
         setCurrentMainChat,
         setOpeningService,
     } = props;
-    const [openModalGMProfile, setOpenModalGMProfile] = useState<boolean>(false);
+    const [openModalProjectProfile, setOpenModalProjectProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
-
+    const _avatarSize = avatarSize || 32;
     return (
         <div>
             <Box
                 position="relative"
-                width={32}
-                height={32}
-                onClick={() => setOpenModalGMProfile(true)}
+                width={_avatarSize}
+                height={_avatarSize}
+                onClick={() => setOpenModalProjectProfile(true)}
             >
                 <Avatar
                     size="sm"
-                    sx={{ width: 32, height: 32 }}
-                    src={`${media_url}/${gmChat.profileImagePath}`}
+                    sx={{ width: _avatarSize, height: _avatarSize }}
+                    src={`${media_url}/${pmChat.profileImagePath}`}
                 >
-                    <GroupsIcon sx={{ fontSize: 32 }} />
+                    <AccountTreeIcon sx={{ fontSize: 26 }} />
                 </Avatar>
             </Box>
 
-            <ModalGMProfile
+            <ModalProjectProfile
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
-                gmChat={gmChat}
-                openModalGMProfile={openModalGMProfile}
-                setOpenModalGMProfile={setOpenModalGMProfile}
+                pmChat={pmChat}
+                openModalProjectProfile={openModalProjectProfile}
+                setOpenModalProjectProfile={setOpenModalProjectProfile}
                 funcSetAllChats={funcSetAllChats}
                 setAvatarUserId={setAvatarUserId}
                 setOpenUserProfile={setOpenUserProfile}
@@ -70,7 +70,7 @@ export const GMAvatar = (props: GMAvatarProps) => {
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
-                    isYou={isYou}
+                    isYou={false}
                     user={teamMemberProfiles[avatarUserId]}
                     openUserProfile={openUserProfile}
                     setOpenUserProfile={setOpenUserProfile}

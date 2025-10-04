@@ -31,7 +31,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import CancelIcon from "@mui/icons-material/Cancel";
 
 import { UserProps } from "../../../types/admin";
-import { ChatProps } from "../../../types/chat";
+import { AllChatProps, ChatProps } from "../../../types/chat";
 import { BnChatNoteEditor } from "../../../components/blockNote/bnChatNoteEditor";
 import { ChatNoteMetaProps, ChatNoteProps, ChatNoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedChatNote } from "../services/sendUpdatedChatNote";
@@ -40,6 +40,9 @@ import { getCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteChatNote } from "../modals/ModalDeleteChatNote";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
+import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
+import { GMAvatar } from "../../../components/common/GMAvatar";
+import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
 type ChatNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -70,6 +73,9 @@ type ChatNoteMainProps = {
     setIsChatNoteVisible: (value: boolean) => void;
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
     moveToSpecificChat: (chatType: number, chatId: number, threadId: number) => void;
+    allChats: AllChatProps[];
+    setCurrentMainChat: (chat: ChatProps) => void;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -96,6 +102,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setIsChatNoteVisible,
         loadNote,
         moveToSpecificChat,
+        allChats,
+        setCurrentMainChat,
+        funcSetAllChats,
     } = props;
 
     const { accessToken } = useAuth();
@@ -218,6 +227,13 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setNoteBodySaved(false);
     }, [selectedTabIndex]);
 
+    const chat = allChats.find(
+        (chat) =>
+            chat.chatType === currentChatNote?.chatType &&
+            currentChatNote &&
+            chat.chatId === currentChatNote.chatId
+    );
+
     return (
         <>
             {(chatNoteMeta.length === 0 || currentChatNote === null) && (
@@ -334,6 +350,54 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             )}
 
                                             <Stack direction={"row"}>
+                                                {chat && chat.chatType === 1 && (
+                                                    <Box sx={{ mt: "2px", mr: "5px" }}>
+                                                        <AvatarWithStatus
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            isYou={false}
+                                                            avatarUser={
+                                                                teamMemberProfiles[
+                                                                    chat.dmPartnerUser.userId
+                                                                ]
+                                                            }
+                                                            socket={socket}
+                                                            chat={chat}
+                                                            setOpeningService={setOpeningService}
+                                                            setCurrentMainChat={setCurrentMainChat}
+                                                        />
+                                                    </Box>
+                                                )}
+                                                {chat && chat.chatType === 2 && (
+                                                    <Box sx={{ mt: "2px", mr: "5px" }}>
+                                                        <GMAvatar
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            isYou={false}
+                                                            socket={socket}
+                                                            gmChat={chat}
+                                                            setOpeningService={setOpeningService}
+                                                            setCurrentMainChat={setCurrentMainChat}
+                                                            funcSetAllChats={funcSetAllChats}
+                                                        />
+                                                    </Box>
+                                                )}
+                                                {chat && chat.chatType === 3 && (
+                                                    <Box sx={{ mt: "2px", mr: "5px" }}>
+                                                        <ProjectAvatar
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            socket={socket}
+                                                            pmChat={chat}
+                                                            setOpeningService={setOpeningService}
+                                                            setCurrentMainChat={setCurrentMainChat}
+                                                            funcSetAllChats={funcSetAllChats}
+                                                        />
+                                                    </Box>
+                                                )}
+
                                                 {isInChatPage && currentChatNote && (
                                                     <IconButton
                                                         component="button"

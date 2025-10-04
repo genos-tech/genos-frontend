@@ -6,8 +6,8 @@ import { ChatProps } from "../../../../types/chat";
 import { PulseDot } from "../../../../components/utils/PulseDot";
 import { UserProps } from "../../../../types/admin";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../GMAvatar";
-import { ProjectAvatar } from "../ProjectAvatar";
+import { GMAvatar } from "../../../../components/common/GMAvatar";
+import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 
 type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -55,6 +55,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     <AvatarWithStatus
                         myself={myself}
                         setMyself={setMyself}
+                        avatarSize={38}
                         isYou={isYou}
                         avatarUser={headerUser}
                         socket={socket}
@@ -67,6 +68,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
                         setMyself={setMyself}
+                        avatarSize={38}
                         isYou={isYou}
                         socket={socket}
                         setOpeningService={setOpeningService}
@@ -79,7 +81,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
                         setMyself={setMyself}
-                        isYou={isYou}
+                        avatarSize={38}
                         socket={socket}
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}

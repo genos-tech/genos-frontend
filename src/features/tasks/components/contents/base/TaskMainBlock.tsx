@@ -280,7 +280,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 />
                                 <IconButton
                                     onClick={() => {
-                                        if (parentTask.project && parentTask.id) {
+                                        if (
+                                            parentTask.project &&
+                                            parentTask.project.projectId &&
+                                            parentTask.id
+                                        ) {
                                             setCurrentProject({
                                                 projectId: parentTask.project.projectId,
                                                 projectName: parentTask.project.projectName,
@@ -288,6 +292,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                                 systemUserId: parentTask.project.systemUserId,
                                             });
                                             setCurrentPreviewTaskId(parentTask.id);
+                                        } else {
+                                            console.error("Failed to set the current project");
                                         }
                                     }}
                                 >

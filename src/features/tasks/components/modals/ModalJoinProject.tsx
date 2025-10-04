@@ -138,16 +138,20 @@ export const ModalJoinProject: React.FC<Props> = ({
                             joinProjectData.hint || "Failed to join the created project"
                         );
                     } else {
-                        setCurrentProject({
-                            projectId: openJoinProject.projectId,
-                            projectName: openJoinProject.projectName,
-                            isPrivate: openJoinProject.isPrivate,
-                            projectTags: [],
-                        });
-                        console.log(5);
-                        (async () => {
-                            await loadProjectsAndTasks(openJoinProject.projectId);
-                        })();
+                        if (openJoinProject.projectId) {
+                            setCurrentProject({
+                                projectId: openJoinProject.projectId,
+                                projectName: openJoinProject.projectName,
+                                isPrivate: openJoinProject.isPrivate,
+                                projectTags: [],
+                                systemUserId: openJoinProject.systemUserId,
+                            });
+                            (async () => {
+                                await loadProjectsAndTasks(openJoinProject.projectId);
+                            })();
+                        } else {
+                            console.error("Failed to join the project");
+                        }
                     }
                 }
                 setOpenJoinProject(disableOpenJoinModalParams);

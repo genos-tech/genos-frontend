@@ -218,7 +218,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         if (currentMainChatId !== currentMainChat.chatId) {
             setCurrentMainChatId(currentMainChat.chatId);
         }
-        if (currentMainChat.project) {
+        if (currentMainChat.project && currentMainChat.project.projectId) {
             setCurrentProject(currentMainChat.project);
         }
     }, [currentMainChat]);
@@ -227,7 +227,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         if (currentSubChat !== undefined && currentSubChatId !== currentSubChat.chatId) {
             setCurrentSubChatId(currentSubChat.chatId);
         }
-        if (currentSubChat?.project) {
+        if (currentSubChat?.project && currentSubChat.project.projectId) {
             setCurrentProject(currentSubChat.project);
         }
     }, [currentSubChat]);
@@ -689,7 +689,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 )}
 
                 {/* Chat Note Pane */}
-                {isChatNoteVisible === true &&  (
+                {isChatNoteVisible === true && (
                     <>
                         <PanelResizeHandle
                             key="chat-note-resize-handle"
@@ -746,6 +746,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setIsChatNoteVisible={setIsChatNoteVisible}
                                     loadNote={loadNote}
                                     moveToSpecificChat={moveToSpecificChat}
+                                    funcSetAllChats={funcSetAllChats}
+                                    setCurrentMainChat={setCurrentMainChat}
+                                    allChats={allChats}
                                 />
                             </Box>
                         </Panel>

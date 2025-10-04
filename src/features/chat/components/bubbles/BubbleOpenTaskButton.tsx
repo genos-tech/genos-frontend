@@ -52,8 +52,10 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                             setIsCreatingTask({ ...isCreatingTask, flag: false });
                             setCurrentPreviewTaskId(taskId);
 
-                            if (message.project) {
+                            if (message.project && message.project.projectId) {
                                 setCurrentProject(message.project);
+                            } else {
+                                console.error("Failed to set the current project");
                             }
                         }
                     }}

@@ -94,7 +94,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                         />
                                         <ListItemButton
                                             onClick={() => {
-                                                if (project && id) {
+                                                if (project && project.projectId && id) {
                                                     setCurrentProject({
                                                         projectId: project.projectId,
                                                         projectName: project.projectName,
@@ -102,6 +102,10 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         systemUserId: project.systemUserId,
                                                     });
                                                     setCurrentPreviewTaskId(id);
+                                                } else {
+                                                    console.error(
+                                                        "Failed to set the current project"
+                                                    );
                                                 }
                                             }}
                                             sx={{
