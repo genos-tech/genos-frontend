@@ -218,9 +218,9 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     count += node.content[0].text.split("\n").length;
                 }
             }
-            // Add 10 lines for each image to avoid scroll issues.
+            // Add 30 lines for each image to avoid scroll issues.
             if (node.type === "image") {
-                count += 10;
+                count += 30;
             }
         }
         return count;

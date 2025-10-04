@@ -313,6 +313,15 @@
 
 
 /* editor */
+.bn-editor img {
+  max-width: 500px;  /* shrink if too big */
+  max-height: 400px;
+  width: auto;
+  height: auto;
+  object-fit: contain; /* keep aspect ratio */
+  cursor: pointer;
+}
+
 /* common code conf */
 .bn-editor code {
   padding-top: 1px;

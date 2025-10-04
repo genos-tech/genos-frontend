@@ -21,6 +21,10 @@ import {
     DefaultReactSuggestionItem,
     SuggestionMenuController,
     getDefaultReactSlashMenuItems,
+    FileRenameButton,
+    FilePreviewButton,
+    FileDownloadButton,
+    FileDeleteButton,
 } from "@blocknote/react";
 import {
     BlockNoteSchema,
@@ -37,6 +41,10 @@ import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
+import { useAuth } from "../../context/AuthContext";
+
+const base_url = import.meta.env.VITE_API_BASE_URL;
+const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnThreadEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -66,11 +74,12 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         setNumEditorLines,
     } = props;
     const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
-    const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
+    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
 
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
@@ -99,12 +108,38 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         editor: typeof schema.BlockNoteEditor
     ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
+    // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
+    async function uploadFile(file: File) {
+        const formData = new FormData();
+        formData.append("team_id", String(myself.teamId));
+        formData.append("chat_type", String(thread.chatType));
+        formData.append("chat_id", String(thread.chatId));
+        formData.append("message_id", String(thread.messages.length + 1));
+        formData.append("thread_id", String(thread.threadId));
+        formData.append("uploader", myself.userId);
+        formData.append("chat_attachment_file", file);
+        const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+        });
+        const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+
+        if (!uploadChatAttachmentResponse.ok) {
+            throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+        }
+
+        return `${django_url}/${uploadChatAttachmentData.chatAttachmentUrl}`;
+    }
+
     // We use the English, default dictionary
     const locale = en;
-
     const editor = useCreateBlockNote({
         schema,
         codeBlock,
+        uploadFile,
         // We override the `placeholders` in our dictionary
         dictionary: {
             ...locale,
@@ -155,8 +190,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             // Set input text
             const content: any[] | any = editor.document.slice(-2, -1)[0].content;
             var contentText: string = "Something wrong....";
-            if (content.length > 0) {
+            if (content && content.length > 0) {
                 contentText = content.map((item: any) => item.text).join(" ");
+            } else if (editor.document.slice(-2, -1)[0].type === "image") {
+                contentText = "Image attachment";
             }
 
             socket.emit(
@@ -241,12 +278,14 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
             }
-            if (node.content[0]) {
+            if (node.content && node.content[0]) {
                 if (node.content[0].text) {
-                    if (node.content[0].text) {
-                        count += node.content[0].text.split("\n").length;
-                    }
+                    count += node.content[0].text.split("\n").length;
                 }
+            }
+            // Add 30 lines for each image to avoid scroll issues.
+            if (node.type === "image") {
+                count += 30;
             }
         }
         return count;
@@ -326,9 +365,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         <FormattingToolbar>
                             <BlockTypeSelect key={"blockTypeSelect"} />
 
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"replaceFileButton"} />
-
                             <BasicTextStyleButton
                                 basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
@@ -353,6 +389,12 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
                             <ColorStyleButton key={"colorStyleButton"} />
                             <CreateLinkButton key={"createLinkButton"} />
+                            <FileCaptionButton key={"fileCaptionButton"} />
+                            <FileReplaceButton key={"replaceFileButton"} />
+                            <FileDeleteButton key={"fileDeleteButton"} />
+                            <FileDownloadButton key={"fileDownloadButton"} />
+                            <FilePreviewButton key={"filePreviewButton"} />
+                            <FileRenameButton key={"fileRenameButton"} />
 
                             {/* Extra button to toggle blue text & background */}
                             <CustomEmojiToolbar

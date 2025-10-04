@@ -20,6 +20,10 @@ import {
     DefaultReactSuggestionItem,
     SuggestionMenuController,
     getDefaultReactSlashMenuItems,
+    FileRenameButton,
+    FilePreviewButton,
+    FileDownloadButton,
+    FileDeleteButton,
 } from "@blocknote/react";
 import {
     BlockNoteSchema,
@@ -33,6 +37,10 @@ import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps } from "../../types/chat";
+import { useAuth } from "../../context/AuthContext";
+
+const base_url = import.meta.env.VITE_API_BASE_URL;
+const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnUpdateEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -68,11 +76,12 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         setNumEditorLines,
     } = props;
     const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
-    const { audio, image, video, file, ...remainingBlockSpecs } = defaultBlockSpecs;
+    const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
 
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
@@ -96,6 +105,32 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         },
     });
 
+    // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
+    async function uploadFile(file: File) {
+        const formData = new FormData();
+        formData.append("team_id", String(myself.teamId));
+        formData.append("chat_type", String(chat.chatType));
+        formData.append("chat_id", String(chat.chatId));
+        formData.append("message_id", String(message.messageId));
+        formData.append("thread_id", "0");
+        formData.append("uploader", myself.userId);
+        formData.append("chat_attachment_file", file);
+        const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            body: formData,
+        });
+        const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+
+        if (!uploadChatAttachmentResponse.ok) {
+            throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+        }
+
+        return `${django_url}/${uploadChatAttachmentData.chatAttachmentUrl}`;
+    }
+
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
         editor: typeof schema.BlockNoteEditor
@@ -107,6 +142,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     const editor = useCreateBlockNote({
         schema,
         codeBlock,
+        uploadFile,
         // We override the `placeholders` in our dictionary
         dictionary: {
             ...locale,
@@ -184,10 +220,14 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
             if (node.children?.length) {
                 count += countLines(node.children); // recursive call
             }
-            if (node.content[0]) {
+            if (node.content && node.content[0]) {
                 if (node.content[0].text) {
                     count += node.content[0].text.split("\n").length;
                 }
+            }
+            // Add 30 lines for each image to avoid scroll issues.
+            if (node.type === "image") {
+                count += 30;
             }
         }
         return count;
@@ -286,9 +326,6 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         <FormattingToolbar>
                             <BlockTypeSelect key={"blockTypeSelect"} />
 
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"replaceFileButton"} />
-
                             <BasicTextStyleButton
                                 basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
@@ -313,6 +350,12 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
 
                             <ColorStyleButton key={"colorStyleButton"} />
                             <CreateLinkButton key={"createLinkButton"} />
+                            <FileCaptionButton key={"fileCaptionButton"} />
+                            <FileReplaceButton key={"replaceFileButton"} />
+                            <FileDeleteButton key={"fileDeleteButton"} />
+                            <FileDownloadButton key={"fileDownloadButton"} />
+                            <FilePreviewButton key={"filePreviewButton"} />
+                            <FileRenameButton key={"fileRenameButton"} />
 
                             {/* Extra button to toggle blue text & background */}
                             <CustomEmojiToolbar

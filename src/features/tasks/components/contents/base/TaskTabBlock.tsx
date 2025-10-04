@@ -29,6 +29,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { AttachmentFileProps, TaskCommentProps } from "../../../../../types/tasks";
 import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
+import { downloadFile } from "../../../../../utils/downloadUtils";
 import { useAuth } from "../../../../../context/AuthContext";
 import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
 import { TaskCommentBubble } from "./sub/TaskCommentBubble";
@@ -645,18 +646,21 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         >
                                             <CloseIcon />
                                         </IconButton>
-                                        <a
-                                            href={file.url}
-                                            download={file.name}
+                                        <div
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                downloadFile(file.url, file.name);
+                                            }}
                                             style={{
                                                 textDecoration: "none",
                                                 color: "inherit",
+                                                cursor: "pointer",
                                             }}
                                         >
                                             <InsertDriveFileIcon
                                                 sx={{ fontSize: 40, cursor: "pointer" }}
                                             />
-                                        </a>
+                                        </div>
                                         <Typography
                                             fontSize={"10px"}
                                             sx={{

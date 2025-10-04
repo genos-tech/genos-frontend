@@ -5,6 +5,7 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 
 import { AttachmentFileProps } from "../../../../../types/tasks";
 import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
+import { downloadFile } from "../../../../../utils/downloadUtils";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -234,13 +235,19 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             >
                                 <CloseIcon />
                             </IconButton>
-                            <a
-                                href={file.url}
-                                download={file.name}
-                                style={{ textDecoration: "none", color: "inherit" }}
+                            <div
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    downloadFile(file.url, file.name);
+                                }}
+                                style={{
+                                    textDecoration: "none",
+                                    color: "inherit",
+                                    cursor: "pointer",
+                                }}
                             >
                                 <InsertDriveFileIcon sx={{ fontSize: 40, cursor: "pointer" }} />
-                            </a>
+                            </div>
                             <Typography
                                 fontSize={"10px"}
                                 sx={{
