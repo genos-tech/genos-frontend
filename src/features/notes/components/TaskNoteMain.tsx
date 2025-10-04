@@ -372,35 +372,27 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 <>
                                                     {currentTask && (
                                                         <>
-                                                            <Chip
-                                                                key={`task-status-${currentTask.status.status}`}
-                                                                size="md"
-                                                                variant="soft"
-                                                                sx={{
-                                                                    mt: "3px",
-                                                                    mr: "5px",
-                                                                    height: "30px",
-                                                                    backgroundColor: currentTask
-                                                                        .status.color
-                                                                        ? alpha(
-                                                                              currentTask.status
-                                                                                  .color,
-                                                                              mode === "dark"
-                                                                                  ? 0.5
-                                                                                  : 0.75
-                                                                          )
-                                                                        : "transparent",
-                                                                    color: currentTask.status
-                                                                        .textColor,
-                                                                    fontWeight: "bold",
-                                                                    borderRadius: "5px",
-                                                                }}
-                                                            >
-                                                                {currentTask.status.status ||
-                                                                    "Open"}
-                                                            </Chip>
+                                                            {currentTask.id && (
+                                                                <Chip
+                                                                    key={`task-note-task-id${currentTask.id}`}
+                                                                    variant="outlined"
+                                                                    color="neutral"
+                                                                    sx={{
+                                                                        mt: "3px",
+                                                                        mr: "5px",
+                                                                        height: "30px",
+                                                                        borderRadius: "5px",
+                                                                        fontWeight: "bold",
+                                                                    }}
+                                                                    size="sm"
+                                                                >
+                                                                    ID: {currentTask.id}
+                                                                </Chip>
+                                                            )}
                                                             <Chip
                                                                 key={`task-title-${currentTask.id}`}
+                                                                variant="outlined"
+                                                                color="primary"
                                                                 sx={{
                                                                     mt: "3px",
                                                                     mr: "5px",
@@ -408,7 +400,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                     borderRadius: "5px",
                                                                     fontWeight: "bold",
                                                                 }}
-                                                                size="md"
+                                                                size="sm"
                                                             >
                                                                 Title:{" "}
                                                                 {currentTask.title.length > 19
@@ -418,6 +410,36 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                       )}...`
                                                                     : currentTask.title || "N/A"}
                                                             </Chip>
+                                                            {currentTask.status.status && (
+                                                                <Chip
+                                                                    key={`task-status-${currentTask.status.status}`}
+                                                                    size="sm"
+                                                                    sx={{
+                                                                        mt: "3px",
+                                                                        mr: "5px",
+                                                                        height: "30px",
+                                                                        backgroundColor:
+                                                                            currentTask.status
+                                                                                .color
+                                                                                ? alpha(
+                                                                                      currentTask
+                                                                                          .status
+                                                                                          .color,
+                                                                                      mode ===
+                                                                                          "dark"
+                                                                                          ? 0.5
+                                                                                          : 0.75
+                                                                                  )
+                                                                                : "transparent",
+                                                                        color: currentTask.status
+                                                                            .textColor,
+                                                                        fontWeight: "bold",
+                                                                        borderRadius: "5px",
+                                                                    }}
+                                                                >
+                                                                    {currentTask.status.status}
+                                                                </Chip>
+                                                            )}
                                                         </>
                                                     )}
 
@@ -586,110 +608,102 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         </TabList>
 
                                         {tabItems.map((tabNote, index) => (
-                                            <Box key={index}>
-                                                <TabPanel
-                                                    key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                                    value={index}
+                                            <TabPanel
+                                                key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                                value={index}
+                                                sx={{
+                                                    paddingX: "5px",
+                                                    paddingTop: "0px",
+                                                    paddingBottom: "5px",
+                                                }}
+                                            >
+                                                <FormControl
+                                                    required
                                                     sx={{
-                                                        paddingX: "5px",
-                                                        paddingTop: "0px",
-                                                        paddingBottom: "5px",
+                                                        mt: "10px",
+                                                        ml: "10px",
+                                                        justifyContent: "center",
+                                                        position: "absolute",
+                                                        zIndex: 100,
                                                     }}
                                                 >
-                                                    <FormControl
-                                                        required
+                                                    <Input
+                                                        startDecorator={<NoteAltIcon />}
+                                                        key={"currentTaskNoteTitle"}
+                                                        variant="soft"
+                                                        placeholder="Note Title"
+                                                        value={currentTaskNoteTitle}
+                                                        onChange={(e) => {
+                                                            setCurrentTaskNoteTitle(
+                                                                e.target.value
+                                                            );
+                                                        }}
+                                                        slotProps={{
+                                                            input: {
+                                                                ref: titleInputRef,
+                                                                onKeyDown: (
+                                                                    e: React.KeyboardEvent<HTMLInputElement>
+                                                                ) => {
+                                                                    if (e.key === "Enter") {
+                                                                        e.preventDefault(); // stop form submission if inside <form>
+                                                                        titleInputRef.current?.blur();
+                                                                    }
+                                                                },
+                                                            },
+                                                        }}
+                                                        onBlur={() => {
+                                                            setNoteUpdated(true);
+                                                        }}
                                                         sx={{
-                                                            mt: "10px",
-                                                            ml: "10px",
-                                                            justifyContent: "center",
+                                                            fontSize: "22px",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                    />
+                                                </FormControl>
+                                                {noteBodySaved === true && (
+                                                    <Box
+                                                        sx={{
                                                             position: "absolute",
+                                                            mt: "12px",
+                                                            ml: "335px",
                                                             zIndex: 100,
                                                         }}
                                                     >
-                                                        <Input
-                                                            startDecorator={<NoteAltIcon />}
-                                                            key={"currentTaskNoteTitle"}
-                                                            variant="soft"
-                                                            placeholder="Note Title"
-                                                            value={currentTaskNoteTitle}
-                                                            onChange={(e) => {
-                                                                setCurrentTaskNoteTitle(
-                                                                    e.target.value
-                                                                );
-                                                            }}
-                                                            slotProps={{
-                                                                input: {
-                                                                    ref: titleInputRef,
-                                                                    onKeyDown: (
-                                                                        e: React.KeyboardEvent<HTMLInputElement>
-                                                                    ) => {
-                                                                        if (e.key === "Enter") {
-                                                                            e.preventDefault(); // stop form submission if inside <form>
-                                                                            titleInputRef.current?.blur();
-                                                                        }
-                                                                    },
-                                                                },
-                                                            }}
-                                                            onBlur={() => {
-                                                                setNoteUpdated(true);
-                                                            }}
-                                                            sx={{
-                                                                fontSize: "22px",
-                                                                fontWeight: "bold",
-                                                            }}
-                                                        />
-                                                    </FormControl>
-                                                    {noteBodySaved === true && (
-                                                        <Box
-                                                            sx={{
-                                                                position: "absolute",
-                                                                mt: "12px",
-                                                                ml: "335px",
-                                                                zIndex: 100,
-                                                            }}
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="neutral"
+                                                            size="sm"
+                                                            startDecorator={
+                                                                <CheckIcon
+                                                                    sx={{
+                                                                        fontSize: "15px",
+                                                                    }}
+                                                                />
+                                                            }
                                                         >
-                                                            <Button
-                                                                variant="outlined"
-                                                                color="neutral"
-                                                                size="sm"
-                                                                startDecorator={
-                                                                    <CheckIcon
-                                                                        sx={{
-                                                                            fontSize: "15px",
-                                                                        }}
-                                                                    />
-                                                                }
-                                                            >
-                                                                Saved
-                                                            </Button>
-                                                        </Box>
-                                                    )}
-                                                    {currentTaskNote && (
-                                                        <>
-                                                            <BnTaskNoteEditor
-                                                                teamMemberProfiles={
-                                                                    teamMemberProfiles
-                                                                }
-                                                                myself={myself}
-                                                                setMyself={setMyself}
-                                                                socket={socket}
-                                                                teamMembers={teamMembers}
-                                                                currentTaskNote={currentTaskNote}
-                                                                body={body}
-                                                                setBody={setBody}
-                                                                setNoteBodyEdited={
-                                                                    setNoteBodyEdited
-                                                                }
-                                                                setNoteBodySaved={setNoteBodySaved}
-                                                                setCurrentChat={setCurrentChat}
-                                                                setOpeningService={
-                                                                    setOpeningService
-                                                                }
-                                                            />
-                                                        </>
-                                                    )}
-                                                </TabPanel>
-                                            </Box>
+                                                            Saved
+                                                        </Button>
+                                                    </Box>
+                                                )}
+                                                {currentTaskNote && (
+                                                    <>
+                                                        <BnTaskNoteEditor
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            socket={socket}
+                                                            teamMembers={teamMembers}
+                                                            currentTaskNote={currentTaskNote}
+                                                            body={body}
+                                                            setBody={setBody}
+                                                            setNoteBodyEdited={setNoteBodyEdited}
+                                                            setNoteBodySaved={setNoteBodySaved}
+                                                            setCurrentChat={setCurrentChat}
+                                                            setOpeningService={setOpeningService}
+                                                        />
+                                                    </>
+                                                )}
+                                            </TabPanel>
                                         ))}
                                     </Tabs>
                                 </Stack>

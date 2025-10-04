@@ -293,7 +293,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 />
 
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
-                    {currentProject && (
+                    {currentProject && currentProject.projectId && (
                         <>
                             <Panel id={"1"} order={1} defaultSize={10} minSize={10} maxSize={30}>
                                 <TaskSidebar
@@ -946,76 +946,78 @@ export const TaskHome = (props: TaskHomeProps) => {
                         </>
                     )}
 
-                    {!currentProject && (
-                        <>
-                            <Panel id={"5"} order={5} minSize={5} maxSize={30}>
-                                <TaskSidebar
-                                    myself={myself}
-                                    setIsDashboardVisible={setIsDashboardVisible}
-                                    taskTableVisible={isTaskTableVisible}
-                                    setTaskTableVisible={setTaskTableVisible}
-                                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                    currentProject={currentProject}
-                                    setCurrentProject={setCurrentProject}
-                                    currentPreviewTaskId={currentPreviewTaskId}
-                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                    setOpenCreateProject={setOpenCreateProject}
-                                    setOpenJoinProject={setOpenJoinProject}
-                                    setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                    setFilterBy={setFilterBy}
-                                    setSelectedTagForFiltering={setSelectedTagForFiltering}
-                                    teamProjects={teamProjects}
-                                    loadProjectsAndTasks={loadProjectsAndTasks}
-                                    setOngoingTasks={setOngoingTasks}
-                                    setClosedTasks={setClosedTasks}
-                                    setDeletedTasks={setDeletedTasks}
-                                    taskMetaTree={taskMetaTree}
-                                    currentTaskChain={currentTaskChain}
-                                    setCurrentFilterName={setCurrentFilterName}
-                                    setIsCreatingTask={setIsCreatingTask}
-                                />
-                            </Panel>
+                    {!currentProject ||
+                        currentProject.projectId === null ||
+                        (currentProject.projectId === undefined && (
+                            <>
+                                <Panel id={"5"} order={5} minSize={5} maxSize={30}>
+                                    <TaskSidebar
+                                        myself={myself}
+                                        setIsDashboardVisible={setIsDashboardVisible}
+                                        taskTableVisible={isTaskTableVisible}
+                                        setTaskTableVisible={setTaskTableVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                        currentProject={currentProject}
+                                        setCurrentProject={setCurrentProject}
+                                        currentPreviewTaskId={currentPreviewTaskId}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setOpenCreateProject={setOpenCreateProject}
+                                        setOpenJoinProject={setOpenJoinProject}
+                                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                        setFilterBy={setFilterBy}
+                                        setSelectedTagForFiltering={setSelectedTagForFiltering}
+                                        teamProjects={teamProjects}
+                                        loadProjectsAndTasks={loadProjectsAndTasks}
+                                        setOngoingTasks={setOngoingTasks}
+                                        setClosedTasks={setClosedTasks}
+                                        setDeletedTasks={setDeletedTasks}
+                                        taskMetaTree={taskMetaTree}
+                                        currentTaskChain={currentTaskChain}
+                                        setCurrentFilterName={setCurrentFilterName}
+                                        setIsCreatingTask={setIsCreatingTask}
+                                    />
+                                </Panel>
 
-                            {/* Resizable Handle with MUI sx Styling */}
-                            <PanelResizeHandle
-                                style={{
-                                    width: "1px",
-                                    backgroundColor: mode === "dark" ? "grey" : "lightgrey",
-                                    transition: "all 0.3s ease-in-out",
-                                    cursor: "col-resize",
-                                }}
-                                className="resize-handle"
-                            />
-
-                            <Panel id={"6"} order={6} minSize={80} maxSize={100}>
-                                <Box
-                                    sx={{
-                                        height: "100%",
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                        width: "100%",
+                                {/* Resizable Handle with MUI sx Styling */}
+                                <PanelResizeHandle
+                                    style={{
+                                        width: "1px",
+                                        backgroundColor: mode === "dark" ? "grey" : "lightgrey",
+                                        transition: "all 0.3s ease-in-out",
+                                        cursor: "col-resize",
                                     }}
-                                >
-                                    <IconButton
-                                        component="button"
-                                        variant="soft"
-                                        color="neutral"
+                                    className="resize-handle"
+                                />
+
+                                <Panel id={"6"} order={6} minSize={80} maxSize={100}>
+                                    <Box
                                         sx={{
-                                            fontSize: "15px",
-                                            paddingRight: "10px",
-                                        }}
-                                        onClick={() => {
-                                            setOpenCreateProject(true);
+                                            height: "100%",
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            width: "100%",
                                         }}
                                     >
-                                        <AddIcon />
-                                        New Project
-                                    </IconButton>
-                                </Box>
-                            </Panel>
-                        </>
-                    )}
+                                        <IconButton
+                                            component="button"
+                                            variant="soft"
+                                            color="neutral"
+                                            sx={{
+                                                fontSize: "15px",
+                                                paddingRight: "10px",
+                                            }}
+                                            onClick={() => {
+                                                setOpenCreateProject(true);
+                                            }}
+                                        >
+                                            <AddIcon />
+                                            New Project / Choose Project
+                                        </IconButton>
+                                    </Box>
+                                </Panel>
+                            </>
+                        ))}
 
                     {/* Modal for creating a new project */}
                     <ModalCreateProject
