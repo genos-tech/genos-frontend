@@ -237,7 +237,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                             padding: "10px",
                         }}
                     >
-                        Not Found Any Chat Note
+                        Choose a Chat Note from the Sidebar
                     </IconButton>
                 </Box>
             )}

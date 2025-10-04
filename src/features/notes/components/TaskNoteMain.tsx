@@ -269,7 +269,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             padding: "10px",
                         }}
                     >
-                        Not Found Any Task Note
+                        Choose a Task Note from the Sidebar
                     </IconButton>
                 </Box>
             )}

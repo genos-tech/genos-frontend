@@ -395,12 +395,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </ListItemDecorator>
                         Attachments
                     </Tab>
-                    <Tab indicatorInset>
+                    {/* <Tab indicatorInset>
                         <ListItemDecorator>
                             <HistoryIcon />
                         </ListItemDecorator>
                         History
-                    </Tab>
+                    </Tab> */}
 
                     {tabIndex === 1 && (
                         <>
@@ -452,12 +452,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             <IconButton
                                 sx={{ mr: "15px", mb: "3px", px: "3px" }}
                                 component="p"
-                                variant="soft"
+                                variant="plain"
                                 color="neutral"
                                 size="sm"
                                 onClick={handleButtonClick}
                             >
-                                <FolderIcon /> Select Files
+                                <FolderIcon sx={{ pr: "5px", fontSize: "25px" }} /> Select Files
                             </IconButton>
                         </>
                     )}
@@ -518,64 +518,68 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     </TabPanel>
 
                     <TabPanel value={1}>
-                        <Stack
-                            className="custom-scrollbar"
-                            direction="row"
-                            sx={{
-                                width: "100%",
-                                minHeight: "40px",
-                                maxHeight: "200px",
-                                overflowY: "scroll",
-                            }}
-                        >
-                            <ListItem nested sx={{ width: "100%" }}>
-                                <List sx={{ gap: 0.5 }}>
-                                    {taskNotes.map((taskNote, index) => {
-                                        return (
-                                            <ListItem
-                                                key={`listitem-${taskNote.noteType}-${taskNote.noteId}-${index}`}
-                                            >
-                                                <ListItemButton
-                                                    variant="soft"
-                                                    onClick={() => {
-                                                        if (
-                                                            setIsTaskHomeVisible &&
-                                                            setIsTaskNoteVisible
-                                                        ) {
-                                                            setIsTaskHomeVisible(false);
-                                                            setIsTaskNoteVisible(true);
-                                                            setCurrentTaskNote(taskNote);
-                                                        }
-                                                    }}
-                                                    sx={{
-                                                        justifyContent: "flex-start",
-                                                        alignItems: "center",
-                                                        borderRadius: "5px",
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        noWrap
-                                                        level="title-md"
-                                                        sx={{
-                                                            px: "10px",
-                                                            overflow: "hidden",
-                                                            textOverflow: "ellipsis",
-                                                            whiteSpace: "nowrap",
-                                                            width: "100%",
-                                                            height: "30px",
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                        }}
+                        <>
+                            {taskNotes.length > 0 && (
+                                <Stack
+                                    className="custom-scrollbar"
+                                    direction="row"
+                                    sx={{
+                                        width: "100%",
+                                        minHeight: "40px",
+                                        maxHeight: "200px",
+                                        overflowY: "scroll",
+                                    }}
+                                >
+                                    <ListItem nested sx={{ width: "100%" }}>
+                                        <List sx={{ gap: 0.5 }}>
+                                            {taskNotes.map((taskNote, index) => {
+                                                return (
+                                                    <ListItem
+                                                        key={`listitem-${taskNote.noteType}-${taskNote.noteId}-${index}`}
                                                     >
-                                                        {`${taskNote.title}`}
-                                                    </Typography>
-                                                </ListItemButton>
-                                            </ListItem>
-                                        );
-                                    })}
-                                </List>
-                            </ListItem>
-                        </Stack>
+                                                        <ListItemButton
+                                                            variant="soft"
+                                                            onClick={() => {
+                                                                if (
+                                                                    setIsTaskHomeVisible &&
+                                                                    setIsTaskNoteVisible
+                                                                ) {
+                                                                    setIsTaskHomeVisible(false);
+                                                                    setIsTaskNoteVisible(true);
+                                                                    setCurrentTaskNote(taskNote);
+                                                                }
+                                                            }}
+                                                            sx={{
+                                                                justifyContent: "flex-start",
+                                                                alignItems: "center",
+                                                                borderRadius: "5px",
+                                                            }}
+                                                        >
+                                                            <Typography
+                                                                noWrap
+                                                                level="title-md"
+                                                                sx={{
+                                                                    px: "10px",
+                                                                    overflow: "hidden",
+                                                                    textOverflow: "ellipsis",
+                                                                    whiteSpace: "nowrap",
+                                                                    width: "100%",
+                                                                    height: "30px",
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                }}
+                                                            >
+                                                                {`${taskNote.title}`}
+                                                            </Typography>
+                                                        </ListItemButton>
+                                                    </ListItem>
+                                                );
+                                            })}
+                                        </List>
+                                    </ListItem>
+                                </Stack>
+                            )}
+                        </>
                     </TabPanel>
 
                     <TabPanel value={2}>
@@ -741,7 +745,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         )}
                     </TabPanel>
 
-                    <TabPanel value={3}>History-Content</TabPanel>
+                    {/* <TabPanel value={3}>History-Content</TabPanel> */}
                 </Box>
             </Tabs>
         </Box>

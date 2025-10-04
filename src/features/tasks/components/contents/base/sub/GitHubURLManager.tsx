@@ -77,12 +77,12 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                 <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                     <GitHubIcon />
                     <Box>
-                        <Typography>URL:</Typography>
+                        <Typography>GitHub</Typography>
                     </Box>
                     <Input
                         key={"url"}
                         size="sm"
-                        placeholder="URL"
+                        placeholder="Paste GitHub PR URL"
                         value={prUrl}
                         onChange={(e) => setPRUrl(e.target.value)}
                         type="url"

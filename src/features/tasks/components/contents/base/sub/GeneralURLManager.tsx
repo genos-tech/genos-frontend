@@ -81,12 +81,12 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                 <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                     <LinkIcon />
                     <Box>
-                        <Typography>URL:</Typography>
+                        <Typography>General Link</Typography>
                     </Box>
                     <Input
                         key={"url"}
                         size="sm"
-                        placeholder="URL"
+                        placeholder="Paste General Link"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         type="url"
