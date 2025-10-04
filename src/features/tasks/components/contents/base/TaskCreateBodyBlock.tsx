@@ -5,6 +5,7 @@ import { PartialBlock } from "@blocknote/core";
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
+import { TaskProps } from "../../../../../types/tasks";
 
 type TaskCreateBodyBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -12,6 +13,7 @@ type TaskCreateBodyBlockProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     teamMembers: UserProps[];
+    taskId: number;
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
     setCurrentChat: (chat: ChatProps) => void;
@@ -24,6 +26,7 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
         setMyself,
         socket,
         teamMembers,
+        taskId,
         body,
         setBody,
         setCurrentChat,
@@ -39,6 +42,7 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
                         setMyself={setMyself}
                         socket={socket}
                         teamMembers={teamMembers}
+                        taskId={taskId}
                         body={body || []}
                         setBody={setBody}
                         setCurrentChat={setCurrentChat}

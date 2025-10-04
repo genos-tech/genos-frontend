@@ -439,7 +439,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     )}
 
                     {tabIndex === 2 && (
-                        <>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Box sx={{ flexGrow: 1 }} />
                             <input
                                 type="file"
@@ -459,7 +459,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             >
                                 <FolderIcon sx={{ pr: "5px", fontSize: "25px" }} /> Select Files
                             </IconButton>
-                        </>
+                        </Box>
                     )}
                 </TabList>
 

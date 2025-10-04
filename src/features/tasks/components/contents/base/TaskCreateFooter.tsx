@@ -5,6 +5,7 @@ import { uploadNewTask } from "../../../services/uploadNewTask";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps, ProjectProps } from "../../../../../types/tasks";
 import { ChatProps, ThreadProps } from "../../../../../types/chat";
+import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 
 type TaskCreateFooterProps = {
     socket: Socket | null;
@@ -26,6 +27,7 @@ type TaskCreateFooterProps = {
     }) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    setInitialEmptyTaskId: (value: number | undefined) => void;
 };
 export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     const {
@@ -44,6 +46,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         setIsCreatingTask,
         setCurrentPreviewTaskId,
         setCurrentProject,
+        setInitialEmptyTaskId,
     } = props;
 
     const DoUploadNewTask = async () => {
@@ -84,6 +87,15 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                             flag: false,
                             parentTaskId: null,
                             rootTaskId: null,
+                        });
+                    }
+
+                    if (taskContents.id !== undefined) {
+                        deleteEmptyTask({
+                            myself: myself,
+                            taskId: taskContents.id,
+                            accessToken: accessToken,
+                            setInitialEmptyTaskId: setInitialEmptyTaskId,
                         });
                     }
                 }}

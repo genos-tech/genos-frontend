@@ -122,6 +122,8 @@ type ChatHomeProps = {
     setTeamProjects: (value: ProjectProps[]) => void;
     taskNoteMeta: TaskNoteMetaProps[];
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
+    initialEmptyTaskId?: number;
+    setInitialEmptyTaskId: (value: number | undefined) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -198,6 +200,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         setTeamProjects,
         taskNoteMeta,
         loadNote,
+        initialEmptyTaskId,
+        setInitialEmptyTaskId,
     } = props;
 
     // Common
@@ -602,6 +606,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     rootTaskId={null}
                                     teamProjects={teamProjects}
                                     setTeamProjects={setTeamProjects}
+                                    initialEmptyTaskId={initialEmptyTaskId}
+                                    setInitialEmptyTaskId={setInitialEmptyTaskId}
                                 />
                             </Box>
                         </Panel>

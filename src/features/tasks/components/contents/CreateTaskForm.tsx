@@ -9,11 +9,6 @@ import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
 import { TaskCreateFooter } from "./base/TaskCreateFooter";
 import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import {
-    updateTaskTitle,
-    updateTaskBody,
-    updateTaskAttachments,
-} from "../../hooks/taskUpdateHooks";
-import {
     updateTeamMembersOptions,
     updateProjectOptions,
     updateTagOptions,
@@ -21,13 +16,9 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
 import { UserProps } from "../../../../types/admin";
-import {
-    AttachmentFileProps,
-    TaskProps,
-    ProjectProps,
-    TagListProps,
-} from "../../../../types/tasks";
+import { TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
 import { ChatProps, ThreadProps } from "../../../../types/chat";
+import { createEmptyTask } from "../../services/createEmptyTask";
 
 const taskContentTemplate: PartialBlock[] = [
     {
@@ -140,6 +131,8 @@ type CreateTaskProps = {
     isTaskPreviewVisible?: boolean;
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
+    initialEmptyTaskId?: number;
+    setInitialEmptyTaskId: (value: number | undefined) => void;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -173,40 +166,73 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         isTaskPreviewVisible,
         teamProjects,
         setTeamProjects,
+        initialEmptyTaskId,
+        setInitialEmptyTaskId,
     } = props;
     const { accessToken } = useAuth();
-    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>([]);
 
     // Init task contents
-    const [taskContents, setTaskContents] = useState<TaskProps>({
-        project: currentProject,
-        title: "",
-        body: [],
-        assignee: myself,
-        reporter: myself,
-        chatType: chatType,
-        chatId: currentMainChat?.chatId || null,
-        threadId: currentThreadChat?.threadId || null,
-        dueDate: getFormattedTodayDateStr(),
-        status: { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
-        priority: { code: -1, priority: "", color: "", textColor: "" },
-        effortLevel: { code: -1, level: "", color: "", textColor: "" },
-        tags: [],
-        githubLink: { url: "", title: "" },
-        generalLink: { url: "", title: "" },
-        attachments: [],
-        parentTaskId: parentTaskId,
-        rootTaskId: rootTaskId,
-    });
+    const [taskContents, setTaskContents] = useState<TaskProps>();
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>(taskContentTemplate);
     const [assignee, setAssignee] = useState<UserProps>(myself);
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
-    updateTaskTitle({ taskTitle, taskContents, setTaskContents });
-    updateTaskBody({ body, taskContents, setTaskContents });
-    updateTaskAttachments({ uploadedFiles, taskContents, setTaskContents });
+    useEffect(() => {
+        createEmptyTask({
+            myself: myself,
+            projectId: currentProject?.projectId || 0,
+            accessToken: accessToken,
+            setInitialEmptyTaskId: setInitialEmptyTaskId,
+        });
+    }, []);
+
+    useEffect(() => {
+        if (initialEmptyTaskId) {
+            setTaskContents({
+                id: initialEmptyTaskId,
+                project: currentProject,
+                title: "",
+                body: taskContentTemplate,
+                assignee: myself,
+                reporter: myself,
+                chatType: chatType,
+                chatId: currentMainChat?.chatId || null,
+                threadId: currentThreadChat?.threadId || null,
+                dueDate: getFormattedTodayDateStr(),
+                status: { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
+                priority: { code: -1, priority: "", color: "", textColor: "" },
+                effortLevel: { code: -1, level: "", color: "", textColor: "" },
+                tags: [],
+                githubLink: { url: "", title: "" },
+                generalLink: { url: "", title: "" },
+                attachments: [],
+                parentTaskId: parentTaskId,
+                rootTaskId: rootTaskId,
+            });
+        }
+    }, [initialEmptyTaskId]);
+
+    // Update task title when it changes
+    useEffect(() => {
+        if (taskContents && taskTitle !== "") {
+            setTaskContents({
+                ...taskContents,
+                title: taskTitle,
+            });
+        }
+    }, [taskTitle]);
+
+    // Update task body when it changes
+    useEffect(() => {
+        if (taskContents && body.length > 0) {
+            setTaskContents({
+                ...taskContents,
+                body: body,
+            });
+        }
+    }, [body]);
 
     // Update status once task is created
     useEffect(() => {
@@ -267,106 +293,114 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     }, [isOpenTagList]);
 
     return (
-        <Sheet
-            className="custom-scrollbar"
-            variant="outlined"
-            sx={{
-                minHeight: 500,
-                borderRadius: "sm",
-                p: 2,
-                overflowY: "scroll",
-                overflowX: "hidden",
-            }}
-        >
-            <TaskTitleBlock
-                taskContents={taskContents}
-                taskTitle={taskTitle}
-                setTaskTitle={setTaskTitle}
-                setIsCreatingTask={setIsCreatingTask}
-                setOpenCreateProject={setOpenCreateProject}
-                setOpenCreateTag={setOpenCreateTag}
-                titleError={titleError}
-                titleErrorOpen={titleErrorOpen}
-                setTitleErrorOpen={setTitleErrorOpen}
-                isPreviewMode={false}
-                setIsMainChatVisible={setIsMainChatVisible}
-                isThreadVisible={isThreadVisible}
-                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                setIsTaskHomeVisible={setIsTaskHomeVisible}
-                isTaskPreviewVisible={isTaskPreviewVisible}
-                isCreatingTask={isCreatingTask}
-            />
+        <>
+            {taskContents && taskContents.id && (
+                <Sheet
+                    className="custom-scrollbar"
+                    variant="outlined"
+                    sx={{
+                        minHeight: 500,
+                        borderRadius: "sm",
+                        p: 2,
+                        overflowY: "scroll",
+                        overflowX: "hidden",
+                    }}
+                >
+                    <TaskTitleBlock
+                        myself={myself}
+                        taskContents={taskContents}
+                        taskTitle={taskTitle}
+                        setTaskTitle={setTaskTitle}
+                        setIsCreatingTask={setIsCreatingTask}
+                        setOpenCreateProject={setOpenCreateProject}
+                        setOpenCreateTag={setOpenCreateTag}
+                        titleError={titleError}
+                        titleErrorOpen={titleErrorOpen}
+                        setTitleErrorOpen={setTitleErrorOpen}
+                        isPreviewMode={false}
+                        setIsMainChatVisible={setIsMainChatVisible}
+                        isThreadVisible={isThreadVisible}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                        isTaskPreviewVisible={isTaskPreviewVisible}
+                        isCreatingTask={isCreatingTask}
+                        setInitialEmptyTaskId={setInitialEmptyTaskId}
+                    />
 
-            <Divider sx={{ mt: 1, mb: 1 }} />
+                    <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskMainBlock
-                teamMemberProfiles={teamMemberProfiles}
-                socket={socket}
-                taskContents={taskContents}
-                setTaskContents={setTaskContents}
-                teamMembers={teamMembers}
-                teamProjects={teamProjects}
-                projectTags={projectTags}
-                myself={myself}
-                setMyself={setMyself}
-                assignee={assignee}
-                setAssignee={setAssignee}
-                reporter={reporter}
-                setReporter={setReporter}
-                isOpenTeamMembersList={isOpenTeamMembersList}
-                setIsOpenTeamMembersList={setIsOpenTeamMembersList}
-                isOpenProjectList={isOpenProjectList}
-                setIsOpenProjectList={setIsOpenProjectList}
-                isOpenTagList={isOpenTagList}
-                setIsOpenTagList={setIsOpenTagList}
-                setOpenCreateTag={setOpenCreateTag}
-                setCurrentProject={setCurrentProject}
-                isPreviewMode={false}
-                setOpeningService={setOpeningService}
-                setCurrentMainChat={setCurrentMainChat}
-                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-            />
+                    <TaskMainBlock
+                        teamMemberProfiles={teamMemberProfiles}
+                        socket={socket}
+                        taskContents={taskContents}
+                        setTaskContents={setTaskContents}
+                        teamMembers={teamMembers}
+                        teamProjects={teamProjects}
+                        projectTags={projectTags}
+                        myself={myself}
+                        setMyself={setMyself}
+                        assignee={assignee}
+                        setAssignee={setAssignee}
+                        reporter={reporter}
+                        setReporter={setReporter}
+                        isOpenTeamMembersList={isOpenTeamMembersList}
+                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        isOpenProjectList={isOpenProjectList}
+                        setIsOpenProjectList={setIsOpenProjectList}
+                        isOpenTagList={isOpenTagList}
+                        setIsOpenTagList={setIsOpenTagList}
+                        setOpenCreateTag={setOpenCreateTag}
+                        setCurrentProject={setCurrentProject}
+                        isPreviewMode={false}
+                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
+                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                    />
 
-            <Divider sx={{ mt: 1, mb: 1 }} />
+                    <Divider sx={{ mt: 1, mb: 1 }} />
 
-            <TaskCreateBodyBlock
-                teamMemberProfiles={teamMemberProfiles}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                teamMembers={teamMembers}
-                body={body}
-                setBody={setBody}
-                setCurrentChat={setCurrentMainChat}
-                setOpeningService={setOpeningService}
-            />
+                    <TaskCreateBodyBlock
+                        teamMemberProfiles={teamMemberProfiles}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        teamMembers={teamMembers}
+                        taskId={taskContents.id}
+                        body={body}
+                        setBody={setBody}
+                        setCurrentChat={setCurrentMainChat}
+                        setOpeningService={setOpeningService}
+                    />
 
-            <Divider sx={{ m: 2 }} />
+                    <Divider sx={{ m: 2 }} />
 
-            <TaskCreateAttachmentBlock
-                taskContents={taskContents}
-                setTaskContents={setTaskContents}
-            />
+                    <TaskCreateAttachmentBlock
+                        taskContents={taskContents}
+                        setTaskContents={setTaskContents}
+                    />
 
-            <Divider sx={{ m: 2 }} />
+                    <Divider sx={{ m: 2 }} />
 
-            <TaskCreateFooter
-                socket={socket}
-                myself={myself}
-                accessToken={accessToken}
-                currentMainChat={currentMainChat}
-                currentThreadChat={currentThreadChat}
-                isThreadVisible={isThreadVisible}
-                taskContents={taskContents}
-                taskTitle={taskTitle}
-                setIsSubmitted={setIsSubmitted}
-                setTitleError={setTitleError}
-                setTitleErrorOpen={setTitleErrorOpen}
-                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                setIsCreatingTask={setIsCreatingTask}
-                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                setCurrentProject={setCurrentProject}
-            />
-        </Sheet>
+                    <TaskCreateFooter
+                        socket={socket}
+                        myself={myself}
+                        accessToken={accessToken}
+                        currentMainChat={currentMainChat}
+                        currentThreadChat={currentThreadChat}
+                        isThreadVisible={isThreadVisible}
+                        taskContents={taskContents}
+                        taskTitle={taskTitle}
+                        setIsSubmitted={setIsSubmitted}
+                        setTitleError={setTitleError}
+                        setTitleErrorOpen={setTitleErrorOpen}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        setIsCreatingTask={setIsCreatingTask}
+                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        setCurrentProject={setCurrentProject}
+                        setInitialEmptyTaskId={setInitialEmptyTaskId}
+                    />
+                </Sheet>
+            )}
+        </>
     );
 };

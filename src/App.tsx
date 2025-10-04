@@ -460,6 +460,7 @@ export const App = () => {
         isUpdate: false,
         scrollToBottom: true,
     });
+    const [initialEmptyTaskId, setInitialEmptyTaskId] = useState<number>();
 
     // Task sidebar related
     const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
@@ -1331,6 +1332,8 @@ export const App = () => {
                         setTeamProjects={setTeamProjects}
                         taskNoteMeta={taskNoteMeta}
                         loadNote={loadNote}
+                        initialEmptyTaskId={initialEmptyTaskId}
+                        setInitialEmptyTaskId={setInitialEmptyTaskId}
                     />
                 ) : null}
 
@@ -1396,6 +1399,8 @@ export const App = () => {
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                         taskMetaTree={taskMetaTree}
                         currentTaskChain={currentTaskChain}
+                        initialEmptyTaskId={initialEmptyTaskId}
+                        setInitialEmptyTaskId={setInitialEmptyTaskId}
                     />
                 ) : null}
 

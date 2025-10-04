@@ -132,6 +132,8 @@ type TaskHomeProps = {
     setIsTaskVisibleInNote: (value: boolean) => void;
     taskMetaTree: TaskMetaTreeNode[];
     currentTaskChain?: TaskMetaTreeNode[];
+    initialEmptyTaskId?: number;
+    setInitialEmptyTaskId: (value: number | undefined) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -195,6 +197,8 @@ export const TaskHome = (props: TaskHomeProps) => {
         setIsTaskVisibleInNote,
         taskMetaTree,
         currentTaskChain,
+        initialEmptyTaskId,
+        setInitialEmptyTaskId,
     } = props;
 
     // Common
@@ -787,6 +791,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 isCreatingTask={isCreatingTask}
                                                 teamProjects={teamProjects}
                                                 setTeamProjects={setTeamProjects}
+                                                initialEmptyTaskId={initialEmptyTaskId}
+                                                setInitialEmptyTaskId={setInitialEmptyTaskId}
                                             />
                                         </Box>
                                     </Panel>

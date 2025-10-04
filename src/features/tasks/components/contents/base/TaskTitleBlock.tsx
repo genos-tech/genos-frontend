@@ -23,8 +23,12 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskProps } from "../../../../../types/tasks";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
+import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
+import { UserProps } from "../../../../../types/admin";
+import { useAuth } from "../../../../../context/AuthContext";
 
 type TaskTitleBlockProps = {
+    myself: UserProps;
     taskContents: TaskProps;
     taskTitle: string;
     setTaskTitle: (value: string) => void;
@@ -56,9 +60,11 @@ type TaskTitleBlockProps = {
     setTaskStatusUpdated?: (value: boolean) => void;
     isTaskNoteVisible?: boolean;
     setIsTaskVisibleInNote?: (value: boolean) => void;
+    setInitialEmptyTaskId?: (value: number | undefined) => void;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
+        myself,
         taskContents,
         taskTitle,
         setTaskTitle,
@@ -82,8 +88,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setTaskStatusUpdated,
         isTaskNoteVisible,
         setIsTaskVisibleInNote,
+        setInitialEmptyTaskId,
     } = props;
 
+    const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
@@ -284,6 +292,15 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         // Close the task preview when the task is visible in the task note.
                         if (setIsTaskVisibleInNote) {
                             setIsTaskVisibleInNote(false);
+                        }
+
+                        if (isCreatingTask.flag === true && taskContents.id !== undefined) {
+                            deleteEmptyTask({
+                                myself: myself,
+                                taskId: taskContents.id,
+                                accessToken: accessToken,
+                                setInitialEmptyTaskId: setInitialEmptyTaskId,
+                            });
                         }
                     }}
                 >

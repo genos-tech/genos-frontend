@@ -29,7 +29,7 @@ export const sendUpdatedSpecificTask = async (
         const api = authApi(accessToken);
 
         if (api) {
-            const res = await api.put("/task/updateTask/", {
+            const res = await api.put("/task/", {
                 task_id: updatedTask.id,
                 team: myself.teamId,
                 project: updatedTask.project.projectId,

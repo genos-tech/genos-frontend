@@ -39,23 +39,25 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
     } = props;
 
     if (taskContents.title === "") {
-        console.error("Target title is required !!!");
         setTitleError("Task title is required !!!");
         setTitleErrorOpen(true);
     } else if (taskContents.project === null) {
-        console.error("Target project is required !!!");
         setTitleError("Target project is required !!!");
+        setTitleErrorOpen(true);
+    } else if (taskContents.id === undefined) {
+        setTitleError("Target task id is required !!!");
         setTitleErrorOpen(true);
     } else {
         try {
-            const taskCreateResponse = await fetch(`${base_url}/task/create/`, {
-                method: "POST",
+            const taskCreateResponse = await fetch(`${base_url}/task/`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
                 },
                 body: JSON.stringify({
                     team: myself.teamId,
+                    task_id: taskContents.id,
                     project: taskContents.project.projectId,
                     assignee: taskContents.assignee.userId,
                     reporter: taskContents.reporter.userId,
@@ -89,6 +91,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     thread_id: currentThreadChat?.threadId || null,
                     parent_task_id: taskContents.parentTaskId,
                     root_task_id: taskContents.rootTaskId,
+                    is_init_table: false,
                 }),
             });
 

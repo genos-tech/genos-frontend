@@ -324,10 +324,6 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                             <FilePreviewButton key={"filePreviewButton"} />
                             <FileRenameButton key={"fileRenameButton"} />
                             <TableCellMergeButton key={"tableCellMergeButton"} />
-                            {/* <CustomEmojiToolbar
-                                    key={"customButton"}
-                                    setShowEmojiPicker={setShowEmojiPicker}
-                                /> */}
                         </FormattingToolbar>
                     )}
                 />
