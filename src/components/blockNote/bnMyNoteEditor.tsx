@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import { useState, useEffect } from "react";
-import { Box } from "@mui/joy";
+import { Box, Tooltip, ModalDialog, Modal, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
@@ -46,6 +46,7 @@ import {
     PartialBlock,
 } from "@blocknote/core";
 import { RiAlertFill } from "react-icons/ri";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
@@ -55,6 +56,8 @@ import { ChatProps } from "../../types/chat";
 import "../../App.css";
 import { MyNoteProps } from "../../types/notes";
 import { useAuth } from "../../context/AuthContext";
+import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { downloadFile } from "../../utils/downloadUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -227,6 +230,23 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         }
     }, [selectedEmoji]);
 
+    // State for modal
+    const [opened, setOpened] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+    // Custom click handler
+    const handleImageClick = (src: string) => {
+        setSelectedImage(src);
+        setOpened(true);
+    };
+
+    const handleDownload = async (
+        url: string,
+        filename = `image-${getCurrentTimestamp()}.png`
+    ) => {
+        await downloadFile(url, filename);
+    };
+
     return (
         <Box sx={{ position: "relative" }} className={bnBoxClassName}>
             <BlockNoteView
@@ -237,6 +257,12 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 theme={mode === "dark" ? "dark" : "light"}
                 formattingToolbar={false}
                 data-changing-font-demo // custom font
+                onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.tagName === "IMG") {
+                        handleImageClick((target as HTMLImageElement).src);
+                    }
+                }}
                 onKeyDown={(event) => {
                     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                         if (editor.document.length > 1) {
@@ -351,6 +377,31 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     }
                 />
             </BlockNoteView>
+
+            <Modal sx={{ zIndex: 10010 }} open={opened} onClose={() => setOpened(false)}>
+                <ModalDialog>
+                    {selectedImage ? (
+                        <Box>
+                            <img src={selectedImage} alt="preview" />
+                            <Tooltip
+                                placement="top"
+                                title="Download"
+                                sx={{ zIndex: 10010 }}
+                                component="div"
+                            >
+                                <IconButton
+                                    onClick={() => handleDownload(selectedImage)}
+                                    color="neutral"
+                                    variant="solid"
+                                    sx={{ position: "absolute", top: "10px", right: "10px" }}
+                                >
+                                    <DownloadIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </Box>
+                    ) : null}
+                </ModalDialog>
+            </Modal>
         </Box>
     );
 };

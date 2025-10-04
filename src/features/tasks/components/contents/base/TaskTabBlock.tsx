@@ -36,6 +36,7 @@ import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 import { TaskNoteMetaProps, TaskNoteProps } from "../../../../../types/notes";
+import { getCurrentTimestamp } from "../../../../../utils/dateUtils";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -649,7 +650,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         <div
                                             onClick={(e) => {
                                                 e.preventDefault();
-                                                downloadFile(file.url, file.name);
+                                                downloadFile(
+                                                    file.url,
+                                                    `file.name-${getCurrentTimestamp()}`
+                                                );
                                             }}
                                             style={{
                                                 textDecoration: "none",

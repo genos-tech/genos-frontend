@@ -94,7 +94,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     const handleDownload = async (
         url: string,
-        filename = `image-${getCurrentTimestamp()}.png`
+        filename = `chat-message-image-${getCurrentTimestamp()}.png`
     ) => {
         await downloadFile(url, filename);
     };
