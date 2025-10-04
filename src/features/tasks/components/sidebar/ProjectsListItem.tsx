@@ -160,10 +160,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 <Typography
                                                     noWrap
                                                     sx={{
-                                                        color:
-                                                            projectId === currentProject?.projectId
-                                                                ? "white"
-                                                                : "neutral-500",
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
                                                         whiteSpace: "nowrap",

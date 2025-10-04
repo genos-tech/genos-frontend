@@ -10,7 +10,6 @@ import { useColorScheme } from "@mui/joy/styles";
 import { ProjectProps, TagListProps, TaskMetaTreeNode } from "../../../../../types/tasks";
 import { Toggler } from "../common";
 import { TaskTreeToggler } from "./TaskTreeToggler";
-import { getCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { areObjectsEqual } from "../../../../../utils/objectHandler";
 
 type OngoingsListItemProps = {
@@ -174,7 +173,6 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
 
                 setIsTaskPreviewVisible(true);
 
-                // No need to pass the tags here since it'll be updated in the other components.
                 setCurrentProject({ ...node.project, projectTags: projectTags });
                 setCurrentPreviewTaskId(node.taskId);
             }}

@@ -22,6 +22,7 @@ import {
 } from "../types/chat";
 import { InboxItemProps } from "../types/common";
 import { addInboxItem } from "../features/admin/services/addInboxItem";
+import { ProjectProps } from "../types/tasks";
 
 function isInArray<T>(item: T, array: T[]): boolean {
     return array.includes(item);
@@ -43,8 +44,10 @@ type wsHookProps = {
     isLoading: boolean;
     funcSetActivityMessages: () => void;
     funcSetInboxItems: () => void;
+    currentProject: ProjectProps | null;
+    currentPreviewTaskId: number;
+    setIsTaskUpdatedBySomeone: (value: boolean) => void;
 };
-
 export const wsHook = (props: wsHookProps) => {
     const {
         socket,
@@ -62,6 +65,9 @@ export const wsHook = (props: wsHookProps) => {
         isLoading,
         funcSetActivityMessages,
         funcSetInboxItems,
+        currentProject,
+        currentPreviewTaskId,
+        setIsTaskUpdatedBySomeone,
     } = props;
 
     const updateAllChat = async (currentChat: ChatProps, newChatMessage: MessageProps) => {
@@ -612,6 +618,14 @@ export const wsHook = (props: wsHookProps) => {
                                     fromMe = true;
                                 } else {
                                     console.log("PM from someone");
+                                }
+
+                                if (
+                                    currentProject &&
+                                    currentProject.projectId === newMessage.project?.projectId &&
+                                    currentPreviewTaskId === newMessage.taskId
+                                ) {
+                                    setIsTaskUpdatedBySomeone(true);
                                 }
 
                                 // Add the new message into the indexedDB.

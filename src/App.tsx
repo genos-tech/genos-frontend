@@ -453,6 +453,7 @@ export const App = () => {
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
     const [isNewTagCreated, setIsNewTagCreated] = useState(false);
     const [isTaskUpdated, setIsTaskUpdated] = useState(false);
+    const [isTaskUpdatedBySomeone, setIsTaskUpdatedBySomeone] = useState(false);
     const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
@@ -463,10 +464,6 @@ export const App = () => {
     // Task sidebar related
     const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
     const [currentTaskChain, setCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
-    const [newlyCreatedTasks, setNewlyCreatedTasks] = useState<TaskProps[]>([]);
-    const handleCreateNewTask = async (parentNoteId: number | null) => {
-        console.log("create new task");
-    };
     const getTaskMeta = async () => {
         const loadedTaskMeta: TaskMetaProps[] = await loadTaskMeta(myself, accessToken);
         if (loadedTaskMeta.length > 0) {
@@ -546,7 +543,7 @@ export const App = () => {
                 setIsTaskPreviewVisible(true);
 
                 // Add a new ongoing task
-                if (isNewTaskCreated === true) {
+                if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
                     setOnGoingTasks((prev) => [
                         ...prev,
                         {
@@ -573,9 +570,10 @@ export const App = () => {
                     ]);
                 }
                 setIsNewTaskCreated(false);
+                setIsTaskUpdatedBySomeone(false);
             })();
         }
-    }, [currentPreviewTaskId, isNewTaskCreated]);
+    }, [currentPreviewTaskId, isNewTaskCreated, isTaskUpdatedBySomeone]);
 
     useEffect(() => {
         // Update an ongoing task
@@ -1035,6 +1033,9 @@ export const App = () => {
         isLoading: isLoading,
         funcSetActivityMessages: funcSetActivityMessages,
         funcSetInboxItems: funcSetInboxItems,
+        currentProject: currentProject,
+        currentPreviewTaskId: currentPreviewTaskId,
+        setIsTaskUpdatedBySomeone: setIsTaskUpdatedBySomeone,
     });
 
     useEffect(() => {
