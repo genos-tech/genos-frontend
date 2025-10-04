@@ -237,208 +237,222 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                             padding: "10px",
                         }}
                     >
-                        Not Found
+                        Not Found Any Chat Note
                     </IconButton>
                 </Box>
             )}
 
             {!(chatNoteMeta.length === 0 || currentChatNote === null) &&
                 chatNoteMeta.length > 0 && (
-                <Stack direction={"column"} sx={{ width: "100%" }}>
-                    {body && (
-                        <>
-                            {currentNoteType !== 0 && (
-                                <Stack direction={"column"} sx={{ width: "100%" }}>
-                                    {/* Note Header */}
-                                    <Stack
-                                        direction="row"
-                                        alignItems="center"
-                                        justifyContent="space-between"
-                                        sx={{
-                                            width: "100%",
-                                            height: "30px",
-                                            mt: isInChatPage === true ? "0px" : "10px",
-                                            mb: "5px",
-                                        }}
-                                    >
-                                        {isInChatPage === true && currentChatNote && (
-                                            <Box
-                                                sx={{
-                                                    ml: "5px",
-                                                    mb: "10px",
-                                                    width: "40%",
-                                                }}
-                                            >
-                                                <ACChatChildNotes
-                                                    myself={myself}
-                                                    noteId={currentChatNote.noteId}
-                                                    openSearchBox={openSearchBox}
-                                                    setOpenSearchBox={setOpenSearchBox}
-                                                    setCurrentChatNote={setCurrentChatNote}
-                                                />
-                                            </Box>
-                                        )}
-                                        {isInChatPage === false && (
-                                            <>
-                                                <Breadcrumbs
-                                                    separator="›"
-                                                    aria-label="breadcrumbs"
+                    <Stack direction={"column"} sx={{ width: "100%" }}>
+                        {body && (
+                            <>
+                                {currentNoteType !== 0 && (
+                                    <Stack direction={"column"} sx={{ width: "100%" }}>
+                                        {/* Note Header */}
+                                        <Stack
+                                            direction="row"
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                            sx={{
+                                                width: "100%",
+                                                height: "30px",
+                                                mt: isInChatPage === true ? "0px" : "10px",
+                                                mb: "5px",
+                                            }}
+                                        >
+                                            {isInChatPage === true && currentChatNote && (
+                                                <Box
+                                                    sx={{
+                                                        ml: "5px",
+                                                        mb: "10px",
+                                                        width: "40%",
+                                                    }}
                                                 >
-                                                    <IconButton
-                                                        component="button"
-                                                        variant="soft"
-                                                        color="warning"
-                                                        sx={{
-                                                            fontSize: "14px",
-                                                        }}
+                                                    <ACChatChildNotes
+                                                        myself={myself}
+                                                        noteId={currentChatNote.noteId}
+                                                        openSearchBox={openSearchBox}
+                                                        setOpenSearchBox={setOpenSearchBox}
+                                                        setCurrentChatNote={setCurrentChatNote}
+                                                    />
+                                                </Box>
+                                            )}
+                                            {isInChatPage === false && (
+                                                <>
+                                                    <Breadcrumbs
+                                                        separator="›"
+                                                        aria-label="breadcrumbs"
                                                     >
-                                                        <QuestionAnswerRoundedIcon
-                                                            sx={{ fontSize: "20px" }}
-                                                        />
-                                                        Chat Notes
-                                                    </IconButton>
-                                                    {currentChatNoteChain &&
-                                                        currentChatNoteChain.map((node) => (
-                                                            <Typography
-                                                                level="title-sm"
-                                                                component="button"
-                                                                onClick={() => {
+                                                        <IconButton
+                                                            component="button"
+                                                            variant="soft"
+                                                            color="warning"
+                                                            sx={{
+                                                                fontSize: "14px",
+                                                            }}
+                                                        >
+                                                            <QuestionAnswerRoundedIcon
+                                                                sx={{ fontSize: "20px" }}
+                                                            />
+                                                            Chat Notes
+                                                        </IconButton>
+                                                        {currentChatNoteChain &&
+                                                            currentChatNoteChain.map((node) => (
+                                                                <Typography
+                                                                    level="title-sm"
+                                                                    component="button"
+                                                                    onClick={() => {
                                                                         loadNote(
                                                                             3,
                                                                             node.noteId,
                                                                             -1
                                                                         );
-                                                                }}
-                                                                sx={{
-                                                                    background: "none",
-                                                                    border: "none",
-                                                                    padding: 0,
-                                                                    cursor: "pointer",
-                                                                    color: "#646CFF",
-                                                                    textAlign: "left",
-                                                                    fontWeight: "bold",
-                                                                }}
-                                                            >
-                                                                {node.title.length > 19
-                                                                    ? `${node.title.slice(
-                                                                          0,
-                                                                          19
-                                                                      )}...`
-                                                                    : node.title}
-                                                            </Typography>
-                                                        ))}
-                                                </Breadcrumbs>
-                                            </>
-                                        )}
-
-                                        <Stack direction={"row"}>
-                                            {isInChatPage && currentChatNote && (
-                                                <IconButton
-                                                    component="button"
-                                                    variant="plain"
-                                                    color="neutral"
-                                                    sx={{
-                                                        fontSize: "14px",
-                                                        paddingRight: "10px",
-                                                        height: "5px",
-                                                    }}
-                                                    onClick={() => {
-                                                        handleCreateNewChatNote(
-                                                            currentChatNote.noteId,
-                                                            currentChatNote.chatType,
-                                                            currentChatNote.chatId,
-                                                            currentChatNote.isThread,
-                                                            currentChatNote.threadId
-                                                        );
-                                                    }}
-                                                >
-                                                    <AddIcon />
-                                                    Child Note
-                                                </IconButton>
+                                                                    }}
+                                                                    sx={{
+                                                                        background: "none",
+                                                                        border: "none",
+                                                                        padding: 0,
+                                                                        cursor: "pointer",
+                                                                        color: "#646CFF",
+                                                                        textAlign: "left",
+                                                                        fontWeight: "bold",
+                                                                    }}
+                                                                >
+                                                                    {node.title.length > 19
+                                                                        ? `${node.title.slice(
+                                                                              0,
+                                                                              19
+                                                                          )}...`
+                                                                        : node.title}
+                                                                </Typography>
+                                                            ))}
+                                                    </Breadcrumbs>
+                                                </>
                                             )}
 
-                                            {isInChatPage && (
-                                                <Tooltip title="Open in Notes">
+                                            <Stack direction={"row"}>
+                                                {isInChatPage && currentChatNote && (
                                                     <IconButton
-                                                        size="sm"
-                                                        color="neutral"
+                                                        component="button"
                                                         variant="plain"
-                                                        sx={{ mb: "5px" }}
-                                                        onClick={() => {
-                                                            setOpeningService(3);
+                                                        color="neutral"
+                                                        sx={{
+                                                            fontSize: "14px",
+                                                            paddingRight: "10px",
+                                                            height: "5px",
                                                         }}
-                                                    >
-                                                        <OpenInNewIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
-
-                                            <Dropdown>
-                                                <MenuButton
-                                                    slots={{ root: IconButton }}
-                                                    slotProps={{
-                                                        root: { color: "neutral" },
-                                                    }}
-                                                    sx={{ mb: "5px" }}
-                                                >
-                                                    <MoreVert />
-                                                </MenuButton>
-                                                <Menu size="sm">
-                                                    <MenuItem
                                                         onClick={() => {
-                                                            if (currentChatNote) {
-                                                                handleCreateNewChatNote(
-                                                                    currentChatNote.noteId,
-                                                                    currentChatNote.chatType,
-                                                                    currentChatNote.chatId,
-                                                                    currentChatNote.isThread,
-                                                                    currentChatNote.threadId
-                                                                );
-                                                            } else {
-                                                                console.error(
-                                                                    "Can't parent note ID to create a child note."
-                                                                );
-                                                            }
+                                                            handleCreateNewChatNote(
+                                                                currentChatNote.noteId,
+                                                                currentChatNote.chatType,
+                                                                currentChatNote.chatId,
+                                                                currentChatNote.isThread,
+                                                                currentChatNote.threadId
+                                                            );
                                                         }}
                                                     >
                                                         <AddIcon />
                                                         Child Note
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            setOpenDeleteNote(true);
-                                                        }}
-                                                        sx={{
-                                                            color: "red",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                    >
-                                                        <DeleteIcon sx={{ color: "red" }} />
-                                                        Delete Note
-                                                    </MenuItem>
-                                                </Menu>
-                                            </Dropdown>
-
-                                            {isInChatPage === true && (
-                                                <Tooltip title="Close Notes">
-                                                    <IconButton
-                                                        size="sm"
-                                                        color="neutral"
-                                                        variant="plain"
-                                                        sx={{ mb: "5px" }}
-                                                        onClick={() => {
-                                                            setIsChatNoteVisible(false);
-
-                                                            // Open main chat pane
-                                                            if (setIsMainChatVisible) {
-                                                                setIsMainChatVisible(true);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <CancelIcon />
                                                     </IconButton>
-                                                </Tooltip>
-                                            )}
+                                                )}
+
+                                                {isInChatPage && (
+                                                    <Tooltip title="Open in Notes">
+                                                        <IconButton
+                                                            size="sm"
+                                                            color="neutral"
+                                                            variant="plain"
+                                                            sx={{ mb: "5px" }}
+                                                            onClick={() => {
+                                                                setOpeningService(3);
+                                                            }}
+                                                        >
+                                                            <OpenInNewIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+
+                                                <Dropdown>
+                                                    <MenuButton
+                                                        slots={{ root: IconButton }}
+                                                        slotProps={{
+                                                            root: { color: "neutral" },
+                                                        }}
+                                                        sx={{ mb: "5px" }}
+                                                    >
+                                                        <MoreVert />
+                                                    </MenuButton>
+                                                    <Menu size="sm">
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                if (currentChatNote) {
+                                                                    handleCreateNewChatNote(
+                                                                        currentChatNote.noteId,
+                                                                        currentChatNote.chatType,
+                                                                        currentChatNote.chatId,
+                                                                        currentChatNote.isThread,
+                                                                        currentChatNote.threadId
+                                                                    );
+                                                                } else {
+                                                                    console.error(
+                                                                        "Can't parent note ID to create a child note."
+                                                                    );
+                                                                }
+                                                            }}
+                                                        >
+                                                            <AddIcon />
+                                                            Child Note
+                                                        </MenuItem>
+                                                        <MenuItem
+                                                            onClick={() => {
+                                                                setOpenDeleteNote(true);
+                                                            }}
+                                                            sx={{
+                                                                color: "red",
+                                                                fontWeight: "bold",
+                                                            }}
+                                                        >
+                                                            <DeleteIcon sx={{ color: "red" }} />
+                                                            Delete Note
+                                                        </MenuItem>
+                                                    </Menu>
+                                                </Dropdown>
+
+                                                {isInChatPage === true && (
+                                                    <Tooltip title="Close Notes">
+                                                        <IconButton
+                                                            size="sm"
+                                                            color="neutral"
+                                                            variant="plain"
+                                                            sx={{ mb: "5px" }}
+                                                            onClick={() => {
+                                                                setIsChatNoteVisible(false);
+
+                                                                // Open main chat pane
+                                                                if (setIsMainChatVisible) {
+                                                                    setIsMainChatVisible(true);
+                                                                }
+                                                            }}
+                                                        >
+                                                            <CancelIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+
+                                                {currentChatNote && (
+                                                    <ModalDeleteChatNote
+                                                        myself={myself}
+                                                        openDeleteNote={openDeleteNote}
+                                                        setOpenDeleteNote={setOpenDeleteNote}
+                                                        chatNoteMeta={chatNoteMeta}
+                                                        setChatNoteMeta={setChatNoteMeta}
+                                                        currentChatNote={currentChatNote}
+                                                        handleCloseTab={handleCloseTab}
+                                                        currentTabIndex={selectedTabIndex}
+                                                    />
+                                                )}
+                                            </Stack>
 
                                             {currentChatNote && (
                                                 <ModalDeleteChatNote
@@ -454,201 +468,187 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             )}
                                         </Stack>
 
-                                        {currentChatNote && (
-                                            <ModalDeleteChatNote
-                                                myself={myself}
-                                                openDeleteNote={openDeleteNote}
-                                                setOpenDeleteNote={setOpenDeleteNote}
-                                                chatNoteMeta={chatNoteMeta}
-                                                setChatNoteMeta={setChatNoteMeta}
-                                                currentChatNote={currentChatNote}
-                                                handleCloseTab={handleCloseTab}
-                                                currentTabIndex={selectedTabIndex}
-                                            />
-                                        )}
-                                    </Stack>
-
-                                    <Tabs
-                                        key={`tabs-${tabItems.length}-${selectedTabIndex}`}
-                                        value={selectedTabIndex}
-                                        onChange={(_, val) => {
-                                            loadNote(
-                                                tabItems[Number(val)].noteType,
-                                                tabItems[Number(val)].noteId,
-                                                Number(val)
-                                            );
-                                        }}
-                                        aria-label="Scrollable tabs"
-                                        sx={{ width: "100%" }}
-                                    >
-                                        <TabList
-                                            sx={{
-                                                px: "5px",
-                                                overflowX: "auto",
-                                                scrollSnapType: "x mandatory",
-                                                "&::-webkit-scrollbar": { display: "none" },
+                                        <Tabs
+                                            key={`tabs-${tabItems.length}-${selectedTabIndex}`}
+                                            value={selectedTabIndex}
+                                            onChange={(_, val) => {
+                                                loadNote(
+                                                    tabItems[Number(val)].noteType,
+                                                    tabItems[Number(val)].noteId,
+                                                    Number(val)
+                                                );
                                             }}
+                                            aria-label="Scrollable tabs"
+                                            sx={{ width: "100%" }}
                                         >
-                                            {tabItems.map((tab, index) => (
-                                                <Box key={index}>
-                                                    <Tab
-                                                        key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
-                                                        sx={{
-                                                            chat: "3px",
-                                                            flex: "none",
-                                                            scrollSnapAlign: "start",
-                                                            borderRadius: "5px",
-                                                        }}
-                                                        variant="soft"
-                                                    >
-                                                        <Box
+                                            <TabList
+                                                sx={{
+                                                    px: "5px",
+                                                    overflowX: "auto",
+                                                    scrollSnapType: "x mandatory",
+                                                    "&::-webkit-scrollbar": { display: "none" },
+                                                }}
+                                            >
+                                                {tabItems.map((tab, index) => (
+                                                    <Box key={index}>
+                                                        <Tab
+                                                            key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
                                                             sx={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                height: "20px",
-                                                                maxWidth: "200px",
+                                                                chat: "3px",
+                                                                flex: "none",
+                                                                scrollSnapAlign: "start",
+                                                                borderRadius: "5px",
                                                             }}
+                                                            variant="soft"
                                                         >
-                                                            {tab.title.length > 19
+                                                            <Box
+                                                                sx={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    height: "20px",
+                                                                    maxWidth: "200px",
+                                                                }}
+                                                            >
+                                                                {tab.title.length > 19
                                                                     ? `${tab.title.slice(
                                                                           0,
                                                                           19
                                                                       )}...`
-                                                                : tab.title}
+                                                                    : tab.title}
 
-                                                            {tabItems.length > 1 && (
-                                                                <IconButton
-                                                                    component="span"
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    color="neutral"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleCloseTab(
-                                                                            index,
-                                                                            Number(tab.noteId)
-                                                                        );
-                                                                    }}
-                                                                    sx={{ ml: 1 }}
-                                                                >
-                                                                    <CloseIcon />
-                                                                </IconButton>
-                                                            )}
-                                                        </Box>
-                                                    </Tab>
-                                                </Box>
-                                            ))}
-                                        </TabList>
+                                                                {tabItems.length > 1 && (
+                                                                    <IconButton
+                                                                        component="span"
+                                                                        size="sm"
+                                                                        variant="plain"
+                                                                        color="neutral"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleCloseTab(
+                                                                                index,
+                                                                                Number(tab.noteId)
+                                                                            );
+                                                                        }}
+                                                                        sx={{ ml: 1 }}
+                                                                    >
+                                                                        <CloseIcon />
+                                                                    </IconButton>
+                                                                )}
+                                                            </Box>
+                                                        </Tab>
+                                                    </Box>
+                                                ))}
+                                            </TabList>
 
-                                        {tabItems.map((tabNote, index) => (
-                                            <TabPanel
-                                                key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                                value={index}
-                                                sx={{
-                                                    paddingX: "5px",
-                                                    paddingTop: "0px",
-                                                    paddingBottom: "5px",
-                                                }}
-                                            >
-                                                <FormControl
-                                                    required
+                                            {tabItems.map((tabNote, index) => (
+                                                <TabPanel
+                                                    key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                                    value={index}
                                                     sx={{
-                                                        mt: "10px",
-                                                        ml: "10px",
-                                                        justifyContent: "center",
-                                                        position: "absolute",
-                                                        zIndex: 100,
+                                                        paddingX: "5px",
+                                                        paddingTop: "0px",
+                                                        paddingBottom: "5px",
                                                     }}
                                                 >
-                                                    <Input
-                                                        startDecorator={<NoteAltIcon />}
-                                                        key={"currentChatNoteTitle"}
-                                                        variant="soft"
-                                                        placeholder="Note Title"
-                                                        value={currentChatNoteTitle}
-                                                        onChange={(e) => {
-                                                            setCurrentChatNoteTitle(
-                                                                e.target.value
-                                                            );
-                                                        }}
-                                                        slotProps={{
-                                                            input: {
-                                                                ref: titleInputRef,
-                                                                onKeyDown: (
-                                                                    e: React.KeyboardEvent<HTMLInputElement>
-                                                                ) => {
-                                                                    if (e.key === "Enter") {
-                                                                        e.preventDefault(); // stop form submission if inside <form>
-                                                                        titleInputRef.current?.blur();
-                                                                    }
-                                                                },
-                                                            },
-                                                        }}
-                                                        onBlur={() => {
-                                                            setNoteUpdated(true);
-                                                        }}
+                                                    <FormControl
+                                                        required
                                                         sx={{
-                                                            fontSize: "22px",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                    />
-                                                </FormControl>
-                                                {noteBodySaved === true && (
-                                                    <Box
-                                                        sx={{
+                                                            mt: "10px",
+                                                            ml: "10px",
+                                                            justifyContent: "center",
                                                             position: "absolute",
-                                                            mt: "12px",
-                                                            ml: "335px",
                                                             zIndex: 100,
                                                         }}
                                                     >
-                                                        <Button
-                                                            variant="outlined"
-                                                            color="neutral"
-                                                            size="sm"
-                                                            startDecorator={
-                                                                <CheckIcon
-                                                                    sx={{ fontSize: "15px" }}
-                                                                />
-                                                            }
+                                                        <Input
+                                                            startDecorator={<NoteAltIcon />}
+                                                            key={"currentChatNoteTitle"}
+                                                            variant="soft"
+                                                            placeholder="Note Title"
+                                                            value={currentChatNoteTitle}
+                                                            onChange={(e) => {
+                                                                setCurrentChatNoteTitle(
+                                                                    e.target.value
+                                                                );
+                                                            }}
+                                                            slotProps={{
+                                                                input: {
+                                                                    ref: titleInputRef,
+                                                                    onKeyDown: (
+                                                                        e: React.KeyboardEvent<HTMLInputElement>
+                                                                    ) => {
+                                                                        if (e.key === "Enter") {
+                                                                            e.preventDefault(); // stop form submission if inside <form>
+                                                                            titleInputRef.current?.blur();
+                                                                        }
+                                                                    },
+                                                                },
+                                                            }}
+                                                            onBlur={() => {
+                                                                setNoteUpdated(true);
+                                                            }}
+                                                            sx={{
+                                                                fontSize: "22px",
+                                                                fontWeight: "bold",
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                    {noteBodySaved === true && (
+                                                        <Box
+                                                            sx={{
+                                                                position: "absolute",
+                                                                mt: "12px",
+                                                                ml: "335px",
+                                                                zIndex: 100,
+                                                            }}
                                                         >
-                                                            Saved
-                                                        </Button>
-                                                    </Box>
-                                                )}
-                                                {currentChatNote && (
-                                                    <>
-                                                        <BnChatNoteEditor
+                                                            <Button
+                                                                variant="outlined"
+                                                                color="neutral"
+                                                                size="sm"
+                                                                startDecorator={
+                                                                    <CheckIcon
+                                                                        sx={{ fontSize: "15px" }}
+                                                                    />
+                                                                }
+                                                            >
+                                                                Saved
+                                                            </Button>
+                                                        </Box>
+                                                    )}
+                                                    {currentChatNote && (
+                                                        <>
+                                                            <BnChatNoteEditor
                                                                 teamMemberProfiles={
                                                                     teamMemberProfiles
                                                                 }
-                                                            myself={myself}
-                                                            setMyself={setMyself}
-                                                            socket={socket}
-                                                            teamMembers={teamMembers}
-                                                            currentChatNote={currentChatNote}
-                                                            body={body}
-                                                            setBody={setBody}
+                                                                myself={myself}
+                                                                setMyself={setMyself}
+                                                                socket={socket}
+                                                                teamMembers={teamMembers}
+                                                                currentChatNote={currentChatNote}
+                                                                body={body}
+                                                                setBody={setBody}
                                                                 setNoteBodyEdited={
                                                                     setNoteBodyEdited
                                                                 }
-                                                            setNoteBodySaved={setNoteBodySaved}
-                                                            setCurrentChat={setCurrentChat}
+                                                                setNoteBodySaved={setNoteBodySaved}
+                                                                setCurrentChat={setCurrentChat}
                                                                 setOpeningService={
                                                                     setOpeningService
                                                                 }
-                                                        />
-                                                    </>
-                                                )}
-                                            </TabPanel>
-                                        ))}
-                                    </Tabs>
-                                </Stack>
-                            )}
-                        </>
-                    )}
-                </Stack>
-            )}
+                                                            />
+                                                        </>
+                                                    )}
+                                                </TabPanel>
+                                            ))}
+                                        </Tabs>
+                                    </Stack>
+                                )}
+                            </>
+                        )}
+                    </Stack>
+                )}
         </>
     );
 };

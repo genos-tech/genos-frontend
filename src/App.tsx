@@ -698,31 +698,13 @@ export const App = () => {
         const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
         const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
         const chatNoteId: string | null = localStorage.getItem("lastOpenChatNoteId");
-        if (noteType) {
+        if (noteType && myNoteId) {
             if (Number(noteType) === 1 && myNoteId) {
-                const note: MyNoteProps = await getData({
-                    storeName: STORES.PERSONAL_NOTES,
-                    key: Number(myNoteId),
-                });
-                if (note) {
-                    setCurrentMyNote(note);
-                }
+                await loadNote(1, Number(myNoteId), -1);
             } else if (Number(noteType) === 2 && taskNoteId) {
-                const note: TaskNoteProps = await getData({
-                    storeName: STORES.TASK_NOTES,
-                    key: Number(taskNoteId),
-                });
-                if (note) {
-                    setCurrentTaskNote(note);
-                }
+                await loadNote(2, Number(taskNoteId), -1);
             } else if (Number(noteType) === 3 && chatNoteId) {
-                const note: ChatNoteProps = await getData({
-                    storeName: STORES.CHAT_NOTES,
-                    key: Number(chatNoteId),
-                });
-                if (note) {
-                    setCurrentChatNote(note);
-                }
+                await loadNote(3, Number(chatNoteId), -1);
             }
         }
     };
@@ -1101,7 +1083,10 @@ export const App = () => {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             setTmpTabItems([]);
             setTabItems(tmpTabItems);
-            popInitialNote();
+
+            if (socketInstance) {
+                popInitialNote();
+            }
         }
     }, [openingService]);
 
@@ -1110,7 +1095,6 @@ export const App = () => {
         funcSetInboxItems();
         funcSetAllChats();
         funcSetActivityMessages();
-        popInitialNote();
     }, []);
 
     useEffect(() => {
@@ -1186,6 +1170,9 @@ export const App = () => {
 
     useEffect(() => {
         if (socketInstance) {
+            // Pop the initial note after the socket is connected.
+            popInitialNote();
+
             socketInstance.emit("join", {
                 joiningCGId: -1, // dm_id or gm_id
                 joiningCGName: myself.userName, // dm_name or gm_name

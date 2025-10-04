@@ -326,48 +326,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     //////////////////////////
     // Common
     //////////////////////////
-    const outerRenderToggleListItemButton = (
-        typo: string,
-        open: boolean,
-        setOpen: (value: boolean) => void,
-        noteType: number
-    ) => (
-        <ListItemButton
-            selected={currentNoteType === noteType ? true : false}
-            variant="outlined"
-            color="primary"
-            onClick={() => {
-                setOpen(!open);
-                setCurrentNoteType(noteType);
-                localStorage.setItem("lastOpenNoteType", String(noteType));
-            }}
-        >
-            {noteType === 1 && <WindowIcon />}
-            {noteType === 2 && <AssignmentRoundedIcon />}
-            {noteType === 3 && <QuestionAnswerRoundedIcon />}
-            {noteType === 4 && <ShareIcon />}
-            <ListItemContent>
-                <Typography
-                    level="title-sm"
-                    sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                >
-                    {typo}
-                </Typography>
-            </ListItemContent>
-            <KeyboardArrowDownIcon
-                sx={[
-                    open
-                        ? {
-                              transform: "rotate(180deg)",
-                          }
-                        : {
-                              transform: "none",
-                          },
-                ]}
-            />
-        </ListItemButton>
-    );
-
     const createChildNoteList = (node: any) => (
         <List>
             <Box key={`my-note-box-${node.noteId}-${tsMyNoteTreeUpdated}`}>
@@ -402,6 +360,48 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         </List>
     );
 
+    const outerRenderToggleListItemButton = (
+        taskTypeName: string,
+        open: boolean,
+        setOpen: (value: boolean) => void,
+        noteType: number
+    ) => (
+        <ListItemButton
+            selected={currentNoteType === noteType ? true : false}
+            variant="outlined"
+            color="primary"
+            onClick={() => {
+                setOpen(!open);
+                setCurrentNoteType(noteType);
+                localStorage.setItem("lastOpenNoteType", String(noteType));
+            }}
+        >
+            {noteType === 1 && <WindowIcon />}
+            {noteType === 2 && <AssignmentRoundedIcon />}
+            {noteType === 3 && <QuestionAnswerRoundedIcon />}
+            {noteType === 4 && <ShareIcon />}
+            <ListItemContent>
+                <Typography
+                    level="title-sm"
+                    sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                    {taskTypeName}
+                </Typography>
+            </ListItemContent>
+            <KeyboardArrowDownIcon
+                sx={[
+                    open
+                        ? {
+                              transform: "rotate(180deg)",
+                          }
+                        : {
+                              transform: "none",
+                          },
+                ]}
+            />
+        </ListItemButton>
+    );
+
     const innerRenderToggleListItemButton = (
         open: boolean,
         setOpen: (value: boolean) => void,
@@ -426,14 +426,15 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             }
             variant="plain"
             sx={{ my: "1px" }}
-            onClick={() => {
-                setOpen(!open);
-                setCurrentNoteType(noteType);
-                localStorage.setItem("lastOpenNoteType", String(noteType));
-                loadNote(noteType, node.noteId, -1);
-            }}
         >
-            <ListItemContent>
+            <ListItemContent
+                onClick={() => {
+                    setOpen(!open);
+                    setCurrentNoteType(noteType);
+                    localStorage.setItem("lastOpenNoteType", String(noteType));
+                    loadNote(noteType, node.noteId, -1);
+                }}
+            >
                 <Typography
                     level="title-sm"
                     sx={{
@@ -447,6 +448,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 </Typography>
             </ListItemContent>
             <KeyboardArrowDownIcon
+                onClick={() => {
+                    setOpen(!open);
+                }}
                 sx={[
                     open
                         ? {
@@ -530,7 +534,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
                     <ListItem nested>
                         <NoteTreeToggler
-                            defaultExpanded={true}
+                            defaultExpanded={false}
                             renderToggle={({ open, setOpen }) =>
                                 outerRenderToggleListItemButton("My Notes", open, setOpen, 1)
                             }
@@ -541,7 +545,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
                     <ListItem nested>
                         <NoteTreeToggler
-                            defaultExpanded={true}
+                            defaultExpanded={false}
                             renderToggle={({ open, setOpen }) =>
                                 outerRenderToggleListItemButton("Task Notes", open, setOpen, 2)
                             }
@@ -552,7 +556,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
                     <ListItem nested>
                         <NoteTreeToggler
-                            defaultExpanded={true}
+                            defaultExpanded={false}
                             renderToggle={({ open, setOpen }) =>
                                 outerRenderToggleListItemButton("Chat Notes", open, setOpen, 3)
                             }
@@ -563,7 +567,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
                     <ListItem nested>
                         <NoteTreeToggler
-                            defaultExpanded={true}
+                            defaultExpanded={false}
                             renderToggle={({ open, setOpen }) =>
                                 outerRenderToggleListItemButton(
                                     "Shared Notes (TBD)",

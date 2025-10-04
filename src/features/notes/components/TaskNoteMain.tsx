@@ -269,7 +269,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             padding: "10px",
                         }}
                     >
-                        Not Found
+                        Not Found Any Task Note
                     </IconButton>
                 </Box>
             )}
@@ -544,7 +544,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             }}
                                         >
                                             {tabItems.map((tab, index) => (
-                                                <Box>
+                                                <Box
+                                                    key={`tab-box-${tab.noteType}-${tab.noteId}-${tsBody}`}
+                                                >
                                                     <Tab
                                                         key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
                                                         sx={{
