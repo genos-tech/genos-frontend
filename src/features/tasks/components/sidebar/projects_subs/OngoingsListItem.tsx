@@ -1,9 +1,11 @@
+import { alpha } from "@mui/system";
 import { useState, useEffect } from "react";
-import { Box, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import { Box, List, ListItem, ListItemContent, Typography, Chip } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import AddIcon from "@mui/icons-material/Add";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ForwardIcon from "@mui/icons-material/Forward";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectProps, TagListProps, TaskMetaTreeNode } from "../../../../../types/tasks";
 import { Toggler } from "../common";
@@ -40,6 +42,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
         setIsCreatingTask,
         setIsTaskHomeVisible,
     } = props;
+    const { mode } = useColorScheme();
 
     const [tmpCurrentTaskChain, setTmpCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
     const [tmpTaskMetaTree, setTmpTaskMetaTree] = useState<TaskMetaTreeNode[]>(taskMetaTree);
@@ -54,25 +57,15 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
     // Only when `taskMetaTree` has been updated with new contents, refresh the Note Chain.
     // `taskMetaTree` has been always updated without any contents change. Is such case,
     // no need to refresh it since it's the same as the tmp one.
-    const [tsTaskTreeUpdated, setTsTaskTreeUpdated] = useState<string>(getCurrentTimestamp());
     useEffect(() => {
         if (areObjectsEqual(tmpTaskMetaTree, taskMetaTree) === false) {
             setTmpTaskMetaTree(taskMetaTree);
-            // Set the timestamp for the key, but also with the index.
-            setTsTaskTreeUpdated(getCurrentTimestamp());
         }
     }, [taskMetaTree]);
 
-    useEffect(() => {
-        // Init timestamp after 1sec which needs to re-render the tree on the sidebar.
-        setTimeout(() => {
-            setTsTaskTreeUpdated(getCurrentTimestamp());
-        }, 1000); // wait Xms
-    }, []);
-
     const createChildNoteList = (node: any) => (
-        <Box key={`my-note-box-${node.taskId}-${tsTaskTreeUpdated}`}>
-            <ListItem nested key={`my-note-${node.taskId}-${tsTaskTreeUpdated}`}>
+        <Box key={`my-note-box-${node.taskId}`}>
+            <ListItem nested key={`my-note-${node.taskId}`}>
                 <ListItemButton
                     variant="plain"
                     sx={{ ml: "20px", mr: "8px", pl: "20px" }}
@@ -107,9 +100,9 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
     );
 
     const renderTaskTree = (node: TaskMetaTreeNode) => (
-        <Box key={`my-note-box-${node.taskId}-${tsTaskTreeUpdated}`}>
+        <Box key={`my-note-box-${node.taskId}`}>
             {tmpCurrentTaskChain && (
-                <ListItem nested key={`my-note-${node.taskId}-${tsTaskTreeUpdated}`}>
+                <ListItem nested key={`my-note-${node.taskId}`}>
                     <TaskTreeToggler
                         renderToggle={({ open, setOpen }) =>
                             innerRenderToggleListItemButton(open, setOpen, node)
@@ -186,10 +179,28 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                 setCurrentPreviewTaskId(node.taskId);
             }}
         >
+            <Chip
+                key={`status-chip-${node.taskId}`} // pass the key directly
+                variant="soft"
+                sx={{
+                    backgroundColor: node.status.color
+                        ? alpha(node.status.color, mode === "dark" ? 0.5 : 0.75)
+                        : "transparent",
+                    color: node.status.textColor,
+                    fontWeight: "bold",
+                    borderRadius: "5px",
+                    marginX: "-10px",
+                }}
+                size="sm"
+            >
+                {`${node.status.status}`}
+            </Chip>
             <ListItemContent>
                 <Typography
+                    noWrap
                     level="title-sm"
                     sx={{
+                        ml: "5px",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",

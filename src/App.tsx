@@ -610,6 +610,7 @@ export const App = () => {
                         : task
                 )
             );
+            getTaskMeta();
             setIsTaskUpdated(false);
         }
     }, [isTaskUpdated, currentPreviewTask]);
