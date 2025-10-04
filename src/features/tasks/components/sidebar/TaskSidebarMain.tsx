@@ -85,8 +85,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
-    const [teamTaskOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
-    const loading = openSearch && teamTaskOptions.length === 0;
+    const [teamTaskSearchOptions, setTeamTaskSearchOptions] = useState<SearchTeamTasksResponse[]>([]);
+    const loading = openSearch && teamTaskSearchOptions.length === 0;
     useEffect(() => {
         let active = true;
 
@@ -100,11 +100,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 -1,
                 "open,wip,pending",
                 -1,
-                accessToken
+                accessToken,
+                true
             );
 
             if (active) {
-                setTeamTaskOptions([...loadedTeamTasks]);
+                setTeamTaskSearchOptions([...loadedTeamTasks]);
             }
         })();
 
@@ -135,7 +136,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 -1,
                 "open,wip,pending",
                 TOP_N,
-                accessToken
+                accessToken,
+                true
             );
             setRecentTasks([...loadedTeamTasks.slice(0, TOP_N)]);
         })();
@@ -186,7 +188,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 currentPreviewTaskId={currentPreviewTaskId}
                 openSearch={openSearch}
                 setOpenSearch={setOpenSearch}
-                teamTaskOptions={teamTaskOptions}
+                teamTaskSearchOptions={teamTaskSearchOptions}
+                setTeamTaskSearchOptions={setTeamTaskSearchOptions}
                 loading={loading}
                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}

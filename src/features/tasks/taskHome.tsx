@@ -225,16 +225,10 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
-    const [teamTaskOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
-    const loading = openSearch && teamTaskOptions.length === 0;
-    useEffect(() => {
-        let active = true;
-
-        if (!loading) {
-            return undefined;
-        }
-
-        (async () => {
+    const [teamTaskSearchOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
+    const loading = openSearch && teamTaskSearchOptions.length === 0;
+    const updateTeamTaskSearchOptions = async (active: boolean) => {
+        if (currentProject && currentProject.projectId) {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
                 currentProject?.projectId || -1,
@@ -246,7 +240,16 @@ export const TaskHome = (props: TaskHomeProps) => {
             if (active) {
                 setTeamTaskOptions([...loadedTeamTasks]);
             }
-        })();
+        }
+    };
+    useEffect(() => {
+        let active = true;
+
+        if (!loading) {
+            return undefined;
+        }
+
+        updateTeamTaskSearchOptions(active);
 
         return () => {
             active = false;
@@ -254,19 +257,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     }, [loading]);
 
     useEffect(() => {
-        (async () => {
-            if (currentProject && currentProject.projectId) {
-                const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
-                    myself,
-                    currentProject.projectId,
-                    displayTaskType.statuses.join(","),
-                    -1,
-                    accessToken
-                );
-
-                setTeamTaskOptions([...loadedTeamTasks]);
-            }
-        })();
+        updateTeamTaskSearchOptions(true);
     }, [displayTaskType]);
 
     function onChangeHandler(value: any) {
@@ -491,6 +482,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         open={openSearch}
                                                         onOpen={() => {
                                                             setOpenSearch(true);
+                                                            // Reset the team task search options to load them again
+                                                            setTeamTaskOptions([]);
                                                         }}
                                                         onClose={() => {
                                                             setOpenSearch(false);
@@ -576,7 +569,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 </ListItemContent>
                                                             </AutocompleteOption>
                                                         )}
-                                                        options={teamTaskOptions}
+                                                        options={teamTaskSearchOptions}
                                                         loading={loading}
                                                         endDecorator={
                                                             loading ? (

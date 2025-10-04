@@ -8,12 +8,14 @@ export const loadTeamTaskList = async (
     projectId: number,
     statuses: string,
     topN: number,
-    accessToken: string | null
+    accessToken: string | null,
+    includeAll?: boolean
 ) => {
     try {
         const api = authApi(accessToken);
+        const _includeAll = includeAll === true ? true : false;
         if (api) {
-            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&statuses=${statuses}&top_n=${topN}`;
+            const query: string = `team_id=${myself.teamId}&project_id=${projectId}&statuses=${statuses}&top_n=${topN}&include_all=${_includeAll}`;
             const res = await api.get(`/search/teamTasks/?${query}`);
             return res.data;
         } else {

@@ -15,7 +15,8 @@ type TaskSidebarSearchBoxProps = {
     currentPreviewTaskId: number;
     openSearch: boolean;
     setOpenSearch: (value: boolean) => void;
-    teamTaskOptions: SearchTeamTasksResponse[];
+    teamTaskSearchOptions: SearchTeamTasksResponse[];
+    setTeamTaskSearchOptions: (value: SearchTeamTasksResponse[]) => void;
     loading: boolean;
     setCurrentPreviewTaskId: (value: number) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
@@ -25,7 +26,8 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
         currentPreviewTaskId,
         openSearch,
         setOpenSearch,
-        teamTaskOptions,
+        teamTaskSearchOptions,
+        setTeamTaskSearchOptions,
         loading,
         setCurrentPreviewTaskId,
         setIsTaskPreviewVisible,
@@ -49,6 +51,8 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
             open={openSearch}
             onOpen={() => {
                 setOpenSearch(true);
+                // Reset the team task search options to load them again
+                setTeamTaskSearchOptions([]);
             }}
             onClose={() => {
                 setOpenSearch(false);
@@ -118,7 +122,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                     </ListItemContent>
                 </AutocompleteOption>
             )}
-            options={teamTaskOptions}
+            options={teamTaskSearchOptions}
             loading={loading}
             endDecorator={
                 loading ? (
