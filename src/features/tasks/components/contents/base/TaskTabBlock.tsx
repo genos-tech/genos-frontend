@@ -358,7 +358,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 <TabList
                     sx={{
                         pt: 1,
-                        justifyContent: "left",
+                        justifyContent: "space-between",
                         [`&& .${tabClasses.root}`]: {
                             flex: "initial",
                             bgcolor: "transparent",
@@ -377,24 +377,26 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         },
                     }}
                 >
-                    <Tab indicatorInset>
-                        <ListItemDecorator>
-                            <CommentIcon />
-                        </ListItemDecorator>
-                        Comments
-                    </Tab>
-                    <Tab indicatorInset>
-                        <ListItemDecorator>
-                            <NoteAltIcon />
-                        </ListItemDecorator>
-                        Notes
-                    </Tab>
-                    <Tab indicatorInset>
-                        <ListItemDecorator>
-                            <InsertPhotoIcon />
-                        </ListItemDecorator>
-                        Attachments
-                    </Tab>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Tab indicatorInset>
+                            <ListItemDecorator>
+                                <CommentIcon />
+                            </ListItemDecorator>
+                            Comments
+                        </Tab>
+                        <Tab indicatorInset>
+                            <ListItemDecorator>
+                                <NoteAltIcon />
+                            </ListItemDecorator>
+                            Notes
+                        </Tab>
+                        <Tab indicatorInset>
+                            <ListItemDecorator>
+                                <InsertPhotoIcon />
+                            </ListItemDecorator>
+                            Attachments
+                        </Tab>
+                    </Box>
                     {/* <Tab indicatorInset>
                         <ListItemDecorator>
                             <HistoryIcon />
@@ -439,8 +441,13 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     )}
 
                     {tabIndex === 2 && (
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
-                            <Box sx={{ flexGrow: 1 }} />
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                alignItems: "center",
+                            }}
+                        >
                             <input
                                 type="file"
                                 accept="*"
