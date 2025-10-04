@@ -269,7 +269,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             padding: "10px",
                         }}
                     >
-                        Choose a Task Note from the Sidebar
+                        No Chat Selected
                     </IconButton>
                 </Box>
             )}
@@ -412,10 +412,10 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             >
                                                                 Title:{" "}
                                                                 {currentTask.title.length > 19
-                                                                    ? currentTask.title.slice(
+                                                                    ? `${currentTask.title.slice(
                                                                           0,
                                                                           19
-                                                                      ) + "..."
+                                                                      )}...`
                                                                     : currentTask.title || "N/A"}
                                                             </Chip>
                                                         </>
@@ -520,76 +520,68 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabItems.length}-${selectedTabIndex}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
-                                            console.log(
-                                                `${selectedTabIndex} -> ${val} (from TaskNoteMain)`
-                                            );
                                             loadNote(
                                                 tabItems[Number(val)].noteType,
                                                 tabItems[Number(val)].noteId,
                                                 Number(val)
                                             );
                                         }}
-                                        aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}
                                     >
                                         <TabList
                                             sx={{
                                                 px: "5px",
-                                                overflowX: "auto",
+                                                overflow: "auto",
                                                 scrollSnapType: "x mandatory",
                                                 "&::-webkit-scrollbar": { display: "none" },
                                             }}
                                         >
                                             {tabItems.map((tab, index) => (
-                                                <Box
-                                                    key={`tab-box-${tab.noteType}-${tab.noteId}-${tsBody}`}
+                                                <Tab
+                                                    key={`tab-${index}`}
+                                                    sx={{
+                                                        mx: "2px",
+                                                        my: "4px",
+                                                        flex: "none",
+                                                        scrollSnapAlign: "start",
+                                                        borderRadius: "5px",
+                                                    }}
+                                                    variant="soft"
                                                 >
-                                                    <Tab
-                                                        key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
+                                                    <Box
                                                         sx={{
-                                                            task: "3px",
-                                                            flex: "none",
-                                                            scrollSnapAlign: "start",
-                                                            borderRadius: "5px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            height: "20px",
+                                                            maxWidth: "200px",
                                                         }}
-                                                        variant="soft"
                                                     >
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                height: "20px",
-                                                                maxWidth: "200px",
-                                                            }}
-                                                        >
-                                                            {tab.title.length > 19
-                                                                ? `${tab.title.slice(0, 19)}...`
-                                                                : tab.title}
+                                                        {tab.title.length > 19
+                                                            ? `${tab.title.slice(0, 19)}...`
+                                                            : tab.title}
 
-                                                            {tabItems.length > 1 && (
-                                                                <IconButton
-                                                                    component="span"
-                                                                    size="sm"
-                                                                    variant="plain"
-                                                                    color="neutral"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleCloseTab(
-                                                                            index,
-                                                                            Number(tab.noteId)
-                                                                        );
-                                                                    }}
-                                                                    sx={{ ml: 1 }}
-                                                                >
-                                                                    <CloseIcon />
-                                                                </IconButton>
-                                                            )}
-                                                        </Box>
-                                                    </Tab>
-                                                </Box>
+                                                        {tabItems.length > 1 && (
+                                                            <IconButton
+                                                                component="span"
+                                                                size="sm"
+                                                                variant="plain"
+                                                                color="neutral"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleCloseTab(
+                                                                        index,
+                                                                        Number(tab.noteId)
+                                                                    );
+                                                                }}
+                                                                sx={{ ml: 1 }}
+                                                            >
+                                                                <CloseIcon />
+                                                            </IconButton>
+                                                        )}
+                                                    </Box>
+                                                </Tab>
                                             ))}
                                         </TabList>
 

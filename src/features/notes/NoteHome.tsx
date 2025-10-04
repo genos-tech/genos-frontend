@@ -108,6 +108,7 @@ type NoteHomeProps = {
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    moveToSpecificChat: (chatType: number, chatId: number, threadId: number) => void;
 };
 export const NoteHome = (props: NoteHomeProps) => {
     const {
@@ -173,6 +174,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         isTaskNoteVisible,
         teamProjects,
         setTeamProjects,
+        moveToSpecificChat,
     } = props;
     const { mode } = useColorScheme();
 
@@ -371,6 +373,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setIsMainChatVisible={setIsMainChatVisible}
                                         setIsChatNoteVisible={setIsChatNoteVisible}
                                         loadNote={loadNote}
+                                        moveToSpecificChat={moveToSpecificChat}
                                     />
                                 )}
                             </Box>

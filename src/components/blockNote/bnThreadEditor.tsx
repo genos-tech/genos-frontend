@@ -285,7 +285,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             }
             // Add 30 lines for each image to avoid scroll issues.
             if (node.type === "image") {
-                count += 30;
+                count += 10;
             }
         }
         return count;

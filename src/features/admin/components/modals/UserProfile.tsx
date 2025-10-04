@@ -370,7 +370,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 setCurrentMainChat
                                             );
                                             setOpeningService(1);
-                                            localStorage.setItem("openingService", "1");
                                             setOpenUserProfile(false);
                                         }
                                     })();

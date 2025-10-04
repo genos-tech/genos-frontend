@@ -219,10 +219,8 @@ export const ChatList = (props: ChatListProps) => {
                                         setCurrentSubChat={setCurrentSubChat}
                                         setIsMainChatVisible={setIsMainChatVisible}
                                         setIsThreadVisible={setIsThreadVisible}
-                                        isThreadVisible={isThreadVisible}
                                         isTaskPreviewVisible={isTaskPreviewVisible}
                                         isCreatingTask={isCreatingTask}
-                                        setIsCreatingTask={setIsCreatingTask}
                                         isSubChatVisible={isSubChatVisible}
                                         setIsSubChatVisible={setIsSubChatVisible}
                                         setOpeningService={setOpeningService}
@@ -268,11 +266,9 @@ export const ChatList = (props: ChatListProps) => {
                                         setCurrentThreadChat={setCurrentThreadChat}
                                         setIsMainChatVisible={setIsMainChatVisible}
                                         setIsThreadVisible={setIsThreadVisible}
-                                        isThreadVisible={isThreadVisible}
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                         isTaskPreviewVisible={isTaskPreviewVisible}
                                         isCreatingTask={isCreatingTask}
-                                        setIsCreatingTask={setIsCreatingTask}
                                         isSubChatVisible={isSubChatVisible}
                                         setOpeningService={setOpeningService}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}

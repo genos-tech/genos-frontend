@@ -107,22 +107,18 @@ export const Sidebar = (props: SidebarProps) => {
 
     const handleMoveToInbox = (): void => {
         setOpeningService(0);
-        localStorage.setItem("openingService", "0");
     };
 
     const handleMoveToChat = (): void => {
         setOpeningService(1);
-        localStorage.setItem("openingService", "1");
     };
 
     const handleMoveToTasks = (): void => {
         setOpeningService(2);
-        localStorage.setItem("openingService", "2");
     };
 
     const handleMoveToNote = (): void => {
         setOpeningService(3);
-        localStorage.setItem("openingService", "3");
     };
 
     return (

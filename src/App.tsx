@@ -9,7 +9,13 @@ import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
 import { FindTeamResponse, Team, UserProps } from "./types/admin";
-import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "./types/chat";
+import {
+    ActivityMessageProps,
+    AllChatProps,
+    ChatProps,
+    ThreadMessageProps,
+    ThreadProps,
+} from "./types/chat";
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
 import { popInboxItems } from "./features/inbox/services/popInboxItems";
@@ -68,6 +74,8 @@ import { STORES } from "./db/conf";
 import { buildTaskTree } from "./features/tasks/utils/buildTaskTree";
 import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
+import { popSpecificMessages } from "./features/chat/services/popSpecificMessages";
+import { loadSpecificThreadMessages } from "./features/chat/services/loadSpecificThreadMessages";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -157,6 +165,9 @@ export const App = () => {
     const [openingService, setOpeningService] = useState<number>(
         Number(localStorage.getItem("openingService") || "1")
     );
+    useEffect(() => {
+        localStorage.setItem("openingService", openingService.toString());
+    }, [openingService]);
 
     // chatType = {1: DM, 2: GM, 3: PM, 4: Pin, 5: Activity}
     const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
@@ -395,6 +406,80 @@ export const App = () => {
             return acc;
         }, {});
     };
+    const defineNewChat = (chat: AllChatProps, messages: any) => {
+        const newMessages: ChatProps = {
+            chatId: chat.chatId,
+            chatName: chat.chatName,
+            chatType: chat.chatType,
+            dmPartnerUser: chat.dmPartnerUser,
+            lastReadMessageId: messages[messages.length - 1].messageId,
+            messages: messages,
+            latestMessage: messages[messages.length - 1],
+            latestMessageText: messages[messages.length - 1].contentText,
+            TSLastMessage: messages[messages.length - 1].tsSent,
+            systemUserId: chat.systemUserId,
+            project: chat.project,
+            isPrivate: chat.isPrivate,
+            profileImagePath: chat.profileImagePath,
+        };
+        return newMessages;
+    };
+    const moveToSpecificThreadChat = async (chat: AllChatProps, threadId: number) => {
+        const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
+            myself,
+            chat.chatType,
+            chat.chatId,
+            threadId,
+            accessToken
+        );
+        if (threadMessages && threadMessages.length > 0) {
+            const newThread: ThreadProps = {
+                chatId: chat.chatId,
+                chatName: chat.chatName,
+                threadId: threadId,
+                chatType: chat.chatType,
+                dmPartnerUser: chat.dmPartnerUser,
+                taskId: threadMessages[threadMessages.length - 1].taskId,
+                messages: threadMessages,
+                project: threadMessages[threadMessages.length - 1].project,
+                TSLastMessage: threadMessages[threadMessages.length - 1].tsSent,
+                taskExist: threadMessages[threadMessages.length - 1].taskExist,
+            };
+            if (newThread) {
+                // Set project if the project id exists in the thread messages.
+                // In other words, if the thread has the corresponding task,
+                // set the project to the project of the task.
+                if (newThread.project?.projectId) {
+                    setCurrentProject(newThread.project);
+                }
+                setCurrentThreadChat(newThread);
+                if (newThread.taskExist === true && newThread.taskId) {
+                    setCurrentPreviewTaskId(newThread.taskId);
+                }
+            }
+        }
+    };
+    const moveToSpecificChat = async (chatType: number, chatId: number, threadId: number) => {
+        setOpeningService(1); // move to chat
+        setIsMainChatVisible(false); // initialize the main chat pane to be closed
+        const targetChat: AllChatProps = allChats.filter(
+            (chat) => chat.chatType === chatType && chat.chatId === chatId
+        )[0];
+        popSpecificMessages(chatId, chatType)
+            .then((messages) => {
+                const newChat: ChatProps = defineNewChat(targetChat, messages);
+                setCurrentMainChat(newChat);
+
+                if (threadId > 0) {
+                    moveToSpecificThreadChat(targetChat, threadId);
+                    setIsThreadVisible(true);
+                } else {
+                    setIsMainChatVisible(true);
+                }
+                setIsChatNoteVisible(true);
+            })
+            .catch((error) => console.error(error));
+    };
 
     useEffect(() => {
         setUnReadChatCounts(countUnreadChats(allChats));
@@ -537,7 +622,7 @@ export const App = () => {
                 );
 
                 // No need to update the current preview task when a new tag is created.
-                if (isNewTagCreated === false) {
+                if (isNewTagCreated === false && loadedTask.length > 0) {
                     setCurrentPreviewTask(loadedTask[0]);
                 }
 
@@ -637,12 +722,15 @@ export const App = () => {
     const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
     const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
-        const targetTabIndex: number =
+        const targetTabIndex: number = Math.max(
             nextTabIndex !== -1
                 ? nextTabIndex
                 : tabItems.findIndex(
                       (note) => note.noteType === noteType && note.noteId === noteId
-                  );
+                  ),
+            0
+        );
+
         if (noteType === 1) {
             const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
             if (note) {
@@ -684,7 +772,7 @@ export const App = () => {
                 }
             } else {
                 const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
-                if (!note.error && note.noteType === 3) {
+                if (note && !note.error && note.noteType === 3) {
                     addNote(3, note);
                     setCurrentChatNote(note);
                     setSelectedTabIndex(targetTabIndex);
@@ -1045,10 +1133,6 @@ export const App = () => {
 
     useEffect(() => {
         if (openingService === 0) {
-            // Keep the tabItems when an user changes the page from Notes to other pages.
-            setTmpTabItems(tabItems);
-            setTabItems([]);
-
             // Init all notes
             setCurrentMyNote(null);
             setCurrentTaskNote(null);
@@ -1056,22 +1140,22 @@ export const App = () => {
         } else if (openingService === 1) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             setTmpTabItems(tabItems);
-            setTabItems([]);
+            setTabItems(tabItems.filter((item) => item.noteType === 3));
 
             // Initialize the task visibility.
             setIsTaskPreviewVisible(false);
 
-            // Initialize the chat note visibility.
-            setIsChatNoteVisible(false);
+            // // Initialize the chat note visibility.
+            // setIsChatNoteVisible(false);
 
             // Init all notes
             setCurrentMyNote(null);
             setCurrentTaskNote(null);
-            setCurrentChatNote(null);
+            // setCurrentChatNote(null);
         } else if (openingService === 2) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             setTmpTabItems(tabItems);
-            setTabItems([]);
+            setTabItems(tabItems.filter((item) => item.noteType === 2));
 
             // Initialize the chat note visibility.
             setIsTaskNoteVisible(false);
@@ -1082,8 +1166,8 @@ export const App = () => {
             setCurrentChatNote(null);
         } else if (openingService === 3) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            setTmpTabItems([]);
             setTabItems(tmpTabItems);
+            setTmpTabItems([]);
 
             if (socketInstance) {
                 popInitialNote();
@@ -1334,6 +1418,7 @@ export const App = () => {
                         loadNote={loadNote}
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
+                        moveToSpecificChat={moveToSpecificChat}
                     />
                 ) : null}
 
@@ -1468,6 +1553,7 @@ export const App = () => {
                         isTaskNoteVisible={isTaskNoteVisible}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
+                        moveToSpecificChat={moveToSpecificChat}
                     />
                 ) : null}
             </CssVarsProvider>

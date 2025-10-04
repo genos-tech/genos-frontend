@@ -291,7 +291,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     }}
                                                     sx={{ px: "10px", mb: "5px" }}
                                                 >
-                                                    <PlaylistAddIcon />
+                                                    <PlaylistAddIcon sx={{ mr: "2px" }} />
                                                     New Note
                                                 </IconButton>
                                             </Tooltip>
@@ -352,7 +352,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     </Stack>
 
                                     <Tabs
-                                        key={`tabs-${tabItems.length}-${selectedTabIndex}`}
                                         value={selectedTabIndex}
                                         onChange={(_, val) => {
                                             loadNote(
@@ -361,22 +360,22 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 Number(val)
                                             );
                                         }}
-                                        aria-label="Scrollable tabs"
                                         sx={{ width: "100%" }}
                                     >
                                         <TabList
                                             sx={{
                                                 px: "5px",
-                                                overflowX: "auto",
+                                                overflow: "auto",
                                                 scrollSnapType: "x mandatory",
                                                 "&::-webkit-scrollbar": { display: "none" },
                                             }}
                                         >
                                             {tabItems.map((tab, index) => (
                                                 <Tab
-                                                    key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
+                                                    key={`tab-${index}`}
                                                     sx={{
-                                                        my: "3px",
+                                                        mx: "2px",
+                                                        my: "4px",
                                                         flex: "none",
                                                         scrollSnapAlign: "start",
                                                         borderRadius: "5px",

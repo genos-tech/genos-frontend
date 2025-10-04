@@ -124,6 +124,7 @@ type ChatHomeProps = {
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
+    moveToSpecificChat: (chatType: number, chatId: number, threadId: number) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -202,6 +203,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         loadNote,
         initialEmptyTaskId,
         setInitialEmptyTaskId,
+        moveToSpecificChat,
     } = props;
 
     // Common
@@ -442,7 +444,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                         padding: "10px",
                                                     }}
                                                 >
-                                                    Choose a Chat from Sidebar
+                                                    No Chat Selected
                                                 </IconButton>
                                             </Box>
                                         </>
@@ -687,7 +689,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 )}
 
                 {/* Chat Note Pane */}
-                {isChatNoteVisible === true && (
+                {isChatNoteVisible === true &&  (
                     <>
                         <PanelResizeHandle
                             key="chat-note-resize-handle"
@@ -743,6 +745,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setIsMainChatVisible={setIsMainChatVisible}
                                     setIsChatNoteVisible={setIsChatNoteVisible}
                                     loadNote={loadNote}
+                                    moveToSpecificChat={moveToSpecificChat}
                                 />
                             </Box>
                         </Panel>
@@ -792,7 +795,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             padding: "10px",
                                         }}
                                     >
-                                        Choose a Chat from Sidebar
+                                        No Chat Selected
                                     </IconButton>
                                 </Box>
                             </Panel>

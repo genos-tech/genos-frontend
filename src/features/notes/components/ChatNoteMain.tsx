@@ -69,6 +69,7 @@ type ChatNoteMainProps = {
     setIsMainChatVisible: (value: boolean) => void;
     setIsChatNoteVisible: (value: boolean) => void;
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
+    moveToSpecificChat: (chatType: number, chatId: number, threadId: number) => void;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -94,6 +95,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setIsMainChatVisible,
         setIsChatNoteVisible,
         loadNote,
+        moveToSpecificChat,
     } = props;
 
     const { accessToken } = useAuth();
@@ -237,7 +239,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                             padding: "10px",
                         }}
                     >
-                        Choose a Chat Note from the Sidebar
+                        No Chat Selected
                     </IconButton>
                 </Box>
             )}
@@ -373,6 +375,26 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     </Tooltip>
                                                 )}
 
+                                                {isInChatPage === false && (
+                                                    <Tooltip title="Open Chat">
+                                                        <IconButton
+                                                            size="sm"
+                                                            color="neutral"
+                                                            variant="plain"
+                                                            sx={{ mb: "5px" }}
+                                                            onClick={() => {
+                                                                moveToSpecificChat(
+                                                                    currentChatNote.chatType,
+                                                                    currentChatNote.chatId,
+                                                                    currentChatNote.threadId
+                                                                );
+                                                            }}
+                                                        >
+                                                            <OpenInNewIcon />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
+
                                                 <Dropdown>
                                                     <MenuButton
                                                         slots={{ root: IconButton }}
@@ -469,7 +491,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         </Stack>
 
                                         <Tabs
-                                            key={`tabs-${tabItems.length}-${selectedTabIndex}`}
                                             value={selectedTabIndex}
                                             onChange={(_, val) => {
                                                 loadNote(
@@ -478,65 +499,60 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     Number(val)
                                                 );
                                             }}
-                                            aria-label="Scrollable tabs"
                                             sx={{ width: "100%" }}
                                         >
                                             <TabList
                                                 sx={{
                                                     px: "5px",
-                                                    overflowX: "auto",
+                                                    overflow: "auto",
                                                     scrollSnapType: "x mandatory",
                                                     "&::-webkit-scrollbar": { display: "none" },
                                                 }}
                                             >
                                                 {tabItems.map((tab, index) => (
-                                                    <Box key={index}>
-                                                        <Tab
-                                                            key={`tab-${tab.noteType}-${tab.noteId}-${tsBody}`}
+                                                    <Tab
+                                                        key={`tab-${index}`}
+                                                        sx={{
+                                                            mx: "2px",
+                                                            my: "4px",
+                                                            flex: "none",
+                                                            scrollSnapAlign: "start",
+                                                            borderRadius: "5px",
+                                                        }}
+                                                        variant="soft"
+                                                    >
+                                                        <Box
                                                             sx={{
-                                                                chat: "3px",
-                                                                flex: "none",
-                                                                scrollSnapAlign: "start",
-                                                                borderRadius: "5px",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                height: "20px",
+                                                                maxWidth: "200px",
                                                             }}
-                                                            variant="soft"
                                                         >
-                                                            <Box
-                                                                sx={{
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                    height: "20px",
-                                                                    maxWidth: "200px",
-                                                                }}
-                                                            >
-                                                                {tab.title.length > 19
-                                                                    ? `${tab.title.slice(
-                                                                          0,
-                                                                          19
-                                                                      )}...`
-                                                                    : tab.title}
+                                                            {tab.title.length > 19
+                                                                ? `${tab.title.slice(0, 19)}...`
+                                                                : tab.title}
 
-                                                                {tabItems.length > 1 && (
-                                                                    <IconButton
-                                                                        component="span"
-                                                                        size="sm"
-                                                                        variant="plain"
-                                                                        color="neutral"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleCloseTab(
-                                                                                index,
-                                                                                Number(tab.noteId)
-                                                                            );
-                                                                        }}
-                                                                        sx={{ ml: 1 }}
-                                                                    >
-                                                                        <CloseIcon />
-                                                                    </IconButton>
-                                                                )}
-                                                            </Box>
-                                                        </Tab>
-                                                    </Box>
+                                                            {tabItems.length > 1 && (
+                                                                <IconButton
+                                                                    component="span"
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    color="neutral"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleCloseTab(
+                                                                            index,
+                                                                            Number(tab.noteId)
+                                                                        );
+                                                                    }}
+                                                                    sx={{ ml: 1 }}
+                                                                >
+                                                                    <CloseIcon />
+                                                                </IconButton>
+                                                            )}
+                                                        </Box>
+                                                    </Tab>
                                                 ))}
                                             </TabList>
 

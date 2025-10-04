@@ -46,7 +46,6 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     setCurrentThreadChat: (value: ThreadProps) => void;
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
-    isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
     isCreatingTask: {
@@ -54,11 +53,6 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
         parentTaskId: number | null;
         rootTaskId: number | null;
     };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
     isSubChatVisible: boolean;
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
@@ -83,11 +77,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setCurrentThreadChat,
         setIsMainChatVisible,
         setIsThreadVisible,
-        isThreadVisible,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
         isCreatingTask,
-        setIsCreatingTask,
         isSubChatVisible,
         setOpeningService,
         setCurrentProject,
