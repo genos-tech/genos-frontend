@@ -314,8 +314,8 @@
 
 /* editor */
 .bn-editor img {
-  max-width: 500px;  /* shrink if too big */
-  max-height: 400px;
+  max-width: 300px;  /* shrink if too big */
+  max-height: 200px;
   width: auto;
   height: auto;
   object-fit: contain; /* keep aspect ratio */

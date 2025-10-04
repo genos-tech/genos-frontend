@@ -10,7 +10,7 @@ export const loadProjectTags = async (
 ) => {
     try {
         const api = authApi(accessToken);
-        if (api) {
+        if (api && projectId) {
             const query: string = `team_id=${myself.teamId}&project_id=${projectId}`;
             const res = await api.get(`/project/tag/?${query}`);
             return res.data;
