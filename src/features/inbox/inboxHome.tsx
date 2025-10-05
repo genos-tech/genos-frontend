@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Box, List, Card, Stack, Typography, Badge, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import AllInboxIcon from "@mui/icons-material/AllInbox";
 
 import { useScrollToBottomOnNewItem } from "./hooks/inboxHooks";
 import { InboxItemProps } from "../../types/common";
@@ -82,7 +83,9 @@ export const InboxHome = (props: InboxHomeProps) => {
                     }}
                     variant="soft"
                 >
-                    <Typography level="h4">Inbox</Typography>
+                    <Typography startDecorator={<AllInboxIcon />} level="h4">
+                        Inbox
+                    </Typography>
                 </Card>
 
                 <Box sx={{ px: "50px" }}>

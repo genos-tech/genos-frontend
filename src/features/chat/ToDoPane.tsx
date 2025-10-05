@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import { useRef } from "react";
-import { Box, Button } from "@mui/joy";
+import { Box, Button, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { UserProps } from "../../types/admin";
@@ -90,7 +90,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     right: 0,
                     display: "flex",
                     justifyContent: "center",
-                    my: 1,
                 }}
             >
                 <Button
@@ -98,6 +97,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     color="primary"
                     disabled={isExistingTodaysTodo}
                     onClick={handleCreateNewTodo}
+                    sx={{
+                        mt: 2, mb: 1,
+                    }}
                 >
                     Add Today's Todo
                 </Button>
