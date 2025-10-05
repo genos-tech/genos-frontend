@@ -590,3 +590,27 @@ div[data-floating-ui-focusable] {
   margin-top: 5px !important;
   margin-left: 10px !important;
 }
+
+
+.todo-preview-light .bn-editor {
+  color: black;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.todo-preview-light code {
+  background-color: #97979770 !important;
+  color: rgb(255, 0, 144);
+}
+
+
+.todo-preview-dark .bn-editor {
+  color: white;
+  background-color: transparent;
+  padding-left: 20px;
+}
+
+.todo-preview-dark code {
+  background-color: #00000070 !important;
+  color: rgb(255, 140, 0);
+}

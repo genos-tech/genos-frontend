@@ -236,3 +236,12 @@ export type CreateGMResponse = {
     chatName: string;
     message: string;
 };
+
+export type ToDoFactProps = {
+    todoId: number;
+    todoContent: PartialBlock[] | any[];
+    isCompleted: boolean;
+    dtCreatedOn: string;
+    tsCreatedAt: string;
+    tsUpdatedAt: string;
+};
