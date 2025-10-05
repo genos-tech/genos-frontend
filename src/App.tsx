@@ -135,10 +135,11 @@ const useMyself = (accessToken: string | null): SetMyselfProps => {
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
             };
 
-            // Only when the new myself is different from the current myself, set the new myself.
-            if (areObjectsEqual(newMyself, myself) === false) {
-                setMyself(newMyself);
-            }
+            // // Only when the new myself is different from the current myself, set the new myself.
+            // if (areObjectsEqual(newMyself, myself) === false) {
+            //     setMyself(newMyself);
+            // }
+            setMyself(newMyself);
         };
 
         // Add a small delay to ensure localStorage is updated
