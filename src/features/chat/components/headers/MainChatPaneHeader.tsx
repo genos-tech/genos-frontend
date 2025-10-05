@@ -1,7 +1,8 @@
 import { Socket } from "socket.io-client";
-import { Button, IconButton, Stack, Tooltip } from "@mui/joy";
+import { IconButton, Stack, Tooltip } from "@mui/joy";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
-import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
@@ -31,6 +32,8 @@ type MainChatPaneHeaderProps = {
     }) => void;
     setOpeningService: (value: number) => void;
     funcSetAllChats: () => Promise<void>;
+    isToDoVisible: boolean;
+    setIsToDoVisible: (value: boolean) => void;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
@@ -51,6 +54,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         setIsCreatingTask,
         setOpeningService,
         funcSetAllChats,
+        setIsToDoVisible,
+        isToDoVisible,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
@@ -122,6 +127,36 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 )}
 
                 <Stack spacing={0} direction="row" sx={{ alignItems: "center" }}>
+                    {isYou === true ? (
+                        <>
+                            {isToDoVisible === true ? (
+                                <Tooltip title="DM" size="sm">
+                                    <IconButton
+                                        component="a"
+                                        size="sm"
+                                        variant="plain"
+                                        color="neutral"
+                                        onClick={() => setIsToDoVisible(false)}
+                                    >
+                                        <QuestionAnswerIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            ) : (
+                                <Tooltip title="To-Do" size="sm">
+                                    <IconButton
+                                        component="a"
+                                        size="sm"
+                                        variant="plain"
+                                        color="neutral"
+                                        onClick={() => setIsToDoVisible(true)}
+                                    >
+                                        <ChecklistIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+                        </>
+                    ) : null}
+
                     {isSubChatVisible && (
                         <div>
                             <IconButton

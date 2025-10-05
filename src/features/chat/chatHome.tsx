@@ -213,6 +213,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
     const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
     const [currentThreadChatId, setCurrentThreadChatId] = useState<number>(-1);
+    const [isToDoVisible, setIsToDoVisible] = useState<boolean>(false);
 
     useEffect(() => {
         if (currentMainChatId !== currentMainChat.chatId) {
@@ -483,6 +484,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             funcSetAllChats={funcSetAllChats}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                             setCurrentProject={setCurrentProject}
+                                            setIsToDoVisible={setIsToDoVisible}
+                                            isToDoVisible={isToDoVisible}
                                         />
                                     )}
                                 </Panel>

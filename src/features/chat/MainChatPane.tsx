@@ -59,6 +59,8 @@ type MessagesPaneProps = {
     funcSetAllChats: () => Promise<void>;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    setIsToDoVisible: (value: boolean) => void;
+    isToDoVisible: boolean;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -91,6 +93,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         funcSetAllChats,
         setCurrentPreviewTaskId,
         setCurrentProject,
+        setIsToDoVisible,
+        isToDoVisible,
     } = props;
     const { accessToken } = useAuth();
     const [chatMessages, setChatMessages] = useState(chat.messages);
@@ -257,6 +261,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     setIsCreatingTask={setIsCreatingTask}
                     setOpeningService={setOpeningService}
                     funcSetAllChats={funcSetAllChats}
+                    isToDoVisible={isToDoVisible}
+                    setIsToDoVisible={setIsToDoVisible}
                 />
 
                 <Box sx={{ px: 0.3, my: 0.2 }}>

@@ -421,7 +421,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 true ? (
                                                                     <LockOutlineIcon
                                                                         sx={{
-                                                                            mt: "3px",
+                                                                            ml: "5px",
+                                                                            mr: "-10px",
+                                                                            mt: "8px",
                                                                             fontSize: "26px",
                                                                         }}
                                                                     />
