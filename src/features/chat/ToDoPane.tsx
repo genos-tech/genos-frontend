@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
-import { useRef } from "react";
-import { Box, Button, useColorScheme } from "@mui/joy";
+import { useRef, useState, useEffect } from "react";
+import { Box, Button, Stack, Switch, Typography } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { UserProps } from "../../types/admin";
@@ -63,6 +63,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         isSubChatVisible,
     } = props;
     const { accessToken } = useAuth();
+    const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
+    const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState(false);
 
     const handleCreateNewTodo = async () => {
         const todoContent = await createNewTodo(
@@ -79,18 +81,23 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         }
     };
 
+    useEffect(() => {
+        if (showOnlyInCompleteTodos) {
+            setTmpTodos(todos.filter((todo) => !todo.isCompleted));
+        } else {
+            setTmpTodos(todos);
+        }
+    }, [showOnlyInCompleteTodos, todos]);
+
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
     return (
-        <>
-            <Box
-                sx={{
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    display: "flex",
-                    justifyContent: "center",
-                }}
+        <Box sx={{ height: "100dvh" }}>
+            <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="center"
+                sx={{ position: "relative" }}
             >
                 <Button
                     variant="soft"
@@ -98,26 +105,57 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     disabled={isExistingTodaysTodo}
                     onClick={handleCreateNewTodo}
                     sx={{
-                        mt: 2, mb: 1,
+                        mt: 2,
+                        mb: 1.5,
                     }}
                 >
                     Add Today's Todo
                 </Button>
-            </Box>
+                <Switch
+                    checked={showOnlyInCompleteTodos}
+                    onChange={() => setShowOnlyInCompleteTodos(!showOnlyInCompleteTodos)}
+                    slotProps={{
+                        track: {
+                            children: (
+                                <Typography
+                                    component="span"
+                                    level="inherit"
+                                    sx={{
+                                        ml: showOnlyInCompleteTodos ? "6px" : "22px",
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    Incomplete
+                                </Typography>
+                            ),
+                        },
+                    }}
+                    size="sm"
+                    variant="soft"
+                    sx={{
+                        position: "absolute",
+                        right: "30px",
+                        "--Switch-thumbSize": "15px",
+                        "--Switch-trackWidth": "95px",
+                        "--Switch-trackHeight": "23px",
+                        paddingLeft: "10px",
+                    }}
+                />
+            </Stack>
             <Box sx={{ px: 0.3, my: 0.2 }}>
-                {todos.length > 0 && (
+                {tmpTodos.length > 0 && (
                     <Virtuoso
                         ref={virtuosoRef}
                         className="custom-scrollbar"
                         style={{
                             height: isSubChatVisible ? "41vh" : "91vh",
                         }}
-                        totalCount={todos.length}
+                        totalCount={tmpTodos.length}
                         initialTopMostItemIndex={0}
                         atTopThreshold={64}
                         atBottomThreshold={128}
                         itemContent={(index) => {
-                            const todo = todos[index];
+                            const todo = tmpTodos[index];
                             return (
                                 <TodoBubble
                                     key={`todo-bubble-${todo.todoId}`}
@@ -129,7 +167,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     teamMembers={teamMembers}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    todos={todos}
+                                    todos={tmpTodos}
                                     setTodos={setTodos}
                                     setOpeningService={setOpeningService}
                                     setCurrentChat={setCurrentChat}
@@ -139,6 +177,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     />
                 )}
             </Box>
-        </>
+        </Box>
     );
 };
