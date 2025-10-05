@@ -87,6 +87,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
                                 width: "100%",
+                                justifyContent: "right",
                             }}
                             startDecorator={<AddIcon />}
                         >
@@ -177,6 +178,19 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                 setCurrentPreviewTaskId(node.taskId);
             }}
         >
+            <Chip
+                key={`id-chip-${node.taskId}`} // pass the key directly
+                variant="soft"
+                color="neutral"
+                sx={{
+                    marginRight: "1px",
+                    borderRadius: "5px",
+                    fontWeight: "bold",
+                }}
+                size="sm"
+            >
+                ID: {node.taskId}
+            </Chip>
             <Chip
                 key={`status-chip-${node.taskId}`} // pass the key directly
                 variant="soft"
