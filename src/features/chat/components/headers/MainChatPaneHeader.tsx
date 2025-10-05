@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { IconButton, Stack, Tooltip } from "@mui/joy";
+import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
@@ -34,6 +34,7 @@ type MainChatPaneHeaderProps = {
     funcSetAllChats: () => Promise<void>;
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
+    incompleteTodoCount: number;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
@@ -56,6 +57,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         funcSetAllChats,
         setIsToDoVisible,
         isToDoVisible,
+        incompleteTodoCount,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
@@ -126,7 +128,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Stack spacing={0} direction="row" sx={{ alignItems: "center" }}>
+                <Stack spacing={0.5} direction="row" sx={{ alignItems: "center" }}>
                     {isYou === true ? (
                         <>
                             {isToDoVisible === true ? (
@@ -143,15 +145,23 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </Tooltip>
                             ) : (
                                 <Tooltip title="To-Do" size="sm">
-                                    <IconButton
-                                        component="a"
+                                    <Badge
+                                        badgeContent={incompleteTodoCount}
+                                        color="primary"
                                         size="sm"
-                                        variant="plain"
-                                        color="neutral"
-                                        onClick={() => setIsToDoVisible(true)}
+                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                        sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
                                     >
-                                        <ChecklistIcon />
-                                    </IconButton>
+                                        <IconButton
+                                            component="a"
+                                            size="sm"
+                                            variant="plain"
+                                            color="neutral"
+                                            onClick={() => setIsToDoVisible(true)}
+                                        >
+                                            <ChecklistIcon />
+                                        </IconButton>
+                                    </Badge>
                                 </Tooltip>
                             )}
                         </>

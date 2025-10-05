@@ -1,6 +1,8 @@
+import { Socket } from "socket.io-client";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
-import { Button, IconButton, Stack, Tooltip } from "@mui/joy";
-import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
+import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import CancelIcon from "@mui/icons-material/Cancel";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
@@ -8,7 +10,6 @@ import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import { HeaderUserName } from "./HeaderUserName";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
-import { Socket } from "socket.io-client";
 
 type SubChatPaneHeaderProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -23,11 +24,6 @@ type SubChatPaneHeaderProps = {
     setIsSubChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
     setIsCreatingTask: (value: {
         flag: boolean;
         parentTaskId: number | null;
@@ -35,6 +31,9 @@ type SubChatPaneHeaderProps = {
     }) => void;
     setOpeningService: (value: number) => void;
     funcSetAllChats: () => Promise<void>;
+    isToDoVisible: boolean;
+    setIsToDoVisible: (value: boolean) => void;
+    incompleteTodoCount: number;
 };
 
 export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
@@ -51,13 +50,15 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         setIsSubChatVisible,
         setIsThreadVisible,
         setIsTaskPreviewVisible,
-        isCreatingTask,
         setIsCreatingTask,
         setOpeningService,
         funcSetAllChats,
+        isToDoVisible,
+        setIsToDoVisible,
+        incompleteTodoCount,
     } = props;
 
-    const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
+    const isYou: boolean = myself.userId === subChat.dmPartnerUser.userId;
 
     const swapChat = () => {
         setCurrentMainChat(subChat);
@@ -116,7 +117,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Stack spacing={0} direction="row" sx={{ alignItems: "center" }}>
+                <Stack spacing={0.5} direction="row" sx={{ alignItems: "center" }}>
                     <IconButton
                         component="a"
                         size="sm"
@@ -126,6 +127,45 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     >
                         <SwapVertIcon />
                     </IconButton>
+
+                    {/* To-Do Related */}
+                    {isYou === true ? (
+                        <>
+                            {isToDoVisible === true ? (
+                                <Tooltip title="DM" size="sm">
+                                    <IconButton
+                                        component="a"
+                                        size="sm"
+                                        variant="plain"
+                                        color="neutral"
+                                        onClick={() => setIsToDoVisible(false)}
+                                    >
+                                        <QuestionAnswerIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            ) : (
+                                <Tooltip title="To-Do" size="sm">
+                                    <Badge
+                                        badgeContent={incompleteTodoCount}
+                                        color="primary"
+                                        size="sm"
+                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                        sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                    >
+                                        <IconButton
+                                            component="a"
+                                            size="sm"
+                                            variant="plain"
+                                            color="neutral"
+                                            onClick={() => setIsToDoVisible(true)}
+                                        >
+                                            <ChecklistIcon />
+                                        </IconButton>
+                                    </Badge>
+                                </Tooltip>
+                            )}
+                        </>
+                    ) : null}
 
                     <IconButton component="a" size="sm" variant="plain" color="neutral">
                         <MoreVertRoundedIcon />

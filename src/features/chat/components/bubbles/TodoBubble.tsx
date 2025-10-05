@@ -1,0 +1,161 @@
+import { useState, useRef, useEffect } from "react";
+import { Box, Chip, Card, Button, Stack } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+
+import { UserProps } from "../../../../types/admin";
+import { ChatProps, ToDoFactProps } from "../../../../types/chat";
+import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
+import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { PartialBlock } from "@blocknote/core";
+import { updateTodo } from "../../services/updateTodo";
+import { useAuth } from "../../../../context/AuthContext";
+
+type TodoBubbleProps = {
+    myself: UserProps;
+    todo: ToDoFactProps;
+    currentIndex: number;
+    isExistingTodaysTodo: boolean;
+    teamMemberProfiles: Record<string, UserProps>;
+    teamMembers: UserProps[];
+    setMyself: (value: UserProps) => void;
+    socket: Socket | null;
+    todos: ToDoFactProps[];
+    setTodos: (value: ToDoFactProps[]) => void;
+    setOpeningService: (value: number) => void;
+    setCurrentChat: (chat: ChatProps) => void;
+};
+export const TodoBubble = (props: TodoBubbleProps) => {
+    const {
+        myself,
+        todo,
+        todos,
+        setTodos,
+        currentIndex,
+        isExistingTodaysTodo,
+        teamMemberProfiles,
+        teamMembers,
+        setMyself,
+        socket,
+        setOpeningService,
+        setCurrentChat,
+    } = props;
+    const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
+
+    const boxRef = useRef<HTMLDivElement>(null);
+    const [body, setBody] = useState<PartialBlock[]>(todo.todoContent);
+    const [startIntervalUpdatingTodo, setStartIntervalUpdatingTodo] = useState(false);
+    const [bodyEdited, setBodyEdited] = useState(false);
+
+    // Send updated task to the backend when task is updated
+    const sendUpdatedTodo = async () => {
+        const updatedTodo = await updateTodo(accessToken, myself, { ...todo, todoContent: body });
+        setTodos(todos.map((todo) => (todo.todoId === updatedTodo.todoId ? updatedTodo : todo)));
+
+        // reset the bodyEdited
+        setBodyEdited(false);
+
+        // reset the startIntervalUpdatingTodo
+        setStartIntervalUpdatingTodo(false);
+    };
+
+    // Auto save task body every Nms if needed
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            if (bodyEdited === true) {
+                setStartIntervalUpdatingTodo(true);
+            }
+        }, 3000);
+
+        // Clean up the interval when the component unmounts
+        return () => clearInterval(intervalId);
+    }, [bodyEdited]);
+
+    useEffect(() => {
+        if (startIntervalUpdatingTodo) {
+            sendUpdatedTodo();
+        }
+    }, [startIntervalUpdatingTodo]);
+
+    return (
+        <Box
+            ref={boxRef}
+            sx={{
+                py: 0.5,
+                px: 15,
+                height: "100%",
+            }}
+        >
+            <Box key={`todo-bubble-box-${todo.todoId}`}>
+                <Card
+                    variant="outlined"
+                    sx={{
+                        backgroundColor: mode === "dark" ? "black" : "white",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    <Stack direction="row" alignItems="center">
+                        <Chip
+                            key={`todo-bubble-chip-${todo.todoId}`}
+                            variant={
+                                currentIndex === 0 && isExistingTodaysTodo === true
+                                    ? "solid"
+                                    : "soft"
+                            }
+                            color={
+                                currentIndex === 0 && isExistingTodaysTodo === true
+                                    ? "primary"
+                                    : "neutral"
+                            }
+                            sx={{
+                                marginRight: "auto",
+                                borderRadius: "5px",
+                                fontWeight: "bold",
+                            }}
+                            size="md"
+                        >
+                            {extractYYYYMMDD(todo.tsCreatedAt)}
+                        </Chip>
+                        <Chip
+                            variant="soft"
+                            color={todo.isCompleted ? "success" : "neutral"}
+                            size="md"
+                            sx={{ marginLeft: "5px" }}
+                            startDecorator={todo.isCompleted ? <DoneAllIcon /> : null}
+                        >
+                            {todo.isCompleted ? "Completed" : "Incomplete"}
+                        </Chip>
+                        <Button
+                            variant="soft"
+                            color="primary"
+                            size="sm"
+                            sx={{ marginLeft: "auto" }}
+                            disabled={bodyEdited === false}
+                            onClick={() => sendUpdatedTodo()}
+                        >
+                            {bodyEdited ? "Save" : "Saved"}
+                        </Button>
+                    </Stack>
+
+                    <BnTodoPreview
+                        customClassName="todo-preview"
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        key={`${todo.todoId}`}
+                        body={body}
+                        setBody={setBody}
+                        setBodyEdited={setBodyEdited}
+                        setCurrentChat={setCurrentChat}
+                        setOpeningService={setOpeningService}
+                    />
+                </Card>
+            </Box>
+        </Box>
+    );
+};

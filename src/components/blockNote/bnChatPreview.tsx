@@ -1,10 +1,10 @@
 import { Socket } from "socket.io-client";
-import { Box, Modal, ModalDialog, Button, IconButton, Tooltip } from "@mui/joy";
+import { Box, Modal, ModalDialog, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote, FormattingToolbar, FileDownloadButton } from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
 import {
     PartialBlock,
     BlockNoteSchema,

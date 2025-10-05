@@ -9,7 +9,13 @@ import { ChatSidebar } from "./components/ChatSidebar";
 import { MessagesPane } from "./MainChatPane";
 import { MessagesSubPane } from "./SubChatPane";
 import { Team, UserProps } from "../../types/admin";
-import { ActivityMessageProps, AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
+import {
+    ActivityMessageProps,
+    AllChatProps,
+    ChatProps,
+    ThreadProps,
+    ToDoFactProps,
+} from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
@@ -24,6 +30,9 @@ import {
     TaskNoteMetaProps,
 } from "../../types/notes";
 import { ChatNoteMain } from "../notes/components/ChatNoteMain";
+import { loadTodo } from "./services/loadTodo";
+import { extractYYYYMMDD } from "../../utils/dateUtils";
+import { useAuth } from "../../context/AuthContext";
 
 type ChatHomeProps = {
     currentTeam: Team;
@@ -208,6 +217,7 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     // Common
     const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
 
     // Chat Related
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
@@ -266,6 +276,25 @@ export const ChatHome = (props: ChatHomeProps) => {
     };
     const { width, height } = useWindowSize();
     ////////////////////////////////////////////////////////////////////////////
+
+    // To-Do Related
+    const [todos, setTodos] = useState<ToDoFactProps[]>([]);
+    const [isExistingTodaysTodo, setIsExistingTodaysTodo] = useState(false);
+    const [incompleteTodoCount, setIncompleteTodoCount] = useState<number>(0);
+    useEffect(() => {
+        loadTodo(myself, accessToken).then((data) => {
+            if (data) {
+                setTodos(data);
+                setIsExistingTodaysTodo(
+                    extractYYYYMMDD(data[data.length - 1].tsCreatedAt) ===
+                        extractYYYYMMDD(new Date().toISOString())
+                );
+            }
+        });
+    }, [myself, accessToken]);
+    useEffect(() => {
+        setIncompleteTodoCount(todos.filter((todo) => !todo.isCompleted).length);
+    }, [todos]);
 
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
@@ -399,6 +428,13 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 funcSetAllChats={funcSetAllChats}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setCurrentProject={setCurrentProject}
+                                                isToDoVisible={isToDoVisible}
+                                                setIsToDoVisible={setIsToDoVisible}
+                                                todos={todos}
+                                                setTodos={setTodos}
+                                                isExistingTodaysTodo={isExistingTodaysTodo}
+                                                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                                                incompleteTodoCount={incompleteTodoCount}
                                             />
                                         </Panel>
 
@@ -486,6 +522,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setCurrentProject={setCurrentProject}
                                             setIsToDoVisible={setIsToDoVisible}
                                             isToDoVisible={isToDoVisible}
+                                            todos={todos}
+                                            setTodos={setTodos}
+                                            isExistingTodaysTodo={isExistingTodaysTodo}
+                                            setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                                            incompleteTodoCount={incompleteTodoCount}
                                         />
                                     )}
                                 </Panel>

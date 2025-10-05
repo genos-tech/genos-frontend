@@ -101,7 +101,6 @@ export const ChatSearch = (props: ChatSearchProps) => {
             const loadedUsers: SearchListProps[] = await loadSearchList(myself, accessToken);
 
             if (active) {
-                console.log("loadedUsers:", loadedUsers);
                 setOptions([...loadedUsers]);
             }
         })();
