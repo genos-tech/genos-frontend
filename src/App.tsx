@@ -104,7 +104,7 @@ const socket = (accessToken: string | null): Socket => {
     });
 };
 
-const useMyself = (): SetMyselfProps => {
+const useMyself = (accessToken: string | null): SetMyselfProps => {
     const [myself, setMyself] = useState<UserProps>({
         teamId: "",
         teamName: "",
@@ -144,7 +144,7 @@ const useMyself = (): SetMyselfProps => {
         return () => {
             window.removeEventListener("storage", fetchUserData);
         };
-    }, []);
+    }, [accessToken]);
 
     return { myself, setMyself };
 };
@@ -157,7 +157,7 @@ export const App = () => {
     // Common
     ///////////////////////
     const { accessToken } = useAuth();
-    const { myself, setMyself } = useMyself();
+    const { myself, setMyself } = useMyself(accessToken);
     const [isLoading, setIsLoading] = useState(true);
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
 
