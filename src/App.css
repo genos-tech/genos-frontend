@@ -36,6 +36,12 @@
   }
 }
 
+input[type="checkbox"] {
+  transform: scale(1.4); /* increase size */
+  transform-origin: center; /* keep it centered */
+  cursor: pointer;
+}
+
 .card {
   padding: 2em;
 }
