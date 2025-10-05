@@ -76,6 +76,7 @@ import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 import { popSpecificMessages } from "./features/chat/services/popSpecificMessages";
 import { loadSpecificThreadMessages } from "./features/chat/services/loadSpecificThreadMessages";
+import { areObjectsEqual } from "./utils/objectHandler";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -119,7 +120,7 @@ const useMyself = (accessToken: string | null): SetMyselfProps => {
 
     useEffect(() => {
         const fetchUserData = () => {
-            setMyself({
+            const newMyself: UserProps = {
                 teamId: localStorage.getItem("teamId") || "",
                 teamName: localStorage.getItem("teamName") || "",
                 userId: localStorage.getItem("userId") || "",
@@ -132,7 +133,12 @@ const useMyself = (accessToken: string | null): SetMyselfProps => {
                 baseCountry: localStorage.getItem("baseCountry") || "",
                 customStatus: localStorage.getItem("customStatus") || "",
                 avatarImgPath: localStorage.getItem("avatarImgPath") || "",
-            });
+            };
+
+            // Only when the new myself is different from the current myself, set the new myself.
+            if (areObjectsEqual(newMyself, myself) === false) {
+                setMyself(newMyself);
+            }
         };
 
         // Add a small delay to ensure localStorage is updated
@@ -239,10 +245,11 @@ export const App = () => {
     const [openCreateProject, setOpenCreateProject] = useState(false);
     const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
     const [currentProject, setCurrentProject] = useState<ProjectProps | null>(null);
+    let tsLastLoadProjectAndTasks: number | undefined = undefined;
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
-        console.log("Loaded team projects:", loadedTeamProjects);
+        tsLastLoadProjectAndTasks = Date.now();
 
         // Set the current project to one of the joining project.
         // TODO: should set "last-opened-project" using cache(localstorage)
@@ -250,31 +257,17 @@ export const App = () => {
             setTeamProjects([...loadedTeamProjects]);
 
             for (let i = 0; i < loadedTeamProjects.length; i++) {
-                if (targetProjectId !== -1 && currentProject) {
-                    if (
-                        loadedTeamProjects[i].projectId === targetProjectId ||
-                        myself.teamId !== currentTeamId
-                    ) {
-                        console.log("Set current project:", loadedTeamProjects[i]);
-                        setCurrentProject({
-                            projectId: loadedTeamProjects[i].projectId,
-                            projectName: loadedTeamProjects[i].projectName,
-                            projectTags: loadedTeamProjects[i].projectTags,
-                            isPrivate: loadedTeamProjects[i].isPrivate,
-                            systemUserId: loadedTeamProjects[i].systemUserId,
-                        });
-                        await loadProjectTasks(
-                            myself,
-                            loadedTeamProjects[i].projectId,
-                            accessToken
-                        );
-                        break;
-                    }
-                } else {
-                    // If targetProjectId is not -1, set the target project as the current project
-                    if (targetProjectId !== -1) {
-                        if (loadedTeamProjects[i].projectId === targetProjectId) {
-                            console.log("Set current project:", loadedTeamProjects[i]);
+                // If the current project is not set, or the current project is not the same
+                // as the loaded team projects, set the current project to the loaded team projects.
+                if (
+                    currentProject === null ||
+                    currentProject.projectId !== loadedTeamProjects[i].projectId
+                ) {
+                    if (targetProjectId !== -1 && currentProject) {
+                        if (
+                            loadedTeamProjects[i].projectId === targetProjectId ||
+                            myself.teamId !== currentTeamId
+                        ) {
                             setCurrentProject({
                                 projectId: loadedTeamProjects[i].projectId,
                                 projectName: loadedTeamProjects[i].projectName,
@@ -282,6 +275,7 @@ export const App = () => {
                                 isPrivate: loadedTeamProjects[i].isPrivate,
                                 systemUserId: loadedTeamProjects[i].systemUserId,
                             });
+                            // Load the latest tasks and insert into the indexedDB
                             await loadProjectTasks(
                                 myself,
                                 loadedTeamProjects[i].projectId,
@@ -289,11 +283,48 @@ export const App = () => {
                             );
                             break;
                         }
-                    } else if (
-                        loadedTeamProjects[i].isJoined === true &&
-                        loadedTeamProjects[i].projectId
-                    ) {
-                        console.log("Set current project:", loadedTeamProjects[i]);
+                    } else {
+                        // If targetProjectId is not -1, set the target project as the current project
+                        if (targetProjectId !== -1) {
+                            if (loadedTeamProjects[i].projectId === targetProjectId) {
+                                setCurrentProject({
+                                    projectId: loadedTeamProjects[i].projectId,
+                                    projectName: loadedTeamProjects[i].projectName,
+                                    projectTags: loadedTeamProjects[i].projectTags,
+                                    isPrivate: loadedTeamProjects[i].isPrivate,
+                                    systemUserId: loadedTeamProjects[i].systemUserId,
+                                });
+                                // Load the latest tasks and insert into the indexedDB
+                                await loadProjectTasks(
+                                    myself,
+                                    loadedTeamProjects[i].projectId,
+                                    accessToken
+                                );
+                                break;
+                            }
+                        } else if (
+                            loadedTeamProjects[i].isJoined === true &&
+                            loadedTeamProjects[i].projectId
+                        ) {
+                            setCurrentProject({
+                                projectId: loadedTeamProjects[i].projectId,
+                                projectName: loadedTeamProjects[i].projectName,
+                                projectTags: loadedTeamProjects[i].projectTags,
+                                isPrivate: loadedTeamProjects[i].isPrivate,
+                                systemUserId: loadedTeamProjects[i].systemUserId,
+                            });
+                            // Load the latest tasks and insert into the indexedDB
+                            await loadProjectTasks(
+                                myself,
+                                loadedTeamProjects[i].projectId,
+                                accessToken
+                            );
+                            break;
+                        }
+                    }
+
+                    // If not meeting any condition, set the last project as the current project
+                    if (i === loadedTeamProjects.length - 1 && loadedTeamProjects[i].projectId) {
                         setCurrentProject({
                             projectId: loadedTeamProjects[i].projectId,
                             projectName: loadedTeamProjects[i].projectName,
@@ -301,6 +332,7 @@ export const App = () => {
                             isPrivate: loadedTeamProjects[i].isPrivate,
                             systemUserId: loadedTeamProjects[i].systemUserId,
                         });
+                        // Load the latest tasks and insert into the indexedDB
                         await loadProjectTasks(
                             myself,
                             loadedTeamProjects[i].projectId,
@@ -308,20 +340,6 @@ export const App = () => {
                         );
                         break;
                     }
-                }
-
-                // If not meeting any condition, set the last project as the current project
-                if (i === loadedTeamProjects.length - 1 && loadedTeamProjects[i].projectId) {
-                    console.log("Set current project:", loadedTeamProjects[i]);
-                    setCurrentProject({
-                        projectId: loadedTeamProjects[i].projectId,
-                        projectName: loadedTeamProjects[i].projectName,
-                        projectTags: loadedTeamProjects[i].projectTags,
-                        isPrivate: loadedTeamProjects[i].isPrivate,
-                        systemUserId: loadedTeamProjects[i].systemUserId,
-                    });
-                    await loadProjectTasks(myself, loadedTeamProjects[i].projectId, accessToken);
-                    break;
                 }
             }
         }
@@ -341,13 +359,22 @@ export const App = () => {
     }, [currentProject]);
 
     useEffect(() => {
-        (async () => {
-            await loadProjectsAndTasks(
-                localStorage.getItem("lastProjectId")
-                    ? Number(localStorage.getItem("lastProjectId"))
-                    : -1
-            );
-        })();
+        const intervalMs: number = 1000;
+        const now = Date.now();
+        if (
+            tsLastLoadProjectAndTasks === undefined ||
+            (tsLastLoadProjectAndTasks && now - tsLastLoadProjectAndTasks >= intervalMs)
+        ) {
+            setTimeout(() => {
+                (async () => {
+                    await loadProjectsAndTasks(
+                        localStorage.getItem("lastProjectId")
+                            ? Number(localStorage.getItem("lastProjectId"))
+                            : -1
+                    );
+                })();
+            }, 500); // wait 500ms
+        }
     }, [myself]);
 
     ///////////////////////
@@ -581,7 +608,9 @@ export const App = () => {
     const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
     const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
     const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
+    let tsLastLoadProjectTasks: number | undefined = undefined;
     const fetchProjectTasks = async (projectId: number) => {
+        tsLastLoadProjectTasks = Date.now();
         const _onGoingTasks: TaskTableProps[] = await popSpecificProjectTasks(
             projectId,
             taskTypes.ongoing.statuses
@@ -600,12 +629,21 @@ export const App = () => {
     };
 
     useEffect(() => {
-        (async () => {
-            if (currentProject && currentProject.projectId) {
-                fetchProjectTasks(currentProject.projectId);
-                localStorage.setItem("lastProjectId", currentProject.projectId.toString());
-            }
-        })();
+        const intervalMs: number = 1000;
+        const now = Date.now();
+        if (
+            tsLastLoadProjectTasks === undefined ||
+            (tsLastLoadProjectTasks && now - tsLastLoadProjectTasks >= intervalMs)
+        ) {
+            setTimeout(() => {
+                (async () => {
+                    if (currentProject && currentProject.projectId) {
+                        await fetchProjectTasks(currentProject.projectId);
+                        localStorage.setItem("lastProjectId", currentProject.projectId.toString());
+                    }
+                })();
+            }, 500); // wait 500ms
+        }
     }, [currentProject]);
 
     useEffect(() => {
