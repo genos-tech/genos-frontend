@@ -76,7 +76,6 @@ import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 import { popSpecificMessages } from "./features/chat/services/popSpecificMessages";
 import { loadSpecificThreadMessages } from "./features/chat/services/loadSpecificThreadMessages";
-import { areObjectsEqual } from "./utils/objectHandler";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -643,7 +642,7 @@ export const App = () => {
                         localStorage.setItem("lastProjectId", currentProject.projectId.toString());
                     }
                 })();
-            }, 500); // wait 500ms
+            }, 1000); // wait 500ms
         }
     }, [currentProject]);
 
