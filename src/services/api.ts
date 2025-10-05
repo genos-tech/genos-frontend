@@ -12,7 +12,7 @@ export const nonAuthApi = () => {
 
 export const authApi = (accessToken: string | null | undefined) => {
     if (!accessToken || accessToken === "") {
-        console.warn("No access token provided. Request will not be sent.");
+        console.warn("[API] No access token provided. HTTP request will not be sent.");
         return null;
     }
     return axios.create({

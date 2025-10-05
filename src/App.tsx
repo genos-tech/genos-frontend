@@ -1206,12 +1206,14 @@ export const App = () => {
 
     useEffect(() => {
         if (accessToken) {
-            console.log("Connecting WS");
+            console.log("[WS] Start establishing WS connection");
             const _socket = socket(accessToken);
             if (_socket && (socketInstance === null || myself.teamId !== currentTeamId)) {
                 setSocketInstance(_socket);
-                console.log("Finished connecting WS");
+                console.log("[WS] WS connection established");
             }
+        } else {
+            console.warn("[WS] No valid access token found");
         }
     }, [myself]);
 
