@@ -135,12 +135,13 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     setOpen(!open);
                                                     setIsTaskHomeVisible(true);
 
-                                                    // Reset the task table...
-                                                    setOngoingTasks([]);
-                                                    setClosedTasks([]);
-                                                    setDeletedTasks([]);
-
-                                                    if (projectId) {
+                                                    // Only if the clicked project id is not the same as the current one,
+                                                    // reset the project (and load tasks in the downstream step.)
+                                                    if (projectId !== currentProject?.projectId) {
+                                                        // Reset the task table...
+                                                        setOngoingTasks([]);
+                                                        setClosedTasks([]);
+                                                        setDeletedTasks([]);
                                                         (async () => {
                                                             await loadProjectsAndTasks(projectId);
                                                             // This will be executed in the loadProjectsAndTasks,

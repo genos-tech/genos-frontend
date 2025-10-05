@@ -605,7 +605,7 @@ export const App = () => {
         closed: { id: 2, statuses: ["Closed"], name: "Closed" },
         deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
     };
-    const [ongoingTasks, setOnGoingTasks] = useState<TaskTableProps[]>([]);
+    const [ongoingTasks, setOngoingTasks] = useState<TaskTableProps[]>([]);
     const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
     const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
     let tsLastLoadProjectTasks: number | undefined = undefined;
@@ -623,7 +623,7 @@ export const App = () => {
             projectId,
             taskTypes.deleted.statuses
         );
-        setOnGoingTasks(_onGoingTasks);
+        setOngoingTasks(_onGoingTasks);
         setClosedTasks(_closedTasks);
         setDeletedTasks(_deletedTasks);
     };
@@ -674,7 +674,7 @@ export const App = () => {
 
                 // Add a new ongoing task
                 if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
-                    setOnGoingTasks((prev) => [
+                    setOngoingTasks((prev) => [
                         ...prev,
                         {
                             id: String(loadedTask[0].id) || null,
@@ -708,7 +708,7 @@ export const App = () => {
     useEffect(() => {
         // Update an ongoing task
         if (isTaskUpdated && currentPreviewTask) {
-            setOnGoingTasks((prevTasks) =>
+            setOngoingTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === String(currentPreviewTask.id)
                         ? {
@@ -1157,6 +1157,9 @@ export const App = () => {
         // Reset note variables when the team changes
         setTabItems([]);
         setTmpTabItems([]);
+        setOngoingTasks([]);
+        setClosedTasks([]);
+        setDeletedTasks([]);
         setCurrentMyNote(null);
         setCurrentTaskNote(null);
         setCurrentChatNote(null);
@@ -1512,7 +1515,7 @@ export const App = () => {
                         isTaskUpdated={isTaskUpdated}
                         setIsTaskUpdated={setIsTaskUpdated}
                         ongoingTasks={ongoingTasks}
-                        setOngoingTasks={setOnGoingTasks}
+                        setOngoingTasks={setOngoingTasks}
                         closedTasks={closedTasks}
                         setClosedTasks={setClosedTasks}
                         deletedTasks={deletedTasks}
