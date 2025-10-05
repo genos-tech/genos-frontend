@@ -238,28 +238,27 @@ export const NoteHome = (props: NoteHomeProps) => {
                     {currentNoteType === 0 && (
                         <Panel id={"2"} order={2} minSize={35} maxSize={85}>
                             <Box sx={{ paddingX: 1, height: "100dvh" }}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    justifyContent="space-between"
-                                    sx={{ width: "100%" }}
+                                <Box
+                                    sx={{
+                                        height: "100%",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        width: "100%",
+                                    }}
                                 >
-                                    <Typography fontSize="20px">Note Home</Typography>
-
-                                    <Tooltip title="Create a New Note" size="sm">
-                                        <IconButton
-                                            component="button"
-                                            size="sm"
-                                            variant="outlined"
-                                            color="neutral"
-                                            onClick={() => {}}
-                                            sx={{ px: "10px" }}
-                                        >
-                                            <PlaylistAddIcon />
-                                            New Note
-                                        </IconButton>
-                                    </Tooltip>
-                                </Stack>
+                                    <IconButton
+                                        component="button"
+                                        variant="soft"
+                                        color="neutral"
+                                        sx={{
+                                            fontSize: "15px",
+                                            padding: "10px",
+                                        }}
+                                    >
+                                        (TBD) Note Home
+                                    </IconButton>
+                                </Box>
                             </Box>
                         </Panel>
                     )}
@@ -387,6 +386,31 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setCurrentMainChat={setCurrentMainChat}
                                         funcSetAllChats={funcSetAllChats}
                                     />
+                                )}
+
+                                {/* Shared Note selected */}
+                                {currentNoteType === 4 && (
+                                    <Box
+                                        sx={{
+                                            height: "100%",
+                                            display: "flex",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            width: "100%",
+                                        }}
+                                    >
+                                        <IconButton
+                                            component="button"
+                                            variant="soft"
+                                            color="neutral"
+                                            sx={{
+                                                fontSize: "15px",
+                                                padding: "10px",
+                                            }}
+                                        >
+                                            (TBD) Shared Notes
+                                        </IconButton>
+                                    </Box>
                                 )}
                             </Box>
                         </Panel>

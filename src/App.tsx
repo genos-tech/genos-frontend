@@ -180,7 +180,7 @@ export const App = () => {
         Number(localStorage.getItem("currentChatPaneType") || "1")
     );
 
-    // noteType = {0: Home, 1: personal note, 2: task note, 3: chat note}
+    // noteType = {0: Home, 1: personal note, 2: task note, 3: chat note, 4: shared note}
     const [currentNoteType, setCurrentNoteType] = useState<number>(
         Number(localStorage.getItem("currentNoteType") || "1")
     );

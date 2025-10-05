@@ -133,7 +133,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    {pmChat.chatName}'s Profile in Project
+                                    Project Profile in {pmChat.chatName}
                                 </Typography>
                             </Box>
                         </Box>

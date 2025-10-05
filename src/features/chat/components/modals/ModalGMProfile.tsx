@@ -128,7 +128,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    {gmChat.chatName}'s Profile in GM
+                                GM Profile in {gmChat.chatName}
                                 </Typography>
                             </Box>
                         </Box>

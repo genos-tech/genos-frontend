@@ -11,6 +11,7 @@ import {
     Menu,
     MenuItem,
     MenuButton,
+    Box,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -481,7 +482,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 </Stack>
 
                 {currentChatPaneType === 1 && (
-                    <>
+                    <Box>
                         <ChatList
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
@@ -512,10 +513,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
                         />
-                    </>
+                    </Box>
                 )}
                 {currentChatPaneType === 2 && (
-                    <>
+                    <Box>
                         <ChatList
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
@@ -546,10 +547,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
                         />
-                    </>
+                    </Box>
                 )}
                 {currentChatPaneType === 3 && (
-                    <>
+                    <Box>
                         <ChatList
                             teamMemberProfiles={teamMemberProfiles}
                             socket={socket}
@@ -580,12 +581,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
                         />
-                    </>
+                    </Box>
                 )}
                 {/* For Pinned Messages */}
-                {currentChatPaneType === 4 && <>{}</>}
+                {currentChatPaneType === 4 && <Box>{}</Box>}
                 {currentChatPaneType === 5 && (
-                    <>
+                    <Box>
                         <ActivityDivider
                             currentActivityMessageType={currentActivityMessageType}
                             setCurrentActivityMessageType={setCurrentActivityMessageType}
@@ -620,7 +621,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
                         />
-                    </>
+                    </Box>
                 )}
             </Sheet>
 

@@ -521,7 +521,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         </Dropdown>
                                                     </Typography>
 
-                                                    <Box sx={{ width: "50%" }}>
+                                                    <Box sx={{ width: "30%" }}>
                                                         <Autocomplete
                                                             key={`ac-project-tags-${currentPreviewTaskId}`}
                                                             sx={{ width: "100%" }}
