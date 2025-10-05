@@ -19,7 +19,7 @@ type ProjectsListItemProps = {
     setOngoingTasks: (value: TaskTableProps[]) => void;
     setClosedTasks: (value: TaskTableProps[]) => void;
     setDeletedTasks: (value: TaskTableProps[]) => void;
-    currentProject: ProjectProps | null;
+    currentProject?: ProjectProps | null;
     loadProjectsAndTasks: (value: number) => Promise<void>;
     setOpenCreateProject: (value: boolean) => void;
     setOpenJoinProject: (value: {

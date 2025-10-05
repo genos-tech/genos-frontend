@@ -9,7 +9,7 @@ import { Toggler } from "../common";
 
 type JoinProjectListItemProps = {
     teamProjects: ProjectProps[];
-    currentProject: ProjectProps | null;
+    currentProject?: ProjectProps | null;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;

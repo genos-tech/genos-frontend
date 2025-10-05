@@ -254,6 +254,7 @@ export const App = () => {
                         loadedTeamProjects[i].projectId === targetProjectId ||
                         myself.teamId !== currentTeamId
                     ) {
+                        console.log("Set current project:", loadedTeamProjects[i]);
                         setCurrentProject({
                             projectId: loadedTeamProjects[i].projectId,
                             projectName: loadedTeamProjects[i].projectName,
@@ -272,6 +273,7 @@ export const App = () => {
                     // If targetProjectId is not -1, set the target project as the current project
                     if (targetProjectId !== -1) {
                         if (loadedTeamProjects[i].projectId === targetProjectId) {
+                            console.log("Set current project:", loadedTeamProjects[i]);
                             setCurrentProject({
                                 projectId: loadedTeamProjects[i].projectId,
                                 projectName: loadedTeamProjects[i].projectName,
@@ -290,6 +292,7 @@ export const App = () => {
                         loadedTeamProjects[i].isJoined === true &&
                         loadedTeamProjects[i].projectId
                     ) {
+                        console.log("Set current project:", loadedTeamProjects[i]);
                         setCurrentProject({
                             projectId: loadedTeamProjects[i].projectId,
                             projectName: loadedTeamProjects[i].projectName,
@@ -308,6 +311,7 @@ export const App = () => {
 
                 // If not meeting any condition, set the last project as the current project
                 if (i === loadedTeamProjects.length - 1 && loadedTeamProjects[i].projectId) {
+                    console.log("Set current project:", loadedTeamProjects[i]);
                     setCurrentProject({
                         projectId: loadedTeamProjects[i].projectId,
                         projectName: loadedTeamProjects[i].projectName,

@@ -17,7 +17,6 @@ import { TaskSidebarSearchBox } from "./SearchBox";
 import { TaskTableListItem } from "./TaskTableListItem";
 import { RecentsListItem } from "./RecentsListItem";
 import { ProjectsListItem } from "./ProjectsListItem";
-import { DashboardListItem } from "./DashboardListItem";
 
 type TaskSidebarProps = {
     myself: UserProps;
@@ -25,7 +24,7 @@ type TaskSidebarProps = {
     taskTableVisible: boolean;
     setTaskTableVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    currentProject: ProjectProps | null;
+    currentProject?: ProjectProps | null;
     setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;

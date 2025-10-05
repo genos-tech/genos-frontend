@@ -10,7 +10,7 @@ import { Toggler } from "../common";
 
 type TagsListItemProps = {
     projectId: number;
-    currentProject: ProjectProps | null;
+    currentProject?: ProjectProps | null;
     setSelectedTagForFiltering: (value: string) => void;
     setFilterBy: (value: number) => void;
     setCurrentFilterName: (value: string) => void;
