@@ -1215,7 +1215,7 @@ export const App = () => {
         } else {
             console.warn("[WS] No valid access token found");
         }
-    }, [myself]);
+    }, [myself, accessToken]);
 
     useEffect(() => {
         initCurrentTeam();
