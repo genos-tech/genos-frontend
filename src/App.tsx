@@ -242,6 +242,7 @@ export const App = () => {
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
+        console.log("Loaded team projects:", loadedTeamProjects);
 
         // Set the current project to one of the joining project.
         // TODO: should set "last-opened-project" using cache(localstorage)
