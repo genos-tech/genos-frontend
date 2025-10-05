@@ -1,14 +1,12 @@
 import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
+import { useRef } from "react";
 import { Box, Button } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { UserProps } from "../../types/admin";
 import { useAuth } from "../../context/AuthContext";
-import { loadTodo } from "./services/loadTodo";
 import { ChatProps, ToDoFactProps } from "../../types/chat";
 import { TodoBubble } from "./components/bubbles/TodoBubble";
-import { extractYYYYMMDD } from "../../utils/dateUtils";
 import { createNewTodo } from "./services/createNewTodo";
 
 const defaultTodoContent = [
@@ -43,6 +41,11 @@ type ToDoPaneProps = {
     socket: Socket | null;
     setOpeningService: (value: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
+    todos: ToDoFactProps[];
+    setTodos: (value: ToDoFactProps[]) => void;
+    isExistingTodaysTodo: boolean;
+    setIsExistingTodaysTodo: (value: boolean) => void;
+    isSubChatVisible: boolean;
 };
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
@@ -53,23 +56,13 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         socket,
         setOpeningService,
         setCurrentChat,
+        todos,
+        setTodos,
+        isExistingTodaysTodo,
+        setIsExistingTodaysTodo,
+        isSubChatVisible,
     } = props;
     const { accessToken } = useAuth();
-    const [todos, setTodos] = useState<ToDoFactProps[]>([]);
-    const [isExistingTodaysTodo, setIsExistingTodaysTodo] = useState(false);
-    useEffect(() => {
-        loadTodo(myself, accessToken).then((data) => {
-            if (data) {
-                setTodos(data);
-                setIsExistingTodaysTodo(
-                    extractYYYYMMDD(data[data.length - 1].tsCreatedAt) ===
-                        extractYYYYMMDD(new Date().toISOString())
-                );
-            }
-        });
-    }, [myself, accessToken]);
-
-    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
     const handleCreateNewTodo = async () => {
         const todoContent = await createNewTodo(
@@ -85,6 +78,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
             setIsExistingTodaysTodo(true);
         }
     };
+
+    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
     return (
         <>
@@ -113,7 +108,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         ref={virtuosoRef}
                         className="custom-scrollbar"
                         style={{
-                            height: "91vh",
+                            height: isSubChatVisible ? "41vh" : "91vh",
                         }}
                         totalCount={todos.length}
                         initialTopMostItemIndex={0}

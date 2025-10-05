@@ -15,7 +15,7 @@ import {
 import { BnChatEditor } from "../../components/blockNote/bnChatEditor";
 import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps, MessageProps } from "../../types/chat";
+import { ChatProps, ThreadProps, MessageProps, ToDoFactProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 import { addChat } from "../../features/chat/services/addChat";
@@ -62,6 +62,11 @@ type MessagesPaneProps = {
     setCurrentProject: (value: ProjectProps) => void;
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
+    todos: ToDoFactProps[];
+    setTodos: (value: ToDoFactProps[]) => void;
+    isExistingTodaysTodo: boolean;
+    setIsExistingTodaysTodo: (value: boolean) => void;
+    incompleteTodoCount: number;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -96,6 +101,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         setCurrentProject,
         setIsToDoVisible,
         isToDoVisible,
+        todos,
+        setTodos,
+        isExistingTodaysTodo,
+        setIsExistingTodaysTodo,
+        incompleteTodoCount,
     } = props;
     const { accessToken } = useAuth();
     const [chatMessages, setChatMessages] = useState(chat.messages);
@@ -264,6 +274,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     funcSetAllChats={funcSetAllChats}
                     isToDoVisible={isToDoVisible}
                     setIsToDoVisible={setIsToDoVisible}
+                    incompleteTodoCount={incompleteTodoCount}
                 />
 
                 {/* To-Do Pane for only myself */}
@@ -279,6 +290,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 socket={socket}
                                 setOpeningService={setOpeningService}
                                 setCurrentChat={setCurrentMainChat}
+                                todos={todos}
+                                setTodos={setTodos}
+                                isExistingTodaysTodo={isExistingTodaysTodo}
+                                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                                isSubChatVisible={isSubChatVisible}
                             />
                         </>
                     )}
