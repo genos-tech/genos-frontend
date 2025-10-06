@@ -527,7 +527,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         taskNotes={taskNotes}
-                        setTaskNotes={setTaskNotes}
                         setCurrentTaskNote={setCurrentTaskNote}
                     />
 
