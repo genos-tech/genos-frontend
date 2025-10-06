@@ -144,11 +144,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         localStorage.setItem("lastChatType", chatType.toString());
         let lastChat: AllChatProps | undefined = undefined;
         let lastChatId: number = -1;
+        let lastChatType: number = -1;
         if (chatType === 1) {
             const lastChatIdStr: string = localStorage.getItem("lastDMChatId") || "";
             if (lastChatIdStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
                 lastChat = allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChatType = 1;
             }
         }
         if (chatType === 2) {
@@ -156,6 +158,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             if (lastChatIdStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
                 lastChat = allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChatType = 2;
             }
         }
         if (chatType === 3) {
@@ -163,19 +166,22 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             if (lastChatIdStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
                 lastChat = allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChatType = 3;
             }
         }
         if (chatType === 4) {
             const lastChatIdStr: string = localStorage.getItem("lastPinnedChatId") || "";
-            if (lastChatIdStr !== "") {
+            const lastChatTypeStr: string = localStorage.getItem("lastPinnedChatType") || "";
+            if (lastChatIdStr !== "" && lastChatTypeStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
                 lastChat = allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChatType = parseInt(lastChatTypeStr);
             }
         }
 
         if (lastChat !== undefined) {
             toggleMessagesPane();
-            popSpecificMessages(lastChatId, chatType)
+            popSpecificMessages(lastChatId, lastChatType)
                 .then((messages: MessageProps[]) => {
                     if (messages.length > 0) {
                         const newChat: ChatProps = defineNewChat(lastChat, messages);

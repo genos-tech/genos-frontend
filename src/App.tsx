@@ -1345,13 +1345,6 @@ export const App = () => {
                     localStorage.setItem("lastChatType", "3");
                     localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
                 }
-                if (currentMainChat.chatType === 4 && currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "4");
-                    localStorage.setItem(
-                        "lastPinnedChatId",
-                        currentMainChat.chatId.toString() || ""
-                    );
-                }
             }
         }, 500); // wait 500ms
     }, [currentMainChat, currentSubChat]);

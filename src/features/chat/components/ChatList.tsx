@@ -235,6 +235,7 @@ export const ChatList = (props: ChatListProps) => {
                                         chatType={chat.chatType}
                                         funcSetAllChats={funcSetAllChats}
                                         allChats={allChats}
+                                        isPinnedChat={chatType === 4}
                                     />
                                 </Stack>
                             </div>

@@ -91,6 +91,7 @@ export const Sidebar = (props: SidebarProps) => {
                 localStorage.setItem("lastGMChatId", "");
                 localStorage.setItem("lastPMChatId", "");
                 localStorage.setItem("lastPinnedChatId", "");
+                localStorage.setItem("lastPinnedChatType", "");
                 localStorage.setItem("lastProjectId", "");
                 localStorage.setItem("lastOpenChatNoteId", "");
                 localStorage.setItem("lastOpenTaskNoteId", "");

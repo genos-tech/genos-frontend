@@ -54,6 +54,7 @@ type ChatListItemProps = ListItemButtonProps & {
     chatType: number;
     funcSetAllChats: () => Promise<void>;
     allChats: AllChatProps[];
+    isPinnedChat: boolean;
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
@@ -77,6 +78,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
         chatType,
         funcSetAllChats,
         allChats,
+        isPinnedChat,
     } = props;
 
     const { accessToken } = useAuth();
@@ -132,6 +134,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
                     }
                 })
                 .catch((error) => console.error(error));
+
+            if (isPinnedChat) {
+                localStorage.setItem("lastChatType", "4");
+                localStorage.setItem("lastPinnedChatId", chat.chatId.toString() || "");
+                localStorage.setItem("lastPinnedChatType", chat.chatType.toString() || "");
+            }
         }
     };
 
