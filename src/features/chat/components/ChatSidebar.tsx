@@ -75,6 +75,8 @@ type ChatSidebarProps = {
     unReadChatCounts?: Record<string, number>;
     unReadActivityMessageCounts: number;
     funcSetAllChats: () => Promise<void>;
+    incompleteTodoCount: number;
+    setIsToDoVisible: (value: boolean) => void;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -108,6 +110,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         unReadChatCounts,
         unReadActivityMessageCounts,
         funcSetAllChats,
+        incompleteTodoCount,
+        setIsToDoVisible,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -537,6 +541,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
+                            incompleteTodoCount={incompleteTodoCount}
+                            setIsToDoVisible={setIsToDoVisible}
                         />
                     </Box>
                 )}
@@ -569,6 +575,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
+                            incompleteTodoCount={incompleteTodoCount}
+                            setIsToDoVisible={setIsToDoVisible}
                         />
                     </Box>
                 )}
@@ -601,6 +609,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
+                            incompleteTodoCount={incompleteTodoCount}
+                            setIsToDoVisible={setIsToDoVisible}
                         />
                     </Box>
                 )}
@@ -634,6 +644,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
+                            incompleteTodoCount={incompleteTodoCount}
+                            setIsToDoVisible={setIsToDoVisible}
                         />
                     </Box>
                 )}
@@ -670,6 +682,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentProject={setCurrentProject}
                             showOnlyUnreadItems={showOnlyUnreadItems}
                             funcSetAllChats={funcSetAllChats}
+                            incompleteTodoCount={incompleteTodoCount}
+                            setIsToDoVisible={setIsToDoVisible}
                         />
                     </Box>
                 )}

@@ -367,6 +367,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 unReadChatCounts={unReadChatCounts}
                                 unReadActivityMessageCounts={unReadActivityMessageCounts}
                                 funcSetAllChats={funcSetAllChats}
+                                incompleteTodoCount={incompleteTodoCount}
+                                setIsToDoVisible={setIsToDoVisible}
                             />
                         </Sheet>
                     </Box>

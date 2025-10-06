@@ -150,7 +150,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                         color="primary"
                                         size="sm"
                                         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                        sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                        sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 1 }}
                                     >
                                         <IconButton
                                             component="a"

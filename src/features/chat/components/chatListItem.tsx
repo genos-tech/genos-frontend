@@ -11,12 +11,14 @@ import {
     Typography,
     IconButton,
     Chip,
+    Badge,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import CircleIcon from "@mui/icons-material/Circle";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import ChecklistIcon from "@mui/icons-material/Checklist";
 
 import { addChat } from "../services/addChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
@@ -55,6 +57,8 @@ type ChatListItemProps = ListItemButtonProps & {
     funcSetAllChats: () => Promise<void>;
     allChats: AllChatProps[];
     isPinnedChat: boolean;
+    incompleteTodoCount: number;
+    setIsToDoVisible: (value: boolean) => void;
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
@@ -79,6 +83,8 @@ export const ChatListItem = (props: ChatListItemProps) => {
         funcSetAllChats,
         allChats,
         isPinnedChat,
+        incompleteTodoCount,
+        setIsToDoVisible,
     } = props;
 
     const { accessToken } = useAuth();
@@ -319,6 +325,28 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
                                         : ""}
                                 </Typography>
+                                {chat.dmPartnerUser.userId === myself.userId && (
+                                    <Tooltip title="To-Do" size="sm">
+                                        <Badge
+                                            badgeContent={incompleteTodoCount}
+                                            color="primary"
+                                            size="sm"
+                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 1 }}
+                                        >
+                                            <IconButton
+                                                component="a"
+                                                size="sm"
+                                                variant="plain"
+                                                color="neutral"
+                                                sx={{ mr: -1 }}
+                                                onClick={() => setIsToDoVisible(true)}
+                                            >
+                                                <ChecklistIcon />
+                                            </IconButton>
+                                        </Badge>
+                                    </Tooltip>
+                                )}
                                 <Tooltip title="Pin Chat" size="sm">
                                     <IconButton
                                         component="a"

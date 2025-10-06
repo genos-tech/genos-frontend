@@ -53,6 +53,8 @@ type ChatListProps = {
     setCurrentProject: (value: ProjectProps) => void;
     showOnlyUnreadItems: boolean;
     funcSetAllChats: () => Promise<void>;
+    incompleteTodoCount: number;
+    setIsToDoVisible: (value: boolean) => void;
 };
 export const ChatList = (props: ChatListProps) => {
     const {
@@ -82,6 +84,8 @@ export const ChatList = (props: ChatListProps) => {
         setCurrentProject,
         showOnlyUnreadItems,
         funcSetAllChats,
+        incompleteTodoCount,
+        setIsToDoVisible,
     } = props;
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
@@ -236,6 +240,8 @@ export const ChatList = (props: ChatListProps) => {
                                         funcSetAllChats={funcSetAllChats}
                                         allChats={allChats}
                                         isPinnedChat={chatType === 4}
+                                        incompleteTodoCount={incompleteTodoCount}
+                                        setIsToDoVisible={setIsToDoVisible}
                                     />
                                 </Stack>
                             </div>
