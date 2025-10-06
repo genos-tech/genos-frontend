@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 import {
     Avatar,
@@ -79,6 +80,8 @@ export const ChatListItem = (props: ChatListItemProps) => {
     } = props;
 
     const { accessToken } = useAuth();
+
+    const [isPinned, setIsPinned] = useState(chat.isPinned);
 
     const selected =
         `${currentMainChat.chatName}-${currentMainChat.chatId}` ===
@@ -316,9 +319,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         onClick={(event) => {
                                             event.stopPropagation(); // Stop the click from reaching ListItemButton
                                             pinChatHandler(chat.chatId, chat.chatType); // Call the intended function
+                                            setIsPinned(!isPinned);
                                         }}
                                     >
-                                        <PushPinIcon sx={{ fontSize: chat.isPinned ? 18 : 16 }} />
+                                        <PushPinIcon sx={{ fontSize: isPinned ? 18 : 16 }} />
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Split View " size="sm">
