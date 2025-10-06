@@ -3,8 +3,6 @@ import React, { useEffect, useState, useRef } from "react";
 import {
     Box,
     Typography,
-    Card,
-    CardContent,
     IconButton,
     Tabs,
     TabList,
@@ -14,15 +12,18 @@ import {
     List,
     ListItem,
     ListItemButton,
+    Tooltip,
+    ModalDialog,
+    Modal,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
 import CloseIcon from "@mui/icons-material/Close";
+import DownloadIcon from "@mui/icons-material/Download";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import AddIcon from "@mui/icons-material/Add";
 import FolderIcon from "@mui/icons-material/Folder";
 import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import HistoryIcon from "@mui/icons-material/History";
 import CommentIcon from "@mui/icons-material/Comment";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -35,7 +36,7 @@ import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHoo
 import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
-import { TaskNoteMetaProps, TaskNoteProps } from "../../../../../types/notes";
+import { TaskNoteProps } from "../../../../../types/notes";
 import { getCurrentTimestamp } from "../../../../../utils/dateUtils";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
@@ -80,7 +81,6 @@ type TaskTabBlockProps = {
         title?: string
     ) => Promise<void>;
     taskNotes: TaskNoteProps[];
-    setTaskNotes: (value: TaskNoteProps[]) => void;
     setCurrentTaskNote: (value: TaskNoteProps) => void;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
@@ -108,7 +108,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setIsTaskNoteVisible,
         handleCreateNewTaskNote,
         taskNotes,
-        setTaskNotes,
         setCurrentTaskNote,
     } = props;
 
@@ -116,7 +115,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const [textFiles, setTextFiles] = useState<FileProps[]>([]);
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
     const [tabIndex, setTabIndex] = React.useState(0);
 
@@ -217,11 +215,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const handleDeleteImage = async (taskId: number | undefined, deletingImage: FileProps) => {
         setImages((prev) => prev.filter((image) => image !== deletingImage));
         if (taskId) {
-            const res = await deleteTaskAttachment(
-                taskId,
-                deletingImage.attachmentId,
-                accessToken
-            );
+            await deleteTaskAttachment(taskId, deletingImage.attachmentId, accessToken);
 
             if (setIsAttachmentDeleted) {
                 setIsAttachmentDeleted(true);
@@ -244,11 +238,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     ) => {
         setTextFiles((prev) => prev.filter((file) => file !== deletingTextFile));
         if (taskId) {
-            const res = await deleteTaskAttachment(
-                taskId,
-                deletingTextFile.attachmentId,
-                accessToken
-            );
+            await deleteTaskAttachment(taskId, deletingTextFile.attachmentId, accessToken);
 
             if (setIsAttachmentDeleted) {
                 setIsAttachmentDeleted(true);
@@ -265,12 +255,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
 
         // No need this in preview mode
         // setIsUploadingFilesUpdated(true);
-    };
-
-    const handleCloseModal = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        if (event.target === event.currentTarget) {
-            setSelectedImage(null);
-        }
     };
 
     useEffect(() => {
@@ -349,6 +333,23 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         taskComments,
         isCommentUpdated.scrollToBottom
     );
+
+    // State for modal
+    const [opened, setOpened] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+    // Custom click handler
+    const handleImageClick = (src: string) => {
+        setSelectedImage(src);
+        setOpened(true);
+    };
+
+    const handleDownload = async (
+        url: string,
+        filename = `chat-message-image-${getCurrentTimestamp()}.png`
+    ) => {
+        await downloadFile(url, filename);
+    };
 
     return (
         <Box sx={{ flexGrow: 1, m: -2, overflowX: "hidden" }}>
@@ -718,46 +719,52 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 height: `${image.height}px`,
                                                 cursor: "pointer",
                                             }}
-                                            onClick={() => setSelectedImage(image.url)}
+                                            onClick={(e) => {
+                                                const target = e.target as HTMLElement;
+                                                if (target.tagName === "IMG") {
+                                                    handleImageClick(
+                                                        (target as HTMLImageElement).src
+                                                    );
+                                                }
+                                            }}
                                         />
                                     </Box>
                                 ))}
                             </Box>
                         </Box>
-                        {selectedImage && (
-                            <Box
-                                onClick={handleCloseModal}
-                                style={{
-                                    position: "fixed",
-                                    top: 0,
-                                    left: 0,
-                                    width: "100%",
-                                    height: "100%",
-                                    background: "rgba(0,0,0,0.5)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    zIndex: 10000,
-                                }}
-                            >
-                                <Card
-                                    sx={{
-                                        position: "relative",
-                                        padding: "20px",
-                                        background: "white",
-                                        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                                    }}
-                                >
-                                    <CardContent>
-                                        <img
-                                            src={selectedImage}
-                                            alt="Full View"
-                                            style={{ maxWidth: "100%", maxHeight: "80vh" }}
-                                        />
-                                    </CardContent>
-                                </Card>
-                            </Box>
-                        )}
+
+                        <Modal
+                            sx={{ zIndex: 10010 }}
+                            open={opened}
+                            onClose={() => setOpened(false)}
+                        >
+                            <ModalDialog>
+                                {selectedImage ? (
+                                    <Box>
+                                        <img src={selectedImage} alt="preview" />
+                                        <Tooltip
+                                            placement="top"
+                                            title="Download"
+                                            sx={{ zIndex: 10010 }}
+                                            component="div"
+                                        >
+                                            <IconButton
+                                                onClick={() => handleDownload(selectedImage)}
+                                                color="neutral"
+                                                variant="solid"
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: "10px",
+                                                    right: "10px",
+                                                }}
+                                            >
+                                                <DownloadIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
+                                ) : null}
+                            </ModalDialog>
+                        </Modal>
                     </TabPanel>
 
                     {/* <TabPanel value={3}>History-Content</TabPanel> */}
