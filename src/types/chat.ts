@@ -211,7 +211,7 @@ export type SearchListProps = {
     type: string;
     name: string;
     email: string | null;
-    dmPartnerUserId: string;
+    dmPartnerUser: UserProps;
     isPrivate: boolean;
     isJoined: boolean;
 };

@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Autocomplete, Box } from "@mui/joy";
+import {
+    Autocomplete,
+    AutocompleteOption,
+    Box,
+    ListItemContent,
+    Stack,
+    Typography,
+} from "@mui/joy";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CircularProgress from "@mui/joy/CircularProgress";
 import { Socket } from "socket.io-client";
@@ -9,6 +16,8 @@ import { moveToSelectedChat } from "../services/moveToChat";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { SearchListProps, AllChatProps, ChatProps } from "../../../types/chat";
+import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
+import { GMAvatar } from "../../../components/common/GMAvatar";
 
 type ChatSearchProps = {
     myself: UserProps;
@@ -20,6 +29,10 @@ type ChatSearchProps = {
     setAllChats: (value: AllChatProps[]) => void;
     setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
     setCurrentChatPaneType: (value: number) => void;
+    teamMemberProfiles: Record<string, UserProps>;
+    setMyself: (value: UserProps) => void;
+    setOpeningService: (value: number) => void;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const ChatSearch = (props: ChatSearchProps) => {
@@ -33,6 +46,10 @@ export const ChatSearch = (props: ChatSearchProps) => {
         setAllChats,
         setOpenJoinGM,
         setCurrentChatPaneType,
+        teamMemberProfiles,
+        setMyself,
+        setOpeningService,
+        funcSetAllChats,
     } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<SearchListProps[]>([]);
@@ -137,6 +154,58 @@ export const ChatSearch = (props: ChatSearchProps) => {
                         ? `🔒 ${option.name}`
                         : option.name
                 }
+                renderOption={(props, option) => {
+                    const gmChat: AllChatProps | undefined = allChats.find(
+                        (chat) => chat.chatId === option.id
+                    );
+                    return (
+                        <AutocompleteOption
+                            {...props}
+                            key={`ac-render-option-chatsearch-${option.name}-${option.id}`}
+                        >
+                            <ListItemContent sx={{ fontSize: "sm" }}>
+                                <Stack direction="row" spacing={1}>
+                                    {option.type === "People" && (
+                                        <AvatarWithStatus
+                                            key={`ac-render-option-chatsearch-user-avatar-${option.name}-${option.id}`}
+                                            avatarUser={
+                                                teamMemberProfiles[option.dmPartnerUser.userId]
+                                            }
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            isYou={option.dmPartnerUser.userId === myself.userId}
+                                            setOpeningService={setOpeningService}
+                                        />
+                                    )}
+                                    {option.type === "Group" && gmChat && (
+                                        <GMAvatar
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            isYou={false}
+                                            setOpeningService={setOpeningService}
+                                            gmChat={gmChat}
+                                            funcSetAllChats={funcSetAllChats}
+                                        />
+                                    )}
+                                    <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
+                                        {option.type === "People"
+                                            ? option.email === myself.userEmail
+                                                ? `${option.name} (You) - ${option.email}`
+                                                : `${option.name} - ${option.email}`
+                                            : option.isPrivate
+                                            ? `🔒 ${option.name}`
+                                            : option.name}
+                                    </Typography>
+                                </Stack>
+                            </ListItemContent>
+                        </AutocompleteOption>
+                    );
+                }}
                 options={options}
                 loading={loading}
                 endDecorator={

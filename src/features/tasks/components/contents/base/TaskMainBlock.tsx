@@ -128,6 +128,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         />
                         <ACTeamUsers
                             myself={myself}
+                            setMyself={setMyself}
                             initialUser={taskContents.assignee}
                             teamMembers={teamMembers}
                             taskContents={taskContents}
@@ -137,6 +138,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             isAssignee={true}
                             setTaskUpdated={setTaskUpdated}
+                            teamMemberProfiles={teamMemberProfiles}
+                            socket={socket}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setOpeningService={setOpeningService}
                         />
                     </ListItem>
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
@@ -152,6 +157,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         />
                         <ACTeamUsers
                             myself={myself}
+                            setMyself={setMyself}
                             initialUser={taskContents.reporter}
                             teamMembers={teamMembers}
                             taskContents={taskContents}
@@ -161,6 +167,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             isAssignee={false}
                             setTaskUpdated={setTaskUpdated}
+                            teamMemberProfiles={teamMemberProfiles}
+                            socket={socket}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setOpeningService={setOpeningService}
                         />
                     </ListItem>
                     <Grid container spacing={2}>
