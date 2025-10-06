@@ -346,7 +346,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
 
     const handleDownload = async (
         url: string,
-        filename = `chat-message-image-${getCurrentTimestamp()}.png`
+        filename = `task-attachment-image-${getCurrentTimestamp()}.png`
     ) => {
         await downloadFile(url, filename);
     };
@@ -639,6 +639,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 handleDeleteTextFile(taskContents.id, file);
                                             }}
                                             size="sm"
+                                            variant="plain"
+                                            color="neutral"
                                             sx={{
                                                 position: "absolute",
                                                 top: 0,
@@ -648,24 +650,28 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         >
                                             <CloseIcon />
                                         </IconButton>
-                                        <div
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                downloadFile(
-                                                    file.url,
-                                                    `file.name-${getCurrentTimestamp()}`
-                                                );
-                                            }}
-                                            style={{
-                                                textDecoration: "none",
-                                                color: "inherit",
-                                                cursor: "pointer",
-                                            }}
+                                        <Tooltip
+                                            placement="top"
+                                            title={`Download \`${file.name}\``}
+                                            sx={{ zIndex: 10010 }}
+                                            component="div"
                                         >
-                                            <InsertDriveFileIcon
-                                                sx={{ fontSize: 40, cursor: "pointer" }}
-                                            />
-                                        </div>
+                                            <div
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    downloadFile(file.url, file.name);
+                                                }}
+                                                style={{
+                                                    textDecoration: "none",
+                                                    color: "inherit",
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <InsertDriveFileIcon
+                                                    sx={{ fontSize: 40, cursor: "pointer" }}
+                                                />
+                                            </div>
+                                        </Tooltip>
                                         <Typography
                                             fontSize={"10px"}
                                             sx={{
@@ -702,11 +708,13 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 handleDeleteImage(taskContents.id, image);
                                             }}
                                             size="sm"
+                                            variant="plain"
+                                            color="neutral"
                                             sx={{
                                                 position: "absolute",
                                                 top: 0,
                                                 right: 0,
-                                                background: "white",
+                                                background: "transparent",
                                             }}
                                         >
                                             <CloseIcon />
