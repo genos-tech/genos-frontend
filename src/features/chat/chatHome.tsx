@@ -285,10 +285,12 @@ export const ChatHome = (props: ChatHomeProps) => {
         loadTodo(myself, accessToken).then((data) => {
             if (data) {
                 setTodos(data);
-                setIsExistingTodaysTodo(
-                    extractYYYYMMDD(data[data.length - 1].tsCreatedAt) ===
-                        extractYYYYMMDD(new Date().toISOString())
-                );
+                if (data.length > 0) {
+                    setIsExistingTodaysTodo(
+                        extractYYYYMMDD(data[0].tsCreatedAt) ===
+                            extractYYYYMMDD(new Date().toISOString())
+                    );
+                }
             }
         });
     }, [myself, accessToken]);
