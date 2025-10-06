@@ -13,6 +13,15 @@ import { UserProps } from "../../../types/admin";
 import { ProjectProps } from "../../../types/tasks";
 import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../../../types/chat";
 
+// Sort all chats by pinned status and then by TSLastMessage in desc
+const sortAllChatByPinned = (allChats: AllChatProps[]) => {
+    return allChats.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.TSLastMessage).getTime() - new Date(a.TSLastMessage).getTime();
+    });
+};
+
 type ChatListProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
@@ -30,7 +39,6 @@ type ChatListProps = {
     currentSubChat: ChatProps;
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
-    isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
     isCreatingTask: {
@@ -38,11 +46,6 @@ type ChatListProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
@@ -51,7 +54,6 @@ type ChatListProps = {
     showOnlyUnreadItems: boolean;
     funcSetAllChats: () => Promise<void>;
 };
-
 export const ChatList = (props: ChatListProps) => {
     const {
         teamMemberProfiles,
@@ -70,11 +72,9 @@ export const ChatList = (props: ChatListProps) => {
         currentSubChat,
         setIsMainChatVisible,
         setIsThreadVisible,
-        isThreadVisible,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
         isCreatingTask,
-        setIsCreatingTask,
         isSubChatVisible,
         setIsSubChatVisible,
         setOpeningService,
@@ -86,17 +86,23 @@ export const ChatList = (props: ChatListProps) => {
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoPMRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoPinnedRef = useRef<VirtuosoHandle | null>(null);
 
     const chatTypeLookup: { [key: number]: any } = {
         1: virtuosoDMRef, // DM
         2: virtuosoGMRef, // GM
         3: virtuosoPMRef, // PM
+        4: virtuosoPinnedRef, // Pinned
     };
     useScrollToBottomOnChatPaneChange(virtuosoDMRef as React.RefObject<VirtuosoHandle>, allChats);
     useScrollToBottomOnChatPaneChange(virtuosoGMRef as React.RefObject<VirtuosoHandle>, allChats);
     useScrollToBottomOnChatPaneChange(virtuosoPMRef as React.RefObject<VirtuosoHandle>, allChats);
+    useScrollToBottomOnChatPaneChange(
+        virtuosoPinnedRef as React.RefObject<VirtuosoHandle>,
+        allChats
+    );
 
-    const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(allChats);
+    const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(sortAllChatByPinned(allChats));
 
     const [selectedActivityId, setSelectedActivityId] = useState<string>("");
 
@@ -167,16 +173,18 @@ export const ChatList = (props: ChatListProps) => {
         if (showOnlyUnreadItems === true) {
             setTmpActivityMessages(tmpActivityMessages.filter((item) => item.isRead === false));
             setTmpAllChats(
-                allChats.filter(
-                    (item) =>
-                        item.lastReadMessageId <
-                        (item.latestMessage
-                            ? item.latestMessage.messageId
-                            : item.lastReadMessageId + 1)
+                sortAllChatByPinned(
+                    allChats.filter(
+                        (item) =>
+                            item.lastReadMessageId <
+                            (item.latestMessage
+                                ? item.latestMessage.messageId
+                                : item.lastReadMessageId + 1)
+                    )
                 )
             );
         } else {
-            setTmpAllChats([...allChats]);
+            setTmpAllChats(sortAllChatByPinned([...allChats]));
         }
     }, [showOnlyUnreadItems, allChats]);
 
@@ -224,8 +232,9 @@ export const ChatList = (props: ChatListProps) => {
                                         isSubChatVisible={isSubChatVisible}
                                         setIsSubChatVisible={setIsSubChatVisible}
                                         setOpeningService={setOpeningService}
-                                        chatType={chatType}
+                                        chatType={chat.chatType}
                                         funcSetAllChats={funcSetAllChats}
+                                        allChats={allChats}
                                     />
                                 </Stack>
                             </div>

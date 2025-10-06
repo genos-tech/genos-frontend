@@ -41,6 +41,8 @@ self.onmessage = async (event) => {
                 TSLastMessage: pmChat.TSLastMessage,
                 project: pmChat.project,
                 profileImagePath: pmChat.profileImagePath,
+                isPinned: pmChat.isPinned,
+                tsLastAllReadActivity: pmChat.tsLastAllReadActivity,
             },
         });
 

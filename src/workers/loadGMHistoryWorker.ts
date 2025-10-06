@@ -40,6 +40,8 @@ self.onmessage = async (event) => {
                 TSLastMessage: gmChat.TSLastMessage,
                 isPrivate: gmChat.isPrivate,
                 profileImagePath: gmChat.profileImagePath,
+                isPinned: gmChat.isPinned,
+                tsLastAllReadActivity: gmChat.tsLastAllReadActivity,
             },
         });
 

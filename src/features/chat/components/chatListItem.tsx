@@ -14,6 +14,7 @@ import {
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import CircleIcon from "@mui/icons-material/Circle";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
 import { addChat } from "../services/addChat";
@@ -25,6 +26,8 @@ import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { updatePinnedChats } from "../services/updatePinnedChats";
+import { useAuth } from "../../../context/AuthContext";
 
 type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;
@@ -49,6 +52,7 @@ type ChatListItemProps = ListItemButtonProps & {
     setOpeningService: (value: number) => void;
     chatType: number;
     funcSetAllChats: () => Promise<void>;
+    allChats: AllChatProps[];
 };
 
 export const ChatListItem = (props: ChatListItemProps) => {
@@ -71,7 +75,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
         setOpeningService,
         chatType,
         funcSetAllChats,
+        allChats,
     } = props;
+
+    const { accessToken } = useAuth();
 
     const selected =
         `${currentMainChat.chatName}-${currentMainChat.chatId}` ===
@@ -97,6 +104,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
             project: chat.project,
             isPrivate: chat.isPrivate,
             profileImagePath: chat.profileImagePath,
+            isPinned: chat.isPinned,
         };
         return newMessages;
     };
@@ -153,6 +161,30 @@ export const ChatListItem = (props: ChatListItemProps) => {
             }
             setIsSubChatVisible(true);
         }
+    };
+
+    const pinChatHandler = async (chatId: number, chatType: number) => {
+        // Update pinned chats. If chat is pinned, remove it from the list, otherwise add it to the list.
+        const updatedAllChats = allChats.map((chat) => ({
+            ...chat,
+            isPinned:
+                chat.chatId === chatId && chat.chatType === chatType
+                    ? !chat.isPinned
+                    : chat.isPinned,
+        }));
+
+        await updatePinnedChats(
+            accessToken,
+            myself,
+            updatedAllChats
+                .map((chat) =>
+                    chat.isPinned ? { chat_type: chat.chatType, chat_id: chat.chatId } : null
+                )
+                .filter((chat) => chat !== null)
+        );
+
+        await addChat({ ...chat, isPinned: !chat.isPinned }, chatType);
+        funcSetAllChats();
     };
 
     return (
@@ -266,7 +298,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                             </Stack>
 
                             {/* Right-aligned content */}
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack direction="row" alignItems="center">
                                 <Typography
                                     level="body-xs"
                                     noWrap
@@ -276,10 +308,19 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
                                         : ""}
                                 </Typography>
-                                {chat.latestMessage &&
-                                    chat.lastReadMessageId < chat.latestMessage?.messageId && (
-                                        <CircleIcon sx={{ fontSize: 12 }} color="primary" />
-                                    )}
+                                <Tooltip title="Pin Chat" size="sm">
+                                    <IconButton
+                                        component="a"
+                                        color={chat.isPinned ? "danger" : "neutral"}
+                                        sx={{ mr: -1 }}
+                                        onClick={(event) => {
+                                            event.stopPropagation(); // Stop the click from reaching ListItemButton
+                                            pinChatHandler(chat.chatId, chat.chatType); // Call the intended function
+                                        }}
+                                    >
+                                        <PushPinIcon sx={{ fontSize: chat.isPinned ? 18 : 16 }} />
+                                    </IconButton>
+                                </Tooltip>
                                 <Tooltip title="Split View " size="sm">
                                     <IconButton
                                         component="a"
@@ -288,9 +329,13 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             splitOpenHandler(); // Call the intended function
                                         }}
                                     >
-                                        <OpenInNewIcon sx={{ fontSize: 12 }} />
+                                        <OpenInNewIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
                                 </Tooltip>
+                                {chat.latestMessage &&
+                                    chat.lastReadMessageId < chat.latestMessage?.messageId && (
+                                        <CircleIcon sx={{ mr: 1, fontSize: 12 }} color="primary" />
+                                    )}
                             </Stack>
                         </Stack>
 

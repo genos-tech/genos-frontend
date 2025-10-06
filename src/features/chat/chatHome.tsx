@@ -361,7 +361,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                 isCreatingTask={isCreatingTask}
-                                setIsCreatingTask={setIsCreatingTask}
                                 setOpeningService={setOpeningService}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
