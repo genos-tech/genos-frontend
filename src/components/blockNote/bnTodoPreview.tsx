@@ -12,6 +12,7 @@ import {
     FormattingToolbar,
     useCreateBlockNote,
     SuggestionMenuController,
+    BlockTypeSelect,
 } from "@blocknote/react";
 import {
     BlockNoteSchema,
@@ -60,20 +61,8 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
-    const {
-        heading,
-        codeBlock,
-        toggleListItem,
-        bulletListItem,
-        numberedListItem,
-        table,
-        file,
-        audio,
-        image,
-        video,
-        quote,
-        ...remainingBlockSpecs
-    } = defaultBlockSpecs;
+    const { heading, table, file, audio, image, video, quote, ...remainingBlockSpecs } =
+        defaultBlockSpecs;
 
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
@@ -139,6 +128,8 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 <FormattingToolbarController
                     formattingToolbar={() => (
                         <FormattingToolbar>
+                            <BlockTypeSelect key={"blockTypeSelect"} />
+
                             <BasicTextStyleButton
                                 basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
