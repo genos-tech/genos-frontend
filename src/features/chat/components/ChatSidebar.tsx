@@ -67,11 +67,6 @@ type ChatSidebarProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
     setOpeningService: (value: number) => void;
@@ -105,7 +100,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
         isCreatingTask,
-        setIsCreatingTask,
         isSubChatVisible,
         setIsSubChatVisible,
         setOpeningService,
@@ -172,12 +166,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             }
         }
         if (chatType === 4) {
-            // const lastChatIdStr: string = localStorage.getItem("lastPinnedChatId") || "";
-            // if (lastChatIdStr !== "") {
-            //     lastChatId = parseInt(lastChatIdStr);
-            //     lastChat = allChats.filter((chat) => chat.chatId === lastChatId)[0];
-            // }
-            console.log("TBD to move pinned chat");
+            const lastChatIdStr: string = localStorage.getItem("lastPinnedChatId") || "";
+            if (lastChatIdStr !== "") {
+                lastChatId = parseInt(lastChatIdStr);
+                lastChat = allChats.filter((chat) => chat.chatId === lastChatId)[0];
+            }
         }
 
         if (lastChat !== undefined) {
@@ -187,7 +180,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     if (messages.length > 0) {
                         const newChat: ChatProps = defineNewChat(lastChat, messages);
                         setCurrentMainChat(newChat);
-                        // addChat(newChat, chatType);
 
                         // Switch Thread to Main
                         if (isThreadVisible) {
@@ -201,7 +193,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 .catch((error) => console.error(error));
         } else {
             setCurrentMainChat(defaultChat);
-            // console.log("No chat found. Setting to default chat.");
         }
     };
 
@@ -378,20 +369,46 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
 
                         {/* For Pinned */}
-                        <Tooltip title="Pinned Chats" sx={{ zIndex: "10020" }} placement="top">
-                            <IconButton
-                                component="p"
-                                variant={currentChatPaneType === 4 ? "solid" : "plain"}
-                                size="sm"
-                                onClick={() => {
-                                    setCurrentChatPaneType(4);
-                                    localStorage.setItem("currentChatPaneType", "4");
-                                    onChatIconClickedHandler(4);
-                                }}
-                            >
-                                <PushPinIcon />
-                            </IconButton>
-                        </Tooltip>
+                        {unReadChatCounts && (unReadChatCounts[4] || 0) > 0 && (
+                            <Tooltip title="Pinned Chats" sx={{ zIndex: "10020" }} placement="top">
+                                <Badge
+                                    badgeContent={unReadChatCounts[4]}
+                                    color="primary"
+                                    size="sm"
+                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                >
+                                    <IconButton
+                                        component="p"
+                                        variant={currentChatPaneType === 4 ? "solid" : "plain"}
+                                        size="sm"
+                                        onClick={() => {
+                                            setCurrentChatPaneType(4);
+                                            localStorage.setItem("currentChatPaneType", "4");
+                                            onChatIconClickedHandler(4);
+                                        }}
+                                    >
+                                        <PushPinIcon />
+                                    </IconButton>
+                                </Badge>
+                            </Tooltip>
+                        )}
+                        {!(unReadChatCounts && (unReadChatCounts[4] || 0) > 0) && (
+                            <Tooltip title="Pinned Chats" sx={{ zIndex: "10020" }} placement="top">
+                                <IconButton
+                                    component="p"
+                                    variant={currentChatPaneType === 4 ? "solid" : "plain"}
+                                    size="sm"
+                                    onClick={() => {
+                                        setCurrentChatPaneType(4);
+                                        localStorage.setItem("currentChatPaneType", "4");
+                                        onChatIconClickedHandler(4);
+                                    }}
+                                >
+                                    <PushPinIcon />
+                                </IconButton>
+                            </Tooltip>
+                        )}
 
                         {/* For Activity */}
                         {unReadActivityMessageCounts > 0 && (
@@ -504,11 +521,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentThreadChat={setCurrentThreadChat}
                             setIsMainChatVisible={setIsMainChatVisible}
                             setIsThreadVisible={setIsThreadVisible}
-                            isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isCreatingTask={isCreatingTask}
-                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}
@@ -538,11 +553,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentThreadChat={setCurrentThreadChat}
                             setIsMainChatVisible={setIsMainChatVisible}
                             setIsThreadVisible={setIsThreadVisible}
-                            isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isCreatingTask={isCreatingTask}
-                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}
@@ -572,11 +585,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentThreadChat={setCurrentThreadChat}
                             setIsMainChatVisible={setIsMainChatVisible}
                             setIsThreadVisible={setIsThreadVisible}
-                            isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isCreatingTask={isCreatingTask}
-                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}
@@ -588,7 +599,38 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     </Box>
                 )}
                 {/* For Pinned Messages */}
-                {currentChatPaneType === 4 && <Box>{}</Box>}
+                {currentChatPaneType === 4 && (
+                    <Box>
+                        <ChatList
+                            teamMemberProfiles={teamMemberProfiles}
+                            socket={socket}
+                            myself={myself}
+                            setMyself={setMyself}
+                            chatType={4}
+                            activityMessages={[]}
+                            setActivityMessages={setActivityMessages}
+                            allChats={allChats.filter((chat) => chat.isPinned)}
+                            currentActivityMessageType={-1}
+                            currentMainChat={currentMainChat}
+                            currentSubChat={currentSubChat}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setCurrentSubChat={setCurrentSubChat}
+                            setCurrentThreadChat={setCurrentThreadChat}
+                            setIsMainChatVisible={setIsMainChatVisible}
+                            setIsThreadVisible={setIsThreadVisible}
+                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            isTaskPreviewVisible={isTaskPreviewVisible}
+                            isCreatingTask={isCreatingTask}
+                            isSubChatVisible={isSubChatVisible}
+                            setIsSubChatVisible={setIsSubChatVisible}
+                            setOpeningService={setOpeningService}
+                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            setCurrentProject={setCurrentProject}
+                            showOnlyUnreadItems={showOnlyUnreadItems}
+                            funcSetAllChats={funcSetAllChats}
+                        />
+                    </Box>
+                )}
                 {currentChatPaneType === 5 && (
                     <Box>
                         <ActivityDivider
@@ -612,11 +654,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentThreadChat={setCurrentThreadChat}
                             setIsMainChatVisible={setIsMainChatVisible}
                             setIsThreadVisible={setIsThreadVisible}
-                            isThreadVisible={isThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isCreatingTask={isCreatingTask}
-                            setIsCreatingTask={setIsCreatingTask}
                             isSubChatVisible={isSubChatVisible}
                             setIsSubChatVisible={setIsSubChatVisible}
                             setOpeningService={setOpeningService}

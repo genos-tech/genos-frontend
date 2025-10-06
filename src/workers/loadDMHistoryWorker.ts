@@ -38,6 +38,8 @@ self.onmessage = async (event) => {
                     latestMessage: dmChat.latestMessage,
                     latestMessageText: dmChat.latestMessageText,
                     TSLastMessage: dmChat.TSLastMessage,
+                    isPinned: dmChat.isPinned,
+                    tsLastAllReadActivity: dmChat.tsLastAllReadActivity,
                 },
             };
             await addData(newChatData);

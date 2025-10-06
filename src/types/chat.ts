@@ -17,6 +17,8 @@ export type AllChatProps = {
     project?: ProjectProps;
     isPrivate?: boolean;
     profileImagePath?: string;
+    isPinned?: boolean;
+    tsLastAllReadActivity?: string;
 };
 
 export type ChatProps = {
@@ -36,6 +38,8 @@ export type ChatProps = {
     notMove?: boolean;
     isPrivate?: boolean;
     profileImagePath?: string;
+    isPinned?: boolean;
+    tsLastAllReadActivity?: string;
 };
 
 // Thread Props
@@ -174,6 +178,8 @@ export type NewMessageProps = {
     isEdited: boolean;
     reactions?: ReactionProps[];
     lastReadMessageId: number;
+    isPinned?: boolean;
+    tsLastAllReadActivity?: string;
 };
 
 export type NewThreadMessageProps = {

@@ -453,7 +453,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                             : "neutral"
                                                                     }
                                                                     sx={{
-                                                                        ml: "8px",
+                                                                        mx: "8px",
                                                                         fontWeight: "bold",
                                                                         borderRadius: "5px",
                                                                     }}
@@ -521,7 +521,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         </Dropdown>
                                                     </Typography>
 
-                                                    <Box sx={{ width: "30%" }}>
+                                                    <Box sx={{ width: "40%" }}>
                                                         <Autocomplete
                                                             key={`ac-project-tags-${currentPreviewTaskId}`}
                                                             sx={{ width: "100%" }}
