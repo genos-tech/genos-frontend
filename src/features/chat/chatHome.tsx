@@ -223,7 +223,13 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
     const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
     const [currentThreadChatId, setCurrentThreadChatId] = useState<number>(-1);
-    const [isToDoVisible, setIsToDoVisible] = useState<boolean>(false);
+    const [isToDoVisible, setIsToDoVisible] = useState<boolean>(
+        localStorage.getItem("isToDoVisible") === "true"
+    );
+
+    useEffect(() => {
+        localStorage.setItem("isToDoVisible", isToDoVisible.toString());
+    }, [isToDoVisible]);
 
     useEffect(() => {
         if (currentMainChatId !== currentMainChat.chatId) {
