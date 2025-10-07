@@ -46,6 +46,7 @@ type ToDoPaneProps = {
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     isSubChatVisible: boolean;
+    currentWindowHeight: number;
 };
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
@@ -61,6 +62,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         isExistingTodaysTodo,
         setIsExistingTodaysTodo,
         isSubChatVisible,
+        currentWindowHeight,
     } = props;
     const { accessToken } = useAuth();
     const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
@@ -148,7 +150,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         ref={virtuosoRef}
                         className="custom-scrollbar"
                         style={{
-                            height: isSubChatVisible ? "41vh" : "91vh",
+                            height: isSubChatVisible
+                                ? `${(currentWindowHeight - 150) * 0.43}px`
+                                : `${currentWindowHeight - 150}px`,
                         }}
                         totalCount={tmpTodos.length}
                         initialTopMostItemIndex={0}

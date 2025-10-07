@@ -272,8 +272,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         fontWeight: "bold",
                                                     }}
                                                 >
-                                                    {node.title.length > 19
-                                                        ? `${node.title.slice(0, 19)}...`
+                                                    {node.title.length > 14
+                                                        ? `${node.title.slice(0, 14)}...`
                                                         : node.title}
                                                 </Typography>
                                             ))}
@@ -390,8 +390,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                             maxWidth: "200px",
                                                         }}
                                                     >
-                                                        {tab.title.length > 19
-                                                            ? `${tab.title.slice(0, 19)}...`
+                                                        {tab.title.length > 14
+                                                            ? `${tab.title.slice(0, 14)}...`
                                                             : tab.title}
 
                                                         {tabItems.length > 1 && (

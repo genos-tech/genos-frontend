@@ -295,6 +295,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 isExistingTodaysTodo={isExistingTodaysTodo}
                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                 isSubChatVisible={isSubChatVisible}
+                                currentWindowHeight={currentWindowHeight}
                             />
                         </>
                     )}

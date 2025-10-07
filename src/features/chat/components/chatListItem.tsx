@@ -319,7 +319,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 <Typography
                                     level="body-xs"
                                     noWrap
-                                    sx={{ display: { xs: "none", md: "block" } }}
+                                    sx={{ display: { xs: "none", md: "block" }, mt: 0.5 }}
                                 >
                                     {chat.latestMessage
                                         ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
@@ -332,7 +332,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             color="primary"
                                             size="sm"
                                             anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 1 }}
+                                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.5 }}
                                         >
                                             <IconButton
                                                 component="a"
@@ -351,7 +351,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     <IconButton
                                         component="a"
                                         color={chat.isPinned ? "danger" : "neutral"}
-                                        sx={{ mr: -1 }}
+                                        sx={{ mr: -1, mt: 0.5 }}
                                         onClick={(event) => {
                                             event.stopPropagation(); // Stop the click from reaching ListItemButton
                                             pinChatHandler(chat.chatId, chat.chatType); // Call the intended function
@@ -364,6 +364,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 <Tooltip title="Split View " size="sm">
                                     <IconButton
                                         component="a"
+                                        sx={{ mt: 0.5 }}
                                         onClick={(event) => {
                                             event.stopPropagation(); // Stop the click from reaching ListItemButton
                                             splitOpenHandler(); // Call the intended function
@@ -374,7 +375,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 </Tooltip>
                                 {chat.latestMessage &&
                                     chat.lastReadMessageId < chat.latestMessage?.messageId && (
-                                        <CircleIcon sx={{ mr: 1, fontSize: 12 }} color="primary" />
+                                        <CircleIcon
+                                            sx={{ mr: 1, fontSize: 12, mt: 1 }}
+                                            color="primary"
+                                        />
                                     )}
                             </Stack>
                         </Stack>

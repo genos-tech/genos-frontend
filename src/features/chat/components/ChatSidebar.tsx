@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
     Stack,
     Sheet,
@@ -428,7 +428,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     color="primary"
                                     size="sm"
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                    sx={{
+                                        "& .JoyBadge-badge": { zIndex: 1 },
+                                    }}
                                 >
                                     <IconButton
                                         component="p"
