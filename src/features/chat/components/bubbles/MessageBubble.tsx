@@ -10,7 +10,7 @@ import { BubbleReplyButton } from "./BubbleReplyButton";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
-import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskProps, ProjectProps } from "../../../../types/tasks";
@@ -186,7 +186,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 taskId: message.taskId || null,
                                 messages: threadMessages,
                                 project: message.project,
-                                TSLastMessage: getCurrentTimestamp(),
+                                TSLastMessage: getLocalCurrentTimestamp(),
                                 taskExist: threadMessages[0].taskExist,
                             };
                             if (message.project && message.project.projectId) {
@@ -307,7 +307,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         id: -1,
                         emoji: selectedEmoji,
                         sender: myself,
-                        tsSent: getCurrentTimestamp(),
+                        tsSent: getLocalCurrentTimestamp(),
                     },
                 ]);
                 if (socket) {

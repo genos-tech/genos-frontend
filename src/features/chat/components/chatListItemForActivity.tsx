@@ -22,7 +22,7 @@ import {
     AllChatProps,
 } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
-import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
 
@@ -251,7 +251,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         projectName: activity.projectName || "",
                         projectTags: [],
                     },
-                    TSLastMessage: getCurrentTimestamp(),
+                    TSLastMessage: getLocalCurrentTimestamp(),
                     taskExist: threadMessages[0].taskExist,
                     moveToSpecificIndex: activity.threadMessageUniqueKey,
                 };

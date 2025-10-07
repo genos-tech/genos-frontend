@@ -34,7 +34,7 @@ import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import "../../App.css";
 
 type BnUpdateTaskCommentEditorProps = {
@@ -207,8 +207,8 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     senderName: myself.userName,
                     commentId: taskComments.length + 1,
                     commentBody: editor.document,
-                    tsSent: getCurrentTimestamp(),
-                    tsUpdated: getCurrentTimestamp(),
+                    tsSent: getLocalCurrentTimestamp(),
+                    tsUpdated: getLocalCurrentTimestamp(),
                     isEdited: false,
                 },
             ]);

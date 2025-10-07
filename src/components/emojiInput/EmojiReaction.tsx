@@ -5,7 +5,7 @@ import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt
 
 import { UserProps } from "../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../types/common";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { MessageProps, ThreadMessageProps } from "../../types/chat";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
@@ -160,7 +160,12 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
             // Emoji not in reactions, add it
             setReactions([
                 ...reactions,
-                { id: -1, emoji: selectedEmoji, sender: myself, tsSent: getCurrentTimestamp() },
+                {
+                    id: -1,
+                    emoji: selectedEmoji,
+                    sender: myself,
+                    tsSent: getLocalCurrentTimestamp(),
+                },
             ]);
             if (socket) {
                 socket.emit("message_reaction", {

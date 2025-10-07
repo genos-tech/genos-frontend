@@ -6,7 +6,7 @@ import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { AttachmentFileProps } from "../../../../../types/tasks";
 import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
 import { downloadFile } from "../../../../../utils/downloadUtils";
-import { getCurrentTimestamp } from "../../../../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -239,7 +239,10 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             <div
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    downloadFile(file.url, `file.name-${getCurrentTimestamp()}`);
+                                    downloadFile(
+                                        file.url,
+                                        `file.name-${getLocalCurrentTimestamp()}`
+                                    );
                                 }}
                                 style={{
                                     textDecoration: "none",

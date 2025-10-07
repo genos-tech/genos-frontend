@@ -57,7 +57,7 @@ import "../../App.css";
 import { TaskNoteProps } from "../../types/notes";
 import { useAuth } from "../../context/AuthContext";
 import { downloadFile } from "../../utils/downloadUtils";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -242,7 +242,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
 
     const handleDownload = async (
         url: string,
-        filename = `task-note-image-${getCurrentTimestamp()}.png`
+        filename = `task-note-image-${getLocalCurrentTimestamp()}.png`
     ) => {
         await downloadFile(url, filename);
     };

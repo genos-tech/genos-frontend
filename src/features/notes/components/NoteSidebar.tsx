@@ -26,7 +26,7 @@ import {
     TaskNoteMetaTreeNode,
     TaskNoteProps,
 } from "../../../types/notes";
-import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { NoteTreeToggler } from "./sub/NoteTreeToggler";
 
 type NoteSidebarProps = {
@@ -103,12 +103,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Only when `myNoteMetaTree` has been updated with new contents, refresh the Note Chain.
     // `myNoteMetaTree` has been always updated without any contents change. Is such case,
     // no need to refresh it since it's the same as the tmp one.
-    const [tsMyNoteTreeUpdated, setTsMyNoteTreeUpdated] = useState<string>(getCurrentTimestamp());
+    const [tsMyNoteTreeUpdated, setTsMyNoteTreeUpdated] = useState<string>(
+        getLocalCurrentTimestamp()
+    );
     useEffect(() => {
         if (areObjectsEqual(tmpMyNoteMetaTree, myNoteMetaTree) === false) {
             setTmpMyNoteMetaTree(myNoteMetaTree);
             // Set the timestamp for the key, but also with the index.
-            setTsMyNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+            setTsMyNoteTreeUpdated(String(selectedTabIndex) + getLocalCurrentTimestamp());
         }
     }, [myNoteMetaTree]);
 
@@ -122,7 +124,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     useEffect(() => {
         // Init timestamp after 1sec which needs to re-render the tree on the sidebar.
         setTimeout(() => {
-            setTsMyNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+            setTsMyNoteTreeUpdated(String(selectedTabIndex) + getLocalCurrentTimestamp());
         }, 1000); // wait Xms
     }, []);
 
@@ -182,13 +184,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // `taskNoteMetaTree` has been always updated without any contents change. Is such case,
     // no need to refresh it since it's the same as the tmp one.
     const [tsTaskNoteTreeUpdated, setTsTaskNoteTreeUpdated] = useState<string>(
-        getCurrentTimestamp()
+        getLocalCurrentTimestamp()
     );
     useEffect(() => {
         if (areObjectsEqual(tmpTaskNoteMetaTree, taskNoteMetaTree) === false) {
             setTmpTaskNoteMetaTree(taskNoteMetaTree);
             // Set the timestamp for the key, but also with the index.
-            setTsTaskNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+            setTsTaskNoteTreeUpdated(String(selectedTabIndex) + getLocalCurrentTimestamp());
         }
     }, [taskNoteMetaTree]);
 
@@ -202,7 +204,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     useEffect(() => {
         // Init timestamp after 1sec which needs to re-render the tree on the sidebar.
         setTimeout(() => {
-            setTsTaskNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+            setTsTaskNoteTreeUpdated(String(selectedTabIndex) + getLocalCurrentTimestamp());
         }, 1000); // wait Xms
     }, []);
 
@@ -262,13 +264,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // `chatNoteMetaTree` has been always updated without any contents change. Is such case,
     // no need to refresh it since it's the same as the tmp one.
     const [tsChatNoteTreeUpdated, setTsChatNoteTreeUpdated] = useState<string>(
-        getCurrentTimestamp()
+        getLocalCurrentTimestamp()
     );
     useEffect(() => {
         if (areObjectsEqual(tmpChatNoteMetaTree, chatNoteMetaTree) === false) {
             setTmpChatNoteMetaTree(chatNoteMetaTree);
             // Set the timestamp for the key, but also with the index.
-            setTsChatNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+            setTsChatNoteTreeUpdated(String(selectedTabIndex) + getLocalCurrentTimestamp());
         }
     }, [chatNoteMetaTree]);
 
@@ -282,7 +284,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     useEffect(() => {
         // Init timestamp after 1sec which needs to re-render the tree on the sidebar.
         setTimeout(() => {
-            setTsChatNoteTreeUpdated(String(selectedTabIndex) + getCurrentTimestamp());
+            setTsChatNoteTreeUpdated(String(selectedTabIndex) + getLocalCurrentTimestamp());
         }, 1000); // wait Xms
     }, []);
 

@@ -36,7 +36,7 @@ import {
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { UserProps } from "../../types/admin";
 import { ChatProps, AllChatProps, MessageProps } from "../../types/chat";
 import { addChat } from "../../features/chat/services/addChat";
@@ -231,8 +231,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                 content: editor.document,
                                 contentText: contentText,
                                 sender: myself,
-                                tsSent: getCurrentTimestamp(),
-                                tsUpdated: getCurrentTimestamp(),
+                                tsSent: getLocalCurrentTimestamp(),
+                                tsUpdated: getLocalCurrentTimestamp(),
                                 numReplies: 0,
                                 taskId: null,
                                 taskStatus: null,
@@ -249,14 +249,14 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             content: editor.document,
                             contentText: contentText,
                             sender: myself,
-                            tsSent: getCurrentTimestamp(),
-                            tsUpdated: getCurrentTimestamp(),
+                            tsSent: getLocalCurrentTimestamp(),
+                            tsUpdated: getLocalCurrentTimestamp(),
                             numReplies: 0,
                             taskId: null,
                             taskStatus: null,
                         },
                         latestMessageText: contentText,
-                        TSLastMessage: getCurrentTimestamp(),
+                        TSLastMessage: getLocalCurrentTimestamp(),
                         profileImagePath: chat.profileImagePath,
                     };
                     setCurrentChat(updatedChat);
@@ -272,8 +272,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         content: editor.document,
                         contentText: contentText,
                         sender: myself,
-                        tsSent: getCurrentTimestamp(),
-                        tsUpdated: getCurrentTimestamp(),
+                        tsSent: getLocalCurrentTimestamp(),
+                        tsUpdated: getLocalCurrentTimestamp(),
                         numReplies: 0,
                         taskId: null,
                         taskStatus: null,
@@ -289,7 +289,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                 chat.messages[chat.messages.length - 1].messageId + 1,
                             latestMessage: latestMessage,
                             latestMessageText: contentText,
-                            TSLastMessage: getCurrentTimestamp(),
+                            TSLastMessage: getLocalCurrentTimestamp(),
                             profileImagePath: chat.profileImagePath,
                         };
 

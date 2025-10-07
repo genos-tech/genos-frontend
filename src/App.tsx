@@ -25,7 +25,7 @@ import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { InboxItemProps } from "./types/common";
-import { getCurrentTimestamp } from "./utils/dateUtils";
+import { getLocalCurrentTimestamp } from "./utils/dateUtils";
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 import {
@@ -125,7 +125,7 @@ const useMyself = (accessToken: string | null): SetMyselfProps => {
                 userId: localStorage.getItem("userId") || "",
                 userName: localStorage.getItem("userName") || "",
                 userEmail: localStorage.getItem("userEmail") || "",
-                tsLastSeen: getCurrentTimestamp(),
+                tsLastSeen: getLocalCurrentTimestamp(),
                 tsJoined: localStorage.getItem("tsJoined") || "",
                 isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
                 role: localStorage.getItem("role") || "",
@@ -203,7 +203,7 @@ export const App = () => {
                     role: role,
                     baseCountry: baseCountry,
                     customStatus: customStatus,
-                    tsLastSeen: getCurrentTimestamp(),
+                    tsLastSeen: getLocalCurrentTimestamp(),
                 },
             });
         }
@@ -415,7 +415,7 @@ export const App = () => {
                         ...initialDMChat,
                         latestMessage: {
                             ...initialDMChat.latestMessage,
-                            tsSent: getCurrentTimestamp(),
+                            tsSent: getLocalCurrentTimestamp(),
                         },
                     },
                     ...allChatsWithoutInitialDMChat,

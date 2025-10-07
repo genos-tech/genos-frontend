@@ -36,7 +36,7 @@ import {
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { ThreadMessageProps, ThreadProps } from "../../types/chat";
@@ -237,12 +237,12 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                                 content: editor.document,
                                 contentText: contentText,
                                 sender: myself,
-                                tsSent: getCurrentTimestamp(),
-                                tsUpdated: getCurrentTimestamp(),
+                                tsSent: getLocalCurrentTimestamp(),
+                                tsUpdated: getLocalCurrentTimestamp(),
                                 taskId: thread.taskId,
                             },
                         ],
-                        TSLastMessage: getCurrentTimestamp(),
+                        TSLastMessage: getLocalCurrentTimestamp(),
                         taskExist: thread.taskId !== null ? true : false,
                     };
                     setCurrentThreadChat(updatedChat);
@@ -258,8 +258,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         content: editor.document,
                         contentText: contentText,
                         sender: myself,
-                        tsSent: getCurrentTimestamp(),
-                        tsUpdated: getCurrentTimestamp(),
+                        tsSent: getLocalCurrentTimestamp(),
+                        tsUpdated: getLocalCurrentTimestamp(),
                         taskId: thread.taskId,
                     };
 

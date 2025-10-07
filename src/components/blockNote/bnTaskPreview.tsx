@@ -56,7 +56,7 @@ import { ChatProps } from "../../types/chat";
 import "../../App.css";
 import { useAuth } from "../../context/AuthContext";
 import { downloadFile } from "../../utils/downloadUtils";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -266,7 +266,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     const handleDownload = async (
         url: string,
-        filename = `task-preview-image-${getCurrentTimestamp()}.png`
+        filename = `task-preview-image-${getLocalCurrentTimestamp()}.png`
     ) => {
         await downloadFile(url, filename);
     };

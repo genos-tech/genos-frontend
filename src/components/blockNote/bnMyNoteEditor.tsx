@@ -56,7 +56,7 @@ import { ChatProps } from "../../types/chat";
 import "../../App.css";
 import { MyNoteProps } from "../../types/notes";
 import { useAuth } from "../../context/AuthContext";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -242,7 +242,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
 
     const handleDownload = async (
         url: string,
-        filename = `image-${getCurrentTimestamp()}.png`
+        filename = `image-${getLocalCurrentTimestamp()}.png`
     ) => {
         await downloadFile(url, filename);
     };

@@ -8,7 +8,7 @@ import { createGMChat } from "./createGMChat";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { CreateGMResponse } from "../../../types/chat";
-import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { emptyDmPartnerUser } from "../../../utils/defaultProps";
 
 const createGroupMessage = [
@@ -58,8 +58,8 @@ const addGMChatAndMessage = async (
         content: createGroupMessage,
         contentText: "Has created",
         sender: myself,
-        tsSent: getCurrentTimestamp(),
-        tsUpdated: getCurrentTimestamp(),
+        tsSent: getLocalCurrentTimestamp(),
+        tsUpdated: getLocalCurrentTimestamp(),
         numReplies: 0,
         taskId: null,
         taskStatus: null,
@@ -73,7 +73,7 @@ const addGMChatAndMessage = async (
         lastReadMessageId: -1,
         latestMessage: newMessage,
         latestMessageText: "Has created",
-        TSLastMessage: getCurrentTimestamp(),
+        TSLastMessage: getLocalCurrentTimestamp(),
         isPrivate: isPrivate,
     };
 
@@ -90,7 +90,7 @@ const addGMChatAndMessage = async (
             dmPartnerUser: defaultDmPartner,
             latestMessage: newChat.latestMessage,
             latestMessageText: newChat.latestMessageText,
-            TSLastMessage: getCurrentTimestamp(),
+            TSLastMessage: getLocalCurrentTimestamp(),
             isPrivate: isPrivate,
         },
     ]);

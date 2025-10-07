@@ -19,7 +19,7 @@ import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { useState } from "react";
 import { downloadFile } from "../../utils/downloadUtils";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 type BnChatPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -94,7 +94,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     const handleDownload = async (
         url: string,
-        filename = `chat-message-image-${getCurrentTimestamp()}.png`
+        filename = `chat-message-image-${getLocalCurrentTimestamp()}.png`
     ) => {
         await downloadFile(url, filename);
     };

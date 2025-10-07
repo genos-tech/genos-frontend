@@ -1,6 +1,6 @@
 import { getTeamMembers } from "../db/crud";
 import { UserProps } from "../types/admin";
-import { getCurrentTimestamp } from "../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../utils/dateUtils";
 
 const checkIsOnline = (
     myself: UserProps,
@@ -8,7 +8,7 @@ const checkIsOnline = (
     targetUserTsLastSeen: string
 ): boolean => {
     const lastSeen = new Date(targetUserTsLastSeen).getTime();
-    const now = new Date(getCurrentTimestamp()).getTime();
+    const now = new Date(getLocalCurrentTimestamp()).getTime();
     if (myself.userId === targetUserId) {
         return true;
     } else if (targetUserTsLastSeen && targetUserTsLastSeen !== "") {

@@ -8,7 +8,7 @@ import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
 import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { extractYYYYMMDDHHMM, getCurrentTimestamp } from "../../../../utils/dateUtils";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { UserProps } from "../../../../types/admin";
 import { ReactionProps } from "../../../../types/common";
@@ -136,7 +136,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         id: -1,
                         emoji: selectedEmoji,
                         sender: myself,
-                        tsSent: getCurrentTimestamp(),
+                        tsSent: getLocalCurrentTimestamp(),
                     },
                 ]);
                 if (socket) {

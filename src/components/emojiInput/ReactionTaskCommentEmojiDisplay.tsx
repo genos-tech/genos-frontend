@@ -5,7 +5,7 @@ import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt
 
 import { UserProps } from "../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../types/common";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { TaskCommentProps } from "../../types/tasks";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
@@ -100,7 +100,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     id: -1,
                     emoji: selectedEmoji,
                     sender: myself,
-                    tsSent: getCurrentTimestamp(),
+                    tsSent: getLocalCurrentTimestamp(),
                 },
             ]);
             if (socket) {

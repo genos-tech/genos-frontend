@@ -57,7 +57,7 @@ import "../../App.css";
 import { ChatNoteProps } from "../../types/notes";
 import { useAuth } from "../../context/AuthContext";
 import { downloadFile } from "../../utils/downloadUtils";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -242,7 +242,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
 
     const handleDownload = async (
         url: string,
-        filename = `chat-note-image-${getCurrentTimestamp()}.png`
+        filename = `chat-note-image-${getLocalCurrentTimestamp()}.png`
     ) => {
         await downloadFile(url, filename);
     };

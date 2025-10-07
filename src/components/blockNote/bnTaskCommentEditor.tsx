@@ -35,7 +35,7 @@ import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { ChatProps } from "../../types/chat";
-import { getCurrentTimestamp } from "../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 import "../../App.css";
 
@@ -191,8 +191,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     senderName: myself.userName,
                     commentId: taskComments.length + 1,
                     commentBody: editor.document,
-                    tsSent: getCurrentTimestamp(),
-                    tsUpdated: getCurrentTimestamp(),
+                    tsSent: getLocalCurrentTimestamp(),
+                    tsUpdated: getLocalCurrentTimestamp(),
                     isEdited: false,
                 },
             ]);

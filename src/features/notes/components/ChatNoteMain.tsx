@@ -36,7 +36,7 @@ import { BnChatNoteEditor } from "../../../components/blockNote/bnChatNoteEditor
 import { ChatNoteMetaProps, ChatNoteProps, ChatNoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedChatNote } from "../services/sendUpdatedChatNote";
 import { useAuth } from "../../../context/AuthContext";
-import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteChatNote } from "../modals/ModalDeleteChatNote";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
@@ -117,7 +117,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
-    const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
+    const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
@@ -207,7 +207,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     useEffect(() => {
         if (currentChatNote) {
             setBody(currentChatNote.body);
-            setTsBody(getCurrentTimestamp());
+            setTsBody(getLocalCurrentTimestamp());
             setCurrentChatNoteTitle(currentChatNote.title);
         }
     }, [currentChatNote]);

@@ -39,7 +39,7 @@ import { BnTaskNoteEditor } from "../../../components/blockNote/bnTaskNoteEditor
 import { TaskNoteMetaProps, TaskNoteProps, TaskNoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedTaskNote } from "../services/sendUpdatedTaskNote";
 import { useAuth } from "../../../context/AuthContext";
-import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { ProjectProps, TaskProps } from "../../../types/tasks";
@@ -129,7 +129,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
-    const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
+    const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
     const titleInputRef = useRef<HTMLInputElement | null>(null);
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
@@ -235,7 +235,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     useEffect(() => {
         if (currentTaskNote) {
             setBody(currentTaskNote.body);
-            setTsBody(getCurrentTimestamp());
+            setTsBody(getLocalCurrentTimestamp());
             setCurrentTaskNoteTitle(currentTaskNote.title);
         }
     }, [currentTaskNote]);

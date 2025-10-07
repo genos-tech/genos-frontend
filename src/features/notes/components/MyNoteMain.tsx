@@ -35,7 +35,7 @@ import { BnMyNoteEditor } from "../../../components/blockNote/bnMyNoteEditor";
 import { MyNoteMetaProps, MyNoteProps, MyNoteMetaTreeNode } from "../../../types/notes";
 import { sendUpdatedMyNote } from "../services/sendUpdatedMyNote";
 import { useAuth } from "../../../context/AuthContext";
-import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
 
@@ -90,7 +90,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
-    const [tsBody, setTsBody] = useState<string>(getCurrentTimestamp());
+    const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -175,7 +175,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     useEffect(() => {
         if (currentMyNote) {
             setBody(currentMyNote.body);
-            setTsBody(getCurrentTimestamp());
+            setTsBody(getLocalCurrentTimestamp());
             setCurrentMyNoteTitle(currentMyNote.title);
         }
     }, [currentMyNote]);

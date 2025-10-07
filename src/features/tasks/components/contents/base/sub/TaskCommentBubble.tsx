@@ -12,7 +12,7 @@ import { TaskCommentProps } from "../../../../../../types/tasks";
 import {
     extractYYYYMMDDHHMM,
     extractMMDDHHMMSSs,
-    getCurrentTimestamp,
+    getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
@@ -100,7 +100,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         id: -1,
                         emoji: selectedEmoji,
                         sender: myself,
-                        tsSent: getCurrentTimestamp(),
+                        tsSent: getLocalCurrentTimestamp(),
                     },
                 ]);
                 if (socket) {

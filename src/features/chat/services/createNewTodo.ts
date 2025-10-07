@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
+import { getLocalCurrentDate } from "../../../utils/dateUtils";
 
 export const createNewTodo = async (
     accessToken: string | null,
@@ -11,11 +12,13 @@ export const createNewTodo = async (
 ) => {
     try {
         const api = authApi(accessToken);
+        const dtLocalDate = getLocalCurrentDate();
         if (api) {
             const res = await api.post("/todo/", {
                 team_id: myself.teamId,
                 user_id: myself.userId,
                 todo_content: todoContent,
+                dt_local_date: dtLocalDate,
             });
             return res.data;
         } else {

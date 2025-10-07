@@ -11,7 +11,7 @@ import { sendDMMessage } from "../../chat/services/sendDMMessage";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { Team, CreateDMResponse } from "../../../types/admin";
-import { getCurrentTimestamp } from "../../../utils/dateUtils";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -86,7 +86,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             userId: myself.userId,
             userName: myself.userName,
             userEmail: myself.userEmail,
-            tsLastSeen: getCurrentTimestamp(),
+            tsLastSeen: getLocalCurrentTimestamp(),
             tsJoined: myself.tsJoined,
             customStatus: myself.customStatus,
             avatarImgPath: myself.avatarImgPath,
