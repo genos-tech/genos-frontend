@@ -46,3 +46,27 @@ export const defaultChat: ChatProps = {
     },
     isPrivate: false,
 };
+
+export const defaultTodoContent = [
+    {
+        type: "checkListItem",
+        props: {
+            checked: false,
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [{ text: "Today's Todo", type: "text", styles: {} }],
+        children: [],
+    },
+    {
+        type: "paragraph",
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [],
+        children: [],
+    },
+];

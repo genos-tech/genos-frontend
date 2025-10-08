@@ -88,7 +88,6 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
 
     // We use the English, default dictionary
     const locale = en;
-    const initialContent: any[] = body.slice(0, -1);
     const editor = useCreateBlockNote({
         schema,
         // We override the `placeholders` in our dictionary
@@ -104,7 +103,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 heading: "Custom heading placeholder",
             },
         },
-        initialContent: initialContent,
+        initialContent: body,
     });
 
     return (

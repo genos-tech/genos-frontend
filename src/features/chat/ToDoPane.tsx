@@ -8,30 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { ChatProps, ToDoFactProps } from "../../types/chat";
 import { TodoBubble } from "./components/bubbles/TodoBubble";
 import { createNewTodo } from "./services/createNewTodo";
-
-const defaultTodoContent = [
-    {
-        type: "checkListItem",
-        props: {
-            checked: false,
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: "Today's Todo", type: "text", styles: {} }],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
-    },
-];
+import { defaultTodoContent } from "./utils/defaults";
 
 type ToDoPaneProps = {
     myself: UserProps;
