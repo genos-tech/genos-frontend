@@ -88,6 +88,9 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             userEmail: myself.userEmail,
             tsLastSeen: getLocalCurrentTimestamp(),
             tsJoined: myself.tsJoined,
+            isOfflineForced: myself.isOfflineForced,
+            role: myself.role,
+            baseCountry: myself.baseCountry,
             customStatus: myself.customStatus,
             avatarImgPath: myself.avatarImgPath,
         });

@@ -207,7 +207,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         setAnchorEl(null);
     };
 
-    useEffect(() => {
+    const updateFilterModel = () => {
         if (filterBy === 1) {
             setPredefinedFilters(predefinedStatusFilters);
         } else if (filterBy === 2) {
@@ -230,6 +230,10 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
             setPredefinedFilters(predefinedEffortLevelFilters);
         }
         setAnchorEl(null);
+    };
+
+    useEffect(() => {
+        updateFilterModel();
     }, [filterBy, selectedTagForFiltering]);
 
     useEffect(() => {
@@ -242,9 +246,10 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     }, [predefinedFilters, currentDisplayingTasks]);
 
     useEffect(() => {
+        // displayTaskType: ongoing, closed, deleted
         if (displayTaskType.id === 1) {
             setCurrentDisplayingTasks(ongoingTasks.filter((task) => task.parentTaskId === null));
-            setPredefinedFilters(predefinedStatusFilters);
+            updateFilterModel();
         } else if (displayTaskType.id === 2) {
             setCurrentDisplayingTasks(closedTasks.filter((task) => task.parentTaskId === null));
             updateTagOptions();

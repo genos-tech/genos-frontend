@@ -534,7 +534,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             />
                                         </Box>
                                     )}
-                                    <Box sx={{ flex: 20 }}>
+                                    <Box sx={{ flex: 50 }}>
                                         <Stack direction="row" spacing={0}>
                                             <BubbleUserName
                                                 isSimpleBubble={isSimpleBubble}
