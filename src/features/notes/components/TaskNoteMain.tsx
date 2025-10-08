@@ -262,7 +262,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     return (
         <>
-            {(taskNoteMeta.length === 0 || currentTaskNote === null) && (
+            {(tabItems.length === 0 || currentTaskNote === null) && (
                 <Box
                     sx={{
                         height: "100%",
@@ -286,7 +286,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                 </Box>
             )}
 
-            {taskNoteMeta.length > 0 && (
+            {!(tabItems.length === 0 || currentTaskNote === null) && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
                     {body && (
                         <>

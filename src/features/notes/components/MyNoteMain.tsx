@@ -197,7 +197,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     return (
         <>
-            {(myNoteMeta.length === 0 || currentMyNote === null) && (
+            {(tabItems.length === 0 || currentMyNote === null) && (
                 <Box
                     sx={{
                         height: "100%",
@@ -225,7 +225,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                 </Box>
             )}
 
-            {myNoteMeta.length > 0 && (
+            {!(tabItems.length === 0 || currentMyNote === null) && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
                     {body && (
                         <>

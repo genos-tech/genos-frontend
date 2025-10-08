@@ -1,17 +1,23 @@
 import { useEffect } from "react";
 import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
+import { UserProps } from "../../types/admin";
 
 type updateTabFromMyNoteUpdateProps = {
+    myself: UserProps;
     currentMyNote: MyNoteProps | null;
     setSelectedTabIndex: (value: number) => void;
     tabItems: any[];
     setTabItems: (value: any[]) => void;
 };
 export const updateTabFromMyNoteUpdate = (props: updateTabFromMyNoteUpdateProps) => {
-    const { currentMyNote, setSelectedTabIndex, tabItems, setTabItems } = props;
+    const { myself, currentMyNote, setSelectedTabIndex, tabItems, setTabItems } = props;
 
     useEffect(() => {
         if (currentMyNote) {
+            if (myself.teamId !== currentMyNote.teamId) {
+                setTabItems([]);
+                return;
+            }
             localStorage.setItem("lastOpenMyNoteId", String(currentMyNote.noteId));
             if (tabItems.length === 0 || tabItems[0] === undefined) {
                 setSelectedTabIndex(0);
@@ -31,16 +37,21 @@ export const updateTabFromMyNoteUpdate = (props: updateTabFromMyNoteUpdateProps)
 };
 
 type updateTabFromTaskNoteUpdateProps = {
+    myself: UserProps;
     currentTaskNote: TaskNoteProps | null;
     setSelectedTabIndex: (value: number) => void;
     tabItems: any[];
     setTabItems: (value: any[]) => void;
 };
 export const updateTabFromTaskNoteUpdate = (props: updateTabFromTaskNoteUpdateProps) => {
-    const { currentTaskNote, setSelectedTabIndex, tabItems, setTabItems } = props;
+    const { myself, currentTaskNote, setSelectedTabIndex, tabItems, setTabItems } = props;
 
     useEffect(() => {
         if (currentTaskNote) {
+            if (myself.teamId !== currentTaskNote.teamId) {
+                setTabItems([]);
+                return;
+            }
             localStorage.setItem("lastOpenTaskNoteId", String(currentTaskNote.noteId));
             if (tabItems.length === 0 || tabItems[0] === undefined) {
                 setSelectedTabIndex(0);
@@ -60,16 +71,21 @@ export const updateTabFromTaskNoteUpdate = (props: updateTabFromTaskNoteUpdatePr
 };
 
 type updateTabFromChatNoteUpdateProps = {
+    myself: UserProps;
     currentChatNote: ChatNoteProps | null;
     setSelectedTabIndex: (value: number) => void;
     tabItems: any[];
     setTabItems: (value: any[]) => void;
 };
 export const updateTabFromChatNoteUpdate = (props: updateTabFromChatNoteUpdateProps) => {
-    const { currentChatNote, setSelectedTabIndex, tabItems, setTabItems } = props;
+    const { myself, currentChatNote, setSelectedTabIndex, tabItems, setTabItems } = props;
 
     useEffect(() => {
         if (currentChatNote) {
+            if (myself.teamId !== currentChatNote.teamId) {
+                setTabItems([]);
+                return;
+            }
             localStorage.setItem("lastOpenChatNoteId", String(currentChatNote.noteId));
             if (tabItems.length === 0 || tabItems[0] === undefined) {
                 setSelectedTabIndex(0);

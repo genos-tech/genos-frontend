@@ -883,6 +883,7 @@ export const App = () => {
         setCurrentMyNoteChain: setCurrentMyNoteChain,
     });
     updateTabFromMyNoteUpdate({
+        myself: myself,
         currentMyNote: currentMyNote,
         setSelectedTabIndex: setSelectedTabIndex,
         tabItems: tabItems,
@@ -958,6 +959,7 @@ export const App = () => {
         setCurrentTaskNoteChain: setCurrentTaskNoteChain,
     });
     updateTabFromTaskNoteUpdate({
+        myself: myself,
         currentTaskNote: currentTaskNote,
         setSelectedTabIndex: setSelectedTabIndex,
         tabItems: tabItems,
@@ -1036,6 +1038,7 @@ export const App = () => {
         setCurrentChatNoteChain: setCurrentChatNoteChain,
     });
     updateTabFromChatNoteUpdate({
+        myself: myself,
         currentChatNote: currentChatNote,
         setSelectedTabIndex: setSelectedTabIndex,
         tabItems: tabItems,

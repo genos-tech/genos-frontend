@@ -236,7 +236,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     return (
         <>
-            {(chatNoteMeta.length === 0 || currentChatNote === null) && (
+            {(tabItems.length === 0 || currentChatNote === null) && (
                 <Box
                     sx={{
                         height: "100%",
@@ -260,7 +260,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                 </Box>
             )}
 
-            {!(chatNoteMeta.length === 0 || currentChatNote === null) &&
+            {!(tabItems.length === 0 || currentChatNote === null) &&
                 chatNoteMeta.length > 0 && (
                     <Stack direction={"column"} sx={{ width: "100%" }}>
                         {body && (
