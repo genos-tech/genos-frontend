@@ -102,6 +102,7 @@ type ProjectTaskTableProps = {
     deletedTasks: TaskTableProps[];
     setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTaskId: (value: number) => void;
+    expiredTasks: TaskTableProps[];
     displayTaskType: TaskType;
     setFilterBy: (value: number) => void;
     filterBy: number;
@@ -121,6 +122,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         ongoingTasks,
         closedTasks,
         deletedTasks,
+        expiredTasks,
         setIsTaskPreviewVisible,
         setCurrentPreviewTaskId,
         displayTaskType,
@@ -132,15 +134,18 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         setCurrentFilterName,
     } = props;
     const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
     const className = `task-datagrid-${mode}`;
     const apiRef = useGridApiRef();
+
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>(
         ongoingTasks.filter((task) => task.parentTaskId === null)
     );
     const [predefinedFilters, setPredefinedFilters] =
         useState<FilterProps[]>(predefinedStatusFilters);
     const [predefinedFiltersRowCount, setPredefinedFiltersRowCount] = useState<number[]>([]);
-    const { accessToken } = useAuth();
+
+    const [showOnlyExpiredTasks, setShowOnlyExpiredTasks] = useState(false);
 
     // Update Project and Tag list
     const getTeamMembers = () => {
@@ -267,84 +272,119 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     return (
         <ThemeProvider theme={theme}>
             <div style={{ height: "100%", overflow: "hidden", borderRadius: "5px" }}>
-                <Stack
-                    direction="row"
-                    gap={1}
-                    mb={1}
-                    flexWrap="wrap"
-                    sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                >
-                    {predefinedFilters.map(
-                        ({ label, filterModel, lightModeColor, darkModeColor }, index) => {
-                            const count = predefinedFiltersRowCount[index];
-                            return (
-                                <Button
-                                    key={`${label}-${count}`}
+                <Stack direction="row">
+                    <Stack
+                        direction="row"
+                        gap={1}
+                        mb={1}
+                        flexWrap="wrap"
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                    >
+                        {predefinedFilters.map(
+                            ({ label, filterModel, lightModeColor, darkModeColor }, index) => {
+                                const count = predefinedFiltersRowCount[index];
+                                return (
+                                    <Button
+                                        key={`${label}-${count}`}
+                                        onClick={() => {
+                                            apiRef.current?.setFilterModel(filterModel);
+                                            setCurrentFilterName(label);
+                                        }}
+                                        variant={
+                                            currentFilterName === label ? "contained" : "outlined"
+                                        }
+                                        color={currentFilterName === label ? "info" : "inherit"}
+                                        sx={{
+                                            color: mode === "dark" ? "white" : "Black",
+                                            borderColor:
+                                                mode === "dark" ? darkModeColor : lightModeColor,
+                                            borderWidth: "2px",
+                                            fontSize: "13px",
+                                            fontWeight: "bold",
+                                            opacity: 0.85,
+                                            height: "25px",
+                                        }}
+                                    >
+                                        {label} {count !== undefined ? `(${count})` : ""}
+                                    </Button>
+                                );
+                            }
+                        )}
+
+                        <IconButton
+                            component="p"
+                            onClick={handleClick}
+                            size="small"
+                            sx={{
+                                color: mode === "dark" ? "#ffffff" : "#000000",
+                                borderRadius: 1, // removes the circular style
+                                padding: 1, // optional, adjust to taste
+                            }}
+                        >
+                            <MoreVertIcon />
+                        </IconButton>
+                        <Menu
+                            id="long-menu"
+                            MenuListProps={{
+                                "aria-labelledby": "long-button",
+                            }}
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleClose}
+                            slotProps={{
+                                paper: {
+                                    style: {
+                                        maxHeight: 300,
+                                    },
+                                },
+                            }}
+                        >
+                            {options.slice(displayTaskType.id - 1).map((option) => (
+                                <MenuItem
+                                    key={option.filterId}
                                     onClick={() => {
-                                        apiRef.current?.setFilterModel(filterModel);
-                                        setCurrentFilterName(label);
-                                    }}
-                                    variant={
-                                        currentFilterName === label ? "contained" : "outlined"
-                                    }
-                                    color={currentFilterName === label ? "info" : "inherit"}
-                                    sx={{
-                                        color: mode === "dark" ? "white" : "Black",
-                                        borderColor:
-                                            mode === "dark" ? darkModeColor : lightModeColor,
-                                        borderWidth: "2px",
-                                        fontSize: "13px",
-                                        fontWeight: "bold",
-                                        opacity: 0.85,
-                                        height: "25px",
+                                        setFilterBy(option.filterId);
+                                        setCurrentFilterName("");
                                     }}
                                 >
-                                    {label} {count !== undefined ? `(${count})` : ""}
-                                </Button>
-                            );
-                        }
-                    )}
+                                    {option.name}
+                                </MenuItem>
+                            ))}
+                        </Menu>
+                    </Stack>
 
-                    <IconButton
-                        component="p"
-                        onClick={handleClick}
-                        size="small"
-                        sx={{
-                            color: mode === "dark" ? "#ffffff" : "#000000",
-                            borderRadius: 1, // removes the circular style
-                            padding: 1, // optional, adjust to taste
-                        }}
-                    >
-                        <MoreVertIcon />
-                    </IconButton>
-                    <Menu
-                        id="long-menu"
-                        MenuListProps={{
-                            "aria-labelledby": "long-button",
-                        }}
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleClose}
-                        slotProps={{
-                            paper: {
-                                style: {
-                                    maxHeight: 300,
-                                },
-                            },
-                        }}
-                    >
-                        {options.slice(displayTaskType.id - 1).map((option) => (
-                            <MenuItem
-                                key={option.filterId}
+                    {expiredTasks.length > 0 && displayTaskType.id === 1 && (
+                        <Stack
+                            direction="row"
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "flex-end", // push to right
+                                flex: 1, // take up available space
+                            }}
+                        >
+                            <Button
+                                component="p"
+                                variant={showOnlyExpiredTasks ? "contained" : "outlined"}
+                                color="error"
+                                size="small"
                                 onClick={() => {
-                                    setFilterBy(option.filterId);
-                                    setCurrentFilterName("");
+                                    if (showOnlyExpiredTasks) {
+                                        setCurrentDisplayingTasks(
+                                            ongoingTasks.filter(
+                                                (task) => task.parentTaskId === null
+                                            )
+                                        );
+                                    } else {
+                                        setCurrentDisplayingTasks(expiredTasks);
+                                    }
+                                    setShowOnlyExpiredTasks(!showOnlyExpiredTasks);
                                 }}
                             >
-                                {option.name}
-                            </MenuItem>
-                        ))}
-                    </Menu>
+                                Expired ({expiredTasks.length})
+                            </Button>
+                        </Stack>
+                    )}
                 </Stack>
 
                 <Box

@@ -115,6 +115,7 @@ type TaskHomeProps = {
     ongoingTasks: TaskTableProps[];
     closedTasks: TaskTableProps[];
     deletedTasks: TaskTableProps[];
+    expiredTasks: TaskTableProps[];
     setOngoingTasks: (value: TaskTableProps[]) => void;
     setClosedTasks: (value: TaskTableProps[]) => void;
     setDeletedTasks: (value: TaskTableProps[]) => void;
@@ -182,6 +183,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         ongoingTasks,
         closedTasks,
         deletedTasks,
+        expiredTasks,
         setOngoingTasks,
         setClosedTasks,
         setDeletedTasks,
@@ -761,6 +763,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             ongoingTasks={ongoingTasks}
                                                             closedTasks={closedTasks}
                                                             deletedTasks={deletedTasks}
+                                                            expiredTasks={expiredTasks}
                                                             setIsTaskPreviewVisible={
                                                                 setIsTaskPreviewVisible
                                                             }

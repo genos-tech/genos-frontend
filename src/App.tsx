@@ -608,7 +608,16 @@ export const App = () => {
     const [ongoingTasks, setOngoingTasks] = useState<TaskTableProps[]>([]);
     const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
     const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
+    const [expiredTasks, setExpiredTasks] = useState<TaskTableProps[]>([]);
     let tsLastLoadProjectTasks: number | undefined = undefined;
+    const getExpiredTasks = async (ongoingTasks: TaskTableProps[]) => {
+        return ongoingTasks.filter((task) => {
+            if (task.daysLeft && task.daysLeft < 0 && task.parentTaskId === null) {
+                return true;
+            }
+            return false;
+        });
+    };
     const fetchProjectTasks = async (projectId: number) => {
         tsLastLoadProjectTasks = Date.now();
         const _onGoingTasks: TaskTableProps[] = await popSpecificProjectTasks(
@@ -623,9 +632,11 @@ export const App = () => {
             projectId,
             taskTypes.deleted.statuses
         );
+        const _expiredTasks: TaskTableProps[] = await getExpiredTasks(_onGoingTasks);
         setOngoingTasks(_onGoingTasks);
         setClosedTasks(_closedTasks);
         setDeletedTasks(_deletedTasks);
+        setExpiredTasks(_expiredTasks);
     };
 
     useEffect(() => {
@@ -1511,6 +1522,7 @@ export const App = () => {
                         isTaskUpdated={isTaskUpdated}
                         setIsTaskUpdated={setIsTaskUpdated}
                         ongoingTasks={ongoingTasks}
+                        expiredTasks={expiredTasks}
                         setOngoingTasks={setOngoingTasks}
                         closedTasks={closedTasks}
                         setClosedTasks={setClosedTasks}
