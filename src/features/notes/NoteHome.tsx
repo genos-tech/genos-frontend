@@ -1,9 +1,8 @@
 import { Socket } from "socket.io-client";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { Box, CssBaseline, IconButton, Tooltip, Typography, Stack } from "@mui/joy";
+import { Box, CssBaseline, IconButton } from "@mui/joy";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { useColorScheme } from "@mui/joy/styles";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
 import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
@@ -108,7 +107,13 @@ type NoteHomeProps = {
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    moveToSpecificChat: (chatType: number, chatId: number, threadId: number) => void;
+    moveToSpecificChat: (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean
+    ) => void;
     currentProject: ProjectProps | null;
     allChats: AllChatProps[];
     funcSetAllChats: () => Promise<void>;
@@ -352,6 +357,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                                 teamProjects={teamProjects}
                                                 setTeamProjects={setTeamProjects}
                                                 taskNoteMeta={taskNoteMeta}
+                                                moveToSpecificChat={moveToSpecificChat}
+                                                openingService={openingService}
                                             />
                                         )}
                                     </>
@@ -481,6 +488,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setTeamProjects={setTeamProjects}
                                         taskNoteMeta={taskNoteMeta}
                                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
+                                        moveToSpecificChat={moveToSpecificChat}
+                                        openingService={openingService}
                                     />
                                 </Box>
                             </Panel>

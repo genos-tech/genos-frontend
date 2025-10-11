@@ -492,9 +492,17 @@ export const App = () => {
             }
         }
     };
-    const moveToSpecificChat = async (chatType: number, chatId: number, threadId: number) => {
+    const moveToSpecificChat = async (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean
+    ) => {
         setOpeningService(1); // move to chat
         setIsMainChatVisible(false); // initialize the main chat pane to be closed
+        setIsChatNoteVisible(openTaskNoteInChat); // initialize the chat note pane to be closed
+        setIsThreadTaskVisible(openThreadTaskPreview); // initialize the task preview pane to be closed
         const targetChat: AllChatProps = allChats.filter(
             (chat) => chat.chatType === chatType && chat.chatId === chatId
         )[0];
@@ -509,7 +517,6 @@ export const App = () => {
                 } else {
                     setIsMainChatVisible(true);
                 }
-                setIsChatNoteVisible(true);
             })
             .catch((error) => console.error(error));
     };
@@ -1547,6 +1554,7 @@ export const App = () => {
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
                         allChats={allChats}
                         funcSetAllChats={funcSetAllChats}
+                        moveToSpecificChat={moveToSpecificChat}
                     />
                 ) : null}
 

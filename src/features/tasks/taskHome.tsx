@@ -16,6 +16,7 @@ import {
     CircularProgress,
     ListItemContent,
     Chip,
+    Tooltip,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
 import AddIcon from "@mui/icons-material/Add";
@@ -138,6 +139,13 @@ type TaskHomeProps = {
     setInitialEmptyTaskId: (value: number | undefined) => void;
     allChats: AllChatProps[];
     funcSetAllChats: () => Promise<void>;
+    moveToSpecificChat: (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean
+    ) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -206,6 +214,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         setInitialEmptyTaskId,
         allChats,
         funcSetAllChats,
+        moveToSpecificChat,
     } = props;
 
     // Common
@@ -664,34 +673,38 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     </Box>
 
                                                     <Box>
-                                                        <IconButton
-                                                            component="p"
-                                                            variant="outlined"
-                                                            size="sm"
-                                                            sx={{
-                                                                fontSize: "15px",
-                                                                paddingRight: "10px",
-                                                            }}
-                                                            onClick={() => {
-                                                                setIsCreatingTask({
-                                                                    flag: true,
-                                                                    parentTaskId: null,
-                                                                    rootTaskId: null,
-                                                                });
-                                                            }}
-                                                        >
-                                                            <AddIcon />
-                                                            Task
-                                                        </IconButton>
-                                                        <Dropdown>
-                                                            <MenuButton
-                                                                slots={{ root: IconButton }}
-                                                                slotProps={{
-                                                                    root: { color: "neutral" },
+                                                        <Tooltip title="Create New Task">
+                                                            <IconButton
+                                                                component="p"
+                                                                variant="outlined"
+                                                                size="sm"
+                                                                sx={{
+                                                                    fontSize: "15px",
+                                                                    paddingRight: "10px",
+                                                                }}
+                                                                onClick={() => {
+                                                                    setIsCreatingTask({
+                                                                        flag: true,
+                                                                        parentTaskId: null,
+                                                                        rootTaskId: null,
+                                                                    });
                                                                 }}
                                                             >
-                                                                <MoreVert />
-                                                            </MenuButton>
+                                                                <AddIcon />
+                                                                Task
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Dropdown>
+                                                            <Tooltip title="More Options">
+                                                                <MenuButton
+                                                                    slots={{ root: IconButton }}
+                                                                    slotProps={{
+                                                                        root: { color: "neutral" },
+                                                                    }}
+                                                                >
+                                                                    <MoreVert />
+                                                                </MenuButton>
+                                                            </Tooltip>
                                                             <Menu size="sm">
                                                                 <MenuItem
                                                                     onClick={() => {
@@ -858,6 +871,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     setTeamProjects={setTeamProjects}
                                                     initialEmptyTaskId={initialEmptyTaskId}
                                                     setInitialEmptyTaskId={setInitialEmptyTaskId}
+                                                    moveToSpecificChat={moveToSpecificChat}
+                                                    openingService={openingService}
                                                 />
                                             </Box>
                                         </Panel>
@@ -941,6 +956,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     teamProjects={teamProjects}
                                                     setTeamProjects={setTeamProjects}
                                                     taskNoteMeta={taskNoteMeta}
+                                                    moveToSpecificChat={moveToSpecificChat}
+                                                    openingService={openingService}
                                                 />
                                             </Box>
                                         </Panel>

@@ -74,6 +74,14 @@ type TaskPreviewProps = {
     setTeamProjects: (value: ProjectProps[]) => void;
     taskNoteMeta: TaskNoteMetaProps[];
     setIsTaskVisibleInNote?: (value: boolean) => void;
+    moveToSpecificChat: (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean
+    ) => void;
+    openingService: number;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -113,6 +121,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setTeamProjects,
         taskNoteMeta,
         setIsTaskVisibleInNote,
+        moveToSpecificChat,
+        openingService,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -418,7 +428,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         isPreviewMode={true}
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsThreadVisible={setIsThreadVisible}
-                        isThreadVisible={isThreadVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         isTaskPreviewVisible={isTaskPreviewVisible}
@@ -427,6 +436,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         isTaskNoteVisible={isTaskNoteVisible}
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
+                        moveToSpecificChat={moveToSpecificChat}
+                        openingService={openingService}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />

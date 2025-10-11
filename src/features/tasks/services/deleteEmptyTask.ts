@@ -14,7 +14,7 @@ export const deleteEmptyTask = async (props: deleteEmptyTaskProps) => {
 
     if (accessToken) {
         const taskCreateResponse = await fetch(
-            `${base_url}/task/?team_id=${myself.teamId}&task_id=${taskId}&is_init_table_boolean=1`,
+            `${base_url}/task/?team_id=${myself.teamId}&task_id=${taskId}&is_init_task_boolean=1`,
             {
                 method: "DELETE",
                 headers: {
