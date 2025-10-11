@@ -99,6 +99,18 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     Thread
                 </Chip>
 
+                <div>
+                    <Typography
+                        component="h2"
+                        noWrap
+                        sx={{ fontWeight: "lg", fontSize: "lg", pl: "5px" }}
+                    >
+                        {isYou ? `${thread?.chatName} (you)` : thread?.chatName}
+                    </Typography>
+                </div>
+            </Stack>
+
+            <Stack spacing={0.3} direction="row" sx={{ alignItems: "center" }}>
                 {/* Custom header in PM and DM/GM (having a task) thread */}
                 {(((thread.chatType === 3 || thread.chatType === 4) &&
                     currentPreviewTaskId !== -1) ||
@@ -142,18 +154,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         )}
                     </>
                 )}
-                <div>
-                    <Typography
-                        component="h2"
-                        noWrap
-                        sx={{ fontWeight: "lg", fontSize: "lg", pl: "5px" }}
-                    >
-                        {isYou ? `${thread?.chatName} (you)` : thread?.chatName}
-                    </Typography>
-                </div>
-            </Stack>
 
-            <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
                 {/* Custom header in DM/GM thread */}
                 {thread.chatType !== 3 && thread.chatType !== 4 && currentPreviewTaskId === -1 && (
                     <>

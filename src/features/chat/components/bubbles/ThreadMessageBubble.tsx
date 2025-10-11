@@ -15,6 +15,8 @@ import { ReactionProps } from "../../../../types/common";
 import { ChatProps } from "../../../../types/chat";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
+import { BubbleFlagButton } from "./BubbleFlagButton";
+import { useAuth } from "../../../../context/AuthContext";
 
 type threadMessageBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -22,6 +24,7 @@ type threadMessageBubbleProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     thread: ThreadProps;
+    setCurrentThreadChat: (chat: ThreadProps) => void;
     variant: "sent" | "received";
     message: ThreadMessageProps;
     isScrolling: boolean;
@@ -42,6 +45,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         setMyself,
         socket,
         thread,
+        setCurrentThreadChat,
         variant,
         message,
         isScrolling,
@@ -54,6 +58,8 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         currentMessageIndex,
         setTargetMessageIndex,
     } = props;
+
+    const { accessToken } = useAuth();
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
 
@@ -244,7 +250,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                   },
                         ]}
                     >
-                        <Stack direction="column" spacing={1.5}>
+                        <Stack direction="column">
                             {showUnderBarOption === true && isSimpleBubble === true && (
                                 <Stack direction="row" spacing={0}>
                                     <BubbleUserName
@@ -282,6 +288,15 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             />
                                         )}
                                     </Box>
+
+                                    <BubbleFlagButton
+                                        accessToken={accessToken}
+                                        myself={myself}
+                                        currentThreadChat={thread}
+                                        setCurrentThreadChat={setCurrentThreadChat}
+                                        threadId={thread.threadId}
+                                        message={message}
+                                    />
 
                                     {/* 
                                         TODO: How to edit the first message in the thread?
@@ -321,7 +336,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                         </Box>
                                     )}
                                     <Box sx={{ flex: 20 }}>
-                                        <Stack direction="row" spacing={2}>
+                                        <Stack direction="row">
                                             <BubbleUserName
                                                 isSimpleBubble={isSimpleBubble}
                                                 sender={message.sender}
@@ -365,6 +380,16 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                             />
                                                         )}
                                                     </Box>
+
+                                                    <BubbleFlagButton
+                                                        accessToken={accessToken}
+                                                        myself={myself}
+                                                        currentThreadChat={thread}
+                                                        setCurrentThreadChat={setCurrentThreadChat}
+                                                        threadId={thread.threadId}
+                                                        message={message}
+                                                    />
+
                                                     {message.sender.userId === myself.userId && (
                                                         <BubbleThreadEditButton
                                                             message={message}

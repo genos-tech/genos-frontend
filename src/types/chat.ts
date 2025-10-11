@@ -124,6 +124,7 @@ export type MessageProps = {
     project?: ProjectProps;
     reactions?: ReactionProps[];
     threadId?: number;
+    isFlagged?: boolean;
 };
 
 export type ThreadMessageProps = {
@@ -147,6 +148,7 @@ export type ThreadMessageProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     reactions?: ReactionProps[];
+    isFlagged?: boolean;
 };
 
 export type NewMessageProps = {
@@ -180,6 +182,7 @@ export type NewMessageProps = {
     lastReadMessageId: number;
     isPinned?: boolean;
     tsLastAllReadActivity?: string;
+    isFlagged?: boolean;
 };
 
 export type NewThreadMessageProps = {
@@ -209,6 +212,7 @@ export type NewThreadMessageProps = {
     taskExist?: boolean;
     isEdited: boolean;
     reactions?: ReactionProps[];
+    isFlagged?: boolean;
 };
 
 // Other Props

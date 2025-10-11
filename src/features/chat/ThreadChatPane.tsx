@@ -334,6 +334,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 setMyself={setMyself}
                                                 socket={socket}
                                                 thread={thread}
+                                                setCurrentThreadChat={setCurrentThreadChat}
                                                 variant={isYou ? "sent" : "received"}
                                                 message={message}
                                                 isScrolling={isScrolling}

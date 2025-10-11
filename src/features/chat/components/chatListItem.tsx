@@ -181,25 +181,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
     };
 
     const pinChatHandler = async (chatId: number, chatType: number) => {
-        // Update pinned chats. If chat is pinned, remove it from the list, otherwise add it to the list.
-        const updatedAllChats = allChats.map((chat) => ({
-            ...chat,
-            isPinned:
-                chat.chatId === chatId && chat.chatType === chatType
-                    ? !chat.isPinned
-                    : chat.isPinned,
-        }));
-
-        await updatePinnedChats(
-            accessToken,
-            myself,
-            updatedAllChats
-                .map((chat) =>
-                    chat.isPinned ? { chat_type: chat.chatType, chat_id: chat.chatId } : null
-                )
-                .filter((chat) => chat !== null)
-        );
-
+        await updatePinnedChats(accessToken, myself, { chat_type: chatType, chat_id: chatId });
         await addChat({ ...chat, isPinned: !chat.isPinned }, chatType);
         funcSetAllChats();
     };

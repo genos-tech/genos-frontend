@@ -20,6 +20,7 @@ import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
+import { BubbleFlagButton } from "./BubbleFlagButton";
 
 type MessageBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -484,6 +485,15 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         )}
                                     </Box>
 
+                                    <BubbleFlagButton
+                                        accessToken={accessToken}
+                                        myself={myself}
+                                        currentChat={chat}
+                                        setCurrentChat={setCurrentMainChat}
+                                        threadId={0}
+                                        message={message}
+                                    />
+
                                     <BubbleReplyButton replayHandler={replayHandler} />
 
                                     {message.sender.userId === myself.userId && (
@@ -578,9 +588,19 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         )}
                                                     </Box>
 
+                                                    <BubbleFlagButton
+                                                        accessToken={accessToken}
+                                                        myself={myself}
+                                                        currentChat={chat}
+                                                        setCurrentChat={setCurrentMainChat}
+                                                        threadId={0}
+                                                        message={message}
+                                                    />
+
                                                     <BubbleReplyButton
                                                         replayHandler={replayHandler}
                                                     />
+
                                                     {message.sender.userId === myself.userId && (
                                                         <BubbleEditButton
                                                             message={message}
