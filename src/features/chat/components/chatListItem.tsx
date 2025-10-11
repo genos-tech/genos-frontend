@@ -267,51 +267,56 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     )}
                                 </div>
 
-                                <Typography
-                                    noWrap
-                                    level="title-sm"
-                                    sx={{ pt: "3px", pl: "5px" }}
-                                    startDecorator={
-                                        chat.isPrivate ? (
-                                            <LockOutlineIcon sx={{ fontSize: "16px" }} />
-                                        ) : undefined
-                                    }
-                                >
-                                    {isYou ? `${chat.chatName} (you)` : chat.chatName}
-                                </Typography>
-
-                                {/* show my own custom status */}
-                                {chat.dmPartnerUser.userId !== "" &&
-                                    myself.userId === chat.dmPartnerUser.userId &&
-                                    myself.customStatus != "" && (
-                                        <Chip
-                                            component="h2"
-                                            variant="outlined"
-                                            size="md"
-                                            sx={{ borderRadius: "sm", height: "10px" }}
-                                        >
-                                            {myself.customStatus}
-                                        </Chip>
-                                    )}
-
-                                {/* show others custom status */}
-                                {chat.dmPartnerUser.userId !== "" &&
-                                    myself.userId !== chat.dmPartnerUser.userId &&
-                                    teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                                    teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !==
-                                        "" && (
-                                        <Chip
-                                            component="h2"
-                                            variant="outlined"
-                                            size="md"
-                                            sx={{ borderRadius: "sm", height: "10px" }}
-                                        >
-                                            {
-                                                teamMemberProfiles[chat.dmPartnerUser.userId]
-                                                    .customStatus
+                                <Box sx={{ pt: "3px" }}>
+                                    <Stack direction="row" spacing={0.5}>
+                                        <Typography
+                                            noWrap
+                                            level="title-sm"
+                                            sx={{ pl: "5px" }}
+                                            startDecorator={
+                                                chat.isPrivate ? (
+                                                    <LockOutlineIcon sx={{ fontSize: "16px" }} />
+                                                ) : undefined
                                             }
-                                        </Chip>
-                                    )}
+                                        >
+                                            {isYou ? `${chat.chatName} (you)` : chat.chatName}
+                                        </Typography>
+
+                                        {/* show my own custom status */}
+                                        {chat.dmPartnerUser.userId !== "" &&
+                                            myself.userId === chat.dmPartnerUser.userId &&
+                                            myself.customStatus != "" && (
+                                                <Chip
+                                                    component="h3"
+                                                    variant="outlined"
+                                                    size="sm"
+                                                    sx={{ borderRadius: "sm", height: "10px" }}
+                                                >
+                                                    {myself.customStatus}
+                                                </Chip>
+                                            )}
+
+                                        {/* show others custom status */}
+                                        {chat.dmPartnerUser.userId !== "" &&
+                                            myself.userId !== chat.dmPartnerUser.userId &&
+                                            teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                                            teamMemberProfiles[chat.dmPartnerUser.userId]
+                                                .customStatus !== "" && (
+                                                <Chip
+                                                    component="h3"
+                                                    variant="outlined"
+                                                    size="sm"
+                                                    sx={{ borderRadius: "sm", height: "10px" }}
+                                                >
+                                                    {
+                                                        teamMemberProfiles[
+                                                            chat.dmPartnerUser.userId
+                                                        ].customStatus
+                                                    }
+                                                </Chip>
+                                            )}
+                                    </Stack>
+                                </Box>
                             </Stack>
 
                             {/* Right-aligned content */}
@@ -319,12 +324,13 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 <Typography
                                     level="body-xs"
                                     noWrap
-                                    sx={{ display: { xs: "none", md: "block" }, mt: 0.5 }}
+                                    sx={{ display: { xs: "none", md: "block" }, mt: 0.6, mr: 1 }}
                                 >
                                     {chat.latestMessage
                                         ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
                                         : ""}
                                 </Typography>
+
                                 {chat.dmPartnerUser.userId === myself.userId && (
                                     <Tooltip title="To-Do" size="sm">
                                         <Badge
@@ -332,7 +338,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             color="primary"
                                             size="sm"
                                             anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.5 }}
+                                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.6 }}
                                         >
                                             <IconButton
                                                 component="a"
@@ -347,11 +353,14 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         </Badge>
                                     </Tooltip>
                                 )}
-                                <Tooltip title="Pin Chat" size="sm">
+                                <Tooltip
+                                    title={chat.isPinned ? "Unpin Chat" : "Pin Chat"}
+                                    size="sm"
+                                >
                                     <IconButton
                                         component="a"
                                         color={chat.isPinned ? "danger" : "neutral"}
-                                        sx={{ mr: -1, mt: 0.5 }}
+                                        sx={{ mr: -1, mt: 0.6 }}
                                         onClick={(event) => {
                                             event.stopPropagation(); // Stop the click from reaching ListItemButton
                                             pinChatHandler(chat.chatId, chat.chatType); // Call the intended function
@@ -364,7 +373,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 <Tooltip title="Split View " size="sm">
                                     <IconButton
                                         component="a"
-                                        sx={{ mt: 0.5 }}
+                                        sx={{ mt: 0.6 }}
                                         onClick={(event) => {
                                             event.stopPropagation(); // Stop the click from reaching ListItemButton
                                             splitOpenHandler(); // Call the intended function

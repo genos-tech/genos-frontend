@@ -119,6 +119,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         "--Switch-trackHeight": "23px",
                         paddingLeft: "10px",
                     }}
+                    color={showOnlyInCompleteTodos ? "warning" : "neutral"}
                 />
             </Stack>
             <Box sx={{ px: 0.3, my: 0.2 }}>

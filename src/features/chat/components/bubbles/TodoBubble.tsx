@@ -119,20 +119,22 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                         >
                             {extractYYYYMMDD(todo.tsCreatedAt)}
                         </Chip>
+
                         <Chip
                             variant="soft"
                             color={todo.isCompleted ? "success" : "neutral"}
                             size="md"
-                            sx={{ marginLeft: "5px" }}
+                            sx={{ marginLeft: "-37px" }}
                             startDecorator={todo.isCompleted ? <DoneAllIcon /> : null}
                         >
                             {todo.isCompleted ? "Completed" : "Incomplete"}
                         </Chip>
+
                         <Button
-                            variant="soft"
+                            variant="outlined"
                             color="primary"
                             size="sm"
-                            sx={{ marginLeft: "auto" }}
+                            sx={{ marginLeft: "auto", fontSize: "12px" }}
                             disabled={bodyEdited === false}
                             onClick={() => sendUpdatedTodo()}
                         >
