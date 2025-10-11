@@ -133,7 +133,13 @@ type ChatHomeProps = {
     loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
-    moveToSpecificChat: (chatType: number, chatId: number, threadId: number) => void;
+    moveToSpecificChat: (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean
+    ) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -663,6 +669,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setTeamProjects={setTeamProjects}
                                     initialEmptyTaskId={initialEmptyTaskId}
                                     setInitialEmptyTaskId={setInitialEmptyTaskId}
+                                    moveToSpecificChat={moveToSpecificChat}
+                                    openingService={openingService}
                                 />
                             </Box>
                         </Panel>
@@ -735,6 +743,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     teamProjects={teamProjects}
                                     setTeamProjects={setTeamProjects}
                                     taskNoteMeta={taskNoteMeta}
+                                    moveToSpecificChat={moveToSpecificChat}
+                                    openingService={openingService}
                                 />
                             </Box>
                         </Panel>

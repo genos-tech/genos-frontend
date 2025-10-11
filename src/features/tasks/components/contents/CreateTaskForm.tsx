@@ -133,6 +133,14 @@ type CreateTaskProps = {
     setTeamProjects: (value: ProjectProps[]) => void;
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
+    moveToSpecificChat: (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean
+    ) => void;
+    openingService: number;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -168,6 +176,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setTeamProjects,
         initialEmptyTaskId,
         setInitialEmptyTaskId,
+        moveToSpecificChat,
+        openingService,
     } = props;
     const { accessToken } = useAuth();
 
@@ -319,12 +329,13 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setTitleErrorOpen={setTitleErrorOpen}
                         isPreviewMode={false}
                         setIsMainChatVisible={setIsMainChatVisible}
-                        isThreadVisible={isThreadVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         isTaskPreviewVisible={isTaskPreviewVisible}
                         isCreatingTask={isCreatingTask}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
+                        moveToSpecificChat={moveToSpecificChat}
+                        openingService={openingService}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />

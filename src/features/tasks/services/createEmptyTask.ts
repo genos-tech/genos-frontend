@@ -40,7 +40,7 @@ export const createEmptyTask = async (props: createEmptyTaskProps) => {
                 thread_id: null,
                 parent_task_id: null,
                 root_task_id: null,
-                is_init_table: true,
+                is_init_task: true,
             }),
         });
 
