@@ -18,6 +18,14 @@ const _messageIdWithChatId = {
 
         return activityMessages;
     },
+    flaggedMessages: async () => {
+        const db = await openDB(DB_NAME, DB_VERSION);
+        const flaggedMessagesStore = db
+            .transaction(STORES.FLAGGED_MESSAGES)
+            .objectStore(STORES.FLAGGED_MESSAGES);
+        const flaggedMessages = await flaggedMessagesStore.getAll();
+        return flaggedMessages;
+    },
     dmChats: async () => {
         const db = await openDB(DB_NAME, DB_VERSION);
         const dmChatsStore = db.transaction(STORES.DM_CHATS).objectStore(STORES.DM_CHATS);
@@ -198,6 +206,9 @@ export const messageIdWithChatId = async (props: any) => {
         return data;
     } else if (props.storeName === STORES.PM_THREAD_MESSAGES) {
         const data = await _messageIdWithChatId.pmThreadMessages(props.chatId, props.threadId);
+        return data;
+    } else if (props.storeName === STORES.FLAGGED_MESSAGES) {
+        const data = await _messageIdWithChatId.flaggedMessages();
         return data;
     } else {
         console.error("Unexpected storeName:", props.storeName);

@@ -15,7 +15,7 @@ import {
 import { BnChatEditor } from "../../components/blockNote/bnChatEditor";
 import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps, MessageProps, ToDoFactProps } from "../../types/chat";
+import { ChatProps, ThreadProps, MessageProps, ToDoFactProps, FlaggedMessageProps } from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 import { addChat } from "../../features/chat/services/addChat";
@@ -67,6 +67,8 @@ type MessagesPaneProps = {
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -106,6 +108,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         isExistingTodaysTodo,
         setIsExistingTodaysTodo,
         incompleteTodoCount,
+        flaggedMessages,
+        setFlaggedMessages,
     } = props;
     const { accessToken } = useAuth();
     const [chatMessages, setChatMessages] = useState(chat.messages);
@@ -458,6 +462,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                                     setIsInEdit={setIsInEdit}
                                                     setEditTargetMessage={setEditTargetMessage}
                                                     currentMessageIndex={index}
+                                                    flaggedMessages={flaggedMessages}
+                                                    setFlaggedMessages={setFlaggedMessages}
                                                 />
                                             </Stack>
                                         </div>

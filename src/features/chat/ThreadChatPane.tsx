@@ -12,7 +12,7 @@ import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
 import { BnThreadEditor } from "../../components/blockNote/bnThreadEditor";
 import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadEditor";
 import { UserProps } from "../../types/admin";
-import { ThreadProps, ChatProps, ThreadMessageProps } from "../../types/chat";
+import { ThreadProps, ChatProps, ThreadMessageProps, FlaggedMessageProps } from "../../types/chat";
 import { TaskProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
@@ -55,6 +55,8 @@ type MessagesPaneProps = {
         isThread: boolean,
         threadId: number
     ) => Promise<void>;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -82,6 +84,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         isChatNoteVisible,
         setIsChatNoteVisible,
         handleCreateNewChatNoteIfNotExist,
+        flaggedMessages,
+        setFlaggedMessages,
     } = props;
 
     const { accessToken } = useAuth();
@@ -346,6 +350,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                                 setEditTargetMessage={setEditTargetMessage}
                                                 currentMessageIndex={index}
                                                 setTargetMessageIndex={setTargetMessageIndex}
+                                                flaggedMessages={flaggedMessages}
+                                                setFlaggedMessages={setFlaggedMessages}
                                             />
                                         </Stack>
                                     </div>
