@@ -260,7 +260,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             }
 
             if (setIsNewTaskCreated) {
-                setIsNewTaskCreated(true);
+                setTimeout(() => {
+                    setIsNewTaskCreated(true);
+                }, 500); // wait 500ms to show the new task
             }
         }
     }, [isSubmitted]);

@@ -28,7 +28,7 @@ import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadS
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
-// chatType = {1: DM, 2: GM, 3: PM, 4: Task Comment}
+// chatType = {1: DM, 2: GM, 3: PM, 4: Task}
 // activityType = {1: message or comment, 2: reaction, 3: mention}
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
@@ -140,9 +140,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 tsJoined: "",
             },
             lastReadMessageId:
-                activity.messageId > currentChat.lastReadMessageId
-                    ? activity.messageId
-                    : currentChat.lastReadMessageId,
+                currentChat && currentChat.lastReadMessageId
+                    ? activity.messageId > currentChat.lastReadMessageId
+                        ? activity.messageId
+                        : currentChat.lastReadMessageId
+                    : activity.messageId,
             messages: messages,
             latestMessage: messages[messages.length - 1],
             latestMessageText: messages[messages.length - 1].contentText,
@@ -318,7 +320,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         1: "DM",
         2: "GM",
         3: "PM",
-        4: "Task Comment",
+        4: "Task",
     };
 
     const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
@@ -487,7 +489,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         </>
                                     )}
 
-                                    {activity.activityType === 1 && (
+                                    {/* Reply except task comment */}
+                                    {activity.activityType === 1 && activity.chatType !== 4 && (
                                         <Chip
                                             size="sm"
                                             variant="outlined"
@@ -501,6 +504,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             Reply
                                         </Chip>
                                     )}
+
                                     {activity.activityType === 2 && (
                                         <Chip
                                             size="sm"
@@ -515,6 +519,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             Reaction
                                         </Chip>
                                     )}
+
                                     {activity.activityType === 3 && (
                                         <Chip
                                             size="sm"
@@ -542,6 +547,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     >
                                         {chatTypeLookup[activity.chatType]}
                                     </Chip>
+
                                     {activity.isThread === true && (
                                         <Chip
                                             size="sm"

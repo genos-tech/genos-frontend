@@ -49,7 +49,7 @@ export const createEmptyTask = async (props: createEmptyTaskProps) => {
         if (!taskCreateResponse.ok) {
             throw new Error("Failed to create a task");
         } else {
-            setInitialEmptyTaskId(taskCreateData.task_id);
+            setInitialEmptyTaskId(taskCreateData.task.task_id);
         }
     }
 };

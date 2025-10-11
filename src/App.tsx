@@ -26,7 +26,7 @@ import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { InboxItemProps } from "./types/common";
-import { getLocalCurrentTimestamp } from "./utils/dateUtils";
+import { getLocalCurrentDate, getLocalCurrentTimestamp } from "./utils/dateUtils";
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 import {
@@ -325,23 +325,24 @@ export const App = () => {
                         }
                     }
 
-                    // If not meeting any condition, set the last project as the current project
-                    if (i === loadedTeamProjects.length - 1 && loadedTeamProjects[i].projectId) {
-                        setCurrentProject({
-                            projectId: loadedTeamProjects[i].projectId,
-                            projectName: loadedTeamProjects[i].projectName,
-                            projectTags: loadedTeamProjects[i].projectTags,
-                            isPrivate: loadedTeamProjects[i].isPrivate,
-                            systemUserId: loadedTeamProjects[i].systemUserId,
-                        });
-                        // Load the latest tasks and insert into the indexedDB
-                        await loadProjectTasks(
-                            myself,
-                            loadedTeamProjects[i].projectId,
-                            accessToken
-                        );
-                        break;
-                    }
+                    // // If not meeting any condition, set the last project as the current project
+                    // if (i === loadedTeamProjects.length - 1 && loadedTeamProjects[i].projectId) {
+                    //     console.log(14, loadedTeamProjects[i].projectId);
+                    //     setCurrentProject({
+                    //         projectId: loadedTeamProjects[i].projectId,
+                    //         projectName: loadedTeamProjects[i].projectName,
+                    //         projectTags: loadedTeamProjects[i].projectTags,
+                    //         isPrivate: loadedTeamProjects[i].isPrivate,
+                    //         systemUserId: loadedTeamProjects[i].systemUserId,
+                    //     });
+                    //     // Load the latest tasks and insert into the indexedDB
+                    //     await loadProjectTasks(
+                    //         myself,
+                    //         loadedTeamProjects[i].projectId,
+                    //         accessToken
+                    //     );
+                    //     break;
+                    // }
                 }
             }
         }
@@ -675,12 +676,12 @@ export const App = () => {
 
     useEffect(() => {
         (async () => {
-            if (currentProject && (isNewProjectCreated === true || isNewTaskCreated === true)) {
+            if (currentProject && isNewProjectCreated === true) {
                 fetchProjectTasks(currentProject.projectId);
                 localStorage.setItem("lastProjectId", currentProject.projectId.toString());
             }
         })();
-    }, [isNewProjectCreated, isNewTaskCreated]);
+    }, [isNewProjectCreated]);
 
     useEffect(() => {
         if (currentProject && currentPreviewTaskId !== -1) {
@@ -720,7 +721,7 @@ export const App = () => {
                             parentTaskId: String(loadedTask[0].parentTaskId) || null,
                             threadId: loadedTask[0].threadId || null,
                             tags: loadedTask[0].tags || [],
-                            concatTags: loadedTask[0].concatTags || null,
+                            concatTags: loadedTask[0].concatTags || "//",
                             teamId: myself.teamId || null,
                             projectId: loadedTask[0].project?.projectId || null,
                         },
@@ -743,8 +744,9 @@ export const App = () => {
                               title: currentPreviewTask.title || null,
                               priority: currentPreviewTask.priority.priority || null,
                               effortLevel: currentPreviewTask.effortLevel.level || null,
-                              createdDate: currentPreviewTask.createdDate || null,
-                              updatedAt: currentPreviewTask.updatedAt || null,
+                              createdDate: currentPreviewTask.createdDate || getLocalCurrentDate(),
+                              updatedAt:
+                                  currentPreviewTask.updatedAt || getLocalCurrentTimestamp(),
                               dueDate: currentPreviewTask.dueDate || null,
                               daysLeft: currentPreviewTask.daysLeft || null,
                               status: currentPreviewTask.status.status || null,
@@ -772,13 +774,15 @@ export const App = () => {
 
     useEffect(() => {
         if (isNewTaskCreated === true) {
-            (async () => {
-                await loadProjectsAndTasks(
-                    localStorage.getItem("lastProjectId")
-                        ? Number(localStorage.getItem("lastProjectId"))
-                        : -1
-                );
-            })();
+            setTimeout(() => {
+                (async () => {
+                    await loadProjectsAndTasks(
+                        localStorage.getItem("lastProjectId")
+                            ? Number(localStorage.getItem("lastProjectId"))
+                            : -1
+                    );
+                })();
+            }, 500);
         }
     }, [isNewTaskCreated]);
 

@@ -72,16 +72,37 @@ export const wsHook = (props: wsHookProps) => {
 
     const updateAllChat = async (currentChat: ChatProps, newChatMessage: MessageProps) => {
         const newChat: AllChatProps = {
+            chatType: currentChat.chatType,
             chatId: currentChat.chatId,
             chatName: currentChat.chatName,
-            chatType: currentChat.chatType,
-            systemUserId: currentChat.systemUserId,
-            dmPartnerUser: currentChat.dmPartnerUser,
-            lastReadMessageId: currentChat.lastReadMessageId,
+            systemUserId:
+                currentChat.systemUserId ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.systemUserId,
+            dmPartnerUser:
+                currentChat.dmPartnerUser ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.dmPartnerUser,
+            lastReadMessageId:
+                currentChat.lastReadMessageId ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.lastReadMessageId ||
+                -1,
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
             TSLastMessage: newChatMessage.tsSent,
-            profileImagePath: currentChat.profileImagePath,
+            project:
+                currentChat.project ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.project,
+            isPrivate:
+                currentChat.isPrivate ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPrivate,
+            profileImagePath:
+                currentChat.profileImagePath ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.profileImagePath,
+            isPinned:
+                currentChat.isPinned ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPinned,
+            tsLastAllReadActivity:
+                currentChat.tsLastAllReadActivity ||
+                allChats.find((chat) => chat.chatId === currentChat.chatId)?.tsLastAllReadActivity,
         };
 
         if (newChat) {

@@ -364,7 +364,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                             }}
                         >
                             <Button
-                                component="p"
+                                component="button"
                                 variant={showOnlyExpiredTasks ? "contained" : "outlined"}
                                 color="error"
                                 size="small"
