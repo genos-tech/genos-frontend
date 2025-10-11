@@ -100,11 +100,26 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
             if (!taskCreateResponse.ok) {
                 throw new Error("Failed to create a task");
             } else {
-                setCurrentPreviewTaskId(taskCreateData.task_id);
+                if (taskCreateData.newly_mentioned_user_ids) {
+                    const newly_mentioned_user_ids: string[] =
+                        taskCreateData.newly_mentioned_user_ids;
+                    if (socket && newly_mentioned_user_ids.length > 0) {
+                        socket.emit("task_body_mention", {
+                            task_id: taskContents.id,
+                            task_title: taskContents.title,
+                            project_id: taskContents.project.projectId,
+                            project_name: taskContents.project.projectName,
+                            ts_mentioned_at: taskCreateData.task.updatedAt,
+                            mentioned_user_ids: newly_mentioned_user_ids,
+                        });
+                    }
+                }
+
+                setCurrentPreviewTaskId(taskCreateData.task.task_id);
 
                 for (const attachment of taskContents.attachments) {
                     const formData = new FormData();
-                    formData.append("task", taskCreateData.task_id);
+                    formData.append("task", taskCreateData.task.task_id);
                     formData.append("attachment_id", "-1");
                     formData.append("attached_file", attachment.file);
                     formData.append("attached_type", attachment.file.type);
@@ -127,12 +142,12 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                 }
 
                 addTask({
-                    id: String(taskCreateData.task_id),
+                    id: String(taskCreateData.task.task_id),
                     title: taskContents.title,
                     priority: taskContents.priority.priority,
                     effortLevel: taskContents.effortLevel.level,
                     createdDate: taskContents.createdDate || null,
-                    updatedAt: taskCreateData.updatedAt || null,
+                    updatedAt: taskCreateData.task.updatedAt || null,
                     dueDate: taskContents.dueDate,
                     daysLeft: taskContents.daysLeft || null,
                     status: taskContents.status.status,
@@ -172,13 +187,13 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         destCGId: taskContents.project.projectId,
                                         chatType: 3,
                                         dmPartnerUserId: null,
-                                        taskId: taskCreateData.task_id,
-                                        taskStatus: taskCreateData.status,
+                                        taskId: taskCreateData.task.task_id,
+                                        taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContents.project.systemUserId,
                                         messageIdForPut: null,
                                     },
                                     (ack: any) => {
-                                        if (taskCreateData.task_id && taskContents.project) {
+                                        if (taskCreateData.task.task_id && taskContents.project) {
                                             const newTaskCreatedThreadMessage =
                                                 taskCreatedThreadMessageTemplate(myself);
                                             socket.emit("thread_message", {
@@ -195,7 +210,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                                 senderName: taskContents.project.projectName,
                                                 destCGName: taskContents.project.projectName,
                                                 destCGId: taskContents.project.projectId,
-                                                taskId: taskCreateData.task_id,
+                                                taskId: taskCreateData.task.task_id,
                                                 systemUserId: taskContents.project.systemUserId,
                                                 messageIdForPut: null,
                                             });
@@ -221,8 +236,8 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         destCGId: currentMainChat.chatId,
                                         chatType: currentMainChat.chatType,
                                         dmPartnerUserId: currentMainChat.dmPartnerUser.userId,
-                                        taskId: taskCreateData.task_id,
-                                        taskStatus: taskCreateData.status,
+                                        taskId: taskCreateData.task.task_id,
+                                        taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContents.project.systemUserId,
                                         messageIdForPut: currentThreadChat.threadId,
                                         isPrivate: currentMainChat.isPrivate,
@@ -242,8 +257,8 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         senderName: taskContents.project.projectName,
                                         destCGName: currentThreadChat.chatName,
                                         destCGId: currentThreadChat.chatId,
-                                        taskId: taskCreateData.task_id,
-                                        taskStatus: taskCreateData.status,
+                                        taskId: taskCreateData.task.task_id,
+                                        taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContents.project.systemUserId,
                                         messageIdForPut: null,
                                     });

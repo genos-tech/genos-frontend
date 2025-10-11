@@ -31,7 +31,7 @@ import { addMessage } from "../services/addMessage";
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
-// chatType = {1: DM, 2: GM, 3: PM, 4: Task Comment}
+// chatType = {1: DM, 2: GM, 3: PM, 4: Task}
 // flaggedMessageType = {1: message or comment, 2: reaction, 3: mention}
 
 type ChatListItemForFlagMessagesProps = ListItemButtonProps & {

@@ -54,6 +54,20 @@ export const sendUpdatedSpecificTask = async (
                 tags: updatedTask.tags,
             });
 
+            if (res && res.data.newly_mentioned_user_ids) {
+                const newly_mentioned_user_ids: string[] = res.data.newly_mentioned_user_ids;
+                if (socket && newly_mentioned_user_ids.length > 0) {
+                    socket.emit("task_body_mention", {
+                        task_id: updatedTask.id,
+                        task_title: updatedTask.title,
+                        project_id: updatedTask.project.projectId,
+                        project_name: updatedTask.project.projectName,
+                        ts_mentioned_at: res.data.task.ts_updated_at,
+                        mentioned_user_ids: newly_mentioned_user_ids,
+                    });
+                }
+            }
+
             // Send ws message only when task metadata is update, not task body.
             if (res && taskBodyEdited === false) {
                 const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);

@@ -64,6 +64,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         });
 
         if (taskContents.project && taskContents.project.projectId) {
+            localStorage.setItem("lastProjectId", String(taskContents.project.projectId));
             setCurrentProject(taskContents.project);
         } else {
             console.error("Failed to set the current project");
