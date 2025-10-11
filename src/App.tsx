@@ -1553,6 +1553,7 @@ export const App = () => {
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
                         allChats={allChats}
+                        setAllChats={setAllChats}
                         funcSetAllChats={funcSetAllChats}
                         moveToSpecificChat={moveToSpecificChat}
                     />

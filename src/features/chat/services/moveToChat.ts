@@ -9,6 +9,7 @@ import { popSpecificMessages } from "../services/popSpecificMessages";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { UserProps } from "../../../types/admin";
 import { MessageProps, AllChatProps, ChatProps } from "../../../types/chat";
+import { loadSpecificGM } from "./loadSpecificGM";
 
 export const moveToDMChat = async (
     socket: Socket | null,
@@ -60,6 +61,7 @@ const joinedMessage = [
 
 export const moveToSelectedChat = async (
     myself: UserProps,
+    accessToken: string | null,
     socket: Socket,
     chatId: number,
     chatName: string,
@@ -73,10 +75,12 @@ export const moveToSelectedChat = async (
     setCurrentChatPaneType: (value: number) => void
 ) => {
     try {
+        // Check if the chat is known / already joined.
         const isKnownChat: boolean = await checkKnownChat(chatId, chatType);
         setOpenSearchBox(false);
 
-        if (!isKnownChat && socket !== null) {
+        if (!isKnownChat && socket !== null && (chatType === 1 || chatType === 2)) {
+            // If the chat is not known, send a message to the chat to join it.
             socket.emit(
                 "message",
                 {
@@ -92,40 +96,82 @@ export const moveToSelectedChat = async (
                     messageIdForPut: null,
                 },
                 async (ack: any) => {
-                    const message: MessageProps = {
-                        chatType: chatType,
-                        messageIdWithChatId: `${chatId}-1`,
-                        chatId: chatId,
-                        messageId: 1,
-                        content: joinedMessage,
-                        contentText: chatType === 1 ? "Has joined" : "Has created",
-                        sender: myself,
-                        tsSent: getLocalCurrentTimestamp(),
-                        tsUpdated: getLocalCurrentTimestamp(),
-                        numReplies: 0,
-                        taskId: null,
-                        taskStatus: null,
-                    };
-                    const chat: AllChatProps = {
-                        chatId: chatId,
-                        chatName: chatName,
-                        chatType: chatType,
-                        dmPartnerUser: dmPartnerUser,
-                        lastReadMessageId: -1,
-                        latestMessage: message,
-                        latestMessageText: chatType === 1 ? "Has joined" : "Has created",
-                        TSLastMessage: getLocalCurrentTimestamp(),
-                        isPrivate: chatType === 2 ? isPrivate : false,
-                    };
+                    // For DM
+                    if (chatType === 1) {
+                        const message: MessageProps = {
+                            chatType: chatType,
+                            messageIdWithChatId: `${chatId}-1`,
+                            chatId: chatId,
+                            messageId: 1,
+                            content: joinedMessage,
+                            contentText: "Has joined",
+                            sender: myself,
+                            tsSent: getLocalCurrentTimestamp(),
+                            tsUpdated: getLocalCurrentTimestamp(),
+                            numReplies: 0,
+                            taskId: null,
+                            taskStatus: null,
+                        };
+                        const chat: AllChatProps = {
+                            chatId: chatId,
+                            chatName: chatName,
+                            chatType: chatType,
+                            dmPartnerUser: dmPartnerUser,
+                            lastReadMessageId: -1,
+                            latestMessage: message,
+                            latestMessageText: "Has joined",
+                            TSLastMessage: getLocalCurrentTimestamp(),
+                            isPrivate: false,
+                        };
 
-                    await addChat(chat, chat.chatType);
-                    await addMessage(message, chat.chatType);
+                        await addChat(chat, chat.chatType);
+                        await addMessage(message, chat.chatType);
 
-                    setCurrentMainChat({ ...chat, messages: [message] });
-                    setAllChats([chat, ...allChats]);
+                        setCurrentMainChat({ ...chat, messages: [message] });
+                        setAllChats([chat, ...allChats]);
+                    }
+
+                    // For GM
+                    if (chatType === 2) {
+                        let loadedChat: ChatProps[] | undefined;
+                        // Load the existing messages in the chat.
+                        loadedChat = await loadSpecificGM(
+                            myself.teamId,
+                            myself.teamName,
+                            myself.userId,
+                            chatId,
+                            accessToken
+                        );
+
+                        if (loadedChat) {
+                            const sortedMessages = loadedChat[0].messages.sort(
+                                (a, b) => a.messageId - b.messageId
+                            );
+                            const newChat: AllChatProps = {
+                                chatType: chatType,
+                                chatId: loadedChat[0].chatId,
+                                chatName: loadedChat[0].chatName,
+                                lastReadMessageId: loadedChat[0].lastReadMessageId,
+                                dmPartnerUser: loadedChat[0].dmPartnerUser,
+                                latestMessage: loadedChat[0].latestMessage,
+                                latestMessageText: loadedChat[0].latestMessageText,
+                                TSLastMessage: loadedChat[0].TSLastMessage,
+                                isPrivate: loadedChat[0].isPrivate,
+                                profileImagePath: loadedChat[0].profileImagePath,
+                                isPinned: loadedChat[0].isPinned,
+                                tsLastAllReadActivity: loadedChat[0].tsLastAllReadActivity,
+                            };
+                            await addChat(newChat, newChat.chatType);
+                            await addMessage(newChat.latestMessage, newChat.chatType);
+
+                            setCurrentMainChat({ ...newChat, messages: sortedMessages });
+                            setAllChats([newChat, ...allChats]);
+                        }
+                    }
                 }
             );
         } else {
+            // If the chat is known, move to the chat.
             if (chatType === 1) {
                 moveToDMChat(socket, chatId, chatName, dmPartnerUser, setCurrentMainChat);
             } else {

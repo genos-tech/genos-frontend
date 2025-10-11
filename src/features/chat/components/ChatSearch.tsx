@@ -77,14 +77,12 @@ export const ChatSearch = (props: ChatSearchProps) => {
                         dmPartnerUserId: value.dmPartnerUser.userId,
                     },
                     (ack: any) => {
-                        // Since the existing DM and GM have chatId (value.id),
-                        // the user can move the the DM or GM.
-                        // But if the user tries to join a new DM (try to make a DM with a new friend),
-                        // there is no chat (chatId) yet, so need to wait till the first message
-                        // will be arrived. (the above "join" ws message will generate the first message for the user)
+                        // Since the existing DM/GM obviously has its own chatId (value.id),
+                        // the user can move the the DM/GM.
                         if (Number(value.id) !== -1) {
                             moveToSelectedChat(
                                 myself,
+                                accessToken,
                                 socket,
                                 value.id,
                                 value.name,
@@ -98,8 +96,11 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                 setCurrentChatPaneType
                             );
                         } else {
-                            // Joining a new DM -> value.id = -1.
-                            // User will get the first message via WS.
+                            // If the user tries to join a new DM (try to make a DM with a new friend),
+                            // there is no chat (chatId) yet, so need to wait till the first message
+                            // will be arrived via WS. (the above "join" ws message will generate
+                            // the first message for the user).
+                            // Joining a new DM -> value.id = -1. User will get the first message via WS.
                         }
                     }
                 );

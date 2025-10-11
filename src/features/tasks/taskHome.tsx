@@ -138,6 +138,7 @@ type TaskHomeProps = {
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
     allChats: AllChatProps[];
+    setAllChats: (value: AllChatProps[]) => void;
     funcSetAllChats: () => Promise<void>;
     moveToSpecificChat: (
         chatType: number,
@@ -213,6 +214,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         initialEmptyTaskId,
         setInitialEmptyTaskId,
         allChats,
+        setAllChats,
         funcSetAllChats,
         moveToSpecificChat,
     } = props;
@@ -1130,6 +1132,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                         setOpenJoinProject={setOpenJoinProject}
                         setCurrentProject={setCurrentProject}
                         loadProjectsAndTasks={loadProjectsAndTasks}
+                        allChats={allChats}
+                        setAllChats={setAllChats}
                     />
 
                     {/* Modal for deleting a project */}

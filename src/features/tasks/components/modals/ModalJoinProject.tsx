@@ -6,6 +6,10 @@ import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import { UserProps } from "../../../../types/admin";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectProps } from "../../../../types/tasks";
+import { loadSpecificPM } from "../../../../features/chat/services/loadSpecificPM";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { addChat } from "../../../chat/services/addChat";
+import { addMessage } from "../../../chat/services/addMessage";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const disableOpenJoinModalParams = {
@@ -35,6 +39,8 @@ type Props = {
     }) => void;
     setCurrentProject: (value: ProjectProps) => void;
     loadProjectsAndTasks: (value: number) => Promise<void>;
+    allChats: AllChatProps[];
+    setAllChats: (value: AllChatProps[]) => void;
 };
 export const ModalJoinProject: React.FC<Props> = ({
     socket,
@@ -43,6 +49,8 @@ export const ModalJoinProject: React.FC<Props> = ({
     setOpenJoinProject,
     setCurrentProject,
     loadProjectsAndTasks,
+    allChats,
+    setAllChats,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -148,6 +156,36 @@ export const ModalJoinProject: React.FC<Props> = ({
                             });
                             (async () => {
                                 await loadProjectsAndTasks(openJoinProject.projectId);
+                                const loadedChat: ChatProps[] = await loadSpecificPM(
+                                    myself.teamId,
+                                    myself.teamName,
+                                    myself.userId,
+                                    openJoinProject.projectId,
+                                    accessToken
+                                );
+                                if (loadedChat) {
+                                    const sortedMessages = loadedChat[0].messages.sort(
+                                        (a, b) => a.messageId - b.messageId
+                                    );
+                                    const newChat: AllChatProps = {
+                                        chatType: 3,
+                                        chatId: loadedChat[0].chatId,
+                                        chatName: loadedChat[0].chatName,
+                                        lastReadMessageId: loadedChat[0].lastReadMessageId,
+                                        dmPartnerUser: loadedChat[0].dmPartnerUser,
+                                        latestMessage: loadedChat[0].latestMessage,
+                                        latestMessageText: loadedChat[0].latestMessageText,
+                                        TSLastMessage: loadedChat[0].TSLastMessage,
+                                        isPrivate: loadedChat[0].isPrivate,
+                                        profileImagePath: loadedChat[0].profileImagePath,
+                                        isPinned: loadedChat[0].isPinned,
+                                        tsLastAllReadActivity: loadedChat[0].tsLastAllReadActivity,
+                                    };
+                                    await addChat(newChat, newChat.chatType);
+                                    await addMessage(newChat.latestMessage, newChat.chatType);
+
+                                    setAllChats([newChat, ...allChats]);
+                                }
                             })();
                         } else {
                             console.error("Failed to join the project");
@@ -189,8 +227,8 @@ export const ModalJoinProject: React.FC<Props> = ({
                         }
                     >
                         {openJoinProject.isPrivate === true
-                            ? "Make a request to join -"
-                            : "Join the project -"}
+                            ? "Make a Request to Join -"
+                            : "Join the Project -"}
                         <Typography level="h3" color="primary" sx={{ ml: 1 }}>
                             {openJoinProject.projectName}
                         </Typography>
