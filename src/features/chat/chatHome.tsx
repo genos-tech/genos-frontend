@@ -13,6 +13,7 @@ import {
     ActivityMessageProps,
     AllChatProps,
     ChatProps,
+    FlaggedMessageProps,
     ThreadProps,
     ToDoFactProps,
 } from "../../types/chat";
@@ -140,6 +141,8 @@ type ChatHomeProps = {
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean
     ) => void;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -219,6 +222,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         initialEmptyTaskId,
         setInitialEmptyTaskId,
         moveToSpecificChat,
+        flaggedMessages,
+        setFlaggedMessages,
     } = props;
 
     // Common
@@ -381,6 +386,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 funcSetAllChats={funcSetAllChats}
                                 incompleteTodoCount={incompleteTodoCount}
                                 setIsToDoVisible={setIsToDoVisible}
+                                flaggedMessages={flaggedMessages}
+                                setFlaggedMessages={setFlaggedMessages}
                             />
                         </Sheet>
                     </Box>
@@ -450,6 +457,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 isExistingTodaysTodo={isExistingTodaysTodo}
                                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                                 incompleteTodoCount={incompleteTodoCount}
+                                                flaggedMessages={flaggedMessages}
+                                                setFlaggedMessages={setFlaggedMessages}
                                             />
                                         </Panel>
 
@@ -542,6 +551,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             isExistingTodaysTodo={isExistingTodaysTodo}
                                             setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                             incompleteTodoCount={incompleteTodoCount}
+                                            flaggedMessages={flaggedMessages}
+                                            setFlaggedMessages={setFlaggedMessages}
                                         />
                                     )}
                                 </Panel>
@@ -599,6 +610,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     handleCreateNewChatNoteIfNotExist={
                                         handleCreateNewChatNoteIfNotExist
                                     }
+                                    flaggedMessages={flaggedMessages}
+                                    setFlaggedMessages={setFlaggedMessages}
                                 />
                             </Box>
                         </Panel>

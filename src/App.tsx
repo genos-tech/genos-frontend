@@ -13,6 +13,7 @@ import {
     ActivityMessageProps,
     AllChatProps,
     ChatProps,
+    FlaggedMessageProps,
     ThreadMessageProps,
     ThreadProps,
 } from "./types/chat";
@@ -76,6 +77,7 @@ import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 import { popSpecificMessages } from "./features/chat/services/popSpecificMessages";
 import { loadSpecificThreadMessages } from "./features/chat/services/loadSpecificThreadMessages";
+import { popFlaggedMessages } from "./features/chat/services/popFlaggedMessages";
 
 type SetMyselfProps = {
     myself: UserProps;
@@ -175,7 +177,7 @@ export const App = () => {
         localStorage.setItem("openingService", openingService.toString());
     }, [openingService]);
 
-    // chatType = {1: DM, 2: GM, 3: PM, 4: Pin, 5: Activity}
+    // chatType = {1: DM, 2: GM, 3: PM, 4: Pin, 5: Activity, 6: Flagged}
     const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
         Number(localStorage.getItem("currentChatPaneType") || "1")
     );
@@ -387,6 +389,13 @@ export const App = () => {
     const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
     const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
     const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
+    const [flaggedMessages, setFlaggedMessages] = useState<FlaggedMessageProps[]>([]);
+    const funcSetFlaggedMessages = async () => {
+        const rawFlaggedMessages: FlaggedMessageProps[] = await popFlaggedMessages();
+        if (rawFlaggedMessages) {
+            setFlaggedMessages(rawFlaggedMessages);
+        }
+    };
     const [allChats, setAllChats] = useState<AllChatProps[]>([]);
     const funcSetAllChats = async () => {
         const rawAllChats: AllChatProps[] = await popAllChats();
@@ -1249,6 +1258,7 @@ export const App = () => {
     useEffect(() => {
         funcSetInboxItems();
         funcSetAllChats();
+        funcSetFlaggedMessages();
         funcSetActivityMessages();
     }, []);
 
@@ -1256,6 +1266,7 @@ export const App = () => {
         if (isLoading === false) {
             funcSetInboxItems();
             funcSetAllChats();
+            funcSetFlaggedMessages();
             funcSetActivityMessages();
 
             // Load all team users
@@ -1484,6 +1495,8 @@ export const App = () => {
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
                         moveToSpecificChat={moveToSpecificChat}
+                        flaggedMessages={flaggedMessages}
+                        setFlaggedMessages={setFlaggedMessages}
                     />
                 ) : null}
 

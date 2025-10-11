@@ -6,7 +6,7 @@ import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleUserName } from "./BubbleUserName";
 import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
-import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
@@ -36,6 +36,8 @@ type threadMessageBubbleProps = {
     setEditTargetMessage: (value: ThreadMessageProps) => void;
     currentMessageIndex: number;
     setTargetMessageIndex: (value: number) => void;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
@@ -57,6 +59,8 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         setEditTargetMessage,
         currentMessageIndex,
         setTargetMessageIndex,
+        flaggedMessages,
+        setFlaggedMessages,
     } = props;
 
     const { accessToken } = useAuth();
@@ -296,6 +300,8 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                         setCurrentThreadChat={setCurrentThreadChat}
                                         threadId={thread.threadId}
                                         message={message}
+                                        flaggedMessages={flaggedMessages}
+                                        setFlaggedMessages={setFlaggedMessages}
                                     />
 
                                     {/* 
@@ -388,6 +394,8 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                         setCurrentThreadChat={setCurrentThreadChat}
                                                         threadId={thread.threadId}
                                                         message={message}
+                                                        flaggedMessages={flaggedMessages}
+                                                        setFlaggedMessages={setFlaggedMessages}
                                                     />
 
                                                     {message.sender.userId === myself.userId && (

@@ -1,7 +1,7 @@
 import { defaultDmPartner } from "../features/chat/services/constants";
 import { loadPMHistory } from "../features/chat/services/loadPMHistory";
 import { UserProps } from "../types/admin";
-import { ChatProps, MessageProps } from "../types/chat";
+import { ChatProps, FlaggedMessageProps, MessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
 import { clearStore, addData, miniBatchInsert } from "../db/crud";
 
@@ -16,15 +16,11 @@ self.onmessage = async (event) => {
     await clearStore(STORES.PM_THREAD_MESSAGES);
 
     // Load data from backend
-    const pmHistory: ChatProps[] = await loadPMHistory(
-        myself.teamId,
-        myself.teamName,
-        myself.userId,
-        accessToken
-    );
+    const pmHistory: { chat_history: ChatProps[]; flagged_messages: FlaggedMessageProps[] } =
+        await loadPMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
 
-    for (let i = 0; i < pmHistory.length; i += 1) {
-        const pmChat: ChatProps = pmHistory[i];
+    for (let i = 0; i < pmHistory.chat_history.length; i += 1) {
+        const pmChat: ChatProps = pmHistory.chat_history[i];
 
         // Insert chat
         await addData({
@@ -52,6 +48,16 @@ self.onmessage = async (event) => {
             await miniBatchInsert({
                 storeName: STORES.PM_MESSAGES,
                 miniBatch: miniBatch,
+            });
+        }
+    }
+
+    if (pmHistory.flagged_messages) {
+        for (let i = 0; i < pmHistory.flagged_messages.length; i += 1) {
+            const flaggedMessage: FlaggedMessageProps = pmHistory.flagged_messages[i];
+            await addData({
+                storeName: STORES.FLAGGED_MESSAGES,
+                data: flaggedMessage,
             });
         }
     }

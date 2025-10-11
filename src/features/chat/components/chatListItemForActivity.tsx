@@ -25,6 +25,8 @@ import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
+import { GMAvatar } from "../../../components/common/GMAvatar";
+import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task Comment}
 // activityType = {1: message or comment, 2: reaction, 3: mention}
@@ -57,6 +59,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+    funcSetAllChats: () => Promise<void>;
 };
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
@@ -84,6 +87,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setOpeningService,
         setCurrentProject,
         setCurrentPreviewTaskId,
+        funcSetAllChats,
     } = props;
     const { accessToken } = useAuth();
 
@@ -228,7 +232,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 accessToken
             );
             if (threadMessages && threadMessages.length > 0) {
-                console.log("thread activity:", activity);
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
                     chatName: activity.chatName,
@@ -350,6 +353,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setGroupedReactions(groupEmojis(activity.reactions));
     }, [activity]);
 
+    const chat = allChats.find(
+        (chat) => chat.chatType === activity.chatType && chat.chatId === activity.chatId
+    );
+
     return (
         <React.Fragment>
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
@@ -388,16 +395,52 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                                 {activity.chatName[0].toUpperCase()}
                                             </Avatar>
                                         )}
+
                                     {activity.chatType === 2 && (
-                                        <Avatar size="sm">
-                                            <GroupsIcon />
-                                        </Avatar>
+                                        <>
+                                            {chat && (
+                                                <GMAvatar
+                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    isYou={isYou}
+                                                    socket={socket}
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    gmChat={chat}
+                                                    funcSetAllChats={funcSetAllChats}
+                                                />
+                                            )}
+                                            {chat === undefined && (
+                                                <Avatar size="sm">
+                                                    <GroupsIcon />
+                                                </Avatar>
+                                            )}
+                                        </>
                                     )}
+
                                     {activity.chatType === 3 && (
-                                        <Avatar size="sm">
-                                            <AccountTreeIcon />
-                                        </Avatar>
+                                        <>
+                                            {chat && (
+                                                <ProjectAvatar
+                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    socket={socket}
+                                                    setOpeningService={setOpeningService}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    pmChat={chat}
+                                                    funcSetAllChats={funcSetAllChats}
+                                                />
+                                            )}
+                                            {chat === undefined && (
+                                                <Avatar size="sm">
+                                                    <AccountTreeIcon />
+                                                </Avatar>
+                                            )}
+                                        </>
                                     )}
+
                                     {activity.chatType === 4 && (
                                         <Avatar size="sm">
                                             <AssignmentRoundedIcon />

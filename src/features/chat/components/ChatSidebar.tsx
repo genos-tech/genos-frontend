@@ -22,6 +22,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import MoreVert from "@mui/icons-material/MoreVert";
 import AddIcon from "@mui/icons-material/Add";
+import FlagIcon from "@mui/icons-material/Flag";
 
 import { ModalCreateGM } from "./modals/ModalCreateGM";
 import { ChatSearch } from "./ChatSearch";
@@ -35,6 +36,7 @@ import {
     AllChatProps,
     ActivityMessageProps,
     ThreadProps,
+    FlaggedMessageProps,
 } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { popSpecificMessages } from "../services/popSpecificMessages";
@@ -77,6 +79,8 @@ type ChatSidebarProps = {
     funcSetAllChats: () => Promise<void>;
     incompleteTodoCount: number;
     setIsToDoVisible: (value: boolean) => void;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -112,6 +116,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         funcSetAllChats,
         incompleteTodoCount,
         setIsToDoVisible,
+        flaggedMessages,
+        setFlaggedMessages,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -420,6 +426,56 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             </Tooltip>
                         )}
 
+                        {/* For Flagged */}
+                        {flaggedMessages.length > 0 && (
+                            <Tooltip
+                                title="Flagged Chats"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
+                                <Badge
+                                    badgeContent={flaggedMessages.length}
+                                    color="primary"
+                                    size="sm"
+                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
+                                >
+                                    <IconButton
+                                        component="p"
+                                        variant={currentChatPaneType === 6 ? "solid" : "plain"}
+                                        size="sm"
+                                        onClick={() => {
+                                            setCurrentChatPaneType(6);
+                                            localStorage.setItem("currentChatPaneType", "6");
+                                            onChatIconClickedHandler(6);
+                                        }}
+                                    >
+                                        <FlagIcon />
+                                    </IconButton>
+                                </Badge>
+                            </Tooltip>
+                        )}
+                        {!(flaggedMessages.length > 0) && (
+                            <Tooltip
+                                title="Flagged Chats"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
+                                <IconButton
+                                    component="p"
+                                    variant={currentChatPaneType === 6 ? "solid" : "plain"}
+                                    size="sm"
+                                    onClick={() => {
+                                        setCurrentChatPaneType(6);
+                                        localStorage.setItem("currentChatPaneType", "6");
+                                        onChatIconClickedHandler(6);
+                                    }}
+                                >
+                                    <FlagIcon />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+
                         {/* For Activity */}
                         {unReadActivityMessageCounts > 0 && (
                             <Tooltip title="Activities" sx={{ zIndex: "10020" }} placement="top">
@@ -514,6 +570,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     </Dropdown>
                 </Stack>
 
+                {/* For DM Chats */}
                 {currentChatPaneType === 1 && (
                     <Box>
                         <ChatList
@@ -545,9 +602,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             incompleteTodoCount={incompleteTodoCount}
                             setIsToDoVisible={setIsToDoVisible}
+                            flaggedMessages={flaggedMessages}
+                            setFlaggedMessages={setFlaggedMessages}
                         />
                     </Box>
                 )}
+
+                {/* For GM Chats */}
                 {currentChatPaneType === 2 && (
                     <Box>
                         <ChatList
@@ -579,9 +640,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             incompleteTodoCount={incompleteTodoCount}
                             setIsToDoVisible={setIsToDoVisible}
+                            flaggedMessages={flaggedMessages}
+                            setFlaggedMessages={setFlaggedMessages}
                         />
                     </Box>
                 )}
+
+                {/* For PM Chats */}
                 {currentChatPaneType === 3 && (
                     <Box>
                         <ChatList
@@ -613,10 +678,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             incompleteTodoCount={incompleteTodoCount}
                             setIsToDoVisible={setIsToDoVisible}
+                            flaggedMessages={flaggedMessages}
+                            setFlaggedMessages={setFlaggedMessages}
                         />
                     </Box>
                 )}
-                {/* For Pinned Messages */}
+
+                {/* For Pinned Chats */}
                 {currentChatPaneType === 4 && (
                     <Box>
                         <ChatList
@@ -637,6 +705,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setIsMainChatVisible={setIsMainChatVisible}
                             setIsThreadVisible={setIsThreadVisible}
                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            flaggedMessages={flaggedMessages}
+                            setFlaggedMessages={setFlaggedMessages}
                             isTaskPreviewVisible={isTaskPreviewVisible}
                             isCreatingTask={isCreatingTask}
                             isSubChatVisible={isSubChatVisible}
@@ -651,6 +721,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         />
                     </Box>
                 )}
+
+                {/* For Activity Messages */}
                 {currentChatPaneType === 5 && (
                     <Box>
                         <ActivityDivider
@@ -662,7 +734,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             myself={myself}
                             setMyself={setMyself}
-                            chatType={-1}
+                            chatType={5}
                             activityMessages={activityMessages}
                             setActivityMessages={setActivityMessages}
                             allChats={allChats}
@@ -686,6 +758,46 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             funcSetAllChats={funcSetAllChats}
                             incompleteTodoCount={incompleteTodoCount}
                             setIsToDoVisible={setIsToDoVisible}
+                            flaggedMessages={flaggedMessages}
+                            setFlaggedMessages={setFlaggedMessages}
+                        />
+                    </Box>
+                )}
+
+                {/* For Flagged Messages */}
+                {currentChatPaneType === 6 && (
+                    <Box>
+                        <ChatList
+                            teamMemberProfiles={teamMemberProfiles}
+                            socket={socket}
+                            myself={myself}
+                            setMyself={setMyself}
+                            chatType={6}
+                            activityMessages={activityMessages}
+                            setActivityMessages={setActivityMessages}
+                            allChats={allChats}
+                            currentActivityMessageType={currentActivityMessageType}
+                            currentMainChat={currentMainChat}
+                            currentSubChat={currentSubChat}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setCurrentSubChat={setCurrentSubChat}
+                            setCurrentThreadChat={setCurrentThreadChat}
+                            setIsMainChatVisible={setIsMainChatVisible}
+                            setIsThreadVisible={setIsThreadVisible}
+                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            isTaskPreviewVisible={isTaskPreviewVisible}
+                            isCreatingTask={isCreatingTask}
+                            isSubChatVisible={isSubChatVisible}
+                            setIsSubChatVisible={setIsSubChatVisible}
+                            setOpeningService={setOpeningService}
+                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                            setCurrentProject={setCurrentProject}
+                            showOnlyUnreadItems={showOnlyUnreadItems}
+                            funcSetAllChats={funcSetAllChats}
+                            incompleteTodoCount={incompleteTodoCount}
+                            setIsToDoVisible={setIsToDoVisible}
+                            flaggedMessages={flaggedMessages}
+                            setFlaggedMessages={setFlaggedMessages}
                         />
                     </Box>
                 )}

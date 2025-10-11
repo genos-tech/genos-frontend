@@ -11,7 +11,14 @@ import { ChatListItem } from "./chatListItem";
 import { ChatListItemForActivity } from "./chatListItemForActivity";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps } from "../../../types/tasks";
-import { ChatProps, AllChatProps, ActivityMessageProps, ThreadProps } from "../../../types/chat";
+import {
+    ChatProps,
+    AllChatProps,
+    ActivityMessageProps,
+    ThreadProps,
+    FlaggedMessageProps,
+} from "../../../types/chat";
+import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
 
 // Sort all chats by pinned status and then by TSLastMessage in desc
 const sortAllChatByPinned = (allChats: AllChatProps[]) => {
@@ -55,6 +62,8 @@ type ChatListProps = {
     funcSetAllChats: () => Promise<void>;
     incompleteTodoCount: number;
     setIsToDoVisible: (value: boolean) => void;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
 export const ChatList = (props: ChatListProps) => {
     const {
@@ -86,11 +95,14 @@ export const ChatList = (props: ChatListProps) => {
         funcSetAllChats,
         incompleteTodoCount,
         setIsToDoVisible,
+        flaggedMessages,
+        setFlaggedMessages,
     } = props;
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoPMRef = useRef<VirtuosoHandle | null>(null);
     const virtuosoPinnedRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoFlaggedRef = useRef<VirtuosoHandle | null>(null);
 
     const chatTypeLookup: { [key: number]: any } = {
         1: virtuosoDMRef, // DM
@@ -105,10 +117,15 @@ export const ChatList = (props: ChatListProps) => {
         virtuosoPinnedRef as React.RefObject<VirtuosoHandle>,
         allChats
     );
+    useScrollToBottomOnChatPaneChange(
+        virtuosoFlaggedRef as React.RefObject<VirtuosoHandle>,
+        allChats
+    );
 
     const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(sortAllChatByPinned(allChats));
 
     const [selectedActivityId, setSelectedActivityId] = useState<string>("");
+    const [selectedFlaggedMessageId, setSelectedFlaggedMessageId] = useState<string>("");
 
     const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
     useScrollToBottomOnNewActivity(
@@ -192,6 +209,13 @@ export const ChatList = (props: ChatListProps) => {
         }
     }, [showOnlyUnreadItems, allChats]);
 
+    const [tmpFlaggedMessages, setTmpFlaggedMessages] =
+        useState<FlaggedMessageProps[]>(flaggedMessages);
+
+    useEffect(() => {
+        setTmpFlaggedMessages(flaggedMessages);
+    }, [flaggedMessages]);
+
     return (
         <List
             size="sm"
@@ -204,7 +228,7 @@ export const ChatList = (props: ChatListProps) => {
             }}
             className="custom-scrollbar"
         >
-            {chatType !== -1 && tmpAllChats.length > 0 && (
+            {chatType < 5 && tmpAllChats.length > 0 && (
                 <Virtuoso
                     ref={chatTypeLookup[chatType]}
                     className="custom-scrollbar"
@@ -250,7 +274,7 @@ export const ChatList = (props: ChatListProps) => {
                 />
             )}
 
-            {chatType === -1 && tmpActivityMessages.length > 0 && (
+            {chatType === 5 && tmpActivityMessages.length > 0 && (
                 <Virtuoso
                     ref={virtuosoActivityRef}
                     className="custom-scrollbar"
@@ -289,6 +313,55 @@ export const ChatList = (props: ChatListProps) => {
                                         setOpeningService={setOpeningService}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setCurrentProject={setCurrentProject}
+                                        funcSetAllChats={funcSetAllChats}
+                                    />
+                                </Stack>
+                            </div>
+                        );
+                    }}
+                />
+            )}
+
+            {chatType === 6 && tmpFlaggedMessages.length > 0 && (
+                <Virtuoso
+                    ref={virtuosoFlaggedRef}
+                    className="custom-scrollbar"
+                    style={{ height: "89dvh" }}
+                    totalCount={tmpFlaggedMessages.length}
+                    initialTopMostItemIndex={0}
+                    atTopThreshold={64}
+                    atBottomThreshold={128}
+                    itemContent={(index) => {
+                        const flaggedMessage = tmpFlaggedMessages[index];
+                        return (
+                            <div>
+                                <Stack direction="row">
+                                    <ChatListItemForFlagMessages
+                                        key={`${flaggedMessage.flaggedMessageId}`}
+                                        selectedFlaggedMessageId={selectedFlaggedMessageId}
+                                        setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        socket={socket}
+                                        flaggedMessage={flaggedMessage}
+                                        flaggedMessages={flaggedMessages}
+                                        setFlaggedMessages={setFlaggedMessages}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        allChats={allChats}
+                                        currentSubChat={currentSubChat}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentSubChat={setCurrentSubChat}
+                                        setCurrentThreadChat={setCurrentThreadChat}
+                                        setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        isCreatingTask={isCreatingTask}
+                                        isSubChatVisible={isSubChatVisible}
+                                        setOpeningService={setOpeningService}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setCurrentProject={setCurrentProject}
+                                        funcSetAllChats={funcSetAllChats}
                                     />
                                 </Stack>
                             </div>

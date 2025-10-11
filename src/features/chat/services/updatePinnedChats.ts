@@ -18,7 +18,7 @@ export const updatePinnedChats = async (
             const res = await api.put("/chat/master/", {
                 team: myself.teamId,
                 user: myself.userId,
-                pinned_chats: pinned_chat,
+                pinned_chat: pinned_chat,
             });
             return res.data;
         } else {

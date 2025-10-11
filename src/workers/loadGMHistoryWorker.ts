@@ -1,7 +1,7 @@
 import { defaultDmPartner } from "../features/chat/services/constants";
 import { loadGMHistory } from "../features/chat/services/loadGMHistory";
 import { UserProps } from "../types/admin";
-import { ChatProps, MessageProps } from "../types/chat";
+import { ChatProps, MessageProps, FlaggedMessageProps } from "../types/chat";
 import { STORES } from "../db/conf";
 import { clearStore, addData, miniBatchInsert } from "../db/crud";
 
@@ -16,15 +16,11 @@ self.onmessage = async (event) => {
     await clearStore(STORES.GM_THREAD_MESSAGES);
 
     // Load data from backend
-    const gmHistory: ChatProps[] = await loadGMHistory(
-        myself.teamId,
-        myself.teamName,
-        myself.userId,
-        accessToken
-    );
+    const gmHistory: { chat_history: ChatProps[]; flagged_messages: FlaggedMessageProps[] } =
+        await loadGMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
 
-    for (let i = 0; i < gmHistory.length; i += 1) {
-        const gmChat: ChatProps = gmHistory[i];
+    for (let i = 0; i < gmHistory.chat_history.length; i += 1) {
+        const gmChat: ChatProps = gmHistory.chat_history[i];
 
         // Insert chat
         await addData({
@@ -51,6 +47,16 @@ self.onmessage = async (event) => {
             await miniBatchInsert({
                 storeName: STORES.GM_MESSAGES,
                 miniBatch: miniBatch,
+            });
+        }
+    }
+
+    if (gmHistory.flagged_messages) {
+        for (let i = 0; i < gmHistory.flagged_messages.length; i += 1) {
+            const flaggedMessage: FlaggedMessageProps = gmHistory.flagged_messages[i];
+            await addData({
+                storeName: STORES.FLAGGED_MESSAGES,
+                data: flaggedMessage,
             });
         }
     }

@@ -144,6 +144,13 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 );
             }
 
+            // For Flagged messages
+            if (!db.objectStoreNames.contains(STORES.FLAGGED_MESSAGES)) {
+                db.createObjectStore(STORES.FLAGGED_MESSAGES, {
+                    keyPath: KEY_PATH.FLAGGED_MESSAGES,
+                });
+            }
+
             // For Tasks
             if (!db.objectStoreNames.contains(STORES.TASKS)) {
                 const tasksStore = db.createObjectStore(STORES.TASKS, { keyPath: KEY_PATH.TASKS });

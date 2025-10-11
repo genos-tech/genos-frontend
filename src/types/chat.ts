@@ -215,6 +215,21 @@ export type NewThreadMessageProps = {
     isFlagged?: boolean;
 };
 
+export type FlaggedMessageProps = {
+    flaggedMessageId: string;
+    chatType: number;
+    chatName: string;
+    chatId: number;
+    threadId: number;
+    messageId: number;
+    contentText: string;
+    sender: UserProps;
+    dmPartnerUser: UserProps;
+    project?: ProjectProps;
+    taskId: number;
+    tsSent: string;
+};
+
 // Other Props
 export type SearchListProps = {
     id: number;

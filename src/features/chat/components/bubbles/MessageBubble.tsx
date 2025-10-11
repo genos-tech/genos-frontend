@@ -12,7 +12,13 @@ import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps, MessageProps, ThreadProps, ThreadMessageProps } from "../../../../types/chat";
+import {
+    ChatProps,
+    MessageProps,
+    ThreadProps,
+    ThreadMessageProps,
+    FlaggedMessageProps,
+} from "../../../../types/chat";
 import { TaskProps, ProjectProps } from "../../../../types/tasks";
 import { ReactionProps } from "../../../../types/common";
 import { useAuth } from "../../../../context/AuthContext";
@@ -55,6 +61,8 @@ type MessageBubbleProps = {
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: MessageProps) => void;
     currentMessageIndex: number;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -83,6 +91,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         setIsInEdit,
         setEditTargetMessage,
         currentMessageIndex,
+        flaggedMessages,
+        setFlaggedMessages,
     } = props;
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
@@ -492,6 +502,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         setCurrentChat={setCurrentMainChat}
                                         threadId={0}
                                         message={message}
+                                        flaggedMessages={flaggedMessages}
+                                        setFlaggedMessages={setFlaggedMessages}
                                     />
 
                                     <BubbleReplyButton replayHandler={replayHandler} />
@@ -595,6 +607,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         setCurrentChat={setCurrentMainChat}
                                                         threadId={0}
                                                         message={message}
+                                                        flaggedMessages={flaggedMessages}
+                                                        setFlaggedMessages={setFlaggedMessages}
                                                     />
 
                                                     <BubbleReplyButton

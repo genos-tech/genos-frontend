@@ -42,6 +42,7 @@ import { ChatProps } from "../../types/chat";
 import { ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 import { useAuth } from "../../context/AuthContext";
+import { getFirstLine } from "../../features/chat/utils/common";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -191,7 +192,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             const content: any[] | any = editor.document.slice(-2, -1)[0].content;
             var contentText: string = "Something wrong....";
             if (content && content.length > 0) {
-                contentText = content.map((item: any) => item.text).join(" ");
+                contentText = getFirstLine(content[0]);
             } else if (editor.document.slice(-2, -1)[0].type === "image") {
                 contentText = "Image attachment";
             }
