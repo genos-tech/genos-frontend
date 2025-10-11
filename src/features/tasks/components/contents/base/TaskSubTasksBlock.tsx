@@ -95,12 +95,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                         <ListItemButton
                                             onClick={() => {
                                                 if (project && project.projectId && id) {
-                                                    setCurrentProject({
-                                                        projectId: project.projectId,
-                                                        projectName: project.projectName,
-                                                        projectTags: project.projectTags || [],
-                                                        systemUserId: project.systemUserId,
-                                                    });
+                                                    // setCurrentProject({
+                                                    //     projectId: project.projectId,
+                                                    //     projectName: project.projectName,
+                                                    //     projectTags: project.projectTags || [],
+                                                    //     systemUserId: project.systemUserId,
+                                                    // });
                                                     setCurrentPreviewTaskId(id);
                                                 } else {
                                                     console.error(

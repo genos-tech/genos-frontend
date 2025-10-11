@@ -1194,6 +1194,12 @@ export const App = () => {
         setOngoingTasks([]);
         setClosedTasks([]);
         setDeletedTasks([]);
+        setIsTaskPreviewVisible(false);
+        setIsThreadTaskVisible(false);
+        setIsChatNoteVisible(false);
+        setIsTaskNoteVisible(false);
+        setIsSubChatVisible(false);
+        setIsThreadVisible(false);
         setCurrentMyNote(null);
         setCurrentTaskNote(null);
         setCurrentChatNote(null);

@@ -280,13 +280,6 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     }
                 }}
             >
-                <GridSuggestionMenuController
-                    triggerCharacter={":"}
-                    // Changes the Emoji Picker to only have 5 columns.
-                    columns={5}
-                    minQueryLength={2}
-                />
-
                 <SideMenuController
                     sideMenu={(props) => (
                         <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
