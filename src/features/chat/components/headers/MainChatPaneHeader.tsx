@@ -3,7 +3,7 @@ import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import MoreVert from "@mui/icons-material/MoreVert";
 import CancelIcon from "@mui/icons-material/Cancel";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
@@ -181,18 +181,23 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </div>
                     )}
 
-                    <IconButton component="a" size="sm" variant="plain" color="neutral">
-                        <MoreVertRoundedIcon />
-                    </IconButton>
-                    <IconButton
-                        component="a"
-                        size="sm"
-                        variant="plain"
-                        color="neutral"
-                        onClick={() => switchSubToMain()}
-                    >
-                        <CancelIcon />
-                    </IconButton>
+                    <Tooltip title="More Options">
+                        <IconButton component="a" size="sm" variant="plain" color="neutral">
+                            <MoreVert />
+                        </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Close">
+                        <IconButton
+                            component="a"
+                            size="sm"
+                            variant="plain"
+                            color="neutral"
+                            onClick={() => switchSubToMain()}
+                        >
+                            <CancelIcon />
+                        </IconButton>
+                    </Tooltip>
                 </Stack>
             </Stack>
         </Stack>

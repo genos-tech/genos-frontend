@@ -464,15 +464,17 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             )}
 
                                             <Dropdown>
-                                                <MenuButton
-                                                    slots={{ root: IconButton }}
-                                                    slotProps={{
-                                                        root: { color: "neutral" },
-                                                    }}
-                                                    sx={{ mb: "5px" }}
-                                                >
-                                                    <MoreVert />
-                                                </MenuButton>
+                                                <Tooltip title="More Options">
+                                                    <MenuButton
+                                                        slots={{ root: IconButton }}
+                                                        slotProps={{
+                                                            root: { color: "neutral" },
+                                                        }}
+                                                        sx={{ mb: "5px" }}
+                                                    >
+                                                        <MoreVert />
+                                                    </MenuButton>
+                                                </Tooltip>
                                                 <Menu size="sm">
                                                     <MenuItem
                                                         onClick={() => {

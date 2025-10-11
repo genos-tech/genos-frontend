@@ -4,7 +4,7 @@ import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import CancelIcon from "@mui/icons-material/Cancel";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import MoreVert from "@mui/icons-material/MoreVert";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 
 import { HeaderUserName } from "./HeaderUserName";
@@ -167,19 +167,23 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         </>
                     ) : null}
 
-                    <IconButton component="a" size="sm" variant="plain" color="neutral">
-                        <MoreVertRoundedIcon />
-                    </IconButton>
+                    <Tooltip title="More Options">
+                        <IconButton component="a" size="sm" variant="plain" color="neutral">
+                            <MoreVert />
+                        </IconButton>
+                    </Tooltip>
 
-                    <IconButton
-                        component="a"
-                        size="sm"
-                        variant="plain"
-                        color="neutral"
-                        onClick={() => setIsSubChatVisible(false)}
-                    >
-                        <CancelIcon />
-                    </IconButton>
+                    <Tooltip title="Close">
+                        <IconButton
+                            component="a"
+                            size="sm"
+                            variant="plain"
+                            color="neutral"
+                            onClick={() => setIsSubChatVisible(false)}
+                        >
+                            <CancelIcon />
+                        </IconButton>
+                    </Tooltip>
                 </Stack>
             </Stack>
         </Stack>

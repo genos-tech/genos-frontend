@@ -252,7 +252,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <Stack direction="row" spacing={1} justifyContent="center" flexGrow={1}>
                         {/* For DM */}
                         {unReadChatCounts && (unReadChatCounts[1] || 0) > 0 && (
-                            <Tooltip title="DM Chats" sx={{ zIndex: "10020" }} placement="top">
+                            <Tooltip
+                                title="Direct Messages"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
                                 <Badge
                                     badgeContent={unReadChatCounts[1]}
                                     color="primary"
@@ -276,7 +280,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             </Tooltip>
                         )}
                         {!(unReadChatCounts && (unReadChatCounts[1] || 0) > 0) && (
-                            <Tooltip title="DM Chats" sx={{ zIndex: "10020" }} placement="top">
+                            <Tooltip
+                                title="Direct Messages"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 1 ? "solid" : "plain"}
@@ -294,7 +302,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                         {/* For GM */}
                         {unReadChatCounts && (unReadChatCounts[2] || 0) > 0 && (
-                            <Tooltip title="GM Chats" sx={{ zIndex: "10020" }} placement="top">
+                            <Tooltip
+                                title="Group Messages"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
                                 <Badge
                                     badgeContent={unReadChatCounts[2]}
                                     color="primary"
@@ -318,7 +330,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             </Tooltip>
                         )}
                         {!(unReadChatCounts && (unReadChatCounts[2] || 0) > 0) && (
-                            <Tooltip title="GM Chats" sx={{ zIndex: "10020" }} placement="top">
+                            <Tooltip
+                                title="Group Messages"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 2 ? "solid" : "plain"}
@@ -337,7 +353,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {/* For PM */}
                         {unReadChatCounts && (unReadChatCounts[3] || 0) > 0 && (
                             <Tooltip
-                                title="Project Chats"
+                                title="Project Messages"
                                 sx={{ zIndex: "10020" }}
                                 placement="top"
                             >
@@ -365,7 +381,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
                         {!(unReadChatCounts && (unReadChatCounts[3] || 0) > 0) && (
                             <Tooltip
-                                title="Project Chats"
+                                title="Project Messages"
                                 sx={{ zIndex: "10020" }}
                                 placement="top"
                             >
@@ -429,7 +445,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {/* For Flagged */}
                         {flaggedMessages.length > 0 && (
                             <Tooltip
-                                title="Flagged Chats"
+                                title="Flagged Messages"
                                 sx={{ zIndex: "10020" }}
                                 placement="top"
                             >
@@ -447,7 +463,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         onClick={() => {
                                             setCurrentChatPaneType(6);
                                             localStorage.setItem("currentChatPaneType", "6");
-                                            onChatIconClickedHandler(6);
                                         }}
                                     >
                                         <FlagIcon />
@@ -457,7 +472,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
                         {!(flaggedMessages.length > 0) && (
                             <Tooltip
-                                title="Flagged Chats"
+                                title="Flagged Messages"
                                 sx={{ zIndex: "10020" }}
                                 placement="top"
                             >
@@ -468,7 +483,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     onClick={() => {
                                         setCurrentChatPaneType(6);
                                         localStorage.setItem("currentChatPaneType", "6");
-                                        onChatIconClickedHandler(6);
                                     }}
                                 >
                                     <FlagIcon />
@@ -478,7 +492,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                         {/* For Activity */}
                         {unReadActivityMessageCounts > 0 && (
-                            <Tooltip title="Activities" sx={{ zIndex: "10020" }} placement="top">
+                            <Tooltip
+                                title="Recent Activities"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
                                 <Badge
                                     badgeContent={unReadActivityMessageCounts}
                                     color="primary"
@@ -503,7 +521,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             </Tooltip>
                         )}
                         {unReadActivityMessageCounts === 0 && (
-                            <Tooltip title="Activities" sx={{ zIndex: "10020" }} placement="top">
+                            <Tooltip
+                                title="Recent Activities"
+                                sx={{ zIndex: "10020" }}
+                                placement="top"
+                            >
                                 <IconButton
                                     component="p"
                                     variant={currentChatPaneType === 5 ? "solid" : "plain"}
@@ -549,14 +571,16 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     />
 
                     <Dropdown>
-                        <MenuButton
-                            slots={{ root: IconButton }}
-                            slotProps={{
-                                root: { color: "neutral" },
-                            }}
-                        >
-                            <MoreVert />
-                        </MenuButton>
+                        <Tooltip title="More Options">
+                            <MenuButton
+                                slots={{ root: IconButton }}
+                                slotProps={{
+                                    root: { color: "neutral" },
+                                }}
+                            >
+                                <MoreVert />
+                            </MenuButton>
+                        </Tooltip>
                         <Menu size="sm">
                             <MenuItem
                                 onClick={() => {
@@ -564,13 +588,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 }}
                             >
                                 <AddIcon />
-                                GM Chats
+                                Group Messages
                             </MenuItem>
                         </Menu>
                     </Dropdown>
                 </Stack>
 
-                {/* For DM Chats */}
+                {/* For Direct Messages */}
                 {currentChatPaneType === 1 && (
                     <Box>
                         <ChatList
@@ -608,7 +632,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     </Box>
                 )}
 
-                {/* For GM Chats */}
+                {/* For Group Messages */}
                 {currentChatPaneType === 2 && (
                     <Box>
                         <ChatList

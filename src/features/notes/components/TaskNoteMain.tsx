@@ -493,15 +493,17 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 </>
                                             )}
                                             <Dropdown>
-                                                <MenuButton
-                                                    slots={{ root: IconButton }}
-                                                    slotProps={{
-                                                        root: { color: "neutral" },
-                                                    }}
-                                                    sx={{ mb: "5px" }}
-                                                >
-                                                    <MoreVert />
-                                                </MenuButton>
+                                                <Tooltip title="More Options">
+                                                    <MenuButton
+                                                        slots={{ root: IconButton }}
+                                                        slotProps={{
+                                                            root: { color: "neutral" },
+                                                        }}
+                                                        sx={{ mb: "5px" }}
+                                                    >
+                                                        <MoreVert />
+                                                    </MenuButton>
+                                                </Tooltip>
                                                 <Menu size="sm">
                                                     <MenuItem
                                                         onClick={() => {

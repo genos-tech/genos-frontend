@@ -236,7 +236,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Close Thread" size="sm">
+                <Tooltip title="Close" size="sm">
                     <IconButton
                         size="sm"
                         variant="plain"
