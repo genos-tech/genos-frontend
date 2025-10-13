@@ -1129,6 +1129,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         setOpenCreateProject={setOpenCreateProject}
                         setCurrentProject={setCurrentProject}
                         setIsNewProjectCreated={setIsNewProjectCreated}
+                        loadProjectsAndTasks={loadProjectsAndTasks}
                     />
 
                     {/* Modal for creating a new project */}

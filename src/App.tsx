@@ -12,11 +12,9 @@ import { FindTeamResponse, Team, UserProps } from "./types/admin";
 
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/wsHook";
-import { popInboxItems } from "./features/inbox/services/popInboxItems";
 import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
-import { InboxItemProps } from "./types/common";
 import { getLocalCurrentDate, getLocalCurrentTimestamp } from "./utils/dateUtils";
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
@@ -69,6 +67,7 @@ import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 
 import { useMyself } from "./hooks/useAuth";
 import { useChat } from "./hooks/useChat";
+import { useInbox } from "./hooks/useInbox";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 const socket = (accessToken: string | null): Socket => {
@@ -916,27 +915,7 @@ export const App = () => {
     ///////////////////////
     // Inbox Related
     ///////////////////////
-    const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
-    const [unReadInboxItemCount, setUnReadInboxItemCount] = useState<number>(0);
-    const countUnReadInboxItem = (inboxItems: InboxItemProps[]): number => {
-        return inboxItems.reduce<number>((acc, item) => {
-            if (item.isRead === false) {
-                acc += 1;
-            }
-            return acc;
-        }, 0);
-    };
-    const funcSetInboxItems = async () => {
-        const inboxItems: InboxItemProps[] = await popInboxItems();
-        if (inboxItems) {
-            setInboxItems(inboxItems);
-        }
-    };
-    useEffect(() => {
-        setUnReadInboxItemCount(
-            countUnReadInboxItem(inboxItems.filter((item) => item.itemType !== 1))
-        );
-    }, [inboxItems]);
+    const { inboxItems, unReadInboxItemCount, funcSetInboxItems } = useInbox();
 
     ///////////////////////
     // Other Hooks
