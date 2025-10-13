@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack, Chip } from "@mui/joy";
+import { Box, Sheet, Stack, Chip, Alert, Snackbar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -15,7 +15,13 @@ import {
 import { BnChatEditor } from "../../components/blockNote/bnChatEditor";
 import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps, MessageProps, ToDoFactProps, FlaggedMessageProps } from "../../types/chat";
+import {
+    ChatProps,
+    ThreadProps,
+    MessageProps,
+    ToDoFactProps,
+    FlaggedMessageProps,
+} from "../../types/chat";
 import { TaskProps, ProjectProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 import { addChat } from "../../features/chat/services/addChat";
@@ -117,6 +123,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
     const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [errorOpen, setErrorOpen] = useState(false);
 
     useEffect(() => {
         // For DM chat, remove the first message because it is the "has joined" message.
@@ -140,7 +148,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         chatMessages.length - 1,
         indexMap,
         currentMainChat.moveToSpecificIndex,
-        currentMainChat.notMove
+        currentMainChat.notMove,
+        setErrorMessage,
+        setErrorOpen
     );
 
     const updateReadStatus = (indexForLastReadMessageId: number) => {
@@ -259,6 +269,23 @@ export const MessagesPane = (props: MessagesPaneProps) => {
             }}
         >
             <Sheet sx={{ backgroundColor: "background.surface" }}>
+                {errorMessage && errorMessage !== "" && (
+                    <Snackbar
+                        autoHideDuration={5000}
+                        open={errorOpen}
+                        variant="soft"
+                        color="danger"
+                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                        onClose={(event, reason) => {
+                            if (reason === "clickaway") {
+                                return;
+                            }
+                            setErrorOpen(false);
+                        }}
+                    >
+                        {errorMessage}
+                    </Snackbar>
+                )}
                 <MainChatPaneHeader
                     teamMemberProfiles={teamMemberProfiles}
                     socket={socket}
