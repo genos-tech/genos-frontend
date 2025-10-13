@@ -163,7 +163,11 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >
                                                 <AccountTreeIcon />
-                                                {isPrivate === true ? <LockOutlineIcon /> : null}
+
+                                                {isPrivate === true ? (
+                                                    <LockOutlineIcon sx={{ mx: "-5px" }} />
+                                                ) : null}
+
                                                 <Typography
                                                     noWrap
                                                     sx={{

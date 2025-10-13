@@ -566,7 +566,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             "--Switch-thumbSize": "15px",
                             "--Switch-trackWidth": "70px",
                             "--Switch-trackHeight": "23px",
-                            paddingLeft: "10px",
+                            marginLeft: "20px",
                         }}
                     />
 

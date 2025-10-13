@@ -385,7 +385,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setOpeningService={setOpeningService}
                     />
 
-                    <Divider sx={{ m: 2 }} />
+                    <Divider sx={{ mt: 2 }} />
 
                     <TaskCreateAttachmentBlock
                         taskContents={taskContents}

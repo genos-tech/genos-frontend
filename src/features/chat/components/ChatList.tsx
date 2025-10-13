@@ -160,9 +160,9 @@ export const ChatList = (props: ChatListProps) => {
                 );
             }
 
-            // Task activities (Task)
+            // Task activities (PM & Task)
             if (currentActivityMessageType === 2) {
-                setTmpActivityMessages(tmpActivityMessages.filter((item) => item.chatType === 4));
+                setTmpActivityMessages(tmpActivityMessages.filter((item) => item.chatType > 2));
             }
 
             // Mention activities

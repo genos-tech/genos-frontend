@@ -17,6 +17,7 @@ import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 import { BubbleFlagButton } from "./BubbleFlagButton";
 import { useAuth } from "../../../../context/AuthContext";
+import { BubbleDeleteButton } from "./BubbleDeleteButton";
 
 type threadMessageBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -317,6 +318,17 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                             setTargetMessageIndex={setTargetMessageIndex}
                                         />
                                     )}
+
+                                    {message.messageId !== 1 &&
+                                        message.sender.userId === myself.userId && (
+                                            <BubbleDeleteButton
+                                                accessToken={accessToken}
+                                                message={message}
+                                                isThread={true}
+                                                currentThreadChat={thread}
+                                                setCurrentThreadChat={setCurrentThreadChat}
+                                            />
+                                        )}
                                 </Stack>
                             )}
 
@@ -413,6 +425,20 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                             }
                                                         />
                                                     )}
+
+                                                    {message.messageId !== 1 &&
+                                                        message.sender.userId ===
+                                                            myself.userId && (
+                                                            <BubbleDeleteButton
+                                                                accessToken={accessToken}
+                                                                message={message}
+                                                                isThread={true}
+                                                                currentThreadChat={thread}
+                                                                setCurrentThreadChat={
+                                                                    setCurrentThreadChat
+                                                                }
+                                                            />
+                                                        )}
                                                 </>
                                             )}
                                         </Stack>
