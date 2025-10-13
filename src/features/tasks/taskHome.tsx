@@ -145,7 +145,10 @@ type TaskHomeProps = {
         chatId: number,
         threadId: number,
         openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
     ) => void;
 };
 export const TaskHome = (props: TaskHomeProps) => {

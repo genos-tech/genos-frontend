@@ -112,7 +112,10 @@ type NoteHomeProps = {
         chatId: number,
         threadId: number,
         openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
     ) => void;
     currentProject: ProjectProps | null;
     allChats: AllChatProps[];
@@ -392,6 +395,8 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         allChats={allChats}
                                         setCurrentMainChat={setCurrentMainChat}
                                         funcSetAllChats={funcSetAllChats}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setCurrentProject={setCurrentProject}
                                     />
                                 )}
 

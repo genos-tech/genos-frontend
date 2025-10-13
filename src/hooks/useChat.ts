@@ -1,0 +1,280 @@
+import { useState, useEffect } from "react";
+import { UserProps } from "../types/admin";
+import {
+    ActivityMessageProps,
+    AllChatProps,
+    ChatProps,
+    FlaggedMessageProps,
+    ThreadMessageProps,
+    ThreadProps,
+} from "../types/chat";
+import { popAllChats } from "../features/chat/services/popAllChats";
+import { popActivityMessages } from "../features/chat/services/popActivityMessages";
+import { popFlaggedMessages } from "../features/chat/services/popFlaggedMessages";
+import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
+import { loadSpecificThreadMessages } from "../features/chat/services/loadSpecificThreadMessages";
+import { getLocalCurrentTimestamp } from "../utils/dateUtils";
+
+export const useChat = (myself: UserProps, accessToken: string | null) => {
+    // Chat visibility states
+    const [isMainChatVisible, setIsMainChatVisible] = useState(true);
+    const [isSubChatVisible, setIsSubChatVisible] = useState(false);
+    const [isThreadVisible, setIsThreadVisible] = useState(false);
+    const [isThreadTaskVisible, setIsThreadTaskVisible] = useState(false);
+    const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
+
+    // Chat type state
+    const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
+        Number(localStorage.getItem("currentChatPaneType") || "1")
+    );
+
+    // Current chats
+    const [currentMainChat, setCurrentMainChat] = useState<ChatProps | undefined>(undefined);
+    const [currentSubChat, setCurrentSubChat] = useState<ChatProps>();
+    const [currentThreadChat, setCurrentThreadChat] = useState<ThreadProps>();
+
+    // Chat data
+    const [allChats, setAllChats] = useState<AllChatProps[]>([]);
+    const [flaggedMessages, setFlaggedMessages] = useState<FlaggedMessageProps[]>([]);
+    const [activityMessages, setActivityMessages] = useState<ActivityMessageProps[]>([]);
+
+    // Unread counts
+    const [unReadChatCounts, setUnReadChatCounts] = useState<Record<string, number>>({});
+    const [unReadActivityMessageCounts, setUnReadActivityMessageCounts] = useState<number>(-1);
+    const [unReadChatAndActivityCounts, setUnReadChatAndActivityCounts] = useState<number>(0);
+
+    const funcSetFlaggedMessages = async () => {
+        const rawFlaggedMessages: FlaggedMessageProps[] = await popFlaggedMessages();
+        if (rawFlaggedMessages) {
+            setFlaggedMessages(rawFlaggedMessages);
+        }
+    };
+
+    const funcSetAllChats = async () => {
+        const rawAllChats: AllChatProps[] = await popAllChats();
+        if (rawAllChats) {
+            // Exclude the chats that have not any messages except the first message, which is "Has joined".
+            const allChatsWithoutInitialDMChat = rawAllChats.filter(
+                (chat) => !(chat.chatType === 1 && chat.latestMessage.messageId <= 1)
+            );
+
+            // But only if the current main chat is the chat without no messages, keep the chat displayed.
+            const initialDMChatIdx = rawAllChats.findIndex(
+                (chat) =>
+                    chat.chatType === 1 &&
+                    currentMainChat?.chatId === chat.chatId &&
+                    chat.latestMessage.messageId <= 1
+            );
+
+            let finalAllChats: AllChatProps[];
+            if (initialDMChatIdx !== -1) {
+                const initialDMChat = rawAllChats[initialDMChatIdx];
+                finalAllChats = [
+                    {
+                        ...initialDMChat,
+                        latestMessage: {
+                            ...initialDMChat.latestMessage,
+                            tsSent: getLocalCurrentTimestamp(),
+                        },
+                    },
+                    ...allChatsWithoutInitialDMChat,
+                ];
+            } else {
+                finalAllChats = allChatsWithoutInitialDMChat;
+            }
+
+            setAllChats(finalAllChats);
+            setUnReadChatCounts(countUnreadChats(allChatsWithoutInitialDMChat));
+        }
+    };
+
+    const funcSetActivityMessages = async () => {
+        const activityMessages: ActivityMessageProps[] = await popActivityMessages(myself);
+        if (activityMessages) {
+            setActivityMessages(activityMessages);
+            setUnReadActivityMessageCounts(countUnreadActivityMessages(activityMessages));
+        }
+    };
+
+    const countUnreadChats = (chats: AllChatProps[]): Record<string, number> => {
+        return chats.reduce<Record<string, number>>((acc, chat) => {
+            if (chat.latestMessage && chat.lastReadMessageId < chat.latestMessage.messageId) {
+                acc[chat.chatType] = (acc[chat.chatType] ?? 0) + 1;
+            }
+            return acc;
+        }, {});
+    };
+
+    const countUnreadActivityMessages = (activityMessages: ActivityMessageProps[]): number => {
+        return activityMessages.reduce<number>((acc, activity) => {
+            if (activity.isRead === false) {
+                acc += 1;
+            }
+            return acc;
+        }, 0);
+    };
+
+    const defineNewChat = (chat: AllChatProps, messages: any): ChatProps => {
+        return {
+            chatId: chat.chatId,
+            chatName: chat.chatName,
+            chatType: chat.chatType,
+            dmPartnerUser: chat.dmPartnerUser,
+            lastReadMessageId: messages[messages.length - 1].messageId,
+            messages: messages,
+            latestMessage: messages[messages.length - 1],
+            latestMessageText: messages[messages.length - 1].contentText,
+            TSLastMessage: messages[messages.length - 1].tsSent,
+            systemUserId: chat.systemUserId,
+            project: chat.project,
+            isPrivate: chat.isPrivate,
+            profileImagePath: chat.profileImagePath,
+        };
+    };
+
+    const moveToSpecificThreadChat = async (chat: AllChatProps, threadId: number) => {
+        const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
+            myself,
+            chat.chatType,
+            chat.chatId,
+            threadId,
+            accessToken
+        );
+        if (threadMessages && threadMessages.length > 0) {
+            const newThread: ThreadProps = {
+                chatId: chat.chatId,
+                chatName: chat.chatName,
+                threadId: threadId,
+                chatType: chat.chatType,
+                dmPartnerUser: chat.dmPartnerUser,
+                taskId: threadMessages[threadMessages.length - 1].taskId,
+                messages: threadMessages,
+                project: threadMessages[threadMessages.length - 1].project,
+                TSLastMessage: threadMessages[threadMessages.length - 1].tsSent,
+                taskExist: threadMessages[threadMessages.length - 1].taskExist,
+            };
+            if (newThread) {
+                setCurrentThreadChat(newThread);
+                return newThread;
+            }
+        }
+        return null;
+    };
+
+    const moveToSpecificChat = async (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
+    ) => {
+        setOpeningService(1); // move to chat
+        setIsMainChatVisible(false);
+        setIsChatNoteVisible(openTaskNoteInChat);
+        setIsThreadTaskVisible(openThreadTaskPreview);
+
+        const targetChat: AllChatProps = allChats.filter(
+            (chat) => chat.chatType === chatType && chat.chatId === chatId
+        )[0];
+
+        try {
+            const messages = await popSpecificMessages(chatId, chatType);
+            const newChat: ChatProps = defineNewChat(targetChat, messages);
+            setCurrentMainChat(newChat);
+
+            if (threadId > 0) {
+                const newThread = await moveToSpecificThreadChat(targetChat, threadId);
+                if (newThread) {
+                    // Set project if the project id exists in the thread messages.
+                    if (newThread.project?.projectId) {
+                        setCurrentProject(newThread.project);
+                    }
+                    if (newThread.taskExist === true && newThread.taskId) {
+                        setCurrentPreviewTaskId(newThread.taskId);
+                    }
+                }
+                setIsThreadVisible(true);
+            } else {
+                setIsMainChatVisible(true);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    // Effects
+    useEffect(() => {
+        setUnReadChatCounts(countUnreadChats(allChats));
+    }, [allChats]);
+
+    useEffect(() => {
+        // Exclude the first thread message cause it's actually not a thread message.
+        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
+            (item) => !(item.isThread === true && item.messageId === 1)
+        );
+        setUnReadActivityMessageCounts(countUnreadActivityMessages(tmpActivityMessages));
+    }, [activityMessages]);
+
+    useEffect(() => {
+        if (unReadChatCounts) {
+            // 1: DM, 2: GM, 3: PM
+            setUnReadChatAndActivityCounts(
+                (unReadChatCounts[1] || 0 + unReadChatCounts[2] || 0 + unReadChatCounts[3] || 0) +
+                    unReadActivityMessageCounts
+            );
+        }
+    }, [unReadChatCounts, unReadActivityMessageCounts]);
+
+    return {
+        // Visibility states
+        isMainChatVisible,
+        setIsMainChatVisible,
+        isSubChatVisible,
+        setIsSubChatVisible,
+        isThreadVisible,
+        setIsThreadVisible,
+        isThreadTaskVisible,
+        setIsThreadTaskVisible,
+        isChatNoteVisible,
+        setIsChatNoteVisible,
+
+        // Chat type
+        currentChatPaneType,
+        setCurrentChatPaneType,
+
+        // Current chats
+        currentMainChat,
+        setCurrentMainChat,
+        currentSubChat,
+        setCurrentSubChat,
+        currentThreadChat,
+        setCurrentThreadChat,
+
+        // Chat data
+        allChats,
+        setAllChats,
+        flaggedMessages,
+        setFlaggedMessages,
+        activityMessages,
+        setActivityMessages,
+
+        // Unread counts
+        unReadChatCounts,
+        setUnReadChatCounts,
+        unReadActivityMessageCounts,
+        setUnReadActivityMessageCounts,
+        unReadChatAndActivityCounts,
+        setUnReadChatAndActivityCounts,
+
+        // Functions
+        funcSetAllChats,
+        funcSetFlaggedMessages,
+        funcSetActivityMessages,
+        moveToSpecificChat,
+        moveToSpecificThreadChat,
+        defineNewChat,
+    };
+};

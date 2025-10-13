@@ -78,11 +78,16 @@ type ChatNoteMainProps = {
         chatId: number,
         threadId: number,
         openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
     ) => void;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     funcSetAllChats: () => Promise<void>;
+    setCurrentPreviewTaskId: (id: number) => void;
+    setCurrentProject: (project: any) => void;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -112,6 +117,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         allChats,
         setCurrentMainChat,
         funcSetAllChats,
+        setCurrentPreviewTaskId,
+        setCurrentProject,
     } = props;
 
     const { accessToken } = useAuth();
@@ -454,7 +461,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                 currentChatNote.chatId,
                                                                 currentChatNote.threadId,
                                                                 true, // openTaskNoteInChat
-                                                                false // openThreadTaskPreview
+                                                                false, // openThreadTaskPreview
+                                                                setOpeningService,
+                                                                setCurrentPreviewTaskId,
+                                                                setCurrentProject
                                                             );
                                                         }}
                                                     >

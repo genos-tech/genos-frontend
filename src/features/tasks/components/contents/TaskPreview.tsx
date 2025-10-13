@@ -79,7 +79,10 @@ type TaskPreviewProps = {
         chatId: number,
         threadId: number,
         openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
     ) => void;
     openingService: number;
 };
@@ -438,6 +441,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                         moveToSpecificChat={moveToSpecificChat}
                         openingService={openingService}
+                        setOpeningService={setOpeningService}
+                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        setCurrentProject={setCurrentProject}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />

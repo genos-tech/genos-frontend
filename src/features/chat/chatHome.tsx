@@ -139,8 +139,11 @@ type ChatHomeProps = {
         chatId: number,
         threadId: number,
         openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
-    ) => void;
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
+    ) => Promise<void>;
     flaggedMessages: FlaggedMessageProps[];
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
 };
@@ -825,6 +828,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     funcSetAllChats={funcSetAllChats}
                                     setCurrentMainChat={setCurrentMainChat}
                                     allChats={allChats}
+                                    setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                    setCurrentProject={setCurrentProject}
                                 />
                             </Box>
                         </Panel>

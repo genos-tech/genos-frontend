@@ -66,9 +66,15 @@ type TaskTitleBlockProps = {
         chatId: number,
         threadId: number,
         openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
     ) => void;
     openingService: number;
+    setOpeningService: (service: number) => void;
+    setCurrentPreviewTaskId: (id: number) => void;
+    setCurrentProject: (project: any) => void;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -98,6 +104,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setInitialEmptyTaskId,
         moveToSpecificChat,
         openingService,
+        setOpeningService,
+        setCurrentPreviewTaskId,
+        setCurrentProject,
     } = props;
 
     const { accessToken } = useAuth();
@@ -229,7 +238,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         taskContents.chatId,
                                         taskContents.threadId,
                                         false, // openTaskNoteInChat
-                                        true // openThreadTaskPreview
+                                        true, // openThreadTaskPreview
+                                        setOpeningService,
+                                        setCurrentPreviewTaskId,
+                                        setCurrentProject
                                     );
                                 }
                             }}
