@@ -5,8 +5,8 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 
 import { AllChatProps, ChatProps } from "../../types/chat";
 import { UserProps } from "../../types/admin";
-import { ModalProjectProfile } from "../../features/chat/components/modals/ModalProjectProfile";
-import { UserProfile } from "../../features/admin/components/modals/UserProfile";
+import { ModalProjectProfile } from "../../features/admin/components/modals/ModalProjectProfile";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 

@@ -25,7 +25,7 @@ import { useAuth } from "../../context/AuthContext";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
 import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
-import { UserProfile } from "../../features/admin/components/modals/UserProfile";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { PulseDot } from "../../components/utils/PulseDot";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;

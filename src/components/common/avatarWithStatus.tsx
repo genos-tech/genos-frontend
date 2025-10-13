@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Box, Avatar } from "@mui/joy";
 
 import { AllChatProps, ChatProps } from "../../types/chat";
-import { UserProfile } from "../../features/admin/components/modals/UserProfile";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { UserProps } from "../../types/admin";
 import { ThreadProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";

@@ -6,7 +6,7 @@ import { Socket } from "socket.io-client";
 import { PulseDot } from "../utils/PulseDot";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
-import { UserProfile } from "../../features/admin/components/modals/UserProfile";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 

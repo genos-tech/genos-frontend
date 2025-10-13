@@ -20,7 +20,7 @@ import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import { UserProps, ProjectProfileProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { useAuth } from "../../../../context/AuthContext";
-import { addChat } from "../../services/addChat";
+import { addChat } from "../../../chat/services/addChat";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 

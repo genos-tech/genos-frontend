@@ -5,7 +5,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import { AllChatProps, ChatProps } from "../../types/chat";
 import { UserProps } from "../../types/admin";
 import { ModalGMProfile } from "../../features/chat/components/modals/ModalGMProfile";
-import { UserProfile } from "../../features/admin/components/modals/UserProfile";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { Socket } from "socket.io-client";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
