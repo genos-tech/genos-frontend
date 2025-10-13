@@ -29,7 +29,9 @@ export const useScrollToBottomOnChatChange = (
     maxIndex: number,
     indexMap?: { [k: string]: any },
     moveToSpecificIndex?: string,
-    notMove?: boolean
+    notMove?: boolean,
+    setErrorMessage?: (value: string) => void,
+    setErrorOpen?: (value: boolean) => void
 ) => {
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
@@ -40,9 +42,17 @@ export const useScrollToBottomOnChatChange = (
         } else {
             setTimeout(() => {
                 if (indexMap && moveToSpecificIndex) {
-                    virtuoso.scrollToIndex({
-                        index: indexMap[moveToSpecificIndex],
-                    });
+                    console.log("indexMap[moveToSpecificIndex]:", indexMap[moveToSpecificIndex]);
+                    if (indexMap[moveToSpecificIndex]) {
+                        virtuoso.scrollToIndex({
+                            index: indexMap[moveToSpecificIndex],
+                        });
+                    } else {
+                        if (setErrorMessage && setErrorOpen) {
+                            setErrorMessage("The message has been deleted.");
+                            setErrorOpen(true);
+                        }
+                    }
                 } else {
                     virtuoso.scrollToIndex({
                         index: "LAST",

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack, Chip } from "@mui/joy";
+import { Box, Sheet, Stack, Chip, Alert, Snackbar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -98,6 +98,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     );
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
     const [indexMap, setIndexMap] = useState<{ [k: string]: any }>();
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [errorOpen, setErrorOpen] = useState(false);
 
     useEffect(() => {
         setThreadMessages(thread.messages || []);
@@ -116,7 +118,9 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         threadMessages.length - 1,
         indexMap,
         currentThreadChat.moveToSpecificIndex,
-        currentThreadChat.notMove
+        currentThreadChat.notMove,
+        setErrorMessage,
+        setErrorOpen
     );
 
     const updateReadStatus = (indexForLastReadMessageId: number) => {
@@ -223,6 +227,23 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         backgroundColor: "background.body",
                     }}
                 >
+                    {errorMessage && errorMessage !== "" && (
+                        <Snackbar
+                            autoHideDuration={5000}
+                            open={errorOpen}
+                            variant="soft"
+                            color="danger"
+                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                            onClose={(event, reason) => {
+                                if (reason === "clickaway") {
+                                    return;
+                                }
+                                setErrorOpen(false);
+                            }}
+                        >
+                            {errorMessage}
+                        </Snackbar>
+                    )}
                     <ThreadChatPaneHeader
                         myself={myself}
                         thread={thread}
