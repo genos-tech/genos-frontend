@@ -117,7 +117,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         "--Switch-thumbSize": "15px",
                         "--Switch-trackWidth": "95px",
                         "--Switch-trackHeight": "23px",
-                        paddingLeft: "10px",
                     }}
                     color={showOnlyInCompleteTodos ? "warning" : "neutral"}
                 />

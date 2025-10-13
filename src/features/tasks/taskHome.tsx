@@ -748,16 +748,20 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         </Dropdown>
                                                         {(isTaskPreviewVisible === true ||
                                                             isCreatingTask.flag === true) && (
-                                                            <IconButton
-                                                                size="sm"
-                                                                variant="plain"
-                                                                color="neutral"
-                                                                onClick={() => {
-                                                                    setIsTaskHomeVisible(false);
-                                                                }}
-                                                            >
-                                                                <CancelIcon />
-                                                            </IconButton>
+                                                            <Tooltip title="Close">
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    color="neutral"
+                                                                    onClick={() => {
+                                                                        setIsTaskHomeVisible(
+                                                                            false
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    <CancelIcon />
+                                                                </IconButton>
+                                                            </Tooltip>
                                                         )}
                                                     </Box>
                                                 </Box>

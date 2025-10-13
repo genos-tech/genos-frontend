@@ -183,6 +183,7 @@ export type NewMessageProps = {
     isPinned?: boolean;
     tsLastAllReadActivity?: string;
     isFlagged?: boolean;
+    isDeleted?: boolean;
 };
 
 export type NewThreadMessageProps = {
@@ -213,6 +214,7 @@ export type NewThreadMessageProps = {
     isEdited: boolean;
     reactions?: ReactionProps[];
     isFlagged?: boolean;
+    isDeleted?: boolean;
 };
 
 export type FlaggedMessageProps = {

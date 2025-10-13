@@ -27,6 +27,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 import { BubbleFlagButton } from "./BubbleFlagButton";
+import { BubbleDeleteButton } from "./BubbleDeleteButton";
 
 type MessageBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -515,6 +516,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             setEditTargetMessage={setEditTargetMessage}
                                         />
                                     )}
+
                                     {(chat.chatType === 3 || chat.chatType === 4) &&
                                         message.sender.isSystemUser === true && (
                                             <BubbleOpenTaskButton
@@ -527,6 +529,18 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setCurrentProject={setCurrentProject}
+                                            />
+                                        )}
+
+                                    {message.numReplies < 2 &&
+                                        message.sender.userId === myself.userId && (
+                                            <BubbleDeleteButton
+                                                socket={socket}
+                                                accessToken={accessToken}
+                                                message={message}
+                                                isThread={false}
+                                                currentChat={chat}
+                                                setCurrentChat={setCurrentMainChat}
                                             />
                                         )}
                                 </Stack>
@@ -624,6 +638,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                             }
                                                         />
                                                     )}
+
                                                     {(chat.chatType === 3 ||
                                                         chat.chatType === 4) &&
                                                         message.sender.isSystemUser === true && (
@@ -649,6 +664,19 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 setCurrentProject={
                                                                     setCurrentProject
                                                                 }
+                                                            />
+                                                        )}
+
+                                                    {message.numReplies < 2 &&
+                                                        message.sender.userId ===
+                                                            myself.userId && (
+                                                            <BubbleDeleteButton
+                                                                socket={socket}
+                                                                accessToken={accessToken}
+                                                                message={message}
+                                                                isThread={false}
+                                                                currentChat={chat}
+                                                                setCurrentChat={setCurrentMainChat}
                                                             />
                                                         )}
                                                 </>
