@@ -19,34 +19,6 @@ import { getLocalCurrentDate, getLocalCurrentTimestamp } from "./utils/dateUtils
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 import {
-    MyNoteMetaProps,
-    TaskNoteMetaProps,
-    ChatNoteMetaProps,
-    ChatNoteMetaTreeNode,
-    ChatNoteProps,
-    MyNoteMetaTreeNode,
-    MyNoteProps,
-    TaskNoteMetaTreeNode,
-    TaskNoteProps,
-} from "./types/notes";
-import { createEmptyMyNote } from "./features/notes/services/createEmptyMyNote";
-import { addNote } from "./features/notes/services/addNote";
-import { createEmptyChatNote } from "./features/notes/services/createEmptyChatNote";
-import { createEmptyTaskNote } from "./features/notes/services/createEmptyTaskNote";
-import { loadMyNoteMeta } from "./features/notes/services/loadMyNoteMeta";
-import { loadTaskNoteMeta } from "./features/notes/services/loadTaskNoteMeta";
-import { loadChatNoteMeta } from "./features/notes/services/loadChatNoteMeta";
-import { loadChatNotesByChatId } from "./features/notes/services/loadChatNotesByChatId";
-import { updataMyNoteChain, initCurrentMyNoteChain } from "./hooks/notes/myNote";
-import { updataTaskNoteChain, initCurrentTaskNoteChain } from "./hooks/notes/taskNote";
-import { updataChatNoteChain, initCurrentChatNoteChain } from "./hooks/notes/chatNote";
-import {
-    updateTabFromChatNoteUpdate,
-    updateTabFromMyNoteUpdate,
-    updateTabFromTaskNoteUpdate,
-} from "./hooks/notes/tab";
-import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "./utils/note";
-import {
     ProjectProps,
     TaskMetaProps,
     TaskMetaTreeNode,
@@ -58,9 +30,6 @@ import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
 import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
 import { popSpecificProjectTasks } from "./features/chat/services/popSpecificProjectTasks";
 import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
-import { getData } from "./db/crud";
-import { loadSpecificNote } from "./features/notes/services/loadSpecificNote";
-import { STORES } from "./db/conf";
 import { buildTaskTree } from "./features/tasks/utils/buildTaskTree";
 import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
@@ -68,6 +37,10 @@ import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 import { useMyself } from "./hooks/useAuth";
 import { useChat } from "./hooks/useChat";
 import { useInbox } from "./hooks/useInbox";
+
+// Import task and note management hooks
+// import { useTaskManagement } from "./hooks/useTaskManagement";
+import { useNoteManagement } from "./hooks/useNoteManagement";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 const socket = (accessToken: string | null): Socket => {
@@ -565,352 +538,8 @@ export const App = () => {
     ///////////////////////
     // Note Related
     ///////////////////////
-    // Common
-    const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-    const [tabItems, setTabItems] = useState<any[]>([]);
-    const [tmpTabItems, setTmpTabItems] = useState<any[]>([]);
-    const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
-    const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
-    const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
-        const targetTabIndex: number = Math.max(
-            nextTabIndex !== -1
-                ? nextTabIndex
-                : tabItems.findIndex(
-                      (note) => note.noteType === noteType && note.noteId === noteId
-                  ),
-            0
-        );
-
-        if (noteType === 1) {
-            const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 1) {
-                    setCurrentMyNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            } else {
-                const note: MyNoteProps = await loadSpecificNote(myself, 1, noteId, accessToken);
-                if (!note.error && note.noteType === 1) {
-                    addNote(1, note);
-                    setCurrentMyNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            }
-            setCurrentNoteType(1);
-        } else if (noteType === 2) {
-            const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 2) {
-                    setCurrentTaskNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            } else {
-                const note: TaskNoteProps = await loadSpecificNote(myself, 2, noteId, accessToken);
-                if (!note.error && note.noteType === 2) {
-                    addNote(2, note);
-                    setCurrentTaskNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            }
-            setCurrentNoteType(2);
-        } else if (noteType === 3) {
-            const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
-            if (note) {
-                if (note.noteType === 3) {
-                    setCurrentChatNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            } else {
-                const note: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
-                if (note && !note.error && note.noteType === 3) {
-                    addNote(3, note);
-                    setCurrentChatNote(note);
-                    setSelectedTabIndex(targetTabIndex);
-                }
-            }
-            setCurrentNoteType(3);
-        }
-    };
-
-    const popInitialNote = async () => {
-        const noteType: string | null = localStorage.getItem("lastOpenNoteType");
-        const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
-        const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
-        const chatNoteId: string | null = localStorage.getItem("lastOpenChatNoteId");
-        if (noteType && myNoteId) {
-            if (Number(noteType) === 1 && myNoteId) {
-                await loadNote(1, Number(myNoteId), -1);
-            } else if (Number(noteType) === 2 && taskNoteId) {
-                await loadNote(2, Number(taskNoteId), -1);
-            } else if (Number(noteType) === 3 && chatNoteId) {
-                await loadNote(3, Number(chatNoteId), -1);
-            }
-        }
-    };
-
-    // My Note Related
-    const [currentMyNote, setCurrentMyNote] = useState<MyNoteProps | null>(null);
-    const [myNoteMeta, setMyNoteMeta] = useState<MyNoteMetaProps[]>([]);
-    const [currentMyNoteChain, setCurrentMyNoteChain] = useState<MyNoteMetaTreeNode[]>();
-    const [newlyCreatedMyNotes, setNewlyCreatedMyNotes] = useState<MyNoteProps[]>([]);
-    const handleCreateNewMyNote = async (parentNoteId: number | null) => {
-        const title = `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedMyNotes.length + 1})`;
-        const _newNote = await createEmptyMyNote(myself, parentNoteId, title, accessToken);
-        const newNote: MyNoteProps = { noteType: 1, ..._newNote };
-        setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
-        setCurrentMyNote(newNote);
-        addNote(1, newNote);
-        setMyNoteMeta([
-            {
-                noteType: newNote.noteType,
-                noteId: newNote.noteId,
-                parentNoteId: newNote.parentNoteId,
-                title: newNote.title,
-                tsUpdated: newNote.tsUpdated,
-            },
-            ...myNoteMeta,
-        ]);
-    };
-    const getMyNoteMeta = async () => {
-        const loadedNotes: MyNoteMetaProps[] = await loadMyNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setMyNoteMeta(loadedNotes);
-        }
-    };
-    const [myNoteMetaTree, setMyNoteMetaTree] = useState<MyNoteMetaTreeNode[]>(
-        buildMyNoteTree(myNoteMeta)
-    );
-    useEffect(() => {
-        setMyNoteMetaTree(buildMyNoteTree(myNoteMeta));
-    }, [myNoteMeta]);
-    initCurrentMyNoteChain({
-        myNoteMeta: myNoteMeta,
-        currentMyNoteChain: currentMyNoteChain,
-        setCurrentMyNoteChain: setCurrentMyNoteChain,
-    });
-    updateTabFromMyNoteUpdate({
-        myself: myself,
-        currentMyNote: currentMyNote,
-        setSelectedTabIndex: setSelectedTabIndex,
-        tabItems: tabItems,
-        setTabItems: setTabItems,
-    });
-    updataMyNoteChain({
-        currentMyNote: currentMyNote,
-        myNoteMetaTree: myNoteMetaTree,
-        currentMyNoteChain: currentMyNoteChain,
-        setCurrentMyNoteChain: setCurrentMyNoteChain,
-        allNoteIdChains: allNoteIdChains,
-        setAllNoteIdChains: setAllNoteIdChains,
-        tabItems: tabItems,
-        selectedTabIndex: selectedTabIndex,
-    });
-
-    // Task Note Related
-    const [currentTaskNote, setCurrentTaskNote] = useState<TaskNoteProps | null>(null);
-    const [taskNoteMeta, setTaskNoteMeta] = useState<TaskNoteMetaProps[]>([]);
-    const [currentTaskNoteChain, setCurrentTaskNoteChain] = useState<TaskNoteMetaTreeNode[]>();
-    const [newlyCreatedTaskNotes, setNewlyCreatedTaskNotes] = useState<TaskNoteProps[]>([]);
-    const [isTaskVisibleInNote, setIsTaskVisibleInNote] = useState(false);
-    const handleCreateNewTaskNote = async (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => {
-        const _title =
-            title && title.length > 0
-                ? title
-                : `${parentNoteId ? "Child" : "New"} Note (${newlyCreatedTaskNotes.length + 1})`;
-        const _newNote = await createEmptyTaskNote(
-            myself,
-            parentNoteId,
-            projectId,
-            taskId,
-            _title,
-            accessToken
-        );
-        const newNote: TaskNoteProps = { noteType: 2, ..._newNote };
-        setNewlyCreatedTaskNotes([...newlyCreatedTaskNotes, newNote]);
-        setCurrentTaskNote(newNote);
-        addNote(2, newNote);
-        setTaskNoteMeta([
-            {
-                noteType: newNote.noteType,
-                noteId: newNote.noteId,
-                parentNoteId: newNote.parentNoteId,
-                projectId: newNote.projectId,
-                taskId: newNote.taskId,
-                title: newNote.title,
-                tsUpdated: newNote.tsUpdated,
-            },
-            ...taskNoteMeta,
-        ]);
-    };
-    const getTaskNoteMeta = async () => {
-        const loadedNotes: TaskNoteMetaProps[] = await loadTaskNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setTaskNoteMeta(loadedNotes);
-        }
-    };
-    const [taskNoteMetaTree, setTaskNoteMetaTree] = useState<TaskNoteMetaTreeNode[]>(
-        buildTaskNoteTree(taskNoteMeta)
-    );
-    useEffect(() => {
-        setTaskNoteMetaTree(buildTaskNoteTree(taskNoteMeta));
-    }, [taskNoteMeta]);
-    initCurrentTaskNoteChain({
-        taskNoteMeta: taskNoteMeta,
-        currentTaskNoteChain: currentTaskNoteChain,
-        setCurrentTaskNoteChain: setCurrentTaskNoteChain,
-    });
-    updateTabFromTaskNoteUpdate({
-        myself: myself,
-        currentTaskNote: currentTaskNote,
-        setSelectedTabIndex: setSelectedTabIndex,
-        tabItems: tabItems,
-        setTabItems: setTabItems,
-    });
-    updataTaskNoteChain({
-        currentTaskNote: currentTaskNote,
-        taskNoteMetaTree: taskNoteMetaTree,
-        currentTaskNoteChain: currentTaskNoteChain,
-        setCurrentTaskNoteChain: setCurrentTaskNoteChain,
-        allNoteIdChains: allNoteIdChains,
-        setAllNoteIdChains: setAllNoteIdChains,
-        tabItems: tabItems,
-        selectedTabIndex: selectedTabIndex,
-    });
-
-    // Chat Note Related
-    const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
-    const [chatNoteMeta, setChatNoteMeta] = useState<ChatNoteMetaProps[]>([]);
-    const [currentChatNoteChain, setCurrentChatNoteChain] = useState<ChatNoteMetaTreeNode[]>();
-    const [newlyCreatedChatNotes, setNewlyCreatedChatNotes] = useState<ChatNoteProps[]>([]);
-    const handleCreateNewChatNote = async (
-        parentNoteId: number | null,
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => {
-        const title = `${parentNoteId ? "Child" : "New"} Note (${
-            newlyCreatedChatNotes.length + 1
-        })`;
-        const _newNote = await createEmptyChatNote(
-            myself,
-            parentNoteId,
-            chatType,
-            chatId,
-            isThread,
-            threadId,
-            title,
-            accessToken
-        );
-        const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
-        setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
-        setCurrentChatNote(newNote);
-        addNote(3, newNote);
-        setChatNoteMeta([
-            {
-                noteType: newNote.noteType,
-                noteId: newNote.noteId,
-                parentNoteId: newNote.parentNoteId,
-                chatType: newNote.chatType,
-                chatId: newNote.chatId,
-                isThread: newNote.isThread,
-                threadId: newNote.threadId,
-                title: newNote.title,
-                tsUpdated: newNote.tsUpdated,
-            },
-            ...chatNoteMeta,
-        ]);
-    };
-    const getChatNoteMeta = async () => {
-        const loadedNotes: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
-        if (loadedNotes.length > 0) {
-            setChatNoteMeta(loadedNotes);
-        }
-    };
-    const [chatNoteMetaTree, setChatNoteMetaTree] = useState<ChatNoteMetaTreeNode[]>(
-        buildChatNoteTree(chatNoteMeta)
-    );
-    useEffect(() => {
-        setChatNoteMetaTree(buildChatNoteTree(chatNoteMeta));
-    }, [chatNoteMeta]);
-    initCurrentChatNoteChain({
-        chatNoteMeta: chatNoteMeta,
-        currentChatNoteChain: currentChatNoteChain,
-        setCurrentChatNoteChain: setCurrentChatNoteChain,
-    });
-    updateTabFromChatNoteUpdate({
-        myself: myself,
-        currentChatNote: currentChatNote,
-        setSelectedTabIndex: setSelectedTabIndex,
-        tabItems: tabItems,
-        setTabItems: setTabItems,
-    });
-    updataChatNoteChain({
-        currentChatNote: currentChatNote,
-        chatNoteMetaTree: chatNoteMetaTree,
-        currentChatNoteChain: currentChatNoteChain,
-        setCurrentChatNoteChain: setCurrentChatNoteChain,
-        allNoteIdChains: allNoteIdChains,
-        setAllNoteIdChains: setAllNoteIdChains,
-        tabItems: tabItems,
-        selectedTabIndex: selectedTabIndex,
-    });
-
-    const handleCreateNewChatNoteIfNotExist = async (
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => {
-        const chatNotes: ChatNoteProps[] = await loadChatNotesByChatId(
-            myself,
-            chatType,
-            chatId,
-            isThread,
-            threadId,
-            accessToken
-        );
-        if (chatNotes.length > 0) {
-            const newNote = chatNotes[0];
-            setCurrentChatNote(newNote);
-            addNote(3, newNote);
-        } else {
-            const title = "New Note";
-            const _newNote = await createEmptyChatNote(
-                myself,
-                null,
-                chatType,
-                chatId,
-                isThread,
-                threadId,
-                title,
-                accessToken
-            );
-            const newNote: ChatNoteProps = { noteType: 3, ..._newNote };
-            setNewlyCreatedChatNotes([...newlyCreatedChatNotes, newNote]);
-            setCurrentChatNote(newNote);
-            addNote(3, newNote);
-            setChatNoteMeta([
-                {
-                    noteType: newNote.noteType,
-                    noteId: newNote.noteId,
-                    parentNoteId: newNote.parentNoteId,
-                    chatType: newNote.chatType,
-                    chatId: newNote.chatId,
-                    isThread: newNote.isThread,
-                    threadId: newNote.threadId,
-                    title: newNote.title,
-                    tsUpdated: newNote.tsUpdated,
-                },
-                ...chatNoteMeta,
-            ]);
-        }
-    };
+    // Note management
+    const noteManagement = useNoteManagement(myself, accessToken);
 
     ///////////////////////
     // Inbox Related
@@ -944,77 +573,65 @@ export const App = () => {
 
     useEffect(() => {
         // Reset note variables when the team changes
-        setTabItems([]);
-        setTmpTabItems([]);
+        noteManagement.initializeNoteStates();
+
         setOngoingTasks([]);
         setClosedTasks([]);
         setDeletedTasks([]);
         setIsTaskPreviewVisible(false);
         setIsThreadTaskVisible(false);
+
         setIsChatNoteVisible(false);
-        setIsTaskNoteVisible(false);
+        noteManagement.setIsTaskNoteVisible(false);
         setIsSubChatVisible(false);
         setIsThreadVisible(false);
-        setCurrentMyNote(null);
-        setCurrentTaskNote(null);
-        setCurrentChatNote(null);
-        setCurrentChatNoteChain(undefined);
-        setCurrentMyNoteChain(undefined);
-        setCurrentTaskNoteChain(undefined);
-        setAllNoteIdChains({});
-        setMyNoteMeta([]);
-        setTaskNoteMeta([]);
-        setChatNoteMeta([]);
-        setMyNoteMetaTree([]);
-        setTaskNoteMetaTree([]);
-        setChatNoteMetaTree([]);
-        setNewlyCreatedMyNotes([]);
-        setNewlyCreatedTaskNotes([]);
-        setNewlyCreatedChatNotes([]);
     }, [currentTeamId]);
 
     useEffect(() => {
         if (openingService === 0) {
             // Init all notes
-            setCurrentMyNote(null);
-            setCurrentTaskNote(null);
-            setCurrentChatNote(null);
+            noteManagement.setCurrentMyNote(null);
+            noteManagement.setCurrentTaskNote(null);
+            noteManagement.setCurrentChatNote(null);
         } else if (openingService === 1) {
-            // Keep the tabItems when an user changes the page from Notes to other pages.
-            setTmpTabItems(tabItems);
-            setTabItems(tabItems.filter((item) => item.noteType === 3));
-
             // Initialize the task visibility.
             setIsTaskPreviewVisible(false);
 
+            // Keep the tabItems when an user changes the page from Notes to other pages.
+            noteManagement.setTmpTabItems(noteManagement.tabItems);
+            noteManagement.setTabItems(
+                noteManagement.tabItems.filter((item) => item.noteType === 3)
+            );
+
             // Initialize the chat note visibility.
-            if (tabItems.filter((item) => item.noteType === 3).length === 0) {
+            if (noteManagement.tabItems.filter((item) => item.noteType === 3).length === 0) {
                 setIsChatNoteVisible(false);
             }
-
             // Init all notes
-            setCurrentMyNote(null);
-            setCurrentTaskNote(null);
+            noteManagement.setCurrentMyNote(null);
+            noteManagement.setCurrentTaskNote(null);
             // setCurrentChatNote(null);
         } else if (openingService === 2) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            setTmpTabItems(tabItems);
-            setTabItems(tabItems.filter((item) => item.noteType === 2));
+            noteManagement.setTmpTabItems(noteManagement.tabItems);
+            noteManagement.setTabItems(
+                noteManagement.tabItems.filter((item) => item.noteType === 2)
+            );
 
             // Initialize the chat note visibility.
-            setIsTaskNoteVisible(false);
+            noteManagement.setIsTaskNoteVisible(false);
 
             // Init all notes
-            setCurrentMyNote(null);
-            setCurrentTaskNote(null);
-            setCurrentChatNote(null);
+            noteManagement.setCurrentMyNote(null);
+            noteManagement.setCurrentTaskNote(null);
+            noteManagement.setCurrentChatNote(null);
         } else if (openingService === 3) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            setTabItems(tmpTabItems);
-            setTmpTabItems([]);
+            noteManagement.setTabItems(noteManagement.tmpTabItems);
+            noteManagement.setTmpTabItems([]);
 
             if (socketInstance) {
-                popInitialNote();
+                noteManagement.popInitialNote();
             }
         }
     }, [openingService]);
@@ -1041,9 +658,9 @@ export const App = () => {
             getTaskMeta();
 
             // Load note metadata
-            getMyNoteMeta();
-            getTaskNoteMeta();
-            getChatNoteMeta();
+            noteManagement.getMyNoteMeta();
+            noteManagement.getTaskNoteMeta();
+            noteManagement.getChatNoteMeta();
         }
     }, [isLoading]);
 
@@ -1104,7 +721,7 @@ export const App = () => {
     useEffect(() => {
         if (socketInstance) {
             // Pop the initial note after the socket is connected.
-            popInitialNote();
+            noteManagement.popInitialNote();
 
             socketInstance.emit("join", {
                 joiningCGId: -1, // dm_id or gm_id
@@ -1214,27 +831,10 @@ export const App = () => {
                         unReadChatCounts={unReadChatCounts}
                         unReadActivityMessageCounts={unReadActivityMessageCounts}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
-                        currentNoteType={currentNoteType}
-                        currentChatNote={currentChatNote}
-                        setCurrentChatNote={setCurrentChatNote}
-                        chatNoteMeta={chatNoteMeta}
-                        setChatNoteMeta={setChatNoteMeta}
-                        tabItems={tabItems}
-                        setTabItems={setTabItems}
-                        selectedTabIndex={selectedTabIndex}
-                        handleCreateNewChatNote={handleCreateNewChatNote}
-                        handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
-                        currentChatNoteChain={currentChatNoteChain}
-                        handleCreateNewTaskNote={handleCreateNewTaskNote}
-                        setCurrentTaskNote={setCurrentTaskNote}
                         isTaskPreviewVisible={isThreadTaskVisible}
                         setIsTaskPreviewVisible={setIsThreadTaskVisible}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
-                        isChatNoteVisible={isChatNoteVisible}
-                        setIsChatNoteVisible={setIsChatNoteVisible}
-                        isTaskNoteVisible={isTaskNoteVisible}
-                        setIsTaskNoteVisible={setIsTaskNoteVisible}
                         currentProject={currentProject}
                         setCurrentProject={setCurrentProject}
                         currentPreviewTaskId={currentPreviewTaskId}
@@ -1255,13 +855,15 @@ export const App = () => {
                         setIsThreadVisible={setIsThreadVisible}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
-                        taskNoteMeta={taskNoteMeta}
-                        loadNote={loadNote}
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
                         moveToSpecificChat={moveToSpecificChat}
                         flaggedMessages={flaggedMessages}
                         setFlaggedMessages={setFlaggedMessages}
+                        noteManagement={noteManagement}
+                        loadProjectsAndTasks={loadProjectsAndTasks}
+                        isChatNoteVisible={isChatNoteVisible}
+                        setIsChatNoteVisible={setIsChatNoteVisible}
                     />
                 ) : null}
 
@@ -1282,20 +884,8 @@ export const App = () => {
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                         unReadInboxItemCount={unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
-                        currentTaskNote={currentTaskNote}
-                        setCurrentTaskNote={setCurrentTaskNote}
-                        currentNoteType={currentNoteType}
-                        taskNoteMeta={taskNoteMeta}
-                        setTaskNoteMeta={setTaskNoteMeta}
-                        tabItems={tabItems}
-                        setTabItems={setTabItems}
-                        selectedTabIndex={selectedTabIndex}
-                        handleCreateNewTaskNote={handleCreateNewTaskNote}
-                        currentTaskNoteChain={currentTaskNoteChain}
                         isTaskPreviewVisible={isTaskPreviewVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        isTaskNoteVisible={isTaskNoteVisible}
-                        setIsTaskNoteVisible={setIsTaskNoteVisible}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
                         teamProjects={teamProjects}
@@ -1324,8 +914,6 @@ export const App = () => {
                         setOpenCreateTag={setOpenCreateTag}
                         isNewTagCreated={isNewTagCreated}
                         setIsNewTagCreated={setIsNewTagCreated}
-                        loadNote={loadNote}
-                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                         taskMetaTree={taskMetaTree}
                         currentTaskChain={currentTaskChain}
                         initialEmptyTaskId={initialEmptyTaskId}
@@ -1334,6 +922,7 @@ export const App = () => {
                         setAllChats={setAllChats}
                         funcSetAllChats={funcSetAllChats}
                         moveToSpecificChat={moveToSpecificChat}
+                        noteManagement={noteManagement}
                     />
                 ) : null}
 
@@ -1350,42 +939,13 @@ export const App = () => {
                         openingService={openingService}
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
-                        currentNoteType={currentNoteType}
-                        setCurrentNoteType={setCurrentNoteType}
-                        myNoteMeta={myNoteMeta}
-                        setMyNoteMeta={setMyNoteMeta}
-                        taskNoteMeta={taskNoteMeta}
-                        setTaskNoteMeta={setTaskNoteMeta}
-                        chatNoteMeta={chatNoteMeta}
-                        setChatNoteMeta={setChatNoteMeta}
-                        tabItems={tabItems}
-                        setTabItems={setTabItems}
-                        selectedTabIndex={selectedTabIndex}
-                        currentMyNote={currentMyNote}
-                        handleCreateNewMyNote={handleCreateNewMyNote}
-                        currentTaskNote={currentTaskNote}
-                        handleCreateNewTaskNote={handleCreateNewTaskNote}
-                        currentChatNote={currentChatNote}
-                        setCurrentChatNote={setCurrentChatNote}
-                        handleCreateNewChatNote={handleCreateNewChatNote}
                         currentProject={currentProject}
                         allChats={allChats}
-                        currentMyNoteChain={currentMyNoteChain}
-                        currentTaskNoteChain={currentTaskNoteChain}
-                        currentChatNoteChain={currentChatNoteChain}
                         unReadInboxItemCount={unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
-                        myNoteMetaTree={myNoteMetaTree}
-                        taskNoteMetaTree={taskNoteMetaTree}
-                        chatNoteMetaTree={chatNoteMetaTree}
-                        allNoteIdChains={allNoteIdChains}
                         isCreatingTask={isCreatingTask}
                         setIsMainChatVisible={setIsMainChatVisible}
-                        setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setIsChatNoteVisible={setIsChatNoteVisible}
-                        loadNote={loadNote}
-                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
-                        isTaskVisibleInNote={isTaskVisibleInNote}
                         setCurrentProject={setCurrentProject}
                         currentPreviewTask={currentPreviewTask}
                         setIsThreadVisible={setIsThreadVisible}
@@ -1399,12 +959,11 @@ export const App = () => {
                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
-                        setCurrentTaskNote={setCurrentTaskNote}
-                        isTaskNoteVisible={isTaskNoteVisible}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
                         moveToSpecificChat={moveToSpecificChat}
                         funcSetAllChats={funcSetAllChats}
+                        noteManagement={noteManagement}
                     />
                 ) : null}
             </CssVarsProvider>

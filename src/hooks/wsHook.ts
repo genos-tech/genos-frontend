@@ -294,7 +294,6 @@ export const wsHook = (props: wsHookProps) => {
                                     notMove: true,
                                 });
                             }
-
                         } else {
                             const newThreadMessage: ThreadMessageProps = {
                                 chatType: newMessage.chatType,

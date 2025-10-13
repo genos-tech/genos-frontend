@@ -23,7 +23,6 @@ export const useInbox = () => {
     };
 
     useEffect(() => {
-        console.log("inboxItems", inboxItems);
         setUnReadInboxItemCount(
             countUnReadInboxItem(inboxItems.filter((item) => item.itemType > 0))
         );

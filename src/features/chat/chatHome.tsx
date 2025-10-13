@@ -23,17 +23,11 @@ import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProjec
 import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { Sidebar } from "../../components/layout/sidebar";
-import {
-    ChatNoteProps,
-    ChatNoteMetaTreeNode,
-    ChatNoteMetaProps,
-    TaskNoteProps,
-    TaskNoteMetaProps,
-} from "../../types/notes";
 import { ChatNoteMain } from "../notes/components/ChatNoteMain";
 import { loadTodo } from "./services/loadTodo";
 import { extractYYYYMMDD } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
+import { NoteManagementState } from "../../hooks/useNoteManagement";
 
 type ChatHomeProps = {
     currentTeam: Team;
@@ -65,35 +59,6 @@ type ChatHomeProps = {
     unReadChatCounts: Record<string, number>;
     unReadActivityMessageCounts: number;
     unReadChatAndActivityCounts: number;
-    currentNoteType: number;
-    currentChatNote: ChatNoteProps | null;
-    setCurrentChatNote: (value: ChatNoteProps) => void;
-    chatNoteMeta: ChatNoteMetaProps[];
-    setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
-    tabItems: any[];
-    setTabItems: (value: any[]) => void;
-    selectedTabIndex: number;
-    handleCreateNewChatNote: (
-        parentNoteId: number | null,
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => Promise<void>;
-    handleCreateNewChatNoteIfNotExist: (
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => Promise<void>;
-    currentChatNoteChain?: ChatNoteMetaTreeNode[];
-    handleCreateNewTaskNote: (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => Promise<void>;
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
     isTaskPreviewVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isCreatingTask: {
@@ -106,10 +71,6 @@ type ChatHomeProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
-    isChatNoteVisible: boolean;
-    setIsChatNoteVisible: (value: boolean) => void;
-    isTaskNoteVisible: boolean;
-    setIsTaskNoteVisible: (value: boolean) => void;
     currentProject: ProjectProps | null;
     setCurrentProject: (value: ProjectProps | null) => void;
     currentPreviewTaskId: number;
@@ -130,8 +91,6 @@ type ChatHomeProps = {
     setIsThreadVisible: (value: boolean) => void;
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
-    taskNoteMeta: TaskNoteMetaProps[];
-    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
     moveToSpecificChat: (
@@ -146,6 +105,10 @@ type ChatHomeProps = {
     ) => Promise<void>;
     flaggedMessages: FlaggedMessageProps[];
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    noteManagement: NoteManagementState;
+    loadProjectsAndTasks: (value: number) => Promise<void>;
+    isChatNoteVisible: boolean;
+    setIsChatNoteVisible: (value: boolean) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -179,27 +142,10 @@ export const ChatHome = (props: ChatHomeProps) => {
         unReadChatCounts,
         unReadActivityMessageCounts,
         unReadChatAndActivityCounts,
-        currentNoteType,
-        currentChatNote,
-        setCurrentChatNote,
-        chatNoteMeta,
-        setChatNoteMeta,
-        tabItems,
-        setTabItems,
-        selectedTabIndex,
-        handleCreateNewChatNote,
-        handleCreateNewChatNoteIfNotExist,
-        currentChatNoteChain,
-        handleCreateNewTaskNote,
-        setCurrentTaskNote,
         isTaskPreviewVisible,
         setIsTaskPreviewVisible,
         isCreatingTask,
         setIsCreatingTask,
-        isChatNoteVisible,
-        setIsChatNoteVisible,
-        isTaskNoteVisible,
-        setIsTaskNoteVisible,
         currentProject,
         setCurrentProject,
         currentPreviewTaskId,
@@ -220,13 +166,15 @@ export const ChatHome = (props: ChatHomeProps) => {
         setIsThreadVisible,
         teamProjects,
         setTeamProjects,
-        taskNoteMeta,
-        loadNote,
         initialEmptyTaskId,
         setInitialEmptyTaskId,
         moveToSpecificChat,
         flaggedMessages,
         setFlaggedMessages,
+        noteManagement,
+        loadProjectsAndTasks,
+        isChatNoteVisible,
+        setIsChatNoteVisible,
     } = props;
 
     // Common
@@ -611,7 +559,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     isChatNoteVisible={isChatNoteVisible}
                                     setIsChatNoteVisible={setIsChatNoteVisible}
                                     handleCreateNewChatNoteIfNotExist={
-                                        handleCreateNewChatNoteIfNotExist
+                                        noteManagement.handleCreateNewChatNoteIfNotExist
                                     }
                                     flaggedMessages={flaggedMessages}
                                     setFlaggedMessages={setFlaggedMessages}
@@ -752,13 +700,15 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     isCommentUpdated={isCommentUpdated}
                                     setIsCommentUpdated={setIsCommentUpdated}
-                                    setIsTaskNoteVisible={setIsTaskNoteVisible}
-                                    handleCreateNewTaskNote={handleCreateNewTaskNote}
-                                    setCurrentTaskNote={setCurrentTaskNote}
-                                    isTaskNoteVisible={isTaskNoteVisible}
+                                    setIsTaskNoteVisible={noteManagement.setIsTaskNoteVisible}
+                                    handleCreateNewTaskNote={
+                                        noteManagement.handleCreateNewTaskNote
+                                    }
+                                    setCurrentTaskNote={noteManagement.setCurrentTaskNote}
+                                    isTaskNoteVisible={noteManagement.isTaskNoteVisible}
                                     teamProjects={teamProjects}
                                     setTeamProjects={setTeamProjects}
-                                    taskNoteMeta={taskNoteMeta}
+                                    taskNoteMeta={noteManagement.taskNoteMeta}
                                     moveToSpecificChat={moveToSpecificChat}
                                     openingService={openingService}
                                 />
@@ -808,28 +758,18 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     teamMembers={teamMembers}
                                     myself={myself}
                                     setMyself={setMyself}
-                                    currentChatNote={currentChatNote}
-                                    setCurrentChatNote={setCurrentChatNote}
                                     setOpeningService={setOpeningService}
                                     setCurrentChat={setCurrentMainChat}
-                                    currentNoteType={currentNoteType}
-                                    chatNoteMeta={chatNoteMeta}
-                                    setChatNoteMeta={setChatNoteMeta}
-                                    tabItems={tabItems}
-                                    setTabItems={setTabItems}
-                                    selectedTabIndex={selectedTabIndex}
-                                    handleCreateNewChatNote={handleCreateNewChatNote}
-                                    currentChatNoteChain={currentChatNoteChain}
                                     isInChatPage={true}
                                     setIsMainChatVisible={setIsMainChatVisible}
-                                    setIsChatNoteVisible={setIsChatNoteVisible}
-                                    loadNote={loadNote}
                                     moveToSpecificChat={moveToSpecificChat}
                                     funcSetAllChats={funcSetAllChats}
                                     setCurrentMainChat={setCurrentMainChat}
                                     allChats={allChats}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     setCurrentProject={setCurrentProject}
+                                    setIsChatNoteVisible={setIsChatNoteVisible}
+                                    noteManagement={noteManagement}
                                 />
                             </Box>
                         </Panel>
@@ -892,6 +832,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     openCreateProject={openCreateProject}
                     setOpenCreateProject={setOpenCreateProject}
                     setCurrentProject={setCurrentProject}
+                    loadProjectsAndTasks={loadProjectsAndTasks}
                 />
 
                 {/* Modal for creating a new tag */}

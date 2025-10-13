@@ -36,7 +36,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { BnTaskNoteEditor } from "../../../components/blockNote/bnTaskNoteEditor";
-import { TaskNoteMetaProps, TaskNoteProps, TaskNoteMetaTreeNode } from "../../../types/notes";
+import { TaskNoteProps } from "../../../types/notes";
 import { sendUpdatedTaskNote } from "../services/sendUpdatedTaskNote";
 import { useAuth } from "../../../context/AuthContext";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -45,6 +45,7 @@ import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { TaskProps } from "../../../types/tasks";
 import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { NoteManagementState } from "../../../hooks/useNoteManagement";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -52,24 +53,9 @@ type TaskNoteMainProps = {
     teamMembers: UserProps[];
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    currentNoteType: number;
-    currentTaskNote: TaskNoteProps | null;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    taskNoteMeta: TaskNoteMetaProps[];
-    setTaskNoteMeta: (value: TaskNoteMetaProps[]) => void;
-    tabItems: TaskNoteProps[];
-    setTabItems: (value: TaskNoteProps[]) => void;
-    selectedTabIndex: number;
-    handleCreateNewTaskNote: (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => Promise<void>;
-    currentTaskNoteChain: TaskNoteMetaTreeNode[];
     isInTaskPage: boolean;
-    setIsTaskNoteVisible: (value: boolean) => void;
     isCreatingTask: {
         flag: boolean;
         parentTaskId: number | null;
@@ -77,13 +63,12 @@ type TaskNoteMainProps = {
     };
     isTaskPreviewVisible?: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    loadNote: (noteType: number, noteId: number, nextTabIndex: number) => Promise<void>;
-    setIsTaskVisibleInNote: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     setCurrentPreviewTask: (value: TaskProps) => void;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     funcSetAllChats: () => Promise<void>;
+    noteManagement: NoteManagementState;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -93,29 +78,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         teamMembers,
         myself,
         setMyself,
-        currentTaskNote,
         setOpeningService,
         setCurrentChat,
-        currentNoteType,
-        taskNoteMeta,
-        setTaskNoteMeta,
-        tabItems,
-        setTabItems,
-        selectedTabIndex,
-        handleCreateNewTaskNote,
-        currentTaskNoteChain,
         isInTaskPage,
-        setIsTaskNoteVisible,
         isCreatingTask,
         isTaskPreviewVisible,
         setIsTaskHomeVisible,
-        loadNote,
-        setIsTaskVisibleInNote,
         currentPreviewTask,
         setCurrentPreviewTask,
         allChats,
         setCurrentMainChat,
         funcSetAllChats,
+        noteManagement,
     } = props;
 
     const { mode } = useColorScheme();
@@ -124,7 +98,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const [noteUpdated, setNoteUpdated] = useState(false);
     const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
     const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>(
-        currentTaskNote?.title || ""
+        noteManagement.currentTaskNote?.title || ""
     );
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
@@ -152,18 +126,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
-        if (currentTaskNote) {
+        if (noteManagement.currentTaskNote) {
             let newNoteTitle = currentTaskNoteTitle;
 
             // If the note title is empty, use the note original title.
             // (not updating the title to empty)
             if (currentTaskNoteTitle === "") {
-                newNoteTitle = currentTaskNote.title;
+                newNoteTitle = noteManagement.currentTaskNote.title;
                 setCurrentTaskNoteTitle(newNoteTitle);
             }
 
             const newNote: TaskNoteProps = {
-                ...currentTaskNote,
+                ...noteManagement.currentTaskNote,
                 title: newNoteTitle,
                 body: body || [],
             };
@@ -179,18 +153,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             setNoteUpdated(false);
 
             // This needs to update the note title on the tab.
-            setTabItems(
-                tabItems.map((item) =>
-                    item.noteType === currentTaskNote?.noteType &&
-                    item.noteId === currentTaskNote?.noteId
+            noteManagement.setTabItems(
+                noteManagement.tabItems.map((item) =>
+                    item.noteType === noteManagement.currentTaskNote?.noteType &&
+                    item.noteId === noteManagement.currentTaskNote?.noteId
                         ? newNote
                         : item
                 )
             );
 
             // This needs to update the note title in the sidebar.
-            setTaskNoteMeta(
-                taskNoteMeta.map((item) =>
+            noteManagement.setTaskNoteMeta(
+                noteManagement.taskNoteMeta.map((item) =>
                     item.noteType === newNote.noteType && item.noteId === newNote.noteId
                         ? {
                               noteType: newNote.noteType,
@@ -221,10 +195,13 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     };
     useEffect(() => {
-        if (currentTaskNote) {
-            setPreviewTask(currentTaskNote.projectId, currentTaskNote.taskId);
+        if (noteManagement.currentTaskNote) {
+            setPreviewTask(
+                noteManagement.currentTaskNote.projectId,
+                noteManagement.currentTaskNote.taskId
+            );
         }
-    }, [currentTaskNote]);
+    }, [noteManagement.currentTaskNote]);
 
     useEffect(() => {
         if (noteUpdated) {
@@ -233,36 +210,40 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     }, [noteUpdated]);
 
     useEffect(() => {
-        if (currentTaskNote) {
-            setBody(currentTaskNote.body);
+        if (noteManagement.currentTaskNote) {
+            setBody(noteManagement.currentTaskNote.body);
             setTsBody(getLocalCurrentTimestamp());
-            setCurrentTaskNoteTitle(currentTaskNote.title);
+            setCurrentTaskNoteTitle(noteManagement.currentTaskNote.title);
         }
-    }, [currentTaskNote]);
+    }, [noteManagement.currentTaskNote]);
 
     const handleCloseTab = async (tabIndex: number, closingNoteId: number) => {
         const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
         const nextTabIndex = Math.max(tabIndex - 1, 0);
-        setTabItems(tabItems.filter((t) => t.noteId !== closingNoteId));
-        await loadNote(
-            tabItems[indexOfNextNote].noteType,
-            tabItems[indexOfNextNote].noteId,
+        noteManagement.setTabItems(
+            noteManagement.tabItems.filter((t) => t.noteId !== closingNoteId)
+        );
+        await noteManagement.loadNote(
+            noteManagement.tabItems[indexOfNextNote].noteType,
+            noteManagement.tabItems[indexOfNextNote].noteId,
             nextTabIndex
         );
     };
 
     useEffect(() => {
         setNoteBodySaved(false);
-    }, [selectedTabIndex]);
+    }, [noteManagement.selectedTabIndex]);
 
     const pmChat = allChats.find(
         (chat) =>
-            chat.chatType === 3 && currentTaskNote && chat.chatId === currentTaskNote.projectId
+            chat.chatType === 3 &&
+            noteManagement.currentTaskNote &&
+            chat.chatId === noteManagement.currentTaskNote.projectId
     );
 
     return (
         <>
-            {(tabItems.length === 0 || currentTaskNote === null) && (
+            {(noteManagement.tabItems.length === 0 || noteManagement.currentTaskNote === null) && (
                 <Box
                     sx={{
                         height: "100%",
@@ -286,11 +267,13 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                 </Box>
             )}
 
-            {!(tabItems.length === 0 || currentTaskNote === null) && (
+            {!(
+                noteManagement.tabItems.length === 0 || noteManagement.currentTaskNote === null
+            ) && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
                     {body && (
                         <>
-                            {currentNoteType !== 0 && (
+                            {noteManagement.currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
                                     {/* Note Header */}
                                     <Stack
@@ -316,32 +299,37 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 <AssignmentRoundedIcon sx={{ fontSize: "20px" }} />
                                                 Task Notes
                                             </IconButton>
-                                            {currentTaskNoteChain.map((node) => (
-                                                <Typography
-                                                    level="title-sm"
-                                                    component="button"
-                                                    onClick={() => {
-                                                        loadNote(2, node.noteId, -1);
-                                                    }}
-                                                    sx={{
-                                                        background: "none",
-                                                        border: "none",
-                                                        padding: 0,
-                                                        cursor: "pointer",
-                                                        color: "#646CFF",
-                                                        textAlign: "left",
-                                                        fontWeight: "bold",
-                                                    }}
-                                                >
-                                                    {node.title.length > 14
-                                                        ? `${node.title.slice(0, 14)}...`
-                                                        : node.title}
-                                                </Typography>
-                                            ))}
+                                            {noteManagement.currentTaskNoteChain &&
+                                                noteManagement.currentTaskNoteChain.map((node) => (
+                                                    <Typography
+                                                        level="title-sm"
+                                                        component="button"
+                                                        onClick={() => {
+                                                            noteManagement.loadNote(
+                                                                2,
+                                                                node.noteId,
+                                                                -1
+                                                            );
+                                                        }}
+                                                        sx={{
+                                                            background: "none",
+                                                            border: "none",
+                                                            padding: 0,
+                                                            cursor: "pointer",
+                                                            color: "#646CFF",
+                                                            textAlign: "left",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                    >
+                                                        {node.title.length > 14
+                                                            ? `${node.title.slice(0, 14)}...`
+                                                            : node.title}
+                                                    </Typography>
+                                                ))}
                                         </Breadcrumbs>
 
                                         <Stack direction={"row"}>
-                                            {isInTaskPage && currentTaskNote && (
+                                            {isInTaskPage && noteManagement.currentTaskNote && (
                                                 <IconButton
                                                     component="button"
                                                     variant="plain"
@@ -352,11 +340,16 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         height: "5px",
                                                     }}
                                                     onClick={() => {
-                                                        handleCreateNewTaskNote(
-                                                            currentTaskNote.noteId,
-                                                            currentTaskNote.projectId,
-                                                            currentTaskNote.taskId
-                                                        );
+                                                        if (noteManagement.currentTaskNote) {
+                                                            noteManagement.handleCreateNewTaskNote(
+                                                                noteManagement.currentTaskNote
+                                                                    .noteId,
+                                                                noteManagement.currentTaskNote
+                                                                    .projectId,
+                                                                noteManagement.currentTaskNote
+                                                                    .taskId
+                                                            );
+                                                        }
                                                     }}
                                                 >
                                                     <AddIcon />
@@ -421,7 +414,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                         }}
                                                                         size="sm"
                                                                         onClick={() => {
-                                                                            setIsTaskVisibleInNote(
+                                                                            noteManagement.setIsTaskVisibleInNote(
                                                                                 true
                                                                             );
                                                                         }}
@@ -500,11 +493,14 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 <Menu size="sm">
                                                     <MenuItem
                                                         onClick={() => {
-                                                            if (currentTaskNote) {
-                                                                handleCreateNewTaskNote(
-                                                                    currentTaskNote.noteId,
-                                                                    currentTaskNote.projectId,
-                                                                    currentTaskNote.taskId
+                                                            if (noteManagement.currentTaskNote) {
+                                                                noteManagement.handleCreateNewTaskNote(
+                                                                    noteManagement.currentTaskNote
+                                                                        .noteId,
+                                                                    noteManagement.currentTaskNote
+                                                                        .projectId,
+                                                                    noteManagement.currentTaskNote
+                                                                        .taskId
                                                                 );
                                                             } else {
                                                                 console.error(
@@ -539,7 +535,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         variant="plain"
                                                         sx={{ mb: "5px" }}
                                                         onClick={() => {
-                                                            setIsTaskNoteVisible(false);
+                                                            noteManagement.setIsTaskNoteVisible(
+                                                                false
+                                                            );
 
                                                             // Open task-home (task table) when both task-preview and task-create-form are closed.
                                                             if (
@@ -556,26 +554,26 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 </Tooltip>
                                             )}
                                         </Stack>
-                                        {currentTaskNote && (
+                                        {noteManagement.currentTaskNote && (
                                             <ModalDeleteTaskNote
                                                 myself={myself}
                                                 openDeleteNote={openDeleteNote}
                                                 setOpenDeleteNote={setOpenDeleteNote}
-                                                taskNoteMeta={taskNoteMeta}
-                                                setTaskNoteMeta={setTaskNoteMeta}
-                                                currentTaskNote={currentTaskNote}
+                                                taskNoteMeta={noteManagement.taskNoteMeta}
+                                                setTaskNoteMeta={noteManagement.setTaskNoteMeta}
+                                                currentTaskNote={noteManagement.currentTaskNote}
                                                 handleCloseTab={handleCloseTab}
-                                                currentTabIndex={selectedTabIndex}
+                                                currentTabIndex={noteManagement.selectedTabIndex}
                                             />
                                         )}
                                     </Stack>
 
                                     <Tabs
-                                        value={selectedTabIndex}
+                                        value={noteManagement.selectedTabIndex}
                                         onChange={(_, val) => {
-                                            loadNote(
-                                                tabItems[Number(val)].noteType,
-                                                tabItems[Number(val)].noteId,
+                                            noteManagement.loadNote(
+                                                noteManagement.tabItems[Number(val)].noteType,
+                                                noteManagement.tabItems[Number(val)].noteId,
                                                 Number(val)
                                             );
                                         }}
@@ -589,7 +587,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 "&::-webkit-scrollbar": { display: "none" },
                                             }}
                                         >
-                                            {tabItems.map((tab, index) => (
+                                            {noteManagement.tabItems.map((tab, index) => (
                                                 <Tab
                                                     key={`tab-${index}`}
                                                     sx={{
@@ -613,7 +611,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             ? `${tab.title.slice(0, 14)}...`
                                                             : tab.title}
 
-                                                        {tabItems.length > 1 && (
+                                                        {noteManagement.tabItems.length > 1 && (
                                                             <IconButton
                                                                 component="span"
                                                                 size="sm"
@@ -636,7 +634,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             ))}
                                         </TabList>
 
-                                        {tabItems.map((tabNote, index) => (
+                                        {noteManagement.tabItems.map((tabNote, index) => (
                                             <TabPanel
                                                 key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                                                 value={index}
@@ -714,7 +712,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         </Button>
                                                     </Box>
                                                 )}
-                                                {currentTaskNote && (
+                                                {noteManagement.currentTaskNote && (
                                                     <>
                                                         <BnTaskNoteEditor
                                                             teamMemberProfiles={teamMemberProfiles}
@@ -722,7 +720,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             setMyself={setMyself}
                                                             socket={socket}
                                                             teamMembers={teamMembers}
-                                                            currentTaskNote={currentTaskNote}
+                                                            currentTaskNote={
+                                                                noteManagement.currentTaskNote
+                                                            }
                                                             body={body}
                                                             setBody={setBody}
                                                             setNoteBodyEdited={setNoteBodyEdited}
