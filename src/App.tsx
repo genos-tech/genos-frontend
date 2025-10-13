@@ -79,10 +79,7 @@ import { popSpecificMessages } from "./features/chat/services/popSpecificMessage
 import { loadSpecificThreadMessages } from "./features/chat/services/loadSpecificThreadMessages";
 import { popFlaggedMessages } from "./features/chat/services/popFlaggedMessages";
 
-type SetMyselfProps = {
-    myself: UserProps;
-    setMyself: (me: UserProps) => void;
-};
+import { useMyself } from "./hooks/useAuth";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 const socket = (accessToken: string | null): Socket => {
@@ -104,57 +101,6 @@ const socket = (accessToken: string | null): Socket => {
             Authorization: accessToken || "",
         },
     });
-};
-
-const useMyself = (accessToken: string | null): SetMyselfProps => {
-    const [myself, setMyself] = useState<UserProps>({
-        teamId: "",
-        teamName: "",
-        userId: "",
-        userName: "",
-        userEmail: "",
-        tsLastSeen: "",
-        tsJoined: "",
-        customStatus: "",
-        avatarImgPath: "",
-    });
-
-    useEffect(() => {
-        const fetchUserData = () => {
-            const newMyself: UserProps = {
-                teamId: localStorage.getItem("teamId") || "",
-                teamName: localStorage.getItem("teamName") || "",
-                userId: localStorage.getItem("userId") || "",
-                userName: localStorage.getItem("userName") || "",
-                userEmail: localStorage.getItem("userEmail") || "",
-                tsLastSeen: getLocalCurrentTimestamp(),
-                tsJoined: localStorage.getItem("tsJoined") || "",
-                isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
-                role: localStorage.getItem("role") || "",
-                baseCountry: localStorage.getItem("baseCountry") || "",
-                customStatus: localStorage.getItem("customStatus") || "",
-                avatarImgPath: localStorage.getItem("avatarImgPath") || "",
-            };
-
-            // // Only when the new myself is different from the current myself, set the new myself.
-            // if (areObjectsEqual(newMyself, myself) === false) {
-            //     setMyself(newMyself);
-            // }
-            setMyself(newMyself);
-        };
-
-        // Add a small delay to ensure localStorage is updated
-        setTimeout(fetchUserData, 50);
-
-        // Listen for storage updates in case another tab updates it
-        window.addEventListener("storage", fetchUserData);
-
-        return () => {
-            window.removeEventListener("storage", fetchUserData);
-        };
-    }, [accessToken]);
-
-    return { myself, setMyself };
 };
 
 export const App = () => {
