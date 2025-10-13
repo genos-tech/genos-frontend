@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
-import { Box, Avatar } from "@mui/joy";
+import { Box, Avatar, Typography, Stack } from "@mui/joy";
 
 import { AllChatProps, ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
@@ -22,6 +22,7 @@ type AvatarWithStatusProps = {
     thread?: ThreadProps;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
+    showNameAndEmail?: boolean;
 };
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     const {
@@ -36,6 +37,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         thread,
         setOpeningService,
         setCurrentMainChat,
+        showNameAndEmail,
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const _avatarSize = avatarSize || 32;
@@ -67,47 +69,62 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
 
     return (
         <div>
-            <Box
-                position="relative"
-                width={_avatarSize}
-                height={_avatarSize}
-                onClick={() => setOpenUserProfile(true)}
-            >
-                {chat && (
-                    <Avatar
-                        size="sm"
-                        sx={{ width: _avatarSize, height: _avatarSize }}
-                        src={`${media_url}/${avatarImg}`}
-                    >
-                        {chat.chatType === 1 || isForBubble === true
-                            ? avatarUser?.userName[0].toUpperCase()
-                            : chat?.chatName[0].toUpperCase()}
-                    </Avatar>
-                )}
-                {thread && (
-                    <Avatar
-                        size="sm"
-                        sx={{ width: _avatarSize, height: _avatarSize }}
-                        src={`${media_url}/${avatarImg}`}
-                    >
-                        {thread.chatType === 1 || isForBubble === true
-                            ? avatarUser?.userName[0].toUpperCase()
-                            : thread?.chatName[0].toUpperCase()}
-                    </Avatar>
-                )}
-                {chat === undefined && thread === undefined && (
-                    <Avatar
-                        size="sm"
-                        sx={{ width: _avatarSize, height: _avatarSize }}
-                        src={`${media_url}/${avatarImg}`}
-                    >
-                        {avatarUser?.userName[0].toUpperCase()}
-                    </Avatar>
-                )}
-                <Box position="absolute" bottom={0} right={0} width={12} height={17}>
-                    <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
+            <Stack direction="row" spacing={1}>
+                <Box
+                    position="relative"
+                    width={_avatarSize}
+                    height={_avatarSize}
+                    onClick={() => setOpenUserProfile(true)}
+                >
+                    {chat && (
+                        <Avatar
+                            size="sm"
+                            sx={{ width: _avatarSize, height: _avatarSize }}
+                            src={`${media_url}/${avatarImg}`}
+                        >
+                            {chat.chatType === 1 || isForBubble === true
+                                ? avatarUser?.userName[0].toUpperCase()
+                                : chat?.chatName[0].toUpperCase()}
+                        </Avatar>
+                    )}
+                    {thread && (
+                        <Avatar
+                            size="sm"
+                            sx={{ width: _avatarSize, height: _avatarSize }}
+                            src={`${media_url}/${avatarImg}`}
+                        >
+                            {thread.chatType === 1 || isForBubble === true
+                                ? avatarUser?.userName[0].toUpperCase()
+                                : thread?.chatName[0].toUpperCase()}
+                        </Avatar>
+                    )}
+                    {chat === undefined && thread === undefined && (
+                        <Avatar
+                            size="sm"
+                            sx={{ width: _avatarSize, height: _avatarSize }}
+                            src={`${media_url}/${avatarImg}`}
+                        >
+                            {avatarUser?.userName[0].toUpperCase()}
+                        </Avatar>
+                    )}
+                    <Box position="absolute" bottom={0} right={0} width={12} height={17}>
+                        <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
+                    </Box>
                 </Box>
-            </Box>
+                {showNameAndEmail === true && (
+                    <Typography
+                        fontWeight={"bold"}
+                        sx={{
+                            pt: "3px",
+                            pl: "5px",
+                            userSelect: "text",
+                        }}
+                        onClick={() => setOpenUserProfile(true)}
+                    >
+                        {avatarUser?.userName} - {avatarUser?.userEmail}
+                    </Typography>
+                )}
+            </Stack>
 
             <UserProfile
                 socket={socket}

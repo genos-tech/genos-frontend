@@ -329,7 +329,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         </Stack>
                                         <Stack direction="column" spacing={2}>
                                             <FormControl>
-                                                <FormLabel>Since Joined</FormLabel>
+                                                <FormLabel>Joined Date</FormLabel>
                                                 <Button
                                                     variant="plain"
                                                     sx={{

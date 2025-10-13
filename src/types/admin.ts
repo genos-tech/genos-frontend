@@ -79,6 +79,7 @@ export type ProjectProfileProps = {
     projectName: string;
     ownerUserId: string;
     profileImagePath: string;
+    projectMembers: UserProps[];
     isPrivate: boolean;
     tsCreatedAt: string;
 };

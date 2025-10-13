@@ -65,6 +65,7 @@ export type GMProfileProps = {
     gmName: string;
     ownerUserId: string;
     profileImagePath: string;
+    gmMembers: UserProps[];
     isPrivate: boolean;
     tsCreatedAt: string;
 };

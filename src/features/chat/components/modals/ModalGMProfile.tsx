@@ -12,17 +12,20 @@ import {
     Typography,
     Card,
     Tooltip,
+    ListItemButton,
 } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, GMProfileProps } from "../../../../types/chat";
+import { AllChatProps, ChatProps, GMProfileProps } from "../../../../types/chat";
 import { useAuth } from "../../../../context/AuthContext";
 import { addChat } from "../../services/addChat";
 import { loadGMProfile } from "../../services/loadGMProfile";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { Socket } from "socket.io-client";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -30,23 +33,31 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 type ModalGMProfileProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    socket: Socket | null;
     gmChat: AllChatProps;
     openModalGMProfile: boolean;
     setOpenModalGMProfile: (value: boolean) => void;
     funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
+    setOpeningService: (value: number) => void;
+    setCurrentMainChat: (value: ChatProps) => void;
 };
 export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const {
         teamMemberProfiles,
         myself,
+        setMyself,
+        socket,
         gmChat,
         openModalGMProfile,
         setOpenModalGMProfile,
         funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
+        setOpeningService,
+        setCurrentMainChat,
     } = props;
 
     const { accessToken } = useAuth();
@@ -128,7 +139,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    GM Profile in {gmChat.chatName}
+                                    GM Profile - {gmChat.chatName}
                                 </Typography>
                             </Box>
                         </Box>
@@ -250,6 +261,34 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         : "N/A"}
                                                 </Typography>
                                             </Stack>
+
+                                            <Box
+                                                className="custom-scrollbar"
+                                                sx={{ maxHeight: "300px", overflow: "auto" }}
+                                            >
+                                                <FormControl>
+                                                    <FormLabel>Members</FormLabel>
+                                                    {gmProfile?.gmMembers.map((member) => (
+                                                        <ListItemButton sx={{ ml: 2, my: 0.2 }}>
+                                                            <AvatarWithStatus
+                                                                isYou={false}
+                                                                setOpeningService={
+                                                                    setOpeningService
+                                                                }
+                                                                setCurrentMainChat={
+                                                                    setCurrentMainChat
+                                                                }
+                                                                avatarUser={member}
+                                                                myself={myself}
+                                                                setMyself={setMyself}
+                                                                socket={socket}
+                                                                showNameAndEmail={true}
+                                                            />
+                                                        </ListItemButton>
+                                                    ))}
+                                                </FormControl>
+                                            </Box>
+
                                             <Stack direction="column" spacing={2}>
                                                 <FormControl>
                                                     <FormLabel>Is Private</FormLabel>
@@ -271,7 +310,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             </Stack>
                                             <Stack direction="column" spacing={2}>
                                                 <FormControl>
-                                                    <FormLabel>Created At</FormLabel>
+                                                    <FormLabel>Created Date</FormLabel>
                                                     <Button
                                                         variant="plain"
                                                         sx={{

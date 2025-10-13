@@ -219,9 +219,11 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             setCurrentMainChat={setCurrentMainChat}
                                         />
                                     )}
+
                                     {chatType === 1 && chat.dmPartnerUser.userId === "" && (
                                         <Avatar size="sm">{chat.chatName[0].toUpperCase()}</Avatar>
                                     )}
+
                                     {chatType === 2 && (
                                         <GMAvatar
                                             teamMemberProfiles={teamMemberProfiles}
@@ -235,6 +237,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             funcSetAllChats={funcSetAllChats}
                                         />
                                     )}
+
                                     {chatType === 3 && (
                                         <ProjectAvatar
                                             teamMemberProfiles={teamMemberProfiles}

@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { useState, useEffect, useRef } from "react";
 import {
     Modal,
@@ -12,41 +13,51 @@ import {
     Typography,
     Card,
     Tooltip,
+    ListItemButton,
 } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 
 import { UserProps, ProjectProfileProps } from "../../../../types/admin";
-import { AllChatProps } from "../../../../types/chat";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { useAuth } from "../../../../context/AuthContext";
 import { addChat } from "../../../chat/services/addChat";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalProjectProfileProps = {
+    socket: Socket | null;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
     pmChat: AllChatProps;
     openModalProjectProfile: boolean;
     setOpenModalProjectProfile: (value: boolean) => void;
     funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
+    setCurrentMainChat: (value: ChatProps) => void;
+    setOpeningService: (value: number) => void;
 };
 export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const {
+        socket,
         teamMemberProfiles,
         myself,
+        setMyself,
         pmChat,
         openModalProjectProfile,
         setOpenModalProjectProfile,
         funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
+        setCurrentMainChat,
+        setOpeningService,
     } = props;
 
     const { accessToken } = useAuth();
@@ -133,7 +144,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                 }}
                             >
                                 <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
-                                    Project Profile in {pmChat.chatName}
+                                    Project Profile - {pmChat.chatName}
                                 </Typography>
                             </Box>
                         </Box>
@@ -261,6 +272,38 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         : "N/A"}
                                                 </Typography>
                                             </Stack>
+
+                                            <Box
+                                                className="custom-scrollbar"
+                                                sx={{ maxHeight: "300px", overflow: "auto" }}
+                                            >
+                                                <FormControl>
+                                                    <FormLabel>Members</FormLabel>
+                                                    {projectProfile?.projectMembers.map(
+                                                        (member) => (
+                                                            <ListItemButton
+                                                                sx={{ ml: 2, my: 0.2 }}
+                                                            >
+                                                                <AvatarWithStatus
+                                                                    isYou={false}
+                                                                    setOpeningService={
+                                                                        setOpeningService
+                                                                    }
+                                                                    setCurrentMainChat={
+                                                                        setCurrentMainChat
+                                                                    }
+                                                                    avatarUser={member}
+                                                                    myself={myself}
+                                                                    setMyself={setMyself}
+                                                                    socket={socket}
+                                                                    showNameAndEmail={true}
+                                                                />
+                                                            </ListItemButton>
+                                                        )
+                                                    )}
+                                                </FormControl>
+                                            </Box>
+
                                             <Stack direction="column" spacing={2}>
                                                 <FormControl>
                                                     <FormLabel>Is Private</FormLabel>
@@ -282,9 +325,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     </Button>
                                                 </FormControl>
                                             </Stack>
+
                                             <Stack direction="column" spacing={2}>
                                                 <FormControl>
-                                                    <FormLabel>Created At</FormLabel>
+                                                    <FormLabel>Created Date</FormLabel>
                                                     <Button
                                                         variant="plain"
                                                         sx={{
