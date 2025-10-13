@@ -60,6 +60,10 @@ export const GMAvatar = (props: GMAvatarProps) => {
             <ModalGMProfile
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                setOpeningService={setOpeningService}
+                setCurrentMainChat={setCurrentMainChat}
                 gmChat={gmChat}
                 openModalGMProfile={openModalGMProfile}
                 setOpenModalGMProfile={setOpenModalGMProfile}

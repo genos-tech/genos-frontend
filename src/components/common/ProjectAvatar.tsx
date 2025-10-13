@@ -55,6 +55,9 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
             </Box>
 
             <ModalProjectProfile
+                socket={socket}
+                setMyself={setMyself}
+                setOpeningService={setOpeningService}
                 teamMemberProfiles={teamMemberProfiles}
                 myself={myself}
                 pmChat={pmChat}
@@ -63,6 +66,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                 funcSetAllChats={funcSetAllChats}
                 setAvatarUserId={setAvatarUserId}
                 setOpenUserProfile={setOpenUserProfile}
+                setCurrentMainChat={setCurrentMainChat}
             />
 
             {avatarUserId && (
