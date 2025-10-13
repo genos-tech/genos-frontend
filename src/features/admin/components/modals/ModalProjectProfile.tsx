@@ -115,8 +115,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         const projectProfile = await loadProjectProfile(myself.teamId, pmChat.chatId, accessToken);
         setProjectProfile(projectProfile);
     };
+
     useEffect(() => {
-        loadProjectProfileData();
+        if (openModalProjectProfile) {
+            loadProjectProfileData();
+        }
     }, [openModalProjectProfile]);
 
     return (

@@ -42,7 +42,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
-import { ProjectProps, TaskProps } from "../../../types/tasks";
+import { TaskProps } from "../../../types/tasks";
 import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 
@@ -407,21 +407,28 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                 </Box>
                                                             )}
                                                             {currentTask.id && (
-                                                                <Chip
-                                                                    key={`task-note-task-id${currentTask.id}`}
-                                                                    variant="outlined"
-                                                                    color="neutral"
-                                                                    sx={{
-                                                                        mt: "3px",
-                                                                        mx: "5px",
-                                                                        height: "30px",
-                                                                        borderRadius: "5px",
-                                                                        fontWeight: "bold",
-                                                                    }}
-                                                                    size="sm"
-                                                                >
-                                                                    ID: {currentTask.id}
-                                                                </Chip>
+                                                                <Tooltip title="Open Task">
+                                                                    <Chip
+                                                                        key={`task-note-task-id${currentTask.id}`}
+                                                                        variant="outlined"
+                                                                        color="neutral"
+                                                                        sx={{
+                                                                            mt: "3px",
+                                                                            mx: "5px",
+                                                                            height: "30px",
+                                                                            borderRadius: "5px",
+                                                                            fontWeight: "bold",
+                                                                        }}
+                                                                        size="sm"
+                                                                        onClick={() => {
+                                                                            setIsTaskVisibleInNote(
+                                                                                true
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        ID: {currentTask.id}
+                                                                    </Chip>
+                                                                </Tooltip>
                                                             )}
                                                             <Chip
                                                                 key={`task-title-${currentTask.id}`}
@@ -476,20 +483,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             )}
                                                         </>
                                                     )}
-
-                                                    <Tooltip title="Open Task">
-                                                        <IconButton
-                                                            size="sm"
-                                                            color="neutral"
-                                                            variant="plain"
-                                                            sx={{ mb: "5px" }}
-                                                            onClick={() => {
-                                                                setIsTaskVisibleInNote(true);
-                                                            }}
-                                                        >
-                                                            <OpenInNewIcon />
-                                                        </IconButton>
-                                                    </Tooltip>
                                                 </>
                                             )}
                                             <Dropdown>
