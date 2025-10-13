@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import { Tooltip, Box, IconButton } from "@mui/joy";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -6,6 +7,7 @@ import { useState } from "react";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 
 type BubbleDeleteButtonTypes = {
+    socket: Socket | null;
     accessToken: string | null;
     message: MessageProps | ThreadMessageProps;
     isThread: boolean;
@@ -16,6 +18,7 @@ type BubbleDeleteButtonTypes = {
 };
 export const BubbleDeleteButton = (props: BubbleDeleteButtonTypes) => {
     const {
+        socket,
         accessToken,
         message,
         isThread,
@@ -41,6 +44,7 @@ export const BubbleDeleteButton = (props: BubbleDeleteButtonTypes) => {
             </Tooltip>
 
             <ModalDeleteMessage
+                socket={socket}
                 openDeleteMessage={openDeleteMessage}
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 message={message}

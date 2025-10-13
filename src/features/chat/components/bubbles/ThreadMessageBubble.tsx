@@ -322,6 +322,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     {message.messageId !== 1 &&
                                         message.sender.userId === myself.userId && (
                                             <BubbleDeleteButton
+                                                socket={socket}
                                                 accessToken={accessToken}
                                                 message={message}
                                                 isThread={true}
@@ -430,6 +431,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                         message.sender.userId ===
                                                             myself.userId && (
                                                             <BubbleDeleteButton
+                                                                socket={socket}
                                                                 accessToken={accessToken}
                                                                 message={message}
                                                                 isThread={true}

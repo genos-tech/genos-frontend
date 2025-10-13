@@ -509,14 +509,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                                     <BubbleReplyButton replayHandler={replayHandler} />
 
-                                    {message.numReplies < 2 &&
-                                        message.sender.userId === myself.userId && (
-                                            <BubbleEditButton
-                                                message={message}
-                                                setIsInEdit={setIsInEdit}
-                                                setEditTargetMessage={setEditTargetMessage}
-                                            />
-                                        )}
+                                    {message.sender.userId === myself.userId && (
+                                        <BubbleEditButton
+                                            message={message}
+                                            setIsInEdit={setIsInEdit}
+                                            setEditTargetMessage={setEditTargetMessage}
+                                        />
+                                    )}
 
                                     {(chat.chatType === 3 || chat.chatType === 4) &&
                                         message.sender.isSystemUser === true && (
@@ -536,6 +535,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     {message.numReplies < 2 &&
                                         message.sender.userId === myself.userId && (
                                             <BubbleDeleteButton
+                                                socket={socket}
                                                 accessToken={accessToken}
                                                 message={message}
                                                 isThread={false}
@@ -667,15 +667,18 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                             />
                                                         )}
 
-                                                    {message.sender.userId === myself.userId && (
-                                                        <BubbleDeleteButton
-                                                            accessToken={accessToken}
-                                                            message={message}
-                                                            isThread={false}
-                                                            currentChat={chat}
-                                                            setCurrentChat={setCurrentMainChat}
-                                                        />
-                                                    )}
+                                                    {message.numReplies < 2 &&
+                                                        message.sender.userId ===
+                                                            myself.userId && (
+                                                            <BubbleDeleteButton
+                                                                socket={socket}
+                                                                accessToken={accessToken}
+                                                                message={message}
+                                                                isThread={false}
+                                                                currentChat={chat}
+                                                                setCurrentChat={setCurrentMainChat}
+                                                            />
+                                                        )}
                                                 </>
                                             )}
                                         </Stack>

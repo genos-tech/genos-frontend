@@ -1,3 +1,4 @@
+import { Socket } from "socket.io-client";
 import React, { useState } from "react";
 import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
 
@@ -8,6 +9,7 @@ import { STORES } from "../../../../db/conf";
 import { deleteThreadMessage } from "../../services/deleteThreadMessage";
 
 type Props = {
+    socket: Socket | null;
     openDeleteMessage: boolean;
     setOpenDeleteMessage: (value: boolean) => void;
     message: MessageProps | ThreadMessageProps;
@@ -20,6 +22,7 @@ type Props = {
 };
 
 export const ModalDeleteMessage: React.FC<Props> = ({
+    socket,
     openDeleteMessage,
     setOpenDeleteMessage,
     message,
@@ -35,7 +38,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     const handleDeleteMessage = async () => {
         if (message) {
             if (isThread) {
-                if (currentThreadChat && setCurrentThreadChat && message.threadId) {
+                if (socket && currentThreadChat && setCurrentThreadChat && message.threadId) {
                     // Delete message from backend
                     await deleteThreadMessage(
                         accessToken,
@@ -72,15 +75,25 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                         notMove: true,
                     });
 
+                    socket.emit("thread_message", {
+                        methodType: "DELETE",
+                        chatType: message.chatType,
+                        destCGId: message.chatId,
+                        threadId: message.threadId,
+                        messageIdForDelete: message.messageId,
+                    });
+
                     // Close modal
                     setOpenDeleteMessage(false);
                     setErrorMessage(null);
                 } else {
-                    console.error("currentThreadChat or setCurrentThreadChat is not defined");
+                    console.error(
+                        "socket or currentThreadChat or setCurrentThreadChat is not defined"
+                    );
                     setErrorMessage("Failed to delete message from thread");
                 }
             } else {
-                if (currentChat && setCurrentChat) {
+                if (socket && currentChat && setCurrentChat) {
                     // Delete message from backend
                     await deleteMessage(
                         accessToken,
@@ -116,11 +129,18 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                         notMove: true,
                     });
 
+                    socket.emit("message", {
+                        methodType: "DELETE",
+                        chatType: message.chatType,
+                        destCGId: message.chatId,
+                        messageIdForDelete: message.messageId,
+                    });
+
                     // Close modal
                     setOpenDeleteMessage(false);
                     setErrorMessage(null);
                 } else {
-                    console.error("currentChat or setCurrentChat is not defined");
+                    console.error("socket or currentChat or setCurrentChat is not defined");
                     setErrorMessage("Failed to delete message from chat");
                 }
             }
