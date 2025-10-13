@@ -16,5 +16,10 @@
         "./src/*"
       ]
     },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+  },
+  "scripts": {
+    "build": "vite build"
   }
 }
