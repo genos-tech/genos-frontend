@@ -283,13 +283,13 @@ export const Sidebar = (props: SidebarProps) => {
                         mb: 0,
                     }}
                 >
-                    <ListItem>
+                    {/* <ListItem>
                         <Tooltip title="Settings" placement="right-start">
                             <ListItemButton>
                                 <SettingsRoundedIcon sx={{ fontSize: 24 }} />
                             </ListItemButton>
                         </Tooltip>
-                    </ListItem>
+                    </ListItem> */}
 
                     <ListItem sx={{ mt: 1 }}>
                         <Tooltip title="Sign out" placement="right-start">

@@ -294,6 +294,23 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 </Button>
                                             </FormControl>
                                             <FormControl>
+                                                <FormLabel>User ID</FormLabel>
+                                                <Button
+                                                    variant="plain"
+                                                    sx={{
+                                                        justifyContent: "flex-start", // left align the content
+                                                    }}
+                                                    disabled={true}
+                                                >
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{ userSelect: "text" }}
+                                                    >
+                                                        {profileUser?.userId}
+                                                    </Typography>
+                                                </Button>
+                                            </FormControl>
+                                            <FormControl>
                                                 <FormLabel>Role</FormLabel>
                                                 <UserProfileRole
                                                     myself={myself}
