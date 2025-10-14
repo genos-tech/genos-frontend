@@ -36,7 +36,7 @@ import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 
 import { useMyself } from "./hooks/useAuth";
 import { useChatManagement } from "./hooks/useChatManagement";
-import { useInbox } from "./hooks/useInbox";
+import { useInboxManagement } from "./hooks/useInboxManagement";
 import { useProject } from "./hooks/useProject";
 
 // Import task and note management hooks
@@ -423,7 +423,7 @@ export const App = () => {
     ///////////////////////
     // Inbox Related
     ///////////////////////
-    const { inboxItems, unReadInboxItemCount, funcSetInboxItems } = useInbox();
+    const IM = useInboxManagement();
 
     ///////////////////////
     // Other Hooks
@@ -444,7 +444,7 @@ export const App = () => {
         setIsTaskCommentUpdated: setIsTaskCommentUpdated,
         isLoading: isLoading,
         funcSetActivityMessages: funcSetActivityMessages,
-        funcSetInboxItems: funcSetInboxItems,
+        funcSetInboxItems: IM.funcSetInboxItems,
         currentProject: currentProject,
         currentPreviewTaskId: currentPreviewTaskId,
         setIsTaskUpdatedBySomeone: setIsTaskUpdatedBySomeone,
@@ -513,7 +513,7 @@ export const App = () => {
 
     // Initialization Hooks
     useEffect(() => {
-        funcSetInboxItems();
+        IM.funcSetInboxItems();
         funcSetAllChats();
         funcSetFlaggedMessages();
         funcSetActivityMessages();
@@ -521,7 +521,7 @@ export const App = () => {
 
     useEffect(() => {
         if (isLoading === false) {
-            funcSetInboxItems();
+            IM.funcSetInboxItems();
             funcSetAllChats();
             funcSetFlaggedMessages();
             funcSetActivityMessages();
@@ -669,8 +669,8 @@ export const App = () => {
                         openingService={openingService}
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
-                        inboxItems={inboxItems}
-                        unReadInboxItemCount={unReadInboxItemCount}
+                        inboxItems={IM.inboxItems}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     />
                 ) : null}
@@ -702,7 +702,7 @@ export const App = () => {
                         funcSetAllChats={funcSetAllChats}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
-                        unReadInboxItemCount={unReadInboxItemCount}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                         unReadChatCounts={unReadChatCounts}
                         unReadActivityMessageCounts={unReadActivityMessageCounts}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
@@ -757,7 +757,7 @@ export const App = () => {
                         setOpeningService={setOpeningService}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
-                        unReadInboxItemCount={unReadInboxItemCount}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                         isTaskPreviewVisible={isTaskPreviewVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
@@ -816,7 +816,7 @@ export const App = () => {
                         setCurrentMainChat={setCurrentMainChat}
                         currentProject={currentProject}
                         allChats={allChats}
-                        unReadInboxItemCount={unReadInboxItemCount}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                         isCreatingTask={isCreatingTask}
                         setIsMainChatVisible={setIsMainChatVisible}

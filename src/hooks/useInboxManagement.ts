@@ -2,7 +2,15 @@ import { useState, useEffect } from "react";
 import { InboxItemProps } from "../types/common";
 import { popInboxItems } from "../features/inbox/services/popInboxItems";
 
-export const useInbox = () => {
+export interface InboxManagementState {
+    inboxItems: InboxItemProps[];
+    setInboxItems: (items: InboxItemProps[]) => void;
+    unReadInboxItemCount: number;
+    setUnReadInboxItemCount: (count: number) => void;
+    funcSetInboxItems: () => Promise<void>;
+}
+
+export const useInboxManagement = (): InboxManagementState => {
     const [inboxItems, setInboxItems] = useState<InboxItemProps[]>([]);
     const [unReadInboxItemCount, setUnReadInboxItemCount] = useState<number>(0);
 
