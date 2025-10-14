@@ -1,5 +1,5 @@
-import { Stack, Typography, IconButton, Button } from "@mui/joy";
 import AddIcon from "@mui/icons-material/Add";
+import { Button, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 export const PinnedDivider = () => {

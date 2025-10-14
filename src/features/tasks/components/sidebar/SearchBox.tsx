@@ -1,13 +1,13 @@
-import { alpha } from "@mui/system";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
-    ListItemContent,
     Autocomplete,
     AutocompleteOption,
-    CircularProgress,
     Chip,
+    CircularProgress,
+    ListItemContent,
 } from "@mui/joy";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 

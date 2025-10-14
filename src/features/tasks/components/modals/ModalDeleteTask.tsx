@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { TaskProps } from "../../../../types/tasks";
 

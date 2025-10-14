@@ -1,37 +1,32 @@
 import { useEffect } from "react";
-import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
+import { CssVarsProvider } from "@mui/joy/styles";
 
 // Import css
 import "./App.css";
 
 // Import worker
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
-
 // Import db
 import { initDB } from "./db/schema";
-
 // Import context
 import { useAuth } from "./context/AuthContext";
-
 // Import components
 import { InitialLoad } from "./components/utils/InitialLoad";
-
 // Import features
 import { ChatHome } from "./features/chat/chatHome";
-import { TaskHome } from "./features/tasks/taskHome";
-import { NoteHome } from "./features/notes/NoteHome";
 import { InboxHome } from "./features/inbox/inboxHome";
-
-// Import hooks
-import { useWebSocket } from "./hooks/common/useWebSocket";
+import { NoteHome } from "./features/notes/NoteHome";
+import { TaskHome } from "./features/tasks/taskHome";
+import { useChatManagement } from "./hooks/chats/useChatManagement";
+import { useMyself } from "./hooks/common/useAuth";
+import { useProjectManagement } from "./hooks/common/useProjectManagement";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { useTeamManagement } from "./hooks/common/useTeamManagement";
-import { useMyself } from "./hooks/common/useAuth";
 import { useUIStateManagement } from "./hooks/common/useUIStateManagement";
-import { useChatManagement } from "./hooks/chats/useChatManagement";
+// Import hooks
+import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
-import { useProjectManagement } from "./hooks/common/useProjectManagement";
 import { useNoteManagement } from "./hooks/notes/useNoteManagement";
 import { useTaskManagement } from "./hooks/tasks/useTaskManagement";
 

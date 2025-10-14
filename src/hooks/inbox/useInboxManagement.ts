@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { InboxItemProps } from "../../types/common";
+import { useEffect, useState } from "react";
+
 import { popInboxItems } from "../../features/inbox/services/popInboxItems";
+import { InboxItemProps } from "../../types/common";
 
 export interface InboxManagementState {
     inboxItems: InboxItemProps[];

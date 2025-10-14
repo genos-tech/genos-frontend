@@ -1,7 +1,7 @@
-import { Stack, IconButton } from "@mui/joy";
 import AddIcon from "@mui/icons-material/Add";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CheckIcon from "@mui/icons-material/Check";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { IconButton, Stack } from "@mui/joy";
 
 import { TaskProps } from "../../../../../types/tasks";
 

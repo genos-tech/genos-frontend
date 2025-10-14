@@ -1,8 +1,8 @@
+import { STORES } from "../db/conf";
+import { addData, clearStore } from "../db/crud";
 import { loadTeamMembers } from "../features/admin/services/loadTeamMembers";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
-import { STORES } from "../db/conf";
-import { clearStore, addData } from "../db/crud";
 
 self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;

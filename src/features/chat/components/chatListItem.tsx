@@ -1,36 +1,36 @@
 import * as React from "react";
 import { useState } from "react";
-import { Socket } from "socket.io-client";
+import ChecklistIcon from "@mui/icons-material/Checklist";
+import CircleIcon from "@mui/icons-material/Circle";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PushPinIcon from "@mui/icons-material/PushPin";
 import {
     Avatar,
+    Badge,
     Box,
-    Tooltip,
+    Chip,
+    IconButton,
     ListDivider,
     ListItem,
     Stack,
+    Tooltip,
     Typography,
-    IconButton,
-    Chip,
-    Badge,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import CircleIcon from "@mui/icons-material/Circle";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
-import ChecklistIcon from "@mui/icons-material/Checklist";
+import { Socket } from "socket.io-client";
 
-import { addChat } from "../services/addChat";
-import { popSpecificMessages } from "../services/popSpecificMessages";
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
+import { GMAvatar } from "../../../components/common/GMAvatar";
+import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { GMAvatar } from "../../../components/common/GMAvatar";
-import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { addChat } from "../services/addChat";
+import { popSpecificMessages } from "../services/popSpecificMessages";
 import { updatePinnedChats } from "../services/updatePinnedChats";
-import { useAuth } from "../../../context/AuthContext";
 
 type ChatListItemProps = ListItemButtonProps & {
     teamMemberProfiles: Record<string, UserProps>;

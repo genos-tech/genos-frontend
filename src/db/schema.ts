@@ -1,6 +1,7 @@
 // src/utils/indexedDB.ts
-import { openDB, IDBPDatabase } from "idb";
-import { DB_NAME, DB_VERSION, STORES, KEY_PATH, INDEX, INDEX_KEY } from "./conf";
+import { IDBPDatabase, openDB } from "idb";
+
+import { DB_NAME, DB_VERSION, INDEX, INDEX_KEY, KEY_PATH, STORES } from "./conf";
 
 export const initDB = async (): Promise<IDBPDatabase> => {
     return openDB(DB_NAME, DB_VERSION, {

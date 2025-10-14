@@ -1,4 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
+import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
+import { popAllChats } from "../../features/chat/services/popAllChats";
+import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
+import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
 import { UserProps } from "../../types/admin";
 import {
     ActivityMessageProps,
@@ -8,11 +14,6 @@ import {
     ThreadMessageProps,
     ThreadProps,
 } from "../../types/chat";
-import { popAllChats } from "../../features/chat/services/popAllChats";
-import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
-import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
-import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
-import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 export interface ChatManagementState {

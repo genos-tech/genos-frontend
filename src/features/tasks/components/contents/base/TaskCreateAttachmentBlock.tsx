@@ -1,12 +1,16 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Box, Typography, Card, CardContent, IconButton, Button, Stack } from "@mui/joy";
+import React, { useEffect, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import { Box, Button, Card, CardContent, IconButton, Stack, Typography } from "@mui/joy";
 
-import { AttachmentFileProps } from "../../../../../types/tasks";
-import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
-import { downloadFile } from "../../../../../utils/downloadUtils";
+import {
+    AttachmentFileProps,
+    FileProps,
+    ImageSizeProps,
+    TaskProps,
+} from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
+import { downloadFile } from "../../../../../utils/downloadUtils";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;

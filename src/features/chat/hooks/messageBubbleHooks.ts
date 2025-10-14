@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
+
 import { ActivityMessageProps, AllChatProps } from "../../../types/chat";
 
 export const useScrollToBottomOnNewMessage = (

@@ -1,8 +1,8 @@
+import { STORES } from "../db/conf";
+import { clearStore, miniBatchInsert } from "../db/crud";
 import { loadSpecificTaskTmp } from "../features/tasks/services/loadSpecificTaskTmp";
 import { UserProps } from "../types/admin";
 import { TaskTableProps } from "../types/tasks";
-import { STORES } from "../db/conf";
-import { clearStore, miniBatchInsert } from "../db/crud";
 
 const BATCH_SIZE = 1000;
 

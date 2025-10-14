@@ -1,9 +1,10 @@
-import { Tooltip, Box, IconButton } from "@mui/joy";
-import FlagIcon from "@mui/icons-material/Flag";
-import { updateFlagMessage } from "../../services/updateFlagMessage";
-import { UserProps } from "../../../../types/admin";
 import { useEffect, useState } from "react";
-import { addMessage } from "../../services/addMessage";
+import FlagIcon from "@mui/icons-material/Flag";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+
+import { STORES } from "../../../../db/conf";
+import { deleteData } from "../../../../db/crud";
+import { UserProps } from "../../../../types/admin";
 import {
     ChatProps,
     FlaggedMessageProps,
@@ -12,8 +13,8 @@ import {
     ThreadProps,
 } from "../../../../types/chat";
 import { addFlaggedMessage } from "../../services/addFlaggedMessage";
-import { deleteData } from "../../../../db/crud";
-import { STORES } from "../../../../db/conf";
+import { addMessage } from "../../services/addMessage";
+import { updateFlagMessage } from "../../services/updateFlagMessage";
 import { getFirstLine } from "../../utils/common";
 
 type BubbleFlagButtonTypes = {

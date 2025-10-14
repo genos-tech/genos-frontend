@@ -1,9 +1,9 @@
-import { alpha } from "@mui/system";
-import { List, ListItem, ListItemContent, Typography, Chip } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { useColorScheme } from "@mui/joy/styles";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import { Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
+import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
 import { ProjectProps } from "../../../../../types/tasks";
 import { Toggler } from "../common";

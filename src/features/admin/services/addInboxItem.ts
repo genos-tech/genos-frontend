@@ -1,5 +1,7 @@
 import AddInboxItemWorker from "../../../workers/addInboxItemWorker.ts?worker";
-import {} from "../../../types/admin";
+
+import "../../../types/admin";
+
 import { InboxItemProps } from "../../../types/common";
 
 export const addInboxItem = (inboxItem: InboxItemProps): Promise<null> => {

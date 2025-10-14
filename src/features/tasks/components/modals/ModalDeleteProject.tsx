@@ -1,12 +1,12 @@
-import axios from "axios";
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import axios from "axios";
 
+import { useAuth } from "../../../../context/AuthContext";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
-import { useAuth } from "../../../../context/AuthContext";
-import { authApi } from "../../../../services/api";
-import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 
 const disableOpenDeleteModalParams = {
     flag: false,

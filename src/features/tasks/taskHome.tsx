@@ -1,53 +1,53 @@
-import { alpha } from "@mui/system";
 import { useEffect, useState } from "react";
-import { Socket } from "socket.io-client";
-import { useColorScheme } from "@mui/joy/styles";
+import AddIcon from "@mui/icons-material/Add";
+import CancelIcon from "@mui/icons-material/Cancel";
+import DeleteIcon from "@mui/icons-material/Delete";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import MoreVert from "@mui/icons-material/MoreVert";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
-    IconButton,
-    CssBaseline,
+    Autocomplete,
+    AutocompleteOption,
     Box,
-    Typography,
+    Chip,
+    CircularProgress,
+    CssBaseline,
     Dropdown,
+    IconButton,
+    ListItemContent,
     Menu,
     MenuButton,
     MenuItem,
-    Autocomplete,
-    AutocompleteOption,
-    CircularProgress,
-    ListItemContent,
-    Chip,
     Tooltip,
+    Typography,
 } from "@mui/joy";
-import { CssVarsProvider } from "@mui/joy/styles";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CancelIcon from "@mui/icons-material/Cancel";
-import MoreVert from "@mui/icons-material/MoreVert";
-import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Socket } from "socket.io-client";
 
-import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
-import { TaskDashboard } from "./components/dashboard//TaskDashboard";
-import { TaskPreview } from "./components/contents/TaskPreview";
-import { ProjectTaskTable } from "./components/table/TaskTable";
 import { CreateTaskForm } from "./components/contents/CreateTaskForm";
-import { loadTeamTaskList } from "./services/loadTaskSearchList";
-import { ModalCreateTag } from "./components/modals/ModalCreateTag";
+import { TaskPreview } from "./components/contents/TaskPreview";
+import { TaskDashboard } from "./components/dashboard//TaskDashboard";
 import { ModalCreateProject } from "./components/modals/ModalCreateProject";
-import { ModalJoinProject } from "./components/modals/ModalJoinProject";
+import { ModalCreateTag } from "./components/modals/ModalCreateTag";
 import { ModalDeleteProject } from "./components/modals/ModalDeleteProject";
+import { ModalJoinProject } from "./components/modals/ModalJoinProject";
+import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
+import { ProjectTaskTable } from "./components/table/TaskTable";
+import { loadTeamTaskList } from "./services/loadTaskSearchList";
+
+import { ProjectAvatar } from "../../components/common/ProjectAvatar";
 import { Sidebar } from "../../components/layout/sidebar";
+import { useAuth } from "../../context/AuthContext";
+import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps } from "../../types/chat";
-import { TaskType, TaskTypesProps, SearchTeamTasksResponse } from "../../types/tasks";
-import { useAuth } from "../../context/AuthContext";
+import { SearchTeamTasksResponse, TaskType, TaskTypesProps } from "../../types/tasks";
 import { TaskNoteMain } from "../notes/components/TaskNoteMain";
-import { ProjectAvatar } from "../../components/common/ProjectAvatar";
-import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
-import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
-import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
-import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },

@@ -1,42 +1,45 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
-import { useColorScheme } from "@mui/joy/styles";
-import { Box, IconButton, Tooltip } from "@mui/joy";
-import SendIcon from "@mui/icons-material/Send";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { useEffect, useRef, useState } from "react";
 import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import SendIcon from "@mui/icons-material/Send";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
+
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+
 import { codeBlock } from "@blocknote/code-block";
+import {
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    filterSuggestionItems,
+} from "@blocknote/core";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
     ColorStyleButton,
     CreateLinkButton,
+    DefaultReactSuggestionItem,
     FileCaptionButton,
     FileReplaceButton,
     FormattingToolbar,
-    useCreateBlockNote,
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
     getDefaultReactSlashMenuItems,
+    SuggestionMenuController,
+    useCreateBlockNote,
 } from "@blocknote/react";
-import {
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    defaultBlockSpecs,
-} from "@blocknote/core";
 
+import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
+import { UserProps } from "../../types/admin";
+import { ChatProps } from "../../types/chat";
+import { TaskCommentProps, TaskProps } from "../../types/tasks";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { EmojiPicker } from "../emojiInput/EmojiPicker";
-import { UserProps } from "../../types/admin";
-import { TaskCommentProps, TaskProps } from "../../types/tasks";
-import { ChatProps } from "../../types/chat";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
+
 import "../../App.css";
 
 type BnTaskCommentEditorProps = {

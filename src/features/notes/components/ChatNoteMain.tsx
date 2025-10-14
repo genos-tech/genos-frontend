@@ -1,51 +1,51 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
-import {
-    Box,
-    Stack,
-    Typography,
-    IconButton,
-    Button,
-    FormControl,
-    Input,
-    Menu,
-    MenuItem,
-    Breadcrumbs,
-    Tabs,
-    TabList,
-    TabPanel,
-    Tab,
-    Dropdown,
-    MenuButton,
-    Tooltip,
-} from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import CancelIcon from "@mui/icons-material/Cancel";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
-import CheckIcon from "@mui/icons-material/Check";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import CancelIcon from "@mui/icons-material/Cancel";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import {
+    Box,
+    Breadcrumbs,
+    Button,
+    Dropdown,
+    FormControl,
+    IconButton,
+    Input,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Stack,
+    Tab,
+    TabList,
+    TabPanel,
+    Tabs,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../types/chat";
 import { BnChatNoteEditor } from "../../../components/blockNote/bnChatNoteEditor";
-import { ChatNoteProps } from "../../../types/notes";
-import { sendUpdatedChatNote } from "../services/sendUpdatedChatNote";
-import { useAuth } from "../../../context/AuthContext";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { addNote } from "../services/addNote";
-import { ModalDeleteChatNote } from "../modals/ModalDeleteChatNote";
-import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
-import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { UserProps } from "../../../types/admin";
+import { AllChatProps, ChatProps } from "../../../types/chat";
+import { ChatNoteProps } from "../../../types/notes";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { ModalDeleteChatNote } from "../modals/ModalDeleteChatNote";
+import { addNote } from "../services/addNote";
+import { sendUpdatedChatNote } from "../services/sendUpdatedChatNote";
+import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 type ChatNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;

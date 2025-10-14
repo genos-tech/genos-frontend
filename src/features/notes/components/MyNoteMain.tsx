@@ -1,44 +1,44 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
-import {
-    Box,
-    Stack,
-    Typography,
-    Tooltip,
-    IconButton,
-    Button,
-    FormControl,
-    Input,
-    Menu,
-    MenuItem,
-    Breadcrumbs,
-    Tabs,
-    TabList,
-    TabPanel,
-    Tab,
-    Dropdown,
-    MenuButton,
-} from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import WindowIcon from "@mui/icons-material/Window";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
-import CheckIcon from "@mui/icons-material/Check";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
+import WindowIcon from "@mui/icons-material/Window";
+import {
+    Box,
+    Breadcrumbs,
+    Button,
+    Dropdown,
+    FormControl,
+    IconButton,
+    Input,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Stack,
+    Tab,
+    TabList,
+    TabPanel,
+    Tabs,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
+import { Socket } from "socket.io-client";
 
+import { BnMyNoteEditor } from "../../../components/blockNote/bnMyNoteEditor";
+import { useAuth } from "../../../context/AuthContext";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
-import { BnMyNoteEditor } from "../../../components/blockNote/bnMyNoteEditor";
 import { MyNoteProps } from "../../../types/notes";
-import { sendUpdatedMyNote } from "../services/sendUpdatedMyNote";
-import { useAuth } from "../../../context/AuthContext";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { addNote } from "../services/addNote";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
-import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { addNote } from "../services/addNote";
+import { sendUpdatedMyNote } from "../services/sendUpdatedMyNote";
 
 type MyNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;

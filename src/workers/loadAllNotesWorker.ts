@@ -1,10 +1,10 @@
-import { loadAllMyNotes } from "../features/notes/services/loadAllMyNotes";
-import { UserProps } from "../types/admin";
 import { STORES } from "../db/conf";
 import { clearStore, miniBatchInsert } from "../db/crud";
-import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../types/notes";
-import { loadAllTaskNotes } from "../features/notes/services/loadAllTaskNotes";
 import { loadAllChatNotes } from "../features/notes/services/loadAllChatNotes";
+import { loadAllMyNotes } from "../features/notes/services/loadAllMyNotes";
+import { loadAllTaskNotes } from "../features/notes/services/loadAllTaskNotes";
+import { UserProps } from "../types/admin";
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../types/notes";
 
 const BATCH_SIZE = 1000;
 

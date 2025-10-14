@@ -1,61 +1,65 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
-import { Box, Tooltip, ModalDialog, Modal, IconButton } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useState } from "react";
+import { codeBlock } from "@blocknote/code-block";
 import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
-import { codeBlock } from "@blocknote/code-block";
+import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
+
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+
 import {
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    ColorStyleButton,
-    CreateLinkButton,
-    FileCaptionButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    TextAlignButton,
-    FormattingToolbarController,
-    useCreateBlockNote,
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
-    getDefaultReactSlashMenuItems,
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    filterSuggestionItems,
+    PartialBlock,
+} from "@blocknote/core";
+import {
     AddCommentButton,
     AddTiptapCommentButton,
+    BasicTextStyleButton,
+    BlockColorsItem,
+    BlockTypeSelect,
+    BlockTypeSelectItem,
+    blockTypeSelectItems,
+    ColorStyleButton,
+    CreateLinkButton,
+    DefaultReactSuggestionItem,
+    DragHandleMenu,
+    DragHandleMenuProps,
+    FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
     FilePreviewButton,
     FileRenameButton,
-    TableCellMergeButton,
-    blockTypeSelectItems,
-    BlockTypeSelectItem,
+    FileReplaceButton,
+    FormattingToolbar,
+    FormattingToolbarController,
+    getDefaultReactSlashMenuItems,
     GridSuggestionMenuController,
+    RemoveBlockItem,
     SideMenu,
     SideMenuController,
-    BlockColorsItem,
-    DragHandleMenu,
-    DragHandleMenuProps,
-    RemoveBlockItem,
+    SuggestionMenuController,
+    TableCellMergeButton,
+    TextAlignButton,
+    useCreateBlockNote,
 } from "@blocknote/react";
-import {
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    defaultBlockSpecs,
-    PartialBlock,
-} from "@blocknote/core";
-import { RiAlertFill } from "react-icons/ri";
 import DownloadIcon from "@mui/icons-material/Download";
+import { RiAlertFill } from "react-icons/ri";
 
-import { Alert } from "./sub/Alert";
-import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { Alert } from "./sub/Alert";
+import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
+
 import "../../App.css";
-import { MyNoteProps } from "../../types/notes";
+
 import { useAuth } from "../../context/AuthContext";
+import { MyNoteProps } from "../../types/notes";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 

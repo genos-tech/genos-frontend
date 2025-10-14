@@ -1,6 +1,6 @@
+import TableChartIcon from "@mui/icons-material/TableChart";
 import { ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
-import TableChartIcon from "@mui/icons-material/TableChart";
 
 type TaskTableListItemProps = {
     taskTableVisible: boolean;

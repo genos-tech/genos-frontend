@@ -1,6 +1,6 @@
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import { ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
-import DashboardIcon from "@mui/icons-material/Dashboard";
 
 type DashboardListItemProps = {
     setTaskTableVisible: (value: boolean) => void;

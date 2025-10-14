@@ -1,48 +1,49 @@
-import { useState, useEffect, useRef } from "react";
-import { Socket } from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
+import { en } from "@blocknote/core/locales";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import SendIcon from "@mui/icons-material/Send";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import SendIcon from "@mui/icons-material/Send";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { en } from "@blocknote/core/locales";
+import { Socket } from "socket.io-client";
+
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { BlockNoteView } from "@blocknote/mantine";
+
 import { codeBlock } from "@blocknote/code-block";
+import {
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    filterSuggestionItems,
+} from "@blocknote/core";
+import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
     ColorStyleButton,
     CreateLinkButton,
+    DefaultReactSuggestionItem,
     FileCaptionButton,
+    FileDeleteButton,
+    FileDownloadButton,
+    FilePreviewButton,
+    FileRenameButton,
     FileReplaceButton,
     FormattingToolbar,
-    useCreateBlockNote,
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
     getDefaultReactSlashMenuItems,
-    FileRenameButton,
-    FilePreviewButton,
-    FileDownloadButton,
-    FileDeleteButton,
+    SuggestionMenuController,
+    useCreateBlockNote,
 } from "@blocknote/react";
-import {
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    defaultBlockSpecs,
-} from "@blocknote/core";
 
+import { useAuth } from "../../context/AuthContext";
+import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
+import { getFirstLine } from "../../features/chat/utils/common";
+import { UserProps } from "../../types/admin";
+import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { EmojiPicker } from "../emojiInput/EmojiPicker";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
-import { ThreadMessageProps, ThreadProps } from "../../types/chat";
-import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
-import { useAuth } from "../../context/AuthContext";
-import { getFirstLine } from "../../features/chat/utils/common";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;

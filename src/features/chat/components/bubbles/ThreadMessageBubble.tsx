@@ -1,23 +1,27 @@
-import { useState, useEffect } from "react";
-import { Box, Stack, Sheet } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { BubbleUnderBar } from "./BubbleUnderBar";
-import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { BubbleUserName } from "./BubbleUserName";
-import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
-import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
-import { UserProps } from "../../../../types/admin";
-import { ReactionProps } from "../../../../types/common";
-import { ChatProps } from "../../../../types/chat";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
-import { BubbleFlagButton } from "./BubbleFlagButton";
 import { useAuth } from "../../../../context/AuthContext";
+import { UserProps } from "../../../../types/admin";
+import {
+    ChatProps,
+    FlaggedMessageProps,
+    ThreadMessageProps,
+    ThreadProps,
+} from "../../../../types/chat";
+import { ReactionProps } from "../../../../types/common";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleDeleteButton } from "./BubbleDeleteButton";
+import { BubbleFlagButton } from "./BubbleFlagButton";
+import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
+import { BubbleUnderBar } from "./BubbleUnderBar";
+import { BubbleUserName } from "./BubbleUserName";
 
 type threadMessageBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;

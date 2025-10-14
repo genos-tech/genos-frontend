@@ -1,14 +1,15 @@
-import { Socket } from "socket.io-client";
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Button, Stack, Switch, Typography } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../types/admin";
-import { useAuth } from "../../context/AuthContext";
-import { ChatProps, ToDoFactProps } from "../../types/chat";
 import { TodoBubble } from "./components/bubbles/TodoBubble";
 import { createNewTodo } from "./services/createNewTodo";
 import { defaultTodoContent } from "./utils/defaults";
+
+import { useAuth } from "../../context/AuthContext";
+import { UserProps } from "../../types/admin";
+import { ChatProps, ToDoFactProps } from "../../types/chat";
 
 type ToDoPaneProps = {
     myself: UserProps;

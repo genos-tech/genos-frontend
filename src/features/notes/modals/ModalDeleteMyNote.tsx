@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { Modal, ModalDialog, Stack, Button, Typography, Alert } from "@mui/joy";
-
-import { MyNoteMetaProps, MyNoteProps } from "../../../types/notes";
-import { deleteMyNote } from "../services/deleteMyNote";
-import { deleteData } from "../../../db/crud";
-import { STORES } from "../../../db/conf";
-import { UserProps } from "../../../types/admin";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../context/AuthContext";
+import { STORES } from "../../../db/conf";
+import { deleteData } from "../../../db/crud";
+import { UserProps } from "../../../types/admin";
+import { MyNoteMetaProps, MyNoteProps } from "../../../types/notes";
+import { deleteMyNote } from "../services/deleteMyNote";
 
 type Props = {
     myself: UserProps;

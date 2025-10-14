@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { TaskMetaTreeNode, TaskMetaProps } from "../../types/tasks";
+
+import { TaskMetaProps, TaskMetaTreeNode } from "../../types/tasks";
 
 type initCurrentTaskChainProps = {
     taskMeta: TaskMetaProps[];

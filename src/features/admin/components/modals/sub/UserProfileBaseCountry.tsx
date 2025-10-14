@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+    Autocomplete,
+    AutocompleteOption,
+    Button,
+    Chip,
     ListItemContent,
     ListItemDecorator,
-    AutocompleteOption,
-    Autocomplete,
-    Typography,
     Stack,
-    Chip,
-    Button,
+    Typography,
 } from "@mui/joy";
 
-import { UserProps } from "../../../../../types/admin";
 import { useAuth } from "../../../../../context/AuthContext";
+import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
 const defaultCountry = {

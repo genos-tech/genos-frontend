@@ -1,15 +1,15 @@
-import { Socket } from "socket.io-client";
-import { alpha } from "@mui/system";
-import { useState, useEffect } from "react";
-import { Box, List, ListItem, Typography, Stack, Divider, Chip, ListItemButton } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Box, Chip, Divider, List, ListItem, ListItemButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
+import { Socket } from "socket.io-client";
 
-import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
+import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
-import { TaskProps, ProjectProps } from "../../../../../types/tasks";
 import { ChatProps } from "../../../../../types/chat";
-import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
+import { ProjectProps, TaskProps } from "../../../../../types/tasks";
+import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 
 type TaskSubTasksBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;

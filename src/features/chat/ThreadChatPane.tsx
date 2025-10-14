@@ -1,22 +1,23 @@
-import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack, Chip, Snackbar } from "@mui/joy";
-import { Socket } from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
+import { Box, Chip, Sheet, Snackbar, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
 import { ThreadMessageBubble } from "./components/bubbles/ThreadMessageBubble";
 import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader";
 import { useScrollToBottomOnChatChange } from "./hooks/messageBubbleHooks";
-import { handleFileDrop } from "./services/handleFileDrop";
-import { handleAtTop } from "./services/handleBubblePositionAction";
 import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
+import { handleAtTop } from "./services/handleBubblePositionAction";
+import { handleFileDrop } from "./services/handleFileDrop";
+
 import { BnThreadEditor } from "../../components/blockNote/bnThreadEditor";
 import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadEditor";
-import { UserProps } from "../../types/admin";
-import { ThreadProps, ChatProps, ThreadMessageProps, FlaggedMessageProps } from "../../types/chat";
-import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
-import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../types/admin";
+import { ChatProps, FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
+import { extractMMDD, extractYYYYMMDD, getTimeDiffSeconds } from "../../utils/dateUtils";
+import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;

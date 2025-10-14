@@ -1,5 +1,5 @@
 import { UserProps } from "../../../types/admin";
-import { MessageProps, ChatProps } from "../../../types/chat";
+import { ChatProps, MessageProps } from "../../../types/chat";
 
 export const defineNewChat = (
     chatId: number,

@@ -1,9 +1,9 @@
 import axios from "axios";
 
-import { authApi } from "../services/api";
-import { ActivityMessageProps } from "../types/chat";
-import { UserProps } from "../types/admin";
 import { addActivityMessage } from "../features/chat/services/addActivityMessage";
+import { authApi } from "../services/api";
+import { UserProps } from "../types/admin";
+import { ActivityMessageProps } from "../types/chat";
 
 self.onmessage = async (event) => {
     const accessToken: string = event.data.accessToken;

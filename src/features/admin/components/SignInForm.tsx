@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
     Alert,
     Box,
@@ -9,18 +8,19 @@ import {
     FormControl,
     FormLabel,
     GlobalStyles,
-    Link,
     Input,
-    Typography,
+    Link,
     Stack,
+    Typography,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../../../context/AuthContext";
+import { SignInResponse } from "../../../types/admin";
+import { signIn } from "../services/signin";
 import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
-import { signIn } from "../services/signin";
-import { SignInResponse } from "../../../types/admin";
-import { useAuth } from "../../../context/AuthContext";
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;

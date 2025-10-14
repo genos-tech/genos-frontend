@@ -1,31 +1,33 @@
-import { Socket } from "socket.io-client";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
+
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { BlockNoteView } from "@blocknote/mantine";
-import {
-    BasicTextStyleButton,
-    ColorStyleButton,
-    CreateLinkButton,
-    FormattingToolbarController,
-    FormattingToolbar,
-    useCreateBlockNote,
-    SuggestionMenuController,
-    BlockTypeSelect,
-} from "@blocknote/react";
+
 import {
     BlockNoteSchema,
+    defaultBlockSpecs,
     defaultInlineContentSpecs,
     filterSuggestionItems,
-    defaultBlockSpecs,
     PartialBlock,
 } from "@blocknote/core";
 import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
+import {
+    BasicTextStyleButton,
+    BlockTypeSelect,
+    ColorStyleButton,
+    CreateLinkButton,
+    FormattingToolbar,
+    FormattingToolbarController,
+    SuggestionMenuController,
+    useCreateBlockNote,
+} from "@blocknote/react";
 
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnTodoPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;

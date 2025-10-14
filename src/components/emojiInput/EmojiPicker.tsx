@@ -1,7 +1,7 @@
-import { useRef, useEffect } from "react";
-import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
+import { useColorScheme } from "@mui/joy/styles";
 
 type EmojiPickerProps = {
     editorPos?: any;

@@ -1,5 +1,5 @@
-import { Box, IconButton, Typography } from "@mui/joy";
 import BusinessIcon from "@mui/icons-material/Business";
+import { Box, IconButton, Typography } from "@mui/joy";
 
 import { ColorSchemeToggle } from "../../../components/layout/colorSchemeToggle";
 

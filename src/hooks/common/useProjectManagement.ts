@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
+import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
 import { UserProps } from "../../types/admin";
 import { ProjectProps } from "../../types/tasks";
-import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
-import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 
 export interface ProjectManagementState {
     teamProjects: ProjectProps[];

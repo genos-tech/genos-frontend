@@ -1,5 +1,6 @@
-import { Tooltip, Box, IconButton } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+
 import { ThreadMessageProps } from "../../../../types/chat";
 
 type BubbleThreadEditButtonTypes = {

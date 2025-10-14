@@ -1,25 +1,27 @@
-import { Socket } from "socket.io-client";
-import { Box, Modal, ModalDialog, IconButton, Tooltip } from "@mui/joy";
+import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
+
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+
+import { useState } from "react";
+import { codeBlock } from "@blocknote/code-block";
+import {
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    PartialBlock,
+} from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
-import {
-    PartialBlock,
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    defaultBlockSpecs,
-} from "@blocknote/core";
-import { codeBlock } from "@blocknote/code-block";
 import DownloadIcon from "@mui/icons-material/Download";
 
-import { CreateMentionSpec } from "./Mention";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
-import { useState } from "react";
-import { downloadFile } from "../../utils/downloadUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { downloadFile } from "../../utils/downloadUtils";
+import { CreateMentionSpec } from "./Mention";
 
 type BnChatPreviewProps = {
     teamMemberProfiles: Record<string, UserProps>;

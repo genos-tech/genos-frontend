@@ -1,6 +1,6 @@
+import AddIcon from "@mui/icons-material/Add";
 import { ListItem, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
-import AddIcon from "@mui/icons-material/Add";
 
 type NewProjectListItemProps = {
     setOpenCreateProject: (value: boolean) => void;

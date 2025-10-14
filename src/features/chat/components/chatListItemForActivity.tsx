@@ -1,32 +1,32 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { Socket } from "socket.io-client";
-import { Avatar, Box, Chip, Tooltip, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
-import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import GroupsIcon from "@mui/icons-material/Groups";
+import { useEffect, useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CircleIcon from "@mui/icons-material/Circle";
+import GroupsIcon from "@mui/icons-material/Groups";
+import { Avatar, Box, Chip, ListDivider, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
+import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../context/AuthContext";
-import { popSpecificMessages } from "../services/popSpecificMessages";
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
-import { UserProps } from "../../../types/admin";
-import { GroupedReactionProps, ReactionProps } from "../../../types/common";
-import { ProjectProps } from "../../../types/tasks";
-import {
-    ActivityMessageProps,
-    ChatProps,
-    ThreadProps,
-    ThreadMessageProps,
-    AllChatProps,
-} from "../../../types/chat";
-import { toggleMessagesPane } from "../../../utils";
-import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
-import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { useAuth } from "../../../context/AuthContext";
+import { UserProps } from "../../../types/admin";
+import {
+    ActivityMessageProps,
+    AllChatProps,
+    ChatProps,
+    ThreadMessageProps,
+    ThreadProps,
+} from "../../../types/chat";
+import { GroupedReactionProps, ReactionProps } from "../../../types/common";
+import { ProjectProps } from "../../../types/tasks";
+import { toggleMessagesPane } from "../../../utils";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
+import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
+import { popSpecificMessages } from "../services/popSpecificMessages";
 
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task}
 // activityType = {1: message or comment, 2: reaction, 3: mention}

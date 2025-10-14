@@ -1,16 +1,16 @@
-import { useState, useRef, useEffect } from "react";
-import { Box, Chip, Card, Button, Stack } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
+import { PartialBlock } from "@blocknote/core";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import { Box, Button, Card, Chip, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
-import DoneAllIcon from "@mui/icons-material/DoneAll";
 
+import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
+import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, ToDoFactProps } from "../../../../types/chat";
-import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { PartialBlock } from "@blocknote/core";
 import { updateTodo } from "../../services/updateTodo";
-import { useAuth } from "../../../../context/AuthContext";
 
 type TodoBubbleProps = {
     myself: UserProps;

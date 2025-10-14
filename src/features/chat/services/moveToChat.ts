@@ -1,14 +1,14 @@
 import { Socket } from "socket.io-client";
 
-import { defaultDmPartner } from "./constants";
-import { defineNewChat } from "../services/defineNewChat";
-import { checkKnownChat } from "../services/checkKnownChat";
+import { UserProps } from "../../../types/admin";
+import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addChat } from "../services/addChat";
 import { addMessage } from "../services/addMessage";
+import { checkKnownChat } from "../services/checkKnownChat";
+import { defineNewChat } from "../services/defineNewChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { UserProps } from "../../../types/admin";
-import { MessageProps, AllChatProps, ChatProps } from "../../../types/chat";
+import { defaultDmPartner } from "./constants";
 import { loadSpecificGM } from "./loadSpecificGM";
 
 export const moveToDMChat = async (

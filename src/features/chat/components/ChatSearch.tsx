@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
     AutocompleteOption,
@@ -7,17 +8,16 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CircularProgress from "@mui/joy/CircularProgress";
 import { Socket } from "socket.io-client";
 
-import { loadSearchList } from "../services/loadChatSearchList";
-import { moveToSelectedChat } from "../services/moveToChat";
-import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from "../../../types/admin";
-import { SearchListProps, AllChatProps, ChatProps } from "../../../types/chat";
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../components/common/GMAvatar";
+import { useAuth } from "../../../context/AuthContext";
+import { UserProps } from "../../../types/admin";
+import { AllChatProps, ChatProps, SearchListProps } from "../../../types/chat";
+import { loadSearchList } from "../services/loadChatSearchList";
+import { moveToSelectedChat } from "../services/moveToChat";
 
 type ChatSearchProps = {
     myself: UserProps;

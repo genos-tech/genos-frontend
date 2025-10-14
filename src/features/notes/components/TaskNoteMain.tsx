@@ -1,52 +1,52 @@
-import { alpha } from "@mui/system";
-import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
-import {
-    Box,
-    Stack,
-    Typography,
-    IconButton,
-    Button,
-    FormControl,
-    Input,
-    Menu,
-    MenuItem,
-    Breadcrumbs,
-    Tabs,
-    TabList,
-    TabPanel,
-    Tab,
-    Dropdown,
-    MenuButton,
-    Tooltip,
-    Chip,
-} from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
-import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import CancelIcon from "@mui/icons-material/Cancel";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
-import CheckIcon from "@mui/icons-material/Check";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import CancelIcon from "@mui/icons-material/Cancel";
+import {
+    Box,
+    Breadcrumbs,
+    Button,
+    Chip,
+    Dropdown,
+    FormControl,
+    IconButton,
+    Input,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Stack,
+    Tab,
+    TabList,
+    TabPanel,
+    Tabs,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../types/chat";
 import { BnTaskNoteEditor } from "../../../components/blockNote/bnTaskNoteEditor";
-import { TaskNoteProps } from "../../../types/notes";
-import { sendUpdatedTaskNote } from "../services/sendUpdatedTaskNote";
-import { useAuth } from "../../../context/AuthContext";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { addNote } from "../services/addNote";
-import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
-import { TaskProps } from "../../../types/tasks";
-import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { useAuth } from "../../../context/AuthContext";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../types/admin";
+import { AllChatProps, ChatProps } from "../../../types/chat";
+import { TaskNoteProps } from "../../../types/notes";
+import { TaskProps } from "../../../types/tasks";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
+import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
+import { addNote } from "../services/addNote";
+import { sendUpdatedTaskNote } from "../services/sendUpdatedTaskNote";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;

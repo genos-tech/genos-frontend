@@ -1,35 +1,35 @@
 import * as React from "react";
-import { Socket } from "socket.io-client";
-import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
-import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import GroupsIcon from "@mui/icons-material/Groups";
+import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagIcon from "@mui/icons-material/Flag";
+import GroupsIcon from "@mui/icons-material/Groups";
+import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
+import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../context/AuthContext";
-import { popSpecificMessages } from "../services/popSpecificMessages";
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
-import { UserProps } from "../../../types/admin";
-import { ProjectProps } from "../../../types/tasks";
-import {
-    ChatProps,
-    ThreadProps,
-    ThreadMessageProps,
-    AllChatProps,
-    FlaggedMessageProps,
-    MessageProps,
-} from "../../../types/chat";
-import { toggleMessagesPane } from "../../../utils";
-import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
-import { updateFlagMessage } from "../services/updateFlagMessage";
-import { useState } from "react";
-import { deleteData } from "../../../db/crud";
-import { STORES } from "../../../db/conf";
-import { addMessage } from "../services/addMessage";
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
+import { useAuth } from "../../../context/AuthContext";
+import { STORES } from "../../../db/conf";
+import { deleteData } from "../../../db/crud";
+import { UserProps } from "../../../types/admin";
+import {
+    AllChatProps,
+    ChatProps,
+    FlaggedMessageProps,
+    MessageProps,
+    ThreadMessageProps,
+    ThreadProps,
+} from "../../../types/chat";
+import { ProjectProps } from "../../../types/tasks";
+import { toggleMessagesPane } from "../../../utils";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { addMessage } from "../services/addMessage";
+import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
+import { popSpecificMessages } from "../services/popSpecificMessages";
+import { updateFlagMessage } from "../services/updateFlagMessage";
 
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task}
 // flaggedMessageType = {1: message or comment, 2: reaction, 3: mention}

@@ -1,13 +1,16 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+
 import "./index.css";
-import { App } from "./App";
-import { SignInForm } from "./features/admin/components/SignInForm";
-import { SignUpForm } from "./features/admin/components/SignUpForm";
+
+import { AuthProvider } from "./context/AuthContext";
 import { PageNotFound } from "./components/layout/pageNotFound";
 import { AuthGuard } from "./features/admin/authGuard";
-import { AuthProvider } from "./context/AuthContext";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
+import { SignInForm } from "./features/admin/components/SignInForm";
+import { SignUpForm } from "./features/admin/components/SignUpForm";
+
+import { App } from "./App";
 
 createRoot(document.getElementById("root")!).render(
     <AuthProvider>

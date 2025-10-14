@@ -1,4 +1,5 @@
 import { openDB } from "idb";
+
 import { DB_NAME, DB_VERSION, STORES } from "./conf";
 
 export async function getAllStores(dbName: string): Promise<string[]> {

@@ -1,11 +1,10 @@
-import { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
-import { Box, Avatar, Typography, Stack } from "@mui/joy";
+import { Avatar, Box, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { AllChatProps, ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { UserProps } from "../../types/admin";
-import { ThreadProps } from "../../types/chat";
+import { AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;

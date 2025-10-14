@@ -1,23 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import AddIcon from "@mui/icons-material/Add";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import HomeIcon from "@mui/icons-material/Home";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import ShareIcon from "@mui/icons-material/Share";
+import WindowIcon from "@mui/icons-material/Window";
 import {
-    GlobalStyles,
     Box,
     Divider,
+    GlobalStyles,
     List,
     ListItem,
     ListItemContent,
-    Typography,
     Sheet,
+    Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import HomeIcon from "@mui/icons-material/Home";
-import WindowIcon from "@mui/icons-material/Window";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import AddIcon from "@mui/icons-material/Add";
-import ShareIcon from "@mui/icons-material/Share";
 
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import {
     ChatNoteMetaTreeNode,
     MyNoteMetaTreeNode,
@@ -25,7 +26,6 @@ import {
 } from "../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { NoteTreeToggler } from "./sub/NoteTreeToggler";
-import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 
 type NoteSidebarProps = {
     NM: NoteManagementState;

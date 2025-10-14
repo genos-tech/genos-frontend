@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { TaskNoteMetaTreeNode, TaskNoteProps, TaskNoteMetaProps } from "../../types/notes";
+
+import { TaskNoteMetaProps, TaskNoteMetaTreeNode, TaskNoteProps } from "../../types/notes";
 
 function areArraysEqualByJSON<T>(arr1: T[], arr2: T[]): boolean {
     return JSON.stringify(arr1) === JSON.stringify(arr2);

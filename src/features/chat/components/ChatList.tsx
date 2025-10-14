@@ -1,23 +1,23 @@
-import { Socket } from "socket.io-client";
 import { useEffect, useRef, useState } from "react";
 import { List, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
+import { UserProps } from "../../../types/admin";
+import {
+    ActivityMessageProps,
+    AllChatProps,
+    ChatProps,
+    FlaggedMessageProps,
+    ThreadProps,
+} from "../../../types/chat";
+import { ProjectProps } from "../../../types/tasks";
 import {
     useScrollToBottomOnChatPaneChange,
     useScrollToBottomOnNewActivity,
 } from "../hooks/messageBubbleHooks";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForActivity } from "./chatListItemForActivity";
-import { UserProps } from "../../../types/admin";
-import { ProjectProps } from "../../../types/tasks";
-import {
-    ChatProps,
-    AllChatProps,
-    ActivityMessageProps,
-    ThreadProps,
-    FlaggedMessageProps,
-} from "../../../types/chat";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
 
 // Sort all chats by pinned status and then by TSLastMessage in desc

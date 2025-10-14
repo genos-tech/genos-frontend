@@ -1,28 +1,29 @@
-import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack, Chip, Alert, Snackbar } from "@mui/joy";
-import { Socket } from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Box, Chip, Sheet, Snackbar, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
 import { MessageBubble } from "./components/bubbles/MessageBubble";
 import { SubChatPaneHeader } from "./components/headers/SubChatPaneHeader";
 import { useScrollToBottomOnChatChange } from "./hooks/messageBubbleHooks";
-import { handleFileDrop } from "./services/handleFileDrop";
-import { handleAtTop } from "./services/handleBubblePositionAction";
 import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
+import { handleAtTop } from "./services/handleBubblePositionAction";
+import { handleFileDrop } from "./services/handleFileDrop";
+
 import { BnChatEditor } from "../../components/blockNote/bnChatEditor";
 import { BnUpdateEditor } from "../../components/blockNote/bnUpdateEditor";
+import { useAuth } from "../../context/AuthContext";
+import { addChat } from "../../features/chat/services/addChat";
 import { UserProps } from "../../types/admin";
 import {
     ChatProps,
-    ThreadProps,
-    MessageProps,
-    ToDoFactProps,
     FlaggedMessageProps,
+    MessageProps,
+    ThreadProps,
+    ToDoFactProps,
 } from "../../types/chat";
-import { TaskProps, ProjectProps } from "../../types/tasks";
-import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
-import { addChat } from "../../features/chat/services/addChat";
-import { useAuth } from "../../context/AuthContext";
+import { ProjectProps, TaskProps } from "../../types/tasks";
+import { extractMMDD, extractYYYYMMDD, getTimeDiffSeconds } from "../../utils/dateUtils";
 import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
 import { ToDoPane } from "./ToDoPane";
 

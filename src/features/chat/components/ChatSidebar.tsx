@@ -1,46 +1,46 @@
 import { useState } from "react";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import AddIcon from "@mui/icons-material/Add";
+import FlagIcon from "@mui/icons-material/Flag";
+import GroupsIcon from "@mui/icons-material/Groups";
+import MoreVert from "@mui/icons-material/MoreVert";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import PersonIcon from "@mui/icons-material/Person";
+import PushPinIcon from "@mui/icons-material/PushPin";
 import {
-    Stack,
-    Sheet,
-    IconButton,
-    Tooltip,
     Badge,
-    Typography,
-    Switch,
-    Dropdown,
-    Menu,
-    MenuItem,
-    MenuButton,
     Box,
+    Dropdown,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Sheet,
+    Stack,
+    Switch,
+    Tooltip,
+    Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import PersonIcon from "@mui/icons-material/Person";
-import GroupsIcon from "@mui/icons-material/Groups";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
-import MoreVert from "@mui/icons-material/MoreVert";
-import AddIcon from "@mui/icons-material/Add";
-import FlagIcon from "@mui/icons-material/Flag";
 
-import { ModalCreateGM } from "./modals/ModalCreateGM";
-import { ChatSearch } from "./ChatSearch";
-import { ChatList } from "./ChatList";
-import { ActivityDivider } from "./ChatSidebarDividers";
 import { UserProps } from "../../../types/admin";
-import { ProjectProps } from "../../../types/tasks";
 import {
-    MessageProps,
-    ChatProps,
-    AllChatProps,
     ActivityMessageProps,
-    ThreadProps,
+    AllChatProps,
+    ChatProps,
     FlaggedMessageProps,
+    MessageProps,
+    ThreadProps,
 } from "../../../types/chat";
+import { ProjectProps } from "../../../types/tasks";
 import { toggleMessagesPane } from "../../../utils";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { defaultChat } from "../utils/defaults";
+import { ChatList } from "./ChatList";
+import { ChatSearch } from "./ChatSearch";
+import { ActivityDivider } from "./ChatSidebarDividers";
+import { ModalCreateGM } from "./modals/ModalCreateGM";
 import { ModalJoinGM } from "./modals/ModalJoinGM";
 
 type ChatSidebarProps = {

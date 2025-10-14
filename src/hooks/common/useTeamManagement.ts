@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { FindTeamResponse, Team, UserProps } from "../../types/admin";
-import { popTeamMembers } from "../../features/chat/services/popTeamMembers";
+import { useEffect, useState } from "react";
+
 import { findTeam } from "../../features/admin/services/findTeam";
+import { popTeamMembers } from "../../features/chat/services/popTeamMembers";
+import { FindTeamResponse, Team, UserProps } from "../../types/admin";
 import PopTeamUsersWorker from "../../workers/popTeamUsersWorker.ts?worker";
 
 export interface TeamManagementState {

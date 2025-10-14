@@ -1,4 +1,4 @@
-import { TaskStatusProps, TaskPriorityProps, TaskEffortLevelProps } from "../../../types/tasks";
+import { TaskEffortLevelProps, TaskPriorityProps, TaskStatusProps } from "../../../types/tasks";
 
 export const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },

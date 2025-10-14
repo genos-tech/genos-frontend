@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
+import { Alert, Button, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
-import { UserProps } from "../../../../types/admin";
 import { useAuth } from "../../../../context/AuthContext";
+import { UserProps } from "../../../../types/admin";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

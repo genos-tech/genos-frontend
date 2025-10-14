@@ -1,30 +1,35 @@
-import { useState, useEffect, useRef } from "react";
-import { Socket } from "socket.io-client";
-import { Sheet, Divider } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
+import { Divider, Sheet } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { TaskTabBlock } from "./base/TaskTabBlock";
-import { TaskTitleBlock } from "./base/TaskTitleBlock";
-import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskBodyBlock } from "./base/TaskBodyBlock";
-import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
-import { TaskCommentEditorBlock } from "./base/TaskCommentEditorBlock";
-import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
-import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
-import { loadTaskComments } from "../../services/loadTaskComments";
-import {
-    updateTeamMembersOptions,
-    updateProjectOptions,
-    updateTagOptions,
-} from "../../services/updateTaskAutoCompleteOptions";
-import { UserProps } from "../../../../types/admin";
-import { AttachmentFileProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
-import { TaskProps, ProjectProps, TagListProps, TaskCommentProps } from "../../../../types/tasks";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
+import {
+    AttachmentFileProps,
+    ProjectProps,
+    TagListProps,
+    TaskCommentProps,
+    TaskProps,
+} from "../../../../types/tasks";
+import { loadTaskComments } from "../../services/loadTaskComments";
 import { loadTaskNotes } from "../../services/loadTaskNotes";
-import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
+import {
+    updateProjectOptions,
+    updateTagOptions,
+    updateTeamMembersOptions,
+} from "../../services/updateTaskAutoCompleteOptions";
+import { TaskBodyBlock } from "./base/TaskBodyBlock";
+import { TaskCommentEditorBlock } from "./base/TaskCommentEditorBlock";
+import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
+import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
+import { TaskTabBlock } from "./base/TaskTabBlock";
+import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
 type TaskPreviewProps = {
     teamMembers: UserProps[];

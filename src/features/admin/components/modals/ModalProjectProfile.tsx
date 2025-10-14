@@ -1,31 +1,31 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import EditIcon from "@mui/icons-material/Edit";
+import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import {
-    Modal,
-    ModalDialog,
     Avatar,
     Box,
+    Button,
+    Card,
     FormControl,
     FormLabel,
-    Button,
     IconButton,
-    Stack,
-    Typography,
-    Card,
-    Tooltip,
     ListItemButton,
+    Modal,
+    ModalDialog,
+    Stack,
+    Tooltip,
+    Typography,
 } from "@mui/joy";
-import EditIcon from "@mui/icons-material/Edit";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import { Socket } from "socket.io-client";
 
-import { UserProps, ProjectProfileProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
-import { useAuth } from "../../../../context/AuthContext";
-import { addChat } from "../../../chat/services/addChat";
-import { loadProjectProfile } from "../../../../services/loadProjectProfile";
-import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { useAuth } from "../../../../context/AuthContext";
+import { loadProjectProfile } from "../../../../services/loadProjectProfile";
+import { ProjectProfileProps, UserProps } from "../../../../types/admin";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { addChat } from "../../../chat/services/addChat";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;

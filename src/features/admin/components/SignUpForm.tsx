@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
     Alert,
     Box,
@@ -8,17 +7,18 @@ import {
     FormControl,
     FormLabel,
     GlobalStyles,
-    Link,
     Input,
-    Typography,
+    Link,
     Stack,
+    Typography,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 
+import { SignUpResponse } from "../../../types/admin";
+import { signUp } from "../services/signup";
 import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
-import { signUp } from "../services/signup";
-import { SignUpResponse } from "../../../types/admin";
 
 interface FormElements extends HTMLFormControlsCollection {
     userName: HTMLInputElement;

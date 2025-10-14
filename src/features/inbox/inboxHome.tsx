@@ -1,15 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-import { Box, List, Card, Stack, Typography, Badge, Chip } from "@mui/joy";
-import { Socket } from "socket.io-client";
-import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { useEffect, useRef, useState } from "react";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
+import { Badge, Box, Card, Chip, List, Stack, Typography } from "@mui/joy";
+import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
-import { useScrollToBottomOnNewItem } from "./hooks/inboxHooks";
-import { InboxItemProps } from "../../types/common";
-import { Team, UserProps } from "../../types/admin";
-import { Sidebar } from "../../components/layout/sidebar";
 import { InboxBubble } from "./components/InboxBubble";
+import { useScrollToBottomOnNewItem } from "./hooks/inboxHooks";
+
+import { Sidebar } from "../../components/layout/sidebar";
+import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
+import { InboxItemProps } from "../../types/common";
 
 type InboxHomeProps = {
     currentTeam: Team;

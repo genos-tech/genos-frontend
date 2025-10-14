@@ -1,9 +1,9 @@
 import * as React from "react";
-import { useColorScheme } from "@mui/joy/styles";
-import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import { Tooltip } from "@mui/joy";
+import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
+import { useColorScheme } from "@mui/joy/styles";
 
 export const ColorSchemeToggle = (props: IconButtonProps) => {
     const { onClick, sx, ...other } = props;

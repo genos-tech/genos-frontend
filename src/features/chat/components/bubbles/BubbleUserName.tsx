@@ -1,10 +1,10 @@
-import { alpha } from "@mui/system";
-import { Box, Typography, Stack, Chip } from "@mui/joy";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
 import { UserProps } from "../../../../types/admin";
-import { statuses } from "../../../tasks/utils/taskMeta";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
+import { statuses } from "../../../tasks/utils/taskMeta";
 
 type BubbleUserNameTypes = {
     isSimpleBubble: boolean;

@@ -1,13 +1,13 @@
-import { Socket } from "socket.io-client";
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../../types/admin";
 import { useAuth } from "../../../../context/AuthContext";
-import { ProjectProps } from "../../../../types/tasks";
 import { loadSpecificPM } from "../../../../features/chat/services/loadSpecificPM";
+import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { ProjectProps } from "../../../../types/tasks";
 import { addChat } from "../../../chat/services/addChat";
 import { addMessage } from "../../../chat/services/addMessage";
 

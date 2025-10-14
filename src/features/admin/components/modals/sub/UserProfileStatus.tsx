@@ -1,24 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
+import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import {
     Box,
-    IconButton,
-    Stack,
-    Typography,
+    Button,
     Chip,
     Dropdown,
+    IconButton,
     Input,
     Menu,
-    MenuItem,
     MenuButton,
-    Button,
+    MenuItem,
+    Stack,
+    Typography,
 } from "@mui/joy";
-import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 
 import { PulseDot } from "../../../../../components/utils/PulseDot";
+import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
-import { useAuth } from "../../../../../context/AuthContext";
 
 const templateCustomStatueOptions = [
     "🧠 In the Zone",

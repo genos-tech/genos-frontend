@@ -1,8 +1,8 @@
+import { STORES } from "../db/conf";
+import { clearStore, miniBatchInsert } from "../db/crud";
 import { loadInbox } from "../features/chat/services/loadInbox";
 import { UserProps } from "../types/admin";
 import { InboxItemProps } from "../types/common";
-import { STORES } from "../db/conf";
-import { clearStore, miniBatchInsert } from "../db/crud";
 
 const BATCH_SIZE = 1000;
 

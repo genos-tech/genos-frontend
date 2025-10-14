@@ -1,26 +1,26 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
-import { Sheet, Divider } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
+import { Divider, Sheet } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { TaskTitleBlock } from "./base/TaskTitleBlock";
-import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
-import { TaskCreateFooter } from "./base/TaskCreateFooter";
-import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
-import {
-    updateTeamMembersOptions,
-    updateProjectOptions,
-    updateTagOptions,
-} from "../../services/updateTaskAutoCompleteOptions";
 import { useAuth } from "../../../../context/AuthContext";
-import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
-import { UserProps } from "../../../../types/admin";
-import { TaskProps, TagListProps } from "../../../../types/tasks";
-import { ChatProps, ThreadProps } from "../../../../types/chat";
-import { createEmptyTask } from "../../services/createEmptyTask";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { ChatProps, ThreadProps } from "../../../../types/chat";
+import { TagListProps, TaskProps } from "../../../../types/tasks";
+import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
+import { createEmptyTask } from "../../services/createEmptyTask";
+import {
+    updateProjectOptions,
+    updateTagOptions,
+    updateTeamMembersOptions,
+} from "../../services/updateTaskAutoCompleteOptions";
+import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
+import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
+import { TaskCreateFooter } from "./base/TaskCreateFooter";
+import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
 const taskContentTemplate: PartialBlock[] = [
     {

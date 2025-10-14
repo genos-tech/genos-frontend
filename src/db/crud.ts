@@ -1,6 +1,7 @@
 import { openDB } from "idb";
+
+import { DB_NAME, DB_VERSION, INDEX, STORES } from "./conf";
 import { initDB } from "./schema";
-import { DB_NAME, DB_VERSION, STORES, INDEX } from "./conf";
 
 const _messageIdWithChatId = {
     Inbox: async () => {

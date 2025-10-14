@@ -1,8 +1,8 @@
-import { alpha } from "@mui/system";
-import { ListItemContent, Chip } from "@mui/joy";
+import { Chip, ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
 import { TagListProps, TaskProps } from "../../../../types/tasks";
 

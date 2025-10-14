@@ -1,32 +1,32 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Socket } from "socket.io-client";
+import AllInboxIcon from "@mui/icons-material/AllInbox";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
-    GlobalStyles,
     Avatar,
+    Badge,
     Box,
     Divider,
+    GlobalStyles,
     List,
     ListItem,
     Sheet,
-    Badge,
     Tooltip,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import AllInboxIcon from "@mui/icons-material/AllInbox";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import { useNavigate } from "react-router-dom";
+import { Socket } from "socket.io-client";
 
-import { ColorSchemeToggle } from "./colorSchemeToggle";
+import { PulseDot } from "../../components/utils/PulseDot";
 import { useAuth } from "../../context/AuthContext";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
 import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
-import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
-import { PulseDot } from "../../components/utils/PulseDot";
+import { ColorSchemeToggle } from "./colorSchemeToggle";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;

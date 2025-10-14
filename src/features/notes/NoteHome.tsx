@@ -1,21 +1,21 @@
-import { Socket } from "socket.io-client";
-import { CssVarsProvider } from "@mui/joy/styles";
 import { Box, CssBaseline, IconButton } from "@mui/joy";
-import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-import { useColorScheme } from "@mui/joy/styles";
+import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../types/admin";
-import { Sidebar } from "../../components/layout/sidebar";
-import { NoteSidebar } from "./components/NoteSidebar";
-import { MyNoteMain } from "./components/MyNoteMain";
 import { ChatNoteMain } from "./components/ChatNoteMain";
+import { MyNoteMain } from "./components/MyNoteMain";
+import { NoteSidebar } from "./components/NoteSidebar";
 import { TaskNoteMain } from "./components/TaskNoteMain";
-import { TaskPreview } from "../tasks/components/contents/TaskPreview";
-import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+
+import { Sidebar } from "../../components/layout/sidebar";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
-import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../types/admin";
+import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 
 type NoteHomeProps = {
     TEM: TeamManagementState;

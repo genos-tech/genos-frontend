@@ -1,5 +1,5 @@
-import { io, Socket } from "socket.io-client";
 import React, { useEffect, useState } from "react";
+import AcUnitIcon from "@mui/icons-material/AcUnit";
 import {
     Alert,
     Box,
@@ -8,35 +8,35 @@ import {
     FormControl,
     FormLabel,
     GlobalStyles,
+    Input,
     Link,
     List,
-    ListItemDecorator,
     ListItemButton,
-    Input,
-    Typography,
+    ListItemDecorator,
     Stack,
+    Typography,
 } from "@mui/joy";
-import { useNavigate } from "react-router-dom";
 import { CssVarsProvider } from "@mui/joy/styles";
-import AcUnitIcon from "@mui/icons-material/AcUnit";
+import { useNavigate } from "react-router-dom";
+import { io, Socket } from "socket.io-client";
 
-import { AdminBackground } from "./Background";
-import { AdminHeader } from "./Header";
-import { createTeam } from "../services/createTeam";
-import { joinTeam } from "../services/joinTeam";
-import { findTeam } from "../services/findTeam";
-import { loadMyTeams } from "../services/loadMyTeams";
-import { createDMChat } from "../../chat/services/createDMChat";
-import { sendDMMessage } from "../../chat/services/sendDMMessage";
-import { sleepMilliSeconds } from "../../../utils/sleep";
 import { useAuth } from "../../../context/AuthContext";
+import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import {
-    Team,
     CreateDMResponse,
     CreateTeamResponse,
     FindTeamResponse,
+    Team,
 } from "../../../types/admin";
-import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
+import { sleepMilliSeconds } from "../../../utils/sleep";
+import { createDMChat } from "../../chat/services/createDMChat";
+import { sendDMMessage } from "../../chat/services/sendDMMessage";
+import { createTeam } from "../services/createTeam";
+import { findTeam } from "../services/findTeam";
+import { joinTeam } from "../services/joinTeam";
+import { loadMyTeams } from "../services/loadMyTeams";
+import { AdminBackground } from "./Background";
+import { AdminHeader } from "./Header";
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;

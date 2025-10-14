@@ -1,11 +1,11 @@
-import { Socket } from "socket.io-client";
 import { Box, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
 import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
+import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
 
 type TaskCommentEditorBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;

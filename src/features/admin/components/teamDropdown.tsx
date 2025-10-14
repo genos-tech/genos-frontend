@@ -1,17 +1,16 @@
-import { useState, useRef, useEffect } from "react";
-import { IconButton, Menu, MenuItem, Dropdown, Avatar, Tooltip, Box } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import { Avatar, Box, Dropdown, IconButton, Menu, MenuItem, Tooltip } from "@mui/joy";
 
-import { loadMyTeams } from "../services/loadMyTeams";
-import { joinTeam } from "../services/joinTeam";
+import { useAuth } from "../../../context/AuthContext";
+import { CreateDMResponse, Team, UserProps } from "../../../types/admin";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sendDMMessage } from "../../chat/services/sendDMMessage";
-import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from "../../../types/admin";
-import { Team, CreateDMResponse } from "../../../types/admin";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { joinTeam } from "../services/joinTeam";
+import { loadMyTeams } from "../services/loadMyTeams";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;

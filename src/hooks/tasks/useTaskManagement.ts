@@ -1,19 +1,20 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
+import { loadTaskMeta } from "../../features/notes/services/loadTaskMeta";
+import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
+import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { UserProps } from "../../types/admin";
 import {
     ProjectProps,
+    TaskMetaProps,
+    TaskMetaTreeNode,
     TaskProps,
     TaskTableProps,
-    TaskMetaTreeNode,
-    TaskMetaProps,
     TaskTypesProps,
 } from "../../types/tasks";
-import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
-import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
-import { initCurrentTaskChain } from "./sidebar";
-import { loadTaskMeta } from "../../features/notes/services/loadTaskMeta";
-import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
 import { getLocalCurrentDate, getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { initCurrentTaskChain } from "./sidebar";
 
 export interface TaskManagementState {
     // Task preview state

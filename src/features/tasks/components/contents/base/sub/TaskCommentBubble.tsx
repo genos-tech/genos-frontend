@@ -1,22 +1,22 @@
-import { Socket } from "socket.io-client";
-import { useEffect, useState, useRef } from "react";
-import { Box, Stack, Typography, Card, Avatar, Tooltip, IconButton } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
+import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPreview";
+import { AvatarWithStatus } from "../../../../../../components/common/avatarWithStatus";
+import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
+import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
 import { UserProps } from "../../../../../../types/admin";
-import { ReactionProps } from "../../../../../../types/common";
 import { ChatProps } from "../../../../../../types/chat";
+import { ReactionProps } from "../../../../../../types/common";
 import { TaskCommentProps } from "../../../../../../types/tasks";
 import {
-    extractYYYYMMDDHHMM,
     extractMMDDHHMMSSs,
+    extractYYYYMMDDHHMM,
     getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
-import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
-import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
-import { AvatarWithStatus } from "../../../../../../components/common/avatarWithStatus";
 
 type TaskCommentBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;

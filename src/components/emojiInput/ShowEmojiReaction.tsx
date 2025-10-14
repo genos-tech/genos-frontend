@@ -1,11 +1,11 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Box, Chip, Tooltip } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../types/common";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { MessageProps, ThreadMessageProps } from "../../types/chat";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();

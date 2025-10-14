@@ -1,23 +1,23 @@
 import React, { useState } from "react";
 import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    Input,
     Modal,
     ModalDialog,
-    Alert,
     Stack,
-    Button,
-    Input,
     Typography,
-    Checkbox,
-    Box,
 } from "@mui/joy";
 
-import { signUp } from "../../../admin/services/signup";
-import { joinTeam } from "../../../admin/services/joinTeam";
-import { UserProps, SignUpResponse } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
-import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { SignUpResponse, UserProps } from "../../../../types/admin";
+import { ProjectProps } from "../../../../types/tasks";
+import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
+import { joinTeam } from "../../../admin/services/joinTeam";
+import { signUp } from "../../../admin/services/signup";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 

@@ -1,5 +1,7 @@
 import { useComponentsContext } from "@blocknote/react";
+
 import "@blocknote/mantine/style.css";
+
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { useColorScheme } from "@mui/joy/styles";
 

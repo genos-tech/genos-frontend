@@ -1,9 +1,9 @@
-import { Socket } from "socket.io-client";
-import { Tooltip, Box, IconButton } from "@mui/joy";
+import { useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
-import { useState } from "react";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
 
 type BubbleDeleteButtonTypes = {

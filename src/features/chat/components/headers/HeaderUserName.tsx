@@ -1,13 +1,13 @@
-import { Socket } from "socket.io-client";
-import { Box, Chip, Stack, Typography } from "@mui/joy";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { ChatProps } from "../../../../types/chat";
-import { PulseDot } from "../../../../components/utils/PulseDot";
-import { UserProps } from "../../../../types/admin";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { PulseDot } from "../../../../components/utils/PulseDot";
+import { UserProps } from "../../../../types/admin";
+import { ChatProps } from "../../../../types/chat";
 
 type HeaderUserNameProps = {
     teamMemberProfiles: Record<string, UserProps>;

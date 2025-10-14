@@ -1,43 +1,48 @@
-import { Socket } from "socket.io-client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
+import CommentIcon from "@mui/icons-material/Comment";
+import DownloadIcon from "@mui/icons-material/Download";
+import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import {
     Box,
-    Typography,
     IconButton,
-    Tabs,
-    TabList,
-    TabPanel,
-    ListItemDecorator,
-    Stack,
     List,
     ListItem,
     ListItemButton,
-    Tooltip,
-    ModalDialog,
+    ListItemDecorator,
     Modal,
+    ModalDialog,
+    Stack,
+    TabList,
+    TabPanel,
+    Tabs,
+    Tooltip,
+    Typography,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
-import CloseIcon from "@mui/icons-material/Close";
-import DownloadIcon from "@mui/icons-material/Download";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import AddIcon from "@mui/icons-material/Add";
-import FolderIcon from "@mui/icons-material/Folder";
-import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import CommentIcon from "@mui/icons-material/Comment";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
-import { AttachmentFileProps, TaskCommentProps } from "../../../../../types/tasks";
-import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
-import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
-import { downloadFile } from "../../../../../utils/downloadUtils";
 import { useAuth } from "../../../../../context/AuthContext";
-import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
-import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 import { TaskNoteProps } from "../../../../../types/notes";
+import {
+    AttachmentFileProps,
+    FileProps,
+    ImageSizeProps,
+    TaskCommentProps,
+    TaskProps,
+} from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
+import { downloadFile } from "../../../../../utils/downloadUtils";
+import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
+import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
+import { TaskCommentBubble } from "./sub/TaskCommentBubble";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;

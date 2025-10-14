@@ -1,10 +1,10 @@
-import { Socket } from "socket.io-client";
 import { Box, Button, Stack } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
 import { ShowEmojiReaction } from "../../../../components/emojiInput/ShowEmojiReaction";
 import { UserProps } from "../../../../types/admin";
-import { ReactionProps } from "../../../../types/common";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
+import { ReactionProps } from "../../../../types/common";
 
 type BubbleUnderBarTypes = {
     socket: Socket | null;

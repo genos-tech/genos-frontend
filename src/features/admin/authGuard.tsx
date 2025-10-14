@@ -1,6 +1,7 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+
+import { useAuth } from "../../context/AuthContext";
 
 export const AuthGuard = () => {
     const { accessToken } = useAuth();

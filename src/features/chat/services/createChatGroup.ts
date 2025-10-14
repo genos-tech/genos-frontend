@@ -1,15 +1,14 @@
 import { Socket } from "socket.io-client";
 
-import { defaultDmPartner } from "./constants";
-import { addChat } from "./addChat";
-import { addMessage } from "./addMessage";
-import { popSpecificMessages } from "./popSpecificMessages";
-import { createGMChat } from "./createGMChat";
 import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
-import { CreateGMResponse } from "../../../types/chat";
+import { AllChatProps, ChatProps, CreateGMResponse, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { emptyDmPartnerUser } from "../../../utils/defaultProps";
+import { addChat } from "./addChat";
+import { addMessage } from "./addMessage";
+import { defaultDmPartner } from "./constants";
+import { createGMChat } from "./createGMChat";
+import { popSpecificMessages } from "./popSpecificMessages";
 
 const createGroupMessage = [
     {

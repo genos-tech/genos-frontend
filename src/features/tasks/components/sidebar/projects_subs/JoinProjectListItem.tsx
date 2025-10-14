@@ -1,12 +1,12 @@
-import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import LoginIcon from "@mui/icons-material/Login";
+import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { ProjectProps } from "../../../../../types/tasks";
 import { Toggler } from "../common";
-import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 
 type JoinProjectListItemProps = {
     PM: ProjectManagementState;

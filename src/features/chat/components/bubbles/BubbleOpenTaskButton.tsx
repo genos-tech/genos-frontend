@@ -1,5 +1,6 @@
-import { Box, Tooltip, IconButton } from "@mui/joy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+
 import { MessageProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
 

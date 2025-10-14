@@ -1,6 +1,7 @@
 import { useEffect } from "react";
-import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
+
 import { UserProps } from "../../types/admin";
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
 
 type updateTabFromMyNoteUpdateProps = {
     myself: UserProps;

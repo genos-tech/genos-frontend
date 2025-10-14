@@ -1,6 +1,6 @@
-import { Socket } from "socket.io-client";
-import { Box, Stack } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
+import { Box, Stack } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
 import { UserProps } from "../../../../../types/admin";

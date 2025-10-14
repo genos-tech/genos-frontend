@@ -1,10 +1,10 @@
-import { Socket } from "socket.io-client";
 import axios from "axios";
+import { Socket } from "socket.io-client";
 
-import { taskMessageTemplate, taskThreadMessageTemplate } from "../utils/TaskMessageTemplate";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
+import { taskMessageTemplate, taskThreadMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;

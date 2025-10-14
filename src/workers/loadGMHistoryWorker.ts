@@ -1,9 +1,9 @@
+import { STORES } from "../db/conf";
+import { addData, clearStore, miniBatchInsert } from "../db/crud";
 import { defaultDmPartner } from "../features/chat/services/constants";
 import { loadGMHistory } from "../features/chat/services/loadGMHistory";
 import { UserProps } from "../types/admin";
-import { ChatProps, MessageProps, FlaggedMessageProps } from "../types/chat";
-import { STORES } from "../db/conf";
-import { clearStore, addData, miniBatchInsert } from "../db/crud";
+import { ChatProps, FlaggedMessageProps, MessageProps } from "../types/chat";
 
 const BATCH_SIZE = 1000;
 

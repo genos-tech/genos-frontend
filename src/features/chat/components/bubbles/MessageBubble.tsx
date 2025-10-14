@@ -1,33 +1,33 @@
-import { useState, useEffect } from "react";
-import { Box, Stack, Sheet } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
-import { BubbleEditButton } from "./BubbleEditButton";
-import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
-import { BubbleUserName } from "./BubbleUserName";
-import { BubbleReplyButton } from "./BubbleReplyButton";
-import { BubbleUnderBar } from "./BubbleUnderBar";
-import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
-import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
-import { UserProps } from "../../../../types/admin";
-import {
-    ChatProps,
-    MessageProps,
-    ThreadProps,
-    ThreadMessageProps,
-    FlaggedMessageProps,
-} from "../../../../types/chat";
-import { TaskProps, ProjectProps } from "../../../../types/tasks";
-import { ReactionProps } from "../../../../types/common";
-import { useAuth } from "../../../../context/AuthContext";
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
-import { BubbleFlagButton } from "./BubbleFlagButton";
+import { useAuth } from "../../../../context/AuthContext";
+import { UserProps } from "../../../../types/admin";
+import {
+    ChatProps,
+    FlaggedMessageProps,
+    MessageProps,
+    ThreadMessageProps,
+    ThreadProps,
+} from "../../../../types/chat";
+import { ReactionProps } from "../../../../types/common";
+import { ProjectProps, TaskProps } from "../../../../types/tasks";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
+import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
+import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleDeleteButton } from "./BubbleDeleteButton";
+import { BubbleEditButton } from "./BubbleEditButton";
+import { BubbleFlagButton } from "./BubbleFlagButton";
+import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
+import { BubbleReplyButton } from "./BubbleReplyButton";
+import { BubbleUnderBar } from "./BubbleUnderBar";
+import { BubbleUserName } from "./BubbleUserName";
 
 type MessageBubbleProps = {
     teamMemberProfiles: Record<string, UserProps>;

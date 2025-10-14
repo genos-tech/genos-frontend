@@ -1,11 +1,11 @@
-import { Socket } from "socket.io-client";
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { deleteMessage } from "../../services/deleteMessage";
-import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
-import { deleteData } from "../../../../db/crud";
 import { STORES } from "../../../../db/conf";
+import { deleteData } from "../../../../db/crud";
+import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { deleteMessage } from "../../services/deleteMessage";
 import { deleteThreadMessage } from "../../services/deleteThreadMessage";
 
 type Props = {

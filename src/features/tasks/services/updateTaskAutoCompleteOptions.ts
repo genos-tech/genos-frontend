@@ -1,8 +1,8 @@
-import { loadTeamProjects } from "../services/loadTeamProjects";
-import { loadProjectTags } from "../services/loadProjectTags";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps, TagListProps } from "../../../types/tasks";
 import LoadTeamMemberWorker from "../../../workers/loadTeamMembersWorker.ts?worker";
+import { loadProjectTags } from "../services/loadProjectTags";
+import { loadTeamProjects } from "../services/loadTeamProjects";
 
 // update team members options
 type UpdateTeamMembersOptions = {

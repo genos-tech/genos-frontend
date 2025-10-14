@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import Autocomplete from "@mui/joy/Autocomplete";
+import { useEffect, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import Autocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
 
+import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
 import { loadChatSubNotes } from "../../services/loadChatSubNotes";
-import { useAuth } from "../../../../context/AuthContext";
 
 type ACChatChildNotesProps = {
     myself: UserProps;

@@ -1,11 +1,11 @@
-import { Socket } from "socket.io-client";
-import { Stack, Typography, ListItemContent, AutocompleteOption } from "@mui/joy";
+import { AutocompleteOption, ListItemContent, Stack, Typography } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../../types/admin";
-import { TaskProps } from "../../../../types/tasks";
-import { ChatProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { UserProps } from "../../../../types/admin";
+import { ChatProps } from "../../../../types/chat";
+import { TaskProps } from "../../../../types/tasks";
 
 type ACTeamUsersProps = {
     myself: UserProps;

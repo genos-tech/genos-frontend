@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 
-import LoadInboxWorker from "../workers/loadInboxWorker.ts?worker";
+import { defaultChat } from "../features/chat/utils/defaults";
+import { UserProps } from "../types/admin";
+import { ChatProps, MessageProps } from "../types/chat";
 import LoadActivityHistoryWorker from "../workers/loadActivityHistoryWorker.ts?worker";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
+import LoadInboxWorker from "../workers/loadInboxWorker.ts?worker";
 import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
 import LoadTeamMemberWorker from "../workers/loadTeamMembersWorker.ts?worker";
 import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
 import PopSpecificMessagesWorker from "../workers/popSpecificMessagesWorker.ts?worker";
-import { UserProps } from "../types/admin";
-import { ChatProps, MessageProps } from "../types/chat";
-import { defaultChat } from "../features/chat/utils/defaults";
 
 export const loadInitialData = (
     myself: UserProps,

@@ -1,11 +1,11 @@
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../types/admin";
-import { TaskProps } from "../../../types/tasks";
 import { ChatProps, ThreadProps } from "../../../types/chat";
+import { TaskProps } from "../../../types/tasks";
 import {
-    taskMessageTemplate,
     taskCreatedThreadMessageTemplate,
+    taskMessageTemplate,
 } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 

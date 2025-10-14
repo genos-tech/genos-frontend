@@ -1,17 +1,17 @@
-import { alpha } from "@mui/system";
-import { useState, useEffect } from "react";
-import { Box, List, ListItem, ListItemContent, Typography, Chip } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ForwardIcon from "@mui/icons-material/Forward";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { ProjectProps, TagListProps, TaskMetaTreeNode } from "../../../../../types/tasks";
+import { areObjectsEqual } from "../../../../../utils/objectHandler";
 import { Toggler } from "../common";
 import { TaskTreeToggler } from "./TaskTreeToggler";
-import { areObjectsEqual } from "../../../../../utils/objectHandler";
-import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 
 type OngoingsListItemProps = {
     currentProjectId: number;
