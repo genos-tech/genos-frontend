@@ -259,7 +259,13 @@ export const useChatManagement = (
         }
     };
 
-    // Effects
+    // Initialization Hooks
+    useEffect(() => {
+        funcSetAllChats();
+        funcSetFlaggedMessages();
+        funcSetActivityMessages();
+    }, []);
+
     useEffect(() => {
         setUnReadChatCounts(countUnreadChats(allChats));
     }, [allChats]);
@@ -281,6 +287,26 @@ export const useChatManagement = (
             );
         }
     }, [unReadChatCounts, unReadActivityMessageCounts]);
+
+    useEffect(() => {
+        setTimeout(() => {
+            funcSetAllChats();
+            if (currentMainChat) {
+                if (currentMainChat.chatType === 1 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "1");
+                    localStorage.setItem("lastDMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 2 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "2");
+                    localStorage.setItem("lastGMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 3 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "3");
+                    localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
+                }
+            }
+        }, 500); // wait 500ms
+    }, [currentMainChat, currentSubChat]);
 
     return {
         // Visibility states

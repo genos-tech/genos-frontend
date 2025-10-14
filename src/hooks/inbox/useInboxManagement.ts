@@ -31,6 +31,10 @@ export const useInboxManagement = (): InboxManagementState => {
     };
 
     useEffect(() => {
+        funcSetInboxItems();
+    }, []);
+
+    useEffect(() => {
         setUnReadInboxItemCount(
             countUnReadInboxItem(inboxItems.filter((item) => item.itemType > 0))
         );

@@ -2,30 +2,36 @@ import { useEffect } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
 
+// Import css
 import "./App.css";
+
+// Import worker
+import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
+
+// Import db
+import { initDB } from "./db/schema";
+
+// Import context
+import { useAuth } from "./context/AuthContext";
+
+// Import components
+import { InitialLoad } from "./components/utils/InitialLoad";
+
+// Import features
 import { ChatHome } from "./features/chat/chatHome";
 import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
-import { InitialLoad } from "./components/utils/InitialLoad";
-
-import { useAuth } from "./context/AuthContext";
-import { webSocketSync } from "./hooks/common/useSyncManagement";
-import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
-import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
-import { TaskProps } from "./types/tasks";
-import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
 
+// Import hooks
 import { useWebSocket } from "./hooks/common/useWebSocket";
+import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { useTeamManagement } from "./hooks/common/useTeamManagement";
 import { useMyself } from "./hooks/common/useAuth";
 import { useUIStateManagement } from "./hooks/common/useUIStateManagement";
 import { useChatManagement } from "./hooks/chats/useChatManagement";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
 import { useProjectManagement } from "./hooks/common/useProjectManagement";
-
-// Import task and note management hooks
-// import { useTaskManagement } from "./hooks/useTaskManagement";
 import { useNoteManagement } from "./hooks/notes/useNoteManagement";
 import { useTaskManagement } from "./hooks/tasks/useTaskManagement";
 
@@ -33,37 +39,31 @@ export const App = () => {
     // Need to run if you delete IndexedDB database
     initDB();
 
-    ///////////////////////
     // Common
-    ///////////////////////
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself(accessToken);
     const UIM = useUIStateManagement();
 
-    ///////////////////////
-    // Team Related
-    ///////////////////////
+    // Team management
     const TEM = useTeamManagement(myself, accessToken);
 
     // WebSocket management
     const { socketInstance } = useWebSocket(accessToken, myself, TEM.currentTeamId);
 
-    ///////////////////////
-    // Project Related
-    ///////////////////////
     // Project management
     const PM = useProjectManagement(myself, accessToken, TEM.currentTeamId);
 
-    ///////////////////////
-    // Chat Related
-    ///////////////////////
     // Chat management
     const CM = useChatManagement(myself, accessToken);
 
-    ///////////////////////
-    // Task Related
-    ///////////////////////
+    // Task management
     const TM = useTaskManagement(myself, accessToken);
+
+    // Note management
+    const NM = useNoteManagement(myself, accessToken);
+
+    // Inbox management
+    const IM = useInboxManagement();
 
     useEffect(() => {
         const intervalMs: number = 1000;
@@ -96,53 +96,9 @@ export const App = () => {
     }, [PM.isNewProjectCreated]);
 
     useEffect(() => {
-        (async () => {
-            if (PM.currentProject && TM.currentPreviewTaskId !== -1) {
-                const loadedTask: TaskProps[] = await loadSpecificTask(
-                    myself,
-                    PM.currentProject.projectId,
-                    TM.currentPreviewTaskId,
-                    accessToken
-                );
-
-                // No need to update the current preview task when a new tag is created.
-                if (TM.isNewTagCreated === false && loadedTask.length > 0) {
-                    TM.setCurrentPreviewTask(loadedTask[0]);
-                }
-
-                TM.setIsTaskPreviewVisible(true);
-
-                // Add a new ongoing task
-                if (TM.isNewTaskCreated === true || TM.isTaskUpdatedBySomeone === true) {
-                    TM.setOngoingTasks([
-                        ...TM.ongoingTasks,
-                        {
-                            id: String(loadedTask[0].id) || null,
-                            title: loadedTask[0].title || "",
-                            priority: loadedTask[0].priority.priority || null,
-                            effortLevel: loadedTask[0].effortLevel.level || null,
-                            createdDate: loadedTask[0].createdDate || null,
-                            updatedAt: loadedTask[0].updatedAt || null,
-                            dueDate: loadedTask[0].dueDate || null,
-                            daysLeft: loadedTask[0].daysLeft || null,
-                            status: loadedTask[0].status.status || null,
-                            assigneeId: loadedTask[0].assignee.userId || null,
-                            assigneeEmail: loadedTask[0].assignee.userEmail || null,
-                            assigneeName: loadedTask[0].assignee.userName || null,
-                            assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
-                            parentTaskId: String(loadedTask[0].parentTaskId) || null,
-                            threadId: loadedTask[0].threadId || null,
-                            tags: loadedTask[0].tags || [],
-                            concatTags: loadedTask[0].concatTags || "//",
-                            teamId: myself.teamId || null,
-                            projectId: loadedTask[0].project?.projectId || null,
-                        },
-                    ]);
-                }
-                TM.setIsNewTaskCreated(false);
-                TM.setIsTaskUpdatedBySomeone(false);
-            }
-        })();
+        if (PM.currentProject) {
+            TM.loadUpdatedTask(PM.currentProject.projectId);
+        }
     }, [TM.currentPreviewTaskId, TM.isNewTaskCreated, TM.isTaskUpdatedBySomeone]);
 
     useEffect(() => {
@@ -180,19 +136,6 @@ export const App = () => {
         }
     }, [PM.currentProject]);
 
-    ///////////////////////
-    // Note Related
-    ///////////////////////
-    const NM = useNoteManagement(myself, accessToken);
-
-    ///////////////////////
-    // Inbox Related
-    ///////////////////////
-    const IM = useInboxManagement();
-
-    ///////////////////////
-    // Other Hooks
-    ///////////////////////
     // Common Hooks
     webSocketSync({
         accessToken: accessToken,
@@ -208,15 +151,13 @@ export const App = () => {
     });
 
     useEffect(() => {
-        // Reset note variables when the team changes
         NM.initializeNoteStates();
+        NM.setIsTaskNoteVisible(false);
 
         TM.setOngoingTasks([]);
         TM.setClosedTasks([]);
         TM.setDeletedTasks([]);
         TM.setIsTaskPreviewVisible(false);
-
-        NM.setIsTaskNoteVisible(false);
 
         CM.setIsThreadTaskVisible(false);
         CM.setIsChatNoteVisibleInChat(false);
@@ -269,17 +210,10 @@ export const App = () => {
         }
     }, [UIM.openingService]);
 
-    // Initialization Hooks
-    useEffect(() => {
-        IM.funcSetInboxItems();
-        CM.funcSetAllChats();
-        CM.funcSetFlaggedMessages();
-        CM.funcSetActivityMessages();
-    }, []);
-
     useEffect(() => {
         if (UIM.isLoading === false) {
             IM.funcSetInboxItems();
+
             CM.funcSetAllChats();
             CM.funcSetFlaggedMessages();
             CM.funcSetActivityMessages();
@@ -337,36 +271,6 @@ export const App = () => {
             };
         }
     }, [myself]);
-
-    // Chat Related Hooks
-    useEffect(() => {
-        setTimeout(() => {
-            CM.funcSetAllChats();
-            if (CM.currentMainChat) {
-                if (CM.currentMainChat.chatType === 1 && CM.currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "1");
-                    localStorage.setItem(
-                        "lastDMChatId",
-                        CM.currentMainChat.chatId.toString() || ""
-                    );
-                }
-                if (CM.currentMainChat.chatType === 2 && CM.currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "2");
-                    localStorage.setItem(
-                        "lastGMChatId",
-                        CM.currentMainChat.chatId.toString() || ""
-                    );
-                }
-                if (CM.currentMainChat.chatType === 3 && CM.currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "3");
-                    localStorage.setItem(
-                        "lastPMChatId",
-                        CM.currentMainChat.chatId.toString() || ""
-                    );
-                }
-            }
-        }, 500); // wait 500ms
-    }, [CM.currentMainChat, CM.currentSubChat]);
 
     // Task Related Hooks
     useEffect(() => {

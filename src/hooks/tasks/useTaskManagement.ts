@@ -86,6 +86,7 @@ export interface TaskManagementState {
 
     // Functions
     loadTask: (projectId: number, taskId: number) => Promise<void>;
+    loadUpdatedTask: (projectId: number) => Promise<void>;
     initializeTaskStates: () => void;
     getTaskMeta: () => Promise<void>;
     fetchProjectTasks: (projectId: number) => Promise<void>;
@@ -183,6 +184,54 @@ export const useTaskManagement = (
             }
         } catch (error) {
             console.error("Error loading task:", error);
+        }
+    };
+
+    const loadUpdatedTask = async (projectId: number) => {
+        if (projectId && currentPreviewTaskId !== -1) {
+            const loadedTask: TaskProps[] = await loadSpecificTask(
+                myself,
+                projectId,
+                currentPreviewTaskId,
+                accessToken
+            );
+
+            // No need to update the current preview task when a new tag is created.
+            if (isNewTagCreated === false && loadedTask.length > 0) {
+                setCurrentPreviewTask(loadedTask[0]);
+            }
+
+            setIsTaskPreviewVisible(true);
+
+            // Add a new ongoing task
+            if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
+                setOngoingTasks([
+                    ...ongoingTasks,
+                    {
+                        id: String(loadedTask[0].id) || null,
+                        title: loadedTask[0].title || "",
+                        priority: loadedTask[0].priority.priority || null,
+                        effortLevel: loadedTask[0].effortLevel.level || null,
+                        createdDate: loadedTask[0].createdDate || null,
+                        updatedAt: loadedTask[0].updatedAt || null,
+                        dueDate: loadedTask[0].dueDate || null,
+                        daysLeft: loadedTask[0].daysLeft || null,
+                        status: loadedTask[0].status.status || null,
+                        assigneeId: loadedTask[0].assignee.userId || null,
+                        assigneeEmail: loadedTask[0].assignee.userEmail || null,
+                        assigneeName: loadedTask[0].assignee.userName || null,
+                        assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
+                        parentTaskId: String(loadedTask[0].parentTaskId) || null,
+                        threadId: loadedTask[0].threadId || null,
+                        tags: loadedTask[0].tags || [],
+                        concatTags: loadedTask[0].concatTags || "//",
+                        teamId: myself.teamId || null,
+                        projectId: loadedTask[0].project?.projectId || null,
+                    },
+                ]);
+            }
+            setIsNewTaskCreated(false);
+            setIsTaskUpdatedBySomeone(false);
         }
     };
 
@@ -335,6 +384,7 @@ export const useTaskManagement = (
 
         // Functions
         loadTask,
+        loadUpdatedTask,
         initializeTaskStates,
         getTaskMeta,
         fetchProjectTasks,
