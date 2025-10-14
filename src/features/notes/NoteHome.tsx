@@ -36,7 +36,7 @@ type NoteHomeProps = {
         rootTaskId: number | null;
     };
     setIsMainChatVisible: (value: boolean) => void;
-    setIsChatNoteVisible: (value: boolean) => void;
+    setIsChatNoteVisibleInChat: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     setIsThreadVisible: (value: boolean) => void;
     isThreadVisible: boolean;
@@ -88,7 +88,7 @@ export const NoteHome = (props: NoteHomeProps) => {
         unReadChatAndActivityCounts,
         isCreatingTask,
         setIsMainChatVisible,
-        setIsChatNoteVisible,
+        setIsChatNoteVisibleInChat,
         setCurrentProject,
         currentProject,
         allChats,
@@ -262,7 +262,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setCurrentChat={setCurrentMainChat}
                                         isInChatPage={false}
                                         setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsChatNoteVisible={setIsChatNoteVisible}
+                                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                                         moveToSpecificChat={moveToSpecificChat}
                                         allChats={allChats}
                                         setCurrentMainChat={setCurrentMainChat}

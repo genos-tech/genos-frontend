@@ -72,7 +72,7 @@ type ChatNoteMainProps = {
     setCurrentPreviewTaskId: (id: number) => void;
     setCurrentProject: (project: any) => void;
     NM: NoteManagementState;
-    setIsChatNoteVisible: (value: boolean) => void;
+    setIsChatNoteVisibleInChat: (value: boolean) => void;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -93,7 +93,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setCurrentPreviewTaskId,
         setCurrentProject,
         NM,
-        setIsChatNoteVisible,
+        setIsChatNoteVisibleInChat,
     } = props;
 
     const { accessToken } = useAuth();
@@ -515,7 +515,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             variant="plain"
                                                             sx={{ mb: "5px" }}
                                                             onClick={() => {
-                                                                setIsChatNoteVisible(false);
+                                                                setIsChatNoteVisibleInChat(false);
 
                                                                 // Open main chat pane
                                                                 if (setIsMainChatVisible) {

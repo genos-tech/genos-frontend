@@ -32,8 +32,8 @@ type ThreadChatPaneHeaderProps = {
     setIsOpeningTask?: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
     currentPreviewTaskId: number;
-    isChatNoteVisible: boolean;
-    setIsChatNoteVisible: (value: boolean) => void;
+    isChatNoteVisibleInChat: boolean;
+    setIsChatNoteVisibleInChat: (value: boolean) => void;
     handleCreateNewChatNoteIfNotExist: (
         chatType: number,
         chatId: number,
@@ -56,8 +56,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setIsCreatingTask,
         currentPreviewTask,
         currentPreviewTaskId,
-        isChatNoteVisible,
-        setIsChatNoteVisible,
+        isChatNoteVisibleInChat,
+        setIsChatNoteVisibleInChat,
         handleCreateNewChatNoteIfNotExist,
     } = props;
     const { mode } = useColorScheme();
@@ -222,7 +222,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 true,
                                 thread.threadId
                             );
-                            setIsChatNoteVisible(true);
+                            setIsChatNoteVisibleInChat(true);
                             setIsMainChatVisible(false);
                             setIsThreadVisible(true);
                             setIsTaskPreviewVisible(false);

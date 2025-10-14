@@ -15,13 +15,13 @@ import { popSpecificMessages } from "../features/chat/services/popSpecificMessag
 import { loadSpecificThreadMessages } from "../features/chat/services/loadSpecificThreadMessages";
 import { getLocalCurrentTimestamp } from "../utils/dateUtils";
 
-export const useChat = (myself: UserProps, accessToken: string | null) => {
+export const useChatManagement = (myself: UserProps, accessToken: string | null) => {
     // Chat visibility states
     const [isMainChatVisible, setIsMainChatVisible] = useState(true);
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
     const [isThreadVisible, setIsThreadVisible] = useState(false);
     const [isThreadTaskVisible, setIsThreadTaskVisible] = useState(false);
-    const [isChatNoteVisible, setIsChatNoteVisible] = useState(false);
+    const [isChatNoteVisibleInChat, setIsChatNoteVisibleInChat] = useState(false);
 
     // Chat type state
     const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
@@ -173,7 +173,7 @@ export const useChat = (myself: UserProps, accessToken: string | null) => {
     ) => {
         setOpeningService(1); // move to chat
         setIsMainChatVisible(false);
-        setIsChatNoteVisible(openTaskNoteInChat);
+        setIsChatNoteVisibleInChat(openTaskNoteInChat);
         setIsThreadTaskVisible(openThreadTaskPreview);
 
         const targetChat: AllChatProps = allChats.filter(
@@ -238,8 +238,8 @@ export const useChat = (myself: UserProps, accessToken: string | null) => {
         setIsThreadVisible,
         isThreadTaskVisible,
         setIsThreadTaskVisible,
-        isChatNoteVisible,
-        setIsChatNoteVisible,
+        isChatNoteVisibleInChat,
+        setIsChatNoteVisibleInChat,
 
         // Chat type
         currentChatPaneType,

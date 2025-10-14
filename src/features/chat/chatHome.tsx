@@ -107,8 +107,8 @@ type ChatHomeProps = {
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
     NM: NoteManagementState;
     loadProjectsAndTasks: (value: number) => Promise<void>;
-    isChatNoteVisible: boolean;
-    setIsChatNoteVisible: (value: boolean) => void;
+    isChatNoteVisibleInChat: boolean;
+    setIsChatNoteVisibleInChat: (value: boolean) => void;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -173,8 +173,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         setFlaggedMessages,
         NM,
         loadProjectsAndTasks,
-        isChatNoteVisible,
-        setIsChatNoteVisible,
+        isChatNoteVisibleInChat,
+        setIsChatNoteVisibleInChat,
     } = props;
 
     // Common
@@ -556,8 +556,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setOpeningService={setOpeningService}
                                     setCurrentMainChat={setCurrentMainChat}
                                     currentPreviewTaskId={currentPreviewTaskId}
-                                    isChatNoteVisible={isChatNoteVisible}
-                                    setIsChatNoteVisible={setIsChatNoteVisible}
+                                    isChatNoteVisibleInChat={isChatNoteVisibleInChat}
+                                    setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                                     handleCreateNewChatNoteIfNotExist={
                                         NM.handleCreateNewChatNoteIfNotExist
                                     }
@@ -716,7 +716,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 )}
 
                 {/* Chat Note Pane */}
-                {isChatNoteVisible === true && (
+                {isChatNoteVisibleInChat === true && (
                     <>
                         <PanelResizeHandle
                             key="chat-note-resize-handle"
@@ -766,7 +766,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     allChats={allChats}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     setCurrentProject={setCurrentProject}
-                                    setIsChatNoteVisible={setIsChatNoteVisible}
+                                    setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                                     NM={NM}
                                 />
                             </Box>
@@ -779,7 +779,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     isThreadVisible === false &&
                     isCreatingTask.flag === false &&
                     isTaskPreviewVisible === false &&
-                    isChatNoteVisible === false && (
+                    isChatNoteVisibleInChat === false && (
                         <>
                             <PanelResizeHandle
                                 key="select-chat-resize-handle"

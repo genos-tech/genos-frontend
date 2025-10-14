@@ -35,7 +35,7 @@ import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 
 import { useMyself } from "./hooks/useAuth";
-import { useChat } from "./hooks/useChat";
+import { useChatManagement } from "./hooks/useChatManagement";
 import { useInbox } from "./hooks/useInbox";
 import { useProject } from "./hooks/useProject";
 
@@ -172,8 +172,8 @@ export const App = () => {
         setIsThreadVisible,
         isThreadTaskVisible,
         setIsThreadTaskVisible,
-        isChatNoteVisible,
-        setIsChatNoteVisible,
+        isChatNoteVisibleInChat,
+        setIsChatNoteVisibleInChat,
         currentChatPaneType,
         setCurrentChatPaneType,
         currentMainChat,
@@ -195,7 +195,9 @@ export const App = () => {
         funcSetFlaggedMessages,
         funcSetActivityMessages,
         moveToSpecificChat,
-    } = useChat(myself, accessToken);
+    } = useChatManagement(myself, accessToken);
+
+    const CM = useChatManagement(myself, accessToken);
 
     ///////////////////////
     // Task Related
@@ -458,7 +460,7 @@ export const App = () => {
         setIsTaskPreviewVisible(false);
         setIsThreadTaskVisible(false);
 
-        setIsChatNoteVisible(false);
+        setIsChatNoteVisibleInChat(false);
         NM.setIsTaskNoteVisible(false);
         setIsSubChatVisible(false);
         setIsThreadVisible(false);
@@ -480,7 +482,7 @@ export const App = () => {
 
             // Initialize the chat note visibility.
             if (NM.tabItems.filter((item) => item.noteType === 3).length === 0) {
-                setIsChatNoteVisible(false);
+                setIsChatNoteVisibleInChat(false);
             }
             // Init all notes
             NM.setCurrentMyNote(null);
@@ -735,8 +737,8 @@ export const App = () => {
                         setFlaggedMessages={setFlaggedMessages}
                         NM={NM}
                         loadProjectsAndTasks={loadProjectsAndTasks}
-                        isChatNoteVisible={isChatNoteVisible}
-                        setIsChatNoteVisible={setIsChatNoteVisible}
+                        isChatNoteVisibleInChat={isChatNoteVisibleInChat}
+                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                     />
                 ) : null}
 
@@ -818,7 +820,7 @@ export const App = () => {
                         unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                         isCreatingTask={isCreatingTask}
                         setIsMainChatVisible={setIsMainChatVisible}
-                        setIsChatNoteVisible={setIsChatNoteVisible}
+                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                         setCurrentProject={setCurrentProject}
                         currentPreviewTask={currentPreviewTask}
                         setIsThreadVisible={setIsThreadVisible}
