@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
     Alert,
     Box,
@@ -9,7 +10,6 @@ import {
     Input,
     Typography,
 } from "@mui/joy";
-import { useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";

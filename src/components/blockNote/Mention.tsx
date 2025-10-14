@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { createReactInlineContentSpec, DefaultReactSuggestionItem } from "@blocknote/react";
 import { Avatar, Box, Typography } from "@mui/joy";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";

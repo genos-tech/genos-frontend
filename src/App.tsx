@@ -1,16 +1,18 @@
 // Import css
 import "./App.css";
 
+import { useEffect } from "react";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { useEffect } from "react";
 
-// Import components
-import { InitialLoad } from "./components/utils/InitialLoad";
-// Import context
-import { useAuth } from "./context/AuthContext";
+// Import worker
+import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 // Import db
 import { initDB } from "./db/schema";
+// Import context
+import { useAuth } from "./context/AuthContext";
+// Import components
+import { InitialLoad } from "./components/utils/InitialLoad";
 // Import features
 import { ChatHome } from "./features/chat/chatHome";
 import { InboxHome } from "./features/inbox/inboxHome";
@@ -27,8 +29,6 @@ import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
 import { useNoteManagement } from "./hooks/notes/useNoteManagement";
 import { useTaskManagement } from "./hooks/tasks/useTaskManagement";
-// Import worker
-import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 
 export const App = () => {
     // Need to run if you delete IndexedDB database

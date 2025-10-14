@@ -16,6 +16,11 @@ export default tseslint.config(
         languageOptions: {
             ecmaVersion: 2020,
             globals: globals.browser,
+            parserOptions: {
+                ecmaFeatures: {
+                    jsx: true,
+                },
+            },
         },
         settings: {
             react: {
@@ -23,11 +28,11 @@ export default tseslint.config(
             },
         },
         plugins: {
-            react: react,
+            react,
             "react-hooks": reactHooks,
             "react-refresh": reactRefresh,
             "simple-import-sort": simpleImportSort,
-            prettier: prettier,
+            prettier,
         },
         rules: {
             ...reactHooks.configs.recommended.rules,
@@ -45,6 +50,9 @@ export default tseslint.config(
                     reservedFirst: true,
                 },
             ],
+            // Disable some React rules that conflict with TypeScript
+            "react/react-in-jsx-scope": "off",
+            "react/prop-types": "off",
             // Object property sorting
             "sort-keys": [
                 "error",

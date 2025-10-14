@@ -1,7 +1,7 @@
+import { useEffect, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import Autocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
-import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";

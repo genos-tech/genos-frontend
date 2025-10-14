@@ -1,6 +1,6 @@
+import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import { Avatar, Box } from "@mui/joy";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { ModalProjectProfile } from "../../features/admin/components/modals/ModalProjectProfile";

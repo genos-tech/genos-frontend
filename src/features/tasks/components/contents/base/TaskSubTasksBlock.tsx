@@ -1,7 +1,7 @@
+import { useEffect, useState } from "react";
 import { Box, Chip, Divider, List, ListItem, ListItemButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";

@@ -1,5 +1,5 @@
-import { Box, Chip, Tooltip } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Box, Chip, Tooltip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";

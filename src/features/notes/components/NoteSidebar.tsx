@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import HomeIcon from "@mui/icons-material/Home";
@@ -16,7 +17,6 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import { useEffect, useState } from "react";
 
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import {

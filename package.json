@@ -12,7 +12,7 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "format:fix": "prettier --write . && eslint . --fix",
-        "sort": "eslint . --fix --rule 'react/jsx-sort-props: error' --rule 'sort-keys: error'",
+        "sort": "eslint . --fix",
         "fix:all": "npm run format && npm run lint:fix",
         "preview": "vite preview"
     },

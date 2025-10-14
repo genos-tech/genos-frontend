@@ -1,5 +1,5 @@
-import { Box, Sheet, Stack } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";

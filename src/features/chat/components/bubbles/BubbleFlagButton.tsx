@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import FlagIcon from "@mui/icons-material/Flag";
 import { Box, IconButton, Tooltip } from "@mui/joy";
-import { useEffect, useState } from "react";
 
 import { STORES } from "../../../../db/conf";
 import { deleteData } from "../../../../db/crud";

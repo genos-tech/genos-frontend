@@ -1,3 +1,5 @@
+import * as React from "react";
+import { useState } from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import CircleIcon from "@mui/icons-material/Circle";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
@@ -16,8 +18,6 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import * as React from "react";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";

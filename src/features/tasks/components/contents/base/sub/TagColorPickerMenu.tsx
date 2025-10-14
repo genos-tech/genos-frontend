@@ -1,6 +1,6 @@
+import React, { useState } from "react";
 import PaletteIcon from "@mui/icons-material/Palette";
 import { IconButton, ListItemDecorator, Menu, MenuItem } from "@mui/joy";
-import React, { useState } from "react";
 
 import { TagColorOption } from "../../../../../../types/tasks";
 

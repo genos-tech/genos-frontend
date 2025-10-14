@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
     Alert,
     Box,
@@ -12,7 +13,6 @@ import {
     Typography,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { SignUpResponse } from "../../../types/admin";

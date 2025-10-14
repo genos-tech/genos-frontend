@@ -1,5 +1,5 @@
-import { Avatar, Box, Stack, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Avatar, Box, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";

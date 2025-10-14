@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { Box, Button, IconButton, Input, Snackbar, Stack, Typography } from "@mui/joy";
-import { useEffect, useState } from "react";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { TaskProps } from "../../../../../../types/tasks";

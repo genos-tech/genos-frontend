@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { Box, IconButton, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
+
+import { ChatSidebar } from "./components/ChatSidebar";
+import { loadTodo } from "./services/loadTodo";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
@@ -19,9 +22,7 @@ import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
-import { ChatSidebar } from "./components/ChatSidebar";
 import { MessagesPane } from "./MainChatPane";
-import { loadTodo } from "./services/loadTodo";
 import { MessagesSubPane } from "./SubChatPane";
 import { ThreadPane } from "./ThreadChatPane";
 

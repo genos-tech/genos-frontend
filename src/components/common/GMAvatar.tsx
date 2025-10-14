@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Avatar, Box } from "@mui/joy";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";

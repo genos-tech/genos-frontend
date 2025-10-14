@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import ForwardIcon from "@mui/icons-material/Forward";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -5,7 +6,6 @@ import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
-import { useEffect, useState } from "react";
 
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { ProjectProps, TagListProps, TaskMetaTreeNode } from "../../../../../types/tasks";
