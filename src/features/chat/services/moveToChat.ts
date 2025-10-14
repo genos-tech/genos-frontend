@@ -55,7 +55,10 @@ export const moveToGMChat = async (
 };
 
 const joinedMessage = [
-    { type: "paragraph", content: [{ type: "text", text: "Has joined", styles: {} }] },
+    {
+        type: "paragraph",
+        content: [{ type: "text", text: "Has joined", styles: {} }],
+    },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 

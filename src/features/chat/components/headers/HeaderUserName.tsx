@@ -42,8 +42,8 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                 ? true
                 : false
             : headerUser.isOnline === true && headerUser.isOfflineForced !== "true"
-            ? true
-            : false
+              ? true
+              : false
         : false;
 
     if (isYou === true) {

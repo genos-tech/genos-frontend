@@ -4,7 +4,7 @@ self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;
     const chatType: number = event.data.chatType;
 
-    var isKnown: boolean;
+    let isKnown: boolean;
     if (chatType === 1) {
         isKnown = await checkIsKnownDMChat(chatId);
     } else if (chatType === 2) {

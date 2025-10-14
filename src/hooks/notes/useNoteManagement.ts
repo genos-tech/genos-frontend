@@ -483,7 +483,10 @@ export const useNoteManagement = (
 
         try {
             if (noteType === 1) {
-                const note = await getData({ storeName: STORES.PERSONAL_NOTES, key: noteId });
+                const note = await getData({
+                    storeName: STORES.PERSONAL_NOTES,
+                    key: noteId,
+                });
                 if (note) {
                     if (note.noteType === 1) {
                         setCurrentMyNote(note);
@@ -504,7 +507,10 @@ export const useNoteManagement = (
                 }
                 setCurrentNoteType(1);
             } else if (noteType === 2) {
-                const note = await getData({ storeName: STORES.TASK_NOTES, key: noteId });
+                const note = await getData({
+                    storeName: STORES.TASK_NOTES,
+                    key: noteId,
+                });
                 if (note) {
                     if (note.noteType === 2) {
                         setCurrentTaskNote(note);
@@ -525,7 +531,10 @@ export const useNoteManagement = (
                 }
                 setCurrentNoteType(2);
             } else if (noteType === 3) {
-                const note = await getData({ storeName: STORES.CHAT_NOTES, key: noteId });
+                const note = await getData({
+                    storeName: STORES.CHAT_NOTES,
+                    key: noteId,
+                });
                 if (note) {
                     if (note.noteType === 3) {
                         setCurrentChatNote(note);

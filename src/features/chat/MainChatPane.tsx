@@ -171,7 +171,10 @@ export const MessagesPane = (props: MessagesPaneProps) => {
             updateReadStatusWorker.onmessage = (event) => {
                 if (event.data === "done") {
                     if (chat.lastReadMessageId < lastReadMessageId) {
-                        const updatedChat = { ...chat, lastReadMessageId: lastReadMessageId };
+                        const updatedChat = {
+                            ...chat,
+                            lastReadMessageId: lastReadMessageId,
+                        };
                         addChat(updatedChat, updatedChat.chatType);
                         funcSetAllChats();
                     } else {
@@ -349,15 +352,15 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                         currentMainChat.chatType === 4
                                             ? "95vh"
                                             : isSubChatVisible
-                                            ? calculateVirtuosoSubHight(
-                                                  currentWindowHeight,
-                                                  paneSizePCT,
-                                                  numEditorLines
-                                              )
-                                            : calculateVirtuosoHight(
-                                                  currentWindowHeight,
-                                                  numEditorLines
-                                              ),
+                                              ? calculateVirtuosoSubHight(
+                                                    currentWindowHeight,
+                                                    paneSizePCT,
+                                                    numEditorLines
+                                                )
+                                              : calculateVirtuosoHight(
+                                                    currentWindowHeight,
+                                                    numEditorLines
+                                                ),
                                 }}
                                 totalCount={chatMessages.length}
                                 initialTopMostItemIndex={chatMessages.length - 1}

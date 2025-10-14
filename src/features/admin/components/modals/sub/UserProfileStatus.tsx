@@ -118,9 +118,9 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                                             ? "#4caf50"
                                                             : "#999"
                                                         : profileUser?.isOnline === true &&
-                                                          profileUser?.isOfflineForced !== "true"
-                                                        ? "#4caf50"
-                                                        : "#999"
+                                                            profileUser?.isOfflineForced !== "true"
+                                                          ? "#4caf50"
+                                                          : "#999"
                                                 }
                                             />
                                         </Box>
@@ -136,9 +136,9 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                             ? "Online"
                                             : "Offline (Forced)"
                                         : profileUser?.isOnline === true &&
-                                          profileUser?.isOfflineForced !== "true"
-                                        ? "Online"
-                                        : "Offline"}
+                                            profileUser?.isOfflineForced !== "true"
+                                          ? "Online"
+                                          : "Offline"}
                                 </Chip>
                             </MenuButton>
                             {myself.userId === profileUser?.userId && (

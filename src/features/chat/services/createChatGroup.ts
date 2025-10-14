@@ -12,7 +12,10 @@ import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { emptyDmPartnerUser } from "../../../utils/defaultProps";
 
 const createGroupMessage = [
-    { type: "paragraph", content: [{ type: "text", text: "Has created", styles: {} }] },
+    {
+        type: "paragraph",
+        content: [{ type: "text", text: "Has created", styles: {} }],
+    },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 

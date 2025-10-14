@@ -181,7 +181,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
     };
 
     const pinChatHandler = async (chatId: number, chatType: number) => {
-        await updatePinnedChats(accessToken, myself, { chat_type: chatType, chat_id: chatId });
+        await updatePinnedChats(accessToken, myself, {
+            chat_type: chatType,
+            chat_id: chatId,
+        });
         await addChat({ ...chat, isPinned: !chat.isPinned }, chatType);
         funcSetAllChats();
     };

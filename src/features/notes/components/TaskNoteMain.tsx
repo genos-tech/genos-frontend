@@ -415,10 +415,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             >
                                                                 Title:{" "}
                                                                 {currentTask.title.length > 14
-                                                                    ? `${currentTask.title.slice(
-                                                                          0,
-                                                                          14
-                                                                      )}...`
+                                                                    ? `${currentTask.title.slice(0, 14)}...`
                                                                     : currentTask.title || "N/A"}
                                                             </Chip>
                                                             {currentTask.status.status && (

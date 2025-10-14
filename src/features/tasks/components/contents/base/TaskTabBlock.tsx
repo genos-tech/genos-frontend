@@ -300,7 +300,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
             } else if (attachmentFile.file) {
                 setUploadingFiles((prev) => [
                     ...prev,
-                    { attachment_id: attachmentFile.attachment_id, file: attachmentFile.file },
+                    {
+                        attachment_id: attachmentFile.attachment_id,
+                        file: attachmentFile.file,
+                    },
                 ]);
             }
         });

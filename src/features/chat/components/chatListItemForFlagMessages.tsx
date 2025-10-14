@@ -144,7 +144,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         );
 
         // Delete the flagged message from the indexedDB
-        deleteData({ storeName: STORES.FLAGGED_MESSAGES, key: flaggedMessage.flaggedMessageId });
+        deleteData({
+            storeName: STORES.FLAGGED_MESSAGES,
+            key: flaggedMessage.flaggedMessageId,
+        });
 
         popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType)
             .then((messages) => {

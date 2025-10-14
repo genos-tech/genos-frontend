@@ -16,8 +16,10 @@ self.onmessage = async (event) => {
     await clearStore(STORES.PM_THREAD_MESSAGES);
 
     // Load data from backend
-    const pmHistory: { chat_history: ChatProps[]; flagged_messages: FlaggedMessageProps[] } =
-        await loadPMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
+    const pmHistory: {
+        chat_history: ChatProps[];
+        flagged_messages: FlaggedMessageProps[];
+    } = await loadPMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
 
     for (let i = 0; i < pmHistory.chat_history.length; i += 1) {
         const pmChat: ChatProps = pmHistory.chat_history[i];

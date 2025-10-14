@@ -2,11 +2,7 @@ import axios from "axios";
 
 import { authApi } from "../../../services/api";
 
-export const loadInbox = async (
-    teamId: string,
-    userId: string,
-    accessToken: string | null
-) => {
+export const loadInbox = async (teamId: string, userId: string, accessToken: string | null) => {
     try {
         const api = authApi(accessToken);
         if (api) {

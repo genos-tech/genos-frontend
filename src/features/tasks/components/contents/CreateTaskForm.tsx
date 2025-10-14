@@ -36,13 +36,21 @@ const taskContentTemplate: PartialBlock[] = [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [{ text: "What needs to be done?", type: "text", styles: { code: true } }],
         children: [],
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -59,13 +67,27 @@ const taskContentTemplate: PartialBlock[] = [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
-        content: [{ text: "Why is this task needed?", type: "text", styles: { code: true } }],
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [
+            {
+                text: "Why is this task needed?",
+                type: "text",
+                styles: { code: true },
+            },
+        ],
         children: [],
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -82,13 +104,21 @@ const taskContentTemplate: PartialBlock[] = [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [{ text: "Any other sharing?", type: "text", styles: { code: true } }],
         children: [],
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -184,7 +214,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 chatId: currentMainChat?.chatId || null,
                 threadId: currentThreadChat?.threadId || null,
                 dueDate: getFormattedTodayDateStr(),
-                status: { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
+                status: {
+                    code: 0,
+                    status: "Open",
+                    color: "#0044c2",
+                    textColor: "white",
+                },
                 priority: { code: -1, priority: "", color: "", textColor: "" },
                 effortLevel: { code: -1, level: "", color: "", textColor: "" },
                 tags: [],

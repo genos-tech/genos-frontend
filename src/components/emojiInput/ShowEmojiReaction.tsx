@@ -258,7 +258,13 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                         }
                         color="neutral"
                         size="sm"
-                        sx={{ fontSize: "0.9rem", cursor: "pointer", px: 0.5, py: 0.5, mx: 0.2 }}
+                        sx={{
+                            fontSize: "0.9rem",
+                            cursor: "pointer",
+                            px: 0.5,
+                            py: 0.5,
+                            mx: 0.2,
+                        }}
                         onClick={() => handleAddReaction(emoji)}
                     >
                         {emoji}

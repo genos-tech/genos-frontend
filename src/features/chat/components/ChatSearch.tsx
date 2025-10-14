@@ -57,7 +57,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
 
     const onChangeHandler = async (value: any) => {
         if (value !== null && socket !== null) {
-            var _chatType: number;
+            let _chatType: number;
             if (value.type === "Group") {
                 _chatType = 2;
             } else {
@@ -152,8 +152,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             ? `${option.name} (You) - ${option.email}`
                             : `${option.name} - ${option.email}`
                         : option.isPrivate
-                        ? `🔒 ${option.name}`
-                        : option.name
+                          ? `🔒 ${option.name}`
+                          : option.name
                 }
                 renderOption={(props, option) => {
                     const gmChat: AllChatProps | undefined = allChats.find(
@@ -199,8 +199,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                                 ? `${option.name} (You) - ${option.email}`
                                                 : `${option.name} - ${option.email}`
                                             : option.isPrivate
-                                            ? `🔒 ${option.name}`
-                                            : option.name}
+                                              ? `🔒 ${option.name}`
+                                              : option.name}
                                     </Typography>
                                 </Stack>
                             </ListItemContent>

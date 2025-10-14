@@ -99,7 +99,10 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             throw new Error("Failed to upload user profile image.");
         } else {
             addChat(
-                { ...gmChat, profileImagePath: uploadProfileImageData.profile_image_file_name },
+                {
+                    ...gmChat,
+                    profileImagePath: uploadProfileImageData.profile_image_file_name,
+                },
                 gmChat.chatType
             );
             await funcSetAllChats();

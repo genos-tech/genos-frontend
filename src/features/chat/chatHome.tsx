@@ -108,7 +108,10 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [mainChatPanelSize, setMainChatPanelSize] = useState(50);
     const [subChatPanelSize, setSubChatPanelSize] = useState(50);
     const useWindowSize = () => {
-        const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+        const [size, setSize] = useState({
+            width: window.innerWidth,
+            height: window.innerHeight,
+        });
 
         useEffect(() => {
             const handleResize = () => {

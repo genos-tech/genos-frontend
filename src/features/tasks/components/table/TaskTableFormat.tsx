@@ -114,9 +114,9 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                             ? "#4caf50"
                                             : "#999"
                                         : params.row?.isOnline === true &&
-                                          params.row?.isOfflineForced === "true"
-                                        ? "#4caf50"
-                                        : "#999"
+                                            params.row?.isOfflineForced === "true"
+                                          ? "#4caf50"
+                                          : "#999"
                                 }
                             />
                         </Box>
@@ -171,7 +171,11 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                     <>
                         {params.value.map(
                             (
-                                tag: { tagName: string; tagColor: string; tagTextColor: string },
+                                tag: {
+                                    tagName: string;
+                                    tagColor: string;
+                                    tagTextColor: string;
+                                },
                                 index: number
                             ) => {
                                 return (

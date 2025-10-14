@@ -45,7 +45,10 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
             // Delete from backend
             await deleteMyNote(myself, currentMyNote.noteId, accessToken);
             // Delete from indexedDB
-            await deleteData({ storeName: STORES.PERSONAL_NOTES, key: currentMyNote.noteId });
+            await deleteData({
+                storeName: STORES.PERSONAL_NOTES,
+                key: currentMyNote.noteId,
+            });
             // Delete the deleted noteId from the meta object
             setMyNoteMeta(myNoteMeta.filter((note) => note.noteId !== currentMyNote.noteId));
             handleCloseTab(currentTabIndex, currentMyNote.noteId);

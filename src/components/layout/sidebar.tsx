@@ -153,7 +153,14 @@ export const Sidebar = (props: SidebarProps) => {
                     },
                 })}
             />
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: "center" }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    alignItems: "center",
+                }}
+            >
                 <TeamDropdown
                     currentTeam={currentTeam}
                     setCurrentTeam={setCurrentTeam}

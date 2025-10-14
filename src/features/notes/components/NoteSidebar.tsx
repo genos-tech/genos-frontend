@@ -343,7 +343,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             <ListItemContent>
                 <Typography
                     level="title-sm"
-                    sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                    sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                    }}
                 >
                     {taskTypeName}
                 </Typography>
@@ -375,12 +379,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     (noteType === 1
                         ? NM.currentMyNote?.noteId
                         : noteType === 2
-                        ? NM.currentTaskNote?.noteId
-                        : noteType === 3
-                        ? NM.currentChatNote?.noteId
-                        : noteType === 4
-                        ? 0 // TODO: This is for shared notes.
-                        : 0)
+                          ? NM.currentTaskNote?.noteId
+                          : noteType === 3
+                            ? NM.currentChatNote?.noteId
+                            : noteType === 4
+                              ? 0 // TODO: This is for shared notes.
+                              : 0)
                     ? true
                     : false
             }

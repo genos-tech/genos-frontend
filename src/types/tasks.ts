@@ -168,7 +168,6 @@ export type ImageSizeProps = {
     height: number;
 };
 
-
 export type TaskMetaProps = {
     taskId: number;
     parentTaskId: number | null;

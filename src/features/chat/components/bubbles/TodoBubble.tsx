@@ -51,7 +51,10 @@ export const TodoBubble = (props: TodoBubbleProps) => {
 
     // Send updated task to the backend when task is updated
     const sendUpdatedTodo = async () => {
-        const updatedTodo = await updateTodo(accessToken, myself, { ...todo, todoContent: body });
+        const updatedTodo = await updateTodo(accessToken, myself, {
+            ...todo,
+            todoContent: body,
+        });
         setTodos(todos.map((todo) => (todo.todoId === updatedTodo.todoId ? updatedTodo : todo)));
 
         // reset the bodyEdited

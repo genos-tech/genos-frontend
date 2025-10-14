@@ -112,7 +112,10 @@ export const JoinTeam = () => {
                             type: "paragraph",
                             content: [{ type: "text", text: "Has joined", styles: {} }],
                         },
-                        { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+                        {
+                            type: "paragraph",
+                            content: [{ type: "text", text: "", styles: {} }],
+                        },
                     ];
 
                     await sendDMMessage(

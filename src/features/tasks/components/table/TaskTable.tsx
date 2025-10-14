@@ -32,19 +32,25 @@ type FilterProps = {
 const predefinedStatusFilters: FilterProps[] = [
     {
         label: "Open",
-        filterModel: { items: [{ field: "status", operator: "equals", value: "Open" }] },
+        filterModel: {
+            items: [{ field: "status", operator: "equals", value: "Open" }],
+        },
         lightModeColor: "#002bff",
         darkModeColor: "#2b80ffff",
     },
     {
         label: "WIP",
-        filterModel: { items: [{ field: "status", operator: "equals", value: "WIP" }] },
+        filterModel: {
+            items: [{ field: "status", operator: "equals", value: "WIP" }],
+        },
         lightModeColor: "#ff8c00ff",
         darkModeColor: "#ff8c00ff",
     },
     {
         label: "Pending",
-        filterModel: { items: [{ field: "status", operator: "equals", value: "Pending" }] },
+        filterModel: {
+            items: [{ field: "status", operator: "equals", value: "Pending" }],
+        },
         lightModeColor: "#b900ff",
         darkModeColor: "#b900ff",
     },
@@ -53,19 +59,25 @@ const predefinedStatusFilters: FilterProps[] = [
 const predefinedPriorityFilters: FilterProps[] = [
     {
         label: "Low",
-        filterModel: { items: [{ field: "priority", operator: "equals", value: "Low" }] },
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "Low" }],
+        },
         lightModeColor: "#0044c2",
         darkModeColor: "#0044c2",
     },
     {
         label: "Medium",
-        filterModel: { items: [{ field: "priority", operator: "equals", value: "Medium" }] },
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "Medium" }],
+        },
         lightModeColor: "#1dc200",
         darkModeColor: "#1dc200",
     },
     {
         label: "High",
-        filterModel: { items: [{ field: "priority", operator: "equals", value: "High" }] },
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "High" }],
+        },
         lightModeColor: "#ff2323",
         darkModeColor: "#ff2323",
     },
@@ -74,19 +86,25 @@ const predefinedPriorityFilters: FilterProps[] = [
 const predefinedEffortLevelFilters: FilterProps[] = [
     {
         label: "Low",
-        filterModel: { items: [{ field: "effortLevel", operator: "equals", value: "Low" }] },
+        filterModel: {
+            items: [{ field: "effortLevel", operator: "equals", value: "Low" }],
+        },
         lightModeColor: "#0044c2",
         darkModeColor: "#0044c2",
     },
     {
         label: "Medium",
-        filterModel: { items: [{ field: "effortLevel", operator: "equals", value: "Medium" }] },
+        filterModel: {
+            items: [{ field: "effortLevel", operator: "equals", value: "Medium" }],
+        },
         lightModeColor: "#1dc200",
         darkModeColor: "#1dc200",
     },
     {
         label: "High",
-        filterModel: { items: [{ field: "effortLevel", operator: "equals", value: "High" }] },
+        filterModel: {
+            items: [{ field: "effortLevel", operator: "equals", value: "High" }],
+        },
         lightModeColor: "#ff2323",
         darkModeColor: "#ff2323",
     },

@@ -4,7 +4,7 @@ self.onmessage = async (event) => {
     const chatType: number = event.data.chatType;
 
     if (chatType !== undefined && chatType !== null) {
-        var latestChat = null;
+        let latestChat = null;
 
         if (chatType === 1) {
             latestChat = await getLatestDMChat();

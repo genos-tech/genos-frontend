@@ -24,7 +24,9 @@ export type MyNoteProps = {
     children?: MyNoteProps[];
 };
 
-export type MyNoteMetaTreeNode = MyNoteMetaProps & { children: MyNoteMetaTreeNode[] };
+export type MyNoteMetaTreeNode = MyNoteMetaProps & {
+    children: MyNoteMetaTreeNode[];
+};
 
 export type TaskNoteMetaProps = {
     noteType: number;
@@ -54,7 +56,9 @@ export type TaskNoteProps = {
     children?: TaskNoteProps[];
 };
 
-export type TaskNoteMetaTreeNode = TaskNoteMetaProps & { children: TaskNoteMetaTreeNode[] };
+export type TaskNoteMetaTreeNode = TaskNoteMetaProps & {
+    children: TaskNoteMetaTreeNode[];
+};
 
 export type ChatNoteMetaProps = {
     noteType: number;
@@ -88,4 +92,6 @@ export type ChatNoteProps = {
     children?: ChatNoteProps[];
 };
 
-export type ChatNoteMetaTreeNode = ChatNoteMetaProps & { children: ChatNoteMetaTreeNode[] };
+export type ChatNoteMetaTreeNode = ChatNoteMetaProps & {
+    children: ChatNoteMetaTreeNode[];
+};

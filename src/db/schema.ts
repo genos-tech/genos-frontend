@@ -10,7 +10,9 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 const userInfoStore = db.createObjectStore(STORES.USER_INFO, {
                     keyPath: KEY_PATH.USER_INFO,
                 });
-                userInfoStore.createIndex(INDEX.USER_INFO, INDEX_KEY.USER_INFO, { unique: false });
+                userInfoStore.createIndex(INDEX.USER_INFO, INDEX_KEY.USER_INFO, {
+                    unique: false,
+                });
             }
 
             // Inbox
@@ -33,7 +35,9 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 const dmChatsStore = db.createObjectStore(STORES.DM_CHATS, {
                     keyPath: KEY_PATH.DM_CHATS,
                 });
-                dmChatsStore.createIndex(INDEX.DM_CHATS, INDEX_KEY.DM_CHATS, { unique: false });
+                dmChatsStore.createIndex(INDEX.DM_CHATS, INDEX_KEY.DM_CHATS, {
+                    unique: false,
+                });
             }
             if (!db.objectStoreNames.contains(STORES.DM_MESSAGES)) {
                 const dmMessagesStore = db.createObjectStore(STORES.DM_MESSAGES, {
@@ -72,7 +76,9 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 const gmChatsStore = db.createObjectStore(STORES.GM_CHATS, {
                     keyPath: KEY_PATH.GM_CHATS,
                 });
-                gmChatsStore.createIndex(INDEX.GM_CHATS, INDEX_KEY.GM_CHATS, { unique: false });
+                gmChatsStore.createIndex(INDEX.GM_CHATS, INDEX_KEY.GM_CHATS, {
+                    unique: false,
+                });
             }
             if (!db.objectStoreNames.contains(STORES.GM_MESSAGES)) {
                 const gmMessagesStore = db.createObjectStore(STORES.GM_MESSAGES, {
@@ -111,7 +117,9 @@ export const initDB = async (): Promise<IDBPDatabase> => {
                 const pmChatsStore = db.createObjectStore(STORES.PM_CHATS, {
                     keyPath: KEY_PATH.PM_CHATS,
                 });
-                pmChatsStore.createIndex(INDEX.PM_CHATS, INDEX_KEY.PM_CHATS, { unique: false });
+                pmChatsStore.createIndex(INDEX.PM_CHATS, INDEX_KEY.PM_CHATS, {
+                    unique: false,
+                });
             }
             if (!db.objectStoreNames.contains(STORES.PM_MESSAGES)) {
                 const pmMessagesStore = db.createObjectStore(STORES.PM_MESSAGES, {
@@ -153,7 +161,9 @@ export const initDB = async (): Promise<IDBPDatabase> => {
 
             // For Tasks
             if (!db.objectStoreNames.contains(STORES.TASKS)) {
-                const tasksStore = db.createObjectStore(STORES.TASKS, { keyPath: KEY_PATH.TASKS });
+                const tasksStore = db.createObjectStore(STORES.TASKS, {
+                    keyPath: KEY_PATH.TASKS,
+                });
                 tasksStore.createIndex(INDEX.TASKS, INDEX_KEY.TASKS, { unique: false });
                 tasksStore.createIndex(INDEX.TASKS_COMPOUND, INDEX_KEY.TASKS_COMPOUND, {
                     unique: false,

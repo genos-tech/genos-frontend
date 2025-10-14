@@ -157,10 +157,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                     {isYou === true
                                         ? "My Profile"
                                         : myself.userId !== profileUser?.userId
-                                        ? profileUser?.userName
-                                            ? `${profileUser?.userName}'s Profile`
-                                            : "Profile"
-                                        : "My Profile"}
+                                          ? profileUser?.userName
+                                              ? `${profileUser?.userName}'s Profile`
+                                              : "Profile"
+                                          : "My Profile"}
                                 </Typography>
                             </Box>
                         </Box>

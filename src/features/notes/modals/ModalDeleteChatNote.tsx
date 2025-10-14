@@ -48,7 +48,10 @@ export const ModalDeleteChatNote: React.FC<Props> = ({
             // Delete from backend
             await deleteChatNote(myself, currentChatNote.noteId, accessToken);
             // Delete from indexedDB
-            await deleteData({ storeName: STORES.CHAT_NOTES, key: currentChatNote.noteId });
+            await deleteData({
+                storeName: STORES.CHAT_NOTES,
+                key: currentChatNote.noteId,
+            });
             // Delete the deleted noteId from the meta object
             setChatNoteMeta(chatNoteMeta.filter((note) => note.noteId !== currentChatNote.noteId));
             handleCloseTab(currentTabIndex, currentChatNote.noteId);

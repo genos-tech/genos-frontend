@@ -115,9 +115,15 @@ const templateRoleOptions = [
     { category: "Executive & Leadership", role: "Chief Executive Officer (CEO)" },
     { category: "Executive & Leadership", role: "Chief Operating Officer (COO)" },
     { category: "Executive & Leadership", role: "Chief Financial Officer (CFO)" },
-    { category: "Executive & Leadership", role: "Chief Technology Officer (CTO)" },
+    {
+        category: "Executive & Leadership",
+        role: "Chief Technology Officer (CTO)",
+    },
     { category: "Executive & Leadership", role: "Chief Marketing Officer (CMO)" },
-    { category: "Executive & Leadership", role: "Chief Human Resources Officer (CHRO)" },
+    {
+        category: "Executive & Leadership",
+        role: "Chief Human Resources Officer (CHRO)",
+    },
     { category: "Executive & Leadership", role: "Chief Data Officer (CDO)" },
     { category: "Executive & Leadership", role: "Chief Product Officer (CPO)" },
     { category: "Executive & Leadership", role: "Managing Director" },
@@ -127,7 +133,10 @@ const templateRoleOptions = [
     { category: "Technology & Engineering", role: "Data Engineer" },
     { category: "Technology & Engineering", role: "Data Scientist" },
     { category: "Technology & Engineering", role: "Machine Learning Engineer" },
-    { category: "Technology & Engineering", role: "Site Reliability Engineer (SRE)" },
+    {
+        category: "Technology & Engineering",
+        role: "Site Reliability Engineer (SRE)",
+    },
     { category: "Technology & Engineering", role: "Cloud Architect" },
     { category: "Technology & Engineering", role: "Security Engineer" },
     { category: "Technology & Engineering", role: "DevOps Engineer" },
@@ -177,9 +186,18 @@ const templateRoleOptions = [
 
     { category: "Human Resources & People", role: "HR Manager" },
     { category: "Human Resources & People", role: "Recruiter" },
-    { category: "Human Resources & People", role: "Talent Acquisition Specialist" },
-    { category: "Human Resources & People", role: "Learning & Development Specialist" },
-    { category: "Human Resources & People", role: "Compensation & Benefits Analyst" },
+    {
+        category: "Human Resources & People",
+        role: "Talent Acquisition Specialist",
+    },
+    {
+        category: "Human Resources & People",
+        role: "Learning & Development Specialist",
+    },
+    {
+        category: "Human Resources & People",
+        role: "Compensation & Benefits Analyst",
+    },
     { category: "Human Resources & People", role: "HR Business Partner" },
     { category: "Human Resources & People", role: "Employee Relations Manager" },
 
@@ -203,7 +221,10 @@ const templateRoleOptions = [
     { category: "Healthcare & Life Sciences", role: "Doctor" },
     { category: "Healthcare & Life Sciences", role: "Nurse" },
     { category: "Healthcare & Life Sciences", role: "Pharmacist" },
-    { category: "Healthcare & Life Sciences", role: "Research Scientist (Biotech)" },
+    {
+        category: "Healthcare & Life Sciences",
+        role: "Research Scientist (Biotech)",
+    },
     { category: "Healthcare & Life Sciences", role: "Clinical Trial Manager" },
     { category: "Healthcare & Life Sciences", role: "Healthcare Administrator" },
     { category: "Healthcare & Life Sciences", role: "Public Health Specialist" },
@@ -222,7 +243,10 @@ const templateRoleOptions = [
     { category: "Manufacturing & Industry", role: "Mechanical Engineer" },
     { category: "Manufacturing & Industry", role: "Electrical Engineer" },
     { category: "Manufacturing & Industry", role: "Production Manager" },
-    { category: "Manufacturing & Industry", role: "Quality Assurance Specialist" },
+    {
+        category: "Manufacturing & Industry",
+        role: "Quality Assurance Specialist",
+    },
     { category: "Manufacturing & Industry", role: "Industrial Designer" },
     { category: "Manufacturing & Industry", role: "Plant Manager" },
     { category: "Manufacturing & Industry", role: "Maintenance Technician" },
@@ -238,8 +262,14 @@ const templateRoleOptions = [
     { category: "Emerging & Future Roles", role: "AI Ethics Officer" },
     { category: "Emerging & Future Roles", role: "Sustainability Manager" },
     { category: "Emerging & Future Roles", role: "ESG Analyst" },
-    { category: "Emerging & Future Roles", role: "Diversity & Inclusion Manager" },
-    { category: "Emerging & Future Roles", role: "Crypto / Blockchain Specialist" },
+    {
+        category: "Emerging & Future Roles",
+        role: "Diversity & Inclusion Manager",
+    },
+    {
+        category: "Emerging & Future Roles",
+        role: "Crypto / Blockchain Specialist",
+    },
     { category: "Emerging & Future Roles", role: "Robotics Engineer" },
     { category: "Emerging & Future Roles", role: "Climate Risk Consultant" },
 

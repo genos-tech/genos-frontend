@@ -16,8 +16,10 @@ self.onmessage = async (event) => {
     await clearStore(STORES.GM_THREAD_MESSAGES);
 
     // Load data from backend
-    const gmHistory: { chat_history: ChatProps[]; flagged_messages: FlaggedMessageProps[] } =
-        await loadGMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
+    const gmHistory: {
+        chat_history: ChatProps[];
+        flagged_messages: FlaggedMessageProps[];
+    } = await loadGMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
 
     for (let i = 0; i < gmHistory.chat_history.length; i += 1) {
         const gmChat: ChatProps = gmHistory.chat_history[i];

@@ -121,7 +121,13 @@ export const TaskHome = (props: TaskHomeProps) => {
         projectName: string;
         isPrivate: boolean;
         systemUserId: string;
-    }>({ flag: false, projectId: -1, projectName: "", isPrivate: true, systemUserId: "" });
+    }>({
+        flag: false,
+        projectId: -1,
+        projectName: "",
+        isPrivate: true,
+        systemUserId: "",
+    });
     const [openDeleteProject, setOpenDeleteProject] = useState<{
         flag: boolean;
         projectId: number;
@@ -330,12 +336,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                         displayTaskType.id === 1
                                                                             ? "primary"
                                                                             : displayTaskType.id ===
-                                                                              2
-                                                                            ? "success"
-                                                                            : displayTaskType.id ===
-                                                                              3
-                                                                            ? "danger"
-                                                                            : "neutral"
+                                                                                2
+                                                                              ? "success"
+                                                                              : displayTaskType.id ===
+                                                                                  3
+                                                                                ? "danger"
+                                                                                : "neutral"
                                                                     }
                                                                     sx={{
                                                                         mx: "8px",
@@ -431,7 +437,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             renderTags={(tags, getTagProps) =>
                                                                 tags.map((item, index) => {
                                                                     const { key, ...tagProps } =
-                                                                        getTagProps({ index }); // spread the 'key'
+                                                                        getTagProps({
+                                                                            index,
+                                                                        }); // spread the 'key'
                                                                     return (
                                                                         <Chip
                                                                             key={`ac-taskhome-search-task-chip-${key}`}

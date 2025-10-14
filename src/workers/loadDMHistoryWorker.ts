@@ -15,8 +15,10 @@ self.onmessage = async (event) => {
     await clearStore(STORES.DM_THREAD_MESSAGES);
 
     // Load data from backend
-    const dmHistory: { chat_history: ChatProps[]; flagged_messages: FlaggedMessageProps[] } =
-        await loadDMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
+    const dmHistory: {
+        chat_history: ChatProps[];
+        flagged_messages: FlaggedMessageProps[];
+    } = await loadDMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
 
     if (dmHistory) {
         if (dmHistory.chat_history) {

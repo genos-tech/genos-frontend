@@ -13,7 +13,10 @@ type UpdateTeamMembersOptions = {
 export const updateTeamMembersOptions = async (props: UpdateTeamMembersOptions) => {
     const { myself, accessToken, setTeamMembers } = props;
     const loadTeamMembersWorker = new LoadTeamMemberWorker();
-    loadTeamMembersWorker.postMessage({ myself: myself, accessToken: accessToken });
+    loadTeamMembersWorker.postMessage({
+        myself: myself,
+        accessToken: accessToken,
+    });
     loadTeamMembersWorker.onmessage = (event) => {
         if (event.data) {
             setTeamMembers(event.data);

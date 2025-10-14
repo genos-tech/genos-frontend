@@ -8,7 +8,11 @@ import { useAuth } from "../../../../context/AuthContext";
 import { authApi } from "../../../../services/api";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 
-const disableOpenDeleteModalParams = { flag: false, projectId: -1, projectName: "" };
+const disableOpenDeleteModalParams = {
+    flag: false,
+    projectId: -1,
+    projectName: "",
+};
 
 type Props = {
     myself: UserProps;

@@ -258,8 +258,8 @@ export const webSocketSync = (props: webSocketSyncProps) => {
             if (message.wsType === "chat") {
                 console.log("chat_message:", message);
                 if (message.chatId !== null) {
-                    var fromMe: boolean = false;
-                    var toMe: boolean = false;
+                    let fromMe: boolean = false;
+                    let toMe: boolean = false;
 
                     if (message.isThread === true) {
                         const newMessage: NewThreadMessageProps = message;
@@ -545,9 +545,8 @@ export const webSocketSync = (props: webSocketSyncProps) => {
                                     await addMessage(newChatMessage, newMessage.chatType);
 
                                     // Prepare a new/updated chat object from the new message for DM
-                                    const updatedChat: ChatProps = await makeDMUpdatedChat(
-                                        newMessage
-                                    );
+                                    const updatedChat: ChatProps =
+                                        await makeDMUpdatedChat(newMessage);
 
                                     if (newMessage.isEdited === true) {
                                         if (fromMe === false && toMe === false) {
@@ -809,7 +808,7 @@ export const webSocketSync = (props: webSocketSyncProps) => {
                 console.log("Got an activity message");
                 console.log("activity_message:", message);
 
-                let tmpNewActivityMessage: ActivityMessageProps = message;
+                const tmpNewActivityMessage: ActivityMessageProps = message;
                 let newActivityMessage: ActivityMessageProps | undefined;
 
                 if (tmpNewActivityMessage) {

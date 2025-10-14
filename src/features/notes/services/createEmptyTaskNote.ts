@@ -14,7 +14,11 @@ export const createEmptyTaskNote = async (
     const initBody = [
         {
             type: "paragraph",
-            props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+            props: {
+                textColor: "default",
+                textAlignment: "left",
+                backgroundColor: "default",
+            },
             content: [],
             children: [],
         },

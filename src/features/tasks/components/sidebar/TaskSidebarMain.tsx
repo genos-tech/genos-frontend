@@ -92,7 +92,10 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 PM.currentProject.projectId,
                 accessToken
             );
-            PM.setCurrentProject({ ...PM.currentProject, projectTags: loadedProjectTags });
+            PM.setCurrentProject({
+                ...PM.currentProject,
+                projectTags: loadedProjectTags,
+            });
         } else {
             console.error("Failed to set the current project");
         }

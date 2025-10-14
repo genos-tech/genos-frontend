@@ -1,9 +1,6 @@
 import CheckKnownChatWorker from "../../../workers/checkKnownChatWorker.ts?worker";
 
-export const checkKnownChat = (
-    chatId: number,
-    chatType: number
-): Promise<boolean> => {
+export const checkKnownChat = (chatId: number, chatType: number): Promise<boolean> => {
     return new Promise((resolve, reject) => {
         const checkKnownChatWorker = new CheckKnownChatWorker();
 

@@ -167,7 +167,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
             updateReadStatusWorker.onmessage = (event) => {
                 if (event.data === "done") {
                     if (chat && chat.lastReadMessageId < lastReadMessageId) {
-                        const updatedChat = { ...chat, lastReadMessageId: lastReadMessageId };
+                        const updatedChat = {
+                            ...chat,
+                            lastReadMessageId: lastReadMessageId,
+                        };
                         addChat(updatedChat, updatedChat.chatType);
                         funcSetAllChats();
                     } else {

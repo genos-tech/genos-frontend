@@ -135,12 +135,12 @@ export const extractYYYYMMDD = (ts: string) => {
 };
 
 export const getFormattedTodayDateStr = (): string => {
-    let today = new Date();
+    const today = new Date();
     return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
 };
 
 export const getFormattedNDaysAfterDateStr = (n: number): string => {
-    let today = new Date();
+    const today = new Date();
     today.setDate(today.getDate() + n);
     return today.toISOString().split("T")[0]; // Extracts 'YYYY-MM-DD' from ISO format
 };

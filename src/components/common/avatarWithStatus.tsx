@@ -48,8 +48,8 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 ? true
                 : false
             : avatarUser.isOnline === true && avatarUser.isOfflineForced !== "true"
-            ? true
-            : false
+              ? true
+              : false
         : false;
 
     const setAvatarImg = (): string => {

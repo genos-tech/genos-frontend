@@ -2,12 +2,36 @@ import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 
 const statusLine = {
-    Open: { text: "OPEN", type: "text", styles: { bold: true, textColor: "blue" } },
-    WIP: { text: "WIP", type: "text", styles: { bold: true, textColor: "yellow" } },
-    Pending: { text: "PENDING", type: "text", styles: { bold: true, textColor: "pink" } },
-    Closed: { text: "CLOSED", type: "text", styles: { bold: true, textColor: "green" } },
-    Deleted: { text: "DELETED", type: "text", styles: { bold: true, textColor: "red" } },
-    default: { text: "UNKNOWN", type: "text", styles: { bold: true, textColor: "gray" } },
+    Open: {
+        text: "OPEN",
+        type: "text",
+        styles: { bold: true, textColor: "blue" },
+    },
+    WIP: {
+        text: "WIP",
+        type: "text",
+        styles: { bold: true, textColor: "yellow" },
+    },
+    Pending: {
+        text: "PENDING",
+        type: "text",
+        styles: { bold: true, textColor: "pink" },
+    },
+    Closed: {
+        text: "CLOSED",
+        type: "text",
+        styles: { bold: true, textColor: "green" },
+    },
+    Deleted: {
+        text: "DELETED",
+        type: "text",
+        styles: { bold: true, textColor: "red" },
+    },
+    default: {
+        text: "UNKNOWN",
+        type: "text",
+        styles: { bold: true, textColor: "gray" },
+    },
 };
 type StatusKey = keyof typeof statusLine;
 function getStatusConfig(key: string): (typeof statusLine)[StatusKey] {
@@ -16,9 +40,21 @@ function getStatusConfig(key: string): (typeof statusLine)[StatusKey] {
 
 const priorityLine = {
     Low: { text: "LOW", type: "text", styles: { bold: true, textColor: "blue" } },
-    Medium: { text: "MEDIUM", type: "text", styles: { bold: true, textColor: "green" } },
-    High: { text: "HIGH", type: "text", styles: { bold: true, textColor: "red" } },
-    default: { text: "N/A", type: "text", styles: { bold: true, textColor: "gray" } },
+    Medium: {
+        text: "MEDIUM",
+        type: "text",
+        styles: { bold: true, textColor: "green" },
+    },
+    High: {
+        text: "HIGH",
+        type: "text",
+        styles: { bold: true, textColor: "red" },
+    },
+    default: {
+        text: "N/A",
+        type: "text",
+        styles: { bold: true, textColor: "gray" },
+    },
 };
 type PriorityKey = keyof typeof priorityLine;
 function getPriorityConfig(key: string): (typeof priorityLine)[PriorityKey] {
@@ -27,9 +63,21 @@ function getPriorityConfig(key: string): (typeof priorityLine)[PriorityKey] {
 
 const effortLevelLine = {
     Low: { text: "LOW", type: "text", styles: { bold: true, textColor: "blue" } },
-    Medium: { text: "MEDIUM", type: "text", styles: { bold: true, textColor: "green" } },
-    High: { text: "HIGH", type: "text", styles: { bold: true, textColor: "red" } },
-    default: { text: "N/A", type: "text", styles: { bold: true, textColor: "gray" } },
+    Medium: {
+        text: "MEDIUM",
+        type: "text",
+        styles: { bold: true, textColor: "green" },
+    },
+    High: {
+        text: "HIGH",
+        type: "text",
+        styles: { bold: true, textColor: "red" },
+    },
+    default: {
+        text: "N/A",
+        type: "text",
+        styles: { bold: true, textColor: "gray" },
+    },
 };
 type EffortLevelKey = keyof typeof effortLevelLine;
 function getEffortLevelConfig(key: string): (typeof effortLevelLine)[EffortLevelKey] {
@@ -52,7 +100,11 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [
             { text: "Priority: ", type: "text", styles: {} },
             getPriorityConfig(task.priority.priority || "default"),
@@ -61,7 +113,11 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [
             { text: "Effort Level: ", type: "text", styles: {} },
             getEffortLevelConfig(task.effortLevel.level || "default"),
@@ -70,7 +126,11 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [
             {
                 text: "Assignee: ",
@@ -94,7 +154,11 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [
             {
                 text: "Reporter: ",
@@ -118,13 +182,21 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [{ text: `Due: ${task.dueDate}`, type: "text", styles: {} }],
         children: [],
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -133,7 +205,11 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
 export const taskCreatedThreadMessageTemplate = (myself: UserProps) => [
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [
             { text: "A new task has been created by ", type: "text", styles: {} },
             {
@@ -153,7 +229,11 @@ export const taskCreatedThreadMessageTemplate = (myself: UserProps) => [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -162,7 +242,11 @@ export const taskCreatedThreadMessageTemplate = (myself: UserProps) => [
 export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) => [
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [
             { text: "The task marked as ", type: "text", styles: {} },
             getStatusConfig(task.status.status || "default"),
@@ -184,7 +268,11 @@ export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) =>
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -193,7 +281,11 @@ export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) =>
 export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => [
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [
             { text: "A new comment from ", type: "text", styles: {} },
             {
@@ -213,7 +305,11 @@ export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },

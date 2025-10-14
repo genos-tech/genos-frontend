@@ -307,10 +307,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                     }}
                                                                 >
                                                                     {node.title.length > 14
-                                                                        ? `${node.title.slice(
-                                                                              0,
-                                                                              14
-                                                                          )}...`
+                                                                        ? `${node.title.slice(0, 14)}...`
                                                                         : node.title}
                                                                 </Typography>
                                                             ))}
