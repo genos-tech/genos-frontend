@@ -38,7 +38,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addNote } from "../services/addNote";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
-import { NoteManagementState } from "../../../hooks/useNoteManagement";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 
 type MyNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;

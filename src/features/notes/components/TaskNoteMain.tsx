@@ -45,7 +45,7 @@ import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { TaskProps } from "../../../types/tasks";
 import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
-import { NoteManagementState } from "../../../hooks/useNoteManagement";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;

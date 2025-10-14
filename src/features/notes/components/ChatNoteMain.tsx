@@ -44,7 +44,7 @@ import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
-import { NoteManagementState } from "../../../hooks/useNoteManagement";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 
 type ChatNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;

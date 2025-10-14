@@ -52,7 +52,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { TaskNoteMain } from "../notes/components/TaskNoteMain";
 import { ProjectAvatar } from "../../components/common/ProjectAvatar";
-import { NoteManagementState } from "../../hooks/useNoteManagement";
+import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },

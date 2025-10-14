@@ -27,7 +27,7 @@ import { ChatNoteMain } from "../notes/components/ChatNoteMain";
 import { loadTodo } from "./services/loadTodo";
 import { extractYYYYMMDD } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
-import { NoteManagementState } from "../../hooks/useNoteManagement";
+import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 
 type ChatHomeProps = {
     currentTeam: Team;

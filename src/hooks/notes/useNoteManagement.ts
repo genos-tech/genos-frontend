@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserProps } from "../types/admin";
+import { UserProps } from "../../types/admin";
 import {
     ChatNoteProps,
     ChatNoteMetaProps,
@@ -10,27 +10,27 @@ import {
     MyNoteProps,
     MyNoteMetaProps,
     MyNoteMetaTreeNode,
-} from "../types/notes";
-import { createEmptyChatNote } from "../features/notes/services/createEmptyChatNote";
-import { createEmptyTaskNote } from "../features/notes/services/createEmptyTaskNote";
-import { loadChatNotesByChatId } from "../features/notes/services/loadChatNotesByChatId";
-import { loadSpecificNote } from "../features/notes/services/loadSpecificNote";
-import { addNote } from "../features/notes/services/addNote";
-import { getData } from "../db/crud";
-import { STORES } from "../db/conf";
-import { createEmptyMyNote } from "../features/notes/services/createEmptyMyNote";
-import { loadMyNoteMeta } from "../features/notes/services/loadMyNoteMeta";
-import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "../utils/note";
+} from "../../types/notes";
+import { createEmptyChatNote } from "../../features/notes/services/createEmptyChatNote";
+import { createEmptyTaskNote } from "../../features/notes/services/createEmptyTaskNote";
+import { loadChatNotesByChatId } from "../../features/notes/services/loadChatNotesByChatId";
+import { loadSpecificNote } from "../../features/notes/services/loadSpecificNote";
+import { addNote } from "../../features/notes/services/addNote";
+import { getData } from "../../db/crud";
+import { STORES } from "../../db/conf";
+import { createEmptyMyNote } from "../../features/notes/services/createEmptyMyNote";
+import { loadMyNoteMeta } from "../../features/notes/services/loadMyNoteMeta";
+import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "../../utils/note";
 import {
     updateTabFromChatNoteUpdate,
     updateTabFromMyNoteUpdate,
     updateTabFromTaskNoteUpdate,
-} from "./notes/tab";
-import { initCurrentMyNoteChain, updataMyNoteChain } from "./notes/myNote";
-import { loadTaskNoteMeta } from "../features/notes/services/loadTaskNoteMeta";
-import { updataTaskNoteChain } from "./notes/taskNote";
-import { loadChatNoteMeta } from "../features/notes/services/loadChatNoteMeta";
-import { initCurrentChatNoteChain, updataChatNoteChain } from "./notes/chatNote";
+} from "./tab";
+import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
+import { loadTaskNoteMeta } from "../../features/notes/services/loadTaskNoteMeta";
+import { updataTaskNoteChain } from "./taskNote";
+import { loadChatNoteMeta } from "../../features/notes/services/loadChatNoteMeta";
+import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 
 export interface NoteManagementState {
     // Note type and tabs

@@ -13,7 +13,7 @@ import { ChatNoteMain } from "./components/ChatNoteMain";
 import { TaskNoteMain } from "./components/TaskNoteMain";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { ProjectProps, TaskProps } from "../../types/tasks";
-import { NoteManagementState } from "../../hooks/useNoteManagement";
+import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 
 type NoteHomeProps = {
     currentTeam: Team;

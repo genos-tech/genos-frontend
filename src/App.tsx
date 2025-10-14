@@ -41,7 +41,7 @@ import { useProject } from "./hooks/useProject";
 
 // Import task and note management hooks
 // import { useTaskManagement } from "./hooks/useTaskManagement";
-import { useNoteManagement } from "./hooks/useNoteManagement";
+import { useNoteManagement } from "./hooks/notes/useNoteManagement";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 const socket = (accessToken: string | null): Socket => {

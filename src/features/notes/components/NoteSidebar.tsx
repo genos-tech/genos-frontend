@@ -25,7 +25,7 @@ import {
 } from "../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { NoteTreeToggler } from "./sub/NoteTreeToggler";
-import { NoteManagementState } from "../../../hooks/useNoteManagement";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 
 type NoteSidebarProps = {
     NM: NoteManagementState;
