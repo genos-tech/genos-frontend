@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { UserProps } from "../types/admin";
-import { getLocalCurrentTimestamp } from "../utils/dateUtils";
+import { UserProps } from "../../types/admin";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 export const useMyself = (accessToken: string | null) => {
     const [myself, setMyself] = useState<UserProps>({

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { UserProps } from "../types/admin";
-import { ProjectProps } from "../types/tasks";
-import { loadTeamProjects } from "../features/tasks/services/loadTeamProjects";
-import { loadProjectTasks } from "../features/tasks/services/loadProjectTasks";
+import { UserProps } from "../../types/admin";
+import { ProjectProps } from "../../types/tasks";
+import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
+import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 
 export const useProject = (
     myself: UserProps,

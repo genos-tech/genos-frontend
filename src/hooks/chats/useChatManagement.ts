@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserProps } from "../types/admin";
+import { UserProps } from "../../types/admin";
 import {
     ActivityMessageProps,
     AllChatProps,
@@ -7,13 +7,13 @@ import {
     FlaggedMessageProps,
     ThreadMessageProps,
     ThreadProps,
-} from "../types/chat";
-import { popAllChats } from "../features/chat/services/popAllChats";
-import { popActivityMessages } from "../features/chat/services/popActivityMessages";
-import { popFlaggedMessages } from "../features/chat/services/popFlaggedMessages";
-import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
-import { loadSpecificThreadMessages } from "../features/chat/services/loadSpecificThreadMessages";
-import { getLocalCurrentTimestamp } from "../utils/dateUtils";
+} from "../../types/chat";
+import { popAllChats } from "../../features/chat/services/popAllChats";
+import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
+import { popFlaggedMessages } from "../../features/chat/services/popFlaggedMessages";
+import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
+import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 export const useChatManagement = (myself: UserProps, accessToken: string | null) => {
     // Chat visibility states
