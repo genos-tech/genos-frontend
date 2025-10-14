@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { io, Socket } from "socket.io-client";
+import { useEffect } from "react";
 import { CssVarsProvider } from "@mui/joy/styles";
 import CssBaseline from "@mui/joy/CssBaseline";
 
@@ -10,14 +9,14 @@ import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
 
 import { useAuth } from "./context/AuthContext";
-import { wsHook } from "./hooks/common/wsHook";
+import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
-import { getLocalCurrentTimestamp } from "./utils/dateUtils";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 import { TaskProps } from "./types/tasks";
 import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
 
+import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useTeamManagement } from "./hooks/common/useTeamManagement";
 import { useMyself } from "./hooks/common/useAuth";
 import { useUIStateManagement } from "./hooks/common/useUIStateManagement";
@@ -30,28 +29,6 @@ import { useProjectManagement } from "./hooks/common/useProjectManagement";
 import { useNoteManagement } from "./hooks/notes/useNoteManagement";
 import { useTaskManagement } from "./hooks/tasks/useTaskManagement";
 
-const ws_url = import.meta.env.VITE_WS_BASE_URL;
-const socket = (accessToken: string | null): Socket => {
-    return io(ws_url, {
-        reconnection: true, // Enable reconnection
-        reconnectionAttempts: 100, // Try to reconnect 5 times
-        reconnectionDelay: 5000, // Wait 1 second before reconnecting
-        reconnectionDelayMax: 60000, // Max delay between reconnection attempts
-        timeout: 100000, // Timeout for the connection attempt
-        withCredentials: true,
-        query: {
-            teamId: localStorage.getItem("teamId"),
-            teamName: localStorage.getItem("teamName"),
-            userId: localStorage.getItem("userId"),
-            userName: localStorage.getItem("userName"),
-            userEmail: localStorage.getItem("userEmail"),
-        },
-        extraHeaders: {
-            Authorization: accessToken || "",
-        },
-    });
-};
-
 export const App = () => {
     // Need to run if you delete IndexedDB database
     initDB();
@@ -61,38 +38,15 @@ export const App = () => {
     ///////////////////////
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself(accessToken);
-    const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
-
-    const UI = useUIStateManagement();
-
-    const sendHeartBeat = () => {
-        if (socketInstance) {
-            const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
-            const role: string = localStorage.getItem("role") || "";
-            const baseCountry: string = localStorage.getItem("baseCountry") || "";
-            const customStatus: string = localStorage.getItem("customStatus") || "";
-            const avatarImgPath: string = localStorage.getItem("avatarImgPath") || "";
-
-            socketInstance.emit("heartbeat", {
-                message: "alive",
-                is_online: true,
-                user: {
-                    ...myself,
-                    avatarImgPath: avatarImgPath,
-                    isOfflineForced: isOfflineForced,
-                    role: role,
-                    baseCountry: baseCountry,
-                    customStatus: customStatus,
-                    tsLastSeen: getLocalCurrentTimestamp(),
-                },
-            });
-        }
-    };
+    const UIM = useUIStateManagement();
 
     ///////////////////////
     // Team Related
     ///////////////////////
     const TEM = useTeamManagement(myself, accessToken);
+
+    // WebSocket management
+    const { socketInstance } = useWebSocket(accessToken, myself, TEM.currentTeamId);
 
     ///////////////////////
     // Project Related
@@ -229,7 +183,6 @@ export const App = () => {
     ///////////////////////
     // Note Related
     ///////////////////////
-    // Note management
     const NM = useNoteManagement(myself, accessToken);
 
     ///////////////////////
@@ -241,11 +194,11 @@ export const App = () => {
     // Other Hooks
     ///////////////////////
     // Common Hooks
-    wsHook({
+    webSocketSync({
         accessToken: accessToken,
         socket: socketInstance,
         myself: myself,
-        isLoading: UI.isLoading,
+        isLoading: UIM.isLoading,
         funcSetInboxItems: IM.funcSetInboxItems,
         currentProject: PM.currentProject,
         currentPreviewTaskId: TM.currentPreviewTaskId,
@@ -272,12 +225,12 @@ export const App = () => {
     }, [TEM.currentTeamId]);
 
     useEffect(() => {
-        if (UI.openingService === 0) {
+        if (UIM.openingService === 0) {
             // Init all notes
             NM.setCurrentMyNote(null);
             NM.setCurrentTaskNote(null);
             NM.setCurrentChatNote(null);
-        } else if (UI.openingService === 1) {
+        } else if (UIM.openingService === 1) {
             // Initialize the task visibility.
             TM.setIsTaskPreviewVisible(false);
 
@@ -293,7 +246,7 @@ export const App = () => {
             NM.setCurrentMyNote(null);
             NM.setCurrentTaskNote(null);
             // setCurrentChatNote(null);
-        } else if (UI.openingService === 2) {
+        } else if (UIM.openingService === 2) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             NM.setTmpTabItems(NM.tabItems);
             NM.setTabItems(NM.tabItems.filter((item) => item.noteType === 2));
@@ -305,7 +258,7 @@ export const App = () => {
             NM.setCurrentMyNote(null);
             NM.setCurrentTaskNote(null);
             NM.setCurrentChatNote(null);
-        } else if (UI.openingService === 3) {
+        } else if (UIM.openingService === 3) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             NM.setTabItems(NM.tmpTabItems);
             NM.setTmpTabItems([]);
@@ -314,7 +267,7 @@ export const App = () => {
                 NM.popInitialNote();
             }
         }
-    }, [UI.openingService]);
+    }, [UIM.openingService]);
 
     // Initialization Hooks
     useEffect(() => {
@@ -325,7 +278,7 @@ export const App = () => {
     }, []);
 
     useEffect(() => {
-        if (UI.isLoading === false) {
+        if (UIM.isLoading === false) {
             IM.funcSetInboxItems();
             CM.funcSetAllChats();
             CM.funcSetFlaggedMessages();
@@ -342,26 +295,13 @@ export const App = () => {
             NM.getTaskNoteMeta();
             NM.getChatNoteMeta();
         }
-    }, [UI.isLoading]);
-
-    useEffect(() => {
-        if (accessToken) {
-            console.log("[WS] Start establishing WS connection");
-            const _socket = socket(accessToken);
-            if (_socket && (socketInstance === null || myself.teamId !== TEM.currentTeamId)) {
-                setSocketInstance(_socket);
-                console.log("[WS] WS connection established");
-            }
-        } else {
-            console.warn("[WS] No valid access token found");
-        }
-    }, [myself, accessToken]);
+    }, [UIM.isLoading]);
 
     useEffect(() => {
         TEM.initCurrentTeam();
         if (myself.teamId !== TEM.currentTeamId) {
             TEM.setCurrentTeamId(myself.teamId);
-            UI.setIsLoading(true);
+            UIM.setIsLoading(true);
         }
 
         if (myself.userId !== "") {
@@ -397,30 +337,6 @@ export const App = () => {
             };
         }
     }, [myself]);
-
-    useEffect(() => {
-        if (socketInstance) {
-            // Pop the initial note after the socket is connected.
-            NM.popInitialNote();
-
-            socketInstance.emit("join", {
-                joiningCGId: -1, // dm_id or gm_id
-                joiningCGName: myself.userName, // dm_name or gm_name
-                chatType: 1,
-                dmPartnerUserId: myself.userId,
-            });
-
-            sendHeartBeat();
-
-            const intervalId = setInterval(() => {
-                sendHeartBeat();
-            }, 60_000);
-
-            return () => {
-                clearInterval(intervalId);
-            };
-        }
-    }, [socketInstance]);
 
     // Chat Related Hooks
     useEffect(() => {
@@ -465,10 +381,10 @@ export const App = () => {
         }
     }, [CM.currentThreadChat]);
 
-    return UI.isLoading || CM.currentMainChat === undefined ? (
+    return UIM.isLoading || CM.currentMainChat === undefined ? (
         <InitialLoad
             myself={myself}
-            setIsLoading={UI.setIsLoading}
+            setIsLoading={UIM.setIsLoading}
             setCurrentMainChat={CM.setCurrentMainChat}
         />
     ) : (
@@ -476,7 +392,7 @@ export const App = () => {
             <CssVarsProvider disableTransitionOnChange>
                 <CssBaseline />
 
-                {UI.openingService === 0 ? (
+                {UIM.openingService === 0 ? (
                     <InboxHome
                         currentTeam={TEM.currentTeam}
                         setCurrentTeam={TEM.setCurrentTeam}
@@ -484,8 +400,8 @@ export const App = () => {
                         myself={myself}
                         socket={socketInstance}
                         setMyself={setMyself}
-                        openingService={UI.openingService}
-                        setOpeningService={UI.setOpeningService}
+                        openingService={UIM.openingService}
+                        setOpeningService={UIM.setOpeningService}
                         setCurrentMainChat={CM.setCurrentMainChat}
                         inboxItems={IM.inboxItems}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
@@ -493,14 +409,14 @@ export const App = () => {
                     />
                 ) : null}
 
-                {UI.openingService === 1 ? (
+                {UIM.openingService === 1 ? (
                     <ChatHome
                         TEM={TEM}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
-                        openingService={UI.openingService}
-                        setOpeningService={UI.setOpeningService}
+                        openingService={UIM.openingService}
+                        setOpeningService={UIM.setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         CM={CM}
                         NM={NM}
@@ -509,15 +425,15 @@ export const App = () => {
                     />
                 ) : null}
 
-                {UI.openingService === 2 ? (
+                {UIM.openingService === 2 ? (
                     <TaskHome
                         TEM={TEM}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
                         setCurrentMainChat={CM.setCurrentMainChat}
-                        openingService={UI.openingService}
-                        setOpeningService={UI.setOpeningService}
+                        openingService={UIM.openingService}
+                        setOpeningService={UIM.setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                         allChats={CM.allChats}
@@ -530,14 +446,14 @@ export const App = () => {
                     />
                 ) : null}
 
-                {UI.openingService === 3 ? (
+                {UIM.openingService === 3 ? (
                     <NoteHome
                         socket={socketInstance}
                         TEM={TEM}
                         myself={myself}
                         setMyself={setMyself}
-                        openingService={UI.openingService}
-                        setOpeningService={UI.setOpeningService}
+                        openingService={UIM.openingService}
+                        setOpeningService={UIM.setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         NM={NM}
                         CM={CM}

@@ -31,7 +31,7 @@ function isInArray<T>(item: T, array: T[]): boolean {
     return array.includes(item);
 }
 
-type wsHookProps = {
+type webSocketSyncProps = {
     socket: Socket | null;
     accessToken: string | null;
     myself: UserProps;
@@ -43,7 +43,7 @@ type wsHookProps = {
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     CM: ChatManagementState;
 };
-export const wsHook = (props: wsHookProps) => {
+export const webSocketSync = (props: webSocketSyncProps) => {
     const {
         accessToken,
         socket,
