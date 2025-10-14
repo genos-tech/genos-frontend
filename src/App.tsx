@@ -35,8 +35,8 @@ import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 
 import { useMyself } from "./hooks/useAuth";
-import { useChatManagement } from "./hooks/useChatManagement";
-import { useInboxManagement } from "./hooks/useInboxManagement";
+import { useChatManagement } from "./hooks/chats/useChatManagement";
+import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
 import { useProject } from "./hooks/useProject";
 
 // Import task and note management hooks
