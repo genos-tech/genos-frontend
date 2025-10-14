@@ -6,10 +6,10 @@ import LoginIcon from "@mui/icons-material/Login";
 
 import { ProjectProps } from "../../../../../types/tasks";
 import { Toggler } from "../common";
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 
 type JoinProjectListItemProps = {
-    teamProjects: ProjectProps[];
-    currentProject?: ProjectProps | null;
+    PM: ProjectManagementState;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -19,7 +19,7 @@ type JoinProjectListItemProps = {
     }) => void;
 };
 export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
-    const { teamProjects, currentProject, setOpenJoinProject } = props;
+    const { PM, setOpenJoinProject } = props;
 
     return (
         <Toggler
@@ -62,7 +62,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
             )}
         >
             <List sx={{ gap: 0.5 }}>
-                {teamProjects.map(
+                {PM.teamProjects.map(
                     ({ projectId, projectName, isPrivate, systemUserId, isJoined }, index) => {
                         return (
                             isJoined === false && (
@@ -70,7 +70,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                     <ListItemButton
                                         color={"neutral"}
                                         variant={
-                                            projectId === currentProject?.projectId
+                                            projectId === PM.currentProject?.projectId
                                                 ? "solid"
                                                 : "plain"
                                         }
@@ -92,7 +92,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                             noWrap
                                             sx={{
                                                 color:
-                                                    projectId === currentProject?.projectId
+                                                    projectId === PM.currentProject?.projectId
                                                         ? "white"
                                                         : "neutral-500",
                                                 overflow: "hidden",

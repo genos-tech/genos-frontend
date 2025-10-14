@@ -6,6 +6,7 @@ import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 import { authApi } from "../../../../services/api";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 
 const disableOpenDeleteModalParams = { flag: false, projectId: -1, projectName: "" };
 
@@ -17,18 +18,14 @@ type Props = {
         projectId: number;
         projectName: string;
     }) => void;
-    setCurrentProject: (value: ProjectProps | null) => void;
-    teamProjects: ProjectProps[];
-    setTeamProjects: (value: ProjectProps[]) => void;
+    PM: ProjectManagementState;
 };
 
 export const ModalDeleteProject: React.FC<Props> = ({
     myself,
     openDeleteProject,
     setOpenDeleteProject,
-    setCurrentProject,
-    teamProjects,
-    setTeamProjects,
+    PM,
 }) => {
     const { accessToken } = useAuth();
 
@@ -44,10 +41,10 @@ export const ModalDeleteProject: React.FC<Props> = ({
                 const query: string = `team_id=${myself.teamId}&project_id=${openDeleteProject.projectId}`;
                 const res = await api.delete(`/project/?${query}`);
                 if (res.status === 204) {
-                    setCurrentProject(null);
+                    PM.setCurrentProject(null);
                     setOpenDeleteProject(disableOpenDeleteModalParams);
-                    setTeamProjects(
-                        teamProjects.filter(
+                    PM.setTeamProjects(
+                        PM.teamProjects.filter(
                             (project) => project.projectId !== openDeleteProject.projectId
                         )
                     );

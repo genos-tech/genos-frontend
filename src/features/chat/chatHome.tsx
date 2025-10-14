@@ -29,6 +29,7 @@ import { extractYYYYMMDD } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 
 type ChatHomeProps = {
     currentTeam: Team;
@@ -55,24 +56,18 @@ type ChatHomeProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
-    currentProject: ProjectProps | null;
-    setCurrentProject: (value: ProjectProps | null) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
     currentPreviewTask: TaskProps | undefined;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
     isNewTagCreated: boolean;
     setIsNewTagCreated: (value: boolean) => void;
-    openCreateProject: boolean;
     openCreateTag: boolean;
-    teamProjects: ProjectProps[];
-    setTeamProjects: (value: ProjectProps[]) => void;
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
     NM: NoteManagementState;
-    loadProjectsAndTasks: (value: number) => Promise<void>;
+    PM: ProjectManagementState;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
 };
@@ -95,24 +90,18 @@ export const ChatHome = (props: ChatHomeProps) => {
         unReadInboxItemCount,
         isCreatingTask,
         setIsCreatingTask,
-        currentProject,
-        setCurrentProject,
         currentPreviewTaskId,
         setCurrentPreviewTaskId,
         currentPreviewTask,
         setCurrentPreviewTask,
-        setOpenCreateProject,
         setOpenCreateTag,
         isNewTagCreated,
         setIsNewTagCreated,
-        openCreateProject,
         openCreateTag,
-        teamProjects,
-        setTeamProjects,
         initialEmptyTaskId,
         setInitialEmptyTaskId,
         NM,
-        loadProjectsAndTasks,
+        PM,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
     } = props;
@@ -139,7 +128,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 setCurrentMainChatId(CM.currentMainChat.chatId);
             }
             if (CM.currentMainChat.project && CM.currentMainChat.project.projectId) {
-                setCurrentProject(CM.currentMainChat.project);
+                PM.setCurrentProject(CM.currentMainChat.project);
             }
         }
     }, [CM.currentMainChat]);
@@ -150,7 +139,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 setCurrentSubChatId(CM.currentSubChat.chatId);
             }
             if (CM.currentSubChat?.project && CM.currentSubChat.project.projectId) {
-                setCurrentProject(CM.currentSubChat.project);
+                PM.setCurrentProject(CM.currentSubChat.project);
             }
         }
     }, [CM.currentSubChat]);
@@ -277,7 +266,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 isCreatingTask={isCreatingTask}
                                 setOpeningService={setOpeningService}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                setCurrentProject={setCurrentProject}
+                                setCurrentProject={PM.setCurrentProject}
                                 unReadChatCounts={CM.unReadChatCounts}
                                 unReadActivityMessageCounts={CM.unReadActivityMessageCounts}
                                 funcSetAllChats={CM.funcSetAllChats}
@@ -346,7 +335,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 setOpeningService={setOpeningService}
                                                 funcSetAllChats={CM.funcSetAllChats}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                setCurrentProject={setCurrentProject}
+                                                setCurrentProject={PM.setCurrentProject}
                                                 isToDoVisible={isToDoVisible}
                                                 setIsToDoVisible={setIsToDoVisible}
                                                 todos={todos}
@@ -442,7 +431,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             setOpeningService={setOpeningService}
                                             funcSetAllChats={CM.funcSetAllChats}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                            setCurrentProject={setCurrentProject}
+                                            setCurrentProject={PM.setCurrentProject}
                                             setIsToDoVisible={setIsToDoVisible}
                                             isToDoVisible={isToDoVisible}
                                             todos={todos}
@@ -567,22 +556,18 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     isCreatingTask={isCreatingTask}
                                     setIsCreatingTask={setIsCreatingTask}
-                                    setOpenCreateProject={setOpenCreateProject}
                                     setOpenCreateTag={setOpenCreateTag}
-                                    currentProject={currentProject}
-                                    setCurrentProject={setCurrentProject}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     isNewTagCreated={isNewTagCreated}
                                     setCurrentMainChat={CM.setCurrentMainChat}
                                     setOpeningService={setOpeningService}
                                     parentTaskId={null}
                                     rootTaskId={null}
-                                    teamProjects={teamProjects}
-                                    setTeamProjects={setTeamProjects}
                                     initialEmptyTaskId={initialEmptyTaskId}
                                     setInitialEmptyTaskId={setInitialEmptyTaskId}
                                     moveToSpecificChat={CM.moveToSpecificChat}
                                     openingService={openingService}
+                                    PM={PM}
                                 />
                             </Box>
                         </Panel>
@@ -631,7 +616,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     socket={socket}
                                     myself={myself}
                                     setMyself={setMyself}
-                                    setCurrentProject={setCurrentProject}
+                                    setCurrentProject={PM.setCurrentProject}
                                     currentPreviewTask={currentPreviewTask}
                                     setIsMainChatVisible={CM.setIsMainChatVisible}
                                     setIsThreadVisible={CM.setIsThreadVisible}
@@ -640,7 +625,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     isCreatingTask={isCreatingTask}
                                     setIsCreatingTask={setIsCreatingTask}
                                     setCurrentPreviewTask={setCurrentPreviewTask}
-                                    setOpenCreateProject={setOpenCreateProject}
+                                    setOpenCreateProject={PM.setOpenCreateProject}
                                     setOpenCreateTag={setOpenCreateTag}
                                     setCurrentMainChat={CM.setCurrentMainChat}
                                     setOpeningService={setOpeningService}
@@ -652,8 +637,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                                     setCurrentTaskNote={NM.setCurrentTaskNote}
                                     isTaskNoteVisible={NM.isTaskNoteVisible}
-                                    teamProjects={teamProjects}
-                                    setTeamProjects={setTeamProjects}
+                                    teamProjects={PM.teamProjects}
+                                    setTeamProjects={PM.setTeamProjects}
                                     taskNoteMeta={NM.taskNoteMeta}
                                     moveToSpecificChat={CM.moveToSpecificChat}
                                     openingService={openingService}
@@ -707,7 +692,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setOpeningService={setOpeningService}
                                     isInChatPage={true}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                    setCurrentProject={setCurrentProject}
+                                    setCurrentProject={PM.setCurrentProject}
                                     NM={NM}
                                     CM={CM}
                                 />
@@ -767,18 +752,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                     )}
 
                 {/* Modal for creating a new project */}
-                <ModalCreateProject
-                    myself={myself}
-                    openCreateProject={openCreateProject}
-                    setOpenCreateProject={setOpenCreateProject}
-                    setCurrentProject={setCurrentProject}
-                    loadProjectsAndTasks={loadProjectsAndTasks}
-                />
+                <ModalCreateProject myself={myself} PM={PM} />
 
                 {/* Modal for creating a new tag */}
                 <ModalCreateTag
                     myself={myself}
-                    currentProject={currentProject}
+                    currentProject={PM.currentProject}
                     openCreateTag={openCreateTag}
                     setOpenCreateTag={setOpenCreateTag}
                     setIsNewTagCreated={setIsNewTagCreated}

@@ -17,26 +17,17 @@ import { UserProps, SignUpResponse } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
 import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type Props = {
     myself: UserProps;
-    openCreateProject: boolean;
-    setOpenCreateProject: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
+    PM: ProjectManagementState;
     setIsNewProjectCreated?: (value: boolean) => void;
-    loadProjectsAndTasks: (value: number) => Promise<void>;
 };
 
-export const ModalCreateProject: React.FC<Props> = ({
-    myself,
-    openCreateProject,
-    setOpenCreateProject,
-    setCurrentProject,
-    setIsNewProjectCreated,
-    loadProjectsAndTasks,
-}) => {
+export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjectCreated }) => {
     const { accessToken } = useAuth();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -122,16 +113,16 @@ export const ModalCreateProject: React.FC<Props> = ({
                             );
 
                             if (prjJoinTeamRes && meJoinTeamRes && createProjectData.project_id) {
-                                setCurrentProject({
+                                PM.setCurrentProject({
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,
                                     projectTags: [],
                                     systemUserId: createProjectData.project_system_user,
                                 });
-                                setOpenCreateProject(false);
+                                PM.setOpenCreateProject(false);
                                 if (setIsNewProjectCreated) {
                                     setIsNewProjectCreated(true);
-                                    loadProjectsAndTasks(createProjectData.project_id);
+                                    PM.loadProjectsAndTasks(createProjectData.project_id);
                                 }
                             } else {
                                 console.error("Failed to add me and/or system_user to the team");
@@ -157,8 +148,8 @@ export const ModalCreateProject: React.FC<Props> = ({
         <>
             <Modal
                 sx={{ zIndex: 10010 }}
-                open={openCreateProject}
-                onClose={() => setOpenCreateProject(false)}
+                open={PM.openCreateProject}
+                onClose={() => PM.setOpenCreateProject(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">Create New Project</Typography>
@@ -191,7 +182,7 @@ export const ModalCreateProject: React.FC<Props> = ({
                             component="button"
                             color="danger"
                             variant="outlined"
-                            onClick={() => setOpenCreateProject(false)}
+                            onClick={() => PM.setOpenCreateProject(false)}
                         >
                             Cancel
                         </Button>

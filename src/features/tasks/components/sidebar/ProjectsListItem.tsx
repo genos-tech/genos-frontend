@@ -11,17 +11,15 @@ import { OngoingsListItem } from "./projects_subs/OngoingsListItem";
 import { TagsListItem } from "./projects_subs/TagsListItem";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 
 type ProjectsListItemProps = {
-    teamProjects: ProjectProps[];
-    setCurrentProject: (value: ProjectProps) => void;
+    PM: ProjectManagementState;
+
     setIsTaskHomeVisible: (value: boolean) => void;
     setOngoingTasks: (value: TaskTableProps[]) => void;
     setClosedTasks: (value: TaskTableProps[]) => void;
     setDeletedTasks: (value: TaskTableProps[]) => void;
-    currentProject?: ProjectProps | null;
-    loadProjectsAndTasks: (value: number) => Promise<void>;
-    setOpenCreateProject: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -45,15 +43,11 @@ type ProjectsListItemProps = {
 };
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
     const {
-        teamProjects,
-        setCurrentProject,
+        PM,
         setIsTaskHomeVisible,
         setOngoingTasks,
         setClosedTasks,
         setDeletedTasks,
-        currentProject,
-        loadProjectsAndTasks,
-        setOpenCreateProject,
         setOpenJoinProject,
         setSelectedTagForFiltering,
         setFilterBy,
@@ -106,7 +100,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                 )}
             >
                 <List>
-                    {teamProjects.map(
+                    {PM.teamProjects.map(
                         (
                             {
                                 projectId,
@@ -127,7 +121,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                             <ListItemButton
                                                 color={"primary"}
                                                 variant={
-                                                    projectId === currentProject?.projectId
+                                                    projectId === PM.currentProject?.projectId
                                                         ? "soft"
                                                         : "plain"
                                                 }
@@ -137,16 +131,20 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
 
                                                     // Only if the clicked project id is not the same as the current one,
                                                     // reset the project (and load tasks in the downstream step.)
-                                                    if (projectId !== currentProject?.projectId) {
+                                                    if (
+                                                        projectId !== PM.currentProject?.projectId
+                                                    ) {
                                                         // Reset the task table...
                                                         setOngoingTasks([]);
                                                         setClosedTasks([]);
                                                         setDeletedTasks([]);
                                                         (async () => {
-                                                            await loadProjectsAndTasks(projectId);
+                                                            await PM.loadProjectsAndTasks(
+                                                                projectId
+                                                            );
                                                             // This will be executed in the loadProjectsAndTasks,
                                                             // but somehow this needs to update the task table...
-                                                            setCurrentProject({
+                                                            PM.setCurrentProject({
                                                                 projectId: projectId,
                                                                 projectName: projectName,
                                                                 projectTags: projectTags,
@@ -201,14 +199,14 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 currentTaskChain={currentTaskChain}
                                                 currentPreviewTaskId={currentPreviewTaskId}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setCurrentProject={setCurrentProject}
+                                                setCurrentProject={PM.setCurrentProject}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                             />
                                             <TagsListItem
                                                 projectId={projectId}
-                                                currentProject={currentProject}
+                                                currentProject={PM.currentProject}
                                                 setSelectedTagForFiltering={
                                                     setSelectedTagForFiltering
                                                 }
@@ -222,13 +220,9 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                         }
                     )}
 
-                    <JoinProjectListItem
-                        teamProjects={teamProjects}
-                        currentProject={currentProject}
-                        setOpenJoinProject={setOpenJoinProject}
-                    />
+                    <JoinProjectListItem PM={PM} setOpenJoinProject={setOpenJoinProject} />
 
-                    <NewProjectListItem setOpenCreateProject={setOpenCreateProject} />
+                    <NewProjectListItem setOpenCreateProject={PM.setOpenCreateProject} />
                 </List>
             </Toggler>
         </ListItem>

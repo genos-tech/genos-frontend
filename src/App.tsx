@@ -34,7 +34,7 @@ import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 import { useMyself } from "./hooks/common/useAuth";
 import { useChatManagement } from "./hooks/chats/useChatManagement";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
-import { useProject } from "./hooks/common/useProject";
+import { useProjectManagement } from "./hooks/common/useProjectManagement";
 
 // Import task and note management hooks
 // import { useTaskManagement } from "./hooks/useTaskManagement";
@@ -144,17 +144,7 @@ export const App = () => {
     // Project Related
     ///////////////////////
     // Project management
-    const {
-        teamProjects,
-        setTeamProjects,
-        openCreateProject,
-        setOpenCreateProject,
-        isNewProjectCreated,
-        setIsNewProjectCreated,
-        currentProject,
-        setCurrentProject,
-        loadProjectsAndTasks,
-    } = useProject(myself, accessToken, currentTeamId);
+    const PM = useProjectManagement(myself, accessToken, currentTeamId);
 
     ///////////////////////
     // Chat Related
@@ -256,30 +246,33 @@ export const App = () => {
         ) {
             setTimeout(() => {
                 (async () => {
-                    if (currentProject && currentProject.projectId) {
-                        await fetchProjectTasks(currentProject.projectId);
-                        localStorage.setItem("lastProjectId", currentProject.projectId.toString());
+                    if (PM.currentProject && PM.currentProject.projectId) {
+                        await fetchProjectTasks(PM.currentProject.projectId);
+                        localStorage.setItem(
+                            "lastProjectId",
+                            PM.currentProject.projectId.toString()
+                        );
                     }
                 })();
             }, 1000); // wait 500ms
         }
-    }, [currentProject]);
+    }, [PM.currentProject]);
 
     useEffect(() => {
         (async () => {
-            if (currentProject && isNewProjectCreated === true) {
-                fetchProjectTasks(currentProject.projectId);
-                localStorage.setItem("lastProjectId", currentProject.projectId.toString());
+            if (PM.currentProject && PM.isNewProjectCreated === true) {
+                fetchProjectTasks(PM.currentProject.projectId);
+                localStorage.setItem("lastProjectId", PM.currentProject.projectId.toString());
             }
         })();
-    }, [isNewProjectCreated]);
+    }, [PM.isNewProjectCreated]);
 
     useEffect(() => {
-        if (currentProject && currentPreviewTaskId !== -1) {
-            (async () => {
+        (async () => {
+            if (PM.currentProject && currentPreviewTaskId !== -1) {
                 const loadedTask: TaskProps[] = await loadSpecificTask(
                     myself,
-                    currentProject.projectId,
+                    PM.currentProject.projectId,
                     currentPreviewTaskId,
                     accessToken
                 );
@@ -320,8 +313,8 @@ export const App = () => {
                 }
                 setIsNewTaskCreated(false);
                 setIsTaskUpdatedBySomeone(false);
-            })();
-        }
+            }
+        })();
     }, [currentPreviewTaskId, isNewTaskCreated, isTaskUpdatedBySomeone]);
 
     useEffect(() => {
@@ -367,7 +360,7 @@ export const App = () => {
         if (isNewTaskCreated === true) {
             setTimeout(() => {
                 (async () => {
-                    await loadProjectsAndTasks(
+                    await PM.loadProjectsAndTasks(
                         localStorage.getItem("lastProjectId")
                             ? Number(localStorage.getItem("lastProjectId"))
                             : -1
@@ -398,7 +391,7 @@ export const App = () => {
         myself: myself,
         isLoading: isLoading,
         funcSetInboxItems: IM.funcSetInboxItems,
-        currentProject: currentProject,
+        currentProject: PM.currentProject,
         currentPreviewTaskId: currentPreviewTaskId,
         setIsTaskUpdatedBySomeone: setIsTaskUpdatedBySomeone,
         setIsTaskCommentUpdated: setIsTaskCommentUpdated,
@@ -413,10 +406,11 @@ export const App = () => {
         setClosedTasks([]);
         setDeletedTasks([]);
         setIsTaskPreviewVisible(false);
-        CM.setIsThreadTaskVisible(false);
 
-        CM.setIsChatNoteVisibleInChat(false);
         NM.setIsTaskNoteVisible(false);
+
+        CM.setIsThreadTaskVisible(false);
+        CM.setIsChatNoteVisibleInChat(false);
         CM.setIsSubChatVisible(false);
         CM.setIsThreadVisible(false);
     }, [currentTeamId]);
@@ -661,24 +655,18 @@ export const App = () => {
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
-                        currentProject={currentProject}
-                        setCurrentProject={setCurrentProject}
                         currentPreviewTaskId={currentPreviewTaskId}
                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                         currentPreviewTask={currentPreviewTask}
                         setCurrentPreviewTask={setCurrentPreviewTask}
-                        setOpenCreateProject={setOpenCreateProject}
                         setOpenCreateTag={setOpenCreateTag}
                         isNewTagCreated={isNewTagCreated}
                         setIsNewTagCreated={setIsNewTagCreated}
-                        openCreateProject={openCreateProject}
                         openCreateTag={openCreateTag}
-                        teamProjects={teamProjects}
-                        setTeamProjects={setTeamProjects}
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
                         NM={NM}
-                        loadProjectsAndTasks={loadProjectsAndTasks}
+                        PM={PM}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         isTaskPreviewVisible={isTaskPreviewVisible}
                     />
@@ -705,11 +693,6 @@ export const App = () => {
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
-                        teamProjects={teamProjects}
-                        setTeamProjects={setTeamProjects}
-                        loadProjectsAndTasks={loadProjectsAndTasks}
-                        currentProject={currentProject}
-                        setCurrentProject={setCurrentProject}
                         setIsNewTaskCreated={setIsNewTaskCreated}
                         isTaskUpdated={isTaskUpdated}
                         setIsTaskUpdated={setIsTaskUpdated}
@@ -720,13 +703,10 @@ export const App = () => {
                         setClosedTasks={setClosedTasks}
                         deletedTasks={deletedTasks}
                         setDeletedTasks={setDeletedTasks}
-                        setIsNewProjectCreated={setIsNewProjectCreated}
                         currentPreviewTaskId={currentPreviewTaskId}
                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                         currentPreviewTask={currentPreviewTask}
                         setCurrentPreviewTask={setCurrentPreviewTask}
-                        openCreateProject={openCreateProject}
-                        setOpenCreateProject={setOpenCreateProject}
                         openCreateTag={openCreateTag}
                         setOpenCreateTag={setOpenCreateTag}
                         isNewTagCreated={isNewTagCreated}
@@ -740,6 +720,7 @@ export const App = () => {
                         funcSetAllChats={CM.funcSetAllChats}
                         moveToSpecificChat={CM.moveToSpecificChat}
                         NM={NM}
+                        PM={PM}
                     />
                 ) : null}
 
@@ -755,24 +736,20 @@ export const App = () => {
                         setMyself={setMyself}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        currentProject={currentProject}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         isCreatingTask={isCreatingTask}
-                        setCurrentProject={setCurrentProject}
                         currentPreviewTask={currentPreviewTask}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         setIsCreatingTask={setIsCreatingTask}
                         setCurrentPreviewTask={setCurrentPreviewTask}
-                        setOpenCreateProject={setOpenCreateProject}
                         setOpenCreateTag={setOpenCreateTag}
                         currentPreviewTaskId={currentPreviewTaskId}
                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
-                        teamProjects={teamProjects}
-                        setTeamProjects={setTeamProjects}
                         NM={NM}
                         CM={CM}
+                        PM={PM}
                     />
                 ) : null}
             </CssVarsProvider>

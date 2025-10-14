@@ -17,6 +17,7 @@ import { TaskSidebarSearchBox } from "./SearchBox";
 import { TaskTableListItem } from "./TaskTableListItem";
 import { RecentsListItem } from "./RecentsListItem";
 import { ProjectsListItem } from "./ProjectsListItem";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 
 type TaskSidebarProps = {
     myself: UserProps;
@@ -24,11 +25,8 @@ type TaskSidebarProps = {
     taskTableVisible: boolean;
     setTaskTableVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    currentProject?: ProjectProps | null;
-    setCurrentProject: (value: ProjectProps) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
-    setOpenCreateProject: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -39,8 +37,6 @@ type TaskSidebarProps = {
     setIsTaskHomeVisible: (value: boolean) => void;
     setFilterBy: (value: number) => void;
     setSelectedTagForFiltering: (value: string) => void;
-    teamProjects: ProjectProps[];
-    loadProjectsAndTasks: (value: number) => Promise<void>;
     setOngoingTasks: (value: TaskTableProps[]) => void;
     setClosedTasks: (value: TaskTableProps[]) => void;
     setDeletedTasks: (value: TaskTableProps[]) => void;
@@ -52,6 +48,7 @@ type TaskSidebarProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
+    PM: ProjectManagementState;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
@@ -61,17 +58,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         taskTableVisible,
         setTaskTableVisible,
         setIsTaskPreviewVisible,
-        currentProject,
-        setCurrentProject,
         currentPreviewTaskId,
         setCurrentPreviewTaskId,
-        setOpenCreateProject,
         setOpenJoinProject,
         setIsTaskHomeVisible,
         setFilterBy,
         setSelectedTagForFiltering,
-        teamProjects,
-        loadProjectsAndTasks,
         setOngoingTasks,
         setClosedTasks,
         setDeletedTasks,
@@ -79,6 +71,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         currentTaskChain,
         setCurrentFilterName,
         setIsCreatingTask,
+        PM,
     } = props;
     const { accessToken } = useAuth();
 
@@ -118,13 +111,13 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     // =======================================================================
 
     const updateProjectTags = async () => {
-        if (currentProject && currentProject.projectId) {
+        if (PM.currentProject && PM.currentProject.projectId) {
             const loadedProjectTags: TagListProps[] = await loadProjectTags(
                 myself,
-                currentProject.projectId,
+                PM.currentProject.projectId,
                 accessToken
             );
-            setCurrentProject({ ...currentProject, projectTags: loadedProjectTags });
+            PM.setCurrentProject({ ...PM.currentProject, projectTags: loadedProjectTags });
         } else {
             console.error("Failed to set the current project");
         }
@@ -234,21 +227,17 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     <RecentsListItem
                         recentTasks={recentTasks}
                         setIsDashboardVisible={setIsDashboardVisible}
-                        setCurrentProject={setCurrentProject}
+                        setCurrentProject={PM.setCurrentProject}
                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                     />
 
                     <ProjectsListItem
-                        teamProjects={teamProjects}
-                        setCurrentProject={setCurrentProject}
+                        PM={PM}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setOngoingTasks={setOngoingTasks}
                         setClosedTasks={setClosedTasks}
                         setDeletedTasks={setDeletedTasks}
-                        currentProject={currentProject}
-                        loadProjectsAndTasks={loadProjectsAndTasks}
-                        setOpenCreateProject={setOpenCreateProject}
                         setOpenJoinProject={setOpenJoinProject}
                         setSelectedTagForFiltering={setSelectedTagForFiltering}
                         setFilterBy={setFilterBy}

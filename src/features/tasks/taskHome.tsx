@@ -53,6 +53,7 @@ import { useAuth } from "../../context/AuthContext";
 import { TaskNoteMain } from "../notes/components/TaskNoteMain";
 import { ProjectAvatar } from "../../components/common/ProjectAvatar";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
@@ -87,11 +88,6 @@ type TaskHomeProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
-    teamProjects: ProjectProps[];
-    setTeamProjects: (value: ProjectProps[]) => void;
-    loadProjectsAndTasks: (value: number) => Promise<void>;
-    currentProject: ProjectProps | null;
-    setCurrentProject: (value: ProjectProps | null) => void;
     setIsNewTaskCreated: (value: boolean) => void;
     isTaskUpdated: boolean;
     setIsTaskUpdated: (value: boolean) => void;
@@ -102,13 +98,10 @@ type TaskHomeProps = {
     setOngoingTasks: (value: TaskTableProps[]) => void;
     setClosedTasks: (value: TaskTableProps[]) => void;
     setDeletedTasks: (value: TaskTableProps[]) => void;
-    setIsNewProjectCreated: (value: boolean) => void;
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (value: number) => void;
     currentPreviewTask?: TaskProps;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    openCreateProject: boolean;
-    setOpenCreateProject: (value: boolean) => void;
     openCreateTag: boolean;
     setOpenCreateTag: (value: boolean) => void;
     isNewTagCreated: boolean;
@@ -132,6 +125,7 @@ type TaskHomeProps = {
     ) => void;
     unReadChatAndActivityCounts: number;
     NM: NoteManagementState;
+    PM: ProjectManagementState;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -153,11 +147,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         setIsTaskPreviewVisible,
         isCreatingTask,
         setIsCreatingTask,
-        teamProjects,
-        setTeamProjects,
-        loadProjectsAndTasks,
-        currentProject,
-        setCurrentProject,
         setIsNewTaskCreated,
         isTaskUpdated,
         setIsTaskUpdated,
@@ -168,13 +157,10 @@ export const TaskHome = (props: TaskHomeProps) => {
         setOngoingTasks,
         setClosedTasks,
         setDeletedTasks,
-        setIsNewProjectCreated,
         currentPreviewTaskId,
         setCurrentPreviewTaskId,
         currentPreviewTask,
         setCurrentPreviewTask,
-        openCreateProject,
-        setOpenCreateProject,
         openCreateTag,
         setOpenCreateTag,
         isNewTagCreated,
@@ -189,6 +175,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         moveToSpecificChat,
         unReadChatAndActivityCounts,
         NM,
+        PM,
     } = props;
 
     // Common
@@ -222,10 +209,10 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [teamTaskSearchOptions, setTeamTaskOptions] = useState<SearchTeamTasksResponse[]>([]);
     const loading = openSearch && teamTaskSearchOptions.length === 0;
     const updateTeamTaskSearchOptions = async (active: boolean) => {
-        if (currentProject && currentProject.projectId) {
+        if (PM.currentProject && PM.currentProject.projectId) {
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
-                currentProject?.projectId || -1,
+                PM.currentProject?.projectId || -1,
                 displayTaskType.statuses.join(","),
                 -1,
                 accessToken
@@ -264,7 +251,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     // =======================================================================
 
     const pmChat = allChats.find(
-        (chat) => chat.chatType === 3 && currentProject && chat.chatId === currentProject.projectId
+        (chat) =>
+            chat.chatType === 3 && PM.currentProject && chat.chatId === PM.currentProject.projectId
     );
 
     return (
@@ -295,17 +283,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 taskTableVisible={isTaskTableVisible}
                                 setTaskTableVisible={setTaskTableVisible}
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                currentProject={currentProject}
-                                setCurrentProject={setCurrentProject}
                                 currentPreviewTaskId={currentPreviewTaskId}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                setOpenCreateProject={setOpenCreateProject}
                                 setOpenJoinProject={setOpenJoinProject}
                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                 setFilterBy={setFilterBy}
                                 setSelectedTagForFiltering={setSelectedTagForFiltering}
-                                teamProjects={teamProjects}
-                                loadProjectsAndTasks={loadProjectsAndTasks}
                                 setOngoingTasks={setOngoingTasks}
                                 setClosedTasks={setClosedTasks}
                                 setDeletedTasks={setDeletedTasks}
@@ -313,10 +296,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 currentTaskChain={currentTaskChain}
                                 setCurrentFilterName={setCurrentFilterName}
                                 setIsCreatingTask={setIsCreatingTask}
+                                PM={PM}
                             />
                         </Panel>
 
-                        {currentProject && currentProject.projectId && (
+                        {PM.currentProject && PM.currentProject.projectId && (
                             <>
                                 {/* left pane (task-home) */}
                                 {isTaskHomeVisible === true && (
@@ -402,7 +386,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                         }
                                                                     />
                                                                 )}
-                                                                {currentProject.isPrivate ===
+                                                                {PM.currentProject.isPrivate ===
                                                                 true ? (
                                                                     <LockOutlineIcon
                                                                         sx={{
@@ -416,7 +400,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             </>
                                                         }
                                                     >
-                                                        {currentProject.projectName}
+                                                        {PM.currentProject.projectName}
                                                         <Dropdown>
                                                             <MenuButton
                                                                 slots={{ root: IconButton }}
@@ -682,7 +666,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             <Menu size="sm">
                                                                 <MenuItem
                                                                     onClick={() => {
-                                                                        setOpenCreateProject(true);
+                                                                        PM.setOpenCreateProject(
+                                                                            true
+                                                                        );
                                                                     }}
                                                                 >
                                                                     <AddIcon />
@@ -698,13 +684,19 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 </MenuItem>
                                                                 <MenuItem
                                                                     onClick={() => {
-                                                                        setOpenDeleteProject({
-                                                                            flag: true,
-                                                                            projectId:
-                                                                                currentProject.projectId,
-                                                                            projectName:
-                                                                                currentProject.projectName,
-                                                                        });
+                                                                        if (PM.currentProject) {
+                                                                            setOpenDeleteProject({
+                                                                                flag: true,
+                                                                                projectId:
+                                                                                    PM
+                                                                                        .currentProject
+                                                                                        .projectId,
+                                                                                projectName:
+                                                                                    PM
+                                                                                        .currentProject
+                                                                                        .projectName,
+                                                                            });
+                                                                        }
                                                                     }}
                                                                     sx={{
                                                                         color: "red",
@@ -750,7 +742,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             setTeamMembers={setTeamMembers}
                                                             teamMemberProfiles={teamMemberProfiles}
                                                             myself={myself}
-                                                            currentProject={currentProject}
+                                                            currentProject={PM.currentProject}
                                                             ongoingTasks={ongoingTasks}
                                                             closedTasks={closedTasks}
                                                             deletedTasks={deletedTasks}
@@ -829,10 +821,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         setIsTaskPreviewVisible
                                                     }
                                                     setIsCreatingTask={setIsCreatingTask}
-                                                    setOpenCreateProject={setOpenCreateProject}
                                                     setOpenCreateTag={setOpenCreateTag}
-                                                    currentProject={currentProject}
-                                                    setCurrentProject={setCurrentProject}
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }
@@ -845,12 +834,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                     isTaskPreviewVisible={isTaskPreviewVisible}
                                                     isCreatingTask={isCreatingTask}
-                                                    teamProjects={teamProjects}
-                                                    setTeamProjects={setTeamProjects}
                                                     initialEmptyTaskId={initialEmptyTaskId}
                                                     setInitialEmptyTaskId={setInitialEmptyTaskId}
                                                     moveToSpecificChat={moveToSpecificChat}
                                                     openingService={openingService}
+                                                    PM={PM}
                                                 />
                                             </Box>
                                         </Panel>
@@ -903,14 +891,14 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     socket={socket}
                                                     myself={myself}
                                                     setMyself={setMyself}
-                                                    setCurrentProject={setCurrentProject}
+                                                    setCurrentProject={PM.setCurrentProject}
                                                     currentPreviewTask={currentPreviewTask}
                                                     setIsCreatingTask={setIsCreatingTask}
                                                     setIsTaskPreviewVisible={
                                                         setIsTaskPreviewVisible
                                                     }
                                                     setCurrentPreviewTask={setCurrentPreviewTask}
-                                                    setOpenCreateProject={setOpenCreateProject}
+                                                    setOpenCreateProject={PM.setOpenCreateProject}
                                                     setOpenCreateTag={setOpenCreateTag}
                                                     isTaskUpdated={isTaskUpdated}
                                                     setIsTaskUpdated={setIsTaskUpdated}
@@ -931,8 +919,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     }
                                                     setCurrentTaskNote={NM.setCurrentTaskNote}
                                                     isTaskNoteVisible={NM.isTaskNoteVisible}
-                                                    teamProjects={teamProjects}
-                                                    setTeamProjects={setTeamProjects}
+                                                    teamProjects={PM.teamProjects}
+                                                    setTeamProjects={PM.setTeamProjects}
                                                     taskNoteMeta={NM.taskNoteMeta}
                                                     moveToSpecificChat={moveToSpecificChat}
                                                     openingService={openingService}
@@ -1005,9 +993,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                         )}
                     </>
 
-                    {!currentProject ||
-                        currentProject.projectId === null ||
-                        (currentProject.projectId === undefined && (
+                    {!PM.currentProject ||
+                        PM.currentProject.projectId === null ||
+                        (PM.currentProject.projectId === undefined && (
                             <>
                                 <Panel id={"5"} order={5} minSize={5} maxSize={30}>
                                     <TaskSidebar
@@ -1016,17 +1004,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         taskTableVisible={isTaskTableVisible}
                                         setTaskTableVisible={setTaskTableVisible}
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        currentProject={currentProject}
-                                        setCurrentProject={setCurrentProject}
                                         currentPreviewTaskId={currentPreviewTaskId}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setOpenCreateProject={setOpenCreateProject}
                                         setOpenJoinProject={setOpenJoinProject}
                                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                                         setFilterBy={setFilterBy}
                                         setSelectedTagForFiltering={setSelectedTagForFiltering}
-                                        teamProjects={teamProjects}
-                                        loadProjectsAndTasks={loadProjectsAndTasks}
                                         setOngoingTasks={setOngoingTasks}
                                         setClosedTasks={setClosedTasks}
                                         setDeletedTasks={setDeletedTasks}
@@ -1034,6 +1017,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         currentTaskChain={currentTaskChain}
                                         setCurrentFilterName={setCurrentFilterName}
                                         setIsCreatingTask={setIsCreatingTask}
+                                        PM={PM}
                                     />
                                 </Panel>
 
@@ -1067,7 +1051,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 paddingRight: "10px",
                                             }}
                                             onClick={() => {
-                                                setOpenCreateProject(true);
+                                                PM.setOpenCreateProject(true);
                                             }}
                                         >
                                             <AddIcon />
@@ -1079,14 +1063,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                         ))}
 
                     {/* Modal for creating a new project */}
-                    <ModalCreateProject
-                        myself={myself}
-                        openCreateProject={openCreateProject}
-                        setOpenCreateProject={setOpenCreateProject}
-                        setCurrentProject={setCurrentProject}
-                        setIsNewProjectCreated={setIsNewProjectCreated}
-                        loadProjectsAndTasks={loadProjectsAndTasks}
-                    />
+                    <ModalCreateProject myself={myself} PM={PM} />
 
                     {/* Modal for creating a new project */}
                     <ModalJoinProject
@@ -1094,8 +1071,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                         myself={myself}
                         openJoinProject={openJoinProject}
                         setOpenJoinProject={setOpenJoinProject}
-                        setCurrentProject={setCurrentProject}
-                        loadProjectsAndTasks={loadProjectsAndTasks}
+                        setCurrentProject={PM.setCurrentProject}
+                        loadProjectsAndTasks={PM.loadProjectsAndTasks}
                         allChats={allChats}
                         setAllChats={setAllChats}
                     />
@@ -1105,15 +1082,13 @@ export const TaskHome = (props: TaskHomeProps) => {
                         myself={myself}
                         openDeleteProject={openDeleteProject}
                         setOpenDeleteProject={setOpenDeleteProject}
-                        setCurrentProject={setCurrentProject}
-                        teamProjects={teamProjects}
-                        setTeamProjects={setTeamProjects}
+                        PM={PM}
                     />
 
                     {/* Modal for creating a new tag */}
                     <ModalCreateTag
                         myself={myself}
-                        currentProject={currentProject}
+                        currentProject={PM.currentProject}
                         openCreateTag={openCreateTag}
                         setOpenCreateTag={setOpenCreateTag}
                         setIsNewTagCreated={setIsNewTagCreated}

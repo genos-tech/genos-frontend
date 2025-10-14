@@ -4,11 +4,23 @@ import { ProjectProps } from "../../types/tasks";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 
-export const useProject = (
+export interface ProjectManagementState {
+    teamProjects: ProjectProps[];
+    setTeamProjects: (projects: ProjectProps[]) => void;
+    openCreateProject: boolean;
+    setOpenCreateProject: (open: boolean) => void;
+    isNewProjectCreated: boolean;
+    setIsNewProjectCreated: (created: boolean) => void;
+    currentProject: ProjectProps | null;
+    setCurrentProject: (project: ProjectProps | null) => void;
+    loadProjectsAndTasks: (targetProjectId: number) => Promise<void>;
+}
+
+export const useProjectManagement = (
     myself: UserProps,
     accessToken: string | null,
     currentTeamId: string
-) => {
+): ProjectManagementState => {
     const [teamProjects, setTeamProjects] = useState<ProjectProps[]>([]);
     const [openCreateProject, setOpenCreateProject] = useState(false);
     const [isNewProjectCreated, setIsNewProjectCreated] = useState(false);
