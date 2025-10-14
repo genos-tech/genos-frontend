@@ -11,7 +11,7 @@ import { InitialLoad } from "./components/utils/InitialLoad";
 import { FindTeamResponse, Team, UserProps } from "./types/admin";
 
 import { useAuth } from "./context/AuthContext";
-import { wsHook } from "./hooks/wsHook";
+import { wsHook } from "./hooks/common/wsHook";
 import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
@@ -34,10 +34,10 @@ import { buildTaskTree } from "./features/tasks/utils/buildTaskTree";
 import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
 import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 
-import { useMyself } from "./hooks/useAuth";
+import { useMyself } from "./hooks/common/useAuth";
 import { useChatManagement } from "./hooks/chats/useChatManagement";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
-import { useProject } from "./hooks/useProject";
+import { useProject } from "./hooks/common/useProject";
 
 // Import task and note management hooks
 // import { useTaskManagement } from "./hooks/useTaskManagement";

@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 import { Socket } from "socket.io-client";
 
-import { addUser } from "../features/admin/services/addUser";
-import { addChat } from "../features/chat/services/addChat";
-import { addActivityMessage } from "../features/chat/services/addActivityMessage";
-import { addMessage } from "../features/chat/services/addMessage";
-import { addThreadMessage } from "../features/chat/services/addThreadMessage";
-import { popSpecificMessages } from "../features/chat/services/popSpecificMessages";
-import { loadSpecificThreadMessages } from "../features/chat/services/loadSpecificThreadMessages";
-import { UserProps } from "../types/admin";
-import { emptyDmPartnerUser } from "../utils/defaultProps";
+import { addUser } from "../../features/admin/services/addUser";
+import { addChat } from "../../features/chat/services/addChat";
+import { addActivityMessage } from "../../features/chat/services/addActivityMessage";
+import { addMessage } from "../../features/chat/services/addMessage";
+import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
+import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
+import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
+import { UserProps } from "../../types/admin";
+import { emptyDmPartnerUser } from "../../utils/defaultProps";
 import {
     AllChatProps,
     ChatProps,
@@ -19,12 +19,12 @@ import {
     NewThreadMessageProps,
     ThreadProps,
     ActivityMessageProps,
-} from "../types/chat";
-import { InboxItemProps } from "../types/common";
-import { addInboxItem } from "../features/admin/services/addInboxItem";
-import { ProjectProps } from "../types/tasks";
-import { deleteData } from "../db/crud";
-import { STORES } from "../db/conf";
+} from "../../types/chat";
+import { InboxItemProps } from "../../types/common";
+import { addInboxItem } from "../../features/admin/services/addInboxItem";
+import { ProjectProps } from "../../types/tasks";
+import { deleteData } from "../../db/crud";
+import { STORES } from "../../db/conf";
 
 function isInArray<T>(item: T, array: T[]): boolean {
     return array.includes(item);

@@ -36,7 +36,7 @@ import {
     CreateTeamResponse,
     FindTeamResponse,
 } from "../../../types/admin";
-import { wsJoinTeamHook } from "../../../hooks/wsJoinTeamHook";
+import { wsJoinTeamHook } from "../../../hooks/common/wsJoinTeamHook";
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
