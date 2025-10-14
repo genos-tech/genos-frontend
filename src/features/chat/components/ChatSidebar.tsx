@@ -56,8 +56,8 @@ type ChatSidebarProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (value: ThreadProps) => void;
-    currentMainChat: ChatProps;
-    currentSubChat: ChatProps;
+    currentMainChat?: ChatProps;
+    currentSubChat?: ChatProps;
     socket: Socket | null;
     setIsMainChatVisible: (value: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;

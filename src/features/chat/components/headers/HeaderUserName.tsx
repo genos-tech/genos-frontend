@@ -16,7 +16,7 @@ type HeaderUserNameProps = {
     setMyself: (value: UserProps) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    chat: ChatProps;
+    chat?: ChatProps;
     isYou: boolean;
     funcSetAllChats: () => Promise<void>;
 };
@@ -33,7 +33,9 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
         funcSetAllChats,
     } = props;
 
-    const headerUser: UserProps | undefined = teamMemberProfiles[chat.dmPartnerUser.userId];
+    const headerUser: UserProps | undefined = chat
+        ? teamMemberProfiles[chat.dmPartnerUser.userId]
+        : undefined;
     let isOnline: boolean = headerUser
         ? myself.userId === headerUser.userId
             ? myself?.isOfflineForced !== "true"
@@ -51,7 +53,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
     return (
         <>
             <div>
-                {chat.chatType === 1 ? (
+                {chat && chat.chatType === 1 ? (
                     <AvatarWithStatus
                         myself={myself}
                         setMyself={setMyself}
@@ -63,7 +65,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
                     />
-                ) : chat.chatType === 2 ? (
+                ) : chat && chat.chatType === 2 ? (
                     <GMAvatar
                         teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
@@ -76,7 +78,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         gmChat={chat}
                         funcSetAllChats={funcSetAllChats}
                     />
-                ) : (
+                ) : chat && chat.chatType === 3 ? (
                     <ProjectAvatar
                         teamMemberProfiles={teamMemberProfiles}
                         myself={myself}
@@ -88,7 +90,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         pmChat={chat}
                         funcSetAllChats={funcSetAllChats}
                     />
-                )}
+                ) : undefined}
             </div>
             <div>
                 <Stack direction={"row"}>
@@ -96,12 +98,12 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         component="h2"
                         noWrap
                         startDecorator={
-                            chat.isPrivate ? (
+                            chat && chat.isPrivate ? (
                                 <LockOutlineIcon sx={{ fontSize: "22px" }} />
                             ) : undefined
                         }
                         endDecorator={
-                            chat.chatType === 1 ? (
+                            chat && chat.chatType === 1 ? (
                                 <Chip
                                     variant="outlined"
                                     size="md"
@@ -122,11 +124,12 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         }
                         sx={{ fontWeight: "lg", fontSize: "lg" }}
                     >
-                        {isYou ? `${chat.chatName} (you)` : chat.chatName}
+                        {isYou ? `${chat?.chatName} (you)` : chat?.chatName}
                     </Typography>
 
                     {/* show my own custom status */}
-                    {chat.dmPartnerUser.userId !== "" &&
+                    {chat &&
+                        chat.dmPartnerUser.userId !== "" &&
                         myself.userId === chat.dmPartnerUser.userId &&
                         myself.customStatus != "" && (
                             <Chip
@@ -140,7 +143,8 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         )}
 
                     {/* show others custom status */}
-                    {chat.dmPartnerUser.userId !== "" &&
+                    {chat &&
+                        chat.dmPartnerUser.userId !== "" &&
                         myself.userId !== chat.dmPartnerUser.userId &&
                         teamMemberProfiles[chat.dmPartnerUser.userId] &&
                         teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (

@@ -42,7 +42,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     allChats: AllChatProps[];
-    currentSubChat: ChatProps;
+    currentSubChat?: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (value: ThreadProps) => void;
@@ -165,7 +165,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 // Handling a message activity in DM, GM, PM
                 if (
                     isSubChatVisible === false ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` !==
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
                         `${activity.chatId}-${activity.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -181,7 +181,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 }
                 if (
                     isSubChatVisible === true ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` ===
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
                         `${activity.chatId}-${activity.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -199,7 +199,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 // Handling a task comment activity
                 if (
                     isSubChatVisible === false ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` !==
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
                         `${activity.chatId}-${activity.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -276,7 +276,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
                 if (
                     isSubChatVisible === false ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` !==
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
                         `${activity.chatId}-${activity.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -292,7 +292,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 }
                 if (
                     isSubChatVisible === true ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` ===
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
                         `${activity.chatId}-${activity.chatName}`
                 ) {
                     toggleMessagesPane();

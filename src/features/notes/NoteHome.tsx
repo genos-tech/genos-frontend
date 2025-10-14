@@ -14,6 +14,7 @@ import { TaskNoteMain } from "./components/TaskNoteMain";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
 import { ProjectProps, TaskProps } from "../../types/tasks";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -26,20 +27,13 @@ type NoteHomeProps = {
     setMyself: (me: UserProps) => void;
     openingService: number;
     setOpeningService: (service: number) => void;
-    setCurrentMainChat: (value: ChatProps) => void;
-
     unReadInboxItemCount: number;
-    unReadChatAndActivityCounts: number;
     isCreatingTask: {
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
     };
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsChatNoteVisibleInChat: (value: boolean) => void;
     currentPreviewTask?: TaskProps;
-    setIsThreadVisible: (value: boolean) => void;
-    isThreadVisible: boolean;
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsCreatingTask: (value: {
         flag: boolean;
@@ -56,20 +50,9 @@ type NoteHomeProps = {
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => void;
     currentProject: ProjectProps | null;
-    allChats: AllChatProps[];
-    funcSetAllChats: () => Promise<void>;
     NM: NoteManagementState;
+    CM: ChatManagementState;
 };
 export const NoteHome = (props: NoteHomeProps) => {
     const {
@@ -83,18 +66,11 @@ export const NoteHome = (props: NoteHomeProps) => {
         setMyself,
         openingService,
         setOpeningService,
-        setCurrentMainChat,
-        unReadInboxItemCount,
-        unReadChatAndActivityCounts,
-        isCreatingTask,
-        setIsMainChatVisible,
-        setIsChatNoteVisibleInChat,
-        setCurrentProject,
         currentProject,
-        allChats,
+        unReadInboxItemCount,
+        isCreatingTask,
+        setCurrentProject,
         currentPreviewTask,
-        setIsThreadVisible,
-        isThreadVisible,
         setIsTaskPreviewVisible,
         setIsCreatingTask,
         setCurrentPreviewTask,
@@ -106,9 +82,8 @@ export const NoteHome = (props: NoteHomeProps) => {
         setIsCommentUpdated,
         teamProjects,
         setTeamProjects,
-        moveToSpecificChat,
-        funcSetAllChats,
         NM,
+        CM,
     } = props;
     const { mode } = useColorScheme();
 
@@ -125,9 +100,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                     setMyself={setMyself}
                     openingService={openingService}
                     setOpeningService={setOpeningService}
-                    setCurrentMainChat={setCurrentMainChat}
+                    setCurrentMainChat={CM.setCurrentMainChat}
                     unReadInboxItemCount={unReadInboxItemCount}
-                    unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                    unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                 />
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} order={1} minSize={10} maxSize={25}>
@@ -184,7 +159,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         myself={myself}
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
-                                        setCurrentChat={setCurrentMainChat}
+                                        setCurrentChat={CM.setCurrentMainChat}
                                         NM={NM}
                                     />
                                 )}
@@ -199,13 +174,13 @@ export const NoteHome = (props: NoteHomeProps) => {
                                             myself={myself}
                                             setMyself={setMyself}
                                             setOpeningService={setOpeningService}
-                                            setCurrentChat={setCurrentMainChat}
+                                            setCurrentChat={CM.setCurrentMainChat}
                                             isInTaskPage={false}
                                             isCreatingTask={isCreatingTask}
                                             setCurrentPreviewTask={setCurrentPreviewTask}
-                                            allChats={allChats}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            funcSetAllChats={funcSetAllChats}
+                                            allChats={CM.allChats}
+                                            setCurrentMainChat={CM.setCurrentMainChat}
+                                            funcSetAllChats={CM.funcSetAllChats}
                                             NM={NM}
                                         />
 
@@ -219,16 +194,16 @@ export const NoteHome = (props: NoteHomeProps) => {
                                                 setMyself={setMyself}
                                                 setCurrentProject={setCurrentProject}
                                                 currentPreviewTask={currentPreviewTask}
-                                                setIsMainChatVisible={setIsMainChatVisible}
-                                                setIsThreadVisible={setIsThreadVisible}
-                                                isThreadVisible={isThreadVisible}
+                                                setIsMainChatVisible={CM.setIsMainChatVisible}
+                                                setIsThreadVisible={CM.setIsThreadVisible}
+                                                isThreadVisible={CM.isThreadVisible}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 isCreatingTask={isCreatingTask}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpenCreateProject={setOpenCreateProject}
                                                 setOpenCreateTag={setOpenCreateTag}
-                                                setCurrentMainChat={setCurrentMainChat}
+                                                setCurrentMainChat={CM.setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
                                                 currentPreviewTaskId={currentPreviewTaskId}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
@@ -243,7 +218,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                                 teamProjects={teamProjects}
                                                 setTeamProjects={setTeamProjects}
                                                 taskNoteMeta={NM.taskNoteMeta}
-                                                moveToSpecificChat={moveToSpecificChat}
+                                                moveToSpecificChat={CM.moveToSpecificChat}
                                                 openingService={openingService}
                                             />
                                         )}
@@ -259,17 +234,11 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         myself={myself}
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
-                                        setCurrentChat={setCurrentMainChat}
                                         isInChatPage={false}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
-                                        moveToSpecificChat={moveToSpecificChat}
-                                        allChats={allChats}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        funcSetAllChats={funcSetAllChats}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setCurrentProject={setCurrentProject}
                                         NM={NM}
+                                        CM={CM}
                                     />
                                 )}
 
@@ -343,16 +312,16 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setMyself={setMyself}
                                         setCurrentProject={setCurrentProject}
                                         currentPreviewTask={currentPreviewTask}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        isThreadVisible={isThreadVisible}
+                                        setIsMainChatVisible={CM.setIsMainChatVisible}
+                                        setIsThreadVisible={CM.setIsThreadVisible}
+                                        isThreadVisible={CM.isThreadVisible}
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                         isCreatingTask={isCreatingTask}
                                         setIsCreatingTask={setIsCreatingTask}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
                                         setOpenCreateProject={setOpenCreateProject}
                                         setOpenCreateTag={setOpenCreateTag}
-                                        setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentMainChat={CM.setCurrentMainChat}
                                         setOpeningService={setOpeningService}
                                         currentPreviewTaskId={currentPreviewTaskId}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
@@ -366,7 +335,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setTeamProjects={setTeamProjects}
                                         taskNoteMeta={NM.taskNoteMeta}
                                         setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
-                                        moveToSpecificChat={moveToSpecificChat}
+                                        moveToSpecificChat={CM.moveToSpecificChat}
                                         openingService={openingService}
                                     />
                                 </Box>

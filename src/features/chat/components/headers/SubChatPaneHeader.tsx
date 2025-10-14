@@ -16,8 +16,8 @@ type SubChatPaneHeaderProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    chat: ChatProps;
-    subChat: ChatProps;
+    chat?: ChatProps;
+    subChat?: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setIsMainChatVisible: (value: boolean) => void;
@@ -58,11 +58,13 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         incompleteTodoCount,
     } = props;
 
-    const isYou: boolean = myself.userId === subChat.dmPartnerUser.userId;
+    const isYou: boolean = myself.userId === subChat?.dmPartnerUser.userId;
 
     const swapChat = () => {
-        setCurrentMainChat(subChat);
-        setCurrentSubChat(chat);
+        if (chat && subChat) {
+            setCurrentMainChat(subChat);
+            setCurrentSubChat(chat);
+        }
     };
 
     return (
@@ -92,7 +94,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 />
             </Stack>
             <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
-                {(subChat.chatType === 3 || subChat.chatType === 4) && (
+                {subChat && (subChat.chatType === 3 || subChat.chatType === 4) && (
                     <Tooltip title="Create a new task" size="sm">
                         <IconButton
                             component="a"

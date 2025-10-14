@@ -38,8 +38,8 @@ type ChatListItemProps = ListItemButtonProps & {
     chat: AllChatProps;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    currentMainChat: ChatProps;
-    currentSubChat: ChatProps;
+    currentMainChat?: ChatProps;
+    currentSubChat?: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setIsMainChatVisible: (value: boolean) => void;
@@ -92,10 +92,10 @@ export const ChatListItem = (props: ChatListItemProps) => {
     const [isPinned, setIsPinned] = useState(chat.isPinned);
 
     const selected =
-        `${currentMainChat.chatName}-${currentMainChat.chatId}` ===
+        `${currentMainChat?.chatName}-${currentMainChat?.chatId}` ===
             `${chat.chatName}-${chat.chatId}` ||
         (isSubChatVisible &&
-            `${currentSubChat.chatName}-${currentSubChat.chatId}` ===
+            `${currentSubChat?.chatName}-${currentSubChat?.chatId}` ===
                 `${chat.chatName}-${chat.chatId}`);
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
@@ -123,7 +123,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
     const onClickHandler = () => {
         if (
             isSubChatVisible === false ||
-            `${currentSubChat.chatId}-${currentSubChat.chatName}` !==
+            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
                 `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
@@ -151,7 +151,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
 
     const splitOpenHandler = () => {
         if (
-            `${currentMainChat.chatId}-${currentMainChat.chatName}` !==
+            `${currentMainChat?.chatId}-${currentMainChat?.chatName}` !==
             `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();

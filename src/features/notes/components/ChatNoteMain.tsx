@@ -45,6 +45,7 @@ import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 
 type ChatNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -53,26 +54,11 @@ type ChatNoteMainProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setOpeningService: (service: number) => void;
-    setCurrentChat: (chat: ChatProps) => void;
     isInChatPage: boolean;
-    setIsMainChatVisible: (value: boolean) => void;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => void;
-    allChats: AllChatProps[];
-    setCurrentMainChat: (chat: ChatProps) => void;
-    funcSetAllChats: () => Promise<void>;
     setCurrentPreviewTaskId: (id: number) => void;
     setCurrentProject: (project: any) => void;
     NM: NoteManagementState;
-    setIsChatNoteVisibleInChat: (value: boolean) => void;
+    CM: ChatManagementState;
 };
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
@@ -83,17 +69,11 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         myself,
         setMyself,
         setOpeningService,
-        setCurrentChat,
         isInChatPage,
-        setIsMainChatVisible,
-        moveToSpecificChat,
-        allChats,
-        setCurrentMainChat,
-        funcSetAllChats,
         setCurrentPreviewTaskId,
         setCurrentProject,
         NM,
-        setIsChatNoteVisibleInChat,
+        CM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -216,7 +196,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setNoteBodySaved(false);
     }, [NM.selectedTabIndex]);
 
-    const chat = allChats.find(
+    const chat = CM.allChats.find(
         (chat) =>
             chat.chatType === NM.currentChatNote?.chatType &&
             NM.currentChatNote &&
@@ -353,7 +333,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             socket={socket}
                                                             chat={chat}
                                                             setOpeningService={setOpeningService}
-                                                            setCurrentMainChat={setCurrentMainChat}
+                                                            setCurrentMainChat={
+                                                                CM.setCurrentMainChat
+                                                            }
                                                         />
                                                     </Box>
                                                 )}
@@ -367,8 +349,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             socket={socket}
                                                             gmChat={chat}
                                                             setOpeningService={setOpeningService}
-                                                            setCurrentMainChat={setCurrentMainChat}
-                                                            funcSetAllChats={funcSetAllChats}
+                                                            setCurrentMainChat={
+                                                                CM.setCurrentMainChat
+                                                            }
+                                                            funcSetAllChats={CM.funcSetAllChats}
                                                         />
                                                     </Box>
                                                 )}
@@ -381,8 +365,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             socket={socket}
                                                             pmChat={chat}
                                                             setOpeningService={setOpeningService}
-                                                            setCurrentMainChat={setCurrentMainChat}
-                                                            funcSetAllChats={funcSetAllChats}
+                                                            setCurrentMainChat={
+                                                                CM.setCurrentMainChat
+                                                            }
+                                                            funcSetAllChats={CM.funcSetAllChats}
                                                         />
                                                     </Box>
                                                 )}
@@ -437,7 +423,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             variant="plain"
                                                             sx={{ mb: "5px" }}
                                                             onClick={() => {
-                                                                moveToSpecificChat(
+                                                                CM.moveToSpecificChat(
                                                                     NM.currentChatNote?.chatType ||
                                                                         0,
                                                                     NM.currentChatNote?.chatId ||
@@ -515,11 +501,13 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             variant="plain"
                                                             sx={{ mb: "5px" }}
                                                             onClick={() => {
-                                                                setIsChatNoteVisibleInChat(false);
+                                                                CM.setIsChatNoteVisibleInChat(
+                                                                    false
+                                                                );
 
                                                                 // Open main chat pane
-                                                                if (setIsMainChatVisible) {
-                                                                    setIsMainChatVisible(true);
+                                                                if (CM.setIsMainChatVisible) {
+                                                                    CM.setIsMainChatVisible(true);
                                                                 }
                                                             }}
                                                         >
@@ -717,7 +705,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                     setNoteBodyEdited
                                                                 }
                                                                 setNoteBodySaved={setNoteBodySaved}
-                                                                setCurrentChat={setCurrentChat}
+                                                                setCurrentChat={
+                                                                    CM.setCurrentMainChat
+                                                                }
                                                                 setOpeningService={
                                                                     setOpeningService
                                                                 }

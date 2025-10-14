@@ -45,7 +45,7 @@ type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     allChats: AllChatProps[];
-    currentSubChat: ChatProps;
+    currentSubChat?: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
     setCurrentThreadChat: (value: ThreadProps) => void;
@@ -191,7 +191,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 // Handling a message flaggedMessage in DM, GM, PM
                 if (
                     isSubChatVisible === false ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` !==
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
                         `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -212,7 +212,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 }
                 if (
                     isSubChatVisible === true ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` ===
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
                         `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -235,7 +235,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 // Handling a task comment flaggedMessage
                 if (
                     isSubChatVisible === false ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` !==
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
                         `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -305,7 +305,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
                 if (
                     isSubChatVisible === false ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` !==
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
                         `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
                 ) {
                     toggleMessagesPane();
@@ -326,7 +326,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 }
                 if (
                     isSubChatVisible === true ||
-                    `${currentSubChat.chatId}-${currentSubChat.chatName}` ===
+                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
                         `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
                 ) {
                     toggleMessagesPane();

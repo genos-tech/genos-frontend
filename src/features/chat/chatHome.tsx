@@ -28,6 +28,7 @@ import { loadTodo } from "./services/loadTodo";
 import { extractYYYYMMDD } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 
 type ChatHomeProps = {
     currentTeam: Team;
@@ -38,29 +39,12 @@ type ChatHomeProps = {
     setMyself: (me: UserProps) => void;
     teamMembers: UserProps[];
     setTeamMembers: (value: UserProps[]) => void;
-    currentChatPaneType: number;
-    setCurrentChatPaneType: (value: number) => void;
-    activityMessages: ActivityMessageProps[];
-    setActivityMessages: (value: ActivityMessageProps[]) => void;
-    currentMainChat: ChatProps;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    currentSubChat: ChatProps | undefined;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    currentThreadChat: ThreadProps | undefined;
-    setCurrentThreadChat: (value: ThreadProps) => void;
+    CM: ChatManagementState;
     openingService: number;
     setOpeningService: (service: number) => void;
-    allChats: AllChatProps[];
-    setAllChats: (chat: AllChatProps[]) => void;
-    funcSetAllChats: () => Promise<void>;
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     unReadInboxItemCount: number;
-    unReadChatCounts: Record<string, number>;
-    unReadActivityMessageCounts: number;
-    unReadChatAndActivityCounts: number;
-    isTaskPreviewVisible: boolean;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     isCreatingTask: {
         flag: boolean;
         parentTaskId: number | null;
@@ -83,32 +67,14 @@ type ChatHomeProps = {
     setIsNewTagCreated: (value: boolean) => void;
     openCreateProject: boolean;
     openCreateTag: boolean;
-    isMainChatVisible: boolean;
-    setIsMainChatVisible: (value: boolean) => void;
-    isSubChatVisible: boolean;
-    setIsSubChatVisible: (value: boolean) => void;
-    isThreadVisible: boolean;
-    setIsThreadVisible: (value: boolean) => void;
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
     initialEmptyTaskId?: number;
     setInitialEmptyTaskId: (value: number | undefined) => void;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => Promise<void>;
-    flaggedMessages: FlaggedMessageProps[];
-    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
     NM: NoteManagementState;
     loadProjectsAndTasks: (value: number) => Promise<void>;
-    isChatNoteVisibleInChat: boolean;
-    setIsChatNoteVisibleInChat: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    isTaskPreviewVisible: boolean;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
@@ -121,29 +87,12 @@ export const ChatHome = (props: ChatHomeProps) => {
         setMyself,
         teamMembers,
         setTeamMembers,
-        currentChatPaneType,
-        setCurrentChatPaneType,
-        activityMessages,
-        setActivityMessages,
-        currentMainChat,
-        setCurrentMainChat,
-        currentSubChat,
-        setCurrentSubChat,
-        currentThreadChat,
-        setCurrentThreadChat,
         openingService,
         setOpeningService,
-        allChats,
-        setAllChats,
-        funcSetAllChats,
+        CM,
         isCommentUpdated,
         setIsCommentUpdated,
         unReadInboxItemCount,
-        unReadChatCounts,
-        unReadActivityMessageCounts,
-        unReadChatAndActivityCounts,
-        isTaskPreviewVisible,
-        setIsTaskPreviewVisible,
         isCreatingTask,
         setIsCreatingTask,
         currentProject,
@@ -158,23 +107,14 @@ export const ChatHome = (props: ChatHomeProps) => {
         setIsNewTagCreated,
         openCreateProject,
         openCreateTag,
-        isMainChatVisible,
-        setIsMainChatVisible,
-        isSubChatVisible,
-        setIsSubChatVisible,
-        isThreadVisible,
-        setIsThreadVisible,
         teamProjects,
         setTeamProjects,
         initialEmptyTaskId,
         setInitialEmptyTaskId,
-        moveToSpecificChat,
-        flaggedMessages,
-        setFlaggedMessages,
         NM,
         loadProjectsAndTasks,
-        isChatNoteVisibleInChat,
-        setIsChatNoteVisibleInChat,
+        setIsTaskPreviewVisible,
+        isTaskPreviewVisible,
     } = props;
 
     // Common
@@ -194,28 +134,32 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [isToDoVisible]);
 
     useEffect(() => {
-        if (currentMainChatId !== currentMainChat.chatId) {
-            setCurrentMainChatId(currentMainChat.chatId);
+        if (CM.currentMainChat) {
+            if (currentMainChatId !== CM.currentMainChat.chatId) {
+                setCurrentMainChatId(CM.currentMainChat.chatId);
+            }
+            if (CM.currentMainChat.project && CM.currentMainChat.project.projectId) {
+                setCurrentProject(CM.currentMainChat.project);
+            }
         }
-        if (currentMainChat.project && currentMainChat.project.projectId) {
-            setCurrentProject(currentMainChat.project);
-        }
-    }, [currentMainChat]);
+    }, [CM.currentMainChat]);
 
     useEffect(() => {
-        if (currentSubChat !== undefined && currentSubChatId !== currentSubChat.chatId) {
-            setCurrentSubChatId(currentSubChat.chatId);
+        if (CM.currentSubChat) {
+            if (CM.currentSubChat !== undefined && currentSubChatId !== CM.currentSubChat.chatId) {
+                setCurrentSubChatId(CM.currentSubChat.chatId);
+            }
+            if (CM.currentSubChat?.project && CM.currentSubChat.project.projectId) {
+                setCurrentProject(CM.currentSubChat.project);
+            }
         }
-        if (currentSubChat?.project && currentSubChat.project.projectId) {
-            setCurrentProject(currentSubChat.project);
-        }
-    }, [currentSubChat]);
+    }, [CM.currentSubChat]);
 
     useEffect(() => {
         if (currentThreadChatId !== -1) {
             setCurrentThreadChatId(currentThreadChatId);
         }
-    }, [currentThreadChat]);
+    }, [CM.currentThreadChat]);
 
     useEffect(() => {
         if (currentPreviewTask) {
@@ -277,9 +221,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                 setMyself={setMyself}
                 openingService={openingService}
                 setOpeningService={setOpeningService}
-                setCurrentMainChat={setCurrentMainChat}
+                setCurrentMainChat={CM.setCurrentMainChat}
                 unReadInboxItemCount={unReadInboxItemCount}
-                unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
             />
 
             <PanelGroup autoSaveId="conditional" direction="horizontal">
@@ -309,43 +253,45 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
                                 setMyself={setMyself}
-                                currentChatPaneType={currentChatPaneType}
-                                setCurrentChatPaneType={setCurrentChatPaneType}
-                                activityMessages={activityMessages}
-                                setActivityMessages={setActivityMessages}
-                                allChats={allChats}
-                                setAllChats={setAllChats}
-                                setCurrentMainChat={setCurrentMainChat}
-                                setCurrentSubChat={setCurrentSubChat}
-                                setCurrentThreadChat={setCurrentThreadChat}
-                                currentMainChat={currentMainChat}
-                                currentSubChat={currentSubChat ? currentSubChat : currentMainChat}
+                                currentChatPaneType={CM.currentChatPaneType}
+                                setCurrentChatPaneType={CM.setCurrentChatPaneType}
+                                activityMessages={CM.activityMessages}
+                                setActivityMessages={CM.setActivityMessages}
+                                allChats={CM.allChats}
+                                setAllChats={CM.setAllChats}
+                                setCurrentMainChat={CM.setCurrentMainChat}
+                                setCurrentSubChat={CM.setCurrentSubChat}
+                                setCurrentThreadChat={CM.setCurrentThreadChat}
+                                currentMainChat={CM.currentMainChat}
+                                currentSubChat={
+                                    CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat
+                                }
                                 socket={socket}
-                                setIsMainChatVisible={setIsMainChatVisible}
-                                isSubChatVisible={isSubChatVisible}
-                                setIsSubChatVisible={setIsSubChatVisible}
-                                setIsThreadVisible={setIsThreadVisible}
-                                isThreadVisible={isThreadVisible}
+                                setIsMainChatVisible={CM.setIsMainChatVisible}
+                                isSubChatVisible={CM.isSubChatVisible}
+                                setIsSubChatVisible={CM.setIsSubChatVisible}
+                                setIsThreadVisible={CM.setIsThreadVisible}
+                                isThreadVisible={CM.isThreadVisible}
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 isTaskPreviewVisible={isTaskPreviewVisible}
                                 isCreatingTask={isCreatingTask}
                                 setOpeningService={setOpeningService}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
-                                unReadChatCounts={unReadChatCounts}
-                                unReadActivityMessageCounts={unReadActivityMessageCounts}
-                                funcSetAllChats={funcSetAllChats}
+                                unReadChatCounts={CM.unReadChatCounts}
+                                unReadActivityMessageCounts={CM.unReadActivityMessageCounts}
+                                funcSetAllChats={CM.funcSetAllChats}
                                 incompleteTodoCount={incompleteTodoCount}
                                 setIsToDoVisible={setIsToDoVisible}
-                                flaggedMessages={flaggedMessages}
-                                setFlaggedMessages={setFlaggedMessages}
+                                flaggedMessages={CM.flaggedMessages}
+                                setFlaggedMessages={CM.setFlaggedMessages}
                             />
                         </Sheet>
                     </Box>
                 </Panel>
 
                 {/* Main Chat and Sub Chat Pane */}
-                {isMainChatVisible === true && (
+                {CM.isMainChatVisible === true && (
                     <>
                         <PanelResizeHandle
                             key="main-chat-resize-handle"
@@ -360,7 +306,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         <Panel id={"2"} order={2} minSize={25} maxSize={90}>
                             <PanelGroup autoSaveId="conditional" direction="vertical">
                                 {/* Sub Chat Pane */}
-                                {isSubChatVisible === true && (
+                                {CM.isSubChatVisible === true && (
                                     <>
                                         <Panel
                                             id={"3"}
@@ -376,29 +322,29 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 myself={myself}
                                                 setMyself={setMyself}
                                                 teamMembers={teamMembers}
-                                                chat={currentMainChat}
+                                                chat={CM.currentMainChat}
                                                 subChat={
-                                                    currentSubChat
-                                                        ? currentSubChat
-                                                        : currentMainChat
+                                                    CM.currentSubChat
+                                                        ? CM.currentSubChat
+                                                        : CM.currentMainChat
                                                 }
                                                 socket={socket}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setCurrentSubChat={setCurrentSubChat}
-                                                currentSubChat={currentSubChat}
-                                                currentThreadChat={currentThreadChat}
-                                                setCurrentThreadChat={setCurrentThreadChat}
-                                                isThreadVisible={isThreadVisible}
-                                                setIsMainChatVisible={setIsMainChatVisible}
-                                                setIsSubChatVisible={setIsSubChatVisible}
-                                                setIsThreadVisible={setIsThreadVisible}
+                                                setCurrentMainChat={CM.setCurrentMainChat}
+                                                setCurrentSubChat={CM.setCurrentSubChat}
+                                                currentSubChat={CM.currentSubChat}
+                                                currentThreadChat={CM.currentThreadChat}
+                                                setCurrentThreadChat={CM.setCurrentThreadChat}
+                                                isThreadVisible={CM.isThreadVisible}
+                                                setIsMainChatVisible={CM.setIsMainChatVisible}
+                                                setIsSubChatVisible={CM.setIsSubChatVisible}
+                                                setIsThreadVisible={CM.setIsThreadVisible}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 isCreatingTask={isCreatingTask}
                                                 setIsCreatingTask={setIsCreatingTask}
                                                 currentSubChatId={currentSubChatId}
                                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpeningService={setOpeningService}
-                                                funcSetAllChats={funcSetAllChats}
+                                                funcSetAllChats={CM.funcSetAllChats}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setCurrentProject={setCurrentProject}
                                                 isToDoVisible={isToDoVisible}
@@ -408,8 +354,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 isExistingTodaysTodo={isExistingTodaysTodo}
                                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                                 incompleteTodoCount={incompleteTodoCount}
-                                                flaggedMessages={flaggedMessages}
-                                                setFlaggedMessages={setFlaggedMessages}
+                                                flaggedMessages={CM.flaggedMessages}
+                                                setFlaggedMessages={CM.setFlaggedMessages}
                                             />
                                         </Panel>
 
@@ -436,7 +382,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     onResize={setMainChatPanelSize}
                                 >
                                     {/* No chat selected */}
-                                    {currentMainChat.chatId === -1 && (
+                                    {CM.currentMainChat && CM.currentMainChat.chatId === -1 && (
                                         <>
                                             <Box
                                                 sx={{
@@ -463,36 +409,38 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     )}
 
                                     {/* Chat selected */}
-                                    {currentMainChat.chatId !== -1 && (
+                                    {CM.currentMainChat && CM.currentMainChat.chatId !== -1 && (
                                         <MessagesPane
                                             teamMemberProfiles={teamMemberProfiles}
                                             currentWindowHeight={height}
                                             paneSizePCT={mainChatPanelSize}
-                                            chat={currentMainChat}
+                                            chat={CM.currentMainChat}
                                             subChat={
-                                                currentSubChat ? currentSubChat : currentMainChat
+                                                CM.currentSubChat
+                                                    ? CM.currentSubChat
+                                                    : CM.currentMainChat
                                             }
                                             myself={myself}
                                             setMyself={setMyself}
                                             teamMembers={teamMembers}
                                             socket={socket}
-                                            currentMainChat={currentMainChat}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            setCurrentSubChat={setCurrentSubChat}
-                                            currentThreadChat={currentThreadChat}
-                                            setCurrentThreadChat={setCurrentThreadChat}
-                                            isThreadVisible={isThreadVisible}
-                                            setIsMainChatVisible={setIsMainChatVisible}
-                                            setIsThreadVisible={setIsThreadVisible}
+                                            currentMainChat={CM.currentMainChat}
+                                            setCurrentMainChat={CM.setCurrentMainChat}
+                                            setCurrentSubChat={CM.setCurrentSubChat}
+                                            currentThreadChat={CM.currentThreadChat}
+                                            setCurrentThreadChat={CM.setCurrentThreadChat}
+                                            isThreadVisible={CM.isThreadVisible}
+                                            setIsMainChatVisible={CM.setIsMainChatVisible}
+                                            setIsThreadVisible={CM.setIsThreadVisible}
                                             isCreatingTask={isCreatingTask}
                                             setIsCreatingTask={setIsCreatingTask}
                                             setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                            isSubChatVisible={isSubChatVisible}
-                                            setIsSubChatVisible={setIsSubChatVisible}
+                                            isSubChatVisible={CM.isSubChatVisible}
+                                            setIsSubChatVisible={CM.setIsSubChatVisible}
                                             currentMainChatId={currentMainChatId}
                                             setCurrentPreviewTask={setCurrentPreviewTask}
                                             setOpeningService={setOpeningService}
-                                            funcSetAllChats={funcSetAllChats}
+                                            funcSetAllChats={CM.funcSetAllChats}
                                             setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                             setCurrentProject={setCurrentProject}
                                             setIsToDoVisible={setIsToDoVisible}
@@ -502,8 +450,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             isExistingTodaysTodo={isExistingTodaysTodo}
                                             setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                             incompleteTodoCount={incompleteTodoCount}
-                                            flaggedMessages={flaggedMessages}
-                                            setFlaggedMessages={setFlaggedMessages}
+                                            flaggedMessages={CM.flaggedMessages}
+                                            setFlaggedMessages={CM.setFlaggedMessages}
                                         />
                                     )}
                                 </Panel>
@@ -513,7 +461,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 )}
 
                 {/* Thread Chat Pane */}
-                {isThreadVisible === true && currentThreadChat && (
+                {CM.isThreadVisible === true && CM.currentThreadChat && (
                     <>
                         <PanelResizeHandle
                             key="thread-chat-resize-handle"
@@ -538,31 +486,31 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 <ThreadPane
                                     teamMemberProfiles={teamMemberProfiles}
                                     currentWindowHeight={height}
-                                    thread={currentThreadChat}
+                                    thread={CM.currentThreadChat}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
                                     teamMembers={teamMembers}
-                                    currentThreadChat={currentThreadChat}
-                                    setCurrentThreadChat={setCurrentThreadChat}
-                                    setIsThreadVisible={setIsThreadVisible}
+                                    currentThreadChat={CM.currentThreadChat}
+                                    setCurrentThreadChat={CM.setCurrentThreadChat}
+                                    setIsThreadVisible={CM.setIsThreadVisible}
                                     currentThreadChatId={currentThreadChatId}
-                                    setIsMainChatVisible={setIsMainChatVisible}
+                                    setIsMainChatVisible={CM.setIsMainChatVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     isTaskPreviewVisible={isTaskPreviewVisible}
                                     isCreatingTask={isCreatingTask}
                                     setIsCreatingTask={setIsCreatingTask}
                                     currentPreviewTask={currentPreviewTask}
                                     setOpeningService={setOpeningService}
-                                    setCurrentMainChat={setCurrentMainChat}
+                                    setCurrentMainChat={CM.setCurrentMainChat}
                                     currentPreviewTaskId={currentPreviewTaskId}
-                                    isChatNoteVisibleInChat={isChatNoteVisibleInChat}
-                                    setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
+                                    isChatNoteVisibleInChat={CM.isChatNoteVisibleInChat}
+                                    setIsChatNoteVisibleInChat={CM.setIsChatNoteVisibleInChat}
                                     handleCreateNewChatNoteIfNotExist={
                                         NM.handleCreateNewChatNoteIfNotExist
                                     }
-                                    flaggedMessages={flaggedMessages}
-                                    setFlaggedMessages={setFlaggedMessages}
+                                    flaggedMessages={CM.flaggedMessages}
+                                    setFlaggedMessages={CM.setFlaggedMessages}
                                 />
                             </Box>
                         </Panel>
@@ -611,11 +559,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     socket={socket}
                                     myself={myself}
                                     setMyself={setMyself}
-                                    currentMainChat={currentMainChat}
-                                    currentThreadChat={currentThreadChat}
-                                    chatType={currentThreadChat?.chatType || -1}
-                                    setIsMainChatVisible={setIsMainChatVisible}
-                                    isThreadVisible={isThreadVisible}
+                                    currentMainChat={CM.currentMainChat}
+                                    currentThreadChat={CM.currentThreadChat}
+                                    chatType={CM.currentThreadChat?.chatType || -1}
+                                    setIsMainChatVisible={CM.setIsMainChatVisible}
+                                    isThreadVisible={CM.isThreadVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     isCreatingTask={isCreatingTask}
                                     setIsCreatingTask={setIsCreatingTask}
@@ -625,7 +573,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setCurrentProject={setCurrentProject}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     isNewTagCreated={isNewTagCreated}
-                                    setCurrentMainChat={setCurrentMainChat}
+                                    setCurrentMainChat={CM.setCurrentMainChat}
                                     setOpeningService={setOpeningService}
                                     parentTaskId={null}
                                     rootTaskId={null}
@@ -633,7 +581,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setTeamProjects={setTeamProjects}
                                     initialEmptyTaskId={initialEmptyTaskId}
                                     setInitialEmptyTaskId={setInitialEmptyTaskId}
-                                    moveToSpecificChat={moveToSpecificChat}
+                                    moveToSpecificChat={CM.moveToSpecificChat}
                                     openingService={openingService}
                                 />
                             </Box>
@@ -685,16 +633,16 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setMyself={setMyself}
                                     setCurrentProject={setCurrentProject}
                                     currentPreviewTask={currentPreviewTask}
-                                    setIsMainChatVisible={setIsMainChatVisible}
-                                    setIsThreadVisible={setIsThreadVisible}
-                                    isThreadVisible={isThreadVisible}
+                                    setIsMainChatVisible={CM.setIsMainChatVisible}
+                                    setIsThreadVisible={CM.setIsThreadVisible}
+                                    isThreadVisible={CM.isThreadVisible}
                                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     isCreatingTask={isCreatingTask}
                                     setIsCreatingTask={setIsCreatingTask}
                                     setCurrentPreviewTask={setCurrentPreviewTask}
                                     setOpenCreateProject={setOpenCreateProject}
                                     setOpenCreateTag={setOpenCreateTag}
-                                    setCurrentMainChat={setCurrentMainChat}
+                                    setCurrentMainChat={CM.setCurrentMainChat}
                                     setOpeningService={setOpeningService}
                                     currentPreviewTaskId={currentPreviewTaskId}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
@@ -707,7 +655,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     teamProjects={teamProjects}
                                     setTeamProjects={setTeamProjects}
                                     taskNoteMeta={NM.taskNoteMeta}
-                                    moveToSpecificChat={moveToSpecificChat}
+                                    moveToSpecificChat={CM.moveToSpecificChat}
                                     openingService={openingService}
                                 />
                             </Box>
@@ -716,7 +664,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 )}
 
                 {/* Chat Note Pane */}
-                {isChatNoteVisibleInChat === true && (
+                {CM.isChatNoteVisibleInChat === true && (
                     <>
                         <PanelResizeHandle
                             key="chat-note-resize-handle"
@@ -757,17 +705,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     myself={myself}
                                     setMyself={setMyself}
                                     setOpeningService={setOpeningService}
-                                    setCurrentChat={setCurrentMainChat}
                                     isInChatPage={true}
-                                    setIsMainChatVisible={setIsMainChatVisible}
-                                    moveToSpecificChat={moveToSpecificChat}
-                                    funcSetAllChats={funcSetAllChats}
-                                    setCurrentMainChat={setCurrentMainChat}
-                                    allChats={allChats}
                                     setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                     setCurrentProject={setCurrentProject}
-                                    setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                                     NM={NM}
+                                    CM={CM}
                                 />
                             </Box>
                         </Panel>
@@ -775,11 +717,11 @@ export const ChatHome = (props: ChatHomeProps) => {
                 )}
 
                 {/* Select Chat Pane if no pane is visible */}
-                {isMainChatVisible === false &&
-                    isThreadVisible === false &&
+                {CM.isMainChatVisible === false &&
+                    CM.isThreadVisible === false &&
                     isCreatingTask.flag === false &&
                     isTaskPreviewVisible === false &&
-                    isChatNoteVisibleInChat === false && (
+                    CM.isChatNoteVisibleInChat === false && (
                         <>
                             <PanelResizeHandle
                                 key="select-chat-resize-handle"

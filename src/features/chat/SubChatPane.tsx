@@ -33,8 +33,8 @@ type MessagesPaneProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     teamMembers: UserProps[];
-    chat: ChatProps;
-    subChat: ChatProps;
+    chat?: ChatProps;
+    subChat?: ChatProps;
     socket: Socket | null;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentSubChat: (chat: ChatProps) => void;
@@ -113,7 +113,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         setFlaggedMessages,
     } = props;
     const { accessToken } = useAuth();
-    const [chatMessages, setChatMessages] = useState(subChat.messages);
+    const [chatMessages, setChatMessages] = useState(subChat?.messages);
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetMessage, setEditTargetMessage] = useState<MessageProps>();
     const [numEditorLines, setNumEditorLines] = useState<number>(1);
@@ -123,12 +123,12 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
 
     useEffect(() => {
         // For DM chat, remove the first message because it is the "has joined" message.
-        if (subChat.chatType === 1) {
+        if (subChat?.chatType === 1) {
             setChatMessages(subChat.messages.slice(1));
         } else {
-            setChatMessages(subChat.messages);
+            setChatMessages(subChat?.messages);
         }
-    }, [subChat.messages]);
+    }, [subChat?.messages]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
     const [visibleRange, setVisibleRange] = useState({
@@ -136,17 +136,19 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         endIndex: 0,
     });
 
-    useScrollToBottomOnChatChange(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        currentSubChatId,
-        visibleRange.endIndex,
-        chatMessages.length - 1,
-        indexMap,
-        currentSubChat?.moveToSpecificIndex,
-        currentSubChat?.notMove,
-        setErrorMessage,
-        setErrorOpen
-    );
+    if (chatMessages) {
+        useScrollToBottomOnChatChange(
+            virtuosoRef as React.RefObject<VirtuosoHandle>,
+            currentSubChatId,
+            visibleRange.endIndex,
+            chatMessages.length - 1,
+            indexMap,
+            currentSubChat?.moveToSpecificIndex,
+            currentSubChat?.notMove,
+            setErrorMessage,
+            setErrorOpen
+        );
+    }
 
     const updateReadStatus = (indexForLastReadMessageId: number) => {
         if (accessToken && currentSubChat && currentSubChat.messages[indexForLastReadMessageId]) {
@@ -164,7 +166,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
             });
             updateReadStatusWorker.onmessage = (event) => {
                 if (event.data === "done") {
-                    if (chat.lastReadMessageId < lastReadMessageId) {
+                    if (chat && chat.lastReadMessageId < lastReadMessageId) {
                         const updatedChat = { ...chat, lastReadMessageId: lastReadMessageId };
                         addChat(updatedChat, updatedChat.chatType);
                         funcSetAllChats();
@@ -329,200 +331,207 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     currentSubChat &&
                     currentSubChat.chatType === 1 &&
                     currentSubChat.dmPartnerUser.userId === myself.userId
-                ) && (
-                    <>
-                        {" "}
-                        <Box sx={{ px: 0.3, my: 0.2 }}>
-                            <Virtuoso
-                                ref={virtuosoRef}
-                                className="custom-scrollbar"
-                                context={{ isScrolling }}
-                                isScrolling={setIsScrolling}
-                                rangeChanged={setVisibleRange}
-                                style={{
-                                    height: calculateVirtuosoSubHight(
-                                        currentWindowHeight,
-                                        paneSizePCT,
-                                        numEditorLines
-                                    ),
-                                }}
-                                totalCount={chatMessages.length}
-                                initialTopMostItemIndex={chatMessages.length - 1}
-                                atTopThreshold={64}
-                                atTopStateChange={handleAtTop}
-                                atBottomThreshold={128}
-                                itemContent={(index, _, { isScrolling }) => {
-                                    const message = chatMessages[index];
-                                    const isYou = myself.userId === message.sender.userId;
-                                    // Set True if the message is clicked from the Activity,
-                                    // or, if the corresponding thread is opened.
-                                    const isFocused =
-                                        message.messageIdWithChatId ===
-                                            currentSubChat?.moveToSpecificIndex ||
-                                        (isThreadVisible &&
-                                            currentThreadChat &&
-                                            message.messageId === currentThreadChat.threadId) ||
-                                        false;
+                ) &&
+                    chat &&
+                    subChat &&
+                    chatMessages && (
+                        <>
+                            <Box sx={{ px: 0.3, my: 0.2 }}>
+                                <Virtuoso
+                                    ref={virtuosoRef}
+                                    className="custom-scrollbar"
+                                    context={{ isScrolling }}
+                                    isScrolling={setIsScrolling}
+                                    rangeChanged={setVisibleRange}
+                                    style={{
+                                        height: calculateVirtuosoSubHight(
+                                            currentWindowHeight,
+                                            paneSizePCT,
+                                            numEditorLines
+                                        ),
+                                    }}
+                                    totalCount={chatMessages.length}
+                                    initialTopMostItemIndex={chatMessages.length - 1}
+                                    atTopThreshold={64}
+                                    atTopStateChange={handleAtTop}
+                                    atBottomThreshold={128}
+                                    itemContent={(index, _, { isScrolling }) => {
+                                        const message = chatMessages[index];
+                                        const isYou = myself.userId === message.sender.userId;
+                                        // Set True if the message is clicked from the Activity,
+                                        // or, if the corresponding thread is opened.
+                                        const isFocused =
+                                            message.messageIdWithChatId ===
+                                                currentSubChat?.moveToSpecificIndex ||
+                                            (isThreadVisible &&
+                                                currentThreadChat &&
+                                                message.messageId ===
+                                                    currentThreadChat.threadId) ||
+                                            false;
 
-                                    const dateSeparator =
-                                        index === 0 ||
-                                        extractYYYYMMDD(chatMessages[index - 1].tsSent) !==
-                                            extractYYYYMMDD(chatMessages[index].tsSent) ? (
-                                            <div style={{ padding: "0.5rem 0" }}>
-                                                <div
-                                                    style={{
-                                                        textAlign: "center",
-                                                        fontWeight: 300,
-                                                    }}
-                                                >
-                                                    <Chip variant="soft">
-                                                        <span
-                                                            style={{
-                                                                backgroundColor:
-                                                                    "var(--alt-background)",
-                                                                border: "1px solid var(--border)",
-                                                                padding: "0.1rem 2rem",
-                                                                borderRadius: "0.5rem",
-                                                            }}
-                                                        >
-                                                            {extractMMDD(
-                                                                chatMessages[index].tsSent
-                                                            )}
-                                                        </span>
-                                                    </Chip>
+                                        const dateSeparator =
+                                            index === 0 ||
+                                            extractYYYYMMDD(chatMessages[index - 1].tsSent) !==
+                                                extractYYYYMMDD(chatMessages[index].tsSent) ? (
+                                                <div style={{ padding: "0.5rem 0" }}>
+                                                    <div
+                                                        style={{
+                                                            textAlign: "center",
+                                                            fontWeight: 300,
+                                                        }}
+                                                    >
+                                                        <Chip variant="soft">
+                                                            <span
+                                                                style={{
+                                                                    backgroundColor:
+                                                                        "var(--alt-background)",
+                                                                    border: "1px solid var(--border)",
+                                                                    padding: "0.1rem 2rem",
+                                                                    borderRadius: "0.5rem",
+                                                                }}
+                                                            >
+                                                                {extractMMDD(
+                                                                    chatMessages[index].tsSent
+                                                                )}
+                                                            </span>
+                                                        </Chip>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ) : null;
+                                            ) : null;
 
-                                    let isSimpleBubble: boolean;
-                                    isSimpleBubble = false;
-                                    if (index > 0) {
-                                        const limitSeconds: number = 600;
-                                        if (
-                                            chatMessages[index - 1].sender.userId ===
-                                                message.sender.userId &&
-                                            getTimeDiffSeconds(
-                                                chatMessages[index - 1].tsSent,
-                                                message.tsSent
-                                            ) < limitSeconds
-                                        ) {
-                                            isSimpleBubble = true;
+                                        let isSimpleBubble: boolean;
+                                        isSimpleBubble = false;
+                                        if (index > 0) {
+                                            const limitSeconds: number = 600;
+                                            if (
+                                                chatMessages[index - 1].sender.userId ===
+                                                    message.sender.userId &&
+                                                getTimeDiffSeconds(
+                                                    chatMessages[index - 1].tsSent,
+                                                    message.tsSent
+                                                ) < limitSeconds
+                                            ) {
+                                                isSimpleBubble = true;
+                                            }
                                         }
-                                    }
 
-                                    let paddingTop: number;
-                                    let paddingBottom: number;
-                                    paddingTop = 0.3;
-                                    paddingBottom = 0.3;
+                                        let paddingTop: number;
+                                        let paddingBottom: number;
+                                        paddingTop = 0.3;
+                                        paddingBottom = 0.3;
 
-                                    let numRepliesWithoutFirstMessage: number;
-                                    if (chat.chatType !== 3) {
-                                        numRepliesWithoutFirstMessage = message.numReplies - 1;
-                                    } else {
-                                        numRepliesWithoutFirstMessage = message.numReplies;
-                                    }
+                                        let numRepliesWithoutFirstMessage: number;
+                                        if (chat.chatType !== 3) {
+                                            numRepliesWithoutFirstMessage = message.numReplies - 1;
+                                        } else {
+                                            numRepliesWithoutFirstMessage = message.numReplies;
+                                        }
 
-                                    if (message.reactions) {
-                                        if (message.reactions.length > 0) {
+                                        if (message.reactions) {
+                                            if (message.reactions.length > 0) {
+                                                paddingBottom = paddingBottom + 2.5;
+                                            }
+                                        } else if (numRepliesWithoutFirstMessage > 0) {
                                             paddingBottom = paddingBottom + 2.5;
                                         }
-                                    } else if (numRepliesWithoutFirstMessage > 0) {
-                                        paddingBottom = paddingBottom + 2.5;
-                                    }
 
-                                    if (index === chatMessages.length - 1) {
-                                        paddingBottom = paddingBottom + 3;
-                                    }
+                                        if (index === chatMessages.length - 1) {
+                                            paddingBottom = paddingBottom + 3;
+                                        }
 
-                                    return (
-                                        <div>
-                                            {dateSeparator}
-                                            <Stack
-                                                direction="row"
-                                                spacing={2}
-                                                sx={{
-                                                    flexDirection: isYou ? "row-reverse" : "row",
-                                                    paddingTop: paddingTop,
-                                                    paddingBottom: paddingBottom,
-                                                    paddingX: 1,
-                                                }}
-                                            >
-                                                <MessageBubble
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    variant={isYou ? "sent" : "received"}
-                                                    chat={subChat}
-                                                    message={message}
-                                                    isScrolling={isScrolling}
-                                                    isFocused={isFocused}
-                                                    isSimpleBubble={isSimpleBubble}
-                                                    socket={socket}
-                                                    setIsMainChatVisible={setIsMainChatVisible}
-                                                    setIsThreadVisible={setIsThreadVisible}
-                                                    setIsTaskPreviewVisible={
-                                                        setIsTaskPreviewVisible
-                                                    }
-                                                    isCreatingTask={isCreatingTask}
-                                                    setIsCreatingTask={setIsCreatingTask}
-                                                    setCurrentThreadChat={setCurrentThreadChat}
-                                                    setCurrentPreviewTask={setCurrentPreviewTask}
-                                                    setOpeningService={setOpeningService}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    setCurrentPreviewTaskId={
-                                                        setCurrentPreviewTaskId
-                                                    }
-                                                    setCurrentProject={setCurrentProject}
-                                                    setIsInEdit={setIsInEdit}
-                                                    setEditTargetMessage={setEditTargetMessage}
-                                                    currentMessageIndex={index}
-                                                    flaggedMessages={flaggedMessages}
-                                                    setFlaggedMessages={setFlaggedMessages}
-                                                />
-                                            </Stack>
-                                        </div>
-                                    );
-                                }}
-                            />
-                        </Box>
-                        <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-                            {isInEdit === true && editTargetMessage && (
-                                <BnUpdateEditor
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    teamMembers={teamMembers}
-                                    chat={chat}
-                                    message={editTargetMessage}
-                                    isInEdit={isInEdit}
-                                    setIsInEdit={setIsInEdit}
-                                    setCurrentChat={setCurrentSubChat}
-                                    isSubChatVisible={true}
-                                    setOpeningService={setOpeningService}
-                                    numEditorLines={numEditorLines}
-                                    setNumEditorLines={setNumEditorLines}
+                                        return (
+                                            <div>
+                                                {dateSeparator}
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    sx={{
+                                                        flexDirection: isYou
+                                                            ? "row-reverse"
+                                                            : "row",
+                                                        paddingTop: paddingTop,
+                                                        paddingBottom: paddingBottom,
+                                                        paddingX: 1,
+                                                    }}
+                                                >
+                                                    <MessageBubble
+                                                        teamMemberProfiles={teamMemberProfiles}
+                                                        myself={myself}
+                                                        setMyself={setMyself}
+                                                        variant={isYou ? "sent" : "received"}
+                                                        chat={subChat}
+                                                        message={message}
+                                                        isScrolling={isScrolling}
+                                                        isFocused={isFocused}
+                                                        isSimpleBubble={isSimpleBubble}
+                                                        socket={socket}
+                                                        setIsMainChatVisible={setIsMainChatVisible}
+                                                        setIsThreadVisible={setIsThreadVisible}
+                                                        setIsTaskPreviewVisible={
+                                                            setIsTaskPreviewVisible
+                                                        }
+                                                        isCreatingTask={isCreatingTask}
+                                                        setIsCreatingTask={setIsCreatingTask}
+                                                        setCurrentThreadChat={setCurrentThreadChat}
+                                                        setCurrentPreviewTask={
+                                                            setCurrentPreviewTask
+                                                        }
+                                                        setOpeningService={setOpeningService}
+                                                        setCurrentMainChat={setCurrentMainChat}
+                                                        setCurrentPreviewTaskId={
+                                                            setCurrentPreviewTaskId
+                                                        }
+                                                        setCurrentProject={setCurrentProject}
+                                                        setIsInEdit={setIsInEdit}
+                                                        setEditTargetMessage={setEditTargetMessage}
+                                                        currentMessageIndex={index}
+                                                        flaggedMessages={flaggedMessages}
+                                                        setFlaggedMessages={setFlaggedMessages}
+                                                    />
+                                                </Stack>
+                                            </div>
+                                        );
+                                    }}
                                 />
-                            )}
-                            {isInEdit === false && (
-                                <BnChatEditor
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    teamMembers={teamMembers}
-                                    chat={chat}
-                                    setCurrentChat={setCurrentSubChat}
-                                    funcSetAllChats={funcSetAllChats}
-                                    isSubChatVisible={true}
-                                    setOpeningService={setOpeningService}
-                                    numEditorLines={numEditorLines}
-                                    setNumEditorLines={setNumEditorLines}
-                                />
-                            )}
-                        </Box>
-                    </>
-                )}
+                            </Box>
+                            <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+                                {isInEdit === true && editTargetMessage && (
+                                    <BnUpdateEditor
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        teamMembers={teamMembers}
+                                        chat={chat}
+                                        message={editTargetMessage}
+                                        isInEdit={isInEdit}
+                                        setIsInEdit={setIsInEdit}
+                                        setCurrentChat={setCurrentSubChat}
+                                        isSubChatVisible={true}
+                                        setOpeningService={setOpeningService}
+                                        numEditorLines={numEditorLines}
+                                        setNumEditorLines={setNumEditorLines}
+                                    />
+                                )}
+                                {isInEdit === false && (
+                                    <BnChatEditor
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        teamMembers={teamMembers}
+                                        chat={chat}
+                                        setCurrentChat={setCurrentSubChat}
+                                        funcSetAllChats={funcSetAllChats}
+                                        isSubChatVisible={true}
+                                        setOpeningService={setOpeningService}
+                                        numEditorLines={numEditorLines}
+                                        setNumEditorLines={setNumEditorLines}
+                                    />
+                                )}
+                            </Box>
+                        </>
+                    )}
             </Sheet>
         </div>
     );

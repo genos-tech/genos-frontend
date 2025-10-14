@@ -653,29 +653,12 @@ export const App = () => {
                         setMyself={setMyself}
                         teamMembers={teamMembers}
                         setTeamMembers={setTeamMembers}
-                        currentChatPaneType={CM.currentChatPaneType}
-                        setCurrentChatPaneType={CM.setCurrentChatPaneType}
-                        activityMessages={CM.activityMessages}
-                        setActivityMessages={CM.setActivityMessages}
-                        currentMainChat={CM.currentMainChat}
-                        setCurrentMainChat={CM.setCurrentMainChat}
-                        currentSubChat={CM.currentSubChat}
-                        setCurrentSubChat={CM.setCurrentSubChat}
-                        currentThreadChat={CM.currentThreadChat}
-                        setCurrentThreadChat={CM.setCurrentThreadChat}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        allChats={CM.allChats}
-                        setAllChats={CM.setAllChats}
-                        funcSetAllChats={CM.funcSetAllChats}
+                        CM={CM}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        unReadChatCounts={CM.unReadChatCounts}
-                        unReadActivityMessageCounts={CM.unReadActivityMessageCounts}
-                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                        isTaskPreviewVisible={CM.isThreadTaskVisible}
-                        setIsTaskPreviewVisible={CM.setIsThreadTaskVisible}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
                         currentProject={currentProject}
@@ -690,23 +673,14 @@ export const App = () => {
                         setIsNewTagCreated={setIsNewTagCreated}
                         openCreateProject={openCreateProject}
                         openCreateTag={openCreateTag}
-                        isMainChatVisible={CM.isMainChatVisible}
-                        setIsMainChatVisible={CM.setIsMainChatVisible}
-                        isSubChatVisible={CM.isSubChatVisible}
-                        setIsSubChatVisible={CM.setIsSubChatVisible}
-                        isThreadVisible={CM.isThreadVisible}
-                        setIsThreadVisible={CM.setIsThreadVisible}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
-                        moveToSpecificChat={CM.moveToSpecificChat}
-                        flaggedMessages={CM.flaggedMessages}
-                        setFlaggedMessages={CM.setFlaggedMessages}
                         NM={NM}
                         loadProjectsAndTasks={loadProjectsAndTasks}
-                        isChatNoteVisibleInChat={CM.isChatNoteVisibleInChat}
-                        setIsChatNoteVisibleInChat={CM.setIsChatNoteVisibleInChat}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        isTaskPreviewVisible={isTaskPreviewVisible}
                     />
                 ) : null}
 
@@ -781,18 +755,11 @@ export const App = () => {
                         setMyself={setMyself}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        setCurrentMainChat={CM.setCurrentMainChat}
                         currentProject={currentProject}
-                        allChats={CM.allChats}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                         isCreatingTask={isCreatingTask}
-                        setIsMainChatVisible={CM.setIsMainChatVisible}
-                        setIsChatNoteVisibleInChat={CM.setIsChatNoteVisibleInChat}
                         setCurrentProject={setCurrentProject}
                         currentPreviewTask={currentPreviewTask}
-                        setIsThreadVisible={CM.setIsThreadVisible}
-                        isThreadVisible={CM.isThreadVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         setIsCreatingTask={setIsCreatingTask}
                         setCurrentPreviewTask={setCurrentPreviewTask}
@@ -804,9 +771,8 @@ export const App = () => {
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
-                        moveToSpecificChat={CM.moveToSpecificChat}
-                        funcSetAllChats={CM.funcSetAllChats}
                         NM={NM}
+                        CM={CM}
                     />
                 ) : null}
             </CssVarsProvider>
