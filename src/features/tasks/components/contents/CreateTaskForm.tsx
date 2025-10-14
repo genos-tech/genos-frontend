@@ -16,10 +16,11 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
 import { UserProps } from "../../../../types/admin";
-import { TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
+import { TaskProps, TagListProps } from "../../../../types/tasks";
 import { ChatProps, ThreadProps } from "../../../../types/chat";
 import { createEmptyTask } from "../../services/createEmptyTask";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
 const taskContentTemplate: PartialBlock[] = [
     {
@@ -106,29 +107,12 @@ type CreateTaskProps = {
     setIsMainChatVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsOpeningTask?: (value: boolean) => void;
-    setOpenCreateTag: (value: boolean) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    isNewTagCreated: boolean;
-    setIsNewTaskCreated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     parentTaskId: number | null;
     rootTaskId: number | null;
     setIsTaskHomeVisible?: (value: boolean) => void;
     isTaskPreviewVisible?: boolean;
-    initialEmptyTaskId?: number;
-    setInitialEmptyTaskId: (value: number | undefined) => void;
     moveToSpecificChat: (
         chatType: number,
         chatId: number,
@@ -141,6 +125,7 @@ type CreateTaskProps = {
     ) => void;
     openingService: number;
     PM: ProjectManagementState;
+    TM: TaskManagementState;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
@@ -157,23 +142,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setIsMainChatVisible,
         isThreadVisible,
         setIsTaskPreviewVisible,
-        isCreatingTask,
-        setIsOpeningTask,
-        setIsCreatingTask,
-        setOpenCreateTag,
-        setCurrentPreviewTaskId,
-        setIsNewTaskCreated,
-        setOpeningService,
+        setIsTaskHomeVisible,
         setCurrentMainChat,
+        setOpeningService,
         parentTaskId,
         rootTaskId,
-        setIsTaskHomeVisible,
-        isTaskPreviewVisible,
-        initialEmptyTaskId,
-        setInitialEmptyTaskId,
         moveToSpecificChat,
         openingService,
         PM,
+        TM,
     } = props;
     const { accessToken } = useAuth();
 
@@ -190,14 +167,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             myself: myself,
             projectId: PM.currentProject?.projectId || 0,
             accessToken: accessToken,
-            setInitialEmptyTaskId: setInitialEmptyTaskId,
+            setInitialEmptyTaskId: TM.setInitialEmptyTaskId,
         });
     }, []);
 
     useEffect(() => {
-        if (initialEmptyTaskId) {
+        if (TM.initialEmptyTaskId) {
             setTaskContents({
-                id: initialEmptyTaskId,
+                id: TM.initialEmptyTaskId,
                 project: PM.currentProject,
                 title: "",
                 body: taskContentTemplate,
@@ -218,7 +195,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 rootTaskId: rootTaskId,
             });
         }
-    }, [initialEmptyTaskId]);
+    }, [TM.initialEmptyTaskId]);
 
     // Update task title when it changes
     useEffect(() => {
@@ -243,21 +220,16 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // Update status once task is created
     useEffect(() => {
         if (isSubmitted) {
-            if (setIsCreatingTask) {
-                setIsCreatingTask({
+            if (TM.setIsCreatingTask) {
+                TM.setIsCreatingTask({
                     flag: false,
                     parentTaskId: null,
                     rootTaskId: null,
                 });
             }
-
-            if (setIsOpeningTask) {
-                setIsOpeningTask(true);
-            }
-
-            if (setIsNewTaskCreated) {
+            if (TM.setIsNewTaskCreated) {
                 setTimeout(() => {
-                    setIsNewTaskCreated(true);
+                    TM.setIsNewTaskCreated(true);
                 }, 500); // wait 500ms to show the new task
             }
         }
@@ -319,24 +291,19 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         taskContents={taskContents}
                         taskTitle={taskTitle}
                         setTaskTitle={setTaskTitle}
-                        setIsCreatingTask={setIsCreatingTask}
                         setOpenCreateProject={PM.setOpenCreateProject}
-                        setOpenCreateTag={setOpenCreateTag}
+                        setOpenCreateTag={TM.setOpenCreateTag}
                         titleError={titleError}
                         titleErrorOpen={titleErrorOpen}
                         setTitleErrorOpen={setTitleErrorOpen}
                         isPreviewMode={false}
                         setIsMainChatVisible={setIsMainChatVisible}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        isTaskPreviewVisible={isTaskPreviewVisible}
-                        isCreatingTask={isCreatingTask}
-                        setInitialEmptyTaskId={setInitialEmptyTaskId}
                         moveToSpecificChat={moveToSpecificChat}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
+                        TM={TM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
@@ -361,12 +328,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setIsOpenProjectList={setIsOpenProjectList}
                         isOpenTagList={isOpenTagList}
                         setIsOpenTagList={setIsOpenTagList}
-                        setOpenCreateTag={setOpenCreateTag}
+                        setOpenCreateTag={TM.setOpenCreateTag}
                         setCurrentProject={PM.setCurrentProject}
                         isPreviewMode={false}
                         setOpeningService={setOpeningService}
                         setCurrentMainChat={setCurrentMainChat}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
@@ -406,10 +373,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setTitleError={setTitleError}
                         setTitleErrorOpen={setTitleErrorOpen}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setIsCreatingTask={setIsCreatingTask}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        setIsCreatingTask={TM.setIsCreatingTask}
+                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
-                        setInitialEmptyTaskId={setInitialEmptyTaskId}
+                        setInitialEmptyTaskId={TM.setInitialEmptyTaskId}
                     />
                 </Sheet>
             )}

@@ -27,17 +27,13 @@ import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { UserProps } from "../../../../../types/admin";
 import { useAuth } from "../../../../../context/AuthContext";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 
 type TaskTitleBlockProps = {
     myself: UserProps;
     taskContents: TaskProps;
     taskTitle: string;
     setTaskTitle: (value: string) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
     setTaskClosed?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpenCreateTag: (value: boolean) => void;
@@ -48,19 +44,11 @@ type TaskTitleBlockProps = {
     isPreviewMode: boolean;
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
-    setIsTaskPreviewVisible?: (value: boolean) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskPreviewVisible?: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
     setCurrentTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
     isTaskNoteVisible?: boolean;
     setIsTaskVisibleInNote?: (value: boolean) => void;
-    setInitialEmptyTaskId?: (value: number | undefined) => void;
     moveToSpecificChat: (
         chatType: number,
         chatId: number,
@@ -73,8 +61,8 @@ type TaskTitleBlockProps = {
     ) => void;
     openingService: number;
     setOpeningService: (service: number) => void;
-    setCurrentPreviewTaskId: (id: number) => void;
     setCurrentProject: (project: any) => void;
+    TM: TaskManagementState;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -82,31 +70,26 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         taskContents,
         taskTitle,
         setTaskTitle,
-        setIsCreatingTask,
-        setTaskClosed,
         setOpenCreateProject,
         setOpenCreateTag,
+        setTaskUpdated,
         titleError,
         titleErrorOpen,
         setTitleErrorOpen,
-        setTaskUpdated,
         isPreviewMode,
         setIsMainChatVisible,
         setIsThreadVisible,
-        setIsTaskPreviewVisible,
         setIsTaskHomeVisible,
-        isTaskPreviewVisible,
-        isCreatingTask,
         setCurrentTaskContent,
         setTaskStatusUpdated,
         isTaskNoteVisible,
         setIsTaskVisibleInNote,
-        setInitialEmptyTaskId,
+        setTaskClosed,
         moveToSpecificChat,
         openingService,
         setOpeningService,
-        setCurrentPreviewTaskId,
         setCurrentProject,
+        TM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -240,7 +223,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         false, // openTaskNoteInChat
                                         true, // openThreadTaskPreview
                                         setOpeningService,
-                                        setCurrentPreviewTaskId,
+                                        TM.setCurrentPreviewTaskId,
                                         setCurrentProject
                                     );
                                 }
@@ -301,11 +284,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         variant="plain"
                         color="neutral"
                         onClick={() => {
-                            if (isPreviewMode === false && setIsCreatingTask) {
-                                setIsCreatingTask({
+                            if (isPreviewMode === false && TM.setIsCreatingTask) {
+                                TM.setIsCreatingTask({
                                     flag: false,
                                     parentTaskId: null,
-                                    rootTaskId: null,
+                                    rootTaskId: TM.currentPreviewTask?.rootTaskId || null,
                                 });
                             }
                             if (isPreviewMode === true && setTaskClosed) {
@@ -317,25 +300,28 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             }
 
                             // setIsThreadVisible(); // Not update, keep as it is !!!
-                            if (setIsTaskPreviewVisible) {
+                            if (TM.setIsTaskPreviewVisible) {
                                 if (isPreviewMode === true) {
-                                    setIsTaskPreviewVisible(false);
+                                    TM.setIsTaskPreviewVisible(false);
                                 }
                                 // Open task-home when both task-preview and task-create-form are closed.
-                                if (isCreatingTask.flag === false && isTaskNoteVisible === false) {
+                                if (
+                                    TM.isCreatingTask.flag === false &&
+                                    isTaskNoteVisible === false
+                                ) {
                                     if (setIsTaskHomeVisible) {
                                         setIsTaskHomeVisible(true);
                                     }
                                 }
                             }
 
-                            setIsCreatingTask({
+                            TM.setIsCreatingTask({
                                 flag: false,
                                 parentTaskId: null,
                                 rootTaskId: null,
                             });
                             // Open task-home when both task-preview and task-create-form are closed.
-                            if (isTaskPreviewVisible === false) {
+                            if (TM.isTaskPreviewVisible === false) {
                                 if (setIsTaskHomeVisible) {
                                     setIsTaskHomeVisible(true);
                                 }
@@ -346,12 +332,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 setIsTaskVisibleInNote(false);
                             }
 
-                            if (isCreatingTask.flag === true && taskContents.id !== undefined) {
+                            if (TM.isCreatingTask.flag === true && taskContents.id !== undefined) {
                                 deleteEmptyTask({
                                     myself: myself,
                                     taskId: taskContents.id,
                                     accessToken: accessToken,
-                                    setInitialEmptyTaskId: setInitialEmptyTaskId,
+                                    setInitialEmptyTaskId: TM.setInitialEmptyTaskId,
                                 });
                             }
                         }}

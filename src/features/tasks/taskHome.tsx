@@ -40,20 +40,13 @@ import { ModalDeleteProject } from "./components/modals/ModalDeleteProject";
 import { Sidebar } from "../../components/layout/sidebar";
 import { Team, UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps } from "../../types/chat";
-import {
-    ProjectProps,
-    TaskTableProps,
-    TaskProps,
-    TaskType,
-    TaskTypesProps,
-    SearchTeamTasksResponse,
-    TaskMetaTreeNode,
-} from "../../types/tasks";
+import { TaskType, TaskTypesProps, SearchTeamTasksResponse } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
 import { TaskNoteMain } from "../notes/components/TaskNoteMain";
 import { ProjectAvatar } from "../../components/common/ProjectAvatar";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
@@ -73,43 +66,7 @@ type TaskHomeProps = {
     setCurrentMainChat: (chat: ChatProps) => void;
     openingService: number;
     setOpeningService: (service: number) => void;
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
-    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     unReadInboxItemCount: number;
-    isTaskPreviewVisible: boolean;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsNewTaskCreated: (value: boolean) => void;
-    isTaskUpdated: boolean;
-    setIsTaskUpdated: (value: boolean) => void;
-    ongoingTasks: TaskTableProps[];
-    closedTasks: TaskTableProps[];
-    deletedTasks: TaskTableProps[];
-    expiredTasks: TaskTableProps[];
-    setOngoingTasks: (value: TaskTableProps[]) => void;
-    setClosedTasks: (value: TaskTableProps[]) => void;
-    setDeletedTasks: (value: TaskTableProps[]) => void;
-    currentPreviewTaskId: number;
-    setCurrentPreviewTaskId: (value: number) => void;
-    currentPreviewTask?: TaskProps;
-    setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    openCreateTag: boolean;
-    setOpenCreateTag: (value: boolean) => void;
-    isNewTagCreated: boolean;
-    setIsNewTagCreated: (value: boolean) => void;
-    taskMetaTree: TaskMetaTreeNode[];
-    currentTaskChain?: TaskMetaTreeNode[];
-    initialEmptyTaskId?: number;
-    setInitialEmptyTaskId: (value: number | undefined) => void;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
     funcSetAllChats: () => Promise<void>;
@@ -126,6 +83,7 @@ type TaskHomeProps = {
     unReadChatAndActivityCounts: number;
     NM: NoteManagementState;
     PM: ProjectManagementState;
+    TM: TaskManagementState;
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -140,42 +98,15 @@ export const TaskHome = (props: TaskHomeProps) => {
         setCurrentMainChat,
         openingService,
         setOpeningService,
-        isCommentUpdated,
-        setIsCommentUpdated,
         unReadInboxItemCount,
-        isTaskPreviewVisible,
-        setIsTaskPreviewVisible,
-        isCreatingTask,
-        setIsCreatingTask,
-        setIsNewTaskCreated,
-        isTaskUpdated,
-        setIsTaskUpdated,
-        ongoingTasks,
-        closedTasks,
-        deletedTasks,
-        expiredTasks,
-        setOngoingTasks,
-        setClosedTasks,
-        setDeletedTasks,
-        currentPreviewTaskId,
-        setCurrentPreviewTaskId,
-        currentPreviewTask,
-        setCurrentPreviewTask,
-        openCreateTag,
-        setOpenCreateTag,
-        isNewTagCreated,
-        setIsNewTagCreated,
-        taskMetaTree,
-        currentTaskChain,
-        initialEmptyTaskId,
-        setInitialEmptyTaskId,
+        unReadChatAndActivityCounts,
         allChats,
         setAllChats,
         funcSetAllChats,
         moveToSpecificChat,
-        unReadChatAndActivityCounts,
         NM,
         PM,
+        TM,
     } = props;
 
     // Common
@@ -244,8 +175,8 @@ export const TaskHome = (props: TaskHomeProps) => {
     function onChangeHandler(value: any) {
         if (value !== null) {
             setOpenSearch(false);
-            setCurrentPreviewTaskId(value.taskId);
-            setIsTaskPreviewVisible(true);
+            TM.setCurrentPreviewTaskId(value.taskId);
+            TM.setIsTaskPreviewVisible(true);
         }
     }
     // =======================================================================
@@ -282,21 +213,13 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 setIsDashboardVisible={setIsDashboardVisible}
                                 taskTableVisible={isTaskTableVisible}
                                 setTaskTableVisible={setTaskTableVisible}
-                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                currentPreviewTaskId={currentPreviewTaskId}
-                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setOpenJoinProject={setOpenJoinProject}
                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                 setFilterBy={setFilterBy}
                                 setSelectedTagForFiltering={setSelectedTagForFiltering}
-                                setOngoingTasks={setOngoingTasks}
-                                setClosedTasks={setClosedTasks}
-                                setDeletedTasks={setDeletedTasks}
-                                taskMetaTree={taskMetaTree}
-                                currentTaskChain={currentTaskChain}
                                 setCurrentFilterName={setCurrentFilterName}
-                                setIsCreatingTask={setIsCreatingTask}
                                 PM={PM}
+                                TM={TM}
                             />
                         </Panel>
 
@@ -492,7 +415,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                                                     <Box sx={{ width: "40%" }}>
                                                         <Autocomplete
-                                                            key={`ac-project-tags-${currentPreviewTaskId}`}
+                                                            key={`ac-project-tags-${TM.currentPreviewTaskId}`}
                                                             sx={{ width: "100%" }}
                                                             placeholder={"Search"}
                                                             variant="soft"
@@ -641,7 +564,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     paddingRight: "10px",
                                                                 }}
                                                                 onClick={() => {
-                                                                    setIsCreatingTask({
+                                                                    TM.setIsCreatingTask({
                                                                         flag: true,
                                                                         parentTaskId: null,
                                                                         rootTaskId: null,
@@ -676,7 +599,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 </MenuItem>
                                                                 <MenuItem
                                                                     onClick={() => {
-                                                                        setOpenCreateTag(true);
+                                                                        TM.setOpenCreateTag(true);
                                                                     }}
                                                                 >
                                                                     <AddIcon />
@@ -710,8 +633,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 </MenuItem>
                                                             </Menu>
                                                         </Dropdown>
-                                                        {(isTaskPreviewVisible === true ||
-                                                            isCreatingTask.flag === true) && (
+                                                        {(TM.isTaskPreviewVisible === true ||
+                                                            TM.isCreatingTask.flag === true) && (
                                                             <Tooltip title="Close">
                                                                 <IconButton
                                                                     size="sm"
@@ -743,16 +666,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             teamMemberProfiles={teamMemberProfiles}
                                                             myself={myself}
                                                             currentProject={PM.currentProject}
-                                                            ongoingTasks={ongoingTasks}
-                                                            closedTasks={closedTasks}
-                                                            deletedTasks={deletedTasks}
-                                                            expiredTasks={expiredTasks}
-                                                            setIsTaskPreviewVisible={
-                                                                setIsTaskPreviewVisible
-                                                            }
-                                                            setCurrentPreviewTaskId={
-                                                                setCurrentPreviewTaskId
-                                                            }
                                                             displayTaskType={displayTaskType}
                                                             setFilterBy={setFilterBy}
                                                             filterBy={filterBy}
@@ -766,6 +679,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             setCurrentFilterName={
                                                                 setCurrentFilterName
                                                             }
+                                                            TM={TM}
                                                         />
                                                     </>
                                                 )}
@@ -774,7 +688,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     </>
                                 )}
 
-                                {isCreatingTask.flag === true && (
+                                {TM.isCreatingTask.flag === true && (
                                     <>
                                         {/* Resizable Handle with MUI sx Styling */}
                                         <PanelResizeHandle
@@ -817,35 +731,22 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     currentMainChat={undefined}
                                                     currentThreadChat={undefined}
                                                     chatType={-1}
-                                                    setIsTaskPreviewVisible={
-                                                        setIsTaskPreviewVisible
-                                                    }
-                                                    setIsCreatingTask={setIsCreatingTask}
-                                                    setOpenCreateTag={setOpenCreateTag}
-                                                    setCurrentPreviewTaskId={
-                                                        setCurrentPreviewTaskId
-                                                    }
-                                                    isNewTagCreated={isNewTagCreated}
-                                                    setIsNewTaskCreated={setIsNewTaskCreated}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
-                                                    parentTaskId={isCreatingTask.parentTaskId}
-                                                    rootTaskId={isCreatingTask.rootTaskId}
+                                                    parentTaskId={TM.isCreatingTask.parentTaskId}
+                                                    rootTaskId={TM.isCreatingTask.rootTaskId}
                                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                    isTaskPreviewVisible={isTaskPreviewVisible}
-                                                    isCreatingTask={isCreatingTask}
-                                                    initialEmptyTaskId={initialEmptyTaskId}
-                                                    setInitialEmptyTaskId={setInitialEmptyTaskId}
                                                     moveToSpecificChat={moveToSpecificChat}
                                                     openingService={openingService}
                                                     PM={PM}
+                                                    TM={TM}
                                                 />
                                             </Box>
                                         </Panel>
                                     </>
                                 )}
 
-                                {isTaskPreviewVisible && currentPreviewTask && (
+                                {TM.isTaskPreviewVisible && TM.currentPreviewTask && (
                                     <>
                                         {/* Resizable Handle with MUI sx Styling */}
                                         <PanelResizeHandle
@@ -892,27 +793,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     myself={myself}
                                                     setMyself={setMyself}
                                                     setCurrentProject={PM.setCurrentProject}
-                                                    currentPreviewTask={currentPreviewTask}
-                                                    setIsCreatingTask={setIsCreatingTask}
-                                                    setIsTaskPreviewVisible={
-                                                        setIsTaskPreviewVisible
-                                                    }
-                                                    setCurrentPreviewTask={setCurrentPreviewTask}
                                                     setOpenCreateProject={PM.setOpenCreateProject}
-                                                    setOpenCreateTag={setOpenCreateTag}
-                                                    isTaskUpdated={isTaskUpdated}
-                                                    setIsTaskUpdated={setIsTaskUpdated}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     setOpeningService={setOpeningService}
-                                                    currentPreviewTaskId={currentPreviewTaskId}
-                                                    setCurrentPreviewTaskId={
-                                                        setCurrentPreviewTaskId
-                                                    }
-                                                    isCommentUpdated={isCommentUpdated}
-                                                    setIsCommentUpdated={setIsCommentUpdated}
                                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                    isTaskPreviewVisible={isTaskPreviewVisible}
-                                                    isCreatingTask={isCreatingTask}
                                                     setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                                                     handleCreateNewTaskNote={
                                                         NM.handleCreateNewTaskNote
@@ -924,6 +808,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     taskNoteMeta={NM.taskNoteMeta}
                                                     moveToSpecificChat={moveToSpecificChat}
                                                     openingService={openingService}
+                                                    TM={TM}
                                                 />
                                             </Box>
                                         </Panel>
@@ -976,14 +861,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     setOpeningService={setOpeningService}
                                                     setCurrentChat={setCurrentMainChat}
                                                     isInTaskPage={true}
-                                                    isCreatingTask={isCreatingTask}
-                                                    isTaskPreviewVisible={isTaskPreviewVisible}
                                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                    setCurrentPreviewTask={setCurrentPreviewTask}
                                                     allChats={allChats}
                                                     setCurrentMainChat={setCurrentMainChat}
                                                     funcSetAllChats={funcSetAllChats}
                                                     NM={NM}
+                                                    TM={TM}
                                                 />
                                             </Box>
                                         </Panel>
@@ -1003,21 +886,13 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         setIsDashboardVisible={setIsDashboardVisible}
                                         taskTableVisible={isTaskTableVisible}
                                         setTaskTableVisible={setTaskTableVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        currentPreviewTaskId={currentPreviewTaskId}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setOpenJoinProject={setOpenJoinProject}
                                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                                         setFilterBy={setFilterBy}
                                         setSelectedTagForFiltering={setSelectedTagForFiltering}
-                                        setOngoingTasks={setOngoingTasks}
-                                        setClosedTasks={setClosedTasks}
-                                        setDeletedTasks={setDeletedTasks}
-                                        taskMetaTree={taskMetaTree}
-                                        currentTaskChain={currentTaskChain}
                                         setCurrentFilterName={setCurrentFilterName}
-                                        setIsCreatingTask={setIsCreatingTask}
                                         PM={PM}
+                                        TM={TM}
                                     />
                                 </Panel>
 
@@ -1086,13 +961,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     />
 
                     {/* Modal for creating a new tag */}
-                    <ModalCreateTag
-                        myself={myself}
-                        currentProject={PM.currentProject}
-                        openCreateTag={openCreateTag}
-                        setOpenCreateTag={setOpenCreateTag}
-                        setIsNewTagCreated={setIsNewTagCreated}
-                    />
+                    <ModalCreateTag myself={myself} currentProject={PM.currentProject} TM={TM} />
                 </PanelGroup>
 
                 {/* Hover Animation with CSS */}

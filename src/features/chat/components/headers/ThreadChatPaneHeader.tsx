@@ -9,7 +9,7 @@ import NoteAltIcon from "@mui/icons-material/NoteAlt";
 
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
-import { TaskProps } from "../../../../types/tasks";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
@@ -17,21 +17,6 @@ type ThreadChatPaneHeaderProps = {
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setIsMainChatVisible: (chat: boolean) => void;
     setIsThreadVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isTaskPreviewVisible: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsOpeningTask?: (value: boolean) => void;
-    currentPreviewTask?: TaskProps;
-    currentPreviewTaskId: number;
     isChatNoteVisibleInChat: boolean;
     setIsChatNoteVisibleInChat: (value: boolean) => void;
     handleCreateNewChatNoteIfNotExist: (
@@ -40,6 +25,7 @@ type ThreadChatPaneHeaderProps = {
         isThread: boolean,
         threadId: number
     ) => Promise<void>;
+    TM: TaskManagementState;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
@@ -49,16 +35,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         setCurrentThreadChat,
         setIsMainChatVisible,
         setIsThreadVisible,
-        setIsTaskPreviewVisible,
-        isTaskPreviewVisible,
-        isCreatingTask,
-        setIsOpeningTask,
-        setIsCreatingTask,
-        currentPreviewTask,
-        currentPreviewTaskId,
         isChatNoteVisibleInChat,
         setIsChatNoteVisibleInChat,
         handleCreateNewChatNoteIfNotExist,
+        TM,
     } = props;
     const { mode } = useColorScheme();
 
@@ -113,10 +93,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
             <Stack spacing={0.3} direction="row" sx={{ alignItems: "center" }}>
                 {/* Custom header in PM and DM/GM (having a task) thread */}
                 {(((thread.chatType === 3 || thread.chatType === 4) &&
-                    currentPreviewTaskId !== -1) ||
-                    (isTaskPreviewVisible === false &&
-                        currentPreviewTaskId !== -1 &&
-                        currentPreviewTask &&
+                    TM.currentPreviewTaskId !== -1) ||
+                    (TM.isTaskPreviewVisible === false &&
+                        TM.currentPreviewTaskId !== -1 &&
+                        TM.currentPreviewTask &&
                         thread.taskExist === true)) && (
                     <>
                         <Chip
@@ -131,24 +111,24 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         >
                             ID: {thread.taskId || "N/A"}
                         </Chip>
-                        {currentPreviewTask && (
+                        {TM.currentPreviewTask && (
                             <>
                                 <Chip
                                     size="lg"
                                     variant="soft"
                                     sx={{
-                                        backgroundColor: currentPreviewTask.status.color
+                                        backgroundColor: TM.currentPreviewTask.status.color
                                             ? alpha(
-                                                  currentPreviewTask.status.color,
+                                                  TM.currentPreviewTask.status.color,
                                                   mode === "dark" ? 0.5 : 0.75
                                               )
                                             : "transparent",
-                                        color: currentPreviewTask.status.textColor,
+                                        color: TM.currentPreviewTask.status.textColor,
                                         fontWeight: "bold",
                                         borderRadius: "5px",
                                     }}
                                 >
-                                    {currentPreviewTask.status.status || "N/A"}
+                                    {TM.currentPreviewTask.status.status || "N/A"}
                                 </Chip>
                             </>
                         )}
@@ -156,36 +136,38 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/* Custom header in DM/GM thread */}
-                {thread.chatType !== 3 && thread.chatType !== 4 && currentPreviewTaskId === -1 && (
-                    <>
-                        <Tooltip title="New Task" size="sm">
-                            <IconButton
-                                component="a"
-                                size="sm"
-                                variant="plain"
-                                color="neutral"
-                                onClick={() => {
-                                    setIsMainChatVisible(true);
-                                    setIsThreadVisible(true);
-                                    setIsTaskPreviewVisible(false);
-                                    setIsCreatingTask({
-                                        flag: true,
-                                        parentTaskId: null,
-                                        rootTaskId: null,
-                                    });
-                                }}
-                                sx={{ px: "10px" }}
-                            >
-                                <PlaylistAddIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </>
-                )}
+                {thread.chatType !== 3 &&
+                    thread.chatType !== 4 &&
+                    TM.currentPreviewTaskId === -1 && (
+                        <>
+                            <Tooltip title="New Task" size="sm">
+                                <IconButton
+                                    component="a"
+                                    size="sm"
+                                    variant="plain"
+                                    color="neutral"
+                                    onClick={() => {
+                                        setIsMainChatVisible(true);
+                                        setIsThreadVisible(true);
+                                        TM.setIsTaskPreviewVisible(false);
+                                        TM.setIsCreatingTask({
+                                            flag: true,
+                                            parentTaskId: null,
+                                            rootTaskId: null,
+                                        });
+                                    }}
+                                    sx={{ px: "10px" }}
+                                >
+                                    <PlaylistAddIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
 
                 {!(
                     thread.chatType !== 3 &&
                     thread.chatType !== 4 &&
-                    currentPreviewTaskId === -1
+                    TM.currentPreviewTaskId === -1
                 ) && (
                     <Tooltip title="Open Task" size="sm">
                         <IconButton
@@ -193,15 +175,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             onClick={() => {
                                 setIsMainChatVisible(false);
                                 setIsThreadVisible(true);
-                                setIsTaskPreviewVisible(true);
-                                setIsCreatingTask({
+                                TM.setIsTaskPreviewVisible(true);
+                                TM.setIsCreatingTask({
                                     flag: false,
                                     parentTaskId: null,
                                     rootTaskId: null,
                                 });
-                                if (setIsOpeningTask) {
-                                    setIsOpeningTask(true);
-                                }
                             }}
                         >
                             <AssignmentRoundedIcon />
@@ -225,11 +204,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             setIsChatNoteVisibleInChat(true);
                             setIsMainChatVisible(false);
                             setIsThreadVisible(true);
-                            setIsTaskPreviewVisible(false);
-                            setIsCreatingTask({ ...isCreatingTask, flag: false });
-                            if (setIsOpeningTask) {
-                                setIsOpeningTask(false);
-                            }
+                            TM.setIsTaskPreviewVisible(false);
+                            TM.setIsCreatingTask({ ...TM.isCreatingTask, flag: false });
                         }}
                     >
                         <NoteAltIcon />

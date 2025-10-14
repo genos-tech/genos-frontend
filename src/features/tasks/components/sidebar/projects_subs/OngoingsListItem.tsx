@@ -11,56 +11,37 @@ import { ProjectProps, TagListProps, TaskMetaTreeNode } from "../../../../../typ
 import { Toggler } from "../common";
 import { TaskTreeToggler } from "./TaskTreeToggler";
 import { areObjectsEqual } from "../../../../../utils/objectHandler";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 
 type OngoingsListItemProps = {
-    taskMetaTree: TaskMetaTreeNode[];
     currentProjectId: number;
-    currentTaskChain?: TaskMetaTreeNode[];
-    currentPreviewTaskId: number;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
     projectTags: TagListProps[];
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
     setIsTaskHomeVisible: (value: boolean) => void;
+    TM: TaskManagementState;
 };
 export const OngoingsListItem = (props: OngoingsListItemProps) => {
-    const {
-        taskMetaTree,
-        currentProjectId,
-        currentTaskChain,
-        currentPreviewTaskId,
-        setIsTaskPreviewVisible,
-        setCurrentProject,
-        setCurrentPreviewTaskId,
-        projectTags,
-        setIsCreatingTask,
-        setIsTaskHomeVisible,
-    } = props;
+    const { currentProjectId, projectTags, setCurrentProject, setIsTaskHomeVisible, TM } = props;
     const { mode } = useColorScheme();
 
     const [tmpCurrentTaskChain, setTmpCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
-    const [tmpTaskMetaTree, setTmpTaskMetaTree] = useState<TaskMetaTreeNode[]>(taskMetaTree);
+    const [tmpTaskMetaTree, setTmpTaskMetaTree] = useState<TaskMetaTreeNode[]>(TM.taskMetaTree);
     useEffect(() => {
-        if (currentTaskChain && currentTaskChain.length > 0) {
-            setTmpCurrentTaskChain(currentTaskChain);
+        if (TM.currentTaskChain && TM.currentTaskChain.length > 0) {
+            setTmpCurrentTaskChain(TM.currentTaskChain);
         } else {
             setTmpCurrentTaskChain([]);
         }
-    }, [currentTaskChain]);
+    }, [TM.currentTaskChain]);
 
     // Only when `taskMetaTree` has been updated with new contents, refresh the Note Chain.
     // `taskMetaTree` has been always updated without any contents change. Is such case,
     // no need to refresh it since it's the same as the tmp one.
     useEffect(() => {
-        if (areObjectsEqual(tmpTaskMetaTree, taskMetaTree) === false) {
-            setTmpTaskMetaTree(taskMetaTree);
+        if (areObjectsEqual(tmpTaskMetaTree, TM.taskMetaTree) === false) {
+            setTmpTaskMetaTree(TM.taskMetaTree);
         }
-    }, [taskMetaTree]);
+    }, [TM.taskMetaTree]);
 
     const createChildNoteList = (node: any) => (
         <Box key={`my-note-box-${node.taskId}`}>
@@ -69,7 +50,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                     variant="plain"
                     sx={{ ml: "20px", mr: "8px", pl: "20px" }}
                     onClick={() => {
-                        setIsCreatingTask({
+                        TM.setIsCreatingTask({
                             flag: true,
                             parentTaskId: node.taskId,
                             rootTaskId: node.rootTaskId,
@@ -163,7 +144,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
         node: any
     ) => (
         <ListItemButton
-            selected={currentPreviewTaskId === node.taskId ? true : false}
+            selected={TM.currentPreviewTaskId === node.taskId ? true : false}
             variant="plain"
             sx={{ ml: "45px", mr: "8px", pl: "20px" }}
             onClick={() => {
@@ -172,10 +153,10 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                     setOpen(!open);
                 }
 
-                setIsTaskPreviewVisible(true);
+                TM.setIsTaskPreviewVisible(true);
 
                 setCurrentProject({ ...node.project, projectTags: projectTags });
-                setCurrentPreviewTaskId(node.taskId);
+                TM.setCurrentPreviewTaskId(node.taskId);
             }}
         >
             <Chip

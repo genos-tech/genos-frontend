@@ -7,15 +7,14 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Team, UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
-import { AllChatProps, ChatProps } from "../../types/chat";
 import { MyNoteMain } from "./components/MyNoteMain";
 import { ChatNoteMain } from "./components/ChatNoteMain";
 import { TaskNoteMain } from "./components/TaskNoteMain";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
-import { ProjectProps, TaskProps } from "../../types/tasks";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 
 type NoteHomeProps = {
     currentTeam: Team;
@@ -29,27 +28,10 @@ type NoteHomeProps = {
     openingService: number;
     setOpeningService: (service: number) => void;
     unReadInboxItemCount: number;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    currentPreviewTask?: TaskProps;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setCurrentPreviewTask: (value: TaskProps) => void;
-    setOpenCreateTag: (value: boolean) => void;
-    currentPreviewTaskId: number;
-    setCurrentPreviewTaskId: (value: number) => void;
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
-    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     PM: ProjectManagementState;
     NM: NoteManagementState;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 export const NoteHome = (props: NoteHomeProps) => {
     const {
@@ -64,19 +46,10 @@ export const NoteHome = (props: NoteHomeProps) => {
         openingService,
         setOpeningService,
         unReadInboxItemCount,
-        isCreatingTask,
-        currentPreviewTask,
-        setIsTaskPreviewVisible,
-        setIsCreatingTask,
-        setCurrentPreviewTask,
-        setOpenCreateTag,
-        currentPreviewTaskId,
-        setCurrentPreviewTaskId,
-        isCommentUpdated,
-        setIsCommentUpdated,
-        PM,
         NM,
         CM,
+        PM,
+        TM,
     } = props;
     const { mode } = useColorScheme();
 
@@ -169,15 +142,14 @@ export const NoteHome = (props: NoteHomeProps) => {
                                             setOpeningService={setOpeningService}
                                             setCurrentChat={CM.setCurrentMainChat}
                                             isInTaskPage={false}
-                                            isCreatingTask={isCreatingTask}
-                                            setCurrentPreviewTask={setCurrentPreviewTask}
                                             allChats={CM.allChats}
                                             setCurrentMainChat={CM.setCurrentMainChat}
                                             funcSetAllChats={CM.funcSetAllChats}
                                             NM={NM}
+                                            TM={TM}
                                         />
 
-                                        {NM.isTaskVisibleInNote && currentPreviewTask && (
+                                        {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
                                             <TaskPreview
                                                 teamMembers={teamMembers}
                                                 setTeamMembers={setTeamMembers}
@@ -186,22 +158,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                                                 myself={myself}
                                                 setMyself={setMyself}
                                                 setCurrentProject={PM.setCurrentProject}
-                                                currentPreviewTask={currentPreviewTask}
                                                 setIsMainChatVisible={CM.setIsMainChatVisible}
                                                 setIsThreadVisible={CM.setIsThreadVisible}
                                                 isThreadVisible={CM.isThreadVisible}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                isCreatingTask={isCreatingTask}
-                                                setIsCreatingTask={setIsCreatingTask}
-                                                setCurrentPreviewTask={setCurrentPreviewTask}
                                                 setOpenCreateProject={PM.setOpenCreateProject}
-                                                setOpenCreateTag={setOpenCreateTag}
                                                 setCurrentMainChat={CM.setCurrentMainChat}
                                                 setOpeningService={setOpeningService}
-                                                currentPreviewTaskId={currentPreviewTaskId}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                isCommentUpdated={isCommentUpdated}
-                                                setIsCommentUpdated={setIsCommentUpdated}
                                                 setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                                                 handleCreateNewTaskNote={
                                                     NM.handleCreateNewTaskNote
@@ -213,6 +175,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                                 taskNoteMeta={NM.taskNoteMeta}
                                                 moveToSpecificChat={CM.moveToSpecificChat}
                                                 openingService={openingService}
+                                                TM={TM}
                                             />
                                         )}
                                     </>
@@ -228,7 +191,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
                                         isInChatPage={false}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                                         setCurrentProject={PM.setCurrentProject}
                                         NM={NM}
                                         CM={CM}
@@ -263,78 +226,71 @@ export const NoteHome = (props: NoteHomeProps) => {
                         </Panel>
                     )}
 
-                    {NM.currentTaskNoteChain && NM.isTaskVisibleInNote && currentPreviewTask && (
-                        <>
-                            <PanelResizeHandle
-                                style={{
-                                    width: "1px",
-                                    backgroundColor: mode === "dark" ? "grey" : "lightgrey",
-                                    transition: "all 0.3s ease-in-out",
-                                    cursor: "col-resize",
-                                }}
-                                className="resize-handle"
-                            />
-
-                            <Panel id={"4"} order={4} minSize={35} maxSize={85}>
-                                <Box
-                                    sx={{
-                                        px: { xs: 1, md: 2 },
-                                        pt: {
-                                            xs: "calc(12px + var(--Header-height))",
-                                            sm: "calc(12px + var(--Header-height))",
-                                            md: 2,
-                                        },
-                                        pb: { xs: 2, sm: 2, md: 3 },
-                                        flex: 1,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        minWidth: 0,
-                                        height: "100dvh",
-                                        gap: 1,
-                                        ml: "1px",
-                                        boxShadow: "0 0 0 1px grey",
-                                        borderColor: mode === "dark" ? "black" : "white",
+                    {NM.currentTaskNoteChain &&
+                        NM.isTaskVisibleInNote &&
+                        TM.currentPreviewTask && (
+                            <>
+                                <PanelResizeHandle
+                                    style={{
+                                        width: "1px",
+                                        backgroundColor: mode === "dark" ? "grey" : "lightgrey",
+                                        transition: "all 0.3s ease-in-out",
+                                        cursor: "col-resize",
                                     }}
-                                >
-                                    <TaskPreview
-                                        teamMembers={teamMembers}
-                                        setTeamMembers={setTeamMembers}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        socket={socket}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        setCurrentProject={PM.setCurrentProject}
-                                        currentPreviewTask={currentPreviewTask}
-                                        setIsMainChatVisible={CM.setIsMainChatVisible}
-                                        setIsThreadVisible={CM.setIsThreadVisible}
-                                        isThreadVisible={CM.isThreadVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        isCreatingTask={isCreatingTask}
-                                        setIsCreatingTask={setIsCreatingTask}
-                                        setCurrentPreviewTask={setCurrentPreviewTask}
-                                        setOpenCreateProject={PM.setOpenCreateProject}
-                                        setOpenCreateTag={setOpenCreateTag}
-                                        setCurrentMainChat={CM.setCurrentMainChat}
-                                        setOpeningService={setOpeningService}
-                                        currentPreviewTaskId={currentPreviewTaskId}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        isCommentUpdated={isCommentUpdated}
-                                        setIsCommentUpdated={setIsCommentUpdated}
-                                        setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
-                                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
-                                        setCurrentTaskNote={NM.setCurrentTaskNote}
-                                        isTaskNoteVisible={NM.isTaskNoteVisible}
-                                        teamProjects={PM.teamProjects}
-                                        setTeamProjects={PM.setTeamProjects}
-                                        taskNoteMeta={NM.taskNoteMeta}
-                                        setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
-                                        moveToSpecificChat={CM.moveToSpecificChat}
-                                        openingService={openingService}
-                                    />
-                                </Box>
-                            </Panel>
-                        </>
-                    )}
+                                    className="resize-handle"
+                                />
+
+                                <Panel id={"4"} order={4} minSize={35} maxSize={85}>
+                                    <Box
+                                        sx={{
+                                            px: { xs: 1, md: 2 },
+                                            pt: {
+                                                xs: "calc(12px + var(--Header-height))",
+                                                sm: "calc(12px + var(--Header-height))",
+                                                md: 2,
+                                            },
+                                            pb: { xs: 2, sm: 2, md: 3 },
+                                            flex: 1,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            minWidth: 0,
+                                            height: "100dvh",
+                                            gap: 1,
+                                            ml: "1px",
+                                            boxShadow: "0 0 0 1px grey",
+                                            borderColor: mode === "dark" ? "black" : "white",
+                                        }}
+                                    >
+                                        <TaskPreview
+                                            teamMembers={teamMembers}
+                                            setTeamMembers={setTeamMembers}
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            socket={socket}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            setCurrentProject={PM.setCurrentProject}
+                                            setIsMainChatVisible={CM.setIsMainChatVisible}
+                                            setIsThreadVisible={CM.setIsThreadVisible}
+                                            isThreadVisible={CM.isThreadVisible}
+                                            setOpenCreateProject={PM.setOpenCreateProject}
+                                            setCurrentMainChat={CM.setCurrentMainChat}
+                                            setOpeningService={setOpeningService}
+                                            setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
+                                            handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
+                                            setCurrentTaskNote={NM.setCurrentTaskNote}
+                                            isTaskNoteVisible={NM.isTaskNoteVisible}
+                                            teamProjects={PM.teamProjects}
+                                            setTeamProjects={PM.setTeamProjects}
+                                            taskNoteMeta={NM.taskNoteMeta}
+                                            setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
+                                            moveToSpecificChat={CM.moveToSpecificChat}
+                                            openingService={openingService}
+                                            TM={TM}
+                                        />
+                                    </Box>
+                                </Panel>
+                            </>
+                        )}
                 </PanelGroup>
 
                 {/* Hover Animation with CSS */}

@@ -5,21 +5,17 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
-import { ProjectProps, TaskMetaTreeNode, TaskTableProps } from "../../../../types/tasks";
 import { Toggler } from "./common";
 import { OngoingsListItem } from "./projects_subs/OngoingsListItem";
 import { TagsListItem } from "./projects_subs/TagsListItem";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
 type ProjectsListItemProps = {
     PM: ProjectManagementState;
-
     setIsTaskHomeVisible: (value: boolean) => void;
-    setOngoingTasks: (value: TaskTableProps[]) => void;
-    setClosedTasks: (value: TaskTableProps[]) => void;
-    setDeletedTasks: (value: TaskTableProps[]) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -29,35 +25,18 @@ type ProjectsListItemProps = {
     }) => void;
     setSelectedTagForFiltering: (value: string) => void;
     setFilterBy: (value: number) => void;
-    taskMetaTree: TaskMetaTreeNode[];
-    currentTaskChain?: TaskMetaTreeNode[];
-    currentPreviewTaskId: number;
     setCurrentFilterName: (value: string) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
+    TM: TaskManagementState;
 };
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
     const {
         PM,
         setIsTaskHomeVisible,
-        setOngoingTasks,
-        setClosedTasks,
-        setDeletedTasks,
         setOpenJoinProject,
         setSelectedTagForFiltering,
         setFilterBy,
-        taskMetaTree,
-        currentTaskChain,
-        currentPreviewTaskId,
         setCurrentFilterName,
-        setIsTaskPreviewVisible,
-        setCurrentPreviewTaskId,
-        setIsCreatingTask,
+        TM,
     } = props;
 
     return (
@@ -135,9 +114,9 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         projectId !== PM.currentProject?.projectId
                                                     ) {
                                                         // Reset the task table...
-                                                        setOngoingTasks([]);
-                                                        setClosedTasks([]);
-                                                        setDeletedTasks([]);
+                                                        TM.setOngoingTasks([]);
+                                                        TM.setClosedTasks([]);
+                                                        TM.setDeletedTasks([]);
                                                         (async () => {
                                                             await PM.loadProjectsAndTasks(
                                                                 projectId
@@ -195,14 +174,9 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                             <OngoingsListItem
                                                 currentProjectId={projectId}
                                                 projectTags={projectTags}
-                                                taskMetaTree={taskMetaTree}
-                                                currentTaskChain={currentTaskChain}
-                                                currentPreviewTaskId={currentPreviewTaskId}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 setCurrentProject={PM.setCurrentProject}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                setIsCreatingTask={setIsCreatingTask}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                TM={TM}
                                             />
                                             <TagsListItem
                                                 projectId={projectId}

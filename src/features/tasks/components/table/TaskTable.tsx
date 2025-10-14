@@ -11,6 +11,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps, TagListProps, TaskType, ProjectProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../chat/services/popTeamMembers";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
 const options = [
     { name: "Group By Status", filterId: 1 },
@@ -97,12 +98,6 @@ type ProjectTaskTableProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     currentProject: ProjectProps | null;
-    ongoingTasks: TaskTableProps[];
-    closedTasks: TaskTableProps[];
-    deletedTasks: TaskTableProps[];
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    expiredTasks: TaskTableProps[];
     displayTaskType: TaskType;
     setFilterBy: (value: number) => void;
     filterBy: number;
@@ -110,6 +105,7 @@ type ProjectTaskTableProps = {
     selectedTagForFiltering: string | undefined;
     currentFilterName: string;
     setCurrentFilterName: (value: string) => void;
+    TM: TaskManagementState;
 };
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
@@ -119,12 +115,6 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         teamMemberProfiles,
         myself,
         currentProject,
-        ongoingTasks,
-        closedTasks,
-        deletedTasks,
-        expiredTasks,
-        setIsTaskPreviewVisible,
-        setCurrentPreviewTaskId,
         displayTaskType,
         setFilterBy,
         filterBy,
@@ -132,6 +122,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         selectedTagForFiltering,
         currentFilterName,
         setCurrentFilterName,
+        TM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -139,7 +130,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const apiRef = useGridApiRef();
 
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>(
-        ongoingTasks.filter((task) => task.parentTaskId === null)
+        TM.ongoingTasks.filter((task) => task.parentTaskId === null)
     );
     const [predefinedFilters, setPredefinedFilters] =
         useState<FilterProps[]>(predefinedStatusFilters);
@@ -180,7 +171,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         (async () => {
             const loadedProjectTags: TagListProps[] = await loadProjectTags(
                 myself,
-                ongoingTasks[0].projectId || -1,
+                TM.ongoingTasks[0].projectId || -1,
                 accessToken
             );
             if (loadedProjectTags.length > 0) {
@@ -253,16 +244,20 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     useEffect(() => {
         // displayTaskType: ongoing, closed, deleted
         if (displayTaskType.id === 1) {
-            setCurrentDisplayingTasks(ongoingTasks.filter((task) => task.parentTaskId === null));
+            setCurrentDisplayingTasks(
+                TM.ongoingTasks.filter((task) => task.parentTaskId === null)
+            );
             updateFilterModel();
         } else if (displayTaskType.id === 2) {
-            setCurrentDisplayingTasks(closedTasks.filter((task) => task.parentTaskId === null));
+            setCurrentDisplayingTasks(TM.closedTasks.filter((task) => task.parentTaskId === null));
             updateTagOptions();
         } else if (displayTaskType.id === 3) {
-            setCurrentDisplayingTasks(deletedTasks.filter((task) => task.parentTaskId === null));
+            setCurrentDisplayingTasks(
+                TM.deletedTasks.filter((task) => task.parentTaskId === null)
+            );
             updateTagOptions();
         }
-    }, [displayTaskType, currentProject, ongoingTasks, closedTasks, deletedTasks]);
+    }, [displayTaskType, currentProject, TM.ongoingTasks, TM.closedTasks, TM.deletedTasks]);
 
     // Reset filter
     useEffect(() => {
@@ -353,7 +348,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                         </Menu>
                     </Stack>
 
-                    {expiredTasks.length > 0 && displayTaskType.id === 1 && (
+                    {TM.expiredTasks.length > 0 && displayTaskType.id === 1 && (
                         <Stack
                             direction="row"
                             sx={{
@@ -371,18 +366,18 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                 onClick={() => {
                                     if (showOnlyExpiredTasks) {
                                         setCurrentDisplayingTasks(
-                                            ongoingTasks.filter(
+                                            TM.ongoingTasks.filter(
                                                 (task) => task.parentTaskId === null
                                             )
                                         );
                                     } else {
-                                        setCurrentDisplayingTasks(expiredTasks);
+                                        setCurrentDisplayingTasks(TM.expiredTasks);
                                     }
                                     setShowOnlyExpiredTasks(!showOnlyExpiredTasks);
                                 }}
                             >
                                 <Typography sx={{ fontSize: "13px", fontWeight: "bold" }}>
-                                    Expired ({expiredTasks.length})
+                                    Expired ({TM.expiredTasks.length})
                                 </Typography>
                             </Button>
                         </Stack>
@@ -398,15 +393,15 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                     <DataGrid
                         onCellClick={(params) => {
                             // setIsTaskPreviewVisible(true);
-                            // setCurrentPreviewTaskId(Number(params.id));
+                            // TM.setCurrentPreviewTaskId(Number(params.id));
                         }}
                         onCellDoubleClick={(params) => {
-                            // setIsTaskPreviewVisible(true);
+                            // TM.setIsTaskPreviewVisible(true);
                             // setCurrentPreviewTaskId(Number(params.id));
                         }}
                         onRowClick={(params, event, detail) => {
-                            setIsTaskPreviewVisible(true);
-                            setCurrentPreviewTaskId(Number(params.id));
+                            TM.setIsTaskPreviewVisible(true);
+                            TM.setCurrentPreviewTaskId(Number(params.id));
                         }}
                         className={className}
                         apiRef={apiRef}

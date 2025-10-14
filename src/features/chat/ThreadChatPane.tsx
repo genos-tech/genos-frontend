@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Box, Sheet, Stack, Chip, Alert, Snackbar } from "@mui/joy";
+import { Box, Sheet, Stack, Chip, Snackbar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
@@ -13,10 +13,10 @@ import { BnThreadEditor } from "../../components/blockNote/bnThreadEditor";
 import { BnUpdateThreadEditor } from "../../components/blockNote/bnUpdateThreadEditor";
 import { UserProps } from "../../types/admin";
 import { ThreadProps, ChatProps, ThreadMessageProps, FlaggedMessageProps } from "../../types/chat";
-import { TaskProps } from "../../types/tasks";
 import { getTimeDiffSeconds, extractYYYYMMDD, extractMMDD } from "../../utils/dateUtils";
 import { useAuth } from "../../context/AuthContext";
 import UpdateReadStatusWorker from "../../workers/updateReadStatusWorker.ts?worker";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -31,22 +31,8 @@ type MessagesPaneProps = {
     setIsThreadVisible: (value: boolean) => void;
     currentThreadChatId: number;
     setIsMainChatVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    isTaskPreviewVisible: boolean;
-    currentPreviewTask?: TaskProps;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    currentPreviewTaskId: number;
     isChatNoteVisibleInChat: boolean;
     setIsChatNoteVisibleInChat: (value: boolean) => void;
     handleCreateNewChatNoteIfNotExist: (
@@ -57,6 +43,7 @@ type MessagesPaneProps = {
     ) => Promise<void>;
     flaggedMessages: FlaggedMessageProps[];
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    TM: TaskManagementState;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -64,7 +51,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         teamMemberProfiles,
         currentWindowHeight,
         thread,
-        isCreatingTask,
         myself,
         setMyself,
         teamMembers,
@@ -74,18 +60,14 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         setIsThreadVisible,
         currentThreadChatId,
         setIsMainChatVisible,
-        setIsTaskPreviewVisible,
-        isTaskPreviewVisible,
-        setIsCreatingTask,
-        currentPreviewTask,
         setOpeningService,
         setCurrentMainChat,
-        currentPreviewTaskId,
         isChatNoteVisibleInChat,
         setIsChatNoteVisibleInChat,
         handleCreateNewChatNoteIfNotExist,
         flaggedMessages,
         setFlaggedMessages,
+        TM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -250,15 +232,10 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         setCurrentThreadChat={setCurrentThreadChat}
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsThreadVisible={setIsThreadVisible}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        isTaskPreviewVisible={isTaskPreviewVisible}
-                        isCreatingTask={isCreatingTask}
-                        setIsCreatingTask={setIsCreatingTask}
-                        currentPreviewTask={currentPreviewTask}
-                        currentPreviewTaskId={currentPreviewTaskId}
                         isChatNoteVisibleInChat={isChatNoteVisibleInChat}
                         setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                         handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
+                        TM={TM}
                     />
 
                     <Box sx={{ px: 0.3, my: 0.2 }}>

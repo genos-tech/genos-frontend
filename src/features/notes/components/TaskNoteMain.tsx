@@ -46,6 +46,7 @@ import { TaskProps } from "../../../types/tasks";
 import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
 import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -56,19 +57,12 @@ type TaskNoteMainProps = {
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
     isInTaskPage: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    isTaskPreviewVisible?: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    currentPreviewTask?: TaskProps;
-    setCurrentPreviewTask: (value: TaskProps) => void;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     funcSetAllChats: () => Promise<void>;
     NM: NoteManagementState;
+    TM: TaskManagementState;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
@@ -81,15 +75,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         setOpeningService,
         setCurrentChat,
         isInTaskPage,
-        isCreatingTask,
-        isTaskPreviewVisible,
         setIsTaskHomeVisible,
-        currentPreviewTask,
-        setCurrentPreviewTask,
         allChats,
         setCurrentMainChat,
         funcSetAllChats,
         NM,
+        TM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -181,7 +172,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     };
 
-    const [currentTask, setCurrentTask] = useState<TaskProps | undefined>(currentPreviewTask);
+    const [currentTask, setCurrentTask] = useState<TaskProps | undefined>(TM.currentPreviewTask);
     const setPreviewTask = async (projectId: number, taskId: number) => {
         const loadedTask: TaskProps[] = await loadSpecificTask(
             myself,
@@ -190,7 +181,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             accessToken
         );
         if (loadedTask.length === 1) {
-            setCurrentPreviewTask(loadedTask[0]);
+            TM.setCurrentPreviewTask(loadedTask[0]);
             setCurrentTask(loadedTask[0]);
         }
     };
@@ -522,8 +513,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                                                             // Open task-home (task table) when both task-preview and task-create-form are closed.
                                                             if (
-                                                                isCreatingTask.flag === false &&
-                                                                isTaskPreviewVisible === false &&
+                                                                TM.isCreatingTask.flag === false &&
+                                                                TM.isTaskPreviewVisible ===
+                                                                    false &&
                                                                 setIsTaskHomeVisible
                                                             ) {
                                                                 setIsTaskHomeVisible(true);

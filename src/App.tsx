@@ -15,21 +15,11 @@ import { wsHook } from "./hooks/common/wsHook";
 import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
-import { getLocalCurrentDate, getLocalCurrentTimestamp } from "./utils/dateUtils";
+import { getLocalCurrentTimestamp } from "./utils/dateUtils";
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
-import {
-    TaskMetaProps,
-    TaskMetaTreeNode,
-    TaskProps,
-    TaskTableProps,
-    TaskTypesProps,
-} from "./types/tasks";
-import { popSpecificProjectTasks } from "./features/chat/services/popSpecificProjectTasks";
+import { TaskProps } from "./types/tasks";
 import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
-import { buildTaskTree } from "./features/tasks/utils/buildTaskTree";
-import { initCurrentTaskChain } from "./hooks/tasks/sidebar";
-import { loadTaskMeta } from "./features/notes/services/loadTaskMeta";
 
 import { useMyself } from "./hooks/common/useAuth";
 import { useChatManagement } from "./hooks/chats/useChatManagement";
@@ -39,6 +29,7 @@ import { useProjectManagement } from "./hooks/common/useProjectManagement";
 // Import task and note management hooks
 // import { useTaskManagement } from "./hooks/useTaskManagement";
 import { useNoteManagement } from "./hooks/notes/useNoteManagement";
+import { useTaskManagement } from "./hooks/tasks/useTaskManagement";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
 const socket = (accessToken: string | null): Socket => {
@@ -155,99 +146,19 @@ export const App = () => {
     ///////////////////////
     // Task Related
     ///////////////////////
-    const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
-    const [isCreatingTask, setIsCreatingTask] = useState<{
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }>({
-        flag: false,
-        parentTaskId: null,
-        rootTaskId: null,
-    });
-    const [openCreateTag, setOpenCreateTag] = useState(false);
-    const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
-    const [isNewTagCreated, setIsNewTagCreated] = useState(false);
-    const [isTaskUpdated, setIsTaskUpdated] = useState(false);
-    const [isTaskUpdatedBySomeone, setIsTaskUpdatedBySomeone] = useState(false);
-    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
-    const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps>();
-    const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
-        isUpdate: false,
-        scrollToBottom: true,
-    });
-    const [initialEmptyTaskId, setInitialEmptyTaskId] = useState<number>();
-
-    // Task sidebar related
-    const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
-    const [currentTaskChain, setCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
-    const getTaskMeta = async () => {
-        const loadedTaskMeta: TaskMetaProps[] = await loadTaskMeta(myself, accessToken);
-        if (loadedTaskMeta.length > 0) {
-            setTaskMeta(loadedTaskMeta);
-        }
-    };
-    const [taskMetaTree, setTaskMetaTree] = useState<TaskMetaTreeNode[]>(buildTaskTree(taskMeta));
-    useEffect(() => {
-        setTaskMetaTree(buildTaskTree(taskMeta));
-    }, [taskMeta]);
-    initCurrentTaskChain({
-        taskMeta: taskMeta,
-        currentTaskChain: currentTaskChain,
-        setCurrentTaskChain: setCurrentTaskChain,
-    });
-
-    // Task table related
-    const taskTypes: TaskTypesProps = {
-        ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
-        closed: { id: 2, statuses: ["Closed"], name: "Closed" },
-        deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
-    };
-    const [ongoingTasks, setOngoingTasks] = useState<TaskTableProps[]>([]);
-    const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
-    const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
-    const [expiredTasks, setExpiredTasks] = useState<TaskTableProps[]>([]);
-    let tsLastLoadProjectTasks: number | undefined = undefined;
-    const getExpiredTasks = async (ongoingTasks: TaskTableProps[]) => {
-        return ongoingTasks.filter((task) => {
-            if (task.daysLeft && task.daysLeft < 0 && task.parentTaskId === null) {
-                return true;
-            }
-            return false;
-        });
-    };
-    const fetchProjectTasks = async (projectId: number) => {
-        tsLastLoadProjectTasks = Date.now();
-        const _onGoingTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.ongoing.statuses
-        );
-        const _closedTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.closed.statuses
-        );
-        const _deletedTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.deleted.statuses
-        );
-        const _expiredTasks: TaskTableProps[] = await getExpiredTasks(_onGoingTasks);
-        setOngoingTasks(_onGoingTasks);
-        setClosedTasks(_closedTasks);
-        setDeletedTasks(_deletedTasks);
-        setExpiredTasks(_expiredTasks);
-    };
+    const TM = useTaskManagement(myself, accessToken);
 
     useEffect(() => {
         const intervalMs: number = 1000;
         const now = Date.now();
         if (
-            tsLastLoadProjectTasks === undefined ||
-            (tsLastLoadProjectTasks && now - tsLastLoadProjectTasks >= intervalMs)
+            TM.tsLastLoadProjectTasks === undefined ||
+            (TM.tsLastLoadProjectTasks && now - TM.tsLastLoadProjectTasks >= intervalMs)
         ) {
             setTimeout(() => {
                 (async () => {
                     if (PM.currentProject && PM.currentProject.projectId) {
-                        await fetchProjectTasks(PM.currentProject.projectId);
+                        await TM.fetchProjectTasks(PM.currentProject.projectId);
                         localStorage.setItem(
                             "lastProjectId",
                             PM.currentProject.projectId.toString()
@@ -261,7 +172,7 @@ export const App = () => {
     useEffect(() => {
         (async () => {
             if (PM.currentProject && PM.isNewProjectCreated === true) {
-                fetchProjectTasks(PM.currentProject.projectId);
+                TM.fetchProjectTasks(PM.currentProject.projectId);
                 localStorage.setItem("lastProjectId", PM.currentProject.projectId.toString());
             }
         })();
@@ -269,25 +180,25 @@ export const App = () => {
 
     useEffect(() => {
         (async () => {
-            if (PM.currentProject && currentPreviewTaskId !== -1) {
+            if (PM.currentProject && TM.currentPreviewTaskId !== -1) {
                 const loadedTask: TaskProps[] = await loadSpecificTask(
                     myself,
                     PM.currentProject.projectId,
-                    currentPreviewTaskId,
+                    TM.currentPreviewTaskId,
                     accessToken
                 );
 
                 // No need to update the current preview task when a new tag is created.
-                if (isNewTagCreated === false && loadedTask.length > 0) {
-                    setCurrentPreviewTask(loadedTask[0]);
+                if (TM.isNewTagCreated === false && loadedTask.length > 0) {
+                    TM.setCurrentPreviewTask(loadedTask[0]);
                 }
 
-                setIsTaskPreviewVisible(true);
+                TM.setIsTaskPreviewVisible(true);
 
                 // Add a new ongoing task
-                if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
-                    setOngoingTasks((prev) => [
-                        ...prev,
+                if (TM.isNewTaskCreated === true || TM.isTaskUpdatedBySomeone === true) {
+                    TM.setOngoingTasks([
+                        ...TM.ongoingTasks,
                         {
                             id: String(loadedTask[0].id) || null,
                             title: loadedTask[0].title || "",
@@ -311,53 +222,14 @@ export const App = () => {
                         },
                     ]);
                 }
-                setIsNewTaskCreated(false);
-                setIsTaskUpdatedBySomeone(false);
+                TM.setIsNewTaskCreated(false);
+                TM.setIsTaskUpdatedBySomeone(false);
             }
         })();
-    }, [currentPreviewTaskId, isNewTaskCreated, isTaskUpdatedBySomeone]);
+    }, [TM.currentPreviewTaskId, TM.isNewTaskCreated, TM.isTaskUpdatedBySomeone]);
 
     useEffect(() => {
-        // Update an ongoing task
-        if (isTaskUpdated && currentPreviewTask) {
-            setOngoingTasks((prevTasks) =>
-                prevTasks.map((task) =>
-                    task.id === String(currentPreviewTask.id)
-                        ? {
-                              id: String(currentPreviewTask.id) || null,
-                              title: currentPreviewTask.title || null,
-                              priority: currentPreviewTask.priority.priority || null,
-                              effortLevel: currentPreviewTask.effortLevel.level || null,
-                              createdDate: currentPreviewTask.createdDate || getLocalCurrentDate(),
-                              updatedAt:
-                                  currentPreviewTask.updatedAt || getLocalCurrentTimestamp(),
-                              dueDate: currentPreviewTask.dueDate || null,
-                              daysLeft: currentPreviewTask.daysLeft || null,
-                              status: currentPreviewTask.status.status || null,
-                              assigneeId: currentPreviewTask.assignee.userId || null,
-                              assigneeEmail: currentPreviewTask.assignee.userEmail || null,
-                              assigneeName: currentPreviewTask.assignee.userName || null,
-                              assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
-                              parentTaskId: currentPreviewTask.parentTaskId
-                                  ? String(currentPreviewTask.parentTaskId)
-                                  : null,
-                              rootTaskId: currentPreviewTask.rootTaskId,
-                              threadId: currentPreviewTask.threadId || null,
-                              tags: currentPreviewTask.tags || [],
-                              concatTags: currentPreviewTask.concatTags || "//",
-                              teamId: myself.teamId || null,
-                              projectId: currentPreviewTask.project?.projectId || null,
-                          }
-                        : task
-                )
-            );
-            getTaskMeta();
-            setIsTaskUpdated(false);
-        }
-    }, [isTaskUpdated, currentPreviewTask]);
-
-    useEffect(() => {
-        if (isNewTaskCreated === true) {
+        if (TM.isNewTaskCreated === true) {
             setTimeout(() => {
                 (async () => {
                     await PM.loadProjectsAndTasks(
@@ -368,7 +240,28 @@ export const App = () => {
                 })();
             }, 500);
         }
-    }, [isNewTaskCreated]);
+    }, [TM.isNewTaskCreated]);
+
+    // Auto-load task when preview ID changes
+    useEffect(() => {
+        if (PM.currentProject && TM.currentPreviewTaskId !== -1) {
+            TM.loadTask(PM.currentProject.projectId, TM.currentPreviewTaskId);
+        }
+    }, [TM.currentPreviewTaskId, PM.currentProject]);
+
+    // Reset task state when team/project changes
+    useEffect(() => {
+        if (!PM.currentProject) {
+            TM.setIsTaskPreviewVisible(false);
+            TM.setCurrentPreviewTaskId(-1);
+            TM.setCurrentPreviewTask(undefined);
+            TM.setIsCreatingTask({
+                flag: false,
+                parentTaskId: null,
+                rootTaskId: null,
+            });
+        }
+    }, [PM.currentProject]);
 
     ///////////////////////
     // Note Related
@@ -392,9 +285,9 @@ export const App = () => {
         isLoading: isLoading,
         funcSetInboxItems: IM.funcSetInboxItems,
         currentProject: PM.currentProject,
-        currentPreviewTaskId: currentPreviewTaskId,
-        setIsTaskUpdatedBySomeone: setIsTaskUpdatedBySomeone,
-        setIsTaskCommentUpdated: setIsTaskCommentUpdated,
+        currentPreviewTaskId: TM.currentPreviewTaskId,
+        setIsTaskUpdatedBySomeone: TM.setIsTaskUpdatedBySomeone,
+        setIsTaskCommentUpdated: TM.setIsTaskCommentUpdated,
         CM: CM,
     });
 
@@ -402,10 +295,10 @@ export const App = () => {
         // Reset note variables when the team changes
         NM.initializeNoteStates();
 
-        setOngoingTasks([]);
-        setClosedTasks([]);
-        setDeletedTasks([]);
-        setIsTaskPreviewVisible(false);
+        TM.setOngoingTasks([]);
+        TM.setClosedTasks([]);
+        TM.setDeletedTasks([]);
+        TM.setIsTaskPreviewVisible(false);
 
         NM.setIsTaskNoteVisible(false);
 
@@ -423,7 +316,7 @@ export const App = () => {
             NM.setCurrentChatNote(null);
         } else if (openingService === 1) {
             // Initialize the task visibility.
-            setIsTaskPreviewVisible(false);
+            TM.setIsTaskPreviewVisible(false);
 
             // Keep the tabItems when an user changes the page from Notes to other pages.
             NM.setTmpTabItems(NM.tabItems);
@@ -479,7 +372,7 @@ export const App = () => {
             funcSetTeamMembers();
 
             // Load task metadata
-            getTaskMeta();
+            TM.getTaskMeta();
 
             // Load note metadata
             NM.getMyNoteMeta();
@@ -605,7 +498,7 @@ export const App = () => {
             CM.currentThreadChat.taskId !== null &&
             CM.isThreadVisible === true
         ) {
-            setCurrentPreviewTaskId(CM.currentThreadChat.taskId);
+            TM.setCurrentPreviewTaskId(CM.currentThreadChat.taskId);
         }
     }, [CM.currentThreadChat]);
 
@@ -649,26 +542,11 @@ export const App = () => {
                         setTeamMembers={setTeamMembers}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        CM={CM}
-                        isCommentUpdated={isTaskCommentUpdated}
-                        setIsCommentUpdated={setIsTaskCommentUpdated}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        isCreatingTask={isCreatingTask}
-                        setIsCreatingTask={setIsCreatingTask}
-                        currentPreviewTaskId={currentPreviewTaskId}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                        currentPreviewTask={currentPreviewTask}
-                        setCurrentPreviewTask={setCurrentPreviewTask}
-                        setOpenCreateTag={setOpenCreateTag}
-                        isNewTagCreated={isNewTagCreated}
-                        setIsNewTagCreated={setIsNewTagCreated}
-                        openCreateTag={openCreateTag}
-                        initialEmptyTaskId={initialEmptyTaskId}
-                        setInitialEmptyTaskId={setInitialEmptyTaskId}
+                        CM={CM}
                         NM={NM}
                         PM={PM}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        isTaskPreviewVisible={isTaskPreviewVisible}
+                        TM={TM}
                     />
                 ) : null}
 
@@ -685,42 +563,15 @@ export const App = () => {
                         setCurrentMainChat={CM.setCurrentMainChat}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        isCommentUpdated={isTaskCommentUpdated}
-                        setIsCommentUpdated={setIsTaskCommentUpdated}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                        isTaskPreviewVisible={isTaskPreviewVisible}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        isCreatingTask={isCreatingTask}
-                        setIsCreatingTask={setIsCreatingTask}
-                        setIsNewTaskCreated={setIsNewTaskCreated}
-                        isTaskUpdated={isTaskUpdated}
-                        setIsTaskUpdated={setIsTaskUpdated}
-                        ongoingTasks={ongoingTasks}
-                        expiredTasks={expiredTasks}
-                        setOngoingTasks={setOngoingTasks}
-                        closedTasks={closedTasks}
-                        setClosedTasks={setClosedTasks}
-                        deletedTasks={deletedTasks}
-                        setDeletedTasks={setDeletedTasks}
-                        currentPreviewTaskId={currentPreviewTaskId}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                        currentPreviewTask={currentPreviewTask}
-                        setCurrentPreviewTask={setCurrentPreviewTask}
-                        openCreateTag={openCreateTag}
-                        setOpenCreateTag={setOpenCreateTag}
-                        isNewTagCreated={isNewTagCreated}
-                        setIsNewTagCreated={setIsNewTagCreated}
-                        taskMetaTree={taskMetaTree}
-                        currentTaskChain={currentTaskChain}
-                        initialEmptyTaskId={initialEmptyTaskId}
-                        setInitialEmptyTaskId={setInitialEmptyTaskId}
                         allChats={CM.allChats}
                         setAllChats={CM.setAllChats}
                         funcSetAllChats={CM.funcSetAllChats}
                         moveToSpecificChat={CM.moveToSpecificChat}
                         NM={NM}
                         PM={PM}
+                        TM={TM}
                     />
                 ) : null}
 
@@ -737,19 +588,10 @@ export const App = () => {
                         openingService={openingService}
                         setOpeningService={setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        isCreatingTask={isCreatingTask}
-                        currentPreviewTask={currentPreviewTask}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setIsCreatingTask={setIsCreatingTask}
-                        setCurrentPreviewTask={setCurrentPreviewTask}
-                        setOpenCreateTag={setOpenCreateTag}
-                        currentPreviewTaskId={currentPreviewTaskId}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                        isCommentUpdated={isTaskCommentUpdated}
-                        setIsCommentUpdated={setIsTaskCommentUpdated}
                         NM={NM}
                         CM={CM}
                         PM={PM}
+                        TM={TM}
                     />
                 ) : null}
             </CssVarsProvider>
