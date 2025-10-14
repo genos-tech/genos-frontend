@@ -416,7 +416,7 @@ export const App = () => {
     // Note Related
     ///////////////////////
     // Note management
-    const noteManagement = useNoteManagement(myself, accessToken);
+    const NM = useNoteManagement(myself, accessToken);
 
     ///////////////////////
     // Inbox Related
@@ -450,7 +450,7 @@ export const App = () => {
 
     useEffect(() => {
         // Reset note variables when the team changes
-        noteManagement.initializeNoteStates();
+        NM.initializeNoteStates();
 
         setOngoingTasks([]);
         setClosedTasks([]);
@@ -459,7 +459,7 @@ export const App = () => {
         setIsThreadTaskVisible(false);
 
         setIsChatNoteVisible(false);
-        noteManagement.setIsTaskNoteVisible(false);
+        NM.setIsTaskNoteVisible(false);
         setIsSubChatVisible(false);
         setIsThreadVisible(false);
     }, [currentTeamId]);
@@ -467,48 +467,44 @@ export const App = () => {
     useEffect(() => {
         if (openingService === 0) {
             // Init all notes
-            noteManagement.setCurrentMyNote(null);
-            noteManagement.setCurrentTaskNote(null);
-            noteManagement.setCurrentChatNote(null);
+            NM.setCurrentMyNote(null);
+            NM.setCurrentTaskNote(null);
+            NM.setCurrentChatNote(null);
         } else if (openingService === 1) {
             // Initialize the task visibility.
             setIsTaskPreviewVisible(false);
 
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            noteManagement.setTmpTabItems(noteManagement.tabItems);
-            noteManagement.setTabItems(
-                noteManagement.tabItems.filter((item) => item.noteType === 3)
-            );
+            NM.setTmpTabItems(NM.tabItems);
+            NM.setTabItems(NM.tabItems.filter((item) => item.noteType === 3));
 
             // Initialize the chat note visibility.
-            if (noteManagement.tabItems.filter((item) => item.noteType === 3).length === 0) {
+            if (NM.tabItems.filter((item) => item.noteType === 3).length === 0) {
                 setIsChatNoteVisible(false);
             }
             // Init all notes
-            noteManagement.setCurrentMyNote(null);
-            noteManagement.setCurrentTaskNote(null);
+            NM.setCurrentMyNote(null);
+            NM.setCurrentTaskNote(null);
             // setCurrentChatNote(null);
         } else if (openingService === 2) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            noteManagement.setTmpTabItems(noteManagement.tabItems);
-            noteManagement.setTabItems(
-                noteManagement.tabItems.filter((item) => item.noteType === 2)
-            );
+            NM.setTmpTabItems(NM.tabItems);
+            NM.setTabItems(NM.tabItems.filter((item) => item.noteType === 2));
 
             // Initialize the chat note visibility.
-            noteManagement.setIsTaskNoteVisible(false);
+            NM.setIsTaskNoteVisible(false);
 
             // Init all notes
-            noteManagement.setCurrentMyNote(null);
-            noteManagement.setCurrentTaskNote(null);
-            noteManagement.setCurrentChatNote(null);
+            NM.setCurrentMyNote(null);
+            NM.setCurrentTaskNote(null);
+            NM.setCurrentChatNote(null);
         } else if (openingService === 3) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            noteManagement.setTabItems(noteManagement.tmpTabItems);
-            noteManagement.setTmpTabItems([]);
+            NM.setTabItems(NM.tmpTabItems);
+            NM.setTmpTabItems([]);
 
             if (socketInstance) {
-                noteManagement.popInitialNote();
+                NM.popInitialNote();
             }
         }
     }, [openingService]);
@@ -535,9 +531,9 @@ export const App = () => {
             getTaskMeta();
 
             // Load note metadata
-            noteManagement.getMyNoteMeta();
-            noteManagement.getTaskNoteMeta();
-            noteManagement.getChatNoteMeta();
+            NM.getMyNoteMeta();
+            NM.getTaskNoteMeta();
+            NM.getChatNoteMeta();
         }
     }, [isLoading]);
 
@@ -598,7 +594,7 @@ export const App = () => {
     useEffect(() => {
         if (socketInstance) {
             // Pop the initial note after the socket is connected.
-            noteManagement.popInitialNote();
+            NM.popInitialNote();
 
             socketInstance.emit("join", {
                 joiningCGId: -1, // dm_id or gm_id
@@ -737,7 +733,7 @@ export const App = () => {
                         moveToSpecificChat={moveToSpecificChat}
                         flaggedMessages={flaggedMessages}
                         setFlaggedMessages={setFlaggedMessages}
-                        noteManagement={noteManagement}
+                        NM={NM}
                         loadProjectsAndTasks={loadProjectsAndTasks}
                         isChatNoteVisible={isChatNoteVisible}
                         setIsChatNoteVisible={setIsChatNoteVisible}
@@ -799,7 +795,7 @@ export const App = () => {
                         setAllChats={setAllChats}
                         funcSetAllChats={funcSetAllChats}
                         moveToSpecificChat={moveToSpecificChat}
-                        noteManagement={noteManagement}
+                        NM={NM}
                     />
                 ) : null}
 
@@ -840,7 +836,7 @@ export const App = () => {
                         setTeamProjects={setTeamProjects}
                         moveToSpecificChat={moveToSpecificChat}
                         funcSetAllChats={funcSetAllChats}
-                        noteManagement={noteManagement}
+                        NM={NM}
                     />
                 ) : null}
             </CssVarsProvider>

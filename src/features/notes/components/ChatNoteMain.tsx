@@ -71,7 +71,7 @@ type ChatNoteMainProps = {
     funcSetAllChats: () => Promise<void>;
     setCurrentPreviewTaskId: (id: number) => void;
     setCurrentProject: (project: any) => void;
-    noteManagement: NoteManagementState;
+    NM: NoteManagementState;
     setIsChatNoteVisible: (value: boolean) => void;
 };
 
@@ -92,7 +92,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         funcSetAllChats,
         setCurrentPreviewTaskId,
         setCurrentProject,
-        noteManagement,
+        NM,
         setIsChatNoteVisible,
     } = props;
 
@@ -101,7 +101,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const [noteUpdated, setNoteUpdated] = useState(false);
     const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
     const [currentChatNoteTitle, setCurrentChatNoteTitle] = useState<string>(
-        noteManagement.currentChatNote?.title || ""
+        NM.currentChatNote?.title || ""
     );
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
@@ -130,18 +130,18 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
-        if (noteManagement.currentChatNote) {
+        if (NM.currentChatNote) {
             let newNoteTitle = currentChatNoteTitle;
 
             // If the note title is empty, use the note original title.
             // (not updating the title to empty)
             if (currentChatNoteTitle === "") {
-                newNoteTitle = noteManagement.currentChatNote.title;
+                newNoteTitle = NM.currentChatNote.title;
                 setCurrentChatNoteTitle(newNoteTitle);
             }
 
             const newNote: ChatNoteProps = {
-                ...noteManagement.currentChatNote,
+                ...NM.currentChatNote,
                 title: newNoteTitle,
                 body: body || [],
             };
@@ -157,18 +157,18 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             setNoteUpdated(false);
 
             // This needs to update the note title on the tab.
-            noteManagement.setTabItems(
-                noteManagement.tabItems.map((item) =>
-                    item.noteType === noteManagement.currentChatNote?.noteType &&
-                    item.noteId === noteManagement.currentChatNote?.noteId
+            NM.setTabItems(
+                NM.tabItems.map((item) =>
+                    item.noteType === NM.currentChatNote?.noteType &&
+                    item.noteId === NM.currentChatNote?.noteId
                         ? newNote
                         : item
                 )
             );
 
             // This needs to update the note title in the sidebar.
-            noteManagement.setChatNoteMeta(
-                noteManagement.chatNoteMeta.map((item) =>
+            NM.setChatNoteMeta(
+                NM.chatNoteMeta.map((item) =>
                     item.noteType === newNote.noteType && item.noteId === newNote.noteId
                         ? {
                               noteType: newNote.noteType,
@@ -194,40 +194,38 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     }, [noteUpdated]);
 
     useEffect(() => {
-        if (noteManagement.currentChatNote) {
-            setBody(noteManagement.currentChatNote.body);
+        if (NM.currentChatNote) {
+            setBody(NM.currentChatNote.body);
             setTsBody(getLocalCurrentTimestamp());
-            setCurrentChatNoteTitle(noteManagement.currentChatNote.title);
+            setCurrentChatNoteTitle(NM.currentChatNote.title);
         }
-    }, [noteManagement.currentChatNote]);
+    }, [NM.currentChatNote]);
 
     const handleCloseTab = async (tabIndex: number, closingNoteId: number) => {
         const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
         const nextTabIndex = Math.max(tabIndex - 1, 0);
-        noteManagement.setTabItems(
-            noteManagement.tabItems.filter((t) => t.noteId !== closingNoteId)
-        );
-        await noteManagement.loadNote(
-            noteManagement.tabItems[indexOfNextNote].noteType,
-            noteManagement.tabItems[indexOfNextNote].noteId,
+        NM.setTabItems(NM.tabItems.filter((t) => t.noteId !== closingNoteId));
+        await NM.loadNote(
+            NM.tabItems[indexOfNextNote].noteType,
+            NM.tabItems[indexOfNextNote].noteId,
             nextTabIndex
         );
     };
 
     useEffect(() => {
         setNoteBodySaved(false);
-    }, [noteManagement.selectedTabIndex]);
+    }, [NM.selectedTabIndex]);
 
     const chat = allChats.find(
         (chat) =>
-            chat.chatType === noteManagement.currentChatNote?.chatType &&
-            noteManagement.currentChatNote &&
-            chat.chatId === noteManagement.currentChatNote.chatId
+            chat.chatType === NM.currentChatNote?.chatType &&
+            NM.currentChatNote &&
+            chat.chatId === NM.currentChatNote.chatId
     );
 
     return (
         <>
-            {(noteManagement.tabItems.length === 0 || noteManagement.currentChatNote === null) && (
+            {(NM.tabItems.length === 0 || NM.currentChatNote === null) && (
                 <Box
                     sx={{
                         height: "100%",
@@ -251,12 +249,12 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                 </Box>
             )}
 
-            {!(noteManagement.tabItems.length === 0 || noteManagement.currentChatNote === null) &&
-                noteManagement.chatNoteMeta.length > 0 && (
+            {!(NM.tabItems.length === 0 || NM.currentChatNote === null) &&
+                NM.chatNoteMeta.length > 0 && (
                     <Stack direction={"column"} sx={{ width: "100%" }}>
                         {body && (
                             <>
-                                {noteManagement.currentNoteType !== 0 && (
+                                {NM.currentNoteType !== 0 && (
                                     <Stack direction={"column"} sx={{ width: "100%" }}>
                                         {/* Note Header */}
                                         <Stack
@@ -270,29 +268,23 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 mb: "5px",
                                             }}
                                         >
-                                            {isInChatPage === true &&
-                                                noteManagement.currentChatNote && (
-                                                    <Box
-                                                        sx={{
-                                                            ml: "5px",
-                                                            mb: "10px",
-                                                            width: "40%",
-                                                        }}
-                                                    >
-                                                        <ACChatChildNotes
-                                                            myself={myself}
-                                                            noteId={
-                                                                noteManagement.currentChatNote
-                                                                    .noteId
-                                                            }
-                                                            openSearchBox={openSearchBox}
-                                                            setOpenSearchBox={setOpenSearchBox}
-                                                            setCurrentChatNote={
-                                                                noteManagement.setCurrentChatNote
-                                                            }
-                                                        />
-                                                    </Box>
-                                                )}
+                                            {isInChatPage === true && NM.currentChatNote && (
+                                                <Box
+                                                    sx={{
+                                                        ml: "5px",
+                                                        mb: "10px",
+                                                        width: "40%",
+                                                    }}
+                                                >
+                                                    <ACChatChildNotes
+                                                        myself={myself}
+                                                        noteId={NM.currentChatNote.noteId}
+                                                        openSearchBox={openSearchBox}
+                                                        setOpenSearchBox={setOpenSearchBox}
+                                                        setCurrentChatNote={NM.setCurrentChatNote}
+                                                    />
+                                                </Box>
+                                            )}
                                             {isInChatPage === false && (
                                                 <>
                                                     <Breadcrumbs
@@ -312,38 +304,36 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             />
                                                             Chat Notes
                                                         </IconButton>
-                                                        {noteManagement.currentChatNoteChain &&
-                                                            noteManagement.currentChatNoteChain.map(
-                                                                (node) => (
-                                                                    <Typography
-                                                                        level="title-sm"
-                                                                        component="button"
-                                                                        onClick={() => {
-                                                                            noteManagement.loadNote(
-                                                                                3,
-                                                                                node.noteId,
-                                                                                -1
-                                                                            );
-                                                                        }}
-                                                                        sx={{
-                                                                            background: "none",
-                                                                            border: "none",
-                                                                            padding: 0,
-                                                                            cursor: "pointer",
-                                                                            color: "#646CFF",
-                                                                            textAlign: "left",
-                                                                            fontWeight: "bold",
-                                                                        }}
-                                                                    >
-                                                                        {node.title.length > 14
-                                                                            ? `${node.title.slice(
-                                                                                  0,
-                                                                                  14
-                                                                              )}...`
-                                                                            : node.title}
-                                                                    </Typography>
-                                                                )
-                                                            )}
+                                                        {NM.currentChatNoteChain &&
+                                                            NM.currentChatNoteChain.map((node) => (
+                                                                <Typography
+                                                                    level="title-sm"
+                                                                    component="button"
+                                                                    onClick={() => {
+                                                                        NM.loadNote(
+                                                                            3,
+                                                                            node.noteId,
+                                                                            -1
+                                                                        );
+                                                                    }}
+                                                                    sx={{
+                                                                        background: "none",
+                                                                        border: "none",
+                                                                        padding: 0,
+                                                                        cursor: "pointer",
+                                                                        color: "#646CFF",
+                                                                        textAlign: "left",
+                                                                        fontWeight: "bold",
+                                                                    }}
+                                                                >
+                                                                    {node.title.length > 14
+                                                                        ? `${node.title.slice(
+                                                                              0,
+                                                                              14
+                                                                          )}...`
+                                                                        : node.title}
+                                                                </Typography>
+                                                            ))}
                                                     </Breadcrumbs>
                                                 </>
                                             )}
@@ -397,36 +387,31 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     </Box>
                                                 )}
 
-                                                {isInChatPage &&
-                                                    noteManagement.currentChatNote && (
-                                                        <IconButton
-                                                            component="button"
-                                                            variant="plain"
-                                                            color="neutral"
-                                                            sx={{
-                                                                fontSize: "14px",
-                                                                paddingRight: "10px",
-                                                                height: "5px",
-                                                            }}
-                                                            onClick={() => {
-                                                                noteManagement.handleCreateNewChatNote(
-                                                                    noteManagement.currentChatNote
-                                                                        ?.noteId || null,
-                                                                    noteManagement.currentChatNote
-                                                                        ?.chatType || 0,
-                                                                    noteManagement.currentChatNote
-                                                                        ?.chatId || 0,
-                                                                    noteManagement.currentChatNote
-                                                                        ?.isThread || false,
-                                                                    noteManagement.currentChatNote
-                                                                        ?.threadId || 0
-                                                                );
-                                                            }}
-                                                        >
-                                                            <AddIcon />
-                                                            Child Note
-                                                        </IconButton>
-                                                    )}
+                                                {isInChatPage && NM.currentChatNote && (
+                                                    <IconButton
+                                                        component="button"
+                                                        variant="plain"
+                                                        color="neutral"
+                                                        sx={{
+                                                            fontSize: "14px",
+                                                            paddingRight: "10px",
+                                                            height: "5px",
+                                                        }}
+                                                        onClick={() => {
+                                                            NM.handleCreateNewChatNote(
+                                                                NM.currentChatNote?.noteId || null,
+                                                                NM.currentChatNote?.chatType || 0,
+                                                                NM.currentChatNote?.chatId || 0,
+                                                                NM.currentChatNote?.isThread ||
+                                                                    false,
+                                                                NM.currentChatNote?.threadId || 0
+                                                            );
+                                                        }}
+                                                    >
+                                                        <AddIcon />
+                                                        Child Note
+                                                    </IconButton>
+                                                )}
 
                                                 {isInChatPage && (
                                                     <Tooltip title="Open in Notes">
@@ -453,12 +438,12 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             sx={{ mb: "5px" }}
                                                             onClick={() => {
                                                                 moveToSpecificChat(
-                                                                    noteManagement.currentChatNote
-                                                                        ?.chatType || 0,
-                                                                    noteManagement.currentChatNote
-                                                                        ?.chatId || 0,
-                                                                    noteManagement.currentChatNote
-                                                                        ?.threadId || 0,
+                                                                    NM.currentChatNote?.chatType ||
+                                                                        0,
+                                                                    NM.currentChatNote?.chatId ||
+                                                                        0,
+                                                                    NM.currentChatNote?.threadId ||
+                                                                        0,
                                                                     true, // openTaskNoteInChat
                                                                     false, // openThreadTaskPreview
                                                                     setOpeningService,
@@ -487,25 +472,15 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     <Menu size="sm">
                                                         <MenuItem
                                                             onClick={() => {
-                                                                if (
-                                                                    noteManagement.currentChatNote
-                                                                ) {
-                                                                    noteManagement.handleCreateNewChatNote(
-                                                                        noteManagement
-                                                                            .currentChatNote
-                                                                            .noteId,
-                                                                        noteManagement
-                                                                            .currentChatNote
+                                                                if (NM.currentChatNote) {
+                                                                    NM.handleCreateNewChatNote(
+                                                                        NM.currentChatNote.noteId,
+                                                                        NM.currentChatNote
                                                                             .chatType,
-                                                                        noteManagement
-                                                                            .currentChatNote
-                                                                            .chatId,
-                                                                        noteManagement
-                                                                            .currentChatNote
+                                                                        NM.currentChatNote.chatId,
+                                                                        NM.currentChatNote
                                                                             .isThread,
-                                                                        noteManagement
-                                                                            .currentChatNote
-                                                                            .threadId
+                                                                        NM.currentChatNote.threadId
                                                                     );
                                                                 } else {
                                                                     console.error(
@@ -553,52 +528,40 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     </Tooltip>
                                                 )}
 
-                                                {noteManagement.currentChatNote && (
+                                                {NM.currentChatNote && (
                                                     <ModalDeleteChatNote
                                                         myself={myself}
                                                         openDeleteNote={openDeleteNote}
                                                         setOpenDeleteNote={setOpenDeleteNote}
-                                                        chatNoteMeta={noteManagement.chatNoteMeta}
-                                                        setChatNoteMeta={
-                                                            noteManagement.setChatNoteMeta
-                                                        }
-                                                        currentChatNote={
-                                                            noteManagement.currentChatNote
-                                                        }
+                                                        chatNoteMeta={NM.chatNoteMeta}
+                                                        setChatNoteMeta={NM.setChatNoteMeta}
+                                                        currentChatNote={NM.currentChatNote}
                                                         handleCloseTab={handleCloseTab}
-                                                        currentTabIndex={
-                                                            noteManagement.selectedTabIndex
-                                                        }
+                                                        currentTabIndex={NM.selectedTabIndex}
                                                     />
                                                 )}
                                             </Stack>
 
-                                            {noteManagement.currentChatNote && (
+                                            {NM.currentChatNote && (
                                                 <ModalDeleteChatNote
                                                     myself={myself}
                                                     openDeleteNote={openDeleteNote}
                                                     setOpenDeleteNote={setOpenDeleteNote}
-                                                    chatNoteMeta={noteManagement.chatNoteMeta}
-                                                    setChatNoteMeta={
-                                                        noteManagement.setChatNoteMeta
-                                                    }
-                                                    currentChatNote={
-                                                        noteManagement.currentChatNote
-                                                    }
+                                                    chatNoteMeta={NM.chatNoteMeta}
+                                                    setChatNoteMeta={NM.setChatNoteMeta}
+                                                    currentChatNote={NM.currentChatNote}
                                                     handleCloseTab={handleCloseTab}
-                                                    currentTabIndex={
-                                                        noteManagement.selectedTabIndex
-                                                    }
+                                                    currentTabIndex={NM.selectedTabIndex}
                                                 />
                                             )}
                                         </Stack>
 
                                         <Tabs
-                                            value={noteManagement.selectedTabIndex}
+                                            value={NM.selectedTabIndex}
                                             onChange={(_, val) => {
-                                                noteManagement.loadNote(
-                                                    noteManagement.tabItems[Number(val)].noteType,
-                                                    noteManagement.tabItems[Number(val)].noteId,
+                                                NM.loadNote(
+                                                    NM.tabItems[Number(val)].noteType,
+                                                    NM.tabItems[Number(val)].noteId,
                                                     Number(val)
                                                 );
                                             }}
@@ -612,7 +575,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     "&::-webkit-scrollbar": { display: "none" },
                                                 }}
                                             >
-                                                {noteManagement.tabItems.map((tab, index) => (
+                                                {NM.tabItems.map((tab, index) => (
                                                     <Tab
                                                         key={`tab-${index}`}
                                                         sx={{
@@ -636,8 +599,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                 ? `${tab.title.slice(0, 14)}...`
                                                                 : tab.title}
 
-                                                            {noteManagement.tabItems.length >
-                                                                1 && (
+                                                            {NM.tabItems.length > 1 && (
                                                                 <IconButton
                                                                     component="span"
                                                                     size="sm"
@@ -660,7 +622,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 ))}
                                             </TabList>
 
-                                            {noteManagement.tabItems.map((tabNote, index) => (
+                                            {NM.tabItems.map((tabNote, index) => (
                                                 <TabPanel
                                                     key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                                                     value={index}
@@ -736,7 +698,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             </Button>
                                                         </Box>
                                                     )}
-                                                    {noteManagement.currentChatNote && (
+                                                    {NM.currentChatNote && (
                                                         <>
                                                             <BnChatNoteEditor
                                                                 teamMemberProfiles={
@@ -747,7 +709,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                 socket={socket}
                                                                 teamMembers={teamMembers}
                                                                 currentChatNote={
-                                                                    noteManagement.currentChatNote
+                                                                    NM.currentChatNote
                                                                 }
                                                                 body={body}
                                                                 setBody={setBody}

@@ -48,7 +48,7 @@ type MyNoteMainProps = {
     setMyself: (me: UserProps) => void;
     setOpeningService: (service: number) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    noteManagement: NoteManagementState;
+    NM: NoteManagementState;
 };
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
@@ -60,7 +60,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         setMyself,
         setOpeningService,
         setCurrentChat,
-        noteManagement,
+        NM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -68,7 +68,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     const [noteUpdated, setNoteUpdated] = useState(false);
     const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
     const [currentMyNoteTitle, setCurrentMyNoteTitle] = useState<string>(
-        noteManagement.currentMyNote?.title || ""
+        NM.currentMyNote?.title || ""
     );
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
@@ -96,18 +96,18 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     // Send updated note to the backend when note is updated
     const updateNote = async () => {
-        if (noteManagement.currentMyNote) {
+        if (NM.currentMyNote) {
             let newNoteTitle = currentMyNoteTitle;
 
             // If the note title is empty, use the note original title.
             // (not updating the title to empty)
             if (currentMyNoteTitle === "") {
-                newNoteTitle = noteManagement.currentMyNote.title;
+                newNoteTitle = NM.currentMyNote.title;
                 setCurrentMyNoteTitle(newNoteTitle);
             }
 
             const newNote: MyNoteProps = {
-                ...noteManagement.currentMyNote,
+                ...NM.currentMyNote,
                 title: newNoteTitle,
                 body: body || [],
             };
@@ -123,18 +123,18 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
             setNoteUpdated(false);
 
             // This needs to update the note title on the tab.
-            noteManagement.setTabItems(
-                noteManagement.tabItems.map((item) =>
-                    item.noteType === noteManagement.currentMyNote?.noteType &&
-                    item.noteId === noteManagement.currentMyNote?.noteId
+            NM.setTabItems(
+                NM.tabItems.map((item) =>
+                    item.noteType === NM.currentMyNote?.noteType &&
+                    item.noteId === NM.currentMyNote?.noteId
                         ? newNote
                         : item
                 )
             );
 
             // This needs to update the note title in the sidebar.
-            noteManagement.setMyNoteMeta(
-                noteManagement.myNoteMeta.map((item) =>
+            NM.setMyNoteMeta(
+                NM.myNoteMeta.map((item) =>
                     item.noteType === newNote.noteType && item.noteId === newNote.noteId
                         ? {
                               noteType: newNote.noteType,
@@ -156,33 +156,31 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     }, [noteUpdated]);
 
     useEffect(() => {
-        if (noteManagement.currentMyNote) {
-            setBody(noteManagement.currentMyNote.body);
+        if (NM.currentMyNote) {
+            setBody(NM.currentMyNote.body);
             setTsBody(getLocalCurrentTimestamp());
-            setCurrentMyNoteTitle(noteManagement.currentMyNote.title);
+            setCurrentMyNoteTitle(NM.currentMyNote.title);
         }
-    }, [noteManagement.currentMyNote]);
+    }, [NM.currentMyNote]);
 
     const handleCloseTab = async (tabIndex: number, closingNoteId: number) => {
         const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
         const nextTabIndex = Math.max(tabIndex - 1, 0);
-        noteManagement.setTabItems(
-            noteManagement.tabItems.filter((t) => t.noteId !== closingNoteId)
-        );
-        await noteManagement.loadNote(
-            noteManagement.tabItems[indexOfNextNote].noteType,
-            noteManagement.tabItems[indexOfNextNote].noteId,
+        NM.setTabItems(NM.tabItems.filter((t) => t.noteId !== closingNoteId));
+        await NM.loadNote(
+            NM.tabItems[indexOfNextNote].noteType,
+            NM.tabItems[indexOfNextNote].noteId,
             nextTabIndex
         );
     };
     // Reset note body saved status when the selected tab index changes
     useEffect(() => {
         setNoteBodySaved(false);
-    }, [noteManagement.selectedTabIndex]);
+    }, [NM.selectedTabIndex]);
 
     return (
         <>
-            {(noteManagement.tabItems.length === 0 || noteManagement.currentMyNote === null) && (
+            {(NM.tabItems.length === 0 || NM.currentMyNote === null) && (
                 <Box
                     sx={{
                         height: "100%",
@@ -201,7 +199,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                             paddingRight: "10px",
                         }}
                         onClick={() => {
-                            noteManagement.handleCreateNewMyNote(null);
+                            NM.handleCreateNewMyNote(null);
                         }}
                     >
                         <AddIcon />
@@ -210,11 +208,11 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                 </Box>
             )}
 
-            {!(noteManagement.tabItems.length === 0 || noteManagement.currentMyNote === null) && (
+            {!(NM.tabItems.length === 0 || NM.currentMyNote === null) && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
                     {body && (
                         <>
-                            {noteManagement.currentNoteType !== 0 && (
+                            {NM.currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
                                     {/* Note Header */}
                                     <Stack
@@ -240,17 +238,13 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 <WindowIcon sx={{ fontSize: "20px" }} />
                                                 My Notes
                                             </IconButton>
-                                            {noteManagement.currentMyNoteChain &&
-                                                noteManagement.currentMyNoteChain.map((node) => (
+                                            {NM.currentMyNoteChain &&
+                                                NM.currentMyNoteChain.map((node) => (
                                                     <Typography
                                                         level="title-sm"
                                                         component="button"
                                                         onClick={() => {
-                                                            noteManagement.loadNote(
-                                                                1,
-                                                                node.noteId,
-                                                                -1
-                                                            );
+                                                            NM.loadNote(1, node.noteId, -1);
                                                         }}
                                                         sx={{
                                                             background: "none",
@@ -277,7 +271,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     variant="plain"
                                                     color="neutral"
                                                     onClick={() => {
-                                                        noteManagement.handleCreateNewMyNote(null);
+                                                        NM.handleCreateNewMyNote(null);
                                                     }}
                                                     sx={{ px: "10px", mb: "5px" }}
                                                 >
@@ -300,10 +294,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 <Menu size="sm">
                                                     <MenuItem
                                                         onClick={() => {
-                                                            if (noteManagement.currentMyNote) {
-                                                                noteManagement.handleCreateNewMyNote(
-                                                                    noteManagement.currentMyNote
-                                                                        .noteId
+                                                            if (NM.currentMyNote) {
+                                                                NM.handleCreateNewMyNote(
+                                                                    NM.currentMyNote.noteId
                                                                 );
                                                             } else {
                                                                 console.error(
@@ -330,26 +323,26 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 </Menu>
                                             </Dropdown>
                                         </Stack>
-                                        {noteManagement.currentMyNote && (
+                                        {NM.currentMyNote && (
                                             <ModalDeleteMyNote
                                                 myself={myself}
                                                 openDeleteNote={openDeleteNote}
                                                 setOpenDeleteNote={setOpenDeleteNote}
-                                                myNoteMeta={noteManagement.myNoteMeta}
-                                                setMyNoteMeta={noteManagement.setMyNoteMeta}
-                                                currentMyNote={noteManagement.currentMyNote}
+                                                myNoteMeta={NM.myNoteMeta}
+                                                setMyNoteMeta={NM.setMyNoteMeta}
+                                                currentMyNote={NM.currentMyNote}
                                                 handleCloseTab={handleCloseTab}
-                                                currentTabIndex={noteManagement.selectedTabIndex}
+                                                currentTabIndex={NM.selectedTabIndex}
                                             />
                                         )}
                                     </Stack>
 
                                     <Tabs
-                                        value={noteManagement.selectedTabIndex}
+                                        value={NM.selectedTabIndex}
                                         onChange={(_, val) => {
-                                            noteManagement.loadNote(
-                                                noteManagement.tabItems[Number(val)].noteType,
-                                                noteManagement.tabItems[Number(val)].noteId,
+                                            NM.loadNote(
+                                                NM.tabItems[Number(val)].noteType,
+                                                NM.tabItems[Number(val)].noteId,
                                                 Number(val)
                                             );
                                         }}
@@ -363,7 +356,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 "&::-webkit-scrollbar": { display: "none" },
                                             }}
                                         >
-                                            {noteManagement.tabItems.map((tab, index) => (
+                                            {NM.tabItems.map((tab, index) => (
                                                 <Tab
                                                     key={`tab-${index}`}
                                                     sx={{
@@ -387,7 +380,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                             ? `${tab.title.slice(0, 14)}...`
                                                             : tab.title}
 
-                                                        {noteManagement.tabItems.length > 1 && (
+                                                        {NM.tabItems.length > 1 && (
                                                             <IconButton
                                                                 component="span"
                                                                 size="sm"
@@ -410,7 +403,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             ))}
                                         </TabList>
 
-                                        {noteManagement.tabItems.map((tabNote, index) => (
+                                        {NM.tabItems.map((tabNote, index) => (
                                             <TabPanel
                                                 key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                                                 value={index}
@@ -484,7 +477,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         </Button>
                                                     </Box>
                                                 )}
-                                                {noteManagement.currentMyNote && (
+                                                {NM.currentMyNote && (
                                                     <>
                                                         <BnMyNoteEditor
                                                             teamMemberProfiles={teamMemberProfiles}
@@ -492,9 +485,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                             setMyself={setMyself}
                                                             socket={socket}
                                                             teamMembers={teamMembers}
-                                                            currentMyNote={
-                                                                noteManagement.currentMyNote
-                                                            }
+                                                            currentMyNote={NM.currentMyNote}
                                                             body={body}
                                                             setBody={setBody}
                                                             setNoteBodyEdited={setNoteBodyEdited}
