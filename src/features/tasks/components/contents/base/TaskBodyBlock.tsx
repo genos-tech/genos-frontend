@@ -39,18 +39,18 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
-                    teamMemberProfiles={teamMemberProfiles}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    teamMembers={teamMembers}
-                    taskId={taskId}
                     body={body || []}
+                    myself={myself}
                     setBody={setBody}
+                    setCurrentChat={setCurrentChat}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
                     setTaskBodyEdited={setTaskBodyEdited}
                     setTaskBodySaved={setTaskBodySaved}
-                    setCurrentChat={setCurrentChat}
-                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    taskId={taskId}
+                    teamMemberProfiles={teamMemberProfiles}
+                    teamMembers={teamMembers}
                 />
             </Box>
         </Stack>

@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import { Box, Button, Card, CardContent, IconButton, Stack, Typography } from "@mui/joy";
+import React, { useEffect, useRef, useState } from "react";
 
 import {
     AttachmentFileProps,
@@ -161,24 +161,24 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
 
     return (
         <Box>
-            <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+            <Stack alignItems="center" direction="row" sx={{ width: "100%" }}>
                 <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
                     Attachments
                 </Typography>
                 <Box sx={{ flexGrow: 1 }} />
                 <input
-                    type="file"
+                    ref={inputRef}
                     accept="*"
                     multiple={true}
-                    ref={inputRef}
-                    onChange={handleSelectedFiles}
                     style={{ display: "none" }}
+                    type="file"
+                    onChange={handleSelectedFiles}
                 />
                 <Button
-                    component="p"
-                    variant="outlined"
                     color="neutral"
+                    component="p"
                     size="sm"
+                    variant="outlined"
                     onClick={handleButtonClick}
                 >
                     Select File
@@ -187,8 +187,6 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
 
             <Box
                 className="custom-scrollbar"
-                onDrop={handleDroppedFiles}
-                onDragOver={(e) => e.preventDefault()}
                 sx={{
                     width: "100%",
                     minHeight: "150px",
@@ -197,6 +195,8 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                     display: "flex",
                     alignItems: "center",
                 }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDroppedFiles}
             >
                 {uploadingFiles.length === 0 && (
                     <Box
@@ -227,9 +227,6 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             style={{ position: "relative", textAlign: "center" }}
                         >
                             <IconButton
-                                onClick={() => {
-                                    handleDeleteTextFile(file);
-                                }}
                                 size="sm"
                                 sx={{
                                     position: "absolute",
@@ -237,21 +234,24 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                     right: 0,
                                     background: "transparent",
                                 }}
+                                onClick={() => {
+                                    handleDeleteTextFile(file);
+                                }}
                             >
                                 <CloseIcon />
                             </IconButton>
                             <div
+                                style={{
+                                    textDecoration: "none",
+                                    color: "inherit",
+                                    cursor: "pointer",
+                                }}
                                 onClick={(e) => {
                                     e.preventDefault();
                                     downloadFile(
                                         file.url,
                                         `file.name-${getLocalCurrentTimestamp()}`
                                     );
-                                }}
-                                style={{
-                                    textDecoration: "none",
-                                    color: "inherit",
-                                    cursor: "pointer",
                                 }}
                             >
                                 <InsertDriveFileIcon sx={{ fontSize: 40, cursor: "pointer" }} />
@@ -285,9 +285,6 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             style={{ position: "relative", display: "inline-block" }}
                         >
                             <IconButton
-                                onClick={() => {
-                                    handleDeleteImage(image);
-                                }}
                                 size="sm"
                                 sx={{
                                     position: "absolute",
@@ -295,12 +292,15 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                     right: 0,
                                     background: "white",
                                 }}
+                                onClick={() => {
+                                    handleDeleteImage(image);
+                                }}
                             >
                                 <CloseIcon />
                             </IconButton>
                             <img
-                                src={image.url}
                                 alt="Uploaded"
+                                src={image.url}
                                 style={{
                                     width: `${image.width}px`,
                                     height: `${image.height}px`,
@@ -314,7 +314,6 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
             </Box>
             {selectedImage && (
                 <Box
-                    onClick={handleCloseModal}
                     style={{
                         position: "fixed",
                         top: 0,
@@ -327,6 +326,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                         justifyContent: "center",
                         zIndex: 10000,
                     }}
+                    onClick={handleCloseModal}
                 >
                     <Card
                         sx={{
@@ -338,8 +338,8 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                     >
                         <CardContent>
                             <img
-                                src={selectedImage}
                                 alt="Full View"
+                                src={selectedImage}
                                 style={{ maxWidth: "100%", maxHeight: "80vh" }}
                             />
                         </CardContent>

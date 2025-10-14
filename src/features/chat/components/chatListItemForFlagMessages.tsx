@@ -1,11 +1,11 @@
-import * as React from "react";
-import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import * as React from "react";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
@@ -369,7 +369,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         <React.Fragment>
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
-                    onClick={onClickHandler}
+                    sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                     color={
                         selectedFlaggedMessageId === flaggedMessage.flaggedMessageId
                             ? "success"
@@ -380,31 +380,31 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             ? "soft"
                             : "outlined"
                     }
-                    sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
+                    onClick={onClickHandler}
                 >
                     <Stack direction="column">
                         <Stack
-                            direction="row"
-                            spacing={1.5}
-                            justifyContent="space-between"
                             alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1.5}
                         >
                             <Stack direction="row" spacing={1}>
                                 <div>
                                     {flaggedMessage.chatType === 1 &&
                                         flaggedMessage.dmPartnerUser.userId !== "" && (
                                             <AvatarWithStatus
-                                                myself={myself}
-                                                setMyself={setMyself}
                                                 isYou={isYou}
+                                                myself={myself}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setMyself={setMyself}
+                                                setOpeningService={setOpeningService}
+                                                socket={socket}
                                                 avatarUser={
                                                     teamMemberProfiles[
                                                         flaggedMessage.dmPartnerUser.userId
                                                     ]
                                                 }
-                                                socket={socket}
-                                                setOpeningService={setOpeningService}
-                                                setCurrentMainChat={setCurrentMainChat}
                                             />
                                         )}
 
@@ -419,15 +419,15 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         <>
                                             {chat && (
                                                 <GMAvatar
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    isYou={isYou}
-                                                    socket={socket}
-                                                    setOpeningService={setOpeningService}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    gmChat={chat}
                                                     funcSetAllChats={funcSetAllChats}
+                                                    gmChat={chat}
+                                                    isYou={isYou}
+                                                    myself={myself}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setMyself={setMyself}
+                                                    setOpeningService={setOpeningService}
+                                                    socket={socket}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                 />
                                             )}
                                             {chat === undefined && (
@@ -442,14 +442,14 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         <>
                                             {chat && (
                                                 <ProjectAvatar
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socket}
-                                                    setOpeningService={setOpeningService}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    pmChat={chat}
                                                     funcSetAllChats={funcSetAllChats}
+                                                    myself={myself}
+                                                    pmChat={chat}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setMyself={setMyself}
+                                                    setOpeningService={setOpeningService}
+                                                    socket={socket}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                 />
                                             )}
                                             {chat === undefined && (
@@ -470,7 +470,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 <Stack direction="row" spacing={0.5}>
                                     {flaggedMessage.chatType !== 3 &&
                                         flaggedMessage.chatType !== 4 && (
-                                            <Typography noWrap level="title-sm" sx={{ pt: "3px" }}>
+                                            <Typography level="title-sm" sx={{ pt: "3px" }} noWrap>
                                                 {isYou
                                                     ? `${flaggedMessage.chatName} (you)`
                                                     : flaggedMessage.chatName}
@@ -482,9 +482,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                             flaggedMessage.chatType === 4) && (
                                             <>
                                                 <Chip
+                                                    color="primary"
                                                     size="sm"
                                                     variant="soft"
-                                                    color="primary"
                                                     sx={{
                                                         fontSize: "12px",
                                                         borderRadius: "4px",
@@ -508,9 +508,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         )}
 
                                         <Chip
+                                            color="neutral"
                                             size="sm"
                                             variant="outlined"
-                                            color="neutral"
                                             sx={{
                                                 fontSize: "12px",
                                                 borderRadius: "4px",
@@ -521,9 +521,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         </Chip>
                                         {flaggedMessage.threadId !== 0 && (
                                             <Chip
+                                                color="neutral"
                                                 size="sm"
                                                 variant="outlined"
-                                                color="neutral"
                                                 sx={{
                                                     fontSize: "12px",
                                                     borderRadius: "4px",
@@ -538,19 +538,19 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             </Stack>
 
                             {/* Right-aligned content */}
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack alignItems="center" direction="row" spacing={1}>
                                 <Typography
                                     level="body-xs"
-                                    noWrap
                                     sx={{ display: { xs: "none", md: "block" } }}
+                                    noWrap
                                 >
                                     {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                                 </Typography>
                                 <IconButton
-                                    onClick={updateFlagStatus}
+                                    color={tmpIsFlagged ? "danger" : "neutral"}
                                     size="sm"
                                     variant="plain"
-                                    color={tmpIsFlagged ? "danger" : "neutral"}
+                                    onClick={updateFlagStatus}
                                 >
                                     <FlagIcon sx={{ fontSize: 16 }} />
                                 </IconButton>
@@ -558,9 +558,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         </Stack>
 
                         <Stack
+                            alignItems="flex-start"
                             direction="row"
                             justifyContent="space-between"
-                            alignItems="flex-start"
                         >
                             <Typography
                                 level="body-sm"

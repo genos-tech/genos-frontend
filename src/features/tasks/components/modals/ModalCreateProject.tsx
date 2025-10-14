@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
     Alert,
     Box,
@@ -10,6 +9,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import React, { useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -147,14 +147,15 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjec
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={PM.openCreateProject}
+                sx={{ zIndex: 10010 }}
                 onClose={() => PM.setOpenCreateProject(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">Create New Project</Typography>
                     <Input
                         placeholder="Unique project name"
+                        sx={{ mt: 1 }}
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
                         onKeyDown={(e) => {
@@ -162,16 +163,15 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjec
                                 handleCreateProject();
                             }
                         }}
-                        sx={{ mt: 1 }}
                     />
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Checkbox
-                            label="🔒 Private Project"
-                            color="neutral"
-                            variant="soft"
                             checked={isPrivate}
-                            onChange={(e) => setIsPrivate(e.target.checked)}
+                            color="neutral"
+                            label="🔒 Private Project"
                             sx={{ mt: 1 }}
+                            variant="soft"
+                            onChange={(e) => setIsPrivate(e.target.checked)}
                         />
                     </Box>
                     {errorMessage && errorMessage !== "" && (
@@ -179,18 +179,18 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjec
                     )}
                     <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             variant="outlined"
                             onClick={() => PM.setOpenCreateProject(false)}
                         >
                             Cancel
                         </Button>
                         <Button
-                            component="button"
                             color="primary"
-                            onClick={handleCreateProject}
+                            component="button"
                             disabled={!projectName.trim()}
+                            onClick={handleCreateProject}
                         >
                             Create
                         </Button>

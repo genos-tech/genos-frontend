@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -322,96 +322,96 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     }}
                 >
                     <TaskTitleBlock
-                        myself={myself}
-                        taskContents={taskContents}
-                        taskTitle={taskTitle}
-                        setTaskTitle={setTaskTitle}
-                        setOpenCreateProject={PM.setOpenCreateProject}
-                        setOpenCreateTag={TM.setOpenCreateTag}
-                        titleError={titleError}
-                        titleErrorOpen={titleErrorOpen}
-                        setTitleErrorOpen={setTitleErrorOpen}
                         isPreviewMode={false}
+                        moveToSpecificChat={moveToSpecificChat}
+                        myself={myself}
+                        openingService={openingService}
+                        setCurrentProject={PM.setCurrentProject}
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        moveToSpecificChat={moveToSpecificChat}
-                        openingService={openingService}
+                        setOpenCreateProject={PM.setOpenCreateProject}
+                        setOpenCreateTag={TM.setOpenCreateTag}
                         setOpeningService={setOpeningService}
-                        setCurrentProject={PM.setCurrentProject}
+                        setTaskTitle={setTaskTitle}
+                        setTitleErrorOpen={setTitleErrorOpen}
+                        taskContents={taskContents}
+                        taskTitle={taskTitle}
+                        titleError={titleError}
+                        titleErrorOpen={titleErrorOpen}
                         TM={TM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskMainBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
-                        taskContents={taskContents}
-                        setTaskContents={setTaskContents}
-                        teamMembers={teamMembers}
-                        teamProjects={PM.teamProjects}
-                        projectTags={projectTags}
-                        myself={myself}
-                        setMyself={setMyself}
                         assignee={assignee}
-                        setAssignee={setAssignee}
-                        reporter={reporter}
-                        setReporter={setReporter}
-                        isOpenTeamMembersList={isOpenTeamMembersList}
-                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         isOpenProjectList={isOpenProjectList}
-                        setIsOpenProjectList={setIsOpenProjectList}
                         isOpenTagList={isOpenTagList}
-                        setIsOpenTagList={setIsOpenTagList}
-                        setOpenCreateTag={TM.setOpenCreateTag}
-                        setCurrentProject={PM.setCurrentProject}
+                        isOpenTeamMembersList={isOpenTeamMembersList}
                         isPreviewMode={false}
-                        setOpeningService={setOpeningService}
+                        myself={myself}
+                        projectTags={projectTags}
+                        reporter={reporter}
+                        setAssignee={setAssignee}
                         setCurrentMainChat={setCurrentMainChat}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
+                        setCurrentProject={PM.setCurrentProject}
+                        setIsOpenProjectList={setIsOpenProjectList}
+                        setIsOpenTagList={setIsOpenTagList}
+                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        setMyself={setMyself}
+                        setOpenCreateTag={TM.setOpenCreateTag}
+                        setOpeningService={setOpeningService}
+                        setReporter={setReporter}
+                        setTaskContents={setTaskContents}
+                        socket={socket}
+                        taskContents={taskContents}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
+                        teamProjects={PM.teamProjects}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCreateBodyBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        teamMembers={teamMembers}
-                        taskId={taskContents.id}
                         body={body}
+                        myself={myself}
                         setBody={setBody}
                         setCurrentChat={setCurrentMainChat}
+                        setMyself={setMyself}
                         setOpeningService={setOpeningService}
+                        socket={socket}
+                        taskId={taskContents.id}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
                     />
 
                     <Divider sx={{ mt: 2 }} />
 
                     <TaskCreateAttachmentBlock
-                        taskContents={taskContents}
                         setTaskContents={setTaskContents}
+                        taskContents={taskContents}
                     />
 
                     <Divider sx={{ m: 2 }} />
 
                     <TaskCreateFooter
-                        socket={socket}
-                        myself={myself}
                         accessToken={accessToken}
                         currentMainChat={currentMainChat}
                         currentThreadChat={currentThreadChat}
                         isThreadVisible={isThreadVisible}
-                        taskContents={taskContents}
-                        taskTitle={taskTitle}
-                        setIsSubmitted={setIsSubmitted}
-                        setTitleError={setTitleError}
-                        setTitleErrorOpen={setTitleErrorOpen}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setIsCreatingTask={TM.setIsCreatingTask}
+                        myself={myself}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
                         setInitialEmptyTaskId={TM.setInitialEmptyTaskId}
+                        setIsCreatingTask={TM.setIsCreatingTask}
+                        setIsSubmitted={setIsSubmitted}
+                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                        setTitleError={setTitleError}
+                        setTitleErrorOpen={setTitleErrorOpen}
+                        socket={socket}
+                        taskContents={taskContents}
+                        taskTitle={taskTitle}
                     />
                 </Sheet>
             )}

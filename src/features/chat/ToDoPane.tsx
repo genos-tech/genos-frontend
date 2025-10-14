@@ -74,26 +74,28 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     return (
         <Box sx={{ height: "100dvh" }}>
             <Stack
-                direction="row"
                 alignItems="center"
+                direction="row"
                 justifyContent="center"
                 sx={{ position: "relative" }}
             >
                 <Button
-                    variant="soft"
                     color="primary"
                     disabled={isExistingTodaysTodo}
-                    onClick={handleCreateNewTodo}
+                    variant="soft"
                     sx={{
                         mt: 2,
                         mb: 1.5,
                     }}
+                    onClick={handleCreateNewTodo}
                 >
                     Add Today's Todo
                 </Button>
                 <Switch
                     checked={showOnlyInCompleteTodos}
-                    onChange={() => setShowOnlyInCompleteTodos(!showOnlyInCompleteTodos)}
+                    color={showOnlyInCompleteTodos ? "warning" : "neutral"}
+                    size="sm"
+                    variant="soft"
                     slotProps={{
                         track: {
                             children: (
@@ -110,8 +112,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             ),
                         },
                     }}
-                    size="sm"
-                    variant="soft"
                     sx={{
                         position: "absolute",
                         right: "30px",
@@ -119,23 +119,18 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         "--Switch-trackWidth": "95px",
                         "--Switch-trackHeight": "23px",
                     }}
-                    color={showOnlyInCompleteTodos ? "warning" : "neutral"}
+                    onChange={() => setShowOnlyInCompleteTodos(!showOnlyInCompleteTodos)}
                 />
             </Stack>
             <Box sx={{ px: 0.3, my: 0.2 }}>
                 {tmpTodos.length > 0 && (
                     <Virtuoso
                         ref={virtuosoRef}
-                        className="custom-scrollbar"
-                        style={{
-                            height: isSubChatVisible
-                                ? `${(currentWindowHeight - 150) * 0.43}px`
-                                : `${currentWindowHeight - 150}px`,
-                        }}
-                        totalCount={tmpTodos.length}
-                        initialTopMostItemIndex={0}
-                        atTopThreshold={64}
                         atBottomThreshold={128}
+                        atTopThreshold={64}
+                        className="custom-scrollbar"
+                        initialTopMostItemIndex={0}
+                        totalCount={tmpTodos.length}
                         itemContent={(index) => {
                             const todo = tmpTodos[index];
                             return (
@@ -144,17 +139,22 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     currentIndex={index}
                                     isExistingTodaysTodo={isExistingTodaysTodo}
                                     myself={myself}
-                                    todo={todo}
+                                    setCurrentChat={setCurrentChat}
+                                    setMyself={setMyself}
+                                    setOpeningService={setOpeningService}
+                                    setTodos={setTodos}
+                                    socket={socket}
                                     teamMemberProfiles={teamMemberProfiles}
                                     teamMembers={teamMembers}
-                                    setMyself={setMyself}
-                                    socket={socket}
+                                    todo={todo}
                                     todos={tmpTodos}
-                                    setTodos={setTodos}
-                                    setOpeningService={setOpeningService}
-                                    setCurrentChat={setCurrentChat}
                                 />
                             );
+                        }}
+                        style={{
+                            height: isSubChatVisible
+                                ? `${(currentWindowHeight - 150) * 0.43}px`
+                                : `${currentWindowHeight - 150}px`,
                         }}
                     />
                 )}

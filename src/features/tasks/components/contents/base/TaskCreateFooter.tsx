@@ -80,10 +80,10 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     return (
         <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
             <Button
-                component="button"
-                variant="outlined"
                 color="danger"
+                component="button"
                 size="sm"
+                variant="outlined"
                 onClick={() => {
                     if (setIsCreatingTask) {
                         setIsCreatingTask({
@@ -106,14 +106,14 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 Cancel
             </Button>
             <Button
+                color="primary"
                 component="button"
+                disabled={taskTitle === "" || taskContents.project?.projectId === null}
                 type="submit"
                 variant="solid"
-                color="primary"
                 onClick={() => {
                     DoUploadNewTask();
                 }}
-                disabled={taskTitle === "" || taskContents.project?.projectId === null}
             >
                 Create
             </Button>

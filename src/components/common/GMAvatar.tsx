@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Avatar, Box } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
@@ -43,46 +43,46 @@ export const GMAvatar = (props: GMAvatarProps) => {
     return (
         <div>
             <Box
+                height={_avatarSize}
                 position="relative"
                 width={_avatarSize}
-                height={_avatarSize}
                 onClick={() => setOpenModalGMProfile(true)}
             >
                 <Avatar
                     size="sm"
-                    sx={{ width: _avatarSize, height: _avatarSize }}
                     src={`${media_url}/${gmChat.profileImagePath}`}
+                    sx={{ width: _avatarSize, height: _avatarSize }}
                 >
                     <GroupsIcon sx={{ fontSize: 26 }} />
                 </Avatar>
             </Box>
 
             <ModalGMProfile
-                teamMemberProfiles={teamMemberProfiles}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                setOpeningService={setOpeningService}
-                setCurrentMainChat={setCurrentMainChat}
-                gmChat={gmChat}
-                openModalGMProfile={openModalGMProfile}
-                setOpenModalGMProfile={setOpenModalGMProfile}
                 funcSetAllChats={funcSetAllChats}
+                gmChat={gmChat}
+                myself={myself}
+                openModalGMProfile={openModalGMProfile}
                 setAvatarUserId={setAvatarUserId}
+                setCurrentMainChat={setCurrentMainChat}
+                setMyself={setMyself}
+                setOpeningService={setOpeningService}
+                setOpenModalGMProfile={setOpenModalGMProfile}
                 setOpenUserProfile={setOpenUserProfile}
+                socket={socket}
+                teamMemberProfiles={teamMemberProfiles}
             />
 
             {avatarUserId && (
                 <UserProfile
-                    socket={socket}
-                    myself={myself}
-                    setMyself={setMyself}
                     isYou={isYou}
-                    user={teamMemberProfiles[avatarUserId]}
+                    myself={myself}
                     openUserProfile={openUserProfile}
-                    setOpenUserProfile={setOpenUserProfile}
                     setCurrentMainChat={setCurrentMainChat}
+                    setMyself={setMyself}
                     setOpeningService={setOpeningService}
+                    setOpenUserProfile={setOpenUserProfile}
+                    socket={socket}
+                    user={teamMemberProfiles[avatarUserId]}
                 />
             )}
         </div>

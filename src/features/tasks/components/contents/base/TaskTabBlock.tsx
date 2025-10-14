@@ -419,11 +419,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         <>
                             <Box sx={{ flexGrow: 1 }} />
                             <IconButton
-                                sx={{ mr: "23px", mb: "3px", px: "5px" }}
-                                component="p"
-                                variant="plain"
                                 color="neutral"
+                                component="p"
                                 size="sm"
+                                sx={{ mr: "23px", mb: "3px", px: "5px" }}
+                                variant="plain"
                                 onClick={() => {
                                     if (
                                         setIsTaskHomeVisible &&
@@ -460,19 +460,19 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             }}
                         >
                             <input
-                                type="file"
+                                ref={inputRef}
                                 accept="*"
                                 multiple={true}
-                                ref={inputRef}
-                                onChange={handleSelectedFiles}
                                 style={{ display: "none" }}
+                                type="file"
+                                onChange={handleSelectedFiles}
                             />
                             <IconButton
-                                sx={{ mr: "15px", mb: "3px", px: "3px" }}
-                                component="p"
-                                variant="plain"
                                 color="neutral"
+                                component="p"
                                 size="sm"
+                                sx={{ mr: "15px", mb: "3px", px: "3px" }}
+                                variant="plain"
                                 onClick={handleButtonClick}
                             >
                                 <FolderIcon sx={{ pr: "5px", fontSize: "25px" }} /> Select Files
@@ -495,39 +495,39 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 <Box sx={{ mb: 1 }}>
                                     <Virtuoso
                                         ref={virtuosoRef}
-                                        className="custom-scrollbar"
-                                        style={{
-                                            height: Math.min(
-                                                taskComments.length * 60 + totalCommentLines * 18,
-                                                800
-                                            ),
-                                        }}
-                                        totalCount={taskComments.length}
-                                        initialTopMostItemIndex={taskComments.length - 1}
-                                        atTopThreshold={64}
                                         atBottomThreshold={128}
+                                        atTopThreshold={64}
+                                        className="custom-scrollbar"
+                                        initialTopMostItemIndex={taskComments.length - 1}
+                                        totalCount={taskComments.length}
                                         itemContent={(index) => {
                                             const comment = taskComments[index];
                                             return (
                                                 <TaskCommentBubble
                                                     key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    socket={socket}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
                                                     comment={comment}
+                                                    myself={myself}
+                                                    setCurrentChat={setCurrentChat}
+                                                    setEditTargetComment={setEditTargetComment}
+                                                    setIsInEdit={setIsInEdit}
+                                                    setMyself={setMyself}
+                                                    setOpeningService={setOpeningService}
+                                                    socket={socket}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                     currentProjectId={
                                                         taskContents.project?.projectId
                                                     }
                                                     currentProjectName={
                                                         taskContents.project?.projectName
                                                     }
-                                                    setIsInEdit={setIsInEdit}
-                                                    setEditTargetComment={setEditTargetComment}
-                                                    setCurrentChat={setCurrentChat}
-                                                    setOpeningService={setOpeningService}
                                                 />
                                             );
+                                        }}
+                                        style={{
+                                            height: Math.min(
+                                                taskComments.length * 60 + totalCommentLines * 18,
+                                                800
+                                            ),
                                         }}
                                     />
                                 </Box>
@@ -548,7 +548,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         overflowY: "scroll",
                                     }}
                                 >
-                                    <ListItem nested sx={{ width: "100%" }}>
+                                    <ListItem sx={{ width: "100%" }} nested>
                                         <List sx={{ gap: 0.5 }}>
                                             {taskNotes.map((taskNote, index) => {
                                                 return (
@@ -557,6 +557,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     >
                                                         <ListItemButton
                                                             variant="soft"
+                                                            sx={{
+                                                                justifyContent: "flex-start",
+                                                                alignItems: "center",
+                                                                borderRadius: "5px",
+                                                            }}
                                                             onClick={() => {
                                                                 if (
                                                                     setIsTaskHomeVisible &&
@@ -567,14 +572,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                                     setCurrentTaskNote(taskNote);
                                                                 }
                                                             }}
-                                                            sx={{
-                                                                justifyContent: "flex-start",
-                                                                alignItems: "center",
-                                                                borderRadius: "5px",
-                                                            }}
                                                         >
                                                             <Typography
-                                                                noWrap
                                                                 level="title-md"
                                                                 sx={{
                                                                     px: "10px",
@@ -586,6 +585,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                                     display: "flex",
                                                                     alignItems: "center",
                                                                 }}
+                                                                noWrap
                                                             >
                                                                 {`${taskNote.title}`}
                                                             </Typography>
@@ -603,8 +603,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     <TabPanel value={2}>
                         <Box
                             className="custom-scrollbar"
-                            onDrop={handleDroppedFiles}
-                            onDragOver={(e) => e.preventDefault()}
                             sx={{
                                 width: "100%",
                                 minHeight: "150px",
@@ -613,6 +611,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 display: "flex",
                                 alignItems: "center",
                             }}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={handleDroppedFiles}
                         >
                             {uploadedFiles.length === 0 && (
                                 <Box
@@ -643,36 +643,36 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         style={{ position: "relative", textAlign: "center" }}
                                     >
                                         <IconButton
-                                            onClick={() => {
-                                                handleDeleteTextFile(taskContents.id, file);
-                                            }}
+                                            color="neutral"
                                             size="sm"
                                             variant="plain"
-                                            color="neutral"
                                             sx={{
                                                 position: "absolute",
                                                 top: 0,
                                                 right: 0,
                                                 background: "transparent",
                                             }}
+                                            onClick={() => {
+                                                handleDeleteTextFile(taskContents.id, file);
+                                            }}
                                         >
                                             <CloseIcon />
                                         </IconButton>
                                         <Tooltip
-                                            placement="top"
-                                            title={`Download \`${file.name}\``}
-                                            sx={{ zIndex: 10010 }}
                                             component="div"
+                                            placement="top"
+                                            sx={{ zIndex: 10010 }}
+                                            title={`Download \`${file.name}\``}
                                         >
                                             <div
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    downloadFile(file.url, file.name);
-                                                }}
                                                 style={{
                                                     textDecoration: "none",
                                                     color: "inherit",
                                                     cursor: "pointer",
+                                                }}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    downloadFile(file.url, file.name);
                                                 }}
                                             >
                                                 <InsertDriveFileIcon
@@ -712,24 +712,24 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         }}
                                     >
                                         <IconButton
-                                            onClick={() => {
-                                                handleDeleteImage(taskContents.id, image);
-                                            }}
+                                            color="neutral"
                                             size="sm"
                                             variant="plain"
-                                            color="neutral"
                                             sx={{
                                                 position: "absolute",
                                                 top: 0,
                                                 right: 0,
                                                 background: "transparent",
                                             }}
+                                            onClick={() => {
+                                                handleDeleteImage(taskContents.id, image);
+                                            }}
                                         >
                                             <CloseIcon />
                                         </IconButton>
                                         <img
-                                            src={image.url}
                                             alt="Uploaded"
+                                            src={image.url}
                                             style={{
                                                 width: `${image.width}px`,
                                                 height: `${image.height}px`,
@@ -750,22 +750,21 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </Box>
 
                         <Modal
-                            sx={{ zIndex: 10010 }}
                             open={opened}
+                            sx={{ zIndex: 10010 }}
                             onClose={() => setOpened(false)}
                         >
                             <ModalDialog>
                                 {selectedImage ? (
                                     <Box>
-                                        <img src={selectedImage} alt="preview" />
+                                        <img alt="preview" src={selectedImage} />
                                         <Tooltip
-                                            placement="top"
-                                            title="Download"
-                                            sx={{ zIndex: 10010 }}
                                             component="div"
+                                            placement="top"
+                                            sx={{ zIndex: 10010 }}
+                                            title="Download"
                                         >
                                             <IconButton
-                                                onClick={() => handleDownload(selectedImage)}
                                                 color="neutral"
                                                 variant="solid"
                                                 sx={{
@@ -773,6 +772,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     top: "10px",
                                                     right: "10px",
                                                 }}
+                                                onClick={() => handleDownload(selectedImage)}
                                             >
                                                 <DownloadIcon />
                                             </IconButton>

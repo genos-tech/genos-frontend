@@ -54,10 +54,10 @@ export const GMDivider = (props: GMDividerProps) => {
                 GM Chats
             </Typography>
             <IconButton
+                color="neutral"
                 component="a"
                 size="sm"
                 variant="plain"
-                color="neutral"
                 onClick={() => setOpenCreateGM(true)}
             >
                 <AddIcon />
@@ -135,12 +135,12 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 my: "3px",
             }}
         >
-            <Stack direction={"row"} spacing={0.5} flexWrap="wrap">
+            <Stack direction={"row"} flexWrap="wrap" spacing={0.5}>
                 <Button
                     component="p"
                     size="sm"
-                    variant={currentActivityMessageType === 0 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
+                    variant={currentActivityMessageType === 0 ? "soft" : "outlined"}
                     onClick={() => {
                         setCurrentActivityMessageType(0);
                     }}
@@ -150,8 +150,8 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    variant={currentActivityMessageType === 3 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
+                    variant={currentActivityMessageType === 3 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 3) {
                             setCurrentActivityMessageType(3);
@@ -165,8 +165,8 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
+                    variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 1) {
                             setCurrentActivityMessageType(1);
@@ -180,8 +180,8 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    variant={currentActivityMessageType === 4 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
+                    variant={currentActivityMessageType === 4 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 4) {
                             setCurrentActivityMessageType(4);
@@ -195,8 +195,8 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    variant={currentActivityMessageType === 2 ? "soft" : "outlined"}
                     sx={{ fontSize: "13px", my: "1px" }}
+                    variant={currentActivityMessageType === 2 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 2) {
                             setCurrentActivityMessageType(2);

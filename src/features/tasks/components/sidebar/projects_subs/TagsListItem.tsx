@@ -40,12 +40,12 @@ export const TagsListItem = (props: TagsListItemProps) => {
                     <ListItemContent>
                         <Typography
                             level="title-sm"
+                            startDecorator={<LocalOfferIcon />}
                             sx={{
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
                             }}
-                            startDecorator={<LocalOfferIcon />}
                         >
                             Tags
                         </Typography>
@@ -73,20 +73,21 @@ export const TagsListItem = (props: TagsListItemProps) => {
                                 <ListItem key={`listitem-${tagName}-${index}`}>
                                     <ListItemButton
                                         color={"neutral"}
-                                        onClick={() => {
-                                            setSelectedTagForFiltering(`/${tagName}/`);
-                                            setFilterBy(2);
-                                            setCurrentFilterName(tagName);
-                                        }}
                                         sx={{
                                             overflow: "hidden",
                                             ml: "45px",
                                             mr: "8px",
                                             pl: "20px",
                                         }}
+                                        onClick={() => {
+                                            setSelectedTagForFiltering(`/${tagName}/`);
+                                            setFilterBy(2);
+                                            setCurrentFilterName(tagName);
+                                        }}
                                     >
                                         <Chip
                                             key={`chip-${tagName}-${index}`}
+                                            size="sm"
                                             variant="outlined"
                                             sx={{
                                                 color: mode === "dark" ? "white" : "black",
@@ -101,7 +102,6 @@ export const TagsListItem = (props: TagsListItemProps) => {
                                                 textOverflow: "ellipsis",
                                                 padding: "1px 4px",
                                             }}
-                                            size="sm"
                                         >
                                             {tagName}
                                         </Chip>

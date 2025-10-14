@@ -209,6 +209,7 @@ export const ChatList = (props: ChatListProps) => {
 
     return (
         <List
+            className="custom-scrollbar"
             size="sm"
             sx={{
                 p: 0,
@@ -217,17 +218,16 @@ export const ChatList = (props: ChatListProps) => {
                 overflowY: "auto",
                 overflowX: "hidden",
             }}
-            className="custom-scrollbar"
         >
             {chatType < 5 && tmpAllChats.length > 0 && (
                 <Virtuoso
                     ref={chatTypeLookup[chatType]}
+                    atBottomThreshold={128}
+                    atTopThreshold={64}
                     className="custom-scrollbar"
+                    initialTopMostItemIndex={0}
                     style={{ height: "93dvh" }}
                     totalCount={tmpAllChats.length}
-                    initialTopMostItemIndex={0}
-                    atTopThreshold={64}
-                    atBottomThreshold={128}
                     itemContent={(index) => {
                         const chat = tmpAllChats[index];
                         return (
@@ -235,28 +235,28 @@ export const ChatList = (props: ChatListProps) => {
                                 <Stack direction="row">
                                     <ChatListItem
                                         key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        socket={socket}
+                                        allChats={allChats}
                                         chat={chat}
-                                        myself={myself}
-                                        setMyself={setMyself}
+                                        chatType={chat.chatType}
                                         currentMainChat={currentMainChat}
                                         currentSubChat={currentSubChat}
+                                        funcSetAllChats={funcSetAllChats}
+                                        incompleteTodoCount={incompleteTodoCount}
+                                        isCreatingTask={isCreatingTask}
+                                        isPinnedChat={chatType === 4}
+                                        isSubChatVisible={isSubChatVisible}
+                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        myself={myself}
                                         setCurrentMainChat={setCurrentMainChat}
                                         setCurrentSubChat={setCurrentSubChat}
                                         setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        isTaskPreviewVisible={isTaskPreviewVisible}
-                                        isCreatingTask={isCreatingTask}
-                                        isSubChatVisible={isSubChatVisible}
                                         setIsSubChatVisible={setIsSubChatVisible}
-                                        setOpeningService={setOpeningService}
-                                        chatType={chat.chatType}
-                                        funcSetAllChats={funcSetAllChats}
-                                        allChats={allChats}
-                                        isPinnedChat={chatType === 4}
-                                        incompleteTodoCount={incompleteTodoCount}
+                                        setIsThreadVisible={setIsThreadVisible}
                                         setIsToDoVisible={setIsToDoVisible}
+                                        setMyself={setMyself}
+                                        setOpeningService={setOpeningService}
+                                        socket={socket}
+                                        teamMemberProfiles={teamMemberProfiles}
                                     />
                                 </Stack>
                             </div>
@@ -268,12 +268,12 @@ export const ChatList = (props: ChatListProps) => {
             {chatType === 5 && tmpActivityMessages.length > 0 && (
                 <Virtuoso
                     ref={virtuosoActivityRef}
+                    atBottomThreshold={128}
+                    atTopThreshold={64}
                     className="custom-scrollbar"
+                    initialTopMostItemIndex={0}
                     style={{ height: "89dvh" }}
                     totalCount={tmpActivityMessages.length}
-                    initialTopMostItemIndex={0}
-                    atTopThreshold={64}
-                    atBottomThreshold={128}
                     itemContent={(index) => {
                         const activityMessage = tmpActivityMessages[index];
                         return (
@@ -281,30 +281,30 @@ export const ChatList = (props: ChatListProps) => {
                                 <Stack direction="row">
                                     <ChatListItemForActivity
                                         key={`${activityMessage.activityId}-${activityMessage.isRead}`}
-                                        selectedActivityId={selectedActivityId}
-                                        setSelectedActivityId={setSelectedActivityId}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        socket={socket}
                                         activity={activityMessage}
                                         activityMessages={activityMessages}
-                                        setActivityMessages={setActivityMessages}
-                                        myself={myself}
-                                        setMyself={setMyself}
                                         allChats={allChats}
                                         currentSubChat={currentSubChat}
+                                        funcSetAllChats={funcSetAllChats}
+                                        isCreatingTask={isCreatingTask}
+                                        isSubChatVisible={isSubChatVisible}
+                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        myself={myself}
+                                        selectedActivityId={selectedActivityId}
+                                        setActivityMessages={setActivityMessages}
                                         setCurrentMainChat={setCurrentMainChat}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                        setCurrentProject={setCurrentProject}
                                         setCurrentSubChat={setCurrentSubChat}
                                         setCurrentThreadChat={setCurrentThreadChat}
                                         setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        isTaskPreviewVisible={isTaskPreviewVisible}
-                                        isCreatingTask={isCreatingTask}
-                                        isSubChatVisible={isSubChatVisible}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        setMyself={setMyself}
                                         setOpeningService={setOpeningService}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setCurrentProject={setCurrentProject}
-                                        funcSetAllChats={funcSetAllChats}
+                                        setSelectedActivityId={setSelectedActivityId}
+                                        socket={socket}
+                                        teamMemberProfiles={teamMemberProfiles}
                                     />
                                 </Stack>
                             </div>
@@ -316,12 +316,12 @@ export const ChatList = (props: ChatListProps) => {
             {chatType === 6 && tmpFlaggedMessages.length > 0 && (
                 <Virtuoso
                     ref={virtuosoFlaggedRef}
+                    atBottomThreshold={128}
+                    atTopThreshold={64}
                     className="custom-scrollbar"
+                    initialTopMostItemIndex={0}
                     style={{ height: "89dvh" }}
                     totalCount={tmpFlaggedMessages.length}
-                    initialTopMostItemIndex={0}
-                    atTopThreshold={64}
-                    atBottomThreshold={128}
                     itemContent={(index) => {
                         const flaggedMessage = tmpFlaggedMessages[index];
                         return (
@@ -329,30 +329,30 @@ export const ChatList = (props: ChatListProps) => {
                                 <Stack direction="row">
                                     <ChatListItemForFlagMessages
                                         key={`${flaggedMessage.flaggedMessageId}`}
-                                        selectedFlaggedMessageId={selectedFlaggedMessageId}
-                                        setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        socket={socket}
-                                        flaggedMessage={flaggedMessage}
-                                        flaggedMessages={flaggedMessages}
-                                        setFlaggedMessages={setFlaggedMessages}
-                                        myself={myself}
-                                        setMyself={setMyself}
                                         allChats={allChats}
                                         currentSubChat={currentSubChat}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        flaggedMessage={flaggedMessage}
+                                        flaggedMessages={flaggedMessages}
+                                        funcSetAllChats={funcSetAllChats}
                                         isCreatingTask={isCreatingTask}
                                         isSubChatVisible={isSubChatVisible}
-                                        setOpeningService={setOpeningService}
+                                        isTaskPreviewVisible={isTaskPreviewVisible}
+                                        myself={myself}
+                                        selectedFlaggedMessageId={selectedFlaggedMessageId}
+                                        setCurrentMainChat={setCurrentMainChat}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setCurrentProject={setCurrentProject}
-                                        funcSetAllChats={funcSetAllChats}
+                                        setCurrentSubChat={setCurrentSubChat}
+                                        setCurrentThreadChat={setCurrentThreadChat}
+                                        setFlaggedMessages={setFlaggedMessages}
+                                        setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                        setIsThreadVisible={setIsThreadVisible}
+                                        setMyself={setMyself}
+                                        setOpeningService={setOpeningService}
+                                        setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
+                                        socket={socket}
+                                        teamMemberProfiles={teamMemberProfiles}
                                     />
                                 </Stack>
                             </div>

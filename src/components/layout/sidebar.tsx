@@ -1,4 +1,3 @@
-import { useState } from "react";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -17,6 +16,7 @@ import {
     Tooltip,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -163,8 +163,8 @@ export const Sidebar = (props: SidebarProps) => {
             >
                 <TeamDropdown
                     currentTeam={currentTeam}
-                    setCurrentTeam={setCurrentTeam}
                     myself={myself}
+                    setCurrentTeam={setCurrentTeam}
                     setMyself={setMyself}
                 />
                 <ColorSchemeToggle />
@@ -192,7 +192,7 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <Tooltip title="Inbox" placement="right-start">
+                        <Tooltip placement="right-start" title="Inbox">
                             <ListItemButton onClick={handleMoveToInbox}>
                                 <Box
                                     sx={{
@@ -203,16 +203,16 @@ export const Sidebar = (props: SidebarProps) => {
                                 >
                                     {unReadInboxItemCount > 0 && (
                                         <Badge
+                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                             badgeContent={unReadInboxItemCount}
                                             color="primary"
                                             size="sm"
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                         >
                                             <AllInboxIcon
+                                                sx={{ fontSize: 24 }}
                                                 color={
                                                     openingService === 0 ? "primary" : "disabled"
                                                 }
-                                                sx={{ fontSize: 24 }}
                                             />
                                         </Badge>
                                     )}
@@ -227,21 +227,21 @@ export const Sidebar = (props: SidebarProps) => {
                         </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip title="Chats" placement="right-start">
+                        <Tooltip placement="right-start" title="Chats">
                             <ListItemButton onClick={handleMoveToChat}>
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     {unReadChatAndActivityCounts > 0 && (
                                         <Badge
+                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                             badgeContent={unReadChatAndActivityCounts}
                                             color="primary"
                                             size="sm"
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                         >
                                             <QuestionAnswerRoundedIcon
+                                                sx={{ fontSize: 24 }}
                                                 color={
                                                     openingService === 1 ? "primary" : "disabled"
                                                 }
-                                                sx={{ fontSize: 24 }}
                                             />
                                         </Badge>
                                     )}
@@ -256,7 +256,7 @@ export const Sidebar = (props: SidebarProps) => {
                         </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip title="Tasks" placement="right-start">
+                        <Tooltip placement="right-start" title="Tasks">
                             <ListItemButton onClick={handleMoveToTasks}>
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <AssignmentRoundedIcon
@@ -268,7 +268,7 @@ export const Sidebar = (props: SidebarProps) => {
                         </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip title="Notes" placement="right-start">
+                        <Tooltip placement="right-start" title="Notes">
                             <ListItemButton onClick={handleMoveToNote}>
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <NoteAltIcon
@@ -299,7 +299,7 @@ export const Sidebar = (props: SidebarProps) => {
                     </ListItem> */}
 
                     <ListItem sx={{ mt: 1 }}>
-                        <Tooltip title="Sign out" placement="right-start">
+                        <Tooltip placement="right-start" title="Sign out">
                             <ListItemButton onClick={handleLogout}>
                                 <LogoutRoundedIcon sx={{ fontSize: 24 }} />
                             </ListItemButton>
@@ -310,27 +310,27 @@ export const Sidebar = (props: SidebarProps) => {
 
             <Divider />
 
-            <Box onClick={() => setOpenUserProfile(true)} sx={{ pl: "12px" }}>
-                <Tooltip title="Open User Profile" placement="right-start">
-                    <Avatar variant="solid" size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
+            <Box sx={{ pl: "12px" }} onClick={() => setOpenUserProfile(true)}>
+                <Tooltip placement="right-start" title="Open User Profile">
+                    <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`} variant="solid">
                         {myself.userName[0].toUpperCase()}
                     </Avatar>
                 </Tooltip>
-                <Box position="absolute" bottom={0} right={0} width={24} height={33}>
+                <Box bottom={0} height={33} position="absolute" right={0} width={24}>
                     <PulseDot color={myself?.isOfflineForced !== "true" ? "#4caf50" : "#999"} />
                 </Box>
             </Box>
 
             <UserProfile
-                socket={socket}
-                myself={myself}
-                setMyself={setMyself}
                 isYou={true}
-                user={teamMemberProfiles[myself.userId]}
+                myself={myself}
                 openUserProfile={openUserProfile}
-                setOpenUserProfile={setOpenUserProfile}
                 setCurrentMainChat={setCurrentMainChat}
+                setMyself={setMyself}
                 setOpeningService={setOpeningService}
+                setOpenUserProfile={setOpenUserProfile}
+                socket={socket}
+                user={teamMemberProfiles[myself.userId]}
             />
         </Sheet>
     );

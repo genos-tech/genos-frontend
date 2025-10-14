@@ -62,19 +62,19 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
             >
                 <Box>
                     <ShowEmojiReaction
-                        socket={socket}
-                        myself={myself}
-                        chatType={chatType}
                         chatName={chatName}
+                        chatType={chatType}
                         dmPartnerUser={dmPartnerUser}
-                        message={message}
                         isThread={isThread}
+                        message={message}
+                        myself={myself}
                         numReplies={numReplies}
-                        showUnderBarOption={showUnderBarOption}
                         reactions={reactions}
                         setReactions={setReactions}
                         setShowEmojiPicker={setShowEmojiPicker}
                         setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                        showUnderBarOption={showUnderBarOption}
+                        socket={socket}
                     />
                 </Box>
 
@@ -83,7 +83,6 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                         component="a"
                         size="sm"
                         variant="plain" // Removes background & border
-                        onClick={replayHandler}
                         sx={{
                             backgroundColor: "transparent",
                             marginLeft: "auto", // Push to right
@@ -97,6 +96,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                                 fontWeight: "bold",
                             },
                         }}
+                        onClick={replayHandler}
                     >
                         {numRepliesWithoutFirstMessage == 1 ? (
                             <Box sx={{ color: "neutral.plainColor" }}>

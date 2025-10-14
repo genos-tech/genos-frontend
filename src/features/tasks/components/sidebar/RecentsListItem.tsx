@@ -73,6 +73,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                             return (
                                 <ListItem key={`recent-task-${taskId}`}>
                                     <ListItemButton
+                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
                                         onClick={() => {
                                             if (projectId) {
                                                 setCurrentProject({
@@ -87,35 +88,35 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                 console.error("Failed to set the current project");
                                             }
                                         }}
-                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
                                     >
                                         <Chip
                                             key={`recent-task-project-chip-${taskId}`}
-                                            variant="outlined"
                                             color="neutral"
+                                            size="sm"
+                                            variant="outlined"
                                             sx={{
                                                 borderRadius: "5px",
                                                 fontWeight: "bold",
                                                 marginX: "-10px",
                                             }}
-                                            size="sm"
                                         >
                                             {projectName.toUpperCase().slice(0, 2)}
                                         </Chip>
                                         <Chip
                                             key={`recent-task-chip-${taskId}`}
-                                            variant="soft"
                                             color="neutral"
+                                            size="sm"
+                                            variant="soft"
                                             sx={{
                                                 borderRadius: "5px",
                                                 fontWeight: "bold",
                                             }}
-                                            size="sm"
                                         >
                                             ID: {taskId || "N/A"}
                                         </Chip>
                                         <Chip
                                             key={`status-chip-${taskId}-${index}`} // pass the key directly
+                                            size="sm"
                                             variant="soft"
                                             sx={{
                                                 backgroundColor: status.color
@@ -129,12 +130,10 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                 borderRadius: "5px",
                                                 marginX: "-10px",
                                             }}
-                                            size="sm"
                                         >
                                             {`${status.status}`}
                                         </Chip>
                                         <Typography
-                                            noWrap
                                             sx={{
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
@@ -142,6 +141,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                 width: "100%", // take full width of button
                                                 fontSize: "15px",
                                             }}
+                                            noWrap
                                         >
                                             {title}
                                         </Typography>

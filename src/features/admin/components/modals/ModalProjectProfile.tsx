@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -17,6 +16,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -126,8 +126,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         <>
             <Modal
                 open={openModalProjectProfile}
-                onClose={() => setOpenModalProjectProfile(false)}
                 sx={{ zIndex: 10001 }}
+                onClose={() => setOpenModalProjectProfile(false)}
             >
                 <ModalDialog>
                     <Box sx={{ flex: 1, width: "1000px" }}>
@@ -146,7 +146,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                     px: 3,
                                 }}
                             >
-                                <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
+                                <Typography component="h1" level="h2" sx={{ mt: 1, mb: 1 }}>
                                     Project Profile - {pmChat.chatName}
                                 </Typography>
                             </Box>
@@ -175,8 +175,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
                                             src={`${media_url}/${pmChat.profileImagePath}`}
+                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
                                         >
                                             <AccountTreeIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
@@ -189,14 +189,14 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             }}
                                         >
                                             <input
-                                                type="file"
+                                                ref={inputRef}
                                                 accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                                 multiple={false}
-                                                ref={inputRef}
-                                                onChange={handleSelectedFiles}
                                                 style={{ display: "none" }}
+                                                type="file"
+                                                onChange={handleSelectedFiles}
                                             />
-                                            <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
+                                            <Tooltip sx={{ zIndex: 9000 }} title="EDIT (TBD)">
                                                 <IconButton
                                                     variant="soft"
                                                     onClick={() => {
@@ -219,8 +219,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Owner</FormLabel>
                                                     <Button
-                                                        variant="plain"
                                                         color="neutral"
+                                                        variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
@@ -288,18 +288,18 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                 sx={{ ml: 2, my: 0.2 }}
                                                             >
                                                                 <AvatarWithStatus
+                                                                    avatarUser={member}
                                                                     isYou={false}
-                                                                    setOpeningService={
-                                                                        setOpeningService
-                                                                    }
+                                                                    myself={myself}
+                                                                    setMyself={setMyself}
+                                                                    showNameAndEmail={true}
+                                                                    socket={socket}
                                                                     setCurrentMainChat={
                                                                         setCurrentMainChat
                                                                     }
-                                                                    avatarUser={member}
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    socket={socket}
-                                                                    showNameAndEmail={true}
+                                                                    setOpeningService={
+                                                                        setOpeningService
+                                                                    }
                                                                 />
                                                             </ListItemButton>
                                                         )
@@ -311,11 +311,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Is Private</FormLabel>
                                                     <Button
+                                                        disabled={true}
                                                         variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
-                                                        disabled={true}
                                                     >
                                                         <Typography
                                                             fontWeight={"bold"}
@@ -333,11 +333,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Created Date</FormLabel>
                                                     <Button
+                                                        disabled={true}
                                                         variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
-                                                        disabled={true}
                                                     >
                                                         <Typography
                                                             fontWeight={"bold"}

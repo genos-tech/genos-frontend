@@ -21,15 +21,15 @@ export const BubbleThreadEditButton = (props: BubbleThreadEditButtonTypes) => {
     return (
         <Box sx={{ textAlign: "right" }}>
             <>
-                <Tooltip title="Edit" size="sm">
+                <Tooltip size="sm" title="Edit">
                     <IconButton
                         size="sm"
+                        sx={{ ml: "0px" }}
                         onClick={() => {
                             setIsInEdit(true);
                             setEditTargetMessage(message);
                             setTargetMessageIndex(currentMessageIndex);
                         }}
-                        sx={{ ml: "0px" }}
                     >
                         <EditIcon />
                     </IconButton>

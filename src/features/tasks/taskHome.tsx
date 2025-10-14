@@ -192,32 +192,32 @@ export const TaskHome = (props: TaskHomeProps) => {
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
                     currentTeam={TEM.currentTeam}
-                    setCurrentTeam={TEM.setCurrentTeam}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
-                    socket={socket}
                     myself={myself}
-                    setMyself={setMyself}
                     openingService={openingService}
                     setCurrentMainChat={setCurrentMainChat}
+                    setCurrentTeam={TEM.setCurrentTeam}
+                    setMyself={setMyself}
                     setOpeningService={setOpeningService}
-                    unReadInboxItemCount={unReadInboxItemCount}
+                    socket={socket}
+                    teamMemberProfiles={TEM.teamMemberProfiles}
                     unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                    unReadInboxItemCount={unReadInboxItemCount}
                 />
 
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
                     <>
-                        <Panel id={"1"} order={1} defaultSize={10} minSize={10} maxSize={30}>
+                        <Panel defaultSize={10} id={"1"} maxSize={30} minSize={10} order={1}>
                             <TaskSidebar
                                 myself={myself}
-                                setIsDashboardVisible={setIsDashboardVisible}
-                                taskTableVisible={isTaskTableVisible}
-                                setTaskTableVisible={setTaskTableVisible}
-                                setOpenJoinProject={setOpenJoinProject}
-                                setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                setFilterBy={setFilterBy}
-                                setSelectedTagForFiltering={setSelectedTagForFiltering}
-                                setCurrentFilterName={setCurrentFilterName}
                                 PM={PM}
+                                setCurrentFilterName={setCurrentFilterName}
+                                setFilterBy={setFilterBy}
+                                setIsDashboardVisible={setIsDashboardVisible}
+                                setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                setOpenJoinProject={setOpenJoinProject}
+                                setSelectedTagForFiltering={setSelectedTagForFiltering}
+                                setTaskTableVisible={setTaskTableVisible}
+                                taskTableVisible={isTaskTableVisible}
                                 TM={TM}
                             />
                         </Panel>
@@ -229,6 +229,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     <>
                                         {/* Resizable Handle with MUI sx Styling */}
                                         <PanelResizeHandle
+                                            className="resize-handle"
                                             style={{
                                                 width: "1px",
                                                 backgroundColor:
@@ -236,13 +237,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 transition: "all 0.3s ease-in-out",
                                                 cursor: "col-resize",
                                             }}
-                                            className="resize-handle"
                                         />
 
-                                        <Panel id={"2"} order={2} minSize={30} maxSize={80}>
+                                        <Panel id={"2"} maxSize={80} minSize={30} order={2}>
                                             <Box
-                                                component="main"
                                                 className="MainContent"
+                                                component="main"
                                                 sx={{
                                                     px: { xs: 1, md: 2 },
                                                     pt: {
@@ -278,33 +278,28 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     }}
                                                 >
                                                     <Typography
-                                                        level="h2"
                                                         component="h1"
-                                                        sx={{
-                                                            display: "flex",
-                                                            alignItems: "center", // vertical centering
-                                                            justifyContent: "center", // horizontal centering
-                                                        }}
+                                                        level="h2"
                                                         startDecorator={
                                                             <>
                                                                 {pmChat && (
                                                                     <ProjectAvatar
                                                                         avatarSize={40}
-                                                                        teamMemberProfiles={
-                                                                            TEM.teamMemberProfiles
-                                                                        }
                                                                         myself={myself}
+                                                                        pmChat={pmChat}
                                                                         setMyself={setMyself}
                                                                         socket={socket}
-                                                                        pmChat={pmChat}
-                                                                        setOpeningService={
-                                                                            setOpeningService
+                                                                        funcSetAllChats={
+                                                                            funcSetAllChats
                                                                         }
                                                                         setCurrentMainChat={
                                                                             setCurrentMainChat
                                                                         }
-                                                                        funcSetAllChats={
-                                                                            funcSetAllChats
+                                                                        setOpeningService={
+                                                                            setOpeningService
+                                                                        }
+                                                                        teamMemberProfiles={
+                                                                            TEM.teamMemberProfiles
                                                                         }
                                                                     />
                                                                 )}
@@ -321,6 +316,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 ) : null}
                                                             </>
                                                         }
+                                                        sx={{
+                                                            display: "flex",
+                                                            alignItems: "center", // vertical centering
+                                                            justifyContent: "center", // horizontal centering
+                                                        }}
                                                     >
                                                         {PM.currentProject.projectName}
                                                         <Dropdown>
@@ -331,6 +331,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                 }}
                                                             >
                                                                 <Chip
+                                                                    size="lg"
                                                                     variant="outlined"
                                                                     color={
                                                                         displayTaskType.id === 1
@@ -348,7 +349,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                         fontWeight: "bold",
                                                                         borderRadius: "5px",
                                                                     }}
-                                                                    size="lg"
                                                                 >
                                                                     {displayTaskType.name}
                                                                 </Chip>
@@ -362,12 +362,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     }}
                                                                 >
                                                                     <Chip
-                                                                        variant="outlined"
                                                                         color="primary"
+                                                                        size="lg"
+                                                                        variant="outlined"
                                                                         sx={{
                                                                             borderRadius: "5px",
                                                                         }}
-                                                                        size="lg"
                                                                     >
                                                                         {taskTypes.ongoing.name}
                                                                     </Chip>
@@ -380,12 +380,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     }}
                                                                 >
                                                                     <Chip
-                                                                        variant="outlined"
                                                                         color="success"
+                                                                        size="lg"
+                                                                        variant="outlined"
                                                                         sx={{
                                                                             borderRadius: "5px",
                                                                         }}
-                                                                        size="lg"
                                                                     >
                                                                         {taskTypes.closed.name}
                                                                     </Chip>
@@ -398,12 +398,12 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     }}
                                                                 >
                                                                     <Chip
-                                                                        variant="outlined"
                                                                         color="danger"
+                                                                        size="lg"
+                                                                        variant="outlined"
                                                                         sx={{
                                                                             borderRadius: "5px",
                                                                         }}
-                                                                        size="lg"
                                                                     >
                                                                         {taskTypes.deleted.name}
                                                                     </Chip>
@@ -415,59 +415,36 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                     <Box sx={{ width: "40%" }}>
                                                         <Autocomplete
                                                             key={`ac-project-tags-${TM.currentPreviewTaskId}`}
-                                                            sx={{ width: "100%" }}
-                                                            placeholder={"Search"}
-                                                            variant="soft"
+                                                            aria-label="Search"
+                                                            loading={loading}
                                                             open={openSearch}
-                                                            onOpen={() => {
-                                                                setOpenSearch(true);
-                                                                // Reset the team task search options to load them again
-                                                                setTeamTaskOptions([]);
-                                                            }}
-                                                            onClose={() => {
-                                                                setOpenSearch(false);
-                                                            }}
+                                                            options={teamTaskSearchOptions}
+                                                            placeholder={"Search"}
+                                                            size="sm"
+                                                            startDecorator={<SearchRoundedIcon />}
+                                                            sx={{ width: "100%" }}
+                                                            variant="soft"
+                                                            endDecorator={
+                                                                loading ? (
+                                                                    <CircularProgress
+                                                                        size="sm"
+                                                                        sx={{
+                                                                            bgcolor:
+                                                                                "background.surface",
+                                                                        }}
+                                                                    />
+                                                                ) : null
+                                                            }
+                                                            getOptionLabel={(option) =>
+                                                                option.title
+                                                            }
+                                                            groupBy={(option) =>
+                                                                option.status.status || "N/A"
+                                                            }
                                                             isOptionEqualToValue={(
                                                                 option,
                                                                 value
                                                             ) => option.taskId === value.taskId}
-                                                            getOptionLabel={(option) =>
-                                                                option.title
-                                                            }
-                                                            renderTags={(tags, getTagProps) =>
-                                                                tags.map((item, index) => {
-                                                                    const { key, ...tagProps } =
-                                                                        getTagProps({
-                                                                            index,
-                                                                        }); // spread the 'key'
-                                                                    return (
-                                                                        <Chip
-                                                                            key={`ac-taskhome-search-task-chip-${key}`}
-                                                                            variant="soft"
-                                                                            sx={{
-                                                                                backgroundColor:
-                                                                                    alpha(
-                                                                                        item.status
-                                                                                            .color ||
-                                                                                            "#0044c2",
-                                                                                        mode ===
-                                                                                            "dark"
-                                                                                            ? 0.5
-                                                                                            : 0.75
-                                                                                    ),
-                                                                                color: item.status
-                                                                                    .textColor,
-                                                                                fontWeight: "bold",
-                                                                                borderRadius:
-                                                                                    "5px",
-                                                                            }}
-                                                                            size="sm"
-                                                                        >
-                                                                            {item.status.status}
-                                                                        </Chip>
-                                                                    );
-                                                                })
-                                                            }
                                                             renderOption={(props, option) => (
                                                                 <AutocompleteOption
                                                                     {...props}
@@ -485,14 +462,15 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     >
                                                                         <Chip
                                                                             key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
-                                                                            variant="outlined"
                                                                             color="neutral"
                                                                             size="sm"
+                                                                            variant="outlined"
                                                                         >
                                                                             ID:{option.taskId}
                                                                         </Chip>
                                                                         <Chip
                                                                             key={`ac-taskhome-search-task-chip-${option.taskId}`}
+                                                                            size="sm"
                                                                             variant="soft"
                                                                             sx={{
                                                                                 backgroundColor:
@@ -514,7 +492,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                                     "5px",
                                                                                 m: "3px",
                                                                             }}
-                                                                            size="sm"
                                                                         >
                                                                             {option.status.status}
                                                                         </Chip>
@@ -522,18 +499,39 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     </ListItemContent>
                                                                 </AutocompleteOption>
                                                             )}
-                                                            options={teamTaskSearchOptions}
-                                                            loading={loading}
-                                                            endDecorator={
-                                                                loading ? (
-                                                                    <CircularProgress
-                                                                        size="sm"
-                                                                        sx={{
-                                                                            bgcolor:
-                                                                                "background.surface",
-                                                                        }}
-                                                                    />
-                                                                ) : null
+                                                            renderTags={(tags, getTagProps) =>
+                                                                tags.map((item, index) => {
+                                                                    const { key, ...tagProps } =
+                                                                        getTagProps({
+                                                                            index,
+                                                                        }); // spread the 'key'
+                                                                    return (
+                                                                        <Chip
+                                                                            key={`ac-taskhome-search-task-chip-${key}`}
+                                                                            size="sm"
+                                                                            variant="soft"
+                                                                            sx={{
+                                                                                backgroundColor:
+                                                                                    alpha(
+                                                                                        item.status
+                                                                                            .color ||
+                                                                                            "#0044c2",
+                                                                                        mode ===
+                                                                                            "dark"
+                                                                                            ? 0.5
+                                                                                            : 0.75
+                                                                                    ),
+                                                                                color: item.status
+                                                                                    .textColor,
+                                                                                fontWeight: "bold",
+                                                                                borderRadius:
+                                                                                    "5px",
+                                                                            }}
+                                                                        >
+                                                                            {item.status.status}
+                                                                        </Chip>
+                                                                    );
+                                                                })
                                                             }
                                                             slotProps={{
                                                                 listbox: {
@@ -545,12 +543,14 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             onChange={(event, value) =>
                                                                 onChangeHandler(value)
                                                             }
-                                                            size="sm"
-                                                            startDecorator={<SearchRoundedIcon />}
-                                                            aria-label="Search"
-                                                            groupBy={(option) =>
-                                                                option.status.status || "N/A"
-                                                            }
+                                                            onClose={() => {
+                                                                setOpenSearch(false);
+                                                            }}
+                                                            onOpen={() => {
+                                                                setOpenSearch(true);
+                                                                // Reset the team task search options to load them again
+                                                                setTeamTaskOptions([]);
+                                                            }}
                                                         />
                                                     </Box>
 
@@ -558,8 +558,8 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                         <Tooltip title="Create New Task">
                                                             <IconButton
                                                                 component="p"
-                                                                variant="outlined"
                                                                 size="sm"
+                                                                variant="outlined"
                                                                 sx={{
                                                                     fontSize: "15px",
                                                                     paddingRight: "10px",
@@ -607,6 +607,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     New Tag
                                                                 </MenuItem>
                                                                 <MenuItem
+                                                                    sx={{
+                                                                        color: "red",
+                                                                        fontWeight: "bold",
+                                                                    }}
                                                                     onClick={() => {
                                                                         if (PM.currentProject) {
                                                                             setOpenDeleteProject({
@@ -622,10 +626,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                             });
                                                                         }
                                                                     }}
-                                                                    sx={{
-                                                                        color: "red",
-                                                                        fontWeight: "bold",
-                                                                    }}
                                                                 >
                                                                     <DeleteIcon
                                                                         sx={{ color: "red" }}
@@ -638,9 +638,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                             TM.isCreatingTask.flag === true) && (
                                                             <Tooltip title="Close">
                                                                 <IconButton
+                                                                    color="neutral"
                                                                     size="sm"
                                                                     variant="plain"
-                                                                    color="neutral"
                                                                     onClick={() => {
                                                                         setIsTaskHomeVisible(
                                                                             false
@@ -662,27 +662,27 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 {isTaskTableVisible === true && (
                                                     <>
                                                         <ProjectTaskTable
-                                                            teamMembers={TEM.teamMembers}
-                                                            setTeamMembers={TEM.setTeamMembers}
-                                                            teamMemberProfiles={
-                                                                TEM.teamMemberProfiles
-                                                            }
-                                                            myself={myself}
+                                                            currentFilterName={currentFilterName}
                                                             currentProject={PM.currentProject}
                                                             displayTaskType={displayTaskType}
-                                                            setFilterBy={setFilterBy}
                                                             filterBy={filterBy}
-                                                            setSelectedTagForFiltering={
-                                                                setSelectedTagForFiltering
-                                                            }
+                                                            myself={myself}
+                                                            setFilterBy={setFilterBy}
+                                                            setTeamMembers={TEM.setTeamMembers}
+                                                            teamMembers={TEM.teamMembers}
+                                                            TM={TM}
                                                             selectedTagForFiltering={
                                                                 selectedTagForFiltering
                                                             }
-                                                            currentFilterName={currentFilterName}
                                                             setCurrentFilterName={
                                                                 setCurrentFilterName
                                                             }
-                                                            TM={TM}
+                                                            setSelectedTagForFiltering={
+                                                                setSelectedTagForFiltering
+                                                            }
+                                                            teamMemberProfiles={
+                                                                TEM.teamMemberProfiles
+                                                            }
                                                         />
                                                     </>
                                                 )}
@@ -695,6 +695,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     <>
                                         {/* Resizable Handle with MUI sx Styling */}
                                         <PanelResizeHandle
+                                            className="resize-handle"
                                             style={{
                                                 width: "1px",
                                                 backgroundColor:
@@ -702,11 +703,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 transition: "all 0.3s ease-in-out",
                                                 cursor: "col-resize",
                                             }}
-                                            className="resize-handle"
                                         />
 
                                         {/* right pane */}
-                                        <Panel id={"4"} order={4} minSize={30} maxSize={80}>
+                                        <Panel id={"4"} maxSize={80} minSize={30} order={4}>
                                             <Box
                                                 sx={{
                                                     px: { xs: 1, md: 2 },
@@ -725,23 +725,23 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 }}
                                             >
                                                 <CreateTaskForm
-                                                    teamMembers={TEM.teamMembers}
-                                                    setTeamMembers={TEM.setTeamMembers}
-                                                    teamMemberProfiles={TEM.teamMemberProfiles}
-                                                    socket={socket}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
+                                                    chatType={-1}
                                                     currentMainChat={undefined}
                                                     currentThreadChat={undefined}
-                                                    chatType={-1}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    setOpeningService={setOpeningService}
-                                                    parentTaskId={TM.isCreatingTask.parentTaskId}
-                                                    rootTaskId={TM.isCreatingTask.rootTaskId}
-                                                    setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                     moveToSpecificChat={moveToSpecificChat}
+                                                    myself={myself}
                                                     openingService={openingService}
+                                                    parentTaskId={TM.isCreatingTask.parentTaskId}
                                                     PM={PM}
+                                                    rootTaskId={TM.isCreatingTask.rootTaskId}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                                    setMyself={setMyself}
+                                                    setOpeningService={setOpeningService}
+                                                    setTeamMembers={TEM.setTeamMembers}
+                                                    socket={socket}
+                                                    teamMemberProfiles={TEM.teamMemberProfiles}
+                                                    teamMembers={TEM.teamMembers}
                                                     TM={TM}
                                                 />
                                             </Box>
@@ -753,6 +753,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                     <>
                                         {/* Resizable Handle with MUI sx Styling */}
                                         <PanelResizeHandle
+                                            className="resize-handle"
                                             style={{
                                                 width: "1px",
                                                 backgroundColor:
@@ -760,16 +761,15 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 transition: "all 0.3s ease-in-out",
                                                 cursor: "col-resize",
                                             }}
-                                            className="resize-handle"
                                         />
 
                                         {/* right pane */}
                                         <Panel
-                                            id={"3"}
-                                            order={3}
                                             defaultSize={50}
-                                            minSize={30}
+                                            id={"3"}
                                             maxSize={80}
+                                            minSize={30}
+                                            order={3}
                                         >
                                             <Box
                                                 sx={{
@@ -789,29 +789,29 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 }}
                                             >
                                                 <TaskPreview
-                                                    teamMembers={TEM.teamMembers}
-                                                    setTeamMembers={TEM.setTeamMembers}
-                                                    teamMemberProfiles={TEM.teamMemberProfiles}
-                                                    socket={socket}
+                                                    isTaskNoteVisible={NM.isTaskNoteVisible}
+                                                    moveToSpecificChat={moveToSpecificChat}
                                                     myself={myself}
-                                                    setMyself={setMyself}
-                                                    setCurrentProject={PM.setCurrentProject}
-                                                    setOpenCreateProject={PM.setOpenCreateProject}
+                                                    openingService={openingService}
                                                     setCurrentMainChat={setCurrentMainChat}
-                                                    setOpeningService={setOpeningService}
+                                                    setCurrentProject={PM.setCurrentProject}
+                                                    setCurrentTaskNote={NM.setCurrentTaskNote}
                                                     setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                     setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
+                                                    setMyself={setMyself}
+                                                    setOpenCreateProject={PM.setOpenCreateProject}
+                                                    setOpeningService={setOpeningService}
+                                                    setTeamMembers={TEM.setTeamMembers}
+                                                    setTeamProjects={PM.setTeamProjects}
+                                                    socket={socket}
+                                                    taskNoteMeta={NM.taskNoteMeta}
+                                                    teamMemberProfiles={TEM.teamMemberProfiles}
+                                                    teamMembers={TEM.teamMembers}
+                                                    teamProjects={PM.teamProjects}
+                                                    TM={TM}
                                                     handleCreateNewTaskNote={
                                                         NM.handleCreateNewTaskNote
                                                     }
-                                                    setCurrentTaskNote={NM.setCurrentTaskNote}
-                                                    isTaskNoteVisible={NM.isTaskNoteVisible}
-                                                    teamProjects={PM.teamProjects}
-                                                    setTeamProjects={PM.setTeamProjects}
-                                                    taskNoteMeta={NM.taskNoteMeta}
-                                                    moveToSpecificChat={moveToSpecificChat}
-                                                    openingService={openingService}
-                                                    TM={TM}
                                                 />
                                             </Box>
                                         </Panel>
@@ -821,6 +821,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                 {NM.isTaskNoteVisible && NM.currentTaskNoteChain && (
                                     <>
                                         <PanelResizeHandle
+                                            className="resize-handle"
                                             style={{
                                                 width: "1px",
                                                 backgroundColor:
@@ -828,15 +829,14 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 transition: "all 0.3s ease-in-out",
                                                 cursor: "col-resize",
                                             }}
-                                            className="resize-handle"
                                         />
 
                                         <Panel
-                                            id={"7"}
-                                            order={7}
                                             defaultSize={50}
-                                            minSize={50}
+                                            id={"7"}
                                             maxSize={100}
+                                            minSize={50}
+                                            order={7}
                                         >
                                             <Box
                                                 sx={{
@@ -856,19 +856,19 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 }}
                                             >
                                                 <TaskNoteMain
-                                                    teamMemberProfiles={TEM.teamMemberProfiles}
-                                                    socket={socket}
-                                                    teamMembers={TEM.teamMembers}
+                                                    allChats={allChats}
+                                                    funcSetAllChats={funcSetAllChats}
+                                                    isInTaskPage={true}
                                                     myself={myself}
+                                                    NM={NM}
+                                                    setCurrentChat={setCurrentMainChat}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                     setMyself={setMyself}
                                                     setOpeningService={setOpeningService}
-                                                    setCurrentChat={setCurrentMainChat}
-                                                    isInTaskPage={true}
-                                                    setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                                    allChats={allChats}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    funcSetAllChats={funcSetAllChats}
-                                                    NM={NM}
+                                                    socket={socket}
+                                                    teamMemberProfiles={TEM.teamMemberProfiles}
+                                                    teamMembers={TEM.teamMembers}
                                                     TM={TM}
                                                 />
                                             </Box>
@@ -883,34 +883,34 @@ export const TaskHome = (props: TaskHomeProps) => {
                         PM.currentProject.projectId === null ||
                         (PM.currentProject.projectId === undefined && (
                             <>
-                                <Panel id={"5"} order={5} minSize={5} maxSize={30}>
+                                <Panel id={"5"} maxSize={30} minSize={5} order={5}>
                                     <TaskSidebar
                                         myself={myself}
-                                        setIsDashboardVisible={setIsDashboardVisible}
-                                        taskTableVisible={isTaskTableVisible}
-                                        setTaskTableVisible={setTaskTableVisible}
-                                        setOpenJoinProject={setOpenJoinProject}
-                                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                        setFilterBy={setFilterBy}
-                                        setSelectedTagForFiltering={setSelectedTagForFiltering}
-                                        setCurrentFilterName={setCurrentFilterName}
                                         PM={PM}
+                                        setCurrentFilterName={setCurrentFilterName}
+                                        setFilterBy={setFilterBy}
+                                        setIsDashboardVisible={setIsDashboardVisible}
+                                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                                        setOpenJoinProject={setOpenJoinProject}
+                                        setSelectedTagForFiltering={setSelectedTagForFiltering}
+                                        setTaskTableVisible={setTaskTableVisible}
+                                        taskTableVisible={isTaskTableVisible}
                                         TM={TM}
                                     />
                                 </Panel>
 
                                 {/* Resizable Handle with MUI sx Styling */}
                                 <PanelResizeHandle
+                                    className="resize-handle"
                                     style={{
                                         width: "1px",
                                         backgroundColor: mode === "dark" ? "grey" : "lightgrey",
                                         transition: "all 0.3s ease-in-out",
                                         cursor: "col-resize",
                                     }}
-                                    className="resize-handle"
                                 />
 
-                                <Panel id={"6"} order={6} minSize={80} maxSize={100}>
+                                <Panel id={"6"} maxSize={100} minSize={80} order={6}>
                                     <Box
                                         sx={{
                                             height: "100%",
@@ -921,9 +921,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                         }}
                                     >
                                         <IconButton
+                                            color="neutral"
                                             component="button"
                                             variant="soft"
-                                            color="neutral"
                                             sx={{
                                                 fontSize: "15px",
                                                 paddingRight: "10px",
@@ -945,26 +945,26 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                     {/* Modal for creating a new project */}
                     <ModalJoinProject
-                        socket={socket}
+                        allChats={allChats}
+                        loadProjectsAndTasks={PM.loadProjectsAndTasks}
                         myself={myself}
                         openJoinProject={openJoinProject}
-                        setOpenJoinProject={setOpenJoinProject}
-                        setCurrentProject={PM.setCurrentProject}
-                        loadProjectsAndTasks={PM.loadProjectsAndTasks}
-                        allChats={allChats}
                         setAllChats={setAllChats}
+                        setCurrentProject={PM.setCurrentProject}
+                        setOpenJoinProject={setOpenJoinProject}
+                        socket={socket}
                     />
 
                     {/* Modal for deleting a project */}
                     <ModalDeleteProject
                         myself={myself}
                         openDeleteProject={openDeleteProject}
-                        setOpenDeleteProject={setOpenDeleteProject}
                         PM={PM}
+                        setOpenDeleteProject={setOpenDeleteProject}
                     />
 
                     {/* Modal for creating a new tag */}
-                    <ModalCreateTag myself={myself} currentProject={PM.currentProject} TM={TM} />
+                    <ModalCreateTag currentProject={PM.currentProject} myself={myself} TM={TM} />
                 </PanelGroup>
 
                 {/* Hover Animation with CSS */}

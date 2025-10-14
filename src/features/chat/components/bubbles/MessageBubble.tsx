@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
@@ -421,17 +421,15 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             ) : (
                 <Box sx={{ position: "relative" }}>
                     <EmojiPicker
-                        showEmojiPicker={showEmojiPicker}
-                        setShowEmojiPicker={setShowEmojiPicker}
-                        setSelectedEmoji={setSelectedEmoji}
                         pickerBottomPosition={10}
                         pickerRightPosition={isSent ? 0 : -40}
+                        setSelectedEmoji={setSelectedEmoji}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        showEmojiPicker={showEmojiPicker}
                     />
                     <Sheet
                         color={"neutral"}
                         variant={"soft"}
-                        onMouseEnter={() => setShowUnderBarOption(true)}
-                        onMouseLeave={() => setShowUnderBarOption(false)}
                         sx={[
                             {
                                 p: 1,
@@ -456,39 +454,41 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                       background: "",
                                   },
                         ]}
+                        onMouseEnter={() => setShowUnderBarOption(true)}
+                        onMouseLeave={() => setShowUnderBarOption(false)}
                     >
                         <Stack direction="column">
                             {showUnderBarOption === true && isSimpleBubble === true && (
                                 <Stack direction="row" spacing={0}>
                                     <BubbleUserName
-                                        isSimpleBubble={isSimpleBubble}
-                                        sender={message.sender}
                                         chatType={chat.chatType}
+                                        dtSent={dtSent}
+                                        isSent={isSent}
+                                        isSimpleBubble={isSimpleBubble}
+                                        isThread={false}
+                                        sender={message.sender}
                                         taskId={message.taskId}
                                         taskStatus={message.taskStatus}
-                                        userName={message.sender.userName}
-                                        isSent={isSent}
-                                        dtSent={dtSent}
                                         tsSent={message.tsSent}
                                         tsUpdated={message.tsUpdated}
-                                        isThread={false}
+                                        userName={message.sender.userName}
                                     />
 
                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
                                         {isScrolling !== true && (
                                             <EmojiReaction
-                                                socket={socket}
-                                                myself={myself}
-                                                chatType={chat.chatType}
                                                 chatName={chat.chatName}
+                                                chatType={chat.chatType}
                                                 dmPartnerUser={chat.dmPartnerUser}
-                                                message={message}
-                                                numReplies={message.numReplies}
                                                 isThread={false}
-                                                showUnderBarOption={showUnderBarOption}
+                                                message={message}
+                                                myself={myself}
+                                                numReplies={message.numReplies}
                                                 reactions={reactions}
                                                 setReactions={setReactions}
                                                 setShowEmojiPicker={setShowEmojiPicker}
+                                                showUnderBarOption={showUnderBarOption}
+                                                socket={socket}
                                                 setUniqueReactionEmojiCount={
                                                     setUniqueReactionEmojiCount
                                                 }
@@ -498,13 +498,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                                     <BubbleFlagButton
                                         accessToken={accessToken}
-                                        myself={myself}
                                         currentChat={chat}
-                                        setCurrentChat={setCurrentMainChat}
-                                        threadId={0}
-                                        message={message}
                                         flaggedMessages={flaggedMessages}
+                                        message={message}
+                                        myself={myself}
+                                        setCurrentChat={setCurrentMainChat}
                                         setFlaggedMessages={setFlaggedMessages}
+                                        threadId={0}
                                     />
 
                                     <BubbleReplyButton replayHandler={replayHandler} />
@@ -512,35 +512,35 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     {message.sender.userId === myself.userId && (
                                         <BubbleEditButton
                                             message={message}
-                                            setIsInEdit={setIsInEdit}
                                             setEditTargetMessage={setEditTargetMessage}
+                                            setIsInEdit={setIsInEdit}
                                         />
                                     )}
 
                                     {(chat.chatType === 3 || chat.chatType === 4) &&
                                         message.sender.isSystemUser === true && (
                                             <BubbleOpenTaskButton
-                                                message={message}
-                                                taskId={message.taskId}
-                                                setIsMainChatVisible={setIsMainChatVisible}
-                                                setIsThreadVisible={setIsThreadVisible}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 isCreatingTask={isCreatingTask}
-                                                setIsCreatingTask={setIsCreatingTask}
+                                                message={message}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setCurrentProject={setCurrentProject}
+                                                setIsCreatingTask={setIsCreatingTask}
+                                                setIsMainChatVisible={setIsMainChatVisible}
+                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                                                setIsThreadVisible={setIsThreadVisible}
+                                                taskId={message.taskId}
                                             />
                                         )}
 
                                     {message.numReplies < 2 &&
                                         message.sender.userId === myself.userId && (
                                             <BubbleDeleteButton
-                                                socket={socket}
                                                 accessToken={accessToken}
-                                                message={message}
-                                                isThread={false}
                                                 currentChat={chat}
+                                                isThread={false}
+                                                message={message}
                                                 setCurrentChat={setCurrentMainChat}
+                                                socket={socket}
                                             />
                                         )}
                                 </Stack>
@@ -554,36 +554,36 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     ) && (
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
-                                                myself={myself}
-                                                setMyself={setMyself}
+                                                chat={chat}
+                                                isForBubble={true}
                                                 isYou={isSent}
+                                                myself={myself}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setMyself={setMyself}
+                                                setOpeningService={setOpeningService}
+                                                socket={socket}
                                                 avatarUser={
                                                     isSent
                                                         ? teamMemberProfiles[myself.userId]
                                                         : teamMemberProfiles[message.sender.userId]
                                                 }
-                                                socket={socket}
-                                                isForBubble={true}
-                                                chat={chat}
-                                                setOpeningService={setOpeningService}
-                                                setCurrentMainChat={setCurrentMainChat}
                                             />
                                         </Box>
                                     )}
                                     <Box sx={{ flex: 50 }}>
                                         <Stack direction="row" spacing={0}>
                                             <BubbleUserName
-                                                isSimpleBubble={isSimpleBubble}
-                                                sender={message.sender}
                                                 chatType={chat.chatType}
+                                                dtSent={dtSent}
+                                                isSent={isSent}
+                                                isSimpleBubble={isSimpleBubble}
+                                                isThread={false}
+                                                sender={message.sender}
                                                 taskId={message.taskId}
                                                 taskStatus={message.taskStatus}
-                                                userName={message.sender.userName}
-                                                isSent={isSent}
-                                                dtSent={dtSent}
                                                 tsSent={message.tsSent}
                                                 tsUpdated={message.tsUpdated}
-                                                isThread={false}
+                                                userName={message.sender.userName}
                                             />
 
                                             {showUnderBarOption === true && (
@@ -591,24 +591,24 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                     <Box sx={{ textAlign: "right", pl: "10px" }}>
                                                         {isScrolling !== true && (
                                                             <EmojiReaction
-                                                                socket={socket}
-                                                                myself={myself}
-                                                                chatType={chat.chatType}
                                                                 chatName={chat.chatName}
+                                                                chatType={chat.chatType}
                                                                 dmPartnerUser={chat.dmPartnerUser}
-                                                                message={message}
-                                                                numReplies={message.numReplies}
                                                                 isThread={false}
-                                                                showUnderBarOption={
-                                                                    showUnderBarOption
-                                                                }
+                                                                message={message}
+                                                                myself={myself}
+                                                                numReplies={message.numReplies}
                                                                 reactions={reactions}
                                                                 setReactions={setReactions}
+                                                                socket={socket}
                                                                 setShowEmojiPicker={
                                                                     setShowEmojiPicker
                                                                 }
                                                                 setUniqueReactionEmojiCount={
                                                                     setUniqueReactionEmojiCount
+                                                                }
+                                                                showUnderBarOption={
+                                                                    showUnderBarOption
                                                                 }
                                                             />
                                                         )}
@@ -616,13 +616,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                                                     <BubbleFlagButton
                                                         accessToken={accessToken}
-                                                        myself={myself}
                                                         currentChat={chat}
-                                                        setCurrentChat={setCurrentMainChat}
-                                                        threadId={0}
-                                                        message={message}
                                                         flaggedMessages={flaggedMessages}
+                                                        message={message}
+                                                        myself={myself}
+                                                        setCurrentChat={setCurrentMainChat}
                                                         setFlaggedMessages={setFlaggedMessages}
+                                                        threadId={0}
                                                     />
 
                                                     <BubbleReplyButton
@@ -643,26 +643,26 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         chat.chatType === 4) &&
                                                         message.sender.isSystemUser === true && (
                                                             <BubbleOpenTaskButton
+                                                                isCreatingTask={isCreatingTask}
                                                                 message={message}
                                                                 taskId={message.taskId}
-                                                                setIsMainChatVisible={
-                                                                    setIsMainChatVisible
-                                                                }
-                                                                setIsThreadVisible={
-                                                                    setIsThreadVisible
-                                                                }
-                                                                setIsTaskPreviewVisible={
-                                                                    setIsTaskPreviewVisible
-                                                                }
-                                                                isCreatingTask={isCreatingTask}
-                                                                setIsCreatingTask={
-                                                                    setIsCreatingTask
-                                                                }
                                                                 setCurrentPreviewTaskId={
                                                                     setCurrentPreviewTaskId
                                                                 }
                                                                 setCurrentProject={
                                                                     setCurrentProject
+                                                                }
+                                                                setIsCreatingTask={
+                                                                    setIsCreatingTask
+                                                                }
+                                                                setIsMainChatVisible={
+                                                                    setIsMainChatVisible
+                                                                }
+                                                                setIsTaskPreviewVisible={
+                                                                    setIsTaskPreviewVisible
+                                                                }
+                                                                setIsThreadVisible={
+                                                                    setIsThreadVisible
                                                                 }
                                                             />
                                                         )}
@@ -671,12 +671,12 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         message.sender.userId ===
                                                             myself.userId && (
                                                             <BubbleDeleteButton
-                                                                socket={socket}
                                                                 accessToken={accessToken}
-                                                                message={message}
-                                                                isThread={false}
                                                                 currentChat={chat}
+                                                                isThread={false}
+                                                                message={message}
                                                                 setCurrentChat={setCurrentMainChat}
+                                                                socket={socket}
                                                             />
                                                         )}
                                                 </>
@@ -688,34 +688,34 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
                             {message.content && message.content.length > 0 && (
                                 <BnChatPreview
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
                                     key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
                                     content={message.content}
                                     isSent={isSent}
+                                    myself={myself}
                                     setCurrentChat={setCurrentMainChat}
+                                    setMyself={setMyself}
                                     setOpeningService={setOpeningService}
+                                    socket={socket}
+                                    teamMemberProfiles={teamMemberProfiles}
                                 />
                             )}
                         </Stack>
 
                         <BubbleUnderBar
-                            socket={socket}
-                            myself={myself}
-                            chatType={chat.chatType}
                             chatName={chat.chatName}
+                            chatType={chat.chatType}
                             dmPartnerUser={chat.dmPartnerUser}
-                            message={message}
-                            numReplies={message.numReplies}
                             isThread={false}
-                            showUnderBarOption={showUnderBarOption}
+                            message={message}
+                            myself={myself}
+                            numReplies={message.numReplies}
                             reactions={reactions}
-                            setReactions={setReactions}
-                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
-                            setShowEmojiPicker={setShowEmojiPicker}
                             replayHandler={replayHandler}
+                            setReactions={setReactions}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                            showUnderBarOption={showUnderBarOption}
+                            socket={socket}
                         />
                     </Sheet>
                 </Box>

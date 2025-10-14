@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, Button, IconButton, Input, Snackbar, Stack, Typography } from "@mui/joy";
+import { useEffect, useState } from "react";
 
 import { TaskProps } from "../../../../../../types/tasks";
 import { getPageTitle } from "../../../../utils/getPageTitle";
@@ -78,19 +78,19 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                 generalLink.url === null ||
                 generalLink.url === "" ||
                 isEditing === true) && (
-                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                <Stack alignItems="center" direction="row" justifyContent="center" spacing={1}>
                     <LinkIcon />
                     <Box>
                         <Typography>General Link</Typography>
                     </Box>
                     <Input
                         key={"url"}
-                        size="sm"
                         placeholder="Paste General Link"
+                        size="sm"
+                        sx={{ width: "200px", height: "30px" }}
+                        type="url"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
-                        type="url"
-                        sx={{ width: "200px", height: "30px" }}
                     />
                     {taskContents && (title !== "" || isEditing === true) && (
                         <>
@@ -99,21 +99,21 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                             </Box>
                             <Input
                                 key={"title"}
-                                size="sm"
                                 placeholder="Title"
+                                size="sm"
+                                sx={{ width: "200px", height: "30px" }}
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                sx={{ width: "200px", height: "30px" }}
                             />
                         </>
                     )}
                     {error && (
                         <Snackbar
+                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             autoHideDuration={5000}
+                            color="danger"
                             open={errorOpen}
                             variant="soft"
-                            color="danger"
-                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             onClose={(event, reason) => {
                                 if (reason === "clickaway") {
                                     return;
@@ -125,10 +125,10 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                         </Snackbar>
                     )}
                     <Button
-                        component="a"
-                        variant="outlined"
                         color="neutral"
+                        component="a"
                         size="sm"
+                        variant="outlined"
                         onClick={handleSave}
                     >
                         Set
@@ -137,7 +137,7 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
             )}
 
             {isEditing === false && generalLink?.url && (
-                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                <Stack alignItems="center" direction="row" justifyContent="center" spacing={1.5}>
                     <LinkIcon />
                     <Typography
                         sx={{
@@ -147,13 +147,13 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                             maxWidth: "500px",
                         }}
                     >
-                        <a href={generalLink.url} target="_blank" rel="noopener noreferrer">
+                        <a href={generalLink.url} rel="noopener noreferrer" target="_blank">
                             {title}
                         </a>
                     </Typography>
                     <IconButton
-                        component="p"
                         color="neutral"
+                        component="p"
                         size="sm"
                         onClick={() => {
                             setIsEditing(true);

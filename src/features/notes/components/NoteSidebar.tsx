@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import HomeIcon from "@mui/icons-material/Home";
@@ -17,6 +16,7 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { useEffect, useState } from "react";
 
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import {
@@ -88,7 +88,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderMyNoteTree = (node: MyNoteMetaTreeNode) => (
         <Box key={`my-note-box-${node.noteId}-${tsMyNoteTreeUpdated}`}>
             {tmpCurrentMyNoteChain && NM.currentMyNoteChain && (
-                <ListItem nested key={`my-note-${node.noteId}-${tsMyNoteTreeUpdated}`}>
+                <ListItem key={`my-note-${node.noteId}-${tsMyNoteTreeUpdated}`} nested>
                     <NoteTreeToggler
                         // Expanding toggle when the target note is in the tab.
                         defaultExpanded={
@@ -169,7 +169,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderTaskNoteTree = (node: TaskNoteMetaTreeNode) => (
         <Box key={`task-note-box-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
             {tmpCurrentTaskNoteChain && (
-                <ListItem nested key={`task-note-${node.noteId}-${tsTaskNoteTreeUpdated}`}>
+                <ListItem key={`task-note-${node.noteId}-${tsTaskNoteTreeUpdated}`} nested>
                     <NoteTreeToggler
                         // Expanding toggle when the target note is in the tab.
                         defaultExpanded={
@@ -250,7 +250,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderChatNoteTree = (node: ChatNoteMetaTreeNode) => (
         <Box key={`chat-note-box-${node.noteId}-${tsChatNoteTreeUpdated}`}>
             {tmpCurrentChatNoteChain && (
-                <ListItem nested key={`chat-note-${node.noteId}-${tsChatNoteTreeUpdated}`}>
+                <ListItem key={`chat-note-${node.noteId}-${tsChatNoteTreeUpdated}`} nested>
                     <NoteTreeToggler
                         // Expanding toggle when the target note is in the tab.
                         defaultExpanded={
@@ -285,10 +285,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const createChildNoteList = (node: any) => (
         <List>
             <Box key={`my-note-box-${node.noteId}-${tsMyNoteTreeUpdated}`}>
-                <ListItem nested key={`my-note-${node.noteId}-${tsMyNoteTreeUpdated}`}>
+                <ListItem key={`my-note-${node.noteId}-${tsMyNoteTreeUpdated}`} nested>
                     <ListItemButton
-                        variant="plain"
                         sx={{ my: "1px" }}
+                        variant="plain"
                         onClick={() => {
                             if (node.noteType === 1) {
                                 NM.handleCreateNewMyNote(node.noteId);
@@ -327,9 +327,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         noteType: number
     ) => (
         <ListItemButton
+            color="primary"
             selected={NM.currentNoteType === noteType ? true : false}
             variant="outlined"
-            color="primary"
             onClick={() => {
                 setOpen(!open);
                 NM.setCurrentNoteType(noteType);
@@ -373,6 +373,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         node: any
     ) => (
         <ListItemButton
+            sx={{ my: "1px" }}
+            variant="plain"
             selected={
                 NM.currentNoteType === noteType &&
                 node.noteId ===
@@ -388,8 +390,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     ? true
                     : false
             }
-            variant="plain"
-            sx={{ my: "1px" }}
         >
             <ListItemContent
                 onClick={() => {
@@ -412,9 +412,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 </Typography>
             </ListItemContent>
             <KeyboardArrowDownIcon
-                onClick={() => {
-                    setOpen(!open);
-                }}
                 sx={[
                     open
                         ? {
@@ -424,6 +421,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                               transform: "none",
                           },
                 ]}
+                onClick={() => {
+                    setOpen(!open);
+                }}
             />
         </ListItemButton>
     );

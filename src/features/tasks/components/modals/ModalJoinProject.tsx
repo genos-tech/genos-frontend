@@ -1,6 +1,6 @@
-import React, { useState } from "react";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import React, { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -213,8 +213,8 @@ export const ModalJoinProject: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openJoinProject.flag}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenJoinProject(disableOpenJoinModalParams)}
             >
                 <ModalDialog>
@@ -229,7 +229,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                         {openJoinProject.isPrivate === true
                             ? "Make a Request to Join -"
                             : "Join the Project -"}
-                        <Typography level="h3" color="primary" sx={{ ml: 1 }}>
+                        <Typography color="primary" level="h3" sx={{ ml: 1 }}>
                             {openJoinProject.projectName}
                         </Typography>
                     </Typography>
@@ -240,17 +240,17 @@ export const ModalJoinProject: React.FC<Props> = ({
 
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenJoinProject(disableOpenJoinModalParams)}
                         >
                             Cancel
                         </Button>
                         <Button
+                            color="primary"
                             component="button"
                             variant="soft"
-                            color="primary"
                             onClick={handleJoinProject}
                         >
                             {openJoinProject.isPrivate === true ? "Send" : "Join"}

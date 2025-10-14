@@ -195,12 +195,12 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     return (
         <>
             <div
-                onDrop={handleFileDrop}
-                onDragOver={(e) => e.preventDefault()}
                 style={{
                     width: "100%",
                     height: "100%",
                 }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleFileDrop}
             >
                 <Sheet
                     sx={{
@@ -212,11 +212,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                 >
                     {errorMessage && errorMessage !== "" && (
                         <Snackbar
+                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             autoHideDuration={5000}
+                            color="danger"
                             open={errorOpen}
                             variant="soft"
-                            color="danger"
-                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             onClose={(event, reason) => {
                                 if (reason === "clickaway") {
                                     return;
@@ -228,35 +228,29 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         </Snackbar>
                     )}
                     <ThreadChatPaneHeader
+                        handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
+                        isChatNoteVisibleInChat={isChatNoteVisibleInChat}
                         myself={myself}
-                        thread={thread}
                         setCurrentThreadChat={setCurrentThreadChat}
+                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsThreadVisible={setIsThreadVisible}
-                        isChatNoteVisibleInChat={isChatNoteVisibleInChat}
-                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
-                        handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
+                        thread={thread}
                         TM={TM}
                     />
 
                     <Box sx={{ px: 0.3, my: 0.2 }}>
                         <Virtuoso
                             ref={virtuosoRef}
+                            atBottomThreshold={128}
+                            atTopStateChange={handleAtTop}
+                            atTopThreshold={64}
                             className="custom-scrollbar"
                             context={{ isScrolling }}
+                            initialTopMostItemIndex={threadMessages.length - 1}
                             isScrolling={setIsScrolling}
                             rangeChanged={setVisibleRange}
-                            style={{
-                                height: calculateVirtuosoHight(
-                                    currentWindowHeight,
-                                    numEditorLines
-                                ),
-                            }}
                             totalCount={threadMessages.length}
-                            initialTopMostItemIndex={threadMessages.length - 1}
-                            atTopThreshold={64}
-                            atTopStateChange={handleAtTop}
-                            atBottomThreshold={128}
                             itemContent={(index, _, { isScrolling }) => {
                                 const message = threadMessages[index];
                                 const isYou = myself.userId === message.sender.userId;
@@ -332,29 +326,35 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                                             }}
                                         >
                                             <ThreadMessageBubble
-                                                teamMemberProfiles={teamMemberProfiles}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                thread={thread}
-                                                setCurrentThreadChat={setCurrentThreadChat}
-                                                variant={isYou ? "sent" : "received"}
-                                                message={message}
-                                                isScrolling={isScrolling}
-                                                isFocused={isFocused}
-                                                isSimpleBubble={isSimpleBubble}
-                                                setOpeningService={setOpeningService}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setIsInEdit={setIsInEdit}
-                                                setEditTargetMessage={setEditTargetMessage}
                                                 currentMessageIndex={index}
-                                                setTargetMessageIndex={setTargetMessageIndex}
                                                 flaggedMessages={flaggedMessages}
+                                                isFocused={isFocused}
+                                                isScrolling={isScrolling}
+                                                isSimpleBubble={isSimpleBubble}
+                                                message={message}
+                                                myself={myself}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setCurrentThreadChat={setCurrentThreadChat}
+                                                setEditTargetMessage={setEditTargetMessage}
                                                 setFlaggedMessages={setFlaggedMessages}
+                                                setIsInEdit={setIsInEdit}
+                                                setMyself={setMyself}
+                                                setOpeningService={setOpeningService}
+                                                setTargetMessageIndex={setTargetMessageIndex}
+                                                socket={socket}
+                                                teamMemberProfiles={teamMemberProfiles}
+                                                thread={thread}
+                                                variant={isYou ? "sent" : "received"}
                                             />
                                         </Stack>
                                     </div>
                                 );
+                            }}
+                            style={{
+                                height: calculateVirtuosoHight(
+                                    currentWindowHeight,
+                                    numEditorLines
+                                ),
                             }}
                         />
                     </Box>
@@ -362,34 +362,34 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                         {isInEdit === true && editTargetMessage && (
                             <BnUpdateThreadEditor
-                                teamMemberProfiles={teamMemberProfiles}
+                                isInEdit={isInEdit}
+                                message={editTargetMessage}
                                 myself={myself}
+                                numEditorLines={numEditorLines}
+                                setCurrentChat={setCurrentMainChat}
+                                setIsInEdit={setIsInEdit}
                                 setMyself={setMyself}
+                                setNumEditorLines={setNumEditorLines}
+                                setOpeningService={setOpeningService}
                                 socket={socket}
+                                teamMemberProfiles={teamMemberProfiles}
                                 teamMembers={teamMembers}
                                 thread={thread}
-                                message={editTargetMessage}
-                                isInEdit={isInEdit}
-                                setIsInEdit={setIsInEdit}
-                                setCurrentChat={setCurrentMainChat}
-                                setOpeningService={setOpeningService}
-                                numEditorLines={numEditorLines}
-                                setNumEditorLines={setNumEditorLines}
                             />
                         )}
                         {isInEdit === false && (
                             <BnThreadEditor
-                                teamMemberProfiles={teamMemberProfiles}
                                 myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                teamMembers={teamMembers}
-                                thread={thread}
+                                numEditorLines={numEditorLines}
                                 setCurrentChat={setCurrentMainChat}
                                 setCurrentThreadChat={setCurrentThreadChat}
-                                setOpeningService={setOpeningService}
-                                numEditorLines={numEditorLines}
+                                setMyself={setMyself}
                                 setNumEditorLines={setNumEditorLines}
+                                setOpeningService={setOpeningService}
+                                socket={socket}
+                                teamMemberProfiles={teamMemberProfiles}
+                                teamMembers={teamMembers}
+                                thread={thread}
                             />
                         )}
                     </Box>

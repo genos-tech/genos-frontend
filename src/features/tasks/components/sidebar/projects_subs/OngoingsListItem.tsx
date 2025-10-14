@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import ForwardIcon from "@mui/icons-material/Forward";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -6,6 +5,7 @@ import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useEffect, useState } from "react";
 
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { ProjectProps, TagListProps, TaskMetaTreeNode } from "../../../../../types/tasks";
@@ -45,10 +45,10 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
 
     const createChildNoteList = (node: any) => (
         <Box key={`my-note-box-${node.taskId}`}>
-            <ListItem nested key={`my-note-${node.taskId}`}>
+            <ListItem key={`my-note-${node.taskId}`} nested>
                 <ListItemButton
-                    variant="plain"
                     sx={{ ml: "20px", mr: "8px", pl: "20px" }}
+                    variant="plain"
                     onClick={() => {
                         TM.setIsCreatingTask({
                             flag: true,
@@ -63,6 +63,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                     <ListItemContent>
                         <Typography
                             level="title-sm"
+                            startDecorator={<AddIcon />}
                             sx={{
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -70,7 +71,6 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                                 width: "100%",
                                 justifyContent: "right",
                             }}
-                            startDecorator={<AddIcon />}
                         >
                             Sub Task
                         </Typography>
@@ -83,7 +83,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
     const renderTaskTree = (node: TaskMetaTreeNode) => (
         <Box key={`my-note-box-${node.taskId}`}>
             {tmpCurrentTaskChain && (
-                <ListItem nested key={`my-note-${node.taskId}`}>
+                <ListItem key={`my-note-${node.taskId}`} nested>
                     <TaskTreeToggler
                         renderToggle={({ open, setOpen }) =>
                             innerRenderToggleListItemButton(open, setOpen, node)
@@ -114,12 +114,12 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
             <ListItemContent>
                 <Typography
                     level="title-sm"
+                    startDecorator={<ForwardIcon />}
                     sx={{
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                     }}
-                    startDecorator={<ForwardIcon />}
                 >
                     {ongoingsTitle}
                 </Typography>
@@ -145,8 +145,8 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
     ) => (
         <ListItemButton
             selected={TM.currentPreviewTaskId === node.taskId ? true : false}
-            variant="plain"
             sx={{ ml: "45px", mr: "8px", pl: "20px" }}
+            variant="plain"
             onClick={() => {
                 // Only open the task if it's not already open.
                 if (open === false) {
@@ -161,19 +161,20 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
         >
             <Chip
                 key={`id-chip-${node.taskId}`} // pass the key directly
-                variant="soft"
                 color="neutral"
+                size="sm"
+                variant="soft"
                 sx={{
                     marginRight: "1px",
                     borderRadius: "5px",
                     fontWeight: "bold",
                 }}
-                size="sm"
             >
                 ID: {node.taskId}
             </Chip>
             <Chip
                 key={`status-chip-${node.taskId}`} // pass the key directly
+                size="sm"
                 variant="soft"
                 sx={{
                     backgroundColor: node.status.color
@@ -184,13 +185,11 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                     borderRadius: "5px",
                     marginX: "-10px",
                 }}
-                size="sm"
             >
                 {`${node.status.status}`}
             </Chip>
             <ListItemContent>
                 <Typography
-                    noWrap
                     level="title-sm"
                     sx={{
                         ml: "5px",
@@ -198,14 +197,12 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                     }}
+                    noWrap
                 >
                     {node.title}
                 </Typography>
             </ListItemContent>
             <KeyboardArrowDownIcon
-                onClick={() => {
-                    setOpen(!open);
-                }}
                 sx={[
                     open
                         ? {
@@ -215,6 +212,9 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                               transform: "none",
                           },
                 ]}
+                onClick={() => {
+                    setOpen(!open);
+                }}
             />
         </ListItemButton>
     );

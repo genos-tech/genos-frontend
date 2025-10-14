@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
     Alert,
     Box,
@@ -10,6 +9,7 @@ import {
     Input,
     Typography,
 } from "@mui/joy";
+import { useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
@@ -104,9 +104,9 @@ export default function TaskInit(props: TaskInitProps) {
                     </FormControl>
                     <CardActions sx={{ gridColumn: "1/-1" }}>
                         <Button
+                            color="primary"
                             component="p"
                             variant="outlined"
-                            color="primary"
                             onClick={() => {
                                 if (projectName !== "") {
                                     createProject();

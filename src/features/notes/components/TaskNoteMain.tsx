@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
@@ -31,6 +30,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnTaskNoteEditor } from "../../../components/blockNote/bnTaskNoteEditor";
@@ -240,9 +240,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                     }}
                 >
                     <IconButton
+                        color="neutral"
                         component="button"
                         variant="soft"
-                        color="neutral"
                         sx={{
                             fontSize: "15px",
                             padding: "10px",
@@ -261,8 +261,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
                                     {/* Note Header */}
                                     <Stack
-                                        direction="row"
                                         alignItems="center"
+                                        direction="row"
                                         justifyContent="space-between"
                                         sx={{
                                             width: "100%",
@@ -271,11 +271,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             mb: "5px",
                                         }}
                                     >
-                                        <Breadcrumbs separator="›" aria-label="breadcrumbs">
+                                        <Breadcrumbs aria-label="breadcrumbs" separator="›">
                                             <IconButton
+                                                color="success"
                                                 component="button"
                                                 variant="soft"
-                                                color="success"
                                                 sx={{
                                                     fontSize: "14px",
                                                 }}
@@ -286,11 +286,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             {NM.currentTaskNoteChain &&
                                                 NM.currentTaskNoteChain.map((node) => (
                                                     <Typography
-                                                        level="title-sm"
                                                         component="button"
-                                                        onClick={() => {
-                                                            NM.loadNote(2, node.noteId, -1);
-                                                        }}
+                                                        level="title-sm"
                                                         sx={{
                                                             background: "none",
                                                             border: "none",
@@ -299,6 +296,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             color: "#646CFF",
                                                             textAlign: "left",
                                                             fontWeight: "bold",
+                                                        }}
+                                                        onClick={() => {
+                                                            NM.loadNote(2, node.noteId, -1);
                                                         }}
                                                     >
                                                         {node.title.length > 14
@@ -311,9 +311,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         <Stack direction={"row"}>
                                             {isInTaskPage && NM.currentTaskNote && (
                                                 <IconButton
+                                                    color="neutral"
                                                     component="button"
                                                     variant="plain"
-                                                    color="neutral"
                                                     sx={{
                                                         fontSize: "14px",
                                                         paddingRight: "10px",
@@ -337,10 +337,10 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             {isInTaskPage && (
                                                 <Tooltip title="Open in Notes">
                                                     <IconButton
-                                                        size="sm"
                                                         color="neutral"
-                                                        variant="plain"
+                                                        size="sm"
                                                         sx={{ mb: "5px" }}
+                                                        variant="plain"
                                                         onClick={() => {
                                                             setOpeningService(3);
                                                         }}
@@ -357,21 +357,21 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             {pmChat && (
                                                                 <Box sx={{ mt: "2px" }}>
                                                                     <ProjectAvatar
-                                                                        teamMemberProfiles={
-                                                                            teamMemberProfiles
-                                                                        }
                                                                         myself={myself}
+                                                                        pmChat={pmChat}
                                                                         setMyself={setMyself}
                                                                         socket={socket}
-                                                                        pmChat={pmChat}
-                                                                        setOpeningService={
-                                                                            setOpeningService
+                                                                        funcSetAllChats={
+                                                                            funcSetAllChats
                                                                         }
                                                                         setCurrentMainChat={
                                                                             setCurrentMainChat
                                                                         }
-                                                                        funcSetAllChats={
-                                                                            funcSetAllChats
+                                                                        setOpeningService={
+                                                                            setOpeningService
+                                                                        }
+                                                                        teamMemberProfiles={
+                                                                            teamMemberProfiles
                                                                         }
                                                                     />
                                                                 </Box>
@@ -380,8 +380,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                 <Tooltip title="Open Task">
                                                                     <Chip
                                                                         key={`task-note-task-id${currentTask.id}`}
-                                                                        variant="outlined"
                                                                         color="neutral"
+                                                                        size="sm"
+                                                                        variant="outlined"
                                                                         sx={{
                                                                             mt: "3px",
                                                                             mx: "5px",
@@ -389,7 +390,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                             borderRadius: "5px",
                                                                             fontWeight: "bold",
                                                                         }}
-                                                                        size="sm"
                                                                         onClick={() => {
                                                                             NM.setIsTaskVisibleInNote(
                                                                                 true
@@ -402,8 +402,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                             )}
                                                             <Chip
                                                                 key={`task-title-${currentTask.id}`}
-                                                                variant="outlined"
                                                                 color="primary"
+                                                                size="sm"
+                                                                variant="outlined"
                                                                 sx={{
                                                                     mt: "3px",
                                                                     mr: "5px",
@@ -411,7 +412,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                     borderRadius: "5px",
                                                                     fontWeight: "bold",
                                                                 }}
-                                                                size="sm"
                                                             >
                                                                 Title:{" "}
                                                                 {currentTask.title.length > 14
@@ -456,10 +456,10 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 <Tooltip title="More Options">
                                                     <MenuButton
                                                         slots={{ root: IconButton }}
+                                                        sx={{ mb: "5px" }}
                                                         slotProps={{
                                                             root: { color: "neutral" },
                                                         }}
-                                                        sx={{ mb: "5px" }}
                                                     >
                                                         <MoreVert />
                                                     </MenuButton>
@@ -484,12 +484,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         Child Note
                                                     </MenuItem>
                                                     <MenuItem
-                                                        onClick={() => {
-                                                            setOpenDeleteNote(true);
-                                                        }}
                                                         sx={{
                                                             color: "red",
                                                             fontWeight: "bold",
+                                                        }}
+                                                        onClick={() => {
+                                                            setOpenDeleteNote(true);
                                                         }}
                                                     >
                                                         <DeleteIcon sx={{ color: "red" }} />
@@ -501,10 +501,10 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             {isInTaskPage === true && (
                                                 <Tooltip title="Close Notes">
                                                     <IconButton
-                                                        size="sm"
                                                         color="neutral"
-                                                        variant="plain"
+                                                        size="sm"
                                                         sx={{ mb: "5px" }}
+                                                        variant="plain"
                                                         onClick={() => {
                                                             NM.setIsTaskNoteVisible(false);
 
@@ -526,19 +526,20 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                         </Stack>
                                         {NM.currentTaskNote && (
                                             <ModalDeleteTaskNote
+                                                currentTabIndex={NM.selectedTabIndex}
+                                                currentTaskNote={NM.currentTaskNote}
+                                                handleCloseTab={handleCloseTab}
                                                 myself={myself}
                                                 openDeleteNote={openDeleteNote}
                                                 setOpenDeleteNote={setOpenDeleteNote}
-                                                taskNoteMeta={NM.taskNoteMeta}
                                                 setTaskNoteMeta={NM.setTaskNoteMeta}
-                                                currentTaskNote={NM.currentTaskNote}
-                                                handleCloseTab={handleCloseTab}
-                                                currentTabIndex={NM.selectedTabIndex}
+                                                taskNoteMeta={NM.taskNoteMeta}
                                             />
                                         )}
                                     </Stack>
 
                                     <Tabs
+                                        sx={{ width: "100%" }}
                                         value={NM.selectedTabIndex}
                                         onChange={(_, val) => {
                                             NM.loadNote(
@@ -547,7 +548,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 Number(val)
                                             );
                                         }}
-                                        sx={{ width: "100%" }}
                                     >
                                         <TabList
                                             sx={{
@@ -560,6 +560,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                             {NM.tabItems.map((tab, index) => (
                                                 <Tab
                                                     key={`tab-${index}`}
+                                                    variant="soft"
                                                     sx={{
                                                         mx: "2px",
                                                         my: "4px",
@@ -567,7 +568,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         scrollSnapAlign: "start",
                                                         borderRadius: "5px",
                                                     }}
-                                                    variant="soft"
                                                 >
                                                     <Box
                                                         sx={{
@@ -583,10 +583,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                                                         {NM.tabItems.length > 1 && (
                                                             <IconButton
+                                                                color="neutral"
                                                                 component="span"
                                                                 size="sm"
+                                                                sx={{ ml: 1 }}
                                                                 variant="plain"
-                                                                color="neutral"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleCloseTab(
@@ -594,7 +595,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                         Number(tab.noteId)
                                                                     );
                                                                 }}
-                                                                sx={{ ml: 1 }}
                                                             >
                                                                 <CloseIcon />
                                                             </IconButton>
@@ -615,7 +615,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 }}
                                             >
                                                 <FormControl
-                                                    required
                                                     sx={{
                                                         mt: "10px",
                                                         ml: "10px",
@@ -623,18 +622,14 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         position: "absolute",
                                                         zIndex: 100,
                                                     }}
+                                                    required
                                                 >
                                                     <Input
-                                                        startDecorator={<NoteAltIcon />}
                                                         key={"currentTaskNoteTitle"}
-                                                        variant="soft"
                                                         placeholder="Note Title"
+                                                        startDecorator={<NoteAltIcon />}
                                                         value={currentTaskNoteTitle}
-                                                        onChange={(e) => {
-                                                            setCurrentTaskNoteTitle(
-                                                                e.target.value
-                                                            );
-                                                        }}
+                                                        variant="soft"
                                                         slotProps={{
                                                             input: {
                                                                 ref: titleInputRef,
@@ -648,12 +643,17 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                                 },
                                                             },
                                                         }}
-                                                        onBlur={() => {
-                                                            setNoteUpdated(true);
-                                                        }}
                                                         sx={{
                                                             fontSize: "22px",
                                                             fontWeight: "bold",
+                                                        }}
+                                                        onBlur={() => {
+                                                            setNoteUpdated(true);
+                                                        }}
+                                                        onChange={(e) => {
+                                                            setCurrentTaskNoteTitle(
+                                                                e.target.value
+                                                            );
                                                         }}
                                                     />
                                                 </FormControl>
@@ -667,9 +667,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                         }}
                                                     >
                                                         <Button
-                                                            variant="outlined"
                                                             color="neutral"
                                                             size="sm"
+                                                            variant="outlined"
                                                             startDecorator={
                                                                 <CheckIcon
                                                                     sx={{
@@ -685,18 +685,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                                 {NM.currentTaskNote && (
                                                     <>
                                                         <BnTaskNoteEditor
-                                                            teamMemberProfiles={teamMemberProfiles}
-                                                            myself={myself}
-                                                            setMyself={setMyself}
-                                                            socket={socket}
-                                                            teamMembers={teamMembers}
-                                                            currentTaskNote={NM.currentTaskNote}
                                                             body={body}
+                                                            currentTaskNote={NM.currentTaskNote}
+                                                            myself={myself}
                                                             setBody={setBody}
+                                                            setCurrentChat={setCurrentChat}
+                                                            setMyself={setMyself}
                                                             setNoteBodyEdited={setNoteBodyEdited}
                                                             setNoteBodySaved={setNoteBodySaved}
-                                                            setCurrentChat={setCurrentChat}
                                                             setOpeningService={setOpeningService}
+                                                            socket={socket}
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            teamMembers={teamMembers}
                                                         />
                                                     </>
                                                 )}

@@ -1,11 +1,6 @@
-import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
-
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -16,6 +11,10 @@ import {
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
+import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { useState } from "react";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -105,11 +104,11 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         <Box className={bnBoxClassName} sx={{ px: "10px" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
                 editable={false}
+                editor={editor}
+                filePanel={false}
                 formattingToolbar={false}
                 linkToolbar={false}
-                filePanel={false}
                 sideMenu={false}
                 slashMenu={false}
                 tableHandles={false}
@@ -122,22 +121,22 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 }}
             ></BlockNoteView>
 
-            <Modal sx={{ zIndex: 10010 }} open={opened} onClose={() => setOpened(false)}>
+            <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
                 <ModalDialog>
                     {selectedImage ? (
                         <Box>
-                            <img src={selectedImage} alt="preview" />
+                            <img alt="preview" src={selectedImage} />
                             <Tooltip
-                                placement="top"
-                                title="Download"
-                                sx={{ zIndex: 10010 }}
                                 component="div"
+                                placement="top"
+                                sx={{ zIndex: 10010 }}
+                                title="Download"
                             >
                                 <IconButton
-                                    onClick={() => handleDownload(selectedImage)}
                                     color="neutral"
-                                    variant="solid"
                                     sx={{ position: "absolute", top: "10px", right: "10px" }}
+                                    variant="solid"
+                                    onClick={() => handleDownload(selectedImage)}
                                 >
                                     <DownloadIcon />
                                 </IconButton>

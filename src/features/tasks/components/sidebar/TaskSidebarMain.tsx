@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { Box, Divider, GlobalStyles, List, Sheet } from "@mui/joy";
 import { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -160,13 +160,13 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
             <TaskSidebarSearchBox
                 currentPreviewTaskId={TM.currentPreviewTaskId}
-                openSearch={openSearch}
-                setOpenSearch={setOpenSearch}
-                teamTaskSearchOptions={teamTaskSearchOptions}
-                setTeamTaskSearchOptions={setTeamTaskSearchOptions}
                 loading={loading}
+                openSearch={openSearch}
                 setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                 setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
+                setOpenSearch={setOpenSearch}
+                setTeamTaskSearchOptions={setTeamTaskSearchOptions}
+                teamTaskSearchOptions={teamTaskSearchOptions}
             />
 
             <Box
@@ -196,27 +196,27 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     /> */}
 
                     <TaskTableListItem
-                        taskTableVisible={taskTableVisible}
-                        setTaskTableVisible={setTaskTableVisible}
                         setIsDashboardVisible={setIsDashboardVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
+                        setTaskTableVisible={setTaskTableVisible}
+                        taskTableVisible={taskTableVisible}
                     />
 
                     <RecentsListItem
                         recentTasks={recentTasks}
-                        setIsDashboardVisible={setIsDashboardVisible}
-                        setCurrentProject={PM.setCurrentProject}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
+                        setCurrentProject={PM.setCurrentProject}
+                        setIsDashboardVisible={setIsDashboardVisible}
                         setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                     />
 
                     <ProjectsListItem
                         PM={PM}
+                        setCurrentFilterName={setCurrentFilterName}
+                        setFilterBy={setFilterBy}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setOpenJoinProject={setOpenJoinProject}
                         setSelectedTagForFiltering={setSelectedTagForFiltering}
-                        setFilterBy={setFilterBy}
-                        setCurrentFilterName={setCurrentFilterName}
                         TM={TM}
                     />
                 </List>

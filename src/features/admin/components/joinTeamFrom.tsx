@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import {
     Alert,
@@ -17,6 +16,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
@@ -416,10 +416,10 @@ export const JoinTeam = () => {
                                 >
                                     <FormControl required>
                                         <FormLabel>Team Id</FormLabel>
-                                        <Input type="name" name="teamId" />
+                                        <Input name="teamId" type="name" />
                                     </FormControl>
                                     <Stack sx={{ gap: 1, mb: 5 }}>
-                                        <Button type="submit" fullWidth variant="soft">
+                                        <Button type="submit" variant="soft" fullWidth>
                                             Search
                                         </Button>
                                     </Stack>
@@ -446,10 +446,10 @@ export const JoinTeam = () => {
                             >
                                 <FormControl required>
                                     <FormLabel>Team Name</FormLabel>
-                                    <Input type="name" name="teamName" />
+                                    <Input name="teamName" type="name" />
                                 </FormControl>
                                 <Stack sx={{ gap: 1 }}>
-                                    <Button type="submit" fullWidth variant="soft">
+                                    <Button type="submit" variant="soft" fullWidth>
                                         Create
                                     </Button>
                                 </Stack>

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
 import { Alert, Box, Button, Chip, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import React, { useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -70,8 +70,8 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, currentProject, TM }) 
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={TM.openCreateTag}
+                sx={{ zIndex: 10010 }}
                 onClose={() => TM.setOpenCreateTag(false)}
             >
                 <ModalDialog>
@@ -121,14 +121,14 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, currentProject, TM }) 
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
                         <Button
+                            color="danger"
                             component="a"
                             variant="outlined"
-                            color="danger"
                             onClick={() => TM.setOpenCreateTag(false)}
                         >
                             Cancel
                         </Button>
-                        <Button component="a" onClick={handleCreateTag} disabled={!tagName.trim()}>
+                        <Button component="a" disabled={!tagName.trim()} onClick={handleCreateTag}>
                             Create
                         </Button>
                     </Stack>

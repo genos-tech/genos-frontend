@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import Autocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
@@ -57,19 +57,16 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
 
     return (
         <Autocomplete
-            placeholder={"Search Child Notes"}
-            open={openSearchBox}
-            onOpen={() => {
-                setOpenSearchBox(true);
-            }}
-            onClose={() => {
-                setOpenSearchBox(false);
-            }}
-            isOptionEqualToValue={(option, value) => option.noteId === value.noteId}
-            getOptionLabel={(option) => option.title}
+            aria-label="Search"
             getOptionKey={(option) => option.noteId}
-            options={options}
+            getOptionLabel={(option) => option.title}
+            isOptionEqualToValue={(option, value) => option.noteId === value.noteId}
             loading={loading}
+            open={openSearchBox}
+            options={options}
+            placeholder={"Search Child Notes"}
+            size="sm"
+            startDecorator={<SearchRoundedIcon />}
             endDecorator={
                 loading ? (
                     <CircularProgress size="sm" sx={{ bgcolor: "background.surface" }} />
@@ -80,9 +77,12 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
                     onChangeHandler(value);
                 }
             }}
-            size="sm"
-            startDecorator={<SearchRoundedIcon />}
-            aria-label="Search"
+            onClose={() => {
+                setOpenSearchBox(false);
+            }}
+            onOpen={() => {
+                setOpenSearchBox(true);
+            }}
         />
     );
 };

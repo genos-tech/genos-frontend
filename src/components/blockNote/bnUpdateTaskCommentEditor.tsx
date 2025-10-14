@@ -1,13 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { en } from "@blocknote/core/locales";
-import { BlockNoteView } from "@blocknote/mantine";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, IconButton, Tooltip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
-
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "../../App.css";
 
 import { codeBlock } from "@blocknote/code-block";
 import {
@@ -16,6 +9,8 @@ import {
     defaultInlineContentSpecs,
     filterSuggestionItems,
 } from "@blocknote/core";
+import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
@@ -29,6 +24,11 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -37,8 +37,6 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-
-import "../../App.css";
 
 type BnUpdateTaskCommentEditorProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -262,19 +260,19 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     return (
         <Box ref={boxRef}>
             <EmojiPicker
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
-                setSelectedEmoji={setSelectedEmoji}
                 pickerBottomPosition={pickerBottomPosition}
                 pickerRightPosition={pickerRightPosition}
+                setSelectedEmoji={setSelectedEmoji}
+                setShowEmojiPicker={setShowEmojiPicker}
+                showEmojiPicker={showEmojiPicker}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
+            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
-                    formattingToolbar={false}
                     data-changing-font-demo // custom font
                     onBlur={() => {
                         if (setTaskUpdated) {
@@ -295,8 +293,8 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 >
                     <Tooltip title="Edit in Modal (TBD)">
                         <IconButton
-                            size="sm"
                             color="neutral"
+                            size="sm"
                             variant="plain"
                             sx={{
                                 position: "absolute",
@@ -311,8 +309,9 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     </Tooltip>
 
                     <IconButton
-                        size="sm"
                         color="success"
+                        disabled={editorDocLength < 2}
+                        size="sm"
                         variant="solid"
                         sx={{
                             position: "absolute",
@@ -321,7 +320,6 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                             zIndex: 1,
                             p: 0.7,
                         }}
-                        disabled={editorDocLength < 2}
                         onClick={() => {
                             updateComment();
                             setIsInEdit(false);
@@ -331,8 +329,8 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                     </IconButton>
 
                     <IconButton
-                        size="sm"
                         color="danger"
+                        size="sm"
                         variant="outlined"
                         sx={{
                             position: "absolute",
@@ -363,20 +361,20 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                             <FileReplaceButton key={"replaceFileButton"} />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton

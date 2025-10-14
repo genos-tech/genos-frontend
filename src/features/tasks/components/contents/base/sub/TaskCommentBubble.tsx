@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPreview";
@@ -136,11 +136,11 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     return (
         <Box ref={boxRef} sx={{ py: 0.5 }}>
             <EmojiPicker
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
-                setSelectedEmoji={setSelectedEmoji}
                 pickerBottomPosition={pickerBottomPosition}
                 pickerRightPosition={pickerRightPosition}
+                setSelectedEmoji={setSelectedEmoji}
+                setShowEmojiPicker={setShowEmojiPicker}
+                showEmojiPicker={showEmojiPicker}
             />
 
             {comment.commentBody[0].content.length > 0 && (
@@ -155,16 +155,16 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 mode === "dark" ? "black" : "rgba(221, 221, 221, 0.45)",
                         }}
                     >
-                        <Stack direction="row" spacing={1} alignItems="center">
+                        <Stack alignItems="center" direction="row" spacing={1}>
                             <AvatarWithStatus
-                                myself={myself}
-                                setMyself={setMyself}
-                                isYou={myself.userId === comment.senderId ? true : false}
                                 avatarUser={teamMemberProfiles[comment.senderId]}
-                                socket={socket}
                                 isForBubble={true}
-                                setOpeningService={setOpeningService}
+                                isYou={myself.userId === comment.senderId ? true : false}
+                                myself={myself}
                                 setCurrentMainChat={setCurrentChat}
+                                setMyself={setMyself}
+                                setOpeningService={setOpeningService}
+                                socket={socket}
                             />
                             <Typography level="title-md">{comment.senderName}</Typography>
                             <Typography
@@ -190,44 +190,44 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             }}
                         >
                             <ReactionTaskCommentEmojiDisplay
-                                socket={socket}
-                                myself={myself}
                                 comment={comment}
+                                myself={myself}
                                 projectId={currentProjectId}
                                 projectName={currentProjectName}
-                                showUnderBarOption={showUnderBarOption}
                                 reactions={reactions}
                                 setReactions={setReactions}
                                 setShowEmojiPicker={setShowEmojiPicker}
+                                showUnderBarOption={showUnderBarOption}
+                                socket={socket}
                             />
                         </Box>
-                        <Tooltip title="Edit" size="sm">
+                        <Tooltip size="sm" title="Edit">
                             <IconButton
                                 size="sm"
-                                onClick={() => {
-                                    setIsInEdit(true);
-                                    setEditTargetComment(comment);
-                                }}
                                 sx={{
                                     position: "absolute",
                                     top: 5,
                                     right: 5,
+                                }}
+                                onClick={() => {
+                                    setIsInEdit(true);
+                                    setEditTargetComment(comment);
                                 }}
                             >
                                 <EditIcon />
                             </IconButton>
                         </Tooltip>
                         <BnChatPreview
-                            customClassName="task-comment-preview"
-                            teamMemberProfiles={teamMemberProfiles}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
                             key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
                             content={comment.commentBody}
+                            customClassName="task-comment-preview"
                             isSent={true}
+                            myself={myself}
                             setCurrentChat={setCurrentChat}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
+                            socket={socket}
+                            teamMemberProfiles={teamMemberProfiles}
                         />
                     </Card>
                 </Box>

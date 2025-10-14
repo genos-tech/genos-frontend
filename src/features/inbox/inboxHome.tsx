@@ -63,28 +63,28 @@ export const InboxHome = (props: InboxHomeProps) => {
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
                 currentTeam={currentTeam}
-                setCurrentTeam={setCurrentTeam}
-                teamMemberProfiles={teamMemberProfiles}
-                socket={socket}
                 myself={myself}
-                setMyself={setMyself}
                 openingService={openingService}
-                setOpeningService={setOpeningService}
                 setCurrentMainChat={setCurrentMainChat}
-                unReadInboxItemCount={unReadInboxItemCount}
+                setCurrentTeam={setCurrentTeam}
+                setMyself={setMyself}
+                setOpeningService={setOpeningService}
+                socket={socket}
+                teamMemberProfiles={teamMemberProfiles}
                 unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                unReadInboxItemCount={unReadInboxItemCount}
             />
             <Stack sx={{ width: "100%" }}>
                 <Card
                     className="Sidebar-overlay"
+                    variant="soft"
                     sx={{
                         height: "50px",
                         justifyContent: "center",
                         borderRadius: "0",
                     }}
-                    variant="soft"
                 >
-                    <Typography startDecorator={<AllInboxIcon />} level="h4">
+                    <Typography level="h4" startDecorator={<AllInboxIcon />}>
                         Inbox
                     </Typography>
                 </Card>
@@ -116,10 +116,10 @@ export const InboxHome = (props: InboxHomeProps) => {
                                 <>
                                     <Typography level="h4">Requests</Typography>
                                     <Chip
-                                        variant="solid"
                                         color="primary"
                                         size="sm"
                                         sx={{ ml: "5px" }}
+                                        variant="solid"
                                     >
                                         {unReadInboxItemCount}
                                     </Chip>
@@ -136,6 +136,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                     <Stack direction={"row"} sx={{ height: "93dvh" }}>
                         {/* General Items */}
                         <List
+                            className="custom-scrollbar"
                             size="sm"
                             sx={{
                                 "--ListItem-paddingY": "0.3rem",
@@ -143,28 +144,27 @@ export const InboxHome = (props: InboxHomeProps) => {
                                 overflowY: "auto",
                                 overflowX: "hidden",
                             }}
-                            className="custom-scrollbar"
                         >
                             <Virtuoso
                                 ref={virtuosoRef}
+                                atBottomThreshold={128}
+                                atTopThreshold={64}
                                 className="custom-scrollbar"
+                                initialTopMostItemIndex={0}
                                 style={{ height: "100%" }}
                                 totalCount={activityInboxItems.length}
-                                initialTopMostItemIndex={0}
-                                atTopThreshold={64}
-                                atBottomThreshold={128}
                                 itemContent={(index) => {
                                     const item = activityInboxItems[index];
                                     return (
                                         <InboxBubble
                                             key={`inbox-general-items-bubble-${item.itemId}`}
-                                            teamMemberProfiles={teamMemberProfiles}
-                                            socket={socket}
-                                            myself={myself}
-                                            setMyself={setMyself}
                                             inboxItem={item}
+                                            myself={myself}
                                             setCurrentChat={setCurrentMainChat}
+                                            setMyself={setMyself}
                                             setOpeningService={setOpeningService}
+                                            socket={socket}
+                                            teamMemberProfiles={teamMemberProfiles}
                                         />
                                     );
                                 }}
@@ -173,6 +173,7 @@ export const InboxHome = (props: InboxHomeProps) => {
 
                         {/* Request Items */}
                         <List
+                            className="custom-scrollbar"
                             size="sm"
                             sx={{
                                 "--ListItem-paddingY": "0.3rem",
@@ -180,28 +181,27 @@ export const InboxHome = (props: InboxHomeProps) => {
                                 overflowY: "auto",
                                 overflowX: "hidden",
                             }}
-                            className="custom-scrollbar"
                         >
                             <Virtuoso
                                 ref={virtuosoRef}
+                                atBottomThreshold={128}
+                                atTopThreshold={64}
                                 className="custom-scrollbar"
+                                initialTopMostItemIndex={0}
                                 style={{ height: "100%" }}
                                 totalCount={requestInboxItems.length}
-                                initialTopMostItemIndex={0}
-                                atTopThreshold={64}
-                                atBottomThreshold={128}
                                 itemContent={(index) => {
                                     const item = requestInboxItems[index];
                                     return (
                                         <InboxBubble
                                             key={`inbox-request-bubble-${item.itemId}`}
-                                            teamMemberProfiles={teamMemberProfiles}
-                                            socket={socket}
-                                            setMyself={setMyself}
-                                            myself={myself}
                                             inboxItem={item}
+                                            myself={myself}
                                             setCurrentChat={setCurrentMainChat}
+                                            setMyself={setMyself}
                                             setOpeningService={setOpeningService}
+                                            socket={socket}
+                                            teamMemberProfiles={teamMemberProfiles}
                                         />
                                     );
                                 }}

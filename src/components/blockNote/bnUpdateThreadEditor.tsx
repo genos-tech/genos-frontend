@@ -1,9 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, IconButton, Tooltip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
-
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
@@ -33,6 +27,11 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
+import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { UserProps } from "../../types/admin";
@@ -256,17 +255,17 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     return (
         <Box>
             <EmojiPicker
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
+                setShowEmojiPicker={setShowEmojiPicker}
+                showEmojiPicker={showEmojiPicker}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
+            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
-                    formattingToolbar={false}
                     data-changing-font-demo // custom font
                     onChange={() => {
                         const comments: any[] = editor.document;
@@ -282,8 +281,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 >
                     <Tooltip title="Edit in Modal (TBD)">
                         <IconButton
-                            size="sm"
                             color="neutral"
+                            size="sm"
                             variant="plain"
                             sx={{
                                 position: "absolute",
@@ -298,8 +297,9 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     </Tooltip>
 
                     <IconButton
-                        size="sm"
                         color="success"
+                        disabled={editorDocLength < 2}
+                        size="sm"
                         variant="solid"
                         sx={{
                             position: "absolute",
@@ -308,7 +308,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                             zIndex: 1,
                             p: 0.7,
                         }}
-                        disabled={editorDocLength < 2}
                         onClick={async () => {
                             sendUpdatedMessage();
                             setIsInEdit(false);
@@ -318,8 +317,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                     </IconButton>
 
                     <IconButton
-                        size="sm"
                         color="danger"
+                        size="sm"
                         variant="outlined"
                         sx={{
                             position: "absolute",
@@ -347,20 +346,20 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                             <BlockTypeSelect key={"blockTypeSelect"} />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton

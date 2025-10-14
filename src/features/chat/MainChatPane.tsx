@@ -265,21 +265,21 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
     return (
         <div
-            onDrop={handleFileDrop}
-            onDragOver={(e) => e.preventDefault()}
             style={{
                 width: "100%",
                 height: "100%",
             }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleFileDrop}
         >
             <Sheet sx={{ backgroundColor: "background.surface" }}>
                 {errorMessage && errorMessage !== "" && (
                     <Snackbar
+                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                         autoHideDuration={5000}
+                        color="danger"
                         open={errorOpen}
                         variant="soft"
-                        color="danger"
-                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                         onClose={(event, reason) => {
                             if (reason === "clickaway") {
                                 return;
@@ -291,25 +291,25 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     </Snackbar>
                 )}
                 <MainChatPaneHeader
-                    teamMemberProfiles={teamMemberProfiles}
-                    socket={socket}
-                    myself={myself}
-                    setMyself={setMyself}
                     chat={chat}
-                    subChat={subChat}
+                    funcSetAllChats={funcSetAllChats}
+                    incompleteTodoCount={incompleteTodoCount}
+                    isSubChatVisible={isSubChatVisible}
+                    isToDoVisible={isToDoVisible}
+                    myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentSubChat={setCurrentSubChat}
-                    isSubChatVisible={isSubChatVisible}
+                    setIsCreatingTask={setIsCreatingTask}
                     setIsMainChatVisible={setIsMainChatVisible}
                     setIsSubChatVisible={setIsSubChatVisible}
-                    setIsThreadVisible={setIsThreadVisible}
                     setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    setIsCreatingTask={setIsCreatingTask}
-                    setOpeningService={setOpeningService}
-                    funcSetAllChats={funcSetAllChats}
-                    isToDoVisible={isToDoVisible}
+                    setIsThreadVisible={setIsThreadVisible}
                     setIsToDoVisible={setIsToDoVisible}
-                    incompleteTodoCount={incompleteTodoCount}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    subChat={subChat}
+                    teamMemberProfiles={teamMemberProfiles}
                 />
 
                 {/* To-Do Pane for only myself */}
@@ -318,19 +318,19 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     currentMainChat.dmPartnerUser.userId === myself.userId && (
                         <>
                             <ToDoPane
+                                currentWindowHeight={currentWindowHeight}
+                                isExistingTodaysTodo={isExistingTodaysTodo}
+                                isSubChatVisible={isSubChatVisible}
                                 myself={myself}
+                                setCurrentChat={setCurrentMainChat}
+                                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                                setMyself={setMyself}
+                                setOpeningService={setOpeningService}
+                                setTodos={setTodos}
+                                socket={socket}
                                 teamMemberProfiles={teamMemberProfiles}
                                 teamMembers={teamMembers}
-                                setMyself={setMyself}
-                                socket={socket}
-                                setOpeningService={setOpeningService}
-                                setCurrentChat={setCurrentMainChat}
                                 todos={todos}
-                                setTodos={setTodos}
-                                isExistingTodaysTodo={isExistingTodaysTodo}
-                                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
-                                isSubChatVisible={isSubChatVisible}
-                                currentWindowHeight={currentWindowHeight}
                             />
                         </>
                     )}
@@ -343,31 +343,15 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         <Box sx={{ px: 0.3, my: 0.2 }}>
                             <Virtuoso
                                 ref={virtuosoRef}
+                                atBottomThreshold={128}
+                                atTopStateChange={handleAtTop}
+                                atTopThreshold={64}
                                 className="custom-scrollbar"
                                 context={{ isScrolling }}
+                                initialTopMostItemIndex={chatMessages.length - 1}
                                 isScrolling={setIsScrolling}
                                 rangeChanged={setVisibleRange}
-                                style={{
-                                    height:
-                                        currentMainChat.chatType === 3 ||
-                                        currentMainChat.chatType === 4
-                                            ? "95vh"
-                                            : isSubChatVisible
-                                              ? calculateVirtuosoSubHight(
-                                                    currentWindowHeight,
-                                                    paneSizePCT,
-                                                    numEditorLines
-                                                )
-                                              : calculateVirtuosoHight(
-                                                    currentWindowHeight,
-                                                    numEditorLines
-                                                ),
-                                }}
                                 totalCount={chatMessages.length}
-                                initialTopMostItemIndex={chatMessages.length - 1}
-                                atTopThreshold={64}
-                                atTopStateChange={handleAtTop}
-                                atBottomThreshold={128}
                                 itemContent={(index, _, { isScrolling }) => {
                                     const message = chatMessages[index];
                                     const isYou = myself.userId === message.sender.userId;
@@ -465,40 +449,56 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                                 }}
                                             >
                                                 <MessageBubble
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    variant={isYou ? "sent" : "received"}
                                                     chat={chat}
-                                                    message={message}
-                                                    isScrolling={isScrolling}
+                                                    currentMessageIndex={index}
+                                                    flaggedMessages={flaggedMessages}
+                                                    isCreatingTask={isCreatingTask}
                                                     isFocused={isFocused}
+                                                    isScrolling={isScrolling}
                                                     isSimpleBubble={isSimpleBubble}
-                                                    socket={socket}
+                                                    message={message}
+                                                    myself={myself}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setCurrentPreviewTask={setCurrentPreviewTask}
+                                                    setCurrentProject={setCurrentProject}
+                                                    setCurrentThreadChat={setCurrentThreadChat}
+                                                    setEditTargetMessage={setEditTargetMessage}
+                                                    setFlaggedMessages={setFlaggedMessages}
+                                                    setIsCreatingTask={setIsCreatingTask}
+                                                    setIsInEdit={setIsInEdit}
                                                     setIsMainChatVisible={setIsMainChatVisible}
                                                     setIsThreadVisible={setIsThreadVisible}
-                                                    setIsTaskPreviewVisible={
-                                                        setIsTaskPreviewVisible
-                                                    }
-                                                    isCreatingTask={isCreatingTask}
-                                                    setIsCreatingTask={setIsCreatingTask}
-                                                    setCurrentThreadChat={setCurrentThreadChat}
-                                                    setCurrentPreviewTask={setCurrentPreviewTask}
+                                                    setMyself={setMyself}
                                                     setOpeningService={setOpeningService}
-                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    socket={socket}
+                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    variant={isYou ? "sent" : "received"}
                                                     setCurrentPreviewTaskId={
                                                         setCurrentPreviewTaskId
                                                     }
-                                                    setCurrentProject={setCurrentProject}
-                                                    setIsInEdit={setIsInEdit}
-                                                    setEditTargetMessage={setEditTargetMessage}
-                                                    currentMessageIndex={index}
-                                                    flaggedMessages={flaggedMessages}
-                                                    setFlaggedMessages={setFlaggedMessages}
+                                                    setIsTaskPreviewVisible={
+                                                        setIsTaskPreviewVisible
+                                                    }
                                                 />
                                             </Stack>
                                         </div>
                                     );
+                                }}
+                                style={{
+                                    height:
+                                        currentMainChat.chatType === 3 ||
+                                        currentMainChat.chatType === 4
+                                            ? "95vh"
+                                            : isSubChatVisible
+                                              ? calculateVirtuosoSubHight(
+                                                    currentWindowHeight,
+                                                    paneSizePCT,
+                                                    numEditorLines
+                                                )
+                                              : calculateVirtuosoHight(
+                                                    currentWindowHeight,
+                                                    numEditorLines
+                                                ),
                                 }}
                             />
                         </Box>
@@ -507,36 +507,36 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                                 {isInEdit === true && editTargetMessage && (
                                     <BnUpdateEditor
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        teamMembers={teamMembers}
                                         chat={chat}
-                                        message={editTargetMessage}
                                         isInEdit={isInEdit}
-                                        setIsInEdit={setIsInEdit}
-                                        setCurrentChat={setCurrentMainChat}
                                         isSubChatVisible={isSubChatVisible}
-                                        setOpeningService={setOpeningService}
+                                        message={editTargetMessage}
+                                        myself={myself}
                                         numEditorLines={numEditorLines}
+                                        setCurrentChat={setCurrentMainChat}
+                                        setIsInEdit={setIsInEdit}
+                                        setMyself={setMyself}
                                         setNumEditorLines={setNumEditorLines}
+                                        setOpeningService={setOpeningService}
+                                        socket={socket}
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        teamMembers={teamMembers}
                                     />
                                 )}
                                 {isInEdit === false && (
                                     <BnChatEditor
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        teamMembers={teamMembers}
                                         chat={chat}
-                                        setCurrentChat={setCurrentMainChat}
                                         funcSetAllChats={funcSetAllChats}
                                         isSubChatVisible={isSubChatVisible}
-                                        setOpeningService={setOpeningService}
+                                        myself={myself}
                                         numEditorLines={numEditorLines}
+                                        setCurrentChat={setCurrentMainChat}
+                                        setMyself={setMyself}
                                         setNumEditorLines={setNumEditorLines}
+                                        setOpeningService={setOpeningService}
+                                        socket={socket}
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        teamMembers={teamMembers}
                                     />
                                 )}
                             </Box>

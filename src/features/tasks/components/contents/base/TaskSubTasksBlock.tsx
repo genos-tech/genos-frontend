@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import { Box, Chip, Divider, List, ListItem, ListItemButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
@@ -75,24 +75,27 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     overflowY: "scroll",
                 }}
             >
-                <ListItem nested sx={{ width: "100%" }}>
+                <ListItem sx={{ width: "100%" }} nested>
                     <List sx={{ gap: 0.5 }}>
                         {childTasks.map(
                             ({ assignee, project, id, title, status, tags }, index) => {
                                 return (
                                     <ListItem key={`listitem-${id}-${index}`}>
                                         <AvatarWithStatus
+                                            avatarUser={teamMemberProfiles[assignee.userId]}
                                             myself={myself}
+                                            setCurrentMainChat={setCurrentMainChat}
                                             setMyself={setMyself}
+                                            setOpeningService={setOpeningService}
+                                            socket={socket}
                                             isYou={
                                                 myself.userId === assignee.userId ? true : false
                                             }
-                                            avatarUser={teamMemberProfiles[assignee.userId]}
-                                            socket={socket}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentMainChat={setCurrentMainChat}
                                         />
                                         <ListItemButton
+                                            sx={{
+                                                marginLeft: "10px",
+                                            }}
                                             onClick={() => {
                                                 if (project && project.projectId && id) {
                                                     // setCurrentProject({
@@ -108,24 +111,22 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     );
                                                 }
                                             }}
-                                            sx={{
-                                                marginLeft: "10px",
-                                            }}
                                         >
                                             <Chip
                                                 key={`id-chip-${id}-${index}`} // pass the key directly
-                                                variant="outlined"
                                                 color="neutral"
+                                                size="md"
+                                                variant="outlined"
                                                 sx={{
                                                     fontWeight: "bold",
                                                     borderRadius: "5px",
                                                 }}
-                                                size="md"
                                             >
                                                 {`${id}`}
                                             </Chip>
                                             <Chip
                                                 key={`status-chip-${id}-${index}`} // pass the key directly
+                                                size="md"
                                                 variant="soft"
                                                 sx={{
                                                     marginX: "5px",
@@ -139,18 +140,17 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                     fontWeight: "bold",
                                                     borderRadius: "5px",
                                                 }}
-                                                size="md"
                                             >
                                                 {`${status.status}`}
                                             </Chip>
                                             <Typography
-                                                noWrap
                                                 sx={{
                                                     overflow: "hidden",
                                                     textOverflow: "ellipsis",
                                                     whiteSpace: "nowrap",
                                                     width: "100%", // take full width of button
                                                 }}
+                                                noWrap
                                             >
                                                 {`${title}`}
                                             </Typography>
@@ -164,6 +164,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                 {tags.map(({ tagName, tagColor }, index) => (
                                                     <Chip
                                                         key={`${id}-${index}-${tagName}`}
+                                                        size="md"
                                                         variant="outlined"
                                                         sx={{
                                                             marginX: "2px",
@@ -179,7 +180,6 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                                 mode === "dark" ? 0.5 : 0.75
                                                             ),
                                                         }}
-                                                        size="md"
                                                     >
                                                         {`${tagName}`}
                                                     </Chip>

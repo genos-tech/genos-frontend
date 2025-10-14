@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import React, { useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { STORES } from "../../../db/conf";
@@ -61,8 +61,8 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openDeleteNote}
+                sx={{ zIndex: 10010 }}
                 onClose={() => {
                     setOpenDeleteNote(false);
                     setErrorMessage(null);
@@ -71,7 +71,7 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
                 <ModalDialog>
                     <Typography level="h4">
                         Are you sure to delete{" "}
-                        <Typography level="h3" color="danger">
+                        <Typography color="danger" level="h3">
                             {currentMyNote.title}
                         </Typography>{" "}
                         ?
@@ -81,8 +81,8 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="neutral"
+                            component="button"
                             variant="outlined"
                             onClick={() => {
                                 setOpenDeleteNote(false);
@@ -92,8 +92,8 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
                             Cancel
                         </Button>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             onClick={() => {
                                 handleDeleteNote();
                             }}

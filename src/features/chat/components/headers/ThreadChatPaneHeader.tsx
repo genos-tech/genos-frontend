@@ -70,11 +70,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         >
             <Stack direction="row" spacing={{ xs: 0.5, md: 0.5 }} sx={{ alignItems: "center" }}>
                 <Chip
-                    size="lg"
-                    variant="solid"
                     color="neutral"
+                    size="lg"
                     startDecorator={<ReplyIcon />}
                     sx={{ borderRadius: "4px" }}
+                    variant="solid"
                 >
                     Thread
                 </Chip>
@@ -82,15 +82,15 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 <div>
                     <Typography
                         component="h2"
-                        noWrap
                         sx={{ fontWeight: "lg", fontSize: "lg", pl: "5px" }}
+                        noWrap
                     >
                         {isYou ? `${thread?.chatName} (you)` : thread?.chatName}
                     </Typography>
                 </div>
             </Stack>
 
-            <Stack spacing={0.3} direction="row" sx={{ alignItems: "center" }}>
+            <Stack direction="row" spacing={0.3} sx={{ alignItems: "center" }}>
                 {/* Custom header in PM and DM/GM (having a task) thread */}
                 {(((thread.chatType === 3 || thread.chatType === 4) &&
                     TM.currentPreviewTaskId !== -1) ||
@@ -101,13 +101,13 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     <>
                         <Chip
                             key={thread.taskId}
-                            variant="soft"
                             color="neutral"
+                            size="lg"
+                            variant="soft"
                             sx={{
                                 borderRadius: "5px",
                                 fontWeight: "bold",
                             }}
-                            size="lg"
                         >
                             ID: {thread.taskId || "N/A"}
                         </Chip>
@@ -140,12 +140,13 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     thread.chatType !== 4 &&
                     TM.currentPreviewTaskId === -1 && (
                         <>
-                            <Tooltip title="New Task" size="sm">
+                            <Tooltip size="sm" title="New Task">
                                 <IconButton
+                                    color="neutral"
                                     component="a"
                                     size="sm"
+                                    sx={{ px: "10px" }}
                                     variant="plain"
-                                    color="neutral"
                                     onClick={() => {
                                         setIsMainChatVisible(true);
                                         setIsThreadVisible(true);
@@ -156,7 +157,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                             rootTaskId: null,
                                         });
                                     }}
-                                    sx={{ px: "10px" }}
                                 >
                                     <PlaylistAddIcon />
                                 </IconButton>
@@ -169,7 +169,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     thread.chatType !== 4 &&
                     TM.currentPreviewTaskId === -1
                 ) && (
-                    <Tooltip title="Open Task" size="sm">
+                    <Tooltip size="sm" title="Open Task">
                         <IconButton
                             size="sm"
                             onClick={() => {
@@ -188,12 +188,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Tooltip title="Open Note" size="sm">
+                <Tooltip size="sm" title="Open Note">
                     <IconButton
+                        color="neutral"
                         component="a"
                         size="sm"
                         variant="plain"
-                        color="neutral"
                         onClick={() => {
                             handleCreateNewChatNoteIfNotExist(
                                 thread.chatType,
@@ -212,11 +212,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Close" size="sm">
+                <Tooltip size="sm" title="Close">
                     <IconButton
+                        color="neutral"
                         size="sm"
                         variant="plain"
-                        color="neutral"
                         onClick={() => {
                             setIsMainChatVisible(true);
                             setIsThreadVisible(false);

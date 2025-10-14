@@ -25,10 +25,13 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     return (
         <Autocomplete
             key={taskContents.id}
-            options={teamProjects}
             getOptionLabel={(option) => option.projectName}
-            value={taskContents.project?.projectId ? taskContents.project : undefined}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
+            options={teamProjects}
+            size="sm"
+            sx={{ width: "100%" }}
+            value={taskContents.project?.projectId ? taskContents.project : undefined}
+            onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {
                 if (value !== null) {
                     setTaskContents({
@@ -56,9 +59,6 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                     }
                 }
             }}
-            onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
-            size="sm"
-            sx={{ width: "100%" }}
         />
     );
 };

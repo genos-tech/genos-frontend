@@ -1,6 +1,6 @@
-import React, { useState } from "react";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import React, { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -117,8 +117,8 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openJoinGM.flag}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenJoinGM(disableOpenJoinGMParams)}
             >
                 <ModalDialog>
@@ -127,7 +127,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                         startDecorator={<LockOutlineIcon sx={{ fontSize: "22px" }} />}
                     >
                         Make a request to join GM -
-                        <Typography level="h3" color="primary" sx={{ ml: 1 }}>
+                        <Typography color="primary" level="h3" sx={{ ml: 1 }}>
                             {openJoinGM.chatName}
                         </Typography>
                     </Typography>
@@ -138,17 +138,17 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
 
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenJoinGM(disableOpenJoinGMParams)}
                         >
                             Cancel
                         </Button>
                         <Button
+                            color="primary"
                             component="button"
                             variant="soft"
-                            color="primary"
                             onClick={handleJoinGM}
                         >
                             Send

@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -21,6 +20,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useRef, useState } from "react";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
@@ -120,13 +120,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         <>
                             <Chip
                                 key={`task-title-block-${taskContents.id}`}
-                                variant="soft"
                                 color="neutral"
+                                size="lg"
+                                variant="soft"
                                 sx={{
                                     borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
-                                size="lg"
                             >
                                 ID: {taskContents.id || "N/A"}
                             </Chip>
@@ -150,20 +150,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             </Chip>
                         </>
                     )}
-                    <FormControl required sx={{ width: "100%" }}>
+                    <FormControl sx={{ width: "100%" }} required>
                         <Input
                             key={"taskTitle"}
-                            variant="soft"
                             placeholder="Task Title"
                             value={taskTitle}
-                            onChange={(e) => {
-                                setTaskTitle(e.target.value);
-                            }}
-                            onBlur={() => {
-                                if (setTaskUpdated) {
-                                    setTaskUpdated(true);
-                                }
-                            }}
+                            variant="soft"
                             slotProps={{
                                 input: {
                                     ref: titleInputRef,
@@ -181,6 +173,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 fontWeight: "bold",
                                 backgroundColor: "transparent",
                             }}
+                            onBlur={() => {
+                                if (setTaskUpdated) {
+                                    setTaskUpdated(true);
+                                }
+                            }}
+                            onChange={(e) => {
+                                setTaskTitle(e.target.value);
+                            }}
                         />
                     </FormControl>
                 </Box>
@@ -189,9 +189,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 {isPreviewMode === true && setIsTaskVisibleInNote === undefined && (
                     <Tooltip title="Expand">
                         <IconButton
+                            color="neutral"
                             size="sm"
                             variant="plain"
-                            color="neutral"
                             onClick={() => {
                                 setIsTaskHomeVisible && setIsTaskHomeVisible(false);
                                 setIsMainChatVisible && setIsMainChatVisible(false);
@@ -206,9 +206,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 {openingService === 2 && taskContents.threadId !== null && (
                     <Tooltip title="Check Thread">
                         <IconButton
+                            color="neutral"
                             size="sm"
                             variant="plain"
-                            color="neutral"
                             onClick={() => {
                                 if (
                                     taskContents.chatType &&
@@ -238,8 +238,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     <Tooltip title="More Options">
                         <MenuButton
                             size="sm"
-                            slots={{ root: IconButton }}
                             slotProps={{ root: { color: "neutral" } }}
+                            slots={{ root: IconButton }}
                         >
                             <MoreVert />
                         </MenuButton>
@@ -263,12 +263,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         </MenuItem>
                         {taskContents.status.status !== "Closed" && (
                             <MenuItem
-                                onClick={() => {
-                                    setOpenDeleteTask(true);
-                                }}
                                 sx={{
                                     color: "red",
                                     fontWeight: "bold",
+                                }}
+                                onClick={() => {
+                                    setOpenDeleteTask(true);
                                 }}
                             >
                                 <DeleteIcon sx={{ color: "red" }} />
@@ -280,9 +280,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                 <Tooltip title="Close">
                     <IconButton
+                        color="neutral"
                         size="sm"
                         variant="plain"
-                        color="neutral"
                         onClick={() => {
                             if (isPreviewMode === false && TM.setIsCreatingTask) {
                                 TM.setIsCreatingTask({
@@ -347,21 +347,21 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 </Tooltip>
 
                 <ModalDeleteTask
-                    openDeleteTask={openDeleteTask}
-                    setOpenDeleteTask={setOpenDeleteTask}
                     currentTaskContent={taskContents}
+                    openDeleteTask={openDeleteTask}
                     setCurrentTaskContent={setCurrentTaskContent}
-                    setTaskUpdated={setTaskUpdated}
+                    setOpenDeleteTask={setOpenDeleteTask}
                     setTaskStatusUpdated={setTaskStatusUpdated}
+                    setTaskUpdated={setTaskUpdated}
                 />
 
                 {isPreviewMode === false && titleError && titleErrorOpen !== undefined && (
                     <Snackbar
+                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                         autoHideDuration={5000}
+                        color="danger"
                         open={titleErrorOpen}
                         variant="soft"
-                        color="danger"
-                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                         onClose={(event, reason) => {
                             if (reason === "clickaway") {
                                 return;

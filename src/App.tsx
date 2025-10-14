@@ -1,18 +1,16 @@
-import { useEffect } from "react";
-import CssBaseline from "@mui/joy/CssBaseline";
-import { CssVarsProvider } from "@mui/joy/styles";
-
 // Import css
 import "./App.css";
 
-// Import worker
-import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
-// Import db
-import { initDB } from "./db/schema";
-// Import context
-import { useAuth } from "./context/AuthContext";
+import CssBaseline from "@mui/joy/CssBaseline";
+import { CssVarsProvider } from "@mui/joy/styles";
+import { useEffect } from "react";
+
 // Import components
 import { InitialLoad } from "./components/utils/InitialLoad";
+// Import context
+import { useAuth } from "./context/AuthContext";
+// Import db
+import { initDB } from "./db/schema";
 // Import features
 import { ChatHome } from "./features/chat/chatHome";
 import { InboxHome } from "./features/inbox/inboxHome";
@@ -29,6 +27,8 @@ import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
 import { useNoteManagement } from "./hooks/notes/useNoteManagement";
 import { useTaskManagement } from "./hooks/tasks/useTaskManagement";
+// Import worker
+import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 
 export const App = () => {
     // Need to run if you delete IndexedDB database
@@ -283,8 +283,8 @@ export const App = () => {
     return UIM.isLoading || CM.currentMainChat === undefined ? (
         <InitialLoad
             myself={myself}
-            setIsLoading={UIM.setIsLoading}
             setCurrentMainChat={CM.setCurrentMainChat}
+            setIsLoading={UIM.setIsLoading}
         />
     ) : (
         <div className="main-container">
@@ -294,70 +294,70 @@ export const App = () => {
                 {UIM.openingService === 0 ? (
                     <InboxHome
                         currentTeam={TEM.currentTeam}
-                        setCurrentTeam={TEM.setCurrentTeam}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        myself={myself}
-                        socket={socketInstance}
-                        setMyself={setMyself}
-                        openingService={UIM.openingService}
-                        setOpeningService={UIM.setOpeningService}
-                        setCurrentMainChat={CM.setCurrentMainChat}
                         inboxItems={IM.inboxItems}
-                        unReadInboxItemCount={IM.unReadInboxItemCount}
+                        myself={myself}
+                        openingService={UIM.openingService}
+                        setCurrentMainChat={CM.setCurrentMainChat}
+                        setCurrentTeam={TEM.setCurrentTeam}
+                        setMyself={setMyself}
+                        setOpeningService={UIM.setOpeningService}
+                        socket={socketInstance}
+                        teamMemberProfiles={TEM.teamMemberProfiles}
                         unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                     />
                 ) : null}
 
                 {UIM.openingService === 1 ? (
                     <ChatHome
-                        TEM={TEM}
-                        socket={socketInstance}
-                        myself={myself}
-                        setMyself={setMyself}
-                        openingService={UIM.openingService}
-                        setOpeningService={UIM.setOpeningService}
-                        unReadInboxItemCount={IM.unReadInboxItemCount}
                         CM={CM}
+                        myself={myself}
                         NM={NM}
+                        openingService={UIM.openingService}
                         PM={PM}
+                        setMyself={setMyself}
+                        setOpeningService={UIM.setOpeningService}
+                        socket={socketInstance}
+                        TEM={TEM}
                         TM={TM}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                     />
                 ) : null}
 
                 {UIM.openingService === 2 ? (
                     <TaskHome
-                        TEM={TEM}
-                        socket={socketInstance}
-                        myself={myself}
-                        setMyself={setMyself}
-                        setCurrentMainChat={CM.setCurrentMainChat}
-                        openingService={UIM.openingService}
-                        setOpeningService={UIM.setOpeningService}
-                        unReadInboxItemCount={IM.unReadInboxItemCount}
-                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                         allChats={CM.allChats}
-                        setAllChats={CM.setAllChats}
                         funcSetAllChats={CM.funcSetAllChats}
                         moveToSpecificChat={CM.moveToSpecificChat}
+                        myself={myself}
                         NM={NM}
+                        openingService={UIM.openingService}
                         PM={PM}
+                        setAllChats={CM.setAllChats}
+                        setCurrentMainChat={CM.setCurrentMainChat}
+                        setMyself={setMyself}
+                        setOpeningService={UIM.setOpeningService}
+                        socket={socketInstance}
+                        TEM={TEM}
                         TM={TM}
+                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                     />
                 ) : null}
 
                 {UIM.openingService === 3 ? (
                     <NoteHome
+                        CM={CM}
+                        myself={myself}
+                        NM={NM}
+                        openingService={UIM.openingService}
+                        PM={PM}
+                        setMyself={setMyself}
+                        setOpeningService={UIM.setOpeningService}
                         socket={socketInstance}
                         TEM={TEM}
-                        myself={myself}
-                        setMyself={setMyself}
-                        openingService={UIM.openingService}
-                        setOpeningService={UIM.setOpeningService}
-                        unReadInboxItemCount={IM.unReadInboxItemCount}
-                        NM={NM}
-                        CM={CM}
-                        PM={PM}
                         TM={TM}
+                        unReadInboxItemCount={IM.unReadInboxItemCount}
                     />
                 ) : null}
             </CssVarsProvider>

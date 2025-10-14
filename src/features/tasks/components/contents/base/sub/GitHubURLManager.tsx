@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { Box, Button, IconButton, Input, Snackbar, Stack, Typography } from "@mui/joy";
+import { useEffect, useState } from "react";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { TaskProps } from "../../../../../../types/tasks";
@@ -74,19 +74,19 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                 githubLink.url === null ||
                 githubLink.url === "" ||
                 isEditing === true) && (
-                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                <Stack alignItems="center" direction="row" justifyContent="center" spacing={1}>
                     <GitHubIcon />
                     <Box>
                         <Typography>GitHub</Typography>
                     </Box>
                     <Input
                         key={"url"}
-                        size="sm"
                         placeholder="Paste GitHub PR URL"
+                        size="sm"
+                        sx={{ width: "200px", height: "30px" }}
+                        type="url"
                         value={prUrl}
                         onChange={(e) => setPRUrl(e.target.value)}
-                        type="url"
-                        sx={{ width: "200px", height: "30px" }}
                     />
                     {taskContents && (prTitle !== "" || isEditing === true) && (
                         <>
@@ -95,21 +95,21 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                             </Box>
                             <Input
                                 key={"title"}
-                                size="sm"
                                 placeholder="Title"
+                                size="sm"
+                                sx={{ width: "200px", height: "30px" }}
                                 value={prTitle}
                                 onChange={(e) => setPRTitle(e.target.value)}
-                                sx={{ width: "200px", height: "30px" }}
                             />
                         </>
                     )}
                     {prError && (
                         <Snackbar
+                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             autoHideDuration={5000}
+                            color="danger"
                             open={prErrorOpen}
                             variant="soft"
-                            color="danger"
-                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             onClose={(event, reason) => {
                                 if (reason === "clickaway") {
                                     return;
@@ -121,10 +121,10 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                         </Snackbar>
                     )}
                     <Button
-                        component="a"
-                        variant="outlined"
                         color="neutral"
+                        component="a"
                         size="sm"
+                        variant="outlined"
                         onClick={handlePRSave}
                     >
                         Set
@@ -133,7 +133,7 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
             )}
 
             {isEditing === false && githubLink?.url && (
-                <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+                <Stack alignItems="center" direction="row" justifyContent="center" spacing={1.5}>
                     <GitHubIcon />
                     <Typography
                         sx={{
@@ -143,13 +143,13 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                             maxWidth: "500px",
                         }}
                     >
-                        <a href={githubLink.url} target="_blank" rel="noopener noreferrer">
+                        <a href={githubLink.url} rel="noopener noreferrer" target="_blank">
                             {prTitle}
                         </a>
                     </Typography>
                     <IconButton
-                        component="p"
                         color="neutral"
+                        component="p"
                         size="sm"
                         onClick={() => {
                             setIsEditing(true);

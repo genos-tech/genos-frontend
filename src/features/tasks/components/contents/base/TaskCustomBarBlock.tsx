@@ -31,10 +31,10 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             {currentTaskContent.status.status === "Open" ||
             currentTaskContent.status.status === "Pending" ? (
                 <IconButton
-                    component="p"
-                    variant="outlined"
                     color="warning"
+                    component="p"
                     size="sm"
+                    variant="outlined"
                     sx={{
                         fontSize: "14px",
                         paddingX: "7px",
@@ -63,10 +63,10 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             )}
             {currentTaskContent.status.status === "WIP" ? (
                 <IconButton
-                    component="p"
-                    variant="outlined"
                     color="success"
+                    component="p"
                     size="sm"
+                    variant="outlined"
                     sx={{
                         fontSize: "14px",
                         paddingX: "7px",
@@ -96,10 +96,10 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
 
             {taskBodySaved === true && (
                 <IconButton
-                    component="p"
-                    variant="plain"
                     color="neutral"
+                    component="p"
                     size="sm"
+                    variant="plain"
                     sx={{
                         fontSize: "14px",
                         paddingX: "5px",
@@ -114,8 +114,8 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             {currentTaskContent.status.status !== "Deleted" && (
                 <IconButton
                     component="p"
-                    variant="plain"
                     size="sm"
+                    variant="plain"
                     sx={{
                         fontSize: "14px",
                         paddingX: "7px",

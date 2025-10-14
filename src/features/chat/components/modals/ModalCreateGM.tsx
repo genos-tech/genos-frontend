@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
     Alert,
     Box,
@@ -10,6 +9,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import React, { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -61,11 +61,12 @@ export const ModalCreateGM: React.FC<Props> = ({
 
     return (
         <>
-            <Modal open={open} onClose={() => setOpen(false)} sx={{ zIndex: 10000 }}>
+            <Modal open={open} sx={{ zIndex: 10000 }} onClose={() => setOpen(false)}>
                 <ModalDialog>
                     <Typography level="h4">Create New Group</Typography>
                     <Input
                         placeholder="Enter group name"
+                        sx={{ mt: 1 }}
                         value={chatName}
                         onChange={(e) => setGroupName(e.target.value)}
                         onKeyDown={(e) => {
@@ -73,16 +74,15 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 handleCreateGroup();
                             }
                         }}
-                        sx={{ mt: 1 }}
                     />
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Checkbox
-                            label="🔒 Private Project"
-                            color="neutral"
-                            variant="soft"
                             checked={isPrivate}
-                            onChange={(e) => setIsPrivate(e.target.checked)}
+                            color="neutral"
+                            label="🔒 Private Project"
                             sx={{ mt: 1 }}
+                            variant="soft"
+                            onChange={(e) => setIsPrivate(e.target.checked)}
                         />
                     </Box>
                     {CreateCGErrorMessage && CreateCGErrorMessage !== "" && (
@@ -90,17 +90,17 @@ export const ModalCreateGM: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
                         <Button
+                            color="danger"
                             component="a"
                             variant="outlined"
-                            color="danger"
                             onClick={() => setOpen(false)}
                         >
                             Cancel
                         </Button>
                         <Button
                             component="a"
-                            onClick={handleCreateGroup}
                             disabled={!chatName.trim()}
+                            onClick={handleCreateGroup}
                         >
                             Create
                         </Button>

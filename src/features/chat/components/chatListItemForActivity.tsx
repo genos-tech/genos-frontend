@@ -1,11 +1,11 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CircleIcon from "@mui/icons-material/Circle";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Avatar, Box, Chip, ListDivider, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import * as React from "react";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
@@ -363,32 +363,32 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         <React.Fragment>
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
-                    onClick={onClickHandler}
                     color={selectedActivityId === activity.activityId ? "success" : "neutral"}
-                    variant={selectedActivityId === activity.activityId ? "soft" : "outlined"}
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
+                    variant={selectedActivityId === activity.activityId ? "soft" : "outlined"}
+                    onClick={onClickHandler}
                 >
                     <Stack direction="column">
                         <Stack
-                            direction="row"
-                            spacing={1.5}
-                            justifyContent="space-between"
                             alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1.5}
                         >
                             <Stack direction="row" spacing={1}>
                                 <div>
                                     {activity.chatType === 1 &&
                                         activity.dmPartnerUserId !== "" && (
                                             <AvatarWithStatus
-                                                myself={myself}
-                                                setMyself={setMyself}
                                                 isYou={isYou}
+                                                myself={myself}
+                                                setCurrentMainChat={setCurrentMainChat}
+                                                setMyself={setMyself}
+                                                setOpeningService={setOpeningService}
+                                                socket={socket}
                                                 avatarUser={
                                                     teamMemberProfiles[activity.dmPartnerUserId]
                                                 }
-                                                socket={socket}
-                                                setOpeningService={setOpeningService}
-                                                setCurrentMainChat={setCurrentMainChat}
                                             />
                                         )}
                                     {activity.chatType === 1 &&
@@ -402,15 +402,15 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         <>
                                             {chat && (
                                                 <GMAvatar
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    isYou={isYou}
-                                                    socket={socket}
-                                                    setOpeningService={setOpeningService}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    gmChat={chat}
                                                     funcSetAllChats={funcSetAllChats}
+                                                    gmChat={chat}
+                                                    isYou={isYou}
+                                                    myself={myself}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setMyself={setMyself}
+                                                    setOpeningService={setOpeningService}
+                                                    socket={socket}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                 />
                                             )}
                                             {chat === undefined && (
@@ -425,14 +425,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                         <>
                                             {chat && (
                                                 <ProjectAvatar
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socket}
-                                                    setOpeningService={setOpeningService}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    pmChat={chat}
                                                     funcSetAllChats={funcSetAllChats}
+                                                    myself={myself}
+                                                    pmChat={chat}
+                                                    setCurrentMainChat={setCurrentMainChat}
+                                                    setMyself={setMyself}
+                                                    setOpeningService={setOpeningService}
+                                                    socket={socket}
+                                                    teamMemberProfiles={teamMemberProfiles}
                                                 />
                                             )}
                                             {chat === undefined && (
@@ -452,7 +452,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
                                 {activity.chatType !== 3 && activity.chatType !== 4 && (
                                     <Box>
-                                        <Typography noWrap level="title-sm">
+                                        <Typography level="title-sm" noWrap>
                                             {isYou
                                                 ? `${activity.chatName} (you)`
                                                 : activity.chatName}
@@ -464,9 +464,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     {(activity.chatType === 3 || activity.chatType === 4) && (
                                         <>
                                             <Chip
+                                                color="primary"
                                                 size="sm"
                                                 variant="soft"
-                                                color="primary"
                                                 sx={{
                                                     fontSize: "12px",
                                                     borderRadius: "4px",
@@ -492,9 +492,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     {/* Reply except task comment */}
                                     {activity.activityType === 1 && activity.chatType !== 4 && (
                                         <Chip
+                                            color="success"
                                             size="sm"
                                             variant="outlined"
-                                            color="success"
                                             sx={{
                                                 fontSize: "12px",
                                                 borderRadius: "4px",
@@ -507,9 +507,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
                                     {activity.activityType === 2 && (
                                         <Chip
+                                            color="warning"
                                             size="sm"
                                             variant="outlined"
-                                            color="warning"
                                             sx={{
                                                 fontSize: "12px",
                                                 borderRadius: "4px",
@@ -522,9 +522,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
                                     {activity.activityType === 3 && (
                                         <Chip
+                                            color="danger"
                                             size="sm"
                                             variant="outlined"
-                                            color="danger"
                                             sx={{
                                                 fontSize: "12px",
                                                 borderRadius: "4px",
@@ -536,9 +536,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                     )}
 
                                     <Chip
+                                        color="neutral"
                                         size="sm"
                                         variant="outlined"
-                                        color="neutral"
                                         sx={{
                                             fontSize: "12px",
                                             borderRadius: "4px",
@@ -550,9 +550,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
                                     {activity.isThread === true && (
                                         <Chip
+                                            color="neutral"
                                             size="sm"
                                             variant="outlined"
-                                            color="neutral"
                                             sx={{
                                                 fontSize: "12px",
                                                 borderRadius: "4px",
@@ -565,25 +565,25 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                 </Box>
                             </Stack>
                             {/* Right-aligned content */}
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack alignItems="center" direction="row" spacing={1}>
                                 <Typography
                                     level="body-xs"
-                                    noWrap
                                     sx={{ display: { xs: "none", md: "block" } }}
+                                    noWrap
                                 >
                                     {extractYYYYMMDDHHMM(activity.tsSent)}
                                 </Typography>
                                 {activity.isRead === false && (
-                                    <CircleIcon sx={{ fontSize: 12 }} color="primary" />
+                                    <CircleIcon color="primary" sx={{ fontSize: 12 }} />
                                 )}
                             </Stack>
                         </Stack>
 
                         {activity.activityType !== 2 && (
                             <Stack
+                                alignItems="flex-start"
                                 direction="row"
                                 justifyContent="space-between"
-                                alignItems="flex-start"
                             >
                                 <Typography
                                     level="body-sm"
@@ -606,14 +606,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         {activity.activityType === 2 && (
                             <>
                                 <Stack
+                                    alignItems="flex-start"
                                     direction="row"
                                     justifyContent="space-between"
-                                    alignItems="flex-start"
                                 >
                                     <Stack
+                                        alignItems="flex-start"
                                         direction="row"
                                         justifyContent="space-between"
-                                        alignItems="flex-start"
                                     >
                                         <Typography
                                             level="body-sm"
@@ -661,13 +661,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             >
                                                 <Chip
                                                     key={`emoji-chip-${emoji}-${index}`}
-                                                    variant={
-                                                        senders.some(
-                                                            (u) => u.userId === myself.userId
-                                                        )
-                                                            ? "solid"
-                                                            : "outlined"
-                                                    }
                                                     color="neutral"
                                                     size="sm"
                                                     sx={{
@@ -676,6 +669,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                                         px: 0.5,
                                                         py: 0.5,
                                                     }}
+                                                    variant={
+                                                        senders.some(
+                                                            (u) => u.userId === myself.userId
+                                                        )
+                                                            ? "solid"
+                                                            : "outlined"
+                                                    }
                                                 >
                                                     {emoji}
                                                     {count}
@@ -691,8 +691,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                                             >
                                                 <Chip
                                                     size="sm"
-                                                    variant="plain"
                                                     sx={{ fontSize: "0.8rem" }}
+                                                    variant="plain"
                                                 >
                                                     +{hidden.length} more
                                                 </Chip>

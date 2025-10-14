@@ -12,13 +12,18 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
     const { taskContents, setTaskContents, setTaskUpdated } = props;
 
     return (
-        <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+        <Stack alignItems="center" direction="row" justifyContent="center" spacing={1.5}>
             <Input
-                type="date"
                 color="neutral"
-                variant="outlined"
                 size="sm"
+                type="date"
                 value={taskContents.dueDate ? taskContents.dueDate : ""}
+                variant="outlined"
+                slotProps={{
+                    input: {
+                        min: getFormattedTodayDateStr(),
+                    },
+                }}
                 onChange={(e) => {
                     setTaskContents({
                         ...taskContents,
@@ -28,17 +33,12 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
                         setTaskUpdated(true);
                     }
                 }}
-                slotProps={{
-                    input: {
-                        min: getFormattedTodayDateStr(),
-                    },
-                }}
             />
             <Button
-                component="a"
-                variant="outlined"
                 color="neutral"
+                component="a"
                 size="sm"
+                variant="outlined"
                 onClick={() => {
                     setTaskContents({
                         ...taskContents,

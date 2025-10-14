@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Autocomplete, Button, Chip, Stack, Typography } from "@mui/joy";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
@@ -36,10 +36,13 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
             {openRoleEditor === true && (
                 <Stack direction={"row"} spacing={0.3}>
                     <Autocomplete
+                        getOptionLabel={(option) => option.role}
+                        groupBy={(option) => option.category}
+                        isOptionEqualToValue={(option, value) => option.role === value.role}
                         open={open}
-                        onOpen={() => setOpen(true)}
-                        onClose={() => setOpen(false)} // this fires on outside click
+                        options={templateRoleOptions}
                         placeholder="Choose a role"
+                        sx={{ width: 300 }}
                         slotProps={{
                             input: {
                                 autoComplete: "new-password", // disable autocomplete and autofill
@@ -50,12 +53,9 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                                 },
                             },
                         }}
-                        sx={{ width: 300 }}
-                        options={templateRoleOptions}
                         autoHighlight
-                        getOptionLabel={(option) => option.role}
-                        isOptionEqualToValue={(option, value) => option.role === value.role}
-                        groupBy={(option) => option.category}
+                        onClose={() => setOpen(false)} // this fires on outside click
+                        onOpen={() => setOpen(true)}
                         onChange={(event, value) => {
                             if (value) {
                                 setOpenRoleEditor(false);
@@ -75,9 +75,9 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         }}
                     />
                     <Chip
-                        variant="outlined"
-                        size="sm"
                         color="danger"
+                        size="sm"
+                        variant="outlined"
                         sx={{
                             borderRadius: "sm",
                             fontWeight: "bold",
@@ -93,16 +93,16 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
 
             {openRoleEditor === false && (
                 <Button
-                    variant="plain"
                     color="neutral"
+                    variant="plain"
+                    sx={{
+                        width: "400px",
+                        justifyContent: "flex-start", // left align the content
+                    }}
                     onClick={() => {
                         if (myself.userId === user?.userId) {
                             setOpenRoleEditor(true);
                         }
-                    }}
-                    sx={{
-                        width: "400px",
-                        justifyContent: "flex-start", // left align the content
                     }}
                 >
                     <Typography fontWeight="bold">{roleValue}</Typography>

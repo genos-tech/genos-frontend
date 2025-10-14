@@ -20,45 +20,19 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
     return (
         <Autocomplete
             key={`ac-project-effort-level-${taskContents.id}`}
-            placeholder="Effort Level"
-            multiple
-            options={effortLevels}
             getOptionLabel={(option) => option.level || ""}
-            value={
-                taskContents &&
-                taskContents.effortLevel.level !== null &&
-                taskContents.effortLevel.level !== ""
-                    ? [taskContents.effortLevel]
-                    : []
-            }
             isOptionEqualToValue={(option, value) => option.level === value.level}
-            renderTags={(tags, getTagProps) =>
-                tags.slice(-1).map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={`ac-project-effort-level-${key}`}
-                            variant="soft"
-                            sx={{
-                                backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
-                                    : "transparent",
-                                color: item.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                            size="sm"
-                        >
-                            {item.level}
-                        </Chip>
-                    );
-                })
-            }
+            openOnFocus={true}
+            options={effortLevels}
+            placeholder="Effort Level"
+            size="sm"
+            sx={{ width: "100%" }}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.level}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.level} // pass the key directly
+                            size="sm"
                             variant="soft"
                             sx={{
                                 backgroundColor: option.color
@@ -68,13 +42,42 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                                 fontWeight: "bold",
                                 borderRadius: "5px",
                             }}
-                            size="sm"
                         >
                             {option.level}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
             )}
+            renderTags={(tags, getTagProps) =>
+                tags.slice(-1).map((item, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    return (
+                        <Chip
+                            key={`ac-project-effort-level-${key}`}
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: item.color
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
+                                    : "transparent",
+                                color: item.textColor,
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                            }}
+                        >
+                            {item.level}
+                        </Chip>
+                    );
+                })
+            }
+            value={
+                taskContents &&
+                taskContents.effortLevel.level !== null &&
+                taskContents.effortLevel.level !== ""
+                    ? [taskContents.effortLevel]
+                    : []
+            }
+            multiple
             onChange={(event, value) => {
                 if (value !== null) {
                     if (value.length > 0) {
@@ -105,9 +108,6 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                     }
                 }
             }}
-            size="sm"
-            sx={{ width: "100%" }}
-            openOnFocus={true}
         />
     );
 };

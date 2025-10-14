@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Box, Chip, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -253,9 +253,6 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                 >
                     <Chip
                         key={`emoji-chip-${emoji}-${index}`}
-                        variant={
-                            senders.some((u) => u.userId === myself.userId) ? "solid" : "outlined"
-                        }
                         color="neutral"
                         size="sm"
                         sx={{
@@ -265,6 +262,9 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                             py: 0.5,
                             mx: 0.2,
                         }}
+                        variant={
+                            senders.some((u) => u.userId === myself.userId) ? "solid" : "outlined"
+                        }
                         onClick={() => handleAddReaction(emoji)}
                     >
                         {emoji}
@@ -275,7 +275,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
 
             {hidden.length > 0 && (
                 <Tooltip title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}>
-                    <Chip size="sm" variant="plain" sx={{ fontSize: "0.8rem" }}>
+                    <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         +{hidden.length} more
                     </Chip>
                 </Tooltip>

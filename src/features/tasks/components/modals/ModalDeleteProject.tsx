@@ -1,6 +1,6 @@
-import React, { useState } from "react";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import axios from "axios";
+import React, { useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -72,14 +72,14 @@ export const ModalDeleteProject: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openDeleteProject.flag}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenDeleteProject(disableOpenDeleteModalParams)}
             >
                 <ModalDialog>
                     <Typography level="h4">
                         Are you sure to delete{" "}
-                        <Typography level="h3" color="danger">
+                        <Typography color="danger" level="h3">
                             {openDeleteProject.projectName}
                         </Typography>{" "}
                         ?
@@ -89,14 +89,14 @@ export const ModalDeleteProject: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="neutral"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenDeleteProject(disableOpenDeleteModalParams)}
                         >
                             Cancel
                         </Button>
-                        <Button component="button" color="danger" onClick={handleDeleteProject}>
+                        <Button color="danger" component="button" onClick={handleDeleteProject}>
                             Delete
                         </Button>
                     </Stack>

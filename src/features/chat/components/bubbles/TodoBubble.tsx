@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { Box, Button, Card, Chip, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
@@ -100,14 +100,10 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                         flexDirection: "column",
                     }}
                 >
-                    <Stack direction="row" alignItems="center">
+                    <Stack alignItems="center" direction="row">
                         <Chip
                             key={`todo-bubble-chip-${todo.todoId}`}
-                            variant={
-                                currentIndex === 0 && isExistingTodaysTodo === true
-                                    ? "solid"
-                                    : "soft"
-                            }
+                            size="md"
                             color={
                                 currentIndex === 0 && isExistingTodaysTodo === true
                                     ? "primary"
@@ -118,27 +114,31 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                                 borderRadius: "5px",
                                 fontWeight: "bold",
                             }}
-                            size="md"
+                            variant={
+                                currentIndex === 0 && isExistingTodaysTodo === true
+                                    ? "solid"
+                                    : "soft"
+                            }
                         >
                             {extractYYYYMMDD(todo.tsCreatedAt)}
                         </Chip>
 
                         <Chip
-                            variant="soft"
                             color={todo.isCompleted ? "success" : "neutral"}
                             size="md"
-                            sx={{ marginLeft: "-37px" }}
                             startDecorator={todo.isCompleted ? <DoneAllIcon /> : null}
+                            sx={{ marginLeft: "-37px" }}
+                            variant="soft"
                         >
                             {todo.isCompleted ? "Completed" : "Incomplete"}
                         </Chip>
 
                         <Button
-                            variant="outlined"
                             color="primary"
+                            disabled={bodyEdited === false}
                             size="sm"
                             sx={{ marginLeft: "auto", fontSize: "12px" }}
-                            disabled={bodyEdited === false}
+                            variant="outlined"
                             onClick={() => sendUpdatedTodo()}
                         >
                             {bodyEdited ? "Save" : "Saved"}
@@ -146,18 +146,18 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                     </Stack>
 
                     <BnTodoPreview
-                        customClassName="todo-preview"
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
                         key={`${todo.todoId}`}
                         body={body}
+                        customClassName="todo-preview"
+                        myself={myself}
                         setBody={setBody}
                         setBodyEdited={setBodyEdited}
                         setCurrentChat={setCurrentChat}
+                        setMyself={setMyself}
                         setOpeningService={setOpeningService}
+                        socket={socket}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
                     />
                 </Card>
             </Box>

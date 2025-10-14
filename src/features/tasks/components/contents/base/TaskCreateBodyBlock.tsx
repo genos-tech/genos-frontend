@@ -37,16 +37,16 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
             <Box sx={{ mt: 2 }}>
                 <div className="md-content">
                     <BnTaskPreview
-                        teamMemberProfiles={teamMemberProfiles}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        teamMembers={teamMembers}
-                        taskId={taskId}
                         body={body || []}
+                        myself={myself}
                         setBody={setBody}
                         setCurrentChat={setCurrentChat}
+                        setMyself={setMyself}
                         setOpeningService={setOpeningService}
+                        socket={socket}
+                        taskId={taskId}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
                     />
                 </div>
             </Box>

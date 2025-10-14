@@ -1,6 +1,6 @@
-import { useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -31,10 +31,10 @@ export const BubbleDeleteButton = (props: BubbleDeleteButtonTypes) => {
 
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip title="Delete" size="sm">
+            <Tooltip size="sm" title="Delete">
                 <IconButton
-                    size="sm"
                     color={"danger"}
+                    size="sm"
                     onClick={() => {
                         setOpenDeleteMessage(true);
                     }}
@@ -44,16 +44,16 @@ export const BubbleDeleteButton = (props: BubbleDeleteButtonTypes) => {
             </Tooltip>
 
             <ModalDeleteMessage
-                socket={socket}
-                openDeleteMessage={openDeleteMessage}
-                setOpenDeleteMessage={setOpenDeleteMessage}
-                message={message}
                 accessToken={accessToken}
-                isThread={isThread}
                 currentChat={currentChat}
-                setCurrentChat={setCurrentChat}
                 currentThreadChat={currentThreadChat}
+                isThread={isThread}
+                message={message}
+                openDeleteMessage={openDeleteMessage}
+                setCurrentChat={setCurrentChat}
                 setCurrentThreadChat={setCurrentThreadChat}
+                setOpenDeleteMessage={setOpenDeleteMessage}
+                socket={socket}
             />
         </Box>
     );

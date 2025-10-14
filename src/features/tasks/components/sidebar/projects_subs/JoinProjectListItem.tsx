@@ -35,7 +35,6 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     <LoginIcon />
                     <ListItemContent>
                         <Typography
-                            noWrap
                             sx={{
                                 fontSize: "15px",
                                 overflow: "hidden",
@@ -43,6 +42,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                 whiteSpace: "nowrap",
                                 width: "100%", // take full width of button
                             }}
+                            noWrap
                         >
                             Join Project
                         </Typography>
@@ -89,7 +89,15 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                         }} // ensure children don't overflow
                                     >
                                         <Typography
-                                            noWrap
+                                            startDecorator={
+                                                isPrivate ? (
+                                                    <LockOutlineIcon
+                                                        sx={{
+                                                            fontSize: "16px",
+                                                        }}
+                                                    />
+                                                ) : undefined
+                                            }
                                             sx={{
                                                 color:
                                                     projectId === PM.currentProject?.projectId
@@ -101,15 +109,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                                 width: "100%", // take full width of button
                                                 ml: "35px",
                                             }}
-                                            startDecorator={
-                                                isPrivate ? (
-                                                    <LockOutlineIcon
-                                                        sx={{
-                                                            fontSize: "16px",
-                                                        }}
-                                                    />
-                                                ) : undefined
-                                            }
+                                            noWrap
                                         >
                                             {projectName}
                                         </Typography>

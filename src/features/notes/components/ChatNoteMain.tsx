@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -29,6 +28,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatNoteEditor } from "../../../components/blockNote/bnChatNoteEditor";
@@ -216,9 +216,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                     }}
                 >
                     <IconButton
+                        color="neutral"
                         component="button"
                         variant="soft"
-                        color="neutral"
                         sx={{
                             fontSize: "15px",
                             padding: "10px",
@@ -238,8 +238,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                     <Stack direction={"column"} sx={{ width: "100%" }}>
                                         {/* Note Header */}
                                         <Stack
-                                            direction="row"
                                             alignItems="center"
+                                            direction="row"
                                             justifyContent="space-between"
                                             sx={{
                                                 width: "100%",
@@ -260,21 +260,21 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                         myself={myself}
                                                         noteId={NM.currentChatNote.noteId}
                                                         openSearchBox={openSearchBox}
-                                                        setOpenSearchBox={setOpenSearchBox}
                                                         setCurrentChatNote={NM.setCurrentChatNote}
+                                                        setOpenSearchBox={setOpenSearchBox}
                                                     />
                                                 </Box>
                                             )}
                                             {isInChatPage === false && (
                                                 <>
                                                     <Breadcrumbs
-                                                        separator="›"
                                                         aria-label="breadcrumbs"
+                                                        separator="›"
                                                     >
                                                         <IconButton
+                                                            color="warning"
                                                             component="button"
                                                             variant="soft"
-                                                            color="warning"
                                                             sx={{
                                                                 fontSize: "14px",
                                                             }}
@@ -287,15 +287,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                         {NM.currentChatNoteChain &&
                                                             NM.currentChatNoteChain.map((node) => (
                                                                 <Typography
-                                                                    level="title-sm"
                                                                     component="button"
-                                                                    onClick={() => {
-                                                                        NM.loadNote(
-                                                                            3,
-                                                                            node.noteId,
-                                                                            -1
-                                                                        );
-                                                                    }}
+                                                                    level="title-sm"
                                                                     sx={{
                                                                         background: "none",
                                                                         border: "none",
@@ -304,6 +297,13 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                         color: "#646CFF",
                                                                         textAlign: "left",
                                                                         fontWeight: "bold",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        NM.loadNote(
+                                                                            3,
+                                                                            node.noteId,
+                                                                            -1
+                                                                        );
                                                                     }}
                                                                 >
                                                                     {node.title.length > 14
@@ -319,17 +319,17 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 {chat && chat.chatType === 1 && (
                                                     <Box sx={{ mt: "2px", mr: "5px" }}>
                                                         <AvatarWithStatus
+                                                            chat={chat}
+                                                            isYou={false}
                                                             myself={myself}
                                                             setMyself={setMyself}
-                                                            isYou={false}
+                                                            setOpeningService={setOpeningService}
+                                                            socket={socket}
                                                             avatarUser={
                                                                 teamMemberProfiles[
                                                                     chat.dmPartnerUser.userId
                                                                 ]
                                                             }
-                                                            socket={socket}
-                                                            chat={chat}
-                                                            setOpeningService={setOpeningService}
                                                             setCurrentMainChat={
                                                                 CM.setCurrentMainChat
                                                             }
@@ -339,42 +339,42 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 {chat && chat.chatType === 2 && (
                                                     <Box sx={{ mt: "2px", mr: "5px" }}>
                                                         <GMAvatar
-                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            funcSetAllChats={CM.funcSetAllChats}
+                                                            gmChat={chat}
+                                                            isYou={false}
                                                             myself={myself}
                                                             setMyself={setMyself}
-                                                            isYou={false}
-                                                            socket={socket}
-                                                            gmChat={chat}
                                                             setOpeningService={setOpeningService}
+                                                            socket={socket}
+                                                            teamMemberProfiles={teamMemberProfiles}
                                                             setCurrentMainChat={
                                                                 CM.setCurrentMainChat
                                                             }
-                                                            funcSetAllChats={CM.funcSetAllChats}
                                                         />
                                                     </Box>
                                                 )}
                                                 {chat && chat.chatType === 3 && (
                                                     <Box sx={{ mt: "2px", mr: "5px" }}>
                                                         <ProjectAvatar
-                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            funcSetAllChats={CM.funcSetAllChats}
                                                             myself={myself}
-                                                            setMyself={setMyself}
-                                                            socket={socket}
                                                             pmChat={chat}
+                                                            setMyself={setMyself}
                                                             setOpeningService={setOpeningService}
+                                                            socket={socket}
+                                                            teamMemberProfiles={teamMemberProfiles}
                                                             setCurrentMainChat={
                                                                 CM.setCurrentMainChat
                                                             }
-                                                            funcSetAllChats={CM.funcSetAllChats}
                                                         />
                                                     </Box>
                                                 )}
 
                                                 {isInChatPage && NM.currentChatNote && (
                                                     <IconButton
+                                                        color="neutral"
                                                         component="button"
                                                         variant="plain"
-                                                        color="neutral"
                                                         sx={{
                                                             fontSize: "14px",
                                                             paddingRight: "10px",
@@ -399,10 +399,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 {isInChatPage && (
                                                     <Tooltip title="Open in Notes">
                                                         <IconButton
-                                                            size="sm"
                                                             color="neutral"
-                                                            variant="plain"
+                                                            size="sm"
                                                             sx={{ mb: "5px" }}
+                                                            variant="plain"
                                                             onClick={() => {
                                                                 setOpeningService(3);
                                                             }}
@@ -415,10 +415,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 {isInChatPage === false && (
                                                     <Tooltip title="Open Related Chat">
                                                         <IconButton
-                                                            size="sm"
                                                             color="neutral"
-                                                            variant="plain"
+                                                            size="sm"
                                                             sx={{ mb: "5px" }}
+                                                            variant="plain"
                                                             onClick={() => {
                                                                 CM.moveToSpecificChat(
                                                                     NM.currentChatNote?.chatType ||
@@ -444,10 +444,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     <Tooltip title="More Options">
                                                         <MenuButton
                                                             slots={{ root: IconButton }}
+                                                            sx={{ mb: "5px" }}
                                                             slotProps={{
                                                                 root: { color: "neutral" },
                                                             }}
-                                                            sx={{ mb: "5px" }}
                                                         >
                                                             <MoreVert />
                                                         </MenuButton>
@@ -476,12 +476,12 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             Child Note
                                                         </MenuItem>
                                                         <MenuItem
-                                                            onClick={() => {
-                                                                setOpenDeleteNote(true);
-                                                            }}
                                                             sx={{
                                                                 color: "red",
                                                                 fontWeight: "bold",
+                                                            }}
+                                                            onClick={() => {
+                                                                setOpenDeleteNote(true);
                                                             }}
                                                         >
                                                             <DeleteIcon sx={{ color: "red" }} />
@@ -493,10 +493,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 {isInChatPage === true && (
                                                     <Tooltip title="Close Notes">
                                                         <IconButton
-                                                            size="sm"
                                                             color="neutral"
-                                                            variant="plain"
+                                                            size="sm"
                                                             sx={{ mb: "5px" }}
+                                                            variant="plain"
                                                             onClick={() => {
                                                                 CM.setIsChatNoteVisibleInChat(
                                                                     false
@@ -515,33 +515,34 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
                                                 {NM.currentChatNote && (
                                                     <ModalDeleteChatNote
+                                                        chatNoteMeta={NM.chatNoteMeta}
+                                                        currentChatNote={NM.currentChatNote}
+                                                        currentTabIndex={NM.selectedTabIndex}
+                                                        handleCloseTab={handleCloseTab}
                                                         myself={myself}
                                                         openDeleteNote={openDeleteNote}
-                                                        setOpenDeleteNote={setOpenDeleteNote}
-                                                        chatNoteMeta={NM.chatNoteMeta}
                                                         setChatNoteMeta={NM.setChatNoteMeta}
-                                                        currentChatNote={NM.currentChatNote}
-                                                        handleCloseTab={handleCloseTab}
-                                                        currentTabIndex={NM.selectedTabIndex}
+                                                        setOpenDeleteNote={setOpenDeleteNote}
                                                     />
                                                 )}
                                             </Stack>
 
                                             {NM.currentChatNote && (
                                                 <ModalDeleteChatNote
+                                                    chatNoteMeta={NM.chatNoteMeta}
+                                                    currentChatNote={NM.currentChatNote}
+                                                    currentTabIndex={NM.selectedTabIndex}
+                                                    handleCloseTab={handleCloseTab}
                                                     myself={myself}
                                                     openDeleteNote={openDeleteNote}
-                                                    setOpenDeleteNote={setOpenDeleteNote}
-                                                    chatNoteMeta={NM.chatNoteMeta}
                                                     setChatNoteMeta={NM.setChatNoteMeta}
-                                                    currentChatNote={NM.currentChatNote}
-                                                    handleCloseTab={handleCloseTab}
-                                                    currentTabIndex={NM.selectedTabIndex}
+                                                    setOpenDeleteNote={setOpenDeleteNote}
                                                 />
                                             )}
                                         </Stack>
 
                                         <Tabs
+                                            sx={{ width: "100%" }}
                                             value={NM.selectedTabIndex}
                                             onChange={(_, val) => {
                                                 NM.loadNote(
@@ -550,7 +551,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     Number(val)
                                                 );
                                             }}
-                                            sx={{ width: "100%" }}
                                         >
                                             <TabList
                                                 sx={{
@@ -563,6 +563,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 {NM.tabItems.map((tab, index) => (
                                                     <Tab
                                                         key={`tab-${index}`}
+                                                        variant="soft"
                                                         sx={{
                                                             mx: "2px",
                                                             my: "4px",
@@ -570,7 +571,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             scrollSnapAlign: "start",
                                                             borderRadius: "5px",
                                                         }}
-                                                        variant="soft"
                                                     >
                                                         <Box
                                                             sx={{
@@ -586,10 +586,11 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
                                                             {NM.tabItems.length > 1 && (
                                                                 <IconButton
+                                                                    color="neutral"
                                                                     component="span"
                                                                     size="sm"
+                                                                    sx={{ ml: 1 }}
                                                                     variant="plain"
-                                                                    color="neutral"
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         handleCloseTab(
@@ -597,7 +598,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                             Number(tab.noteId)
                                                                         );
                                                                     }}
-                                                                    sx={{ ml: 1 }}
                                                                 >
                                                                     <CloseIcon />
                                                                 </IconButton>
@@ -618,7 +618,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     }}
                                                 >
                                                     <FormControl
-                                                        required
                                                         sx={{
                                                             mt: "10px",
                                                             ml: "10px",
@@ -626,18 +625,14 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             position: "absolute",
                                                             zIndex: 100,
                                                         }}
+                                                        required
                                                     >
                                                         <Input
-                                                            startDecorator={<NoteAltIcon />}
                                                             key={"currentChatNoteTitle"}
-                                                            variant="soft"
                                                             placeholder="Note Title"
+                                                            startDecorator={<NoteAltIcon />}
                                                             value={currentChatNoteTitle}
-                                                            onChange={(e) => {
-                                                                setCurrentChatNoteTitle(
-                                                                    e.target.value
-                                                                );
-                                                            }}
+                                                            variant="soft"
                                                             slotProps={{
                                                                 input: {
                                                                     ref: titleInputRef,
@@ -651,12 +646,17 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                                     },
                                                                 },
                                                             }}
-                                                            onBlur={() => {
-                                                                setNoteUpdated(true);
-                                                            }}
                                                             sx={{
                                                                 fontSize: "22px",
                                                                 fontWeight: "bold",
+                                                            }}
+                                                            onBlur={() => {
+                                                                setNoteUpdated(true);
+                                                            }}
+                                                            onChange={(e) => {
+                                                                setCurrentChatNoteTitle(
+                                                                    e.target.value
+                                                                );
                                                             }}
                                                         />
                                                     </FormControl>
@@ -670,9 +670,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             }}
                                                         >
                                                             <Button
-                                                                variant="outlined"
                                                                 color="neutral"
                                                                 size="sm"
+                                                                variant="outlined"
                                                                 startDecorator={
                                                                     <CheckIcon
                                                                         sx={{ fontSize: "15px" }}
@@ -686,27 +686,27 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     {NM.currentChatNote && (
                                                         <>
                                                             <BnChatNoteEditor
-                                                                teamMemberProfiles={
-                                                                    teamMemberProfiles
-                                                                }
+                                                                body={body}
                                                                 myself={myself}
+                                                                setBody={setBody}
                                                                 setMyself={setMyself}
+                                                                setNoteBodySaved={setNoteBodySaved}
                                                                 socket={socket}
                                                                 teamMembers={teamMembers}
                                                                 currentChatNote={
                                                                     NM.currentChatNote
                                                                 }
-                                                                body={body}
-                                                                setBody={setBody}
-                                                                setNoteBodyEdited={
-                                                                    setNoteBodyEdited
-                                                                }
-                                                                setNoteBodySaved={setNoteBodySaved}
                                                                 setCurrentChat={
                                                                     CM.setCurrentMainChat
                                                                 }
+                                                                setNoteBodyEdited={
+                                                                    setNoteBodyEdited
+                                                                }
                                                                 setOpeningService={
                                                                     setOpeningService
+                                                                }
+                                                                teamMemberProfiles={
+                                                                    teamMemberProfiles
                                                                 }
                                                             />
                                                         </>

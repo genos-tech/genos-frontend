@@ -46,7 +46,11 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
     return (
         <Autocomplete
             key={taskContents.id}
+            isOptionEqualToValue={(option, value) => option.userId === value.userId}
             options={teamMembers}
+            size="sm"
+            sx={{ width: "100%" }}
+            value={initialUser || myself}
             getOptionLabel={(option) =>
                 option.userEmail === myself.userEmail
                     ? `${option.userName} (You) - ${option.userEmail}`
@@ -63,12 +67,12 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                                 <AvatarWithStatus
                                     key={`ac-render-option-user-search-avatar-${option.userName}-${option.userId}`}
                                     avatarUser={teamMemberProfiles[option.userId]}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    setCurrentMainChat={setCurrentMainChat}
                                     isYou={option.userId === myself.userId}
+                                    myself={myself}
+                                    setCurrentMainChat={setCurrentMainChat}
+                                    setMyself={setMyself}
                                     setOpeningService={setOpeningService}
+                                    socket={socket}
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
                                     {option.userEmail === myself.userEmail
@@ -80,8 +84,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                     </AutocompleteOption>
                 );
             }}
-            value={initialUser || myself}
-            isOptionEqualToValue={(option, value) => option.userId === value.userId}
+            onOpen={() => setIsOpenTeamMembersList(!isOpenTeamMembersList)}
             onChange={(event, value) => {
                 if (value !== null) {
                     if (isAssignee) {
@@ -104,9 +107,6 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                     setUser(value);
                 }
             }}
-            onOpen={() => setIsOpenTeamMembersList(!isOpenTeamMembersList)}
-            size="sm"
-            sx={{ width: "100%" }}
         />
     );
 };

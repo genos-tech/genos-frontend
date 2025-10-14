@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -402,59 +402,59 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     }}
                 >
                     <TaskTitleBlock
+                        isPreviewMode={true}
+                        isTaskNoteVisible={isTaskNoteVisible}
+                        moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
-                        taskContents={tmpCurrentTaskContent}
-                        taskTitle={taskTitle}
-                        setTaskTitle={setTaskTitle}
+                        openingService={openingService}
+                        setCurrentProject={setCurrentProject}
+                        setCurrentTaskContent={setTmpCurrentTaskContent}
+                        setIsMainChatVisible={setIsMainChatVisible}
+                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
+                        setIsThreadVisible={setIsThreadVisible}
                         setOpenCreateProject={setOpenCreateProject}
                         setOpenCreateTag={TM.setOpenCreateTag}
-                        setTaskClosed={setTaskClosed}
-                        setTaskUpdated={setTaskUpdated}
-                        isPreviewMode={true}
-                        setIsMainChatVisible={setIsMainChatVisible}
-                        setIsThreadVisible={setIsThreadVisible}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        setCurrentTaskContent={setTmpCurrentTaskContent}
-                        setTaskStatusUpdated={setTaskStatusUpdated}
-                        isTaskNoteVisible={isTaskNoteVisible}
-                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
-                        moveToSpecificChat={moveToSpecificChat}
-                        openingService={openingService}
                         setOpeningService={setOpeningService}
-                        setCurrentProject={setCurrentProject}
+                        setTaskClosed={setTaskClosed}
+                        setTaskStatusUpdated={setTaskStatusUpdated}
+                        setTaskTitle={setTaskTitle}
+                        setTaskUpdated={setTaskUpdated}
+                        taskContents={tmpCurrentTaskContent}
+                        taskTitle={taskTitle}
                         TM={TM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskMainBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
-                        taskContents={tmpCurrentTaskContent}
-                        setTaskContents={setTmpCurrentTaskContent}
-                        teamMembers={teamMembers}
-                        teamProjects={teamProjects}
-                        projectTags={projectTags}
-                        myself={myself}
-                        setMyself={setMyself}
                         assignee={assignee}
-                        setAssignee={setAssignee}
-                        reporter={reporter}
-                        setReporter={setReporter}
-                        isOpenTeamMembersList={isOpenTeamMembersList}
-                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         isOpenProjectList={isOpenProjectList}
-                        setIsOpenProjectList={setIsOpenProjectList}
                         isOpenTagList={isOpenTagList}
-                        setIsOpenTagList={setIsOpenTagList}
-                        setOpenCreateTag={TM.setOpenCreateTag}
-                        setCurrentProject={setCurrentProject}
+                        isOpenTeamMembersList={isOpenTeamMembersList}
                         isPreviewMode={true}
-                        setTaskUpdated={setTaskUpdated}
-                        setOpeningService={setOpeningService}
+                        myself={myself}
+                        projectTags={projectTags}
+                        reporter={reporter}
+                        setAssignee={setAssignee}
                         setCurrentMainChat={setCurrentMainChat}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
+                        setCurrentProject={setCurrentProject}
+                        setIsOpenProjectList={setIsOpenProjectList}
+                        setIsOpenTagList={setIsOpenTagList}
+                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        setMyself={setMyself}
+                        setOpenCreateTag={TM.setOpenCreateTag}
+                        setOpeningService={setOpeningService}
+                        setReporter={setReporter}
+                        setTaskContents={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
+                        setTaskUpdated={setTaskUpdated}
+                        socket={socket}
+                        taskContents={tmpCurrentTaskContent}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
+                        teamProjects={teamProjects}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
@@ -462,90 +462,90 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     <TaskCustomBarBlock
                         currentTaskContent={tmpCurrentTaskContent}
                         setCurrentTaskContent={setTmpCurrentTaskContent}
+                        setIsCreatingTask={TM.setIsCreatingTask}
+                        setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskUpdated={setTaskUpdated}
-                        setIsCreatingTask={TM.setIsCreatingTask}
                         taskBodySaved={taskBodySaved}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
                     />
 
                     <TaskBodyBlock
                         key={`TaskBodyBlock-${tmpCurrentTaskContent.id}`}
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
-                        myself={myself}
-                        setMyself={setMyself}
-                        teamMembers={teamMembers}
-                        taskId={tmpCurrentTaskContent.id}
                         body={body}
+                        myself={myself}
                         setBody={setBody}
+                        setCurrentChat={setCurrentMainChat}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
                         setTaskBodyEdited={setTaskBodyEdited}
                         setTaskBodySaved={setTaskBodySaved}
-                        setCurrentChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
+                        socket={socket}
+                        taskId={tmpCurrentTaskContent.id}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
                     />
 
                     <Divider sx={{ mt: 2 }} />
 
                     <TaskSubTasksBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
-                        myself={myself}
-                        setMyself={setMyself}
                         currentPreviewTaskId={TM.currentPreviewTaskId}
                         currentTaskContent={tmpCurrentTaskContent}
-                        setCurrentProject={setCurrentProject}
-                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
-                        setOpeningService={setOpeningService}
+                        myself={myself}
                         setCurrentMainChat={setCurrentMainChat}
+                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
+                        setCurrentProject={setCurrentProject}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
+                        socket={socket}
+                        teamMemberProfiles={teamMemberProfiles}
                     />
 
                     <TaskTabBlock
-                        socket={socket}
-                        myself={myself}
-                        setMyself={setMyself}
-                        teamMemberProfiles={teamMemberProfiles}
-                        setCurrentChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
-                        uploadedFiles={uploadedFiles}
-                        setUploadedFiles={setUploadedFiles}
                         currentPreviewTaskId={TM.currentPreviewTaskId}
-                        taskContents={tmpCurrentTaskContent}
-                        setTaskContents={setTmpCurrentTaskContent}
-                        setTaskUpdated={setTaskUpdated}
-                        setIsAttachmentDeleted={setIsAttachmentDeleted}
-                        setDeletedAttachmentId={setDeletedAttachmentId}
-                        taskComments={taskComments}
+                        handleCreateNewTaskNote={handleCreateNewTaskNote}
                         isCommentUpdated={TM.isTaskCommentUpdated}
-                        setIsInEdit={setIsInEdit}
+                        myself={myself}
+                        setCurrentChat={setCurrentMainChat}
+                        setCurrentTaskNote={setCurrentTaskNote}
+                        setDeletedAttachmentId={setDeletedAttachmentId}
                         setEditTargetComment={setEditTargetComment}
+                        setIsAttachmentDeleted={setIsAttachmentDeleted}
+                        setIsInEdit={setIsInEdit}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
-                        handleCreateNewTaskNote={handleCreateNewTaskNote}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
+                        setTaskContents={setTmpCurrentTaskContent}
+                        setTaskUpdated={setTaskUpdated}
+                        setUploadedFiles={setUploadedFiles}
+                        socket={socket}
+                        taskComments={taskComments}
+                        taskContents={tmpCurrentTaskContent}
                         taskNotes={taskNotes}
-                        setCurrentTaskNote={setCurrentTaskNote}
+                        teamMemberProfiles={teamMemberProfiles}
+                        uploadedFiles={uploadedFiles}
                     />
 
                     <Divider sx={{ m: 2 }} />
 
                     <TaskCommentEditorBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        teamMembers={teamMembers}
-                        task={tmpCurrentTaskContent}
-                        taskComments={taskComments}
-                        setTaskComments={setTaskComments}
-                        isCommentUpdated={TM.isTaskCommentUpdated}
-                        setIsCommentUpdated={TM.setIsTaskCommentUpdated}
-                        setCurrentChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
-                        taskCommentLines={taskCommentLines}
-                        setTaskCommentLines={setTaskCommentLines}
-                        isInEdit={isInEdit}
-                        setIsInEdit={setIsInEdit}
                         editTargetComment={editTargetComment}
+                        isCommentUpdated={TM.isTaskCommentUpdated}
+                        isInEdit={isInEdit}
+                        myself={myself}
+                        setCurrentChat={setCurrentMainChat}
+                        setIsCommentUpdated={TM.setIsTaskCommentUpdated}
+                        setIsInEdit={setIsInEdit}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
+                        setTaskCommentLines={setTaskCommentLines}
+                        setTaskComments={setTaskComments}
+                        socket={socket}
+                        task={tmpCurrentTaskContent}
+                        taskCommentLines={taskCommentLines}
+                        taskComments={taskComments}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
                     />
                 </Sheet>
             )}

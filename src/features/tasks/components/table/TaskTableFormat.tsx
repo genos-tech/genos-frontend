@@ -95,7 +95,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             width: 250,
             renderCell: (params) => {
                 return (
-                    <Box textAlign="left" sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                    <Box sx={{ display: "flex", gap: 2, alignItems: "center" }} textAlign="left">
                         <Avatar
                             size="sm"
                             src={
@@ -131,6 +131,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
                     value={params.value}
+                    fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
                         params.api.setEditCellValue(
@@ -148,7 +149,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             field: params.field,
                         });
                     }}
-                    fullWidth
                 >
                     {teamMembers.map((option) => (
                         <MenuItem key={option.userId} value={option.userEmail}>
@@ -182,6 +182,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                     <Chip
                                         key={index}
                                         label={tag.tagName}
+                                        size="small"
                                         variant="outlined"
                                         sx={{
                                             color: mode === "dark" ? "white" : "black",
@@ -194,7 +195,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                             ),
                                             ml: 0.5,
                                         }}
-                                        size="small"
                                     />
                                 );
                             }
@@ -218,6 +218,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                 return option ? (
                     <Chip
                         label={option.label}
+                        size="small"
                         variant="outlined"
                         sx={{
                             backgroundColor: alpha(
@@ -228,13 +229,13 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             fontWeight: "bold",
                             borderRadius: "5px",
                         }}
-                        size="small"
                     />
                 ) : null;
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
                     value={params.value}
+                    fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
                         params.api.setEditCellValue(
@@ -252,12 +253,12 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             field: params.field,
                         });
                     }}
-                    fullWidth
                 >
                     {hmlOptions.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                             <Chip
                                 label={option.label}
+                                size="small"
                                 variant="outlined"
                                 sx={{
                                     backgroundColor: alpha(option.color || "#ff2323", 0.75),
@@ -265,7 +266,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                     fontWeight: "bold",
                                     borderRadius: "5px",
                                 }}
-                                size="small"
                             />
                         </MenuItem>
                     ))}
@@ -287,6 +287,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                 return option ? (
                     <Chip
                         label={option.label}
+                        size="small"
                         variant="outlined"
                         sx={{
                             backgroundColor: alpha(
@@ -297,13 +298,13 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             fontWeight: "bold",
                             borderRadius: "5px",
                         }}
-                        size="small"
                     />
                 ) : null;
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
                     value={params.value}
+                    fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
                         params.api.setEditCellValue(
@@ -321,12 +322,12 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             field: params.field,
                         });
                     }}
-                    fullWidth
                 >
                     {hmlOptions.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                             <Chip
                                 label={option.label}
+                                size="small"
                                 variant="outlined"
                                 sx={{
                                     backgroundColor: alpha(option.color || "#ff2323", 0.75),
@@ -334,7 +335,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                     fontWeight: "bold",
                                     borderRadius: "5px",
                                 }}
-                                size="small"
                             />
                         </MenuItem>
                     ))}
@@ -357,6 +357,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                     <Chip
                         icon={option.icon}
                         label={option.label}
+                        size="small"
                         variant="outlined"
                         sx={{
                             backgroundColor: alpha(
@@ -367,13 +368,13 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             fontWeight: "bold",
                             borderRadius: "5px",
                         }}
-                        size="small"
                     />
                 ) : null;
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
                     value={params.value}
+                    fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
                         params.api.setEditCellValue(
@@ -391,12 +392,12 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                             field: params.field,
                         });
                     }}
-                    fullWidth
                 >
                     {statusOptions.map((option) => (
                         <MenuItem key={option.value} value={option.value}>
                             <Chip
                                 label={option.label}
+                                size="small"
                                 variant="outlined"
                                 sx={{
                                     backgroundColor: alpha(option.color || "#ff2323", 0.75),
@@ -404,7 +405,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                                     fontWeight: "bold",
                                     borderRadius: "5px",
                                 }}
-                                size="small"
                             />
                         </MenuItem>
                     ))}
@@ -434,8 +434,8 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                 return params.value === -1 ? (
                     <Chip
                         label={"Expired"}
-                        variant="outlined"
                         size="small"
+                        variant="outlined"
                         sx={{
                             backgroundColor: alpha("#ff2323", mode === "dark" ? 0.5 : 0.75),
                             color: "white",

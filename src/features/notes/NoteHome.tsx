@@ -3,11 +3,6 @@ import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
-import { ChatNoteMain } from "./components/ChatNoteMain";
-import { MyNoteMain } from "./components/MyNoteMain";
-import { NoteSidebar } from "./components/NoteSidebar";
-import { TaskNoteMain } from "./components/TaskNoteMain";
-
 import { Sidebar } from "../../components/layout/sidebar";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -16,6 +11,10 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
+import { ChatNoteMain } from "./components/ChatNoteMain";
+import { MyNoteMain } from "./components/MyNoteMain";
+import { NoteSidebar } from "./components/NoteSidebar";
+import { TaskNoteMain } from "./components/TaskNoteMain";
 
 type NoteHomeProps = {
     TEM: TeamManagementState;
@@ -52,34 +51,34 @@ export const NoteHome = (props: NoteHomeProps) => {
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
                     currentTeam={TEM.currentTeam}
-                    setCurrentTeam={TEM.setCurrentTeam}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
-                    socket={socket}
                     myself={myself}
-                    setMyself={setMyself}
                     openingService={openingService}
-                    setOpeningService={setOpeningService}
                     setCurrentMainChat={CM.setCurrentMainChat}
-                    unReadInboxItemCount={unReadInboxItemCount}
+                    setCurrentTeam={TEM.setCurrentTeam}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    teamMemberProfiles={TEM.teamMemberProfiles}
                     unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
+                    unReadInboxItemCount={unReadInboxItemCount}
                 />
                 <PanelGroup direction="horizontal">
-                    <Panel id={"1"} order={1} minSize={10} maxSize={25}>
+                    <Panel id={"1"} maxSize={25} minSize={10} order={1}>
                         <NoteSidebar NM={NM} />
                     </Panel>
 
                     <PanelResizeHandle
+                        className="resize-handle"
                         style={{
                             width: "1px",
                             backgroundColor: mode === "dark" ? "grey" : "lightgrey",
                             transition: "all 0.3s ease-in-out",
                             cursor: "col-resize",
                         }}
-                        className="resize-handle"
                     />
 
                     {NM.currentNoteType === 0 && (
-                        <Panel id={"2"} order={2} minSize={35} maxSize={85}>
+                        <Panel id={"2"} maxSize={85} minSize={35} order={2}>
                             <Box sx={{ paddingX: 1, height: "100dvh" }}>
                                 <Box
                                     sx={{
@@ -91,9 +90,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                     }}
                                 >
                                     <IconButton
+                                        color="neutral"
                                         component="button"
                                         variant="soft"
-                                        color="neutral"
                                         sx={{
                                             fontSize: "15px",
                                             padding: "10px",
@@ -107,19 +106,19 @@ export const NoteHome = (props: NoteHomeProps) => {
                     )}
 
                     {NM.currentNoteType !== 0 && (
-                        <Panel id={"3"} order={3} minSize={35} maxSize={85}>
+                        <Panel id={"3"} maxSize={85} minSize={35} order={3}>
                             <Box sx={{ paddingX: 1, height: "100dvh" }}>
                                 {/* My Note selected */}
                                 {NM.currentNoteType === 1 && NM.currentMyNoteChain && (
                                     <MyNoteMain
-                                        teamMemberProfiles={TEM.teamMemberProfiles}
-                                        socket={socket}
-                                        teamMembers={TEM.teamMembers}
                                         myself={myself}
+                                        NM={NM}
+                                        setCurrentChat={CM.setCurrentMainChat}
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
-                                        setCurrentChat={CM.setCurrentMainChat}
-                                        NM={NM}
+                                        socket={socket}
+                                        teamMemberProfiles={TEM.teamMemberProfiles}
+                                        teamMembers={TEM.teamMembers}
                                     />
                                 )}
 
@@ -127,48 +126,48 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 {NM.currentNoteType === 2 && NM.currentTaskNoteChain && (
                                     <>
                                         <TaskNoteMain
-                                            teamMemberProfiles={TEM.teamMemberProfiles}
-                                            socket={socket}
-                                            teamMembers={TEM.teamMembers}
+                                            allChats={CM.allChats}
+                                            funcSetAllChats={CM.funcSetAllChats}
+                                            isInTaskPage={false}
                                             myself={myself}
+                                            NM={NM}
+                                            setCurrentChat={CM.setCurrentMainChat}
+                                            setCurrentMainChat={CM.setCurrentMainChat}
                                             setMyself={setMyself}
                                             setOpeningService={setOpeningService}
-                                            setCurrentChat={CM.setCurrentMainChat}
-                                            isInTaskPage={false}
-                                            allChats={CM.allChats}
-                                            setCurrentMainChat={CM.setCurrentMainChat}
-                                            funcSetAllChats={CM.funcSetAllChats}
-                                            NM={NM}
+                                            socket={socket}
+                                            teamMemberProfiles={TEM.teamMemberProfiles}
+                                            teamMembers={TEM.teamMembers}
                                             TM={TM}
                                         />
 
                                         {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
                                             <TaskPreview
-                                                teamMembers={TEM.teamMembers}
-                                                setTeamMembers={TEM.setTeamMembers}
-                                                teamMemberProfiles={TEM.teamMemberProfiles}
-                                                socket={socket}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                setCurrentProject={PM.setCurrentProject}
-                                                setIsMainChatVisible={CM.setIsMainChatVisible}
-                                                setIsThreadVisible={CM.setIsThreadVisible}
+                                                isTaskNoteVisible={NM.isTaskNoteVisible}
                                                 isThreadVisible={CM.isThreadVisible}
-                                                setOpenCreateProject={PM.setOpenCreateProject}
+                                                moveToSpecificChat={CM.moveToSpecificChat}
+                                                myself={myself}
+                                                openingService={openingService}
                                                 setCurrentMainChat={CM.setCurrentMainChat}
-                                                setOpeningService={setOpeningService}
+                                                setCurrentProject={PM.setCurrentProject}
+                                                setCurrentTaskNote={NM.setCurrentTaskNote}
+                                                setIsMainChatVisible={CM.setIsMainChatVisible}
                                                 setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
+                                                setIsThreadVisible={CM.setIsThreadVisible}
+                                                setMyself={setMyself}
+                                                setOpenCreateProject={PM.setOpenCreateProject}
+                                                setOpeningService={setOpeningService}
+                                                setTeamMembers={TEM.setTeamMembers}
+                                                setTeamProjects={PM.setTeamProjects}
+                                                socket={socket}
+                                                taskNoteMeta={NM.taskNoteMeta}
+                                                teamMemberProfiles={TEM.teamMemberProfiles}
+                                                teamMembers={TEM.teamMembers}
+                                                teamProjects={PM.teamProjects}
+                                                TM={TM}
                                                 handleCreateNewTaskNote={
                                                     NM.handleCreateNewTaskNote
                                                 }
-                                                setCurrentTaskNote={NM.setCurrentTaskNote}
-                                                isTaskNoteVisible={NM.isTaskNoteVisible}
-                                                teamProjects={PM.teamProjects}
-                                                setTeamProjects={PM.setTeamProjects}
-                                                taskNoteMeta={NM.taskNoteMeta}
-                                                moveToSpecificChat={CM.moveToSpecificChat}
-                                                openingService={openingService}
-                                                TM={TM}
                                             />
                                         )}
                                     </>
@@ -177,17 +176,17 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 {/* Chat Note selected */}
                                 {NM.currentNoteType === 3 && NM.currentChatNoteChain && (
                                     <ChatNoteMain
-                                        teamMemberProfiles={TEM.teamMemberProfiles}
-                                        socket={socket}
-                                        teamMembers={TEM.teamMembers}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
+                                        CM={CM}
                                         isInChatPage={false}
+                                        myself={myself}
+                                        NM={NM}
                                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                                         setCurrentProject={PM.setCurrentProject}
-                                        NM={NM}
-                                        CM={CM}
+                                        setMyself={setMyself}
+                                        setOpeningService={setOpeningService}
+                                        socket={socket}
+                                        teamMemberProfiles={TEM.teamMemberProfiles}
+                                        teamMembers={TEM.teamMembers}
                                     />
                                 )}
 
@@ -203,9 +202,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         }}
                                     >
                                         <IconButton
+                                            color="neutral"
                                             component="button"
                                             variant="soft"
-                                            color="neutral"
                                             sx={{
                                                 fontSize: "15px",
                                                 padding: "10px",
@@ -224,16 +223,16 @@ export const NoteHome = (props: NoteHomeProps) => {
                         TM.currentPreviewTask && (
                             <>
                                 <PanelResizeHandle
+                                    className="resize-handle"
                                     style={{
                                         width: "1px",
                                         backgroundColor: mode === "dark" ? "grey" : "lightgrey",
                                         transition: "all 0.3s ease-in-out",
                                         cursor: "col-resize",
                                     }}
-                                    className="resize-handle"
                                 />
 
-                                <Panel id={"4"} order={4} minSize={35} maxSize={85}>
+                                <Panel id={"4"} maxSize={85} minSize={35} order={4}>
                                     <Box
                                         sx={{
                                             px: { xs: 1, md: 2 },
@@ -255,29 +254,29 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         }}
                                     >
                                         <TaskPreview
-                                            teamMembers={TEM.teamMembers}
-                                            setTeamMembers={TEM.setTeamMembers}
-                                            teamMemberProfiles={TEM.teamMemberProfiles}
-                                            socket={socket}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            setCurrentProject={PM.setCurrentProject}
-                                            setIsMainChatVisible={CM.setIsMainChatVisible}
-                                            setIsThreadVisible={CM.setIsThreadVisible}
-                                            isThreadVisible={CM.isThreadVisible}
-                                            setOpenCreateProject={PM.setOpenCreateProject}
-                                            setCurrentMainChat={CM.setCurrentMainChat}
-                                            setOpeningService={setOpeningService}
-                                            setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                                             handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
-                                            setCurrentTaskNote={NM.setCurrentTaskNote}
                                             isTaskNoteVisible={NM.isTaskNoteVisible}
-                                            teamProjects={PM.teamProjects}
-                                            setTeamProjects={PM.setTeamProjects}
-                                            taskNoteMeta={NM.taskNoteMeta}
-                                            setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
+                                            isThreadVisible={CM.isThreadVisible}
                                             moveToSpecificChat={CM.moveToSpecificChat}
+                                            myself={myself}
                                             openingService={openingService}
+                                            setCurrentMainChat={CM.setCurrentMainChat}
+                                            setCurrentProject={PM.setCurrentProject}
+                                            setCurrentTaskNote={NM.setCurrentTaskNote}
+                                            setIsMainChatVisible={CM.setIsMainChatVisible}
+                                            setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
+                                            setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
+                                            setIsThreadVisible={CM.setIsThreadVisible}
+                                            setMyself={setMyself}
+                                            setOpenCreateProject={PM.setOpenCreateProject}
+                                            setOpeningService={setOpeningService}
+                                            setTeamMembers={TEM.setTeamMembers}
+                                            setTeamProjects={PM.setTeamProjects}
+                                            socket={socket}
+                                            taskNoteMeta={NM.taskNoteMeta}
+                                            teamMemberProfiles={TEM.teamMemberProfiles}
+                                            teamMembers={TEM.teamMembers}
+                                            teamProjects={PM.teamProjects}
                                             TM={TM}
                                         />
                                     </Box>

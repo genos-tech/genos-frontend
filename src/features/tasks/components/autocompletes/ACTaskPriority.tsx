@@ -20,45 +20,19 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
     return (
         <Autocomplete
             key={taskContents.id}
-            placeholder="Priority"
-            multiple
-            options={priorities}
             getOptionLabel={(option) => option.priority || ""}
-            value={
-                taskContents &&
-                taskContents.priority.priority !== null &&
-                taskContents.priority.priority !== ""
-                    ? [taskContents.priority]
-                    : []
-            }
             isOptionEqualToValue={(option, value) => option.priority === value.priority}
-            renderTags={(tags, getTagProps) =>
-                tags.slice(-1).map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={key} // pass the key directly
-                            variant="soft"
-                            sx={{
-                                backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
-                                    : "transparent",
-                                color: item.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                            size="sm"
-                        >
-                            {item.priority}
-                        </Chip>
-                    );
-                })
-            }
+            openOnFocus={true}
+            options={priorities}
+            placeholder="Priority"
+            size="sm"
+            sx={{ width: "100%" }}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.priority}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.priority} // pass the key directly
+                            size="sm"
                             variant="soft"
                             sx={{
                                 backgroundColor: option.color
@@ -68,13 +42,42 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                                 fontWeight: "bold",
                                 borderRadius: "5px",
                             }}
-                            size="sm"
                         >
                             {option.priority}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
             )}
+            renderTags={(tags, getTagProps) =>
+                tags.slice(-1).map((item, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    return (
+                        <Chip
+                            key={key} // pass the key directly
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: item.color
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
+                                    : "transparent",
+                                color: item.textColor,
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                            }}
+                        >
+                            {item.priority}
+                        </Chip>
+                    );
+                })
+            }
+            value={
+                taskContents &&
+                taskContents.priority.priority !== null &&
+                taskContents.priority.priority !== ""
+                    ? [taskContents.priority]
+                    : []
+            }
+            multiple
             onChange={(event, value) => {
                 if (value !== null) {
                     if (value.length > 0) {
@@ -105,9 +108,6 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                     }
                 }
             }}
-            size="sm"
-            sx={{ width: "100%" }}
-            openOnFocus={true}
         />
     );
 };

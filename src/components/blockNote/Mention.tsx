@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { createReactInlineContentSpec, DefaultReactSuggestionItem } from "@blocknote/react";
 import { Avatar, Box, Typography } from "@mui/joy";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
@@ -42,9 +42,6 @@ export const CreateMentionSpec = (
                 return (
                     <>
                         <Box
-                            onClick={() => {
-                                setOpenUserProfile(true);
-                            }}
                             sx={{
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -60,10 +57,13 @@ export const CreateMentionSpec = (
                                 userSelect: "none",
                                 fontSize: "0.875rem",
                             }}
+                            onClick={() => {
+                                setOpenUserProfile(true);
+                            }}
                         >
                             <Typography
-                                level="body-sm"
                                 fontWeight={"bold"}
+                                level="body-sm"
                                 sx={{
                                     color: myself.userId === userId ? "#ff7700ff" : "#ff0077fd",
                                 }}
@@ -73,15 +73,15 @@ export const CreateMentionSpec = (
                         </Box>
 
                         <UserProfile
-                            socket={socket}
-                            myself={myself}
-                            setMyself={setMyself}
                             isYou={myself.userId === userId ? true : false}
-                            user={teamMemberProfiles[userId]}
+                            myself={myself}
                             openUserProfile={openUserProfile}
-                            setOpenUserProfile={setOpenUserProfile}
                             setCurrentMainChat={setCurrentMainChat}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
+                            setOpenUserProfile={setOpenUserProfile}
+                            socket={socket}
+                            user={teamMemberProfiles[userId]}
                         />
                     </>
                 );
@@ -117,15 +117,15 @@ export const MentionMenuItems = (
             ]);
         },
         icon: (
-            <Box display="flex" alignItems="center" gap={1}>
+            <Box alignItems="center" display="flex" gap={1}>
                 {/* Avatar + Status Dot */}
-                <Box position="relative" width={32} height={32}>
+                <Box height={32} position="relative" width={32}>
                     <Avatar
-                        src={`${media_url}/${user.avatarImgPath}`}
                         alt={user.userName}
+                        src={`${media_url}/${user.avatarImgPath}`}
                         sx={{ width: 32, height: 32 }}
                     />
-                    <Box position="absolute" bottom={0} right={0} width={10} height={10}>
+                    <Box bottom={0} height={10} position="absolute" right={0} width={10}>
                         <PulseDot
                             color={
                                 teamMemberProfiles[user.userId]?.isOnline === true &&

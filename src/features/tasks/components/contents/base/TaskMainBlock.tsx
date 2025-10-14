@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
@@ -118,73 +118,73 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
-                            myself={myself}
-                            setMyself={setMyself}
-                            isYou={myself.userId === assignee.userId ? true : false}
                             avatarUser={teamMemberProfiles[assignee.userId]}
-                            socket={socket}
-                            setOpeningService={setOpeningService}
+                            isYou={myself.userId === assignee.userId ? true : false}
+                            myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
+                            setMyself={setMyself}
+                            setOpeningService={setOpeningService}
+                            socket={socket}
                         />
                         <ACTeamUsers
-                            myself={myself}
-                            setMyself={setMyself}
                             initialUser={taskContents.assignee}
-                            teamMembers={teamMembers}
-                            taskContents={taskContents}
-                            setTaskContents={setTaskContents}
-                            setUser={setAssignee}
-                            isOpenTeamMembersList={isOpenTeamMembersList}
-                            setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             isAssignee={true}
-                            setTaskUpdated={setTaskUpdated}
-                            teamMemberProfiles={teamMemberProfiles}
-                            socket={socket}
+                            isOpenTeamMembersList={isOpenTeamMembersList}
+                            myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
+                            setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
+                            setTaskContents={setTaskContents}
+                            setTaskUpdated={setTaskUpdated}
+                            setUser={setAssignee}
+                            socket={socket}
+                            taskContents={taskContents}
+                            teamMemberProfiles={teamMemberProfiles}
+                            teamMembers={teamMembers}
                         />
                     </ListItem>
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
-                            myself={myself}
-                            setMyself={setMyself}
-                            isYou={myself.userId === reporter.userId ? true : false}
                             avatarUser={teamMemberProfiles[reporter.userId]}
-                            socket={socket}
-                            setOpeningService={setOpeningService}
+                            isYou={myself.userId === reporter.userId ? true : false}
+                            myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
+                            setMyself={setMyself}
+                            setOpeningService={setOpeningService}
+                            socket={socket}
                         />
                         <ACTeamUsers
-                            myself={myself}
-                            setMyself={setMyself}
                             initialUser={taskContents.reporter}
-                            teamMembers={teamMembers}
-                            taskContents={taskContents}
-                            setTaskContents={setTaskContents}
-                            setUser={setReporter}
-                            isOpenTeamMembersList={isOpenTeamMembersList}
-                            setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             isAssignee={false}
-                            setTaskUpdated={setTaskUpdated}
-                            teamMemberProfiles={teamMemberProfiles}
-                            socket={socket}
+                            isOpenTeamMembersList={isOpenTeamMembersList}
+                            myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
+                            setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
+                            setTaskContents={setTaskContents}
+                            setTaskUpdated={setTaskUpdated}
+                            setUser={setReporter}
+                            socket={socket}
+                            taskContents={taskContents}
+                            teamMemberProfiles={teamMemberProfiles}
+                            teamMembers={teamMembers}
                         />
                     </ListItem>
-                    <Grid container spacing={2}>
+                    <Grid spacing={2} container>
                         <Grid key={1} xs={6}>
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography sx={{ minWidth: "80px" }}>Project</Typography>
                                 <ACTeamProjects
-                                    teamProjects={teamProjects}
-                                    taskContents={taskContents}
-                                    setTaskContents={setTaskContents}
                                     isOpenProjectList={isOpenProjectList}
-                                    setIsOpenProjectList={setIsOpenProjectList}
                                     setCurrentProject={setCurrentProject}
+                                    setIsOpenProjectList={setIsOpenProjectList}
+                                    setTaskContents={setTaskContents}
                                     setTaskUpdated={setTaskUpdated}
+                                    taskContents={taskContents}
+                                    teamProjects={teamProjects}
                                 />
                             </ListItem>
                         </Grid>
@@ -192,17 +192,17 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography sx={{ minWidth: "40px" }}>Tags</Typography>
                                 <ACProjectTags
-                                    projectTags={projectTags}
-                                    taskContents={taskContents}
-                                    setTaskContents={setTaskContents}
                                     isOpenTagList={isOpenTagList}
+                                    projectTags={projectTags}
                                     setIsOpenTagList={setIsOpenTagList}
+                                    setTaskContents={setTaskContents}
                                     setTaskUpdated={setTaskUpdated}
+                                    taskContents={taskContents}
                                 />
                                 <IconButton
+                                    color="neutral"
                                     size="sm"
                                     variant="plain"
-                                    color="neutral"
                                     onClick={() => {
                                         setOpenCreateTag(true);
                                     }}
@@ -212,14 +212,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             </ListItem>
                         </Grid>
                     </Grid>
-                    <Grid container spacing={2}>
+                    <Grid spacing={2} container>
                         <Grid key={1} xs={6}>
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography sx={{ minWidth: "80px" }}>Priority</Typography>
                                 <ACTaskPriority
-                                    taskContents={taskContents}
                                     setTaskContents={setTaskContents}
                                     setTaskUpdated={setTaskUpdated}
+                                    taskContents={taskContents}
                                 />
                             </ListItem>
                         </Grid>
@@ -227,9 +227,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography sx={{ minWidth: "100px" }}>Effort Level</Typography>
                                 <ACTaskEffortLevel
-                                    taskContents={taskContents}
                                     setTaskContents={setTaskContents}
                                     setTaskUpdated={setTaskUpdated}
+                                    taskContents={taskContents}
                                 />
                             </ListItem>
                         </Grid>
@@ -238,55 +238,55 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <ListItem sx={{ width: "49%" }}>
                             <Typography sx={{ minWidth: "80px" }}>Status</Typography>
                             <ACTaskStatus
+                                setTaskContents={setTaskContents}
+                                setTaskStatusUpdated={setTaskStatusUpdated}
+                                setTaskUpdated={setTaskUpdated}
                                 socket={socket}
                                 taskContents={taskContents}
-                                setTaskContents={setTaskContents}
-                                setTaskUpdated={setTaskUpdated}
-                                setTaskStatusUpdated={setTaskStatusUpdated}
                             />
                         </ListItem>
                     )}
                     <ListItem>
                         <Typography sx={{ minWidth: "80px" }}>Due Date</Typography>
                         <TaskDueDateInput
-                            taskContents={taskContents}
                             setTaskContents={setTaskContents}
                             setTaskUpdated={setTaskUpdated}
+                            taskContents={taskContents}
                         />
                     </ListItem>
                     <ListItem>
                         <GitHubURLManager
                             githubLink={taskContents.githubLink}
-                            taskContents={taskContents}
                             setTaskContents={setTaskContents}
                             setTaskUpdated={setTaskUpdated}
+                            taskContents={taskContents}
                         />
                     </ListItem>
                     <ListItem>
                         <GeneralURLManager
                             generalLink={taskContents.generalLink}
-                            taskContents={taskContents}
                             setTaskContents={setTaskContents}
                             setTaskUpdated={setTaskUpdated}
+                            taskContents={taskContents}
                         />
                     </ListItem>
                     {parentTask !== undefined ? (
                         <ListItem>
                             <Stack
-                                direction="row"
-                                spacing={0.5}
-                                justifyContent="center"
                                 alignItems="center"
+                                direction="row"
+                                justifyContent="center"
+                                spacing={0.5}
                             >
                                 <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
                                 <AvatarWithStatus
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    isYou={myself.userId === assignee.userId ? true : false}
                                     avatarUser={teamMemberProfiles[assignee.userId]}
-                                    socket={socket}
-                                    setOpeningService={setOpeningService}
+                                    isYou={myself.userId === assignee.userId ? true : false}
+                                    myself={myself}
                                     setCurrentMainChat={setCurrentMainChat}
+                                    setMyself={setMyself}
+                                    setOpeningService={setOpeningService}
+                                    socket={socket}
                                 />
                                 <IconButton
                                     onClick={() => {
@@ -308,18 +308,19 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     }}
                                 >
                                     <Chip
-                                        variant="outlined"
                                         color="neutral"
+                                        size="md"
+                                        variant="outlined"
                                         sx={{
                                             marginX: "5px",
                                             fontWeight: "bold",
                                             borderRadius: "5px",
                                         }}
-                                        size="md"
                                     >
                                         {`${parentTask.id}`}
                                     </Chip>
                                     <Chip
+                                        size="md"
                                         variant="soft"
                                         sx={{
                                             backgroundColor: parentTask.status.color
@@ -332,12 +333,10 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                             fontWeight: "bold",
                                             borderRadius: "5px",
                                         }}
-                                        size="md"
                                     >
                                         {`${parentTask.status.status}`}
                                     </Chip>
                                     <Typography
-                                        noWrap
                                         sx={{
                                             mx: "5px",
                                             overflow: "hidden",
@@ -345,6 +344,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                             whiteSpace: "nowrap",
                                             width: "100%", // take full width of button
                                         }}
+                                        noWrap
                                     >
                                         {`${parentTask.title}`}
                                     </Typography>

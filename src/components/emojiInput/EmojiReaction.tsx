@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Box, Button, IconButton, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -245,15 +245,15 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             {baseEmojiList.map((emoji, index) => (
                                 <Button
                                     key={`default-emoji-${index}`}
-                                    onClick={() => handleAddReaction(emoji)}
-                                    variant="plain"
                                     size="sm"
+                                    variant="plain"
                                     sx={{
                                         minWidth: "auto",
                                         paddingX: "4px",
                                         paddingY: "0",
                                         fontSize: "16px",
                                     }}
+                                    onClick={() => handleAddReaction(emoji)}
                                 >
                                     {emoji}
                                 </Button>
@@ -263,17 +263,17 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                     <Tooltip size="sm" title="React">
                         <IconButton
                             key={`emoji-icon-${message.messageId}`}
-                            onClick={() => {
-                                setShowEmojiPicker(true);
-                            }}
-                            variant="plain"
                             size="sm"
+                            variant="plain"
                             sx={{
                                 minWidth: "auto",
                                 paddingX: "4px",
                                 paddingY: "0",
                                 fontSize: "16px",
                                 fontWeight: "bold",
+                            }}
+                            onClick={() => {
+                                setShowEmojiPicker(true);
                             }}
                         >
                             <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />

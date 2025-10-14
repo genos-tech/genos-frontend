@@ -137,15 +137,20 @@ export const ChatSearch = (props: ChatSearchProps) => {
     return (
         <Box sx={{ px: 2, pb: 0.5, mt: 2 }}>
             <Autocomplete
-                placeholder={"Search"}
-                open={openSearchBox}
-                onOpen={() => {
-                    setOpenSearchBox(true);
-                }}
-                onClose={() => {
-                    setOpenSearchBox(false);
-                }}
+                aria-label="Search"
+                groupBy={(option) => option.type}
                 isOptionEqualToValue={(option, value) => option.name === value.name}
+                loading={loading}
+                open={openSearchBox}
+                options={options}
+                placeholder={"Search"}
+                size="sm"
+                startDecorator={<SearchRoundedIcon />}
+                endDecorator={
+                    loading ? (
+                        <CircularProgress size="sm" sx={{ bgcolor: "background.surface" }} />
+                    ) : null
+                }
                 getOptionLabel={(option) =>
                     option.type === "People"
                         ? option.email === myself.userEmail
@@ -169,28 +174,28 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                     {option.type === "People" && (
                                         <AvatarWithStatus
                                             key={`ac-render-option-chatsearch-user-avatar-${option.name}-${option.id}`}
+                                            isYou={option.dmPartnerUser.userId === myself.userId}
+                                            myself={myself}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setMyself={setMyself}
+                                            setOpeningService={setOpeningService}
+                                            socket={socket}
                                             avatarUser={
                                                 teamMemberProfiles[option.dmPartnerUser.userId]
                                             }
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            isYou={option.dmPartnerUser.userId === myself.userId}
-                                            setOpeningService={setOpeningService}
                                         />
                                     )}
                                     {option.type === "Group" && gmChat && (
                                         <GMAvatar
-                                            teamMemberProfiles={teamMemberProfiles}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            isYou={false}
-                                            setOpeningService={setOpeningService}
-                                            gmChat={gmChat}
                                             funcSetAllChats={funcSetAllChats}
+                                            gmChat={gmChat}
+                                            isYou={false}
+                                            myself={myself}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setMyself={setMyself}
+                                            setOpeningService={setOpeningService}
+                                            socket={socket}
+                                            teamMemberProfiles={teamMemberProfiles}
                                         />
                                     )}
                                     <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
@@ -207,18 +212,13 @@ export const ChatSearch = (props: ChatSearchProps) => {
                         </AutocompleteOption>
                     );
                 }}
-                options={options}
-                loading={loading}
-                endDecorator={
-                    loading ? (
-                        <CircularProgress size="sm" sx={{ bgcolor: "background.surface" }} />
-                    ) : null
-                }
                 onChange={(event, value) => onChangeHandler(value)}
-                size="sm"
-                startDecorator={<SearchRoundedIcon />}
-                aria-label="Search"
-                groupBy={(option) => option.type}
+                onClose={() => {
+                    setOpenSearchBox(false);
+                }}
+                onOpen={() => {
+                    setOpenSearchBox(true);
+                }}
             />
         </Box>
     );

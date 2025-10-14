@@ -11,14 +11,13 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
         <ListItem key={"listitem-createProject"}>
             <ListItemButton
                 color="primary"
+                sx={{ overflow: "hidden" }} // ensure children don't overflow
                 onClick={() => {
                     setOpenCreateProject(true);
                 }}
-                sx={{ overflow: "hidden" }} // ensure children don't overflow
             >
                 <AddIcon />
                 <Typography
-                    noWrap
                     sx={{
                         fontSize: "15px",
                         overflow: "hidden",
@@ -26,6 +25,7 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
                         whiteSpace: "nowrap",
                         width: "100%", // take full width of button
                     }}
+                    noWrap
                 >
                     New Project
                 </Typography>

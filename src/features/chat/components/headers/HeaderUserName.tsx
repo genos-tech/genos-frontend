@@ -55,40 +55,40 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
             <div>
                 {chat && chat.chatType === 1 ? (
                     <AvatarWithStatus
-                        myself={myself}
-                        setMyself={setMyself}
                         avatarSize={38}
-                        isYou={isYou}
                         avatarUser={headerUser}
-                        socket={socket}
                         chat={chat}
-                        setOpeningService={setOpeningService}
+                        isYou={isYou}
+                        myself={myself}
                         setCurrentMainChat={setCurrentMainChat}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
+                        socket={socket}
                     />
                 ) : chat && chat.chatType === 2 ? (
                     <GMAvatar
-                        teamMemberProfiles={teamMemberProfiles}
-                        myself={myself}
-                        setMyself={setMyself}
                         avatarSize={38}
-                        isYou={isYou}
-                        socket={socket}
-                        setOpeningService={setOpeningService}
-                        setCurrentMainChat={setCurrentMainChat}
-                        gmChat={chat}
                         funcSetAllChats={funcSetAllChats}
+                        gmChat={chat}
+                        isYou={isYou}
+                        myself={myself}
+                        setCurrentMainChat={setCurrentMainChat}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
+                        socket={socket}
+                        teamMemberProfiles={teamMemberProfiles}
                     />
                 ) : chat && chat.chatType === 3 ? (
                     <ProjectAvatar
-                        teamMemberProfiles={teamMemberProfiles}
-                        myself={myself}
-                        setMyself={setMyself}
                         avatarSize={38}
-                        socket={socket}
-                        setOpeningService={setOpeningService}
-                        setCurrentMainChat={setCurrentMainChat}
-                        pmChat={chat}
                         funcSetAllChats={funcSetAllChats}
+                        myself={myself}
+                        pmChat={chat}
+                        setCurrentMainChat={setCurrentMainChat}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
+                        socket={socket}
+                        teamMemberProfiles={teamMemberProfiles}
                     />
                 ) : undefined}
             </div>
@@ -96,19 +96,15 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                 <Stack direction={"row"}>
                     <Typography
                         component="h2"
-                        noWrap
-                        startDecorator={
-                            chat && chat.isPrivate ? (
-                                <LockOutlineIcon sx={{ fontSize: "22px" }} />
-                            ) : undefined
-                        }
+                        sx={{ fontWeight: "lg", fontSize: "lg" }}
                         endDecorator={
                             chat && chat.chatType === 1 ? (
                                 <Chip
-                                    variant="outlined"
-                                    size="md"
                                     color="neutral"
+                                    size="md"
+                                    slotProps={{ root: { component: "span" } }}
                                     sx={{ borderRadius: "sm" }}
+                                    variant="outlined"
                                     startDecorator={
                                         <Box sx={{ ml: "-5px" }}>
                                             <PulseDot
@@ -116,13 +112,17 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                                             />
                                         </Box>
                                     }
-                                    slotProps={{ root: { component: "span" } }}
                                 >
                                     {isOnline === true ? "Online" : "Offline"}
                                 </Chip>
                             ) : undefined
                         }
-                        sx={{ fontWeight: "lg", fontSize: "lg" }}
+                        startDecorator={
+                            chat && chat.isPrivate ? (
+                                <LockOutlineIcon sx={{ fontSize: "22px" }} />
+                            ) : undefined
+                        }
+                        noWrap
                     >
                         {isYou ? `${chat?.chatName} (you)` : chat?.chatName}
                     </Typography>
@@ -134,9 +134,9 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         myself.customStatus != "" && (
                             <Chip
                                 component="h2"
-                                variant="outlined"
                                 size="md"
                                 sx={{ ml: "3px", borderRadius: "sm" }}
+                                variant="outlined"
                             >
                                 {myself.customStatus}
                             </Chip>
@@ -150,9 +150,9 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
                             <Chip
                                 component="h2"
-                                variant="outlined"
                                 size="md"
                                 sx={{ ml: "3px", borderRadius: "sm" }}
+                                variant="outlined"
                             >
                                 {teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                             </Chip>

@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
@@ -27,6 +26,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnMyNoteEditor } from "../../../components/blockNote/bnMyNoteEditor";
@@ -191,9 +191,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                     }}
                 >
                     <IconButton
+                        color="neutral"
                         component="button"
                         variant="soft"
-                        color="neutral"
                         sx={{
                             fontSize: "15px",
                             paddingRight: "10px",
@@ -216,8 +216,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
                                     {/* Note Header */}
                                     <Stack
-                                        direction="row"
                                         alignItems="center"
+                                        direction="row"
                                         justifyContent="space-between"
                                         sx={{
                                             width: "100%",
@@ -226,11 +226,11 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             mb: "5px",
                                         }}
                                     >
-                                        <Breadcrumbs separator="›" aria-label="breadcrumbs">
+                                        <Breadcrumbs aria-label="breadcrumbs" separator="›">
                                             <IconButton
+                                                color="primary"
                                                 component="button"
                                                 variant="soft"
-                                                color="primary"
                                                 sx={{
                                                     fontSize: "14px",
                                                 }}
@@ -241,11 +241,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             {NM.currentMyNoteChain &&
                                                 NM.currentMyNoteChain.map((node) => (
                                                     <Typography
-                                                        level="title-sm"
                                                         component="button"
-                                                        onClick={() => {
-                                                            NM.loadNote(1, node.noteId, -1);
-                                                        }}
+                                                        level="title-sm"
                                                         sx={{
                                                             background: "none",
                                                             border: "none",
@@ -254,6 +251,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                             color: "#646CFF",
                                                             textAlign: "left",
                                                             fontWeight: "bold",
+                                                        }}
+                                                        onClick={() => {
+                                                            NM.loadNote(1, node.noteId, -1);
                                                         }}
                                                     >
                                                         {node.title.length > 14
@@ -264,16 +264,16 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         </Breadcrumbs>
 
                                         <Stack direction={"row"}>
-                                            <Tooltip title="Create a New Note" size="sm">
+                                            <Tooltip size="sm" title="Create a New Note">
                                                 <IconButton
+                                                    color="neutral"
                                                     component="button"
                                                     size="sm"
+                                                    sx={{ px: "10px", mb: "5px" }}
                                                     variant="plain"
-                                                    color="neutral"
                                                     onClick={() => {
                                                         NM.handleCreateNewMyNote(null);
                                                     }}
-                                                    sx={{ px: "10px", mb: "5px" }}
                                                 >
                                                     <PlaylistAddIcon sx={{ mr: "2px" }} />
                                                     New Note
@@ -283,10 +283,10 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 <Tooltip title="More Options">
                                                     <MenuButton
                                                         slots={{ root: IconButton }}
+                                                        sx={{ mb: "5px" }}
                                                         slotProps={{
                                                             root: { color: "neutral" },
                                                         }}
-                                                        sx={{ mb: "5px" }}
                                                     >
                                                         <MoreVert />
                                                     </MenuButton>
@@ -309,12 +309,12 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         Child Note
                                                     </MenuItem>
                                                     <MenuItem
-                                                        onClick={() => {
-                                                            setOpenDeleteNote(true);
-                                                        }}
                                                         sx={{
                                                             color: "red",
                                                             fontWeight: "bold",
+                                                        }}
+                                                        onClick={() => {
+                                                            setOpenDeleteNote(true);
                                                         }}
                                                     >
                                                         <DeleteIcon sx={{ color: "red" }} />
@@ -325,19 +325,20 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         </Stack>
                                         {NM.currentMyNote && (
                                             <ModalDeleteMyNote
+                                                currentMyNote={NM.currentMyNote}
+                                                currentTabIndex={NM.selectedTabIndex}
+                                                handleCloseTab={handleCloseTab}
+                                                myNoteMeta={NM.myNoteMeta}
                                                 myself={myself}
                                                 openDeleteNote={openDeleteNote}
-                                                setOpenDeleteNote={setOpenDeleteNote}
-                                                myNoteMeta={NM.myNoteMeta}
                                                 setMyNoteMeta={NM.setMyNoteMeta}
-                                                currentMyNote={NM.currentMyNote}
-                                                handleCloseTab={handleCloseTab}
-                                                currentTabIndex={NM.selectedTabIndex}
+                                                setOpenDeleteNote={setOpenDeleteNote}
                                             />
                                         )}
                                     </Stack>
 
                                     <Tabs
+                                        sx={{ width: "100%" }}
                                         value={NM.selectedTabIndex}
                                         onChange={(_, val) => {
                                             NM.loadNote(
@@ -346,7 +347,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 Number(val)
                                             );
                                         }}
-                                        sx={{ width: "100%" }}
                                     >
                                         <TabList
                                             sx={{
@@ -359,6 +359,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             {NM.tabItems.map((tab, index) => (
                                                 <Tab
                                                     key={`tab-${index}`}
+                                                    variant="soft"
                                                     sx={{
                                                         mx: "2px",
                                                         my: "4px",
@@ -366,7 +367,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         scrollSnapAlign: "start",
                                                         borderRadius: "5px",
                                                     }}
-                                                    variant="soft"
                                                 >
                                                     <Box
                                                         sx={{
@@ -382,10 +382,11 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
                                                         {NM.tabItems.length > 1 && (
                                                             <IconButton
+                                                                color="neutral"
                                                                 component="span"
                                                                 size="sm"
+                                                                sx={{ ml: 1 }}
                                                                 variant="plain"
-                                                                color="neutral"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     handleCloseTab(
@@ -393,7 +394,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                                         Number(tab.noteId)
                                                                     );
                                                                 }}
-                                                                sx={{ ml: 1 }}
                                                             >
                                                                 <CloseIcon />
                                                             </IconButton>
@@ -414,7 +414,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 }}
                                             >
                                                 <FormControl
-                                                    required
                                                     sx={{
                                                         mt: "10px",
                                                         ml: "10px",
@@ -422,16 +421,14 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         position: "absolute",
                                                         zIndex: 100,
                                                     }}
+                                                    required
                                                 >
                                                     <Input
-                                                        startDecorator={<NoteAltIcon />}
                                                         key={"currentMyNoteTitle"}
-                                                        variant="soft"
                                                         placeholder="Note Title"
+                                                        startDecorator={<NoteAltIcon />}
                                                         value={currentMyNoteTitle}
-                                                        onChange={(e) => {
-                                                            setCurrentMyNoteTitle(e.target.value);
-                                                        }}
+                                                        variant="soft"
                                                         slotProps={{
                                                             input: {
                                                                 ref: titleInputRef,
@@ -445,12 +442,15 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                                 },
                                                             },
                                                         }}
-                                                        onBlur={() => {
-                                                            setNoteUpdated(true);
-                                                        }}
                                                         sx={{
                                                             fontSize: "22px",
                                                             fontWeight: "bold",
+                                                        }}
+                                                        onBlur={() => {
+                                                            setNoteUpdated(true);
+                                                        }}
+                                                        onChange={(e) => {
+                                                            setCurrentMyNoteTitle(e.target.value);
                                                         }}
                                                     />
                                                 </FormControl>
@@ -464,9 +464,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         }}
                                                     >
                                                         <Button
-                                                            variant="outlined"
                                                             color="neutral"
                                                             size="sm"
+                                                            variant="outlined"
                                                             startDecorator={
                                                                 <CheckIcon
                                                                     sx={{ fontSize: "15px" }}
@@ -480,18 +480,18 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 {NM.currentMyNote && (
                                                     <>
                                                         <BnMyNoteEditor
-                                                            teamMemberProfiles={teamMemberProfiles}
-                                                            myself={myself}
-                                                            setMyself={setMyself}
-                                                            socket={socket}
-                                                            teamMembers={teamMembers}
-                                                            currentMyNote={NM.currentMyNote}
                                                             body={body}
+                                                            currentMyNote={NM.currentMyNote}
+                                                            myself={myself}
                                                             setBody={setBody}
+                                                            setCurrentChat={setCurrentChat}
+                                                            setMyself={setMyself}
                                                             setNoteBodyEdited={setNoteBodyEdited}
                                                             setNoteBodySaved={setNoteBodySaved}
-                                                            setCurrentChat={setCurrentChat}
                                                             setOpeningService={setOpeningService}
+                                                            socket={socket}
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            teamMembers={teamMembers}
                                                         />
                                                     </>
                                                 )}

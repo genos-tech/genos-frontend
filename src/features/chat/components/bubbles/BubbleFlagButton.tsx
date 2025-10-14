@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import FlagIcon from "@mui/icons-material/Flag";
 import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 
 import { STORES } from "../../../../db/conf";
 import { deleteData } from "../../../../db/crud";
@@ -50,10 +50,10 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
 
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip title={tmpIsFlagged ? "Unflag" : "Flag"} size="sm">
+            <Tooltip size="sm" title={tmpIsFlagged ? "Unflag" : "Flag"}>
                 <IconButton
-                    size="sm"
                     color={tmpIsFlagged ? "danger" : "neutral"}
+                    size="sm"
                     onClick={() => {
                         // If the message is not a thread message,
                         // we need to update the message in the indexedDB.

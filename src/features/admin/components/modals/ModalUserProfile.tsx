@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
@@ -17,6 +16,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
@@ -128,15 +128,15 @@ export const UserProfile = (props: UserProfileProps) => {
         <>
             <Modal
                 open={openUserProfile}
-                onClose={() => setOpenUserProfile(false)}
                 sx={{ zIndex: 10001 }}
+                onClose={() => setOpenUserProfile(false)}
             >
                 <ModalDialog>
                     <Box sx={{ flex: 1, width: "1000px" }}>
                         <EmojiPicker
-                            showEmojiPicker={showEmojiPicker}
-                            setShowEmojiPicker={setShowEmojiPicker}
                             setSelectedEmoji={setSelectedEmoji}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            showEmojiPicker={showEmojiPicker}
                         />
                         <Box
                             sx={{
@@ -153,7 +153,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                     px: 3,
                                 }}
                             >
-                                <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
+                                <Typography component="h1" level="h2" sx={{ mt: 1, mb: 1 }}>
                                     {isYou === true
                                         ? "My Profile"
                                         : myself.userId !== profileUser?.userId
@@ -188,9 +188,9 @@ export const UserProfile = (props: UserProfileProps) => {
                                         }}
                                     >
                                         <Avatar
+                                            src={`${media_url}/${profileUser?.avatarImgPath}`}
                                             sx={{ width: 180, height: 180, fontSize: "50px" }}
                                             onClick={() => setOpenUserProfile(true)}
-                                            src={`${media_url}/${profileUser?.avatarImgPath}`}
                                         >
                                             {profileUser?.userName[0]}
                                         </Avatar>
@@ -204,14 +204,14 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 }}
                                             >
                                                 <input
-                                                    type="file"
+                                                    ref={inputRef}
                                                     accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                                     multiple={false}
-                                                    ref={inputRef}
-                                                    onChange={handleSelectedFiles}
                                                     style={{ display: "none" }}
+                                                    type="file"
+                                                    onChange={handleSelectedFiles}
                                                 />
-                                                <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
+                                                <Tooltip sx={{ zIndex: 9000 }} title="EDIT (TBD)">
                                                     <IconButton
                                                         variant="soft"
                                                         onClick={handleButtonClick}
@@ -225,13 +225,13 @@ export const UserProfile = (props: UserProfileProps) => {
 
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <UserProfileStatus
-                                            myself={myself}
-                                            setMyself={setMyself}
                                             isYou={isYou}
-                                            user={user}
-                                            setShowEmojiPicker={setShowEmojiPicker}
+                                            myself={myself}
                                             selectedEmoji={selectedEmoji}
+                                            setMyself={setMyself}
                                             setSelectedEmoji={setSelectedEmoji}
+                                            setShowEmojiPicker={setShowEmojiPicker}
+                                            user={user}
                                         />
 
                                         <Stack direction={"row"} spacing={2}>
@@ -250,10 +250,10 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 {profileUser?.userEmail}
                                             </Typography>
                                             <Typography
+                                                sx={{ userSelect: "text" }}
                                                 startDecorator={
                                                     <LocalPhoneIcon fontSize="small" />
                                                 }
-                                                sx={{ userSelect: "text" }}
                                             >
                                                 +81 999-888-777
                                             </Typography>
@@ -262,11 +262,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <FormControl>
                                                 <FormLabel>Team Name</FormLabel>
                                                 <Button
+                                                    disabled={true}
                                                     variant="plain"
                                                     sx={{
                                                         justifyContent: "flex-start", // left align the content
                                                     }}
-                                                    disabled={true}
                                                 >
                                                     <Typography
                                                         fontWeight="bold"
@@ -279,11 +279,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <FormControl>
                                                 <FormLabel>Team ID</FormLabel>
                                                 <Button
+                                                    disabled={true}
                                                     variant="plain"
                                                     sx={{
                                                         justifyContent: "flex-start", // left align the content
                                                     }}
-                                                    disabled={true}
                                                 >
                                                     <Typography
                                                         fontWeight="bold"
@@ -296,11 +296,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <FormControl>
                                                 <FormLabel>User ID</FormLabel>
                                                 <Button
+                                                    disabled={true}
                                                     variant="plain"
                                                     sx={{
                                                         justifyContent: "flex-start", // left align the content
                                                     }}
-                                                    disabled={true}
                                                 >
                                                     <Typography
                                                         fontWeight="bold"
@@ -331,11 +331,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <FormControl>
                                                 <FormLabel>Joined Date</FormLabel>
                                                 <Button
+                                                    disabled={true}
                                                     variant="plain"
                                                     sx={{
                                                         justifyContent: "flex-start", // left align the content
                                                     }}
-                                                    disabled={true}
                                                 >
                                                     <Typography
                                                         fontWeight={"bold"}
@@ -363,8 +363,8 @@ export const UserProfile = (props: UserProfileProps) => {
                         >
                             <IconButton
                                 component="button"
-                                variant="outlined"
                                 size="sm"
+                                variant="outlined"
                                 sx={{
                                     fontSize: "16px",
                                     paddingX: "7px",

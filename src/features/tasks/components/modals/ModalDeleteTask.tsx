@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import React, { useState } from "react";
 
 import { TaskProps } from "../../../../types/tasks";
 
@@ -50,14 +50,14 @@ export const ModalDeleteTask: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openDeleteTask}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenDeleteTask(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">
                         Are you sure to delete{" "}
-                        <Typography level="h3" color="danger">
+                        <Typography color="danger" level="h3">
                             {currentTaskContent.title}
                         </Typography>{" "}
                         ?
@@ -67,16 +67,16 @@ export const ModalDeleteTask: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="neutral"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenDeleteTask(false)}
                         >
                             Cancel
                         </Button>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             onClick={() => {
                                 handleDeleteTask();
                             }}

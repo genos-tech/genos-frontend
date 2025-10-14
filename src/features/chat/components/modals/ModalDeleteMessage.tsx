@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import React, { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { STORES } from "../../../../db/conf";
@@ -150,8 +150,8 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openDeleteMessage}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenDeleteMessage(false)}
             >
                 <ModalDialog>
@@ -163,16 +163,16 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="neutral"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenDeleteMessage(false)}
                         >
                             Cancel
                         </Button>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             onClick={() => {
                                 handleDeleteMessage();
                             }}

@@ -1,7 +1,3 @@
-import { Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
-
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
@@ -24,6 +20,9 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
+import { Box } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -112,11 +111,11 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         <Box className={bnBoxClassName} sx={{ px: "10px" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
                 editable={true}
+                editor={editor}
+                filePanel={false}
                 formattingToolbar={false}
                 linkToolbar={false}
-                filePanel={false}
                 sideMenu={false}
                 slashMenu={false}
                 tableHandles={false}
@@ -132,20 +131,20 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                             <BlockTypeSelect key={"blockTypeSelect"} />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton

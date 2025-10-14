@@ -1,30 +1,29 @@
-import { createRoot } from "react-dom/client";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
-
 import "./index.css";
 
-import { AuthProvider } from "./context/AuthContext";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+
+import { App } from "./App";
 import { PageNotFound } from "./components/layout/pageNotFound";
+import { AuthProvider } from "./context/AuthContext";
 import { AuthGuard } from "./features/admin/authGuard";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
 
-import { App } from "./App";
-
 createRoot(document.getElementById("root")!).render(
     <AuthProvider>
         <Router>
             <Routes>
-                <Route path="/" element={<SignInForm />} />
-                <Route path="/SignUp" element={<SignUpForm />} />
-                <Route path="/SignIn" element={<SignInForm />} />
-                <Route path="*" element={<PageNotFound />} />
+                <Route element={<SignInForm />} path="/" />
+                <Route element={<SignUpForm />} path="/SignUp" />
+                <Route element={<SignInForm />} path="/SignIn" />
+                <Route element={<PageNotFound />} path="*" />
 
                 {/* Protected Routes */}
                 <Route element={<AuthGuard />}>
-                    <Route path="/App" element={<App />} />
-                    <Route path="/JoinTeam" element={<JoinTeam />} />
+                    <Route element={<App />} path="/App" />
+                    <Route element={<JoinTeam />} path="/JoinTeam" />
                 </Route>
             </Routes>
         </Router>

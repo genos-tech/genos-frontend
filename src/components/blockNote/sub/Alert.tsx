@@ -1,9 +1,9 @@
+import "./styles.css";
+
 import { defaultProps } from "@blocknote/core";
 import { createReactBlockSpec } from "@blocknote/react";
 import { Menu } from "@mantine/core";
 import { MdCancel, MdCheckCircle, MdError, MdInfo } from "react-icons/md";
-
-import "./styles.css";
 
 // The types of alerts that users can choose from.
 export const alertTypes = [
@@ -110,7 +110,7 @@ export const Alert = createReactBlockSpec(
                         </Menu.Dropdown>
                     </Menu>
                     {/*Rich text field for user to type in*/}
-                    <div className={"inline-content"} ref={props.contentRef} />
+                    <div ref={props.contentRef} className={"inline-content"} />
                 </div>
             );
         },

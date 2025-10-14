@@ -56,44 +56,44 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
 
             {isInEdit === true && editTargetComment && (
                 <BnUpdateTaskCommentEditor
-                    teamMemberProfiles={teamMemberProfiles}
+                    isCommentUpdated={isCommentUpdated}
+                    isInEdit={isInEdit}
+                    isPrivate={task.project?.isPrivate}
                     myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    teamMembers={teamMembers}
                     projectId={task.project?.projectId}
                     projectName={task.project?.projectName}
-                    isPrivate={task.project?.isPrivate}
-                    taskId={task.id}
-                    taskComments={taskComments}
-                    setTaskComments={setTaskComments}
-                    isCommentUpdated={isCommentUpdated}
-                    setIsCommentUpdated={setIsCommentUpdated}
-                    targetComment={editTargetComment}
-                    isInEdit={isInEdit}
-                    setIsInEdit={setIsInEdit}
                     setCurrentChat={setCurrentChat}
+                    setIsCommentUpdated={setIsCommentUpdated}
+                    setIsInEdit={setIsInEdit}
+                    setMyself={setMyself}
                     setOpeningService={setOpeningService}
-                    taskCommentLines={taskCommentLines}
                     setTaskCommentLines={setTaskCommentLines}
+                    setTaskComments={setTaskComments}
+                    socket={socket}
+                    targetComment={editTargetComment}
+                    taskCommentLines={taskCommentLines}
+                    taskComments={taskComments}
+                    taskId={task.id}
+                    teamMemberProfiles={teamMemberProfiles}
+                    teamMembers={teamMembers}
                 />
             )}
             {isInEdit === false && (
                 <BnTaskCommentEditor
-                    teamMemberProfiles={teamMemberProfiles}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    teamMembers={teamMembers}
-                    task={task}
-                    taskComments={taskComments}
-                    setTaskComments={setTaskComments}
                     isCommentUpdated={isCommentUpdated}
-                    setIsCommentUpdated={setIsCommentUpdated}
+                    myself={myself}
                     setCurrentChat={setCurrentChat}
+                    setIsCommentUpdated={setIsCommentUpdated}
+                    setMyself={setMyself}
                     setOpeningService={setOpeningService}
-                    taskCommentLines={taskCommentLines}
                     setTaskCommentLines={setTaskCommentLines}
+                    setTaskComments={setTaskComments}
+                    socket={socket}
+                    task={task}
+                    taskCommentLines={taskCommentLines}
+                    taskComments={taskComments}
+                    teamMemberProfiles={teamMemberProfiles}
+                    teamMembers={teamMembers}
                 />
             )}
         </Box>

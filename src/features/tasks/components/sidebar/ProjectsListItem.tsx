@@ -99,6 +99,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                         renderToggle={({ open, setOpen }) => (
                                             <ListItemButton
                                                 color={"primary"}
+                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 variant={
                                                     projectId === PM.currentProject?.projectId
                                                         ? "soft"
@@ -137,7 +138,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         );
                                                     }
                                                 }}
-                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >
                                                 <AccountTreeIcon />
 
@@ -146,13 +146,13 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 ) : null}
 
                                                 <Typography
-                                                    noWrap
                                                     sx={{
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
                                                         whiteSpace: "nowrap",
                                                         width: "100%", // take full width of button
                                                     }}
+                                                    noWrap
                                                 >
                                                     {projectName}
                                                 </Typography>
@@ -179,13 +179,13 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 TM={TM}
                                             />
                                             <TagsListItem
-                                                projectId={projectId}
                                                 currentProject={PM.currentProject}
+                                                projectId={projectId}
+                                                setCurrentFilterName={setCurrentFilterName}
+                                                setFilterBy={setFilterBy}
                                                 setSelectedTagForFiltering={
                                                     setSelectedTagForFiltering
                                                 }
-                                                setFilterBy={setFilterBy}
-                                                setCurrentFilterName={setCurrentFilterName}
                                             />
                                         </List>
                                     </Toggler>

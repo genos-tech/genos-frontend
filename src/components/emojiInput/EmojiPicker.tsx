@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
 import data from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef } from "react";
 
 type EmojiPickerProps = {
     editorPos?: any;
@@ -65,8 +65,8 @@ export const EmojiPicker = ({
                 >
                     <Picker
                         data={data}
-                        onEmojiSelect={handleEmojiSelect}
                         theme={mode === "dark" ? "dark" : "light"}
+                        onEmojiSelect={handleEmojiSelect}
                     />
                 </div>
             )}

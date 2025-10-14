@@ -82,25 +82,26 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         >
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
                 <HeaderUserName
-                    teamMemberProfiles={teamMemberProfiles}
-                    socket={socket}
+                    chat={subChat}
+                    funcSetAllChats={funcSetAllChats}
+                    isYou={isYou}
                     myself={myself}
+                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
-                    setCurrentMainChat={setCurrentMainChat}
-                    chat={subChat}
-                    isYou={isYou}
-                    funcSetAllChats={funcSetAllChats}
+                    socket={socket}
+                    teamMemberProfiles={teamMemberProfiles}
                 />
             </Stack>
-            <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 {subChat && (subChat.chatType === 3 || subChat.chatType === 4) && (
-                    <Tooltip title="Create a new task" size="sm">
+                    <Tooltip size="sm" title="Create a new task">
                         <IconButton
+                            color="neutral"
                             component="a"
                             size="sm"
+                            sx={{ px: "10px" }}
                             variant="plain"
-                            color="neutral"
                             onClick={() => {
                                 setIsMainChatVisible(true);
                                 setIsThreadVisible(false);
@@ -111,7 +112,6 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                     rootTaskId: null,
                                 });
                             }}
-                            sx={{ px: "10px" }}
                         >
                             <PlaylistAddIcon />
                             New Task
@@ -119,12 +119,12 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Stack spacing={0.5} direction="row" sx={{ alignItems: "center" }}>
+                <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
                     <IconButton
+                        color="neutral"
                         component="a"
                         size="sm"
                         variant="plain"
-                        color="neutral"
                         onClick={() => swapChat()}
                     >
                         <SwapVertIcon />
@@ -134,31 +134,31 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     {isYou === true ? (
                         <>
                             {isToDoVisible === true ? (
-                                <Tooltip title="DM" size="sm">
+                                <Tooltip size="sm" title="DM">
                                     <IconButton
+                                        color="neutral"
                                         component="a"
                                         size="sm"
                                         variant="plain"
-                                        color="neutral"
                                         onClick={() => setIsToDoVisible(false)}
                                     >
                                         <QuestionAnswerIcon />
                                     </IconButton>
                                 </Tooltip>
                             ) : (
-                                <Tooltip title="To-Do" size="sm">
+                                <Tooltip size="sm" title="To-Do">
                                     <Badge
+                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                         badgeContent={incompleteTodoCount}
                                         color="primary"
                                         size="sm"
-                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                         sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 1 }}
                                     >
                                         <IconButton
+                                            color="neutral"
                                             component="a"
                                             size="sm"
                                             variant="plain"
-                                            color="neutral"
                                             onClick={() => setIsToDoVisible(true)}
                                         >
                                             <ChecklistIcon />
@@ -170,17 +170,17 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     ) : null}
 
                     <Tooltip title="More Options">
-                        <IconButton component="a" size="sm" variant="plain" color="neutral">
+                        <IconButton color="neutral" component="a" size="sm" variant="plain">
                             <MoreVert />
                         </IconButton>
                     </Tooltip>
 
                     <Tooltip title="Close">
                         <IconButton
+                            color="neutral"
                             component="a"
                             size="sm"
                             variant="plain"
-                            color="neutral"
                             onClick={() => setIsSubChatVisible(false)}
                         >
                             <CancelIcon />

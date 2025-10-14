@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { Avatar, Box, Dropdown, IconButton, Menu, MenuItem, Tooltip } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { CreateDMResponse, Team, UserProps } from "../../../types/admin";
@@ -171,7 +171,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <Tooltip title="Switch Team" placement="right-start">
+                <Tooltip placement="right-start" title="Switch Team">
                     <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
                         <Avatar
                             src={`${media_url}/${currentTeam.teamImgPath}`}
@@ -187,21 +187,21 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     </IconButton>
                 </Tooltip>
                 <Menu
-                    className="custom-scrollbar"
-                    size="sm"
                     ref={dropdownRef}
-                    sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     anchorEl={anchorEl}
+                    className="custom-scrollbar"
                     open={Boolean(anchorEl)}
+                    size="sm"
+                    sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     onClose={handleClose}
                 >
                     {teams.map((team) => (
                         <MenuItem
                             key={team.teamName}
+                            variant={team.teamId === myself.teamId ? "solid" : "plain"}
                             onClick={() => {
                                 handleClicked(team.teamId, team.teamName);
                             }}
-                            variant={team.teamId === myself.teamId ? "solid" : "plain"}
                         >
                             <AcUnitIcon />
                             {team.teamName}
@@ -220,12 +220,12 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     {myself.userId === currentTeam.teamOwnerId && (
                         <Box>
                             <input
-                                type="file"
+                                ref={inputRef}
                                 accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                 multiple={false}
-                                ref={inputRef}
-                                onChange={handleSelectedFiles}
                                 style={{ display: "none" }}
+                                type="file"
+                                onChange={handleSelectedFiles}
                             />
                             <MenuItem
                                 key={"editTeamProfileImage"}

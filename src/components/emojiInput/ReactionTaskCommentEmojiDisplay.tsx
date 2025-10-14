@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Box, Button, Chip, IconButton, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -137,9 +137,6 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                 >
                     <Chip
                         key={`emoji-chip-${emoji}-${index}`}
-                        variant={
-                            senders.some((u) => u.userId === myself.userId) ? "solid" : "outlined"
-                        }
                         color="neutral"
                         size="sm"
                         sx={{
@@ -150,6 +147,9 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                             mb: 1,
                             mx: 0.2,
                         }}
+                        variant={
+                            senders.some((u) => u.userId === myself.userId) ? "solid" : "outlined"
+                        }
                         onClick={() => handleAddReaction(emoji)}
                     >
                         {emoji}
@@ -160,7 +160,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
 
             {hidden.length > 0 && (
                 <Tooltip title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}>
-                    <Chip size="sm" variant="plain" sx={{ fontSize: "0.8rem" }}>
+                    <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         +{hidden.length} more
                     </Chip>
                 </Tooltip>
@@ -173,15 +173,15 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                             {baseEmojiList.map((emoji, index) => (
                                 <Button
                                     key={`default-emoji-${index}`}
-                                    onClick={() => handleAddReaction(emoji)}
-                                    variant="plain"
                                     size="sm"
+                                    variant="plain"
                                     sx={{
                                         minWidth: "auto",
                                         paddingX: "4px",
                                         marginBottom: 0.5,
                                         fontSize: "20px",
                                     }}
+                                    onClick={() => handleAddReaction(emoji)}
                                 >
                                     {emoji}
                                 </Button>
@@ -190,17 +190,17 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     )}
                     <IconButton
                         key={`emoji-icon-${comment.commentId}`}
-                        onClick={() => {
-                            setShowEmojiPicker(true);
-                        }}
                         color="primary"
-                        variant="plain"
                         size="sm"
+                        variant="plain"
                         sx={{
                             minWidth: "auto",
                             paddingX: "4px",
                             marginBottom: 0.5,
                             fontSize: "20px",
+                        }}
+                        onClick={() => {
+                            setShowEmojiPicker(true);
                         }}
                     >
                         <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Box, Button, CircularProgress, Typography } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
@@ -51,8 +51,8 @@ export const InitialLoad = (props: InitialLoadProps) => {
                         Your token might be already expired...
                     </Typography>
                     <Button
-                        variant="outlined"
                         sx={{ mt: "10px" }}
+                        variant="outlined"
                         onClick={() => {
                             navigate("/SignIn");
                         }}

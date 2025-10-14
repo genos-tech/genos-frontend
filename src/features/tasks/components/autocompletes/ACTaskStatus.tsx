@@ -23,39 +23,19 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
     return (
         <Autocomplete
             key={taskContents.id}
-            placeholder="Status"
-            multiple
-            options={statuses}
-            value={taskContents ? [taskContents.status] : []}
             getOptionLabel={(option) => option.status || ""}
             isOptionEqualToValue={(option, value) => option.status === value.status}
-            renderTags={(tags, getTagProps) =>
-                tags.slice(-1).map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={key} // pass the key directly
-                            variant="soft"
-                            sx={{
-                                backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
-                                    : "transparent",
-                                color: item.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                            size="sm"
-                        >
-                            {item ? item.status : ""}
-                        </Chip>
-                    );
-                })
-            }
+            options={statuses}
+            placeholder="Status"
+            size="sm"
+            sx={{ width: "100%" }}
+            value={taskContents ? [taskContents.status] : []}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.status}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.status} // pass the key directly
+                            size="sm"
                             variant="soft"
                             sx={{
                                 backgroundColor: option.color
@@ -65,13 +45,35 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                 fontWeight: "bold",
                                 borderRadius: "5px",
                             }}
-                            size="sm"
                         >
                             {option.status}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
             )}
+            renderTags={(tags, getTagProps) =>
+                tags.slice(-1).map((item, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    return (
+                        <Chip
+                            key={key} // pass the key directly
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: item.color
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
+                                    : "transparent",
+                                color: item.textColor,
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                            }}
+                        >
+                            {item ? item.status : ""}
+                        </Chip>
+                    );
+                })
+            }
+            multiple
             onChange={(event, value) => {
                 if (value !== null && value.length > 0) {
                     (async () => {
@@ -88,8 +90,6 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                     })();
                 }
             }}
-            size="sm"
-            sx={{ width: "100%" }}
         />
     );
 };

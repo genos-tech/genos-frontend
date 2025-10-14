@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box, Button, IconButton, Menu, MenuItem, Stack, Typography } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { DataGrid, GridFilterModel, GridToolbar, useGridApiRef } from "@mui/x-data-grid";
+import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -288,9 +288,9 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                 <Stack direction="row">
                     <Stack
                         direction="row"
+                        flexWrap="wrap"
                         gap={1}
                         mb={1}
-                        flexWrap="wrap"
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                     >
                         {predefinedFilters.map(
@@ -299,13 +299,6 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                 return (
                                     <Button
                                         key={`${label}-${count}`}
-                                        onClick={() => {
-                                            apiRef.current?.setFilterModel(filterModel);
-                                            setCurrentFilterName(label);
-                                        }}
-                                        variant={
-                                            currentFilterName === label ? "contained" : "outlined"
-                                        }
                                         color={currentFilterName === label ? "info" : "inherit"}
                                         sx={{
                                             color: mode === "dark" ? "white" : "Black",
@@ -317,6 +310,13 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                             opacity: 0.85,
                                             height: "25px",
                                         }}
+                                        variant={
+                                            currentFilterName === label ? "contained" : "outlined"
+                                        }
+                                        onClick={() => {
+                                            apiRef.current?.setFilterModel(filterModel);
+                                            setCurrentFilterName(label);
+                                        }}
                                     >
                                         {label} {count !== undefined ? `(${count})` : ""}
                                     </Button>
@@ -326,24 +326,23 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
 
                         <IconButton
                             component="p"
-                            onClick={handleClick}
                             size="small"
                             sx={{
                                 color: mode === "dark" ? "#ffffff" : "#000000",
                                 borderRadius: 1, // removes the circular style
                                 padding: 1, // optional, adjust to taste
                             }}
+                            onClick={handleClick}
                         >
                             <MoreVertIcon />
                         </IconButton>
                         <Menu
+                            anchorEl={anchorEl}
                             id="long-menu"
+                            open={open}
                             MenuListProps={{
                                 "aria-labelledby": "long-button",
                             }}
-                            anchorEl={anchorEl}
-                            open={open}
-                            onClose={handleClose}
                             slotProps={{
                                 paper: {
                                     style: {
@@ -351,6 +350,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                     },
                                 },
                             }}
+                            onClose={handleClose}
                         >
                             {options.slice(displayTaskType.id - 1).map((option) => (
                                 <MenuItem
@@ -377,10 +377,10 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                             }}
                         >
                             <Button
-                                component="button"
-                                variant={showOnlyExpiredTasks ? "contained" : "outlined"}
                                 color="error"
+                                component="button"
                                 size="small"
+                                variant={showOnlyExpiredTasks ? "contained" : "outlined"}
                                 onClick={() => {
                                     if (showOnlyExpiredTasks) {
                                         setCurrentDisplayingTasks(
@@ -409,37 +409,8 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                     }}
                 >
                     <DataGrid
-                        onCellClick={(params) => {
-                            // setIsTaskPreviewVisible(true);
-                            // TM.setCurrentPreviewTaskId(Number(params.id));
-                        }}
-                        onCellDoubleClick={(params) => {
-                            // TM.setIsTaskPreviewVisible(true);
-                            // setCurrentPreviewTaskId(Number(params.id));
-                        }}
-                        onRowClick={(params, event, detail) => {
-                            TM.setIsTaskPreviewVisible(true);
-                            TM.setCurrentPreviewTaskId(Number(params.id));
-                        }}
-                        className={className}
                         apiRef={apiRef}
-                        sx={{
-                            "& .MuiDataGrid-columnHeaderTitle": {
-                                fontSize: "0.875rem",
-                                fontWeight: "bold",
-                            },
-                            "& .MuiDataGrid-row.Mui-selected": {
-                                backgroundColor: "rgba(0, 123, 255, 0.2) !important", // light blue
-                            },
-                            "& .MuiDataGrid-row.Mui-selected:hover": {
-                                backgroundColor: "rgba(0, 123, 255, 0.3) !important", // slightly darker on hover
-                            },
-                        }}
-                        style={{
-                            color: mode === "dark" ? "#fbfcfc" : "#373737",
-                            borderColor: "transparent",
-                            fontWeight: "bold",
-                        }}
+                        className={className}
                         rows={currentDisplayingTasks}
                         columns={getTaskColumns({
                             teamMemberProfiles: teamMemberProfiles,
@@ -481,17 +452,46 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                 },
                             },
                         }}
-                        slots={{
-                            toolbar: GridToolbar,
-                        }}
                         slotProps={{
                             toolbar: {
                                 showQuickFilter: true,
                             },
                         }}
-                        keepNonExistentRowsSelected
+                        slots={{
+                            toolbar: GridToolbar,
+                        }}
+                        style={{
+                            color: mode === "dark" ? "#fbfcfc" : "#373737",
+                            borderColor: "transparent",
+                            fontWeight: "bold",
+                        }}
+                        sx={{
+                            "& .MuiDataGrid-columnHeaderTitle": {
+                                fontSize: "0.875rem",
+                                fontWeight: "bold",
+                            },
+                            "& .MuiDataGrid-row.Mui-selected": {
+                                backgroundColor: "rgba(0, 123, 255, 0.2) !important", // light blue
+                            },
+                            "& .MuiDataGrid-row.Mui-selected:hover": {
+                                backgroundColor: "rgba(0, 123, 255, 0.3) !important", // slightly darker on hover
+                            },
+                        }}
                         checkboxSelection
                         disableRowSelectionOnClick
+                        keepNonExistentRowsSelected
+                        onCellClick={(params) => {
+                            // setIsTaskPreviewVisible(true);
+                            // TM.setCurrentPreviewTaskId(Number(params.id));
+                        }}
+                        onCellDoubleClick={(params) => {
+                            // TM.setIsTaskPreviewVisible(true);
+                            // setCurrentPreviewTaskId(Number(params.id));
+                        }}
+                        onRowClick={(params, event, detail) => {
+                            TM.setIsTaskPreviewVisible(true);
+                            TM.setCurrentPreviewTaskId(Number(params.id));
+                        }}
                     />
                 </Box>
             </div>

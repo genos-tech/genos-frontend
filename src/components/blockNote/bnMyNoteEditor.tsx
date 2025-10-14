@@ -1,14 +1,8 @@
-import { useEffect, useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
-import { en } from "@blocknote/core/locales";
-import { BlockNoteView } from "@blocknote/mantine";
-import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { Socket } from "socket.io-client";
-
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "../../App.css";
 
+import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -16,6 +10,8 @@ import {
     filterSuggestionItems,
     PartialBlock,
 } from "@blocknote/core";
+import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
     AddTiptapCommentButton,
@@ -48,20 +44,21 @@ import {
     useCreateBlockNote,
 } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
+import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useState } from "react";
 import { RiAlertFill } from "react-icons/ri";
-
-import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { Alert } from "./sub/Alert";
-import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
-
-import "../../App.css";
+import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { UserProps } from "../../types/admin";
+import { ChatProps } from "../../types/chat";
 import { MyNoteProps } from "../../types/notes";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { Alert } from "./sub/Alert";
+import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -252,15 +249,24 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     };
 
     return (
-        <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+        <Box className={bnBoxClassName} sx={{ position: "relative" }}>
             <BlockNoteView
                 className="bn-box"
                 editor={editor}
-                sideMenu={false}
                 emojiPicker={false}
-                theme={mode === "dark" ? "dark" : "light"}
                 formattingToolbar={false}
+                sideMenu={false}
+                theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo // custom font
+                onChange={() => {
+                    setBody(editor.document);
+                    if (setNoteBodyEdited) {
+                        setNoteBodyEdited(true);
+                        if (setNoteBodySaved) {
+                            setNoteBodySaved(false);
+                        }
+                    }
+                }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
                     if (target.tagName === "IMG") {
@@ -271,15 +277,6 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                         if (editor.document.length > 1) {
                             //Auto saving logic here
-                        }
-                    }
-                }}
-                onChange={() => {
-                    setBody(editor.document);
-                    if (setNoteBodyEdited) {
-                        setNoteBodyEdited(true);
-                        if (setNoteBodySaved) {
-                            setNoteBodySaved(false);
                         }
                     }
                 }}
@@ -308,33 +305,33 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                             />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             <BasicTextStyleButton
                                 key={"codeStyleButton"}
                                 basicTextStyle={"code"}
                             />
-                            <TextAlignButton textAlignment={"left"} key={"textAlignLeftButton"} />
+                            <TextAlignButton key={"textAlignLeftButton"} textAlignment={"left"} />
                             <TextAlignButton
-                                textAlignment={"center"}
                                 key={"textAlignCenterButton"}
+                                textAlignment={"center"}
                             />
                             <TextAlignButton
-                                textAlignment={"right"}
                                 key={"textAlignRightButton"}
+                                textAlignment={"right"}
                             />
                             <ColorStyleButton key={"colorStyleButton"} />
                             <CreateLinkButton key={"createLinkButton"} />
@@ -375,22 +372,22 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 />
             </BlockNoteView>
 
-            <Modal sx={{ zIndex: 10010 }} open={opened} onClose={() => setOpened(false)}>
+            <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
                 <ModalDialog>
                     {selectedImage ? (
                         <Box>
-                            <img src={selectedImage} alt="preview" />
+                            <img alt="preview" src={selectedImage} />
                             <Tooltip
-                                placement="top"
-                                title="Download"
-                                sx={{ zIndex: 10010 }}
                                 component="div"
+                                placement="top"
+                                sx={{ zIndex: 10010 }}
+                                title="Download"
                             >
                                 <IconButton
-                                    onClick={() => handleDownload(selectedImage)}
                                     color="neutral"
-                                    variant="solid"
                                     sx={{ position: "absolute", top: "10px", right: "10px" }}
+                                    variant="solid"
+                                    onClick={() => handleDownload(selectedImage)}
                                 >
                                     <DownloadIcon />
                                 </IconButton>

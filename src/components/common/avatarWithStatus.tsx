@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Avatar, Box, Stack, Typography } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
@@ -70,16 +70,16 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         <div>
             <Stack direction="row" spacing={1}>
                 <Box
+                    height={_avatarSize}
                     position="relative"
                     width={_avatarSize}
-                    height={_avatarSize}
                     onClick={() => setOpenUserProfile(true)}
                 >
                     {chat && (
                         <Avatar
                             size="sm"
-                            sx={{ width: _avatarSize, height: _avatarSize }}
                             src={`${media_url}/${avatarImg}`}
+                            sx={{ width: _avatarSize, height: _avatarSize }}
                         >
                             {chat.chatType === 1 || isForBubble === true
                                 ? avatarUser?.userName[0].toUpperCase()
@@ -89,8 +89,8 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                     {thread && (
                         <Avatar
                             size="sm"
-                            sx={{ width: _avatarSize, height: _avatarSize }}
                             src={`${media_url}/${avatarImg}`}
+                            sx={{ width: _avatarSize, height: _avatarSize }}
                         >
                             {thread.chatType === 1 || isForBubble === true
                                 ? avatarUser?.userName[0].toUpperCase()
@@ -100,13 +100,13 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                     {chat === undefined && thread === undefined && (
                         <Avatar
                             size="sm"
-                            sx={{ width: _avatarSize, height: _avatarSize }}
                             src={`${media_url}/${avatarImg}`}
+                            sx={{ width: _avatarSize, height: _avatarSize }}
                         >
                             {avatarUser?.userName[0].toUpperCase()}
                         </Avatar>
                     )}
-                    <Box position="absolute" bottom={0} right={0} width={12} height={17}>
+                    <Box bottom={0} height={17} position="absolute" right={0} width={12}>
                         <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
                     </Box>
                 </Box>
@@ -126,15 +126,15 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             </Stack>
 
             <UserProfile
-                socket={socket}
-                myself={myself}
-                setMyself={setMyself}
                 isYou={isYou}
-                user={avatarUser}
+                myself={myself}
                 openUserProfile={openUserProfile}
-                setOpenUserProfile={setOpenUserProfile}
                 setCurrentMainChat={setCurrentMainChat}
+                setMyself={setMyself}
                 setOpeningService={setOpeningService}
+                setOpenUserProfile={setOpenUserProfile}
+                socket={socket}
+                user={avatarUser}
             />
         </div>
     );

@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
@@ -91,18 +91,18 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         flexDirection: "column",
                     }}
                 >
-                    <Stack direction="row" alignItems="center">
+                    <Stack alignItems="center" direction="row">
                         {inboxItem.itemType === 1 && (
                             <Chip
                                 key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                                variant="soft"
                                 color="neutral"
+                                size="md"
+                                variant="soft"
                                 sx={{
                                     marginRight: "auto",
                                     borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
-                                size="md"
                             >
                                 Team Request
                             </Chip>
@@ -110,14 +110,14 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         {inboxItem.itemType === 2 && (
                             <Chip
                                 key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                                variant="soft"
                                 color="neutral"
+                                size="md"
+                                variant="soft"
                                 sx={{
                                     marginRight: "auto",
                                     borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
-                                size="md"
                             >
                                 Project Request
                             </Chip>
@@ -125,36 +125,36 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         {inboxItem.itemType === 3 && (
                             <Chip
                                 key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                                variant="soft"
                                 color="neutral"
+                                size="md"
+                                variant="soft"
                                 sx={{
                                     marginRight: "auto",
                                     borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
-                                size="md"
                             >
                                 GM Request
                             </Chip>
                         )}
 
-                        <Typography level="body-xs" fontWeight="bold">
+                        <Typography fontWeight="bold" level="body-xs">
                             {extractYYYYMMDDHHMM(inboxItem.tsSent)}
                         </Typography>
                     </Stack>
 
                     {inboxItem.itemBody[0].content.length > 0 && (
                         <BnChatPreview
-                            customClassName="inbox-preview"
-                            teamMemberProfiles={teamMemberProfiles}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
                             key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
                             content={inboxItem.itemBody}
+                            customClassName="inbox-preview"
                             isSent={true}
+                            myself={myself}
                             setCurrentChat={setCurrentChat}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
+                            socket={socket}
+                            teamMemberProfiles={teamMemberProfiles}
                         />
                     )}
 
@@ -164,11 +164,11 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         (inboxItem.isRead === true || requestApproved === true) && (
                             <Button
                                 key={`inbox-approved-button-${inboxItem.itemType}-${inboxItem.itemId}`}
-                                variant="outlined"
                                 color="neutral"
+                                disabled={true}
                                 size="sm"
                                 sx={{ width: "100px", alignSelf: "flex-end" }}
-                                disabled={true}
+                                variant="outlined"
                             >
                                 Approved
                             </Button>
@@ -180,9 +180,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         requestApproved === false && (
                             <Button
                                 key={`inbox-approve-button-${inboxItem.itemType}-${inboxItem.itemId}`}
-                                variant="soft"
                                 size="sm"
                                 sx={{ width: "100px", alignSelf: "flex-end" }}
+                                variant="soft"
                                 onClick={() => {
                                     if (socket && inboxItem.itemType === 1) {
                                         socket.emit("approve_join_team_request", {

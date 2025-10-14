@@ -1,5 +1,3 @@
-import * as React from "react";
-import { useState } from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import CircleIcon from "@mui/icons-material/Circle";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
@@ -18,6 +16,8 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import * as React from "react";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
@@ -193,33 +193,33 @@ export const ChatListItem = (props: ChatListItemProps) => {
         <React.Fragment>
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
-                    onClick={onClickHandler}
-                    selected={selected}
-                    variant="soft"
                     color="neutral"
+                    selected={selected}
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
+                    variant="soft"
+                    onClick={onClickHandler}
                 >
                     <Stack direction="column">
                         <Stack
-                            direction="row"
-                            spacing={1.5}
-                            justifyContent="space-between"
                             alignItems="center"
+                            direction="row"
+                            justifyContent="space-between"
+                            spacing={1.5}
                         >
                             <Stack direction="row" spacing={1}>
                                 <div>
                                     {chatType === 1 && chat.dmPartnerUser.userId !== "" && (
                                         <AvatarWithStatus
-                                            myself={myself}
-                                            setMyself={setMyself}
+                                            chat={chat}
                                             isYou={isYou}
+                                            myself={myself}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setMyself={setMyself}
+                                            setOpeningService={setOpeningService}
+                                            socket={socket}
                                             avatarUser={
                                                 teamMemberProfiles[chat.dmPartnerUser.userId]
                                             }
-                                            socket={socket}
-                                            chat={chat}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentMainChat={setCurrentMainChat}
                                         />
                                     )}
 
@@ -229,28 +229,28 @@ export const ChatListItem = (props: ChatListItemProps) => {
 
                                     {chatType === 2 && (
                                         <GMAvatar
-                                            teamMemberProfiles={teamMemberProfiles}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            isYou={isYou}
-                                            socket={socket}
-                                            gmChat={chat}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentMainChat={setCurrentMainChat}
                                             funcSetAllChats={funcSetAllChats}
+                                            gmChat={chat}
+                                            isYou={isYou}
+                                            myself={myself}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setMyself={setMyself}
+                                            setOpeningService={setOpeningService}
+                                            socket={socket}
+                                            teamMemberProfiles={teamMemberProfiles}
                                         />
                                     )}
 
                                     {chatType === 3 && (
                                         <ProjectAvatar
-                                            teamMemberProfiles={teamMemberProfiles}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            pmChat={chat}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentMainChat={setCurrentMainChat}
                                             funcSetAllChats={funcSetAllChats}
+                                            myself={myself}
+                                            pmChat={chat}
+                                            setCurrentMainChat={setCurrentMainChat}
+                                            setMyself={setMyself}
+                                            setOpeningService={setOpeningService}
+                                            socket={socket}
+                                            teamMemberProfiles={teamMemberProfiles}
                                         />
                                     )}
                                 </div>
@@ -258,7 +258,6 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 <Box sx={{ pt: "3px" }}>
                                     <Stack direction="row" spacing={0.5}>
                                         <Typography
-                                            noWrap
                                             level="title-sm"
                                             sx={{ pl: "5px" }}
                                             startDecorator={
@@ -266,6 +265,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                                     <LockOutlineIcon sx={{ fontSize: "16px" }} />
                                                 ) : undefined
                                             }
+                                            noWrap
                                         >
                                             {isYou ? `${chat.chatName} (you)` : chat.chatName}
                                         </Typography>
@@ -276,9 +276,9 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                             myself.customStatus != "" && (
                                                 <Chip
                                                     component="h3"
-                                                    variant="outlined"
                                                     size="sm"
                                                     sx={{ borderRadius: "sm", height: "10px" }}
+                                                    variant="outlined"
                                                 >
                                                     {myself.customStatus}
                                                 </Chip>
@@ -292,9 +292,9 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                                 .customStatus !== "" && (
                                                 <Chip
                                                     component="h3"
-                                                    variant="outlined"
                                                     size="sm"
                                                     sx={{ borderRadius: "sm", height: "10px" }}
+                                                    variant="outlined"
                                                 >
                                                     {
                                                         teamMemberProfiles[
@@ -308,11 +308,11 @@ export const ChatListItem = (props: ChatListItemProps) => {
                             </Stack>
 
                             {/* Right-aligned content */}
-                            <Stack direction="row" alignItems="center">
+                            <Stack alignItems="center" direction="row">
                                 <Typography
                                     level="body-xs"
-                                    noWrap
                                     sx={{ display: { xs: "none", md: "block" }, mt: 0.6, mr: 1 }}
+                                    noWrap
                                 >
                                     {chat.latestMessage
                                         ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
@@ -320,20 +320,20 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 </Typography>
 
                                 {chat.dmPartnerUser.userId === myself.userId && (
-                                    <Tooltip title="To-Do" size="sm">
+                                    <Tooltip size="sm" title="To-Do">
                                         <Badge
+                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                             badgeContent={incompleteTodoCount}
                                             color="primary"
                                             size="sm"
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                             sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.6 }}
                                         >
                                             <IconButton
+                                                color="neutral"
                                                 component="a"
                                                 size="sm"
-                                                variant="plain"
-                                                color="neutral"
                                                 sx={{ mr: -1 }}
+                                                variant="plain"
                                                 onClick={() => setIsToDoVisible(true)}
                                             >
                                                 <ChecklistIcon />
@@ -342,12 +342,12 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                     </Tooltip>
                                 )}
                                 <Tooltip
-                                    title={chat.isPinned ? "Unpin Chat" : "Pin Chat"}
                                     size="sm"
+                                    title={chat.isPinned ? "Unpin Chat" : "Pin Chat"}
                                 >
                                     <IconButton
-                                        component="a"
                                         color={chat.isPinned ? "danger" : "neutral"}
+                                        component="a"
                                         sx={{ mr: -1, mt: 0.6 }}
                                         onClick={(event) => {
                                             event.stopPropagation(); // Stop the click from reaching ListItemButton
@@ -358,7 +358,7 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                         <PushPinIcon sx={{ fontSize: isPinned ? 18 : 16 }} />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title="Split View " size="sm">
+                                <Tooltip size="sm" title="Split View ">
                                     <IconButton
                                         component="a"
                                         sx={{ mt: 0.6 }}
@@ -373,8 +373,8 @@ export const ChatListItem = (props: ChatListItemProps) => {
                                 {chat.latestMessage &&
                                     chat.lastReadMessageId < chat.latestMessage?.messageId && (
                                         <CircleIcon
-                                            sx={{ mr: 1, fontSize: 12, mt: 1 }}
                                             color="primary"
+                                            sx={{ mr: 1, fontSize: 12, mt: 1 }}
                                         />
                                     )}
                             </Stack>

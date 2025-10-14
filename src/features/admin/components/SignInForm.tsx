@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
     Alert,
     Box,
@@ -14,6 +13,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -164,15 +164,15 @@ export const SignInForm = () => {
                                 <FormControl required>
                                     <FormLabel>Email</FormLabel>
                                     <Input
-                                        type="email"
-                                        name="email"
                                         defaultValue={localStorage.getItem("signInEmail") || ""}
+                                        name="email"
+                                        type="email"
                                     />
                                 </FormControl>
 
                                 <FormControl required>
                                     <FormLabel>Password</FormLabel>
-                                    <Input type="password" name="password" />
+                                    <Input name="password" type="password" />
                                 </FormControl>
 
                                 <Stack sx={{ gap: 4, mt: 2 }}>
@@ -184,20 +184,20 @@ export const SignInForm = () => {
                                         }}
                                     >
                                         <Checkbox
-                                            size="sm"
                                             label="Remember me"
                                             name="persistent"
+                                            size="sm"
                                             onChange={(event) => {
                                                 if (event.target.checked) {
                                                     setRememberEmail(true);
                                                 }
                                             }}
                                         />
-                                        <Link level="title-sm" href="#replace-with-a-link">
+                                        <Link href="#replace-with-a-link" level="title-sm">
                                             Forgot your password?
                                         </Link>
                                     </Box>
-                                    <Button type="submit" fullWidth variant="soft">
+                                    <Button type="submit" variant="soft" fullWidth>
                                         Sign In
                                     </Button>
                                 </Stack>

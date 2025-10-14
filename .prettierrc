@@ -12,9 +12,7 @@
     "quoteProps": "as-needed",
     "jsxSingleQuote": false,
     "proseWrap": "preserve",
-    "plugins": [
-        "@ianvs/prettier-plugin-sort-imports"
-    ],
+    "plugins": ["@ianvs/prettier-plugin-sort-imports"],
     "importOrder": [
         "^(react/(.*)$)|^(react$)",
         "<THIRD_PARTY_MODULES>",
@@ -32,10 +30,6 @@
         "",
         "^[./]"
     ],
-    "importOrderParserPlugins": [
-        "typescript",
-        "jsx",
-        "decorators-legacy"
-    ],
+    "importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
     "importOrderTypeScriptVersion": "5.0.0"
 }
