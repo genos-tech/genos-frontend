@@ -19,15 +19,12 @@ import { getLocalCurrentDate, getLocalCurrentTimestamp } from "./utils/dateUtils
 import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 import {
-    ProjectProps,
     TaskMetaProps,
     TaskMetaTreeNode,
     TaskProps,
     TaskTableProps,
     TaskTypesProps,
 } from "./types/tasks";
-import { loadTeamProjects } from "./features/tasks/services/loadTeamProjects";
-import { loadProjectTasks } from "./features/tasks/services/loadProjectTasks";
 import { popSpecificProjectTasks } from "./features/chat/services/popSpecificProjectTasks";
 import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
 import { buildTaskTree } from "./features/tasks/utils/buildTaskTree";
@@ -163,40 +160,6 @@ export const App = () => {
     // Chat Related
     ///////////////////////
     // Chat management
-    const {
-        isMainChatVisible,
-        setIsMainChatVisible,
-        isSubChatVisible,
-        setIsSubChatVisible,
-        isThreadVisible,
-        setIsThreadVisible,
-        isThreadTaskVisible,
-        setIsThreadTaskVisible,
-        isChatNoteVisibleInChat,
-        setIsChatNoteVisibleInChat,
-        currentChatPaneType,
-        setCurrentChatPaneType,
-        currentMainChat,
-        setCurrentMainChat,
-        currentSubChat,
-        setCurrentSubChat,
-        currentThreadChat,
-        setCurrentThreadChat,
-        allChats,
-        setAllChats,
-        flaggedMessages,
-        setFlaggedMessages,
-        activityMessages,
-        setActivityMessages,
-        unReadChatCounts,
-        unReadActivityMessageCounts,
-        unReadChatAndActivityCounts,
-        funcSetAllChats,
-        funcSetFlaggedMessages,
-        funcSetActivityMessages,
-        moveToSpecificChat,
-    } = useChatManagement(myself, accessToken);
-
     const CM = useChatManagement(myself, accessToken);
 
     ///////////////////////
@@ -430,24 +393,16 @@ export const App = () => {
     ///////////////////////
     // Common Hooks
     wsHook({
-        socket: socketInstance,
         accessToken: accessToken,
+        socket: socketInstance,
         myself: myself,
-        allChats: allChats,
-        currentMainChat: currentMainChat,
-        currentSubChat: currentSubChat,
-        currentThreadChat: currentThreadChat,
-        setCurrentMainChat: setCurrentMainChat,
-        setCurrentSubChat: setCurrentSubChat,
-        setCurrentThreadChat: setCurrentThreadChat,
-        funcSetAllChats: funcSetAllChats,
-        setIsTaskCommentUpdated: setIsTaskCommentUpdated,
         isLoading: isLoading,
-        funcSetActivityMessages: funcSetActivityMessages,
         funcSetInboxItems: IM.funcSetInboxItems,
         currentProject: currentProject,
         currentPreviewTaskId: currentPreviewTaskId,
         setIsTaskUpdatedBySomeone: setIsTaskUpdatedBySomeone,
+        setIsTaskCommentUpdated: setIsTaskCommentUpdated,
+        CM: CM,
     });
 
     useEffect(() => {
@@ -458,12 +413,12 @@ export const App = () => {
         setClosedTasks([]);
         setDeletedTasks([]);
         setIsTaskPreviewVisible(false);
-        setIsThreadTaskVisible(false);
+        CM.setIsThreadTaskVisible(false);
 
-        setIsChatNoteVisibleInChat(false);
+        CM.setIsChatNoteVisibleInChat(false);
         NM.setIsTaskNoteVisible(false);
-        setIsSubChatVisible(false);
-        setIsThreadVisible(false);
+        CM.setIsSubChatVisible(false);
+        CM.setIsThreadVisible(false);
     }, [currentTeamId]);
 
     useEffect(() => {
@@ -482,7 +437,7 @@ export const App = () => {
 
             // Initialize the chat note visibility.
             if (NM.tabItems.filter((item) => item.noteType === 3).length === 0) {
-                setIsChatNoteVisibleInChat(false);
+                CM.setIsChatNoteVisibleInChat(false);
             }
             // Init all notes
             NM.setCurrentMyNote(null);
@@ -514,17 +469,17 @@ export const App = () => {
     // Initialization Hooks
     useEffect(() => {
         IM.funcSetInboxItems();
-        funcSetAllChats();
-        funcSetFlaggedMessages();
-        funcSetActivityMessages();
+        CM.funcSetAllChats();
+        CM.funcSetFlaggedMessages();
+        CM.funcSetActivityMessages();
     }, []);
 
     useEffect(() => {
         if (isLoading === false) {
             IM.funcSetInboxItems();
-            funcSetAllChats();
-            funcSetFlaggedMessages();
-            funcSetActivityMessages();
+            CM.funcSetAllChats();
+            CM.funcSetFlaggedMessages();
+            CM.funcSetActivityMessages();
 
             // Load all team users
             funcSetTeamMembers();
@@ -620,38 +575,51 @@ export const App = () => {
     // Chat Related Hooks
     useEffect(() => {
         setTimeout(() => {
-            funcSetAllChats();
-            if (currentMainChat) {
-                if (currentMainChat.chatType === 1 && currentMainChat.chatId !== -1) {
+            CM.funcSetAllChats();
+            if (CM.currentMainChat) {
+                if (CM.currentMainChat.chatType === 1 && CM.currentMainChat.chatId !== -1) {
                     localStorage.setItem("lastChatType", "1");
-                    localStorage.setItem("lastDMChatId", currentMainChat.chatId.toString() || "");
+                    localStorage.setItem(
+                        "lastDMChatId",
+                        CM.currentMainChat.chatId.toString() || ""
+                    );
                 }
-                if (currentMainChat.chatType === 2 && currentMainChat.chatId !== -1) {
+                if (CM.currentMainChat.chatType === 2 && CM.currentMainChat.chatId !== -1) {
                     localStorage.setItem("lastChatType", "2");
-                    localStorage.setItem("lastGMChatId", currentMainChat.chatId.toString() || "");
+                    localStorage.setItem(
+                        "lastGMChatId",
+                        CM.currentMainChat.chatId.toString() || ""
+                    );
                 }
-                if (currentMainChat.chatType === 3 && currentMainChat.chatId !== -1) {
+                if (CM.currentMainChat.chatType === 3 && CM.currentMainChat.chatId !== -1) {
                     localStorage.setItem("lastChatType", "3");
-                    localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
+                    localStorage.setItem(
+                        "lastPMChatId",
+                        CM.currentMainChat.chatId.toString() || ""
+                    );
                 }
             }
         }, 500); // wait 500ms
-    }, [currentMainChat, currentSubChat]);
+    }, [CM.currentMainChat, CM.currentSubChat]);
 
     // Task Related Hooks
     useEffect(() => {
         // If the thread chat is visible and has a task id, set the current preview task id.
         // This happens when someone created a task in the thread chat.
-        if (currentThreadChat && currentThreadChat.taskId !== null && isThreadVisible === true) {
-            setCurrentPreviewTaskId(currentThreadChat.taskId);
+        if (
+            CM.currentThreadChat &&
+            CM.currentThreadChat.taskId !== null &&
+            CM.isThreadVisible === true
+        ) {
+            setCurrentPreviewTaskId(CM.currentThreadChat.taskId);
         }
-    }, [currentThreadChat]);
+    }, [CM.currentThreadChat]);
 
-    return isLoading || currentMainChat === undefined ? (
+    return isLoading || CM.currentMainChat === undefined ? (
         <InitialLoad
             myself={myself}
             setIsLoading={setIsLoading}
-            setCurrentMainChat={setCurrentMainChat}
+            setCurrentMainChat={CM.setCurrentMainChat}
         />
     ) : (
         <div className="main-container">
@@ -668,10 +636,10 @@ export const App = () => {
                         setMyself={setMyself}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        setCurrentMainChat={setCurrentMainChat}
+                        setCurrentMainChat={CM.setCurrentMainChat}
                         inboxItems={IM.inboxItems}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                     />
                 ) : null}
 
@@ -685,29 +653,29 @@ export const App = () => {
                         setMyself={setMyself}
                         teamMembers={teamMembers}
                         setTeamMembers={setTeamMembers}
-                        currentChatPaneType={currentChatPaneType}
-                        setCurrentChatPaneType={setCurrentChatPaneType}
-                        activityMessages={activityMessages}
-                        setActivityMessages={setActivityMessages}
-                        currentMainChat={currentMainChat}
-                        setCurrentMainChat={setCurrentMainChat}
-                        currentSubChat={currentSubChat}
-                        setCurrentSubChat={setCurrentSubChat}
-                        currentThreadChat={currentThreadChat}
-                        setCurrentThreadChat={setCurrentThreadChat}
+                        currentChatPaneType={CM.currentChatPaneType}
+                        setCurrentChatPaneType={CM.setCurrentChatPaneType}
+                        activityMessages={CM.activityMessages}
+                        setActivityMessages={CM.setActivityMessages}
+                        currentMainChat={CM.currentMainChat}
+                        setCurrentMainChat={CM.setCurrentMainChat}
+                        currentSubChat={CM.currentSubChat}
+                        setCurrentSubChat={CM.setCurrentSubChat}
+                        currentThreadChat={CM.currentThreadChat}
+                        setCurrentThreadChat={CM.setCurrentThreadChat}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        allChats={allChats}
-                        setAllChats={setAllChats}
-                        funcSetAllChats={funcSetAllChats}
+                        allChats={CM.allChats}
+                        setAllChats={CM.setAllChats}
+                        funcSetAllChats={CM.funcSetAllChats}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        unReadChatCounts={unReadChatCounts}
-                        unReadActivityMessageCounts={unReadActivityMessageCounts}
-                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
-                        isTaskPreviewVisible={isThreadTaskVisible}
-                        setIsTaskPreviewVisible={setIsThreadTaskVisible}
+                        unReadChatCounts={CM.unReadChatCounts}
+                        unReadActivityMessageCounts={CM.unReadActivityMessageCounts}
+                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
+                        isTaskPreviewVisible={CM.isThreadTaskVisible}
+                        setIsTaskPreviewVisible={CM.setIsThreadTaskVisible}
                         isCreatingTask={isCreatingTask}
                         setIsCreatingTask={setIsCreatingTask}
                         currentProject={currentProject}
@@ -722,23 +690,23 @@ export const App = () => {
                         setIsNewTagCreated={setIsNewTagCreated}
                         openCreateProject={openCreateProject}
                         openCreateTag={openCreateTag}
-                        isMainChatVisible={isMainChatVisible}
-                        setIsMainChatVisible={setIsMainChatVisible}
-                        isSubChatVisible={isSubChatVisible}
-                        setIsSubChatVisible={setIsSubChatVisible}
-                        isThreadVisible={isThreadVisible}
-                        setIsThreadVisible={setIsThreadVisible}
+                        isMainChatVisible={CM.isMainChatVisible}
+                        setIsMainChatVisible={CM.setIsMainChatVisible}
+                        isSubChatVisible={CM.isSubChatVisible}
+                        setIsSubChatVisible={CM.setIsSubChatVisible}
+                        isThreadVisible={CM.isThreadVisible}
+                        setIsThreadVisible={CM.setIsThreadVisible}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
-                        moveToSpecificChat={moveToSpecificChat}
-                        flaggedMessages={flaggedMessages}
-                        setFlaggedMessages={setFlaggedMessages}
+                        moveToSpecificChat={CM.moveToSpecificChat}
+                        flaggedMessages={CM.flaggedMessages}
+                        setFlaggedMessages={CM.setFlaggedMessages}
                         NM={NM}
                         loadProjectsAndTasks={loadProjectsAndTasks}
-                        isChatNoteVisibleInChat={isChatNoteVisibleInChat}
-                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
+                        isChatNoteVisibleInChat={CM.isChatNoteVisibleInChat}
+                        setIsChatNoteVisibleInChat={CM.setIsChatNoteVisibleInChat}
                     />
                 ) : null}
 
@@ -752,13 +720,13 @@ export const App = () => {
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
-                        setCurrentMainChat={setCurrentMainChat}
+                        setCurrentMainChat={CM.setCurrentMainChat}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
                         isCommentUpdated={isTaskCommentUpdated}
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                         isTaskPreviewVisible={isTaskPreviewVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         isCreatingTask={isCreatingTask}
@@ -793,10 +761,10 @@ export const App = () => {
                         currentTaskChain={currentTaskChain}
                         initialEmptyTaskId={initialEmptyTaskId}
                         setInitialEmptyTaskId={setInitialEmptyTaskId}
-                        allChats={allChats}
-                        setAllChats={setAllChats}
-                        funcSetAllChats={funcSetAllChats}
-                        moveToSpecificChat={moveToSpecificChat}
+                        allChats={CM.allChats}
+                        setAllChats={CM.setAllChats}
+                        funcSetAllChats={CM.funcSetAllChats}
+                        moveToSpecificChat={CM.moveToSpecificChat}
                         NM={NM}
                     />
                 ) : null}
@@ -813,18 +781,18 @@ export const App = () => {
                         setMyself={setMyself}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
-                        setCurrentMainChat={setCurrentMainChat}
+                        setCurrentMainChat={CM.setCurrentMainChat}
                         currentProject={currentProject}
-                        allChats={allChats}
+                        allChats={CM.allChats}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
-                        unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                        unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                         isCreatingTask={isCreatingTask}
-                        setIsMainChatVisible={setIsMainChatVisible}
-                        setIsChatNoteVisibleInChat={setIsChatNoteVisibleInChat}
+                        setIsMainChatVisible={CM.setIsMainChatVisible}
+                        setIsChatNoteVisibleInChat={CM.setIsChatNoteVisibleInChat}
                         setCurrentProject={setCurrentProject}
                         currentPreviewTask={currentPreviewTask}
-                        setIsThreadVisible={setIsThreadVisible}
-                        isThreadVisible={isThreadVisible}
+                        setIsThreadVisible={CM.setIsThreadVisible}
+                        isThreadVisible={CM.isThreadVisible}
                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         setIsCreatingTask={setIsCreatingTask}
                         setCurrentPreviewTask={setCurrentPreviewTask}
@@ -836,8 +804,8 @@ export const App = () => {
                         setIsCommentUpdated={setIsTaskCommentUpdated}
                         teamProjects={teamProjects}
                         setTeamProjects={setTeamProjects}
-                        moveToSpecificChat={moveToSpecificChat}
-                        funcSetAllChats={funcSetAllChats}
+                        moveToSpecificChat={CM.moveToSpecificChat}
+                        funcSetAllChats={CM.funcSetAllChats}
                         NM={NM}
                     />
                 ) : null}

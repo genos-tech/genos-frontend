@@ -15,7 +15,61 @@ import { popSpecificMessages } from "../../features/chat/services/popSpecificMes
 import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
-export const useChatManagement = (myself: UserProps, accessToken: string | null) => {
+export interface ChatManagementState {
+    isMainChatVisible: boolean;
+    setIsMainChatVisible: (value: boolean) => void;
+    isSubChatVisible: boolean;
+    setIsSubChatVisible: (value: boolean) => void;
+    isThreadVisible: boolean;
+    setIsThreadVisible: (value: boolean) => void;
+    isThreadTaskVisible: boolean;
+    setIsThreadTaskVisible: (value: boolean) => void;
+    isChatNoteVisibleInChat: boolean;
+    setIsChatNoteVisibleInChat: (value: boolean) => void;
+    currentChatPaneType: number;
+    setCurrentChatPaneType: (value: number) => void;
+    currentMainChat: ChatProps | undefined;
+    setCurrentMainChat: (value: ChatProps | undefined) => void;
+    currentSubChat: ChatProps | undefined;
+    setCurrentSubChat: (value: ChatProps | undefined) => void;
+    currentThreadChat: ThreadProps | undefined;
+    setCurrentThreadChat: (value: ThreadProps | undefined) => void;
+    allChats: AllChatProps[];
+    setAllChats: (value: AllChatProps[]) => void;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
+    unReadChatCounts: Record<string, number>;
+    setUnReadChatCounts: (value: Record<string, number>) => void;
+    unReadActivityMessageCounts: number;
+    setUnReadActivityMessageCounts: (value: number) => void;
+    unReadChatAndActivityCounts: number;
+    setUnReadChatAndActivityCounts: (value: number) => void;
+    funcSetAllChats: () => Promise<void>;
+    funcSetFlaggedMessages: () => Promise<void>;
+    funcSetActivityMessages: () => Promise<void>;
+    moveToSpecificChat: (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        openTaskNoteInChat: boolean,
+        openThreadTaskPreview: boolean,
+        setOpeningService: (service: number) => void,
+        setCurrentPreviewTaskId: (id: number) => void,
+        setCurrentProject: (project: any) => void
+    ) => Promise<void>;
+    moveToSpecificThreadChat: (
+        chat: AllChatProps,
+        threadId: number
+    ) => Promise<ThreadProps | null>;
+    defineNewChat: (chat: AllChatProps, messages: any) => ChatProps;
+}
+
+export const useChatManagement = (
+    myself: UserProps,
+    accessToken: string | null
+): ChatManagementState => {
     // Chat visibility states
     const [isMainChatVisible, setIsMainChatVisible] = useState(true);
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);

@@ -25,6 +25,7 @@ import { addInboxItem } from "../../features/admin/services/addInboxItem";
 import { ProjectProps } from "../../types/tasks";
 import { deleteData } from "../../db/crud";
 import { STORES } from "../../db/conf";
+import { ChatManagementState } from "../chats/useChatManagement";
 
 function isInArray<T>(item: T, array: T[]): boolean {
     return array.includes(item);
@@ -34,42 +35,26 @@ type wsHookProps = {
     socket: Socket | null;
     accessToken: string | null;
     myself: UserProps;
-    allChats: AllChatProps[];
-    currentMainChat: ChatProps | undefined;
-    currentSubChat: ChatProps | undefined;
-    currentThreadChat: ThreadProps | undefined;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    setCurrentThreadChat: (chat: ThreadProps) => void;
-    funcSetAllChats: () => Promise<void>;
-    setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     isLoading: boolean;
-    funcSetActivityMessages: () => void;
     funcSetInboxItems: () => void;
     currentProject: ProjectProps | null;
     currentPreviewTaskId: number;
     setIsTaskUpdatedBySomeone: (value: boolean) => void;
+    setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
+    CM: ChatManagementState;
 };
 export const wsHook = (props: wsHookProps) => {
     const {
-        socket,
         accessToken,
+        socket,
         myself,
-        allChats,
-        currentMainChat,
-        currentSubChat,
-        currentThreadChat,
-        setCurrentMainChat,
-        setCurrentSubChat,
-        setCurrentThreadChat,
-        funcSetAllChats,
-        setIsTaskCommentUpdated,
         isLoading,
-        funcSetActivityMessages,
         funcSetInboxItems,
         currentProject,
         currentPreviewTaskId,
         setIsTaskUpdatedBySomeone,
+        setIsTaskCommentUpdated,
+        CM,
     } = props;
 
     const updateAllChat = async (currentChat: ChatProps, newChatMessage: MessageProps) => {
@@ -79,37 +64,39 @@ export const wsHook = (props: wsHookProps) => {
             chatName: currentChat.chatName,
             systemUserId:
                 currentChat.systemUserId ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.systemUserId,
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)?.systemUserId,
             dmPartnerUser:
                 currentChat.dmPartnerUser ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.dmPartnerUser,
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)?.dmPartnerUser,
             lastReadMessageId:
                 currentChat.lastReadMessageId ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.lastReadMessageId ||
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)
+                    ?.lastReadMessageId ||
                 -1,
             latestMessage: newChatMessage,
             latestMessageText: newChatMessage.contentText,
             TSLastMessage: newChatMessage.tsSent,
             project:
                 currentChat.project ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.project,
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)?.project,
             isPrivate:
                 currentChat.isPrivate ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPrivate,
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPrivate,
             profileImagePath:
                 currentChat.profileImagePath ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.profileImagePath,
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)?.profileImagePath,
             isPinned:
                 currentChat.isPinned ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPinned,
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPinned,
             tsLastAllReadActivity:
                 currentChat.tsLastAllReadActivity ||
-                allChats.find((chat) => chat.chatId === currentChat.chatId)?.tsLastAllReadActivity,
+                CM.allChats.find((chat) => chat.chatId === currentChat.chatId)
+                    ?.tsLastAllReadActivity,
         };
 
         if (newChat) {
             await addChat(newChat, currentChat.chatType);
-            funcSetAllChats();
+            CM.funcSetAllChats();
         }
     };
 
@@ -229,15 +216,15 @@ export const wsHook = (props: wsHookProps) => {
         await addThreadMessage(newChatMessage, newChatMessage.chatType);
 
         if (
-            currentThreadChat !== undefined &&
-            newThreadMessage.chatId === currentThreadChat.chatId &&
-            newThreadMessage.threadId === currentThreadChat.threadId
+            CM.currentThreadChat !== undefined &&
+            newThreadMessage.chatId === CM.currentThreadChat.chatId &&
+            newThreadMessage.threadId === CM.currentThreadChat.threadId
         ) {
             const updatedThreadChat = await makeUpdatedThreadChat(
-                currentThreadChat,
+                CM.currentThreadChat,
                 newThreadMessage
             );
-            setCurrentThreadChat(updatedThreadChat);
+            CM.setCurrentThreadChat(updatedThreadChat);
         }
     };
 
@@ -281,14 +268,14 @@ export const wsHook = (props: wsHookProps) => {
                         if (message.isDeleted === true) {
                             // If an user is opening the thread and get the new message, update the thread to show the message.
                             if (
-                                currentThreadChat &&
-                                newMessage.chatType === currentThreadChat.chatType &&
-                                newMessage.chatId === currentThreadChat.chatId &&
-                                newMessage.threadId === currentThreadChat.threadId
+                                CM.currentThreadChat &&
+                                newMessage.chatType === CM.currentThreadChat.chatType &&
+                                newMessage.chatId === CM.currentThreadChat.chatId &&
+                                newMessage.threadId === CM.currentThreadChat.threadId
                             ) {
-                                setCurrentThreadChat({
-                                    ...currentThreadChat,
-                                    messages: currentThreadChat.messages.filter(
+                                CM.setCurrentThreadChat({
+                                    ...CM.currentThreadChat,
+                                    messages: CM.currentThreadChat.messages.filter(
                                         (m) => m.messageId !== newMessage.messageId
                                     ),
                                     notMove: true,
@@ -327,8 +314,8 @@ export const wsHook = (props: wsHookProps) => {
                                 chatType: newMessage.chatType,
                                 dmPartnerUser: newMessage.sender,
                                 taskId: newThreadMessage.taskId,
-                                messages: currentThreadChat
-                                    ? [...currentThreadChat.messages, newThreadMessage]
+                                messages: CM.currentThreadChat
+                                    ? [...CM.currentThreadChat.messages, newThreadMessage]
                                     : [newThreadMessage],
                                 TSLastMessage: newThreadMessage.tsSent,
                                 notMove: true,
@@ -375,12 +362,13 @@ export const wsHook = (props: wsHookProps) => {
 
                                             // If an user is opening the thread and get the new message, update the thread to show the message.
                                             if (
-                                                currentThreadChat &&
-                                                newMessage.chatId === currentThreadChat.chatId &&
+                                                CM.currentThreadChat &&
+                                                newMessage.chatId ===
+                                                    CM.currentThreadChat.chatId &&
                                                 newThreadMessage.threadId ===
-                                                    currentThreadChat.threadId
+                                                    CM.currentThreadChat.threadId
                                             ) {
-                                                setCurrentThreadChat(updatedThreadChat);
+                                                CM.setCurrentThreadChat(updatedThreadChat);
                                             }
                                         }
                                     }
@@ -405,12 +393,13 @@ export const wsHook = (props: wsHookProps) => {
 
                                             // If an user is opening the thread and get the new message, update the thread to show the message.
                                             if (
-                                                currentThreadChat &&
-                                                newMessage.chatId === currentThreadChat.chatId &&
+                                                CM.currentThreadChat &&
+                                                newMessage.chatId ===
+                                                    CM.currentThreadChat.chatId &&
                                                 newThreadMessage.threadId ===
-                                                    currentThreadChat.threadId
+                                                    CM.currentThreadChat.threadId
                                             ) {
-                                                setCurrentThreadChat(updatedThreadChat);
+                                                CM.setCurrentThreadChat(updatedThreadChat);
                                             }
                                         }
                                     }
@@ -435,12 +424,13 @@ export const wsHook = (props: wsHookProps) => {
 
                                             // If an user is opening the thread and get the new message, update the thread to show the message.
                                             if (
-                                                currentThreadChat !== undefined &&
-                                                newMessage.chatId === currentThreadChat.chatId &&
+                                                CM.currentThreadChat !== undefined &&
+                                                newMessage.chatId ===
+                                                    CM.currentThreadChat.chatId &&
                                                 newThreadMessage.threadId ===
-                                                    currentThreadChat.threadId
+                                                    CM.currentThreadChat.threadId
                                             ) {
-                                                setCurrentThreadChat(updatedThreadChat);
+                                                CM.setCurrentThreadChat(updatedThreadChat);
                                             }
                                         }
                                     }
@@ -478,13 +468,13 @@ export const wsHook = (props: wsHookProps) => {
                             // If an user is opening the chat of the new message now using MAIN chat pane,
                             // update the MAIN chat by deleting the message.
                             if (
-                                currentMainChat &&
-                                newMessage.chatType === currentMainChat.chatType &&
-                                newMessage.chatId === currentMainChat.chatId
+                                CM.currentMainChat &&
+                                newMessage.chatType === CM.currentMainChat.chatType &&
+                                newMessage.chatId === CM.currentMainChat.chatId
                             ) {
-                                setCurrentMainChat({
-                                    ...currentMainChat,
-                                    messages: currentMainChat.messages.filter(
+                                CM.setCurrentMainChat({
+                                    ...CM.currentMainChat,
+                                    messages: CM.currentMainChat.messages.filter(
                                         (m) => m.messageId !== newMessage.messageId
                                     ),
                                     notMove: true,
@@ -494,13 +484,13 @@ export const wsHook = (props: wsHookProps) => {
                             // If an user is opening the chat of the new message now using SUB chat pane,
                             // update the SUB chat by deleting the message.
                             else if (
-                                currentSubChat &&
-                                newMessage.chatType === currentSubChat.chatType &&
-                                newMessage.chatId === currentSubChat.chatId
+                                CM.currentSubChat &&
+                                newMessage.chatType === CM.currentSubChat.chatType &&
+                                newMessage.chatId === CM.currentSubChat.chatId
                             ) {
-                                setCurrentSubChat({
-                                    ...currentSubChat,
-                                    messages: currentSubChat.messages.filter(
+                                CM.setCurrentSubChat({
+                                    ...CM.currentSubChat,
+                                    messages: CM.currentSubChat.messages.filter(
                                         (m) => m.messageId !== newMessage.messageId
                                     ),
                                     notMove: true,
@@ -570,18 +560,18 @@ export const wsHook = (props: wsHookProps) => {
                                             // If an user is opening the chat of the new message now using MAIN chat pane,
                                             // update the MAIN chat by appending the new message.
                                             if (
-                                                currentMainChat &&
-                                                newMessage.chatId === currentMainChat.chatId
+                                                CM.currentMainChat &&
+                                                newMessage.chatId === CM.currentMainChat.chatId
                                             ) {
-                                                setCurrentMainChat(updatedChat);
+                                                CM.setCurrentMainChat(updatedChat);
                                             }
                                             // If an user is opening the chat of the new message now using SUB chat pane,
                                             // update the SUB chat by appending the new message.
                                             else if (
-                                                currentSubChat &&
-                                                newMessage.chatId === currentSubChat.chatId
+                                                CM.currentSubChat &&
+                                                newMessage.chatId === CM.currentSubChat.chatId
                                             ) {
-                                                setCurrentSubChat(updatedChat);
+                                                CM.setCurrentSubChat(updatedChat);
                                             }
                                         }
                                     } else {
@@ -596,18 +586,18 @@ export const wsHook = (props: wsHookProps) => {
                                             // If an user is opening the chat of the new message now using MAIN chat pane,
                                             // update the MAIN chat by appending the new message.
                                             if (
-                                                currentMainChat &&
-                                                newMessage.chatId === currentMainChat?.chatId
+                                                CM.currentMainChat &&
+                                                newMessage.chatId === CM.currentMainChat?.chatId
                                             ) {
-                                                setCurrentMainChat(updatedChat);
+                                                CM.setCurrentMainChat(updatedChat);
                                             }
                                             // If an user is opening the chat of the new message now using SUB chat pane,
                                             // update the SUB chat by appending the new message.
                                             else if (
-                                                currentSubChat &&
-                                                newMessage.chatId === currentSubChat.chatId
+                                                CM.currentSubChat &&
+                                                newMessage.chatId === CM.currentSubChat.chatId
                                             ) {
-                                                setCurrentSubChat(updatedChat);
+                                                CM.setCurrentSubChat(updatedChat);
                                             }
 
                                             if (newMessage.messageId === 1) {
@@ -639,7 +629,7 @@ export const wsHook = (props: wsHookProps) => {
                                                 if (newMessage.isReactionUpdated === false) {
                                                     await updateAllChat(newDMChat, newChatMessage);
                                                 }
-                                                setCurrentMainChat(newDMChat);
+                                                CM.setCurrentMainChat(newDMChat);
 
                                                 // Join the newly (I) created DM chat.
                                                 if (newDMChat.dmPartnerUser) {
@@ -678,23 +668,23 @@ export const wsHook = (props: wsHookProps) => {
                                         // If an user is opening the chat of the new message now using MAIN chat pane,
                                         // update the MAIN chat by appending the new message.
                                         if (
-                                            currentMainChat &&
-                                            newMessage.chatId === currentMainChat.chatId
+                                            CM.currentMainChat &&
+                                            newMessage.chatId === CM.currentMainChat.chatId
                                         ) {
-                                            setCurrentMainChat(updatedChat);
+                                            CM.setCurrentMainChat(updatedChat);
                                         }
                                         // If an user is opening the chat of the new message now using SUB chat pane,
                                         // update the SUB chat by appending the new message.
                                         else if (
-                                            currentSubChat &&
-                                            newMessage.chatId === currentSubChat.chatId
+                                            CM.currentSubChat &&
+                                            newMessage.chatId === CM.currentSubChat.chatId
                                         ) {
-                                            setCurrentSubChat(updatedChat);
+                                            CM.setCurrentSubChat(updatedChat);
                                         }
                                     } else {
                                         if (fromMe === false) {
-                                            // allChats.length > 0 <- what's this??
-                                            if (allChats.length > 0) {
+                                            // CM.allChats.length > 0 <- what's this??
+                                            if (CM.allChats.length > 0) {
                                                 // Update chat sidebar if the message not reaction-related.
                                                 if (newMessage.isReactionUpdated === false) {
                                                     await updateAllChat(
@@ -706,18 +696,18 @@ export const wsHook = (props: wsHookProps) => {
                                                 // If an user is opening the chat of the new message now using MAIN chat pane,
                                                 // update the MAIN chat by appending the new message.
                                                 if (
-                                                    currentMainChat &&
-                                                    newMessage.chatId === currentMainChat.chatId
+                                                    CM.currentMainChat &&
+                                                    newMessage.chatId === CM.currentMainChat.chatId
                                                 ) {
-                                                    setCurrentMainChat(updatedChat);
+                                                    CM.setCurrentMainChat(updatedChat);
                                                 }
                                                 // If an user is opening the chat of the new message now using SUB chat pane,
                                                 // update the SUB chat by appending the new message.
                                                 else if (
-                                                    currentSubChat &&
-                                                    newMessage.chatId === currentSubChat.chatId
+                                                    CM.currentSubChat &&
+                                                    newMessage.chatId === CM.currentSubChat.chatId
                                                 ) {
-                                                    setCurrentSubChat(updatedChat);
+                                                    CM.setCurrentSubChat(updatedChat);
                                                 }
                                             }
                                         } else {
@@ -755,23 +745,23 @@ export const wsHook = (props: wsHookProps) => {
                                         // If an user is opening the chat of the new message now using MAIN chat pane,
                                         // update the MAIN chat by appending the new message.
                                         if (
-                                            currentMainChat &&
-                                            newMessage.chatId === currentMainChat.chatId
+                                            CM.currentMainChat &&
+                                            newMessage.chatId === CM.currentMainChat.chatId
                                         ) {
-                                            setCurrentMainChat(updatedChat);
+                                            CM.setCurrentMainChat(updatedChat);
                                         }
                                         // If an user is opening the chat of the new message now using SUB chat pane,
                                         // update the SUB chat by appending the new message.
                                         else if (
-                                            currentSubChat &&
-                                            newMessage.chatId === currentSubChat.chatId
+                                            CM.currentSubChat &&
+                                            newMessage.chatId === CM.currentSubChat.chatId
                                         ) {
-                                            setCurrentSubChat(updatedChat);
+                                            CM.setCurrentSubChat(updatedChat);
                                         }
                                     } else {
                                         if (fromMe === false) {
-                                            // allChats.length > 0 <- what's this??
-                                            if (allChats.length > 0) {
+                                            // CM.allChats.length > 0 <- what's this??
+                                            if (CM.allChats.length > 0) {
                                                 // Update chat sidebar if the message not reaction-related.
                                                 if (newMessage.isReactionUpdated === false) {
                                                     await updateAllChat(
@@ -783,18 +773,18 @@ export const wsHook = (props: wsHookProps) => {
                                                 // If an user is opening the chat of the new message now using MAIN chat pane,
                                                 // update the MAIN chat by appending the new message.
                                                 if (
-                                                    currentMainChat &&
-                                                    newMessage.chatId === currentMainChat.chatId
+                                                    CM.currentMainChat &&
+                                                    newMessage.chatId === CM.currentMainChat.chatId
                                                 ) {
-                                                    setCurrentMainChat(updatedChat);
+                                                    CM.setCurrentMainChat(updatedChat);
                                                 }
                                                 // If an user is opening the chat of the new message now using SUB chat pane,
                                                 // update the SUB chat by appending the new message.
                                                 else if (
-                                                    currentSubChat &&
-                                                    newMessage.chatId === currentSubChat.chatId
+                                                    CM.currentSubChat &&
+                                                    newMessage.chatId === CM.currentSubChat.chatId
                                                 ) {
-                                                    setCurrentSubChat(updatedChat);
+                                                    CM.setCurrentSubChat(updatedChat);
                                                 }
                                             }
                                         } else {
@@ -863,7 +853,7 @@ export const wsHook = (props: wsHookProps) => {
                             // Update the activity message in the indexedDB
                             if (doUpdateActivityMessage && newActivityMessage) {
                                 await addActivityMessage(newActivityMessage);
-                                funcSetActivityMessages();
+                                CM.funcSetActivityMessages();
                             }
                         } else {
                             console.log("[IGNORE] Thread, task comment or mention from myself");
@@ -880,7 +870,7 @@ export const wsHook = (props: wsHookProps) => {
                             newActivityMessage = tmpNewActivityMessage;
                             if (newActivityMessage) {
                                 await addActivityMessage(newActivityMessage);
-                                funcSetActivityMessages();
+                                CM.funcSetActivityMessages();
                             }
                         } else {
                             console.log(
@@ -912,5 +902,12 @@ export const wsHook = (props: wsHookProps) => {
             socket.off("message");
             socket.off("connect");
         };
-    }, [accessToken, isLoading, allChats, currentMainChat, currentSubChat, currentThreadChat]);
+    }, [
+        accessToken,
+        isLoading,
+        CM.allChats,
+        CM.currentMainChat,
+        CM.currentSubChat,
+        CM.currentThreadChat,
+    ]);
 };
