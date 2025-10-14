@@ -8,19 +8,17 @@ import { ChatHome } from "./features/chat/chatHome";
 import { TaskHome } from "./features/tasks/taskHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { InitialLoad } from "./components/utils/InitialLoad";
-import { FindTeamResponse, Team, UserProps } from "./types/admin";
 
 import { useAuth } from "./context/AuthContext";
 import { wsHook } from "./hooks/common/wsHook";
-import { popTeamMembers } from "./features/chat/services/popTeamMembers";
 import { initDB } from "./db/schema";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { getLocalCurrentTimestamp } from "./utils/dateUtils";
-import { findTeam } from "./features/admin/services/findTeam";
 import PopTeamUsersWorker from "./workers/popTeamUsersWorker.ts?worker";
 import { TaskProps } from "./types/tasks";
 import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
 
+import { useTeamManagement } from "./hooks/common/useTeamManagement";
 import { useMyself } from "./hooks/common/useAuth";
 import { useChatManagement } from "./hooks/chats/useChatManagement";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
@@ -105,37 +103,13 @@ export const App = () => {
     ///////////////////////
     // Team Related
     ///////////////////////
-    const [currentTeamId, setCurrentTeamId] = useState("");
-    const [teamMembers, setTeamMembers] = useState<UserProps[]>([]);
-    const [teamMemberProfiles, setTeamMemberProfiles] = useState<Record<string, UserProps>>({});
-
-    const funcSetTeamMembers = async () => {
-        const teamMembers: UserProps[] = await popTeamMembers(myself);
-        if (teamMembers) {
-            setTeamMembers(teamMembers);
-        }
-    };
-
-    const [currentTeam, setCurrentTeam] = useState<Team>({
-        teamId: myself.teamId,
-        teamName: myself.teamName,
-        teamEmail: "",
-        teamOwnerId: "",
-        teamImgPath: localStorage.getItem("teamImgPath") || undefined,
-    });
-
-    const initCurrentTeam = async () => {
-        const findTeamRes: FindTeamResponse = await findTeam(accessToken, myself.teamId);
-        if (findTeamRes && findTeamRes.exist === true) {
-            setCurrentTeam(findTeamRes.teamDetails);
-        }
-    };
+    const TEM = useTeamManagement(myself, accessToken);
 
     ///////////////////////
     // Project Related
     ///////////////////////
     // Project management
-    const PM = useProjectManagement(myself, accessToken, currentTeamId);
+    const PM = useProjectManagement(myself, accessToken, TEM.currentTeamId);
 
     ///////////////////////
     // Chat Related
@@ -306,7 +280,7 @@ export const App = () => {
         CM.setIsChatNoteVisibleInChat(false);
         CM.setIsSubChatVisible(false);
         CM.setIsThreadVisible(false);
-    }, [currentTeamId]);
+    }, [TEM.currentTeamId]);
 
     useEffect(() => {
         if (openingService === 0) {
@@ -369,7 +343,7 @@ export const App = () => {
             CM.funcSetActivityMessages();
 
             // Load all team users
-            funcSetTeamMembers();
+            TEM.funcSetTeamMembers();
 
             // Load task metadata
             TM.getTaskMeta();
@@ -385,7 +359,7 @@ export const App = () => {
         if (accessToken) {
             console.log("[WS] Start establishing WS connection");
             const _socket = socket(accessToken);
-            if (_socket && (socketInstance === null || myself.teamId !== currentTeamId)) {
+            if (_socket && (socketInstance === null || myself.teamId !== TEM.currentTeamId)) {
                 setSocketInstance(_socket);
                 console.log("[WS] WS connection established");
             }
@@ -395,9 +369,9 @@ export const App = () => {
     }, [myself, accessToken]);
 
     useEffect(() => {
-        initCurrentTeam();
-        if (myself.teamId !== currentTeamId) {
-            setCurrentTeamId(myself.teamId);
+        TEM.initCurrentTeam();
+        if (myself.teamId !== TEM.currentTeamId) {
+            TEM.setCurrentTeamId(myself.teamId);
             setIsLoading(true);
         }
 
@@ -411,7 +385,7 @@ export const App = () => {
                 if (data.error) {
                     console.error("Worker failed:", data.error);
                 } else {
-                    setTeamMemberProfiles(data);
+                    TEM.setTeamMemberProfiles(data);
                 }
             };
 
@@ -423,7 +397,7 @@ export const App = () => {
                     if (data.error) {
                         console.error("Worker failed:", data.error);
                     } else {
-                        setTeamMemberProfiles(data);
+                        TEM.setTeamMemberProfiles(data);
                     }
                 };
             }, 60_000);
@@ -515,9 +489,9 @@ export const App = () => {
 
                 {openingService === 0 ? (
                     <InboxHome
-                        currentTeam={currentTeam}
-                        setCurrentTeam={setCurrentTeam}
-                        teamMemberProfiles={teamMemberProfiles}
+                        currentTeam={TEM.currentTeam}
+                        setCurrentTeam={TEM.setCurrentTeam}
+                        teamMemberProfiles={TEM.teamMemberProfiles}
                         myself={myself}
                         socket={socketInstance}
                         setMyself={setMyself}
@@ -532,14 +506,10 @@ export const App = () => {
 
                 {openingService === 1 ? (
                     <ChatHome
-                        currentTeam={currentTeam}
-                        setCurrentTeam={setCurrentTeam}
-                        teamMemberProfiles={teamMemberProfiles}
+                        TEM={TEM}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
-                        teamMembers={teamMembers}
-                        setTeamMembers={setTeamMembers}
                         openingService={openingService}
                         setOpeningService={setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
@@ -552,11 +522,7 @@ export const App = () => {
 
                 {openingService === 2 ? (
                     <TaskHome
-                        teamMembers={teamMembers}
-                        setTeamMembers={setTeamMembers}
-                        currentTeam={currentTeam}
-                        setCurrentTeam={setCurrentTeam}
-                        teamMemberProfiles={teamMemberProfiles}
+                        TEM={TEM}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
@@ -577,12 +543,8 @@ export const App = () => {
 
                 {openingService === 3 ? (
                     <NoteHome
-                        currentTeam={currentTeam}
-                        setCurrentTeam={setCurrentTeam}
-                        teamMemberProfiles={teamMemberProfiles}
                         socket={socketInstance}
-                        teamMembers={teamMembers}
-                        setTeamMembers={setTeamMembers}
+                        TEM={TEM}
                         myself={myself}
                         setMyself={setMyself}
                         openingService={openingService}

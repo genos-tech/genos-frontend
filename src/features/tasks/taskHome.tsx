@@ -38,7 +38,7 @@ import { ModalCreateProject } from "./components/modals/ModalCreateProject";
 import { ModalJoinProject } from "./components/modals/ModalJoinProject";
 import { ModalDeleteProject } from "./components/modals/ModalDeleteProject";
 import { Sidebar } from "../../components/layout/sidebar";
-import { Team, UserProps } from "../../types/admin";
+import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps } from "../../types/chat";
 import { TaskType, TaskTypesProps, SearchTeamTasksResponse } from "../../types/tasks";
 import { useAuth } from "../../context/AuthContext";
@@ -47,6 +47,7 @@ import { ProjectAvatar } from "../../components/common/ProjectAvatar";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
@@ -55,11 +56,7 @@ const taskTypes: TaskTypesProps = {
 };
 
 type TaskHomeProps = {
-    teamMembers: UserProps[];
-    setTeamMembers: (value: UserProps[]) => void;
-    currentTeam: Team;
-    setCurrentTeam: (value: Team) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -87,11 +84,7 @@ type TaskHomeProps = {
 };
 export const TaskHome = (props: TaskHomeProps) => {
     const {
-        teamMembers,
-        setTeamMembers,
-        currentTeam,
-        setCurrentTeam,
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
@@ -192,9 +185,9 @@ export const TaskHome = (props: TaskHomeProps) => {
 
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    currentTeam={currentTeam}
-                    setCurrentTeam={setCurrentTeam}
-                    teamMemberProfiles={teamMemberProfiles}
+                    currentTeam={TEM.currentTeam}
+                    setCurrentTeam={TEM.setCurrentTeam}
+                    teamMemberProfiles={TEM.teamMemberProfiles}
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
@@ -292,7 +285,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                                     <ProjectAvatar
                                                                         avatarSize={40}
                                                                         teamMemberProfiles={
-                                                                            teamMemberProfiles
+                                                                            TEM.teamMemberProfiles
                                                                         }
                                                                         myself={myself}
                                                                         setMyself={setMyself}
@@ -661,9 +654,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 {isTaskTableVisible === true && (
                                                     <>
                                                         <ProjectTaskTable
-                                                            teamMembers={teamMembers}
-                                                            setTeamMembers={setTeamMembers}
-                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            teamMembers={TEM.teamMembers}
+                                                            setTeamMembers={TEM.setTeamMembers}
+                                                            teamMemberProfiles={
+                                                                TEM.teamMemberProfiles
+                                                            }
                                                             myself={myself}
                                                             currentProject={PM.currentProject}
                                                             displayTaskType={displayTaskType}
@@ -722,9 +717,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 }}
                                             >
                                                 <CreateTaskForm
-                                                    teamMembers={teamMembers}
-                                                    setTeamMembers={setTeamMembers}
-                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    teamMembers={TEM.teamMembers}
+                                                    setTeamMembers={TEM.setTeamMembers}
+                                                    teamMemberProfiles={TEM.teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
                                                     setMyself={setMyself}
@@ -786,9 +781,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 }}
                                             >
                                                 <TaskPreview
-                                                    teamMembers={teamMembers}
-                                                    setTeamMembers={setTeamMembers}
-                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    teamMembers={TEM.teamMembers}
+                                                    setTeamMembers={TEM.setTeamMembers}
+                                                    teamMemberProfiles={TEM.teamMemberProfiles}
                                                     socket={socket}
                                                     myself={myself}
                                                     setMyself={setMyself}
@@ -853,9 +848,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                                                 }}
                                             >
                                                 <TaskNoteMain
-                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    teamMemberProfiles={TEM.teamMemberProfiles}
                                                     socket={socket}
-                                                    teamMembers={teamMembers}
+                                                    teamMembers={TEM.teamMembers}
                                                     myself={myself}
                                                     setMyself={setMyself}
                                                     setOpeningService={setOpeningService}

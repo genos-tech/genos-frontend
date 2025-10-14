@@ -4,7 +4,7 @@ import { Box, CssBaseline, IconButton } from "@mui/joy";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { Team, UserProps } from "../../types/admin";
+import { UserProps } from "../../types/admin";
 import { Sidebar } from "../../components/layout/sidebar";
 import { NoteSidebar } from "./components/NoteSidebar";
 import { MyNoteMain } from "./components/MyNoteMain";
@@ -15,14 +15,11 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 
 type NoteHomeProps = {
-    currentTeam: Team;
-    setCurrentTeam: (value: Team) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
-    teamMembers: UserProps[];
-    setTeamMembers: (value: UserProps[]) => void;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     openingService: number;
@@ -35,12 +32,8 @@ type NoteHomeProps = {
 };
 export const NoteHome = (props: NoteHomeProps) => {
     const {
-        currentTeam,
-        setCurrentTeam,
-        teamMemberProfiles,
+        TEM,
         socket,
-        teamMembers,
-        setTeamMembers,
         myself,
         setMyself,
         openingService,
@@ -58,9 +51,9 @@ export const NoteHome = (props: NoteHomeProps) => {
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    currentTeam={currentTeam}
-                    setCurrentTeam={setCurrentTeam}
-                    teamMemberProfiles={teamMemberProfiles}
+                    currentTeam={TEM.currentTeam}
+                    setCurrentTeam={TEM.setCurrentTeam}
+                    teamMemberProfiles={TEM.teamMemberProfiles}
                     socket={socket}
                     myself={myself}
                     setMyself={setMyself}
@@ -119,9 +112,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 {/* My Note selected */}
                                 {NM.currentNoteType === 1 && NM.currentMyNoteChain && (
                                     <MyNoteMain
-                                        teamMemberProfiles={teamMemberProfiles}
+                                        teamMemberProfiles={TEM.teamMemberProfiles}
                                         socket={socket}
-                                        teamMembers={teamMembers}
+                                        teamMembers={TEM.teamMembers}
                                         myself={myself}
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
@@ -134,9 +127,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 {NM.currentNoteType === 2 && NM.currentTaskNoteChain && (
                                     <>
                                         <TaskNoteMain
-                                            teamMemberProfiles={teamMemberProfiles}
+                                            teamMemberProfiles={TEM.teamMemberProfiles}
                                             socket={socket}
-                                            teamMembers={teamMembers}
+                                            teamMembers={TEM.teamMembers}
                                             myself={myself}
                                             setMyself={setMyself}
                                             setOpeningService={setOpeningService}
@@ -151,9 +144,9 @@ export const NoteHome = (props: NoteHomeProps) => {
 
                                         {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
                                             <TaskPreview
-                                                teamMembers={teamMembers}
-                                                setTeamMembers={setTeamMembers}
-                                                teamMemberProfiles={teamMemberProfiles}
+                                                teamMembers={TEM.teamMembers}
+                                                setTeamMembers={TEM.setTeamMembers}
+                                                teamMemberProfiles={TEM.teamMemberProfiles}
                                                 socket={socket}
                                                 myself={myself}
                                                 setMyself={setMyself}
@@ -184,9 +177,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 {/* Chat Note selected */}
                                 {NM.currentNoteType === 3 && NM.currentChatNoteChain && (
                                     <ChatNoteMain
-                                        teamMemberProfiles={teamMemberProfiles}
+                                        teamMemberProfiles={TEM.teamMemberProfiles}
                                         socket={socket}
-                                        teamMembers={teamMembers}
+                                        teamMembers={TEM.teamMembers}
                                         myself={myself}
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
@@ -262,9 +255,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                                         }}
                                     >
                                         <TaskPreview
-                                            teamMembers={teamMembers}
-                                            setTeamMembers={setTeamMembers}
-                                            teamMemberProfiles={teamMemberProfiles}
+                                            teamMembers={TEM.teamMembers}
+                                            setTeamMembers={TEM.setTeamMembers}
+                                            teamMemberProfiles={TEM.teamMemberProfiles}
                                             socket={socket}
                                             myself={myself}
                                             setMyself={setMyself}

@@ -44,7 +44,7 @@ export const useProjectManagement = (
                     currentProject === null ||
                     currentProject.projectId !== loadedTeamProjects[i].projectId
                 ) {
-                    if (targetProjectId !== -1 && currentProject) {
+                    if (targetProjectId !== -1 && currentProject && currentTeamId) {
                         if (
                             loadedTeamProjects[i].projectId === targetProjectId ||
                             myself.teamId !== currentTeamId

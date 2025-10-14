@@ -8,7 +8,7 @@ import { ThreadPane } from "./ThreadChatPane";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { MessagesPane } from "./MainChatPane";
 import { MessagesSubPane } from "./SubChatPane";
-import { Team, UserProps } from "../../types/admin";
+import { UserProps } from "../../types/admin";
 import { ToDoFactProps } from "../../types/chat";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
@@ -23,16 +23,13 @@ import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 
 type ChatHomeProps = {
-    currentTeam: Team;
-    setCurrentTeam: (value: Team) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    teamMembers: UserProps[];
-    setTeamMembers: (value: UserProps[]) => void;
     CM: ChatManagementState;
     openingService: number;
     setOpeningService: (service: number) => void;
@@ -44,14 +41,10 @@ type ChatHomeProps = {
 
 export const ChatHome = (props: ChatHomeProps) => {
     const {
-        currentTeam,
-        setCurrentTeam,
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
-        teamMembers,
-        setTeamMembers,
         openingService,
         setOpeningService,
         unReadInboxItemCount,
@@ -157,9 +150,9 @@ export const ChatHome = (props: ChatHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
-                currentTeam={currentTeam}
-                setCurrentTeam={setCurrentTeam}
-                teamMemberProfiles={teamMemberProfiles}
+                currentTeam={TEM.currentTeam}
+                setCurrentTeam={TEM.setCurrentTeam}
+                teamMemberProfiles={TEM.teamMemberProfiles}
                 socket={socket}
                 myself={myself}
                 setMyself={setMyself}
@@ -194,7 +187,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             }}
                         >
                             <ChatSidebar
-                                teamMemberProfiles={teamMemberProfiles}
+                                teamMemberProfiles={TEM.teamMemberProfiles}
                                 myself={myself}
                                 setMyself={setMyself}
                                 currentChatPaneType={CM.currentChatPaneType}
@@ -260,12 +253,12 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             onResize={setSubChatPanelSize}
                                         >
                                             <MessagesSubPane
-                                                teamMemberProfiles={teamMemberProfiles}
+                                                teamMemberProfiles={TEM.teamMemberProfiles}
                                                 currentWindowHeight={height}
                                                 paneSizePCT={subChatPanelSize}
                                                 myself={myself}
                                                 setMyself={setMyself}
-                                                teamMembers={teamMembers}
+                                                teamMembers={TEM.teamMembers}
                                                 chat={CM.currentMainChat}
                                                 subChat={
                                                     CM.currentSubChat
@@ -359,7 +352,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     {/* Chat selected */}
                                     {CM.currentMainChat && CM.currentMainChat.chatId !== -1 && (
                                         <MessagesPane
-                                            teamMemberProfiles={teamMemberProfiles}
+                                            teamMemberProfiles={TEM.teamMemberProfiles}
                                             currentWindowHeight={height}
                                             paneSizePCT={mainChatPanelSize}
                                             chat={CM.currentMainChat}
@@ -370,7 +363,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                             }
                                             myself={myself}
                                             setMyself={setMyself}
-                                            teamMembers={teamMembers}
+                                            teamMembers={TEM.teamMembers}
                                             socket={socket}
                                             currentMainChat={CM.currentMainChat}
                                             setCurrentMainChat={CM.setCurrentMainChat}
@@ -432,13 +425,13 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 }}
                             >
                                 <ThreadPane
-                                    teamMemberProfiles={teamMemberProfiles}
+                                    teamMemberProfiles={TEM.teamMemberProfiles}
                                     currentWindowHeight={height}
                                     thread={CM.currentThreadChat}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    teamMembers={teamMembers}
+                                    teamMembers={TEM.teamMembers}
                                     currentThreadChat={CM.currentThreadChat}
                                     setCurrentThreadChat={CM.setCurrentThreadChat}
                                     setIsThreadVisible={CM.setIsThreadVisible}
@@ -496,9 +489,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 }}
                             >
                                 <CreateTaskForm
-                                    teamMembers={teamMembers}
-                                    setTeamMembers={setTeamMembers}
-                                    teamMemberProfiles={teamMemberProfiles}
+                                    teamMembers={TEM.teamMembers}
+                                    setTeamMembers={TEM.setTeamMembers}
+                                    teamMemberProfiles={TEM.teamMemberProfiles}
                                     socket={socket}
                                     myself={myself}
                                     setMyself={setMyself}
@@ -557,9 +550,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 }}
                             >
                                 <TaskPreview
-                                    teamMembers={teamMembers}
-                                    setTeamMembers={setTeamMembers}
-                                    teamMemberProfiles={teamMemberProfiles}
+                                    teamMembers={TEM.teamMembers}
+                                    setTeamMembers={TEM.setTeamMembers}
+                                    teamMemberProfiles={TEM.teamMemberProfiles}
                                     socket={socket}
                                     myself={myself}
                                     setMyself={setMyself}
@@ -622,9 +615,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 }}
                             >
                                 <ChatNoteMain
-                                    teamMemberProfiles={teamMemberProfiles}
+                                    teamMemberProfiles={TEM.teamMemberProfiles}
                                     socket={socket}
-                                    teamMembers={teamMembers}
+                                    teamMembers={TEM.teamMembers}
                                     myself={myself}
                                     setMyself={setMyself}
                                     setOpeningService={setOpeningService}
