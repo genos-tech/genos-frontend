@@ -20,6 +20,7 @@ import { loadSpecificTask } from "./features/tasks/services/loadSpecificTask";
 
 import { useTeamManagement } from "./hooks/common/useTeamManagement";
 import { useMyself } from "./hooks/common/useAuth";
+import { useUIStateManagement } from "./hooks/common/useUIStateManagement";
 import { useChatManagement } from "./hooks/chats/useChatManagement";
 import { useInboxManagement } from "./hooks/inbox/useInboxManagement";
 import { useProjectManagement } from "./hooks/common/useProjectManagement";
@@ -60,21 +61,9 @@ export const App = () => {
     ///////////////////////
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself(accessToken);
-    const [isLoading, setIsLoading] = useState(true);
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
 
-    // openingService = {0: Inbox, 1: Chat, 2: Tasks, 3: Notes}
-    const [openingService, setOpeningService] = useState<number>(
-        Number(localStorage.getItem("openingService") || "1")
-    );
-    useEffect(() => {
-        localStorage.setItem("openingService", openingService.toString());
-    }, [openingService]);
-
-    // noteType = {0: Home, 1: personal note, 2: task note, 3: chat note, 4: shared note}
-    const [currentNoteType, setCurrentNoteType] = useState<number>(
-        Number(localStorage.getItem("currentNoteType") || "1")
-    );
+    const UI = useUIStateManagement();
 
     const sendHeartBeat = () => {
         if (socketInstance) {
@@ -256,7 +245,7 @@ export const App = () => {
         accessToken: accessToken,
         socket: socketInstance,
         myself: myself,
-        isLoading: isLoading,
+        isLoading: UI.isLoading,
         funcSetInboxItems: IM.funcSetInboxItems,
         currentProject: PM.currentProject,
         currentPreviewTaskId: TM.currentPreviewTaskId,
@@ -283,12 +272,12 @@ export const App = () => {
     }, [TEM.currentTeamId]);
 
     useEffect(() => {
-        if (openingService === 0) {
+        if (UI.openingService === 0) {
             // Init all notes
             NM.setCurrentMyNote(null);
             NM.setCurrentTaskNote(null);
             NM.setCurrentChatNote(null);
-        } else if (openingService === 1) {
+        } else if (UI.openingService === 1) {
             // Initialize the task visibility.
             TM.setIsTaskPreviewVisible(false);
 
@@ -304,7 +293,7 @@ export const App = () => {
             NM.setCurrentMyNote(null);
             NM.setCurrentTaskNote(null);
             // setCurrentChatNote(null);
-        } else if (openingService === 2) {
+        } else if (UI.openingService === 2) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             NM.setTmpTabItems(NM.tabItems);
             NM.setTabItems(NM.tabItems.filter((item) => item.noteType === 2));
@@ -316,7 +305,7 @@ export const App = () => {
             NM.setCurrentMyNote(null);
             NM.setCurrentTaskNote(null);
             NM.setCurrentChatNote(null);
-        } else if (openingService === 3) {
+        } else if (UI.openingService === 3) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             NM.setTabItems(NM.tmpTabItems);
             NM.setTmpTabItems([]);
@@ -325,7 +314,7 @@ export const App = () => {
                 NM.popInitialNote();
             }
         }
-    }, [openingService]);
+    }, [UI.openingService]);
 
     // Initialization Hooks
     useEffect(() => {
@@ -336,7 +325,7 @@ export const App = () => {
     }, []);
 
     useEffect(() => {
-        if (isLoading === false) {
+        if (UI.isLoading === false) {
             IM.funcSetInboxItems();
             CM.funcSetAllChats();
             CM.funcSetFlaggedMessages();
@@ -353,7 +342,7 @@ export const App = () => {
             NM.getTaskNoteMeta();
             NM.getChatNoteMeta();
         }
-    }, [isLoading]);
+    }, [UI.isLoading]);
 
     useEffect(() => {
         if (accessToken) {
@@ -372,7 +361,7 @@ export const App = () => {
         TEM.initCurrentTeam();
         if (myself.teamId !== TEM.currentTeamId) {
             TEM.setCurrentTeamId(myself.teamId);
-            setIsLoading(true);
+            UI.setIsLoading(true);
         }
 
         if (myself.userId !== "") {
@@ -476,10 +465,10 @@ export const App = () => {
         }
     }, [CM.currentThreadChat]);
 
-    return isLoading || CM.currentMainChat === undefined ? (
+    return UI.isLoading || CM.currentMainChat === undefined ? (
         <InitialLoad
             myself={myself}
-            setIsLoading={setIsLoading}
+            setIsLoading={UI.setIsLoading}
             setCurrentMainChat={CM.setCurrentMainChat}
         />
     ) : (
@@ -487,7 +476,7 @@ export const App = () => {
             <CssVarsProvider disableTransitionOnChange>
                 <CssBaseline />
 
-                {openingService === 0 ? (
+                {UI.openingService === 0 ? (
                     <InboxHome
                         currentTeam={TEM.currentTeam}
                         setCurrentTeam={TEM.setCurrentTeam}
@@ -495,8 +484,8 @@ export const App = () => {
                         myself={myself}
                         socket={socketInstance}
                         setMyself={setMyself}
-                        openingService={openingService}
-                        setOpeningService={setOpeningService}
+                        openingService={UI.openingService}
+                        setOpeningService={UI.setOpeningService}
                         setCurrentMainChat={CM.setCurrentMainChat}
                         inboxItems={IM.inboxItems}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
@@ -504,14 +493,14 @@ export const App = () => {
                     />
                 ) : null}
 
-                {openingService === 1 ? (
+                {UI.openingService === 1 ? (
                     <ChatHome
                         TEM={TEM}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
-                        openingService={openingService}
-                        setOpeningService={setOpeningService}
+                        openingService={UI.openingService}
+                        setOpeningService={UI.setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         CM={CM}
                         NM={NM}
@@ -520,15 +509,15 @@ export const App = () => {
                     />
                 ) : null}
 
-                {openingService === 2 ? (
+                {UI.openingService === 2 ? (
                     <TaskHome
                         TEM={TEM}
                         socket={socketInstance}
                         myself={myself}
                         setMyself={setMyself}
                         setCurrentMainChat={CM.setCurrentMainChat}
-                        openingService={openingService}
-                        setOpeningService={setOpeningService}
+                        openingService={UI.openingService}
+                        setOpeningService={UI.setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                         allChats={CM.allChats}
@@ -541,14 +530,14 @@ export const App = () => {
                     />
                 ) : null}
 
-                {openingService === 3 ? (
+                {UI.openingService === 3 ? (
                     <NoteHome
                         socket={socketInstance}
                         TEM={TEM}
                         myself={myself}
                         setMyself={setMyself}
-                        openingService={openingService}
-                        setOpeningService={setOpeningService}
+                        openingService={UI.openingService}
+                        setOpeningService={UI.setOpeningService}
                         unReadInboxItemCount={IM.unReadInboxItemCount}
                         NM={NM}
                         CM={CM}
