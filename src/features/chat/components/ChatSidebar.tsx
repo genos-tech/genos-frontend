@@ -598,36 +598,42 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {currentChatPaneType === 1 && (
                     <Box>
                         <ChatList
-                            activityMessages={[]}
-                            allChats={allChats.filter((chat) => chat.chatType === 1)}
+                            socket={socket}
                             chatType={1}
                             currentActivityMessageType={-1}
-                            currentMainChat={currentMainChat}
-                            currentSubChat={currentSubChat}
-                            flaggedMessages={flaggedMessages}
-                            funcSetAllChats={funcSetAllChats}
-                            incompleteTodoCount={incompleteTodoCount}
-                            isCreatingTask={isCreatingTask}
-                            isSubChatVisible={isSubChatVisible}
-                            isTaskPreviewVisible={isTaskPreviewVisible}
-                            myself={myself}
-                            setActivityMessages={setActivityMessages}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setCurrentProject={setCurrentProject}
-                            setCurrentSubChat={setCurrentSubChat}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                            setFlaggedMessages={setFlaggedMessages}
-                            setIsMainChatVisible={setIsMainChatVisible}
-                            setIsSubChatVisible={setIsSubChatVisible}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsThreadVisible={setIsThreadVisible}
-                            setIsToDoVisible={setIsToDoVisible}
-                            setMyself={setMyself}
-                            setOpeningService={setOpeningService}
-                            showOnlyUnreadItems={showOnlyUnreadItems}
-                            socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
+                            }}
+                            actions={{
+                                setCurrentMainChat,
+                                setCurrentSubChat,
+                                setCurrentThreadChat,
+                                setIsMainChatVisible,
+                                setIsThreadVisible,
+                                setIsTaskPreviewVisible,
+                                setIsSubChatVisible,
+                                setOpeningService,
+                                setCurrentPreviewTaskId,
+                                setCurrentProject,
+                                setIsToDoVisible,
+                                funcSetAllChats,
+                            }}
+                            data={{
+                                teamMemberProfiles,
+                                myself,
+                                setMyself,
+                                allChats: allChats.filter((chat) => chat.chatType === 1),
+                                activityMessages: [],
+                                setActivityMessages,
+                                flaggedMessages,
+                                setFlaggedMessages,
+                            }}
                         />
                     </Box>
                 )}
@@ -636,36 +642,42 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {currentChatPaneType === 2 && (
                     <Box>
                         <ChatList
-                            activityMessages={[]}
-                            allChats={allChats.filter((chat) => chat.chatType === 2)}
+                            socket={socket}
                             chatType={2}
                             currentActivityMessageType={-1}
-                            currentMainChat={currentMainChat}
-                            currentSubChat={currentSubChat}
-                            flaggedMessages={flaggedMessages}
-                            funcSetAllChats={funcSetAllChats}
-                            incompleteTodoCount={incompleteTodoCount}
-                            isCreatingTask={isCreatingTask}
-                            isSubChatVisible={isSubChatVisible}
-                            isTaskPreviewVisible={isTaskPreviewVisible}
-                            myself={myself}
-                            setActivityMessages={setActivityMessages}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setCurrentProject={setCurrentProject}
-                            setCurrentSubChat={setCurrentSubChat}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                            setFlaggedMessages={setFlaggedMessages}
-                            setIsMainChatVisible={setIsMainChatVisible}
-                            setIsSubChatVisible={setIsSubChatVisible}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsThreadVisible={setIsThreadVisible}
-                            setIsToDoVisible={setIsToDoVisible}
-                            setMyself={setMyself}
-                            setOpeningService={setOpeningService}
-                            showOnlyUnreadItems={showOnlyUnreadItems}
-                            socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
+                            }}
+                            actions={{
+                                setCurrentMainChat,
+                                setCurrentSubChat,
+                                setCurrentThreadChat,
+                                setIsMainChatVisible,
+                                setIsThreadVisible,
+                                setIsTaskPreviewVisible,
+                                setIsSubChatVisible,
+                                setOpeningService,
+                                setCurrentPreviewTaskId,
+                                setCurrentProject,
+                                setIsToDoVisible,
+                                funcSetAllChats,
+                            }}
+                            data={{
+                                teamMemberProfiles,
+                                myself,
+                                setMyself,
+                                allChats: allChats.filter((chat) => chat.chatType === 2),
+                                activityMessages: [],
+                                setActivityMessages,
+                                flaggedMessages,
+                                setFlaggedMessages,
+                            }}
                         />
                     </Box>
                 )}
@@ -674,36 +686,42 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {currentChatPaneType === 3 && (
                     <Box>
                         <ChatList
-                            activityMessages={[]}
-                            allChats={allChats.filter((chat) => chat.chatType === 3)}
+                            socket={socket}
                             chatType={3}
                             currentActivityMessageType={-1}
-                            currentMainChat={currentMainChat}
-                            currentSubChat={currentSubChat}
-                            flaggedMessages={flaggedMessages}
-                            funcSetAllChats={funcSetAllChats}
-                            incompleteTodoCount={incompleteTodoCount}
-                            isCreatingTask={isCreatingTask}
-                            isSubChatVisible={isSubChatVisible}
-                            isTaskPreviewVisible={isTaskPreviewVisible}
-                            myself={myself}
-                            setActivityMessages={setActivityMessages}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setCurrentProject={setCurrentProject}
-                            setCurrentSubChat={setCurrentSubChat}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                            setFlaggedMessages={setFlaggedMessages}
-                            setIsMainChatVisible={setIsMainChatVisible}
-                            setIsSubChatVisible={setIsSubChatVisible}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsThreadVisible={setIsThreadVisible}
-                            setIsToDoVisible={setIsToDoVisible}
-                            setMyself={setMyself}
-                            setOpeningService={setOpeningService}
-                            showOnlyUnreadItems={showOnlyUnreadItems}
-                            socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
+                            }}
+                            actions={{
+                                setCurrentMainChat,
+                                setCurrentSubChat,
+                                setCurrentThreadChat,
+                                setIsMainChatVisible,
+                                setIsThreadVisible,
+                                setIsTaskPreviewVisible,
+                                setIsSubChatVisible,
+                                setOpeningService,
+                                setCurrentPreviewTaskId,
+                                setCurrentProject,
+                                setIsToDoVisible,
+                                funcSetAllChats,
+                            }}
+                            data={{
+                                teamMemberProfiles,
+                                myself,
+                                setMyself,
+                                allChats: allChats.filter((chat) => chat.chatType === 3),
+                                activityMessages: [],
+                                setActivityMessages,
+                                flaggedMessages,
+                                setFlaggedMessages,
+                            }}
                         />
                     </Box>
                 )}
@@ -712,36 +730,42 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {currentChatPaneType === 4 && (
                     <Box>
                         <ChatList
-                            activityMessages={[]}
-                            allChats={allChats.filter((chat) => chat.isPinned)}
+                            socket={socket}
                             chatType={4}
                             currentActivityMessageType={-1}
-                            currentMainChat={currentMainChat}
-                            currentSubChat={currentSubChat}
-                            flaggedMessages={flaggedMessages}
-                            funcSetAllChats={funcSetAllChats}
-                            incompleteTodoCount={incompleteTodoCount}
-                            isCreatingTask={isCreatingTask}
-                            isSubChatVisible={isSubChatVisible}
-                            isTaskPreviewVisible={isTaskPreviewVisible}
-                            myself={myself}
-                            setActivityMessages={setActivityMessages}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setCurrentProject={setCurrentProject}
-                            setCurrentSubChat={setCurrentSubChat}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                            setFlaggedMessages={setFlaggedMessages}
-                            setIsMainChatVisible={setIsMainChatVisible}
-                            setIsSubChatVisible={setIsSubChatVisible}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsThreadVisible={setIsThreadVisible}
-                            setIsToDoVisible={setIsToDoVisible}
-                            setMyself={setMyself}
-                            setOpeningService={setOpeningService}
-                            showOnlyUnreadItems={showOnlyUnreadItems}
-                            socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
+                            }}
+                            actions={{
+                                setCurrentMainChat,
+                                setCurrentSubChat,
+                                setCurrentThreadChat,
+                                setIsMainChatVisible,
+                                setIsThreadVisible,
+                                setIsTaskPreviewVisible,
+                                setIsSubChatVisible,
+                                setOpeningService,
+                                setCurrentPreviewTaskId,
+                                setCurrentProject,
+                                setIsToDoVisible,
+                                funcSetAllChats,
+                            }}
+                            data={{
+                                teamMemberProfiles,
+                                myself,
+                                setMyself,
+                                allChats: allChats.filter((chat) => chat.isPinned),
+                                activityMessages: [],
+                                setActivityMessages,
+                                flaggedMessages,
+                                setFlaggedMessages,
+                            }}
                         />
                     </Box>
                 )}
@@ -754,36 +778,42 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentActivityMessageType={setCurrentActivityMessageType}
                         />
                         <ChatList
-                            activityMessages={activityMessages}
-                            allChats={allChats}
+                            socket={socket}
                             chatType={5}
                             currentActivityMessageType={currentActivityMessageType}
-                            currentMainChat={currentMainChat}
-                            currentSubChat={currentSubChat}
-                            flaggedMessages={flaggedMessages}
-                            funcSetAllChats={funcSetAllChats}
-                            incompleteTodoCount={incompleteTodoCount}
-                            isCreatingTask={isCreatingTask}
-                            isSubChatVisible={isSubChatVisible}
-                            isTaskPreviewVisible={isTaskPreviewVisible}
-                            myself={myself}
-                            setActivityMessages={setActivityMessages}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setCurrentProject={setCurrentProject}
-                            setCurrentSubChat={setCurrentSubChat}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                            setFlaggedMessages={setFlaggedMessages}
-                            setIsMainChatVisible={setIsMainChatVisible}
-                            setIsSubChatVisible={setIsSubChatVisible}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsThreadVisible={setIsThreadVisible}
-                            setIsToDoVisible={setIsToDoVisible}
-                            setMyself={setMyself}
-                            setOpeningService={setOpeningService}
-                            showOnlyUnreadItems={showOnlyUnreadItems}
-                            socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
+                            }}
+                            actions={{
+                                setCurrentMainChat,
+                                setCurrentSubChat,
+                                setCurrentThreadChat,
+                                setIsMainChatVisible,
+                                setIsThreadVisible,
+                                setIsTaskPreviewVisible,
+                                setIsSubChatVisible,
+                                setOpeningService,
+                                setCurrentPreviewTaskId,
+                                setCurrentProject,
+                                setIsToDoVisible,
+                                funcSetAllChats,
+                            }}
+                            data={{
+                                teamMemberProfiles,
+                                myself,
+                                setMyself,
+                                allChats,
+                                activityMessages,
+                                setActivityMessages,
+                                flaggedMessages,
+                                setFlaggedMessages,
+                            }}
                         />
                     </Box>
                 )}
@@ -792,36 +822,42 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {currentChatPaneType === 6 && (
                     <Box>
                         <ChatList
-                            activityMessages={activityMessages}
-                            allChats={allChats}
+                            socket={socket}
                             chatType={6}
                             currentActivityMessageType={currentActivityMessageType}
-                            currentMainChat={currentMainChat}
-                            currentSubChat={currentSubChat}
-                            flaggedMessages={flaggedMessages}
-                            funcSetAllChats={funcSetAllChats}
-                            incompleteTodoCount={incompleteTodoCount}
-                            isCreatingTask={isCreatingTask}
-                            isSubChatVisible={isSubChatVisible}
-                            isTaskPreviewVisible={isTaskPreviewVisible}
-                            myself={myself}
-                            setActivityMessages={setActivityMessages}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                            setCurrentProject={setCurrentProject}
-                            setCurrentSubChat={setCurrentSubChat}
-                            setCurrentThreadChat={setCurrentThreadChat}
-                            setFlaggedMessages={setFlaggedMessages}
-                            setIsMainChatVisible={setIsMainChatVisible}
-                            setIsSubChatVisible={setIsSubChatVisible}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                            setIsThreadVisible={setIsThreadVisible}
-                            setIsToDoVisible={setIsToDoVisible}
-                            setMyself={setMyself}
-                            setOpeningService={setOpeningService}
-                            showOnlyUnreadItems={showOnlyUnreadItems}
-                            socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
+                            }}
+                            actions={{
+                                setCurrentMainChat,
+                                setCurrentSubChat,
+                                setCurrentThreadChat,
+                                setIsMainChatVisible,
+                                setIsThreadVisible,
+                                setIsTaskPreviewVisible,
+                                setIsSubChatVisible,
+                                setOpeningService,
+                                setCurrentPreviewTaskId,
+                                setCurrentProject,
+                                setIsToDoVisible,
+                                funcSetAllChats,
+                            }}
+                            data={{
+                                teamMemberProfiles,
+                                myself,
+                                setMyself,
+                                allChats,
+                                activityMessages,
+                                setActivityMessages,
+                                flaggedMessages,
+                                setFlaggedMessages,
+                            }}
                         />
                     </Box>
                 )}

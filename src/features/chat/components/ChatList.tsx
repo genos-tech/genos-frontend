@@ -20,6 +20,73 @@ import { ChatListItem } from "./chatListItem";
 import { ChatListItemForActivity } from "./chatListItemForActivity";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
 
+// Constants
+const CHAT_TYPES = {
+    DM: 1,
+    GM: 2,
+    PM: 3,
+    PINNED: 4,
+    ACTIVITY: 5,
+    FLAGGED: 6,
+} as const;
+
+const ACTIVITY_TYPES = {
+    ALL: 0,
+    THREAD: 1,
+    TASK: 2,
+    MENTION: 3,
+    REACTION: 4,
+} as const;
+
+const ACTIVITY_FILTERS = {
+    [ACTIVITY_TYPES.ALL]: () => true,
+    [ACTIVITY_TYPES.THREAD]: (item: ActivityMessageProps) => item.isThread === true,
+    [ACTIVITY_TYPES.TASK]: (item: ActivityMessageProps) => item.chatType > 2,
+    [ACTIVITY_TYPES.MENTION]: (item: ActivityMessageProps) => item.activityType === 3,
+    [ACTIVITY_TYPES.REACTION]: (item: ActivityMessageProps) => item.activityType === 2,
+} as const;
+
+// Interfaces for better prop organization
+interface ChatListState {
+    currentMainChat?: ChatProps;
+    currentSubChat?: ChatProps;
+    isTaskPreviewVisible: boolean;
+    isSubChatVisible: boolean;
+    isCreatingTask: {
+        flag: boolean;
+        parentTaskId: number | null;
+        rootTaskId: number | null;
+    };
+    showOnlyUnreadItems: boolean;
+    incompleteTodoCount: number;
+}
+
+interface ChatListActions {
+    setCurrentMainChat: (chat: ChatProps) => void;
+    setCurrentSubChat: (chat: ChatProps) => void;
+    setCurrentThreadChat: (value: ThreadProps) => void;
+    setIsMainChatVisible: (value: boolean) => void;
+    setIsThreadVisible: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setIsSubChatVisible: (value: boolean) => void;
+    setOpeningService: (value: number) => void;
+    setCurrentPreviewTaskId: (value: number) => void;
+    setCurrentProject: (value: ProjectProps) => void;
+    setIsToDoVisible: (value: boolean) => void;
+    funcSetAllChats: () => Promise<void>;
+}
+
+interface ChatListData {
+    teamMemberProfiles: Record<string, UserProps>;
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    allChats: AllChatProps[];
+    activityMessages: ActivityMessageProps[];
+    setActivityMessages: (value: ActivityMessageProps[]) => void;
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+}
+
 // Sort all chats by pinned status and then by TSLastMessage in desc
 const sortAllChatByPinned = (allChats: AllChatProps[]) => {
     return allChats.sort((a, b) => {
@@ -30,182 +97,387 @@ const sortAllChatByPinned = (allChats: AllChatProps[]) => {
 };
 
 type ChatListProps = {
-    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
-    myself: UserProps;
-    setMyself: (value: UserProps) => void;
     chatType: number;
     currentActivityMessageType: number;
-    activityMessages: ActivityMessageProps[];
-    setActivityMessages: (value: ActivityMessageProps[]) => void;
-    allChats: AllChatProps[];
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    setCurrentThreadChat: (value: ThreadProps) => void;
-    currentMainChat?: ChatProps;
-    currentSubChat?: ChatProps;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isTaskPreviewVisible: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    isSubChatVisible: boolean;
-    setIsSubChatVisible: (value: boolean) => void;
-    setOpeningService: (value: number) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    showOnlyUnreadItems: boolean;
-    funcSetAllChats: () => Promise<void>;
-    incompleteTodoCount: number;
-    setIsToDoVisible: (value: boolean) => void;
-    flaggedMessages: FlaggedMessageProps[];
-    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    state: ChatListState;
+    actions: ChatListActions;
+    data: ChatListData;
 };
-export const ChatList = (props: ChatListProps) => {
-    const {
-        teamMemberProfiles,
-        socket,
-        myself,
-        setMyself,
-        chatType,
-        activityMessages,
-        setActivityMessages,
-        allChats,
-        currentActivityMessageType,
-        setCurrentMainChat,
-        setCurrentSubChat,
-        setCurrentThreadChat,
-        currentMainChat,
-        currentSubChat,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        setIsTaskPreviewVisible,
-        isTaskPreviewVisible,
-        isCreatingTask,
-        isSubChatVisible,
-        setIsSubChatVisible,
-        setOpeningService,
-        setCurrentPreviewTaskId,
-        setCurrentProject,
-        showOnlyUnreadItems,
-        funcSetAllChats,
-        incompleteTodoCount,
-        setIsToDoVisible,
-        flaggedMessages,
-        setFlaggedMessages,
-    } = props;
-    const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
-    const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
-    const virtuosoPMRef = useRef<VirtuosoHandle | null>(null);
-    const virtuosoPinnedRef = useRef<VirtuosoHandle | null>(null);
-    const virtuosoFlaggedRef = useRef<VirtuosoHandle | null>(null);
 
-    const chatTypeLookup: { [key: number]: any } = {
-        1: virtuosoDMRef, // DM
-        2: virtuosoGMRef, // GM
-        3: virtuosoPMRef, // PM
-        4: virtuosoPinnedRef, // Pinned
-    };
-    useScrollToBottomOnChatPaneChange(virtuosoDMRef as React.RefObject<VirtuosoHandle>, allChats);
-    useScrollToBottomOnChatPaneChange(virtuosoGMRef as React.RefObject<VirtuosoHandle>, allChats);
-    useScrollToBottomOnChatPaneChange(virtuosoPMRef as React.RefObject<VirtuosoHandle>, allChats);
-    useScrollToBottomOnChatPaneChange(
-        virtuosoPinnedRef as React.RefObject<VirtuosoHandle>,
-        allChats
-    );
-    useScrollToBottomOnChatPaneChange(
-        virtuosoFlaggedRef as React.RefObject<VirtuosoHandle>,
-        allChats
-    );
-
+// Custom hook for managing filtered chats
+const useFilteredChats = (allChats: AllChatProps[], showOnlyUnreadItems: boolean) => {
     const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(sortAllChatByPinned(allChats));
 
-    const [selectedActivityId, setSelectedActivityId] = useState<string>("");
-    const [selectedFlaggedMessageId, setSelectedFlaggedMessageId] = useState<string>("");
-
-    const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
-    useScrollToBottomOnNewActivity(
-        virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
-        activityMessages,
-        true
-    );
-
-    {
-        /* Not displaying the first message in a thread 
-                                because it's the same as its parent message */
-    }
-    const [tmpActivityMessages, setTmpActivityMessages] = useState<ActivityMessageProps[]>(
-        activityMessages.filter((item) => !(item.isThread === true && item.messageId === 1))
-    );
-
     useEffect(() => {
-        // Exclude the first thread message cause it's actually not a thread message.
-        const tmpActivityMessages: ActivityMessageProps[] = activityMessages.filter(
-            (item) => !(item.isThread === true && item.messageId === 1)
-        );
-        if (tmpActivityMessages) {
-            // All activities
-            if (currentActivityMessageType === 0) {
-                setTmpActivityMessages(tmpActivityMessages);
-            }
-
-            // Thread activities
-            if (currentActivityMessageType === 1) {
-                setTmpActivityMessages(
-                    tmpActivityMessages.filter((item) => item.isThread === true)
-                );
-            }
-
-            // Task activities (PM & Task)
-            if (currentActivityMessageType === 2) {
-                setTmpActivityMessages(tmpActivityMessages.filter((item) => item.chatType > 2));
-            }
-
-            // Mention activities
-            if (currentActivityMessageType === 3) {
-                setTmpActivityMessages(
-                    tmpActivityMessages.filter((item) => item.activityType === 3)
-                );
-            }
-
-            // Reaction activities
-            if (currentActivityMessageType === 4) {
-                setTmpActivityMessages(
-                    tmpActivityMessages.filter((item) => item.activityType === 2)
-                );
-            }
-        }
-    }, [activityMessages, currentActivityMessageType, showOnlyUnreadItems]);
-
-    useEffect(() => {
-        if (showOnlyUnreadItems === true) {
-            setTmpActivityMessages(tmpActivityMessages.filter((item) => item.isRead === false));
-            setTmpAllChats(
-                sortAllChatByPinned(
-                    allChats.filter(
-                        (item) =>
-                            item.lastReadMessageId <
-                            (item.latestMessage
-                                ? item.latestMessage.messageId
-                                : item.lastReadMessageId + 1)
-                    )
-                )
+        if (showOnlyUnreadItems) {
+            const filteredChats = allChats.filter(
+                (item) =>
+                    item.lastReadMessageId <
+                    (item.latestMessage
+                        ? item.latestMessage.messageId
+                        : item.lastReadMessageId + 1)
             );
+            setTmpAllChats(sortAllChatByPinned(filteredChats));
         } else {
             setTmpAllChats(sortAllChatByPinned([...allChats]));
         }
     }, [showOnlyUnreadItems, allChats]);
 
-    const [tmpFlaggedMessages, setTmpFlaggedMessages] =
-        useState<FlaggedMessageProps[]>(flaggedMessages);
+    return tmpAllChats;
+};
+
+// Custom hook for managing filtered activity messages
+const useFilteredActivityMessages = (
+    activityMessages: ActivityMessageProps[],
+    currentActivityMessageType: number,
+    showOnlyUnreadItems: boolean
+) => {
+    const [tmpActivityMessages, setTmpActivityMessages] = useState<ActivityMessageProps[]>(
+        activityMessages.filter((item) => !(item.isThread === true && item.messageId === 1))
+    );
 
     useEffect(() => {
-        setTmpFlaggedMessages(flaggedMessages);
-    }, [flaggedMessages]);
+        const filteredMessages = activityMessages.filter(
+            (item) => !(item.isThread === true && item.messageId === 1)
+        );
+
+        if (filteredMessages) {
+            const filterFn =
+                ACTIVITY_FILTERS[currentActivityMessageType as keyof typeof ACTIVITY_FILTERS];
+            const filtered = filterFn ? filteredMessages.filter(filterFn) : filteredMessages;
+
+            if (showOnlyUnreadItems) {
+                setTmpActivityMessages(filtered.filter((item) => item.isRead === false));
+            } else {
+                setTmpActivityMessages(filtered);
+            }
+        }
+    }, [activityMessages, currentActivityMessageType, showOnlyUnreadItems]);
+
+    return tmpActivityMessages;
+};
+
+// Component for rendering chat items
+const ChatListRenderer = ({
+    tmpAllChats,
+    allChats,
+    virtuosoRef,
+    state,
+    actions,
+    data,
+    socket,
+}: {
+    tmpAllChats: AllChatProps[];
+    allChats: AllChatProps[];
+    virtuosoRef: React.RefObject<VirtuosoHandle | null>;
+    state: ChatListState;
+    actions: ChatListActions;
+    data: ChatListData;
+    socket: Socket | null;
+}) => (
+    <Virtuoso
+        ref={virtuosoRef}
+        atBottomThreshold={128}
+        atTopThreshold={64}
+        className="custom-scrollbar"
+        initialTopMostItemIndex={0}
+        style={{ height: "93dvh" }}
+        totalCount={tmpAllChats.length}
+        itemContent={(index) => {
+            const chat = tmpAllChats[index];
+            return (
+                <div>
+                    <Stack direction="row">
+                        <ChatListItem
+                            key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
+                            allChats={allChats}
+                            chat={chat}
+                            chatType={chat.chatType}
+                            currentMainChat={state.currentMainChat}
+                            currentSubChat={state.currentSubChat}
+                            funcSetAllChats={actions.funcSetAllChats}
+                            incompleteTodoCount={state.incompleteTodoCount}
+                            isCreatingTask={state.isCreatingTask}
+                            isPinnedChat={false}
+                            isSubChatVisible={state.isSubChatVisible}
+                            isTaskPreviewVisible={state.isTaskPreviewVisible}
+                            myself={data.myself}
+                            setCurrentMainChat={actions.setCurrentMainChat}
+                            setCurrentSubChat={actions.setCurrentSubChat}
+                            setIsMainChatVisible={actions.setIsMainChatVisible}
+                            setIsSubChatVisible={actions.setIsSubChatVisible}
+                            setIsThreadVisible={actions.setIsThreadVisible}
+                            setIsToDoVisible={actions.setIsToDoVisible}
+                            setMyself={data.setMyself}
+                            setOpeningService={actions.setOpeningService}
+                            socket={socket}
+                            teamMemberProfiles={data.teamMemberProfiles}
+                        />
+                    </Stack>
+                </div>
+            );
+        }}
+    />
+);
+
+// Component for rendering activity messages
+const ActivityListRenderer = ({
+    tmpActivityMessages,
+    activityMessages,
+    virtuosoRef,
+    state,
+    actions,
+    data,
+    socket,
+    selectedActivityId,
+    setSelectedActivityId,
+}: {
+    tmpActivityMessages: ActivityMessageProps[];
+    activityMessages: ActivityMessageProps[];
+    virtuosoRef: React.RefObject<VirtuosoHandle | null>;
+    state: ChatListState;
+    actions: ChatListActions;
+    data: ChatListData;
+    socket: Socket | null;
+    selectedActivityId: string;
+    setSelectedActivityId: (id: string) => void;
+}) => (
+    <Virtuoso
+        ref={virtuosoRef}
+        atBottomThreshold={128}
+        atTopThreshold={64}
+        className="custom-scrollbar"
+        initialTopMostItemIndex={0}
+        style={{ height: "89dvh" }}
+        totalCount={tmpActivityMessages.length}
+        itemContent={(index) => {
+            const activityMessage = tmpActivityMessages[index];
+            return (
+                <div>
+                    <Stack direction="row">
+                        <ChatListItemForActivity
+                            key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                            activity={activityMessage}
+                            activityMessages={activityMessages}
+                            allChats={data.allChats}
+                            currentSubChat={state.currentSubChat}
+                            funcSetAllChats={actions.funcSetAllChats}
+                            isCreatingTask={state.isCreatingTask}
+                            isSubChatVisible={state.isSubChatVisible}
+                            isTaskPreviewVisible={state.isTaskPreviewVisible}
+                            myself={data.myself}
+                            selectedActivityId={selectedActivityId}
+                            setActivityMessages={data.setActivityMessages}
+                            setCurrentMainChat={actions.setCurrentMainChat}
+                            setCurrentPreviewTaskId={actions.setCurrentPreviewTaskId}
+                            setCurrentProject={actions.setCurrentProject}
+                            setCurrentSubChat={actions.setCurrentSubChat}
+                            setCurrentThreadChat={actions.setCurrentThreadChat}
+                            setIsMainChatVisible={actions.setIsMainChatVisible}
+                            setIsTaskPreviewVisible={actions.setIsTaskPreviewVisible}
+                            setIsThreadVisible={actions.setIsThreadVisible}
+                            setMyself={data.setMyself}
+                            setOpeningService={actions.setOpeningService}
+                            setSelectedActivityId={setSelectedActivityId}
+                            socket={socket}
+                            teamMemberProfiles={data.teamMemberProfiles}
+                        />
+                    </Stack>
+                </div>
+            );
+        }}
+    />
+);
+
+// Component for rendering flagged messages
+const FlaggedListRenderer = ({
+    tmpFlaggedMessages,
+    flaggedMessages,
+    virtuosoRef,
+    state,
+    actions,
+    data,
+    socket,
+    selectedFlaggedMessageId,
+    setSelectedFlaggedMessageId,
+}: {
+    tmpFlaggedMessages: FlaggedMessageProps[];
+    flaggedMessages: FlaggedMessageProps[];
+    virtuosoRef: React.RefObject<VirtuosoHandle | null>;
+    state: ChatListState;
+    actions: ChatListActions;
+    data: ChatListData;
+    socket: Socket | null;
+    selectedFlaggedMessageId: string;
+    setSelectedFlaggedMessageId: (id: string) => void;
+}) => (
+    <Virtuoso
+        ref={virtuosoRef}
+        atBottomThreshold={128}
+        atTopThreshold={64}
+        className="custom-scrollbar"
+        initialTopMostItemIndex={0}
+        style={{ height: "89dvh" }}
+        totalCount={tmpFlaggedMessages.length}
+        itemContent={(index) => {
+            const flaggedMessage = tmpFlaggedMessages[index];
+            return (
+                <div>
+                    <Stack direction="row">
+                        <ChatListItemForFlagMessages
+                            key={`${flaggedMessage.flaggedMessageId}`}
+                            allChats={data.allChats}
+                            currentSubChat={state.currentSubChat}
+                            flaggedMessage={flaggedMessage}
+                            flaggedMessages={flaggedMessages}
+                            funcSetAllChats={actions.funcSetAllChats}
+                            isCreatingTask={state.isCreatingTask}
+                            isSubChatVisible={state.isSubChatVisible}
+                            isTaskPreviewVisible={state.isTaskPreviewVisible}
+                            myself={data.myself}
+                            selectedFlaggedMessageId={selectedFlaggedMessageId}
+                            setCurrentMainChat={actions.setCurrentMainChat}
+                            setCurrentPreviewTaskId={actions.setCurrentPreviewTaskId}
+                            setCurrentProject={actions.setCurrentProject}
+                            setCurrentSubChat={actions.setCurrentSubChat}
+                            setCurrentThreadChat={actions.setCurrentThreadChat}
+                            setFlaggedMessages={data.setFlaggedMessages}
+                            setIsMainChatVisible={actions.setIsMainChatVisible}
+                            setIsTaskPreviewVisible={actions.setIsTaskPreviewVisible}
+                            setIsThreadVisible={actions.setIsThreadVisible}
+                            setMyself={data.setMyself}
+                            setOpeningService={actions.setOpeningService}
+                            setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
+                            socket={socket}
+                            teamMemberProfiles={data.teamMemberProfiles}
+                        />
+                    </Stack>
+                </div>
+            );
+        }}
+    />
+);
+
+export const ChatList = (props: ChatListProps) => {
+    const { socket, chatType, currentActivityMessageType, state, actions, data } = props;
+
+    // Refs for different chat types
+    const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoGMRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoPMRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoPinnedRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoFlaggedRef = useRef<VirtuosoHandle | null>(null);
+    const virtuosoActivityRef = useRef<VirtuosoHandle | null>(null);
+
+    // Chat type lookup for refs
+    const chatTypeLookup: { [key: number]: React.RefObject<VirtuosoHandle | null> } = {
+        [CHAT_TYPES.DM]: virtuosoDMRef,
+        [CHAT_TYPES.GM]: virtuosoGMRef,
+        [CHAT_TYPES.PM]: virtuosoPMRef,
+        [CHAT_TYPES.PINNED]: virtuosoPinnedRef,
+    };
+
+    // Custom hooks for filtered data
+    const tmpAllChats = useFilteredChats(data.allChats, state.showOnlyUnreadItems);
+    const tmpActivityMessages = useFilteredActivityMessages(
+        data.activityMessages,
+        currentActivityMessageType,
+        state.showOnlyUnreadItems
+    );
+    const [tmpFlaggedMessages, setTmpFlaggedMessages] = useState<FlaggedMessageProps[]>(
+        data.flaggedMessages
+    );
+    const [selectedActivityId, setSelectedActivityId] = useState<string>("");
+    const [selectedFlaggedMessageId, setSelectedFlaggedMessageId] = useState<string>("");
+
+    // Scroll hooks
+    useScrollToBottomOnChatPaneChange(
+        virtuosoDMRef as React.RefObject<VirtuosoHandle>,
+        data.allChats
+    );
+    useScrollToBottomOnChatPaneChange(
+        virtuosoGMRef as React.RefObject<VirtuosoHandle>,
+        data.allChats
+    );
+    useScrollToBottomOnChatPaneChange(
+        virtuosoPMRef as React.RefObject<VirtuosoHandle>,
+        data.allChats
+    );
+    useScrollToBottomOnChatPaneChange(
+        virtuosoPinnedRef as React.RefObject<VirtuosoHandle>,
+        data.allChats
+    );
+    useScrollToBottomOnChatPaneChange(
+        virtuosoFlaggedRef as React.RefObject<VirtuosoHandle>,
+        data.allChats
+    );
+    useScrollToBottomOnNewActivity(
+        virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
+        data.activityMessages,
+        true
+    );
+
+    // Update flagged messages when props change
+    useEffect(() => {
+        setTmpFlaggedMessages(data.flaggedMessages);
+    }, [data.flaggedMessages]);
+
+    const renderChatList = () => {
+        if (chatType < CHAT_TYPES.ACTIVITY && tmpAllChats.length > 0) {
+            const virtuosoRef = chatTypeLookup[chatType];
+            return (
+                <ChatListRenderer
+                    tmpAllChats={tmpAllChats}
+                    allChats={data.allChats}
+                    virtuosoRef={virtuosoRef}
+                    state={state}
+                    actions={actions}
+                    data={data}
+                    socket={socket}
+                />
+            );
+        }
+        return null;
+    };
+
+    const renderActivityList = () => {
+        if (chatType === CHAT_TYPES.ACTIVITY && tmpActivityMessages.length > 0) {
+            return (
+                <ActivityListRenderer
+                    tmpActivityMessages={tmpActivityMessages}
+                    activityMessages={data.activityMessages}
+                    virtuosoRef={virtuosoActivityRef}
+                    state={state}
+                    actions={actions}
+                    data={data}
+                    socket={socket}
+                    selectedActivityId={selectedActivityId}
+                    setSelectedActivityId={setSelectedActivityId}
+                />
+            );
+        }
+        return null;
+    };
+
+    const renderFlaggedList = () => {
+        if (chatType === CHAT_TYPES.FLAGGED && tmpFlaggedMessages.length > 0) {
+            return (
+                <FlaggedListRenderer
+                    tmpFlaggedMessages={tmpFlaggedMessages}
+                    flaggedMessages={data.flaggedMessages}
+                    virtuosoRef={virtuosoFlaggedRef}
+                    state={state}
+                    actions={actions}
+                    data={data}
+                    socket={socket}
+                    selectedFlaggedMessageId={selectedFlaggedMessageId}
+                    setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
+                />
+            );
+        }
+        return null;
+    };
 
     return (
         <List
@@ -219,147 +491,9 @@ export const ChatList = (props: ChatListProps) => {
                 overflowX: "hidden",
             }}
         >
-            {chatType < 5 && tmpAllChats.length > 0 && (
-                <Virtuoso
-                    ref={chatTypeLookup[chatType]}
-                    atBottomThreshold={128}
-                    atTopThreshold={64}
-                    className="custom-scrollbar"
-                    initialTopMostItemIndex={0}
-                    style={{ height: "93dvh" }}
-                    totalCount={tmpAllChats.length}
-                    itemContent={(index) => {
-                        const chat = tmpAllChats[index];
-                        return (
-                            <div>
-                                <Stack direction="row">
-                                    <ChatListItem
-                                        key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
-                                        allChats={allChats}
-                                        chat={chat}
-                                        chatType={chat.chatType}
-                                        currentMainChat={currentMainChat}
-                                        currentSubChat={currentSubChat}
-                                        funcSetAllChats={funcSetAllChats}
-                                        incompleteTodoCount={incompleteTodoCount}
-                                        isCreatingTask={isCreatingTask}
-                                        isPinnedChat={chatType === 4}
-                                        isSubChatVisible={isSubChatVisible}
-                                        isTaskPreviewVisible={isTaskPreviewVisible}
-                                        myself={myself}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsSubChatVisible={setIsSubChatVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        setIsToDoVisible={setIsToDoVisible}
-                                        setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
-                                        socket={socket}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                    />
-                                </Stack>
-                            </div>
-                        );
-                    }}
-                />
-            )}
-
-            {chatType === 5 && tmpActivityMessages.length > 0 && (
-                <Virtuoso
-                    ref={virtuosoActivityRef}
-                    atBottomThreshold={128}
-                    atTopThreshold={64}
-                    className="custom-scrollbar"
-                    initialTopMostItemIndex={0}
-                    style={{ height: "89dvh" }}
-                    totalCount={tmpActivityMessages.length}
-                    itemContent={(index) => {
-                        const activityMessage = tmpActivityMessages[index];
-                        return (
-                            <div>
-                                <Stack direction="row">
-                                    <ChatListItemForActivity
-                                        key={`${activityMessage.activityId}-${activityMessage.isRead}`}
-                                        activity={activityMessage}
-                                        activityMessages={activityMessages}
-                                        allChats={allChats}
-                                        currentSubChat={currentSubChat}
-                                        funcSetAllChats={funcSetAllChats}
-                                        isCreatingTask={isCreatingTask}
-                                        isSubChatVisible={isSubChatVisible}
-                                        isTaskPreviewVisible={isTaskPreviewVisible}
-                                        myself={myself}
-                                        selectedActivityId={selectedActivityId}
-                                        setActivityMessages={setActivityMessages}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setCurrentProject={setCurrentProject}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
-                                        setSelectedActivityId={setSelectedActivityId}
-                                        socket={socket}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                    />
-                                </Stack>
-                            </div>
-                        );
-                    }}
-                />
-            )}
-
-            {chatType === 6 && tmpFlaggedMessages.length > 0 && (
-                <Virtuoso
-                    ref={virtuosoFlaggedRef}
-                    atBottomThreshold={128}
-                    atTopThreshold={64}
-                    className="custom-scrollbar"
-                    initialTopMostItemIndex={0}
-                    style={{ height: "89dvh" }}
-                    totalCount={tmpFlaggedMessages.length}
-                    itemContent={(index) => {
-                        const flaggedMessage = tmpFlaggedMessages[index];
-                        return (
-                            <div>
-                                <Stack direction="row">
-                                    <ChatListItemForFlagMessages
-                                        key={`${flaggedMessage.flaggedMessageId}`}
-                                        allChats={allChats}
-                                        currentSubChat={currentSubChat}
-                                        flaggedMessage={flaggedMessage}
-                                        flaggedMessages={flaggedMessages}
-                                        funcSetAllChats={funcSetAllChats}
-                                        isCreatingTask={isCreatingTask}
-                                        isSubChatVisible={isSubChatVisible}
-                                        isTaskPreviewVisible={isTaskPreviewVisible}
-                                        myself={myself}
-                                        selectedFlaggedMessageId={selectedFlaggedMessageId}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setCurrentProject={setCurrentProject}
-                                        setCurrentSubChat={setCurrentSubChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
-                                        setFlaggedMessages={setFlaggedMessages}
-                                        setIsMainChatVisible={setIsMainChatVisible}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
-                                        setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
-                                        setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
-                                        socket={socket}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                    />
-                                </Stack>
-                            </div>
-                        );
-                    }}
-                />
-            )}
+            {renderChatList()}
+            {renderActivityList()}
+            {renderFlaggedList()}
         </List>
     );
 };
