@@ -1,15 +1,84 @@
-#root {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    overflow-x: hidden;
-    overflow: hidden;
+/* ==========================================================================
+   CSS Variables
+   ========================================================================== */
+
+:root {
+    /* Layout */
+    --root-display: grid;
+    --root-overflow: hidden;
+    
+    /* Logo */
+    --logo-height: 6em;
+    --logo-padding: 1.5em;
+    --logo-transition: filter 300ms;
+    
+    /* Cards */
+    --card-padding: 2em;
+    
+    /* Scrollbars */
+    --scrollbar-width: 8px;
+    --scrollbar-height: 8px;
+    --scrollbar-track-bg: transparent;
+    --scrollbar-thumb-bg: #626262;
+    --scrollbar-thumb-bg-hover: #9c9c9c;
+    --scrollbar-border-radius: 10px;
+    
+    /* DataGrid Colors */
+    --datagrid-light-header-bg: #d9d9d9;
+    --datagrid-light-header-color: rgb(55, 55, 55);
+    --datagrid-light-filler-bg: #d9d9d9;
+    --datagrid-light-toolbar-bg: #c5c5c571;
+    --datagrid-light-button-color: rgb(55, 55, 55);
+    
+    --datagrid-dark-header-bg: #161616;
+    --datagrid-dark-header-color: rgb(255, 255, 255);
+    --datagrid-dark-filler-bg: #161616;
+    --datagrid-dark-toolbar-bg: #d4d4d44e;
+    --datagrid-dark-button-color: white;
+    --datagrid-dark-main-bg: #000000;
+    
+    /* Editor Colors */
+    --editor-light-bg: rgb(214, 214, 214);
+    --editor-dark-bg: #1f1f1f;
+    --editor-placeholder-light: #9c9c9c;
+    --editor-placeholder-dark: #909090;
+    
+    /* Responsive breakpoints */
+    --breakpoint-mobile: 480px;
+    --breakpoint-tablet: 768px;
+    --breakpoint-desktop: 1024px;
+    
+    /* Code Colors */
+    --code-light-bg: #97979770;
+    --code-light-color: rgb(255, 0, 144);
+    --code-dark-bg: #00000070;
+    --code-dark-color: rgb(255, 140, 0);
+    --code-dark-me-bg: #ffffffce;
+    --code-dark-me-color: rgb(255, 0, 144);
+    --code-light-me-bg: #00000070;
+    --code-light-me-color: rgb(255, 140, 0);
 }
 
+/* ==========================================================================
+   Root Layout
+   ========================================================================== */
+
+#root {
+    display: var(--root-display);
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    overflow-x: var(--root-overflow);
+    overflow: var(--root-overflow);
+}
+
+/* ==========================================================================
+   Logo & Branding
+   ========================================================================== */
+
 .logo {
-    height: 6em;
-    padding: 1.5em;
+    height: var(--logo-height);
+    padding: var(--logo-padding);
     will-change: filter;
-    transition: filter 300ms;
+    transition: var(--logo-transition);
 }
 
 .logo:hover {
@@ -24,7 +93,6 @@
     from {
         transform: rotate(0deg);
     }
-
     to {
         transform: rotate(360deg);
     }
@@ -36,113 +104,159 @@
     }
 }
 
+/* ==========================================================================
+   Form Elements
+   ========================================================================== */
+
 input[type="checkbox"] {
-    transform: scale(1.4); /* increase size */
-    transform-origin: center; /* keep it centered */
+    transform: scale(1.4);
+    transform-origin: center;
     cursor: pointer;
 }
 
+/* ==========================================================================
+   Layout Components
+   ========================================================================== */
+
 .card {
-    padding: 2em;
+    padding: var(--card-padding);
 }
 
 .read-the-docs {
     color: #888;
 }
 
-.custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
+/* ==========================================================================
+   Scrollbar Styles
+   ========================================================================== */
 
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #626262;
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #9c9c9c;
-    border-radius: 10px;
-}
-
-.MuiAutocomplete-listbox::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-
-.MuiAutocomplete-listbox::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.MuiAutocomplete-listbox::-webkit-scrollbar-thumb {
-    background: #626262;
-    border-radius: 10px;
-}
-
-.MuiAutocomplete-listbox::-webkit-scrollbar-thumb:hover {
-    background: #9c9c9c;
-    border-radius: 10px;
-}
-
+/* Base scrollbar styles */
+.custom-scrollbar::-webkit-scrollbar,
+.MuiAutocomplete-listbox::-webkit-scrollbar,
 .MuiDataGrid-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
 }
 
+.custom-scrollbar::-webkit-scrollbar-track,
+.MuiAutocomplete-listbox::-webkit-scrollbar-track,
 .MuiDataGrid-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--scrollbar-track-bg);
 }
 
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-bg);
+    border-radius: var(--scrollbar-border-radius);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-bg-hover);
+    border-radius: var(--scrollbar-border-radius);
+}
+
+/* DataGrid specific scrollbar overrides */
 .task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
-    background: #626262;
-    border-radius: 10px;
+    background: var(--scrollbar-thumb-bg);
+    border-radius: var(--scrollbar-border-radius);
 }
 
 .task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #9c9c9c;
-    border-radius: 10px;
+    background: var(--scrollbar-thumb-bg-hover);
+    border-radius: var(--scrollbar-border-radius);
 }
 
 .task-datagrid-dark .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
     background: #404040;
-    border-radius: 10px;
+    border-radius: var(--scrollbar-border-radius);
 }
 
 .task-datagrid-dark .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #777777;
-    border-radius: 10px;
+    border-radius: var(--scrollbar-border-radius);
 }
 
+/* ==========================================================================
+   DataGrid Styles
+   ========================================================================== */
+
+/* Toolbar pagination */
 .css-rxb3rp-MuiToolbar-root-MuiTablePagination-toolbar {
     min-height: 52px;
     padding-right: 2px;
     padding-bottom: 15px;
 }
 
-.task-datagrid-dark .MuiIconButton-root.MuiIconButton-sizeSmall {
+/* Dark theme DataGrid */
+.task-datagrid-dark .MuiIconButton-root.MuiIconButton-sizeSmall,
+.task-datagrid-dark .MuiDataGrid-menuIconButton,
+.task-datagrid-dark .css-4uxqju-MuiSvgIcon-root {
     color: white !important;
 }
 
-.task-datagrid-dark .MuiDataGrid-menuIconButton {
-    color: white !important;
+.task-datagrid-dark .MuiDataGrid-columnHeader {
+    background-color: var(--datagrid-dark-header-bg);
+    color: var(--datagrid-dark-header-color);
 }
 
-.task-datagrid-light .MuiDataGrid-columnHeader {
-    background-color: #d9d9d9;
-    color: rgb(55, 55, 55);
+.task-datagrid-dark .MuiDataGrid-filler,
+.task-datagrid-dark .MuiDataGrid-scrollbarFiller {
+    background-color: var(--datagrid-dark-filler-bg);
+}
+
+.task-datagrid-dark .MuiDataGrid-scrollbarFiller {
     opacity: 0.8;
 }
 
-.task-datagrid-light .MuiDataGrid-filler {
-    background-color: #d9d9d9;
+.task-datagrid-dark .MuiDataGrid-toolbarContainer {
+    background-color: var(--datagrid-dark-header-bg);
+    opacity: 0.8;
+}
+
+.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-pcashz-MuiInputBase-root-MuiInput-root {
+    color: white;
+}
+
+.task-datagrid-dark .css-1f02in7-MuiInputBase-root-MuiInput-root {
+    background-color: var(--datagrid-dark-toolbar-bg) !important;
+    border-radius: 1ch;
+}
+
+.task-datagrid-dark .css-yhoksd-MuiButtonBase-root-MuiButton-root {
+    color: var(--datagrid-dark-button-color) !important;
+}
+
+.task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-virtualScroller {
+    background-color: var(--datagrid-dark-main-bg);
+    opacity: 0.9;
+}
+
+.task-datagrid-dark .MuiDataGrid-footerContainer .MuiTablePagination-root {
+    background-color: var(--datagrid-dark-header-bg);
+    color: var(--datagrid-dark-header-color);
+    font-weight: bold;
+    overflow-y: hidden;
+}
+
+.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
+    color: var(--datagrid-dark-button-color) !important;
+    font-weight: bold;
+}
+
+/* Light theme DataGrid */
+.task-datagrid-light .MuiDataGrid-columnHeader {
+    background-color: var(--datagrid-light-header-bg);
+    color: var(--datagrid-light-header-color);
+    opacity: 0.8;
+}
+
+.task-datagrid-light .MuiDataGrid-filler,
+.task-datagrid-light .MuiDataGrid-scrollbarFiller {
+    background-color: var(--datagrid-light-filler-bg);
 }
 
 .task-datagrid-light .MuiDataGrid-scrollbarFiller {
-    background-color: #d9d9d9;
     opacity: 0.8;
 }
 
@@ -150,124 +264,72 @@ input[type="checkbox"] {
     overflow-y: hidden;
 }
 
-.task-datagrid-dark .MuiDataGrid-columnHeader {
-    background-color: #161616;
-    color: rgb(255, 255, 255);
-}
-
-.task-datagrid-dark .MuiDataGrid-filler {
-    background-color: #161616;
-}
-
-.task-datagrid-dark .MuiDataGrid-scrollbarFiller {
-    background-color: #161616;
-    opacity: 0.8;
-}
-
-.task-datagrid-dark .css-4uxqju-MuiSvgIcon-root {
-    color: rgb(255, 255, 255);
-}
-
-.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-pcashz-MuiInputBase-root-MuiInput-root {
-    color: white;
-}
-
 .task-datagrid-light .MuiDataGrid-toolbarContainer .css-pcashz-MuiInputBase-root-MuiInput-root {
     color: black;
 }
 
-.task-datagrid-dark .MuiDataGrid-toolbarContainer {
-    background-color: #161616;
-    opacity: 0.8;
-}
-
-.task-datagrid-dark .css-1f02in7-MuiInputBase-root-MuiInput-root {
-    background-color: #d4d4d44e !important;
-    border-radius: 1ch;
-}
-
 .task-datagrid-light .css-1f02in7-MuiInputBase-root-MuiInput-root {
-    background-color: #c5c5c571 !important;
+    background-color: var(--datagrid-light-toolbar-bg) !important;
     border-radius: 1ch;
-}
-
-.task-datagrid-dark .css-yhoksd-MuiButtonBase-root-MuiButton-root {
-    color: white !important;
 }
 
 .task-datagrid-light .css-yhoksd-MuiButtonBase-root-MuiButton-root {
-    color: rgb(55, 55, 55) !important;
-}
-
-.task-datagrid-dark .MuiDataGrid-main .MuiDataGrid-virtualScroller {
-    background-color: #000000;
-    opacity: 0.9;
-}
-
-/* .task-datagrid-dark .MuiDataGrid-footerContainer {
-  background-color: #161616;
-  color: white;
-  font-weight: bold;
-} */
-
-.task-datagrid-dark .MuiDataGrid-footerContainer .MuiTablePagination-root {
-    background-color: #161616;
-    color: white;
-    font-weight: bold;
-    overflow-y: hidden;
-}
-
-.task-datagrid-dark .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
-    color: white !important;
-    font-weight: bold;
+    color: var(--datagrid-light-button-color) !important;
 }
 
 .task-datagrid-light .MuiDataGrid-toolbarContainer .css-ww58ll-MuiButtonBase-root-MuiButton-root {
-    color: rgb(55, 55, 55) !important;
+    color: var(--datagrid-light-button-color) !important;
     font-weight: bold;
 }
 
+/* DataGrid editing styles */
 .css-nk6ga4-MuiDataGrid-root .MuiDataGrid-cell.MuiDataGrid-cell--editing {
     background-color: transparent !important;
 }
 
+/* Dark theme editing */
 .task-datagrid-dark .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
-    background-color: #161616 !important;
-    color: rgb(255, 255, 255) !important;
-    font-weight: bold;
-}
-
-.task-datagrid-light .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
-    background-color: transparent !important;
-    color: rgb(55, 55, 55) !important;
+    background-color: var(--datagrid-dark-header-bg) !important;
+    color: var(--datagrid-dark-header-color) !important;
     font-weight: bold;
 }
 
 .task-datagrid-dark .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
-    background-color: #161616 !important;
-    color: rgb(255, 255, 255) !important;
-    font-weight: bold;
-}
-
-.task-datagrid-light .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
-    background-color: #d9d9d9;
-    color: rgb(255, 255, 255) !important;
+    background-color: var(--datagrid-dark-header-bg) !important;
+    color: var(--datagrid-dark-header-color) !important;
     font-weight: bold;
 }
 
 .task-datagrid-dark .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
-    color: white !important;
+    color: var(--datagrid-dark-button-color) !important;
+}
+
+/* Light theme editing */
+.task-datagrid-light .css-lwh7h4-MuiInputBase-root-MuiDataGrid-editInputCell {
+    background-color: transparent !important;
+    color: var(--datagrid-light-header-color) !important;
+    font-weight: bold;
+}
+
+.task-datagrid-light .css-io9sw2-MuiSelect-select-MuiInputBase-input-MuiOutlinedInput-input {
+    background-color: var(--datagrid-light-header-bg);
+    color: rgb(255, 255, 255) !important;
+    font-weight: bold;
 }
 
 .task-datagrid-light .css-hxxjno-MuiSvgIcon-root-MuiSelect-icon {
-    color: rgb(55, 55, 55) !important;
+    color: var(--datagrid-light-header-color) !important;
 }
 
 .task-datagrid-light .css-157nff6-MuiButtonBase-root-MuiIconButton-root.Mui-disabled {
-    color: rgb(55, 55, 55) !important;
+    color: var(--datagrid-light-header-color) !important;
 }
 
-/* editor preview */
+/* ==========================================================================
+   BlockNote Editor Styles
+   ========================================================================== */
+
+/* Message bubble preview styles */
 .bn-message-bubble-box-light .bn-editor {
     background-color: transparent;
     padding: 1px;
@@ -275,8 +337,8 @@ input[type="checkbox"] {
 }
 
 .bn-message-bubble-box-light code {
-    background-color: #97979770 !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-light-bg) !important;
+    color: var(--code-light-color);
 }
 
 .bn-message-bubble-box-light-me .bn-editor {
@@ -286,19 +348,18 @@ input[type="checkbox"] {
 }
 
 .bn-message-bubble-box-light-me code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-light-me-bg) !important;
+    color: var(--code-light-me-color);
 }
 
 .bn-message-bubble-box-dark .bn-editor {
     background-color: transparent;
     padding: 1px;
-    /* color: black; */
 }
 
 .bn-message-bubble-box-dark code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-dark-bg) !important;
+    color: var(--code-dark-color);
 }
 
 .bn-message-bubble-box-dark-me .bn-editor {
@@ -308,48 +369,37 @@ input[type="checkbox"] {
 }
 
 .bn-message-bubble-box-dark-me code {
-    background-color: #ffffffce !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-dark-me-bg) !important;
+    color: var(--code-dark-me-color);
 }
 
-/* editor */
+/* Editor common styles */
 .bn-editor img {
-    max-width: 300px; /* shrink if too big */
+    max-width: 300px;
     max-height: 200px;
     width: auto;
     height: auto;
-    object-fit: contain; /* keep aspect ratio */
+    object-fit: contain;
     cursor: pointer;
 }
 
-/* common code conf */
 .bn-editor code {
-    padding-top: 1px;
-    padding-bottom: 1px;
-    padding-left: 4px;
-    padding-right: 4px;
+    padding: 1px 4px;
     border-radius: 4px;
 }
 
-/* code color&background color in the code block*/
 .bn-editor pre code.bn-inline-content {
     color: inherit;
     background-color: inherit !important;
 }
 
-/* code block background color */
 .bn-block-content[data-content-type="codeBlock"] {
     background-color: #474747 !important;
 }
 
-.bn-message-bubble-box-light-me code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
-}
-
-/* editor */
+/* Chat editor styles */
 .bn-chat-editor-box-light .bn-editor {
-    background-color: rgb(214, 214, 214);
+    background-color: var(--editor-light-bg);
     padding-top: 55px;
     height: var(--chat-editor-height, 200px);
     overflow: scroll;
@@ -357,12 +407,12 @@ input[type="checkbox"] {
 }
 
 .bn-chat-editor-box-light code {
-    background-color: #97979770 !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-light-bg) !important;
+    color: var(--code-light-color);
 }
 
 .bn-chat-editor-box-dark .bn-editor {
-    background-color: #1f1f1f;
+    background-color: var(--editor-dark-bg);
     padding-top: 55px;
     height: var(--chat-editor-height, 200px);
     overflow: scroll;
@@ -370,26 +420,23 @@ input[type="checkbox"] {
 }
 
 .bn-chat-editor-box-dark code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-dark-bg) !important;
+    color: var(--code-dark-color);
 }
 
-.bn-chat-editor-box-dark
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #909090 !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-chat-editor-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-dark) !important;
+    opacity: 1 !important;
 }
 
-.bn-chat-editor-box-light
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #9c9c9c !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-chat-editor-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-light) !important;
+    opacity: 1 !important;
 }
 
+/* Task comment editor styles */
 .bn-task-comment-box-light .bn-editor {
-    background-color: rgb(214, 214, 214);
+    background-color: var(--editor-light-bg);
     padding-top: 55px;
     height: var(--task-comment-editor-height, 200px);
     overflow: scroll;
@@ -397,12 +444,12 @@ input[type="checkbox"] {
 }
 
 .bn-task-comment-box-light code {
-    background-color: #97979770 !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-light-bg) !important;
+    color: var(--code-light-color);
 }
 
 .bn-task-comment-box-dark .bn-editor {
-    background-color: #1f1f1f;
+    background-color: var(--editor-dark-bg);
     padding-top: 55px;
     height: var(--task-comment-editor-height, 200px);
     overflow: scroll;
@@ -410,105 +457,91 @@ input[type="checkbox"] {
 }
 
 .bn-task-comment-box-dark code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-dark-bg) !important;
+    color: var(--code-dark-color);
 }
 
-.bn-task-comment-box-dark
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #909090 !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-task-comment-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-dark) !important;
+    opacity: 1 !important;
 }
 
-.bn-task-comment-box-light
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #9c9c9c !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-task-comment-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-light) !important;
+    opacity: 1 !important;
 }
 
+/* Task body editor styles */
 .bn-task-body-box-light .bn-editor {
-    background-color: rgb(214, 214, 214);
-    padding-top: 20px;
-    padding-bottom: 20px;
+    background-color: var(--editor-light-bg);
+    padding: 20px 0;
     height: var(--task-body-editor-height, 500px);
     overflow-y: scroll;
 }
 
 .bn-task-body-box-light code {
-    background-color: #97979770 !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-light-bg) !important;
+    color: var(--code-light-color);
 }
 
 .bn-task-body-box-dark .bn-editor {
-    background-color: #1f1f1f;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    background-color: var(--editor-dark-bg);
+    padding: 20px 0;
     height: var(--task-body-editor-height, 500px);
     overflow-y: scroll;
 }
 
 .bn-task-body-box-dark code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-dark-bg) !important;
+    color: var(--code-dark-color);
 }
 
-.bn-task-body-box-dark
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #909090 !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-task-body-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-dark) !important;
+    opacity: 1 !important;
 }
 
-.bn-task-body-box-light
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #9c9c9c !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-task-body-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-light) !important;
+    opacity: 1 !important;
 }
 
+/* Note body editor styles */
 .bn-note-body-box-light .bn-editor {
-    background-color: rgb(214, 214, 214);
-    padding-top: 50px;
-    padding-bottom: 20px;
+    background-color: var(--editor-light-bg);
+    padding: 50px 0 20px;
     height: 92dvh;
     overflow-y: scroll;
 }
 
 .bn-note-body-box-light code {
-    background-color: #97979770 !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-light-bg) !important;
+    color: var(--code-light-color);
 }
 
 .bn-note-body-box-dark .bn-editor {
-    background-color: #1f1f1f;
-    padding-top: 50px;
-    padding-bottom: 20px;
+    background-color: var(--editor-dark-bg);
+    padding: 50px 0 20px;
     height: 92dvh;
     overflow-y: scroll;
 }
 
 .bn-note-body-box-dark code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-dark-bg) !important;
+    color: var(--code-dark-color);
 }
 
-.bn-note-body-box-dark
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #909090 !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-note-body-box-dark .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-dark) !important;
+    opacity: 1 !important;
 }
 
-.bn-note-body-box-light
-    .bn-block-content[data-is-empty-and-focused="true"]
-    .bn-inline-content::before {
-    color: #9c9c9c !important; /* placeholder text color */
-    opacity: 1 !important; /* ensure it's not dimmed */
+.bn-note-body-box-light .bn-block-content[data-is-empty-and-focused="true"] .bn-inline-content::before {
+    color: var(--editor-placeholder-light) !important;
+    opacity: 1 !important;
 }
 
-/* File name color uploaded in a Note */
+/* BlockNote utility styles */
 .bn-file-name-with-icon:hover {
     color: #000000;
 }
@@ -524,7 +557,7 @@ input[type="checkbox"] {
 }
 
 .bn-box::-webkit-scrollbar {
-    width: 8px;
+    width: var(--scrollbar-width);
 }
 
 .bn-box::-webkit-scrollbar-thumb {
@@ -538,7 +571,6 @@ input[type="checkbox"] {
 
 .bn-box {
     scrollbar-width: thin;
-    /* Firefox */
     scrollbar-color: #888 transparent;
 }
 
@@ -546,11 +578,15 @@ input[type="checkbox"] {
     font-family: "Comic Sans MS", sans-serif;
 }
 
-/* Change the SuggestionMenuController position */
 div[data-floating-ui-focusable] {
     max-height: 300px !important;
 }
 
+/* ==========================================================================
+   Preview Styles
+   ========================================================================== */
+
+/* Task comment preview */
 .task-comment-preview-light .bn-editor {
     color: black;
     background-color: transparent;
@@ -559,7 +595,7 @@ div[data-floating-ui-focusable] {
 
 .task-comment-preview-light code {
     background-color: #adadad70 !important;
-    color: rgb(255, 0, 144);
+    color: var(--code-light-color);
 }
 
 .task-comment-preview-dark .bn-editor {
@@ -570,9 +606,10 @@ div[data-floating-ui-focusable] {
 
 .task-comment-preview-dark code {
     background-color: #2f2f2f70 !important;
-    color: rgb(255, 140, 0);
+    color: var(--code-dark-color);
 }
 
+/* Inbox preview */
 .inbox-preview-light .bn-editor {
     color: black;
     background-color: transparent;
@@ -580,8 +617,8 @@ div[data-floating-ui-focusable] {
 }
 
 .inbox-preview-light code {
-    background-color: #97979770 !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-light-bg) !important;
+    color: var(--code-light-color);
 }
 
 .inbox-preview-dark .bn-editor {
@@ -591,15 +628,11 @@ div[data-floating-ui-focusable] {
 }
 
 .inbox-preview-dark code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-dark-bg) !important;
+    color: var(--code-dark-color);
 }
 
-.css-ljwjwd-JoyStack-root > :not(style) ~ :not(style) {
-    margin-top: 5px !important;
-    margin-left: 10px !important;
-}
-
+/* Todo preview */
 .todo-preview-light .bn-editor {
     color: black;
     background-color: transparent;
@@ -607,8 +640,8 @@ div[data-floating-ui-focusable] {
 }
 
 .todo-preview-light code {
-    background-color: #97979770 !important;
-    color: rgb(255, 0, 144);
+    background-color: var(--code-light-bg) !important;
+    color: var(--code-light-color);
 }
 
 .todo-preview-dark .bn-editor {
@@ -618,6 +651,83 @@ div[data-floating-ui-focusable] {
 }
 
 .todo-preview-dark code {
-    background-color: #00000070 !important;
-    color: rgb(255, 140, 0);
+    background-color: var(--code-dark-bg) !important;
+    color: var(--code-dark-color);
+}
+
+/* ==========================================================================
+   Utility Styles
+   ========================================================================== */
+
+.css-ljwjwd-JoyStack-root > :not(style) ~ :not(style) {
+    margin-top: 5px !important;
+    margin-left: 10px !important;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+    .card {
+        padding: 1em;
+    }
+    
+    .logo {
+        height: 4em;
+        padding: 1em;
+    }
+    
+    .bn-chat-editor-box-light .bn-editor,
+    .bn-chat-editor-box-dark .bn-editor {
+        padding-top: 40px;
+        height: var(--chat-editor-height, 150px);
+        padding-left: 10px;
+    }
+    
+    .bn-task-comment-box-light .bn-editor,
+    .bn-task-comment-box-dark .bn-editor {
+        padding-top: 40px;
+        height: var(--task-comment-editor-height, 150px);
+        padding-left: 10px;
+    }
+    
+    .bn-task-body-box-light .bn-editor,
+    .bn-task-body-box-dark .bn-editor {
+        padding: 15px 0;
+        height: var(--task-body-editor-height, 300px);
+    }
+    
+    .bn-note-body-box-light .bn-editor,
+    .bn-note-body-box-dark .bn-editor {
+        padding: 30px 0 15px;
+        height: 85dvh;
+    }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .bn-chat-editor-box-light .bn-editor,
+    .bn-chat-editor-box-dark .bn-editor {
+        height: var(--chat-editor-height, 250px);
+    }
+    
+    .bn-task-body-box-light .bn-editor,
+    .bn-task-body-box-dark .bn-editor {
+        height: var(--task-body-editor-height, 400px);
+    }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+    .bn-chat-editor-box-light .bn-editor,
+    .bn-chat-editor-box-dark .bn-editor {
+        height: var(--chat-editor-height, 300px);
+    }
+    
+    .bn-task-body-box-light .bn-editor,
+    .bn-task-body-box-dark .bn-editor {
+        height: var(--task-body-editor-height, 600px);
+    }
 }
