@@ -1,8 +1,6 @@
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import { Breadcrumbs, IconButton, Stack, Typography } from "@mui/joy";
 
-import { TaskNoteProps } from "../../../types/notes";
-
 interface NoteHeaderProps {
     currentTaskNoteChain: any[] | null;
     onLoadNote: (noteType: number, noteId: number, tabIndex: number) => void;
