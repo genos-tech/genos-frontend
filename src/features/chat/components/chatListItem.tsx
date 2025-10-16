@@ -1,67 +1,17 @@
 import * as React from "react";
-import { useState } from "react";
-import ChecklistIcon from "@mui/icons-material/Checklist";
-import CircleIcon from "@mui/icons-material/Circle";
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import {
-    Avatar,
-    Badge,
-    Box,
-    Chip,
-    IconButton,
-    ListDivider,
-    ListItem,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
-import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import { Socket } from "socket.io-client";
+import { memo } from "react";
+import { ListDivider, ListItem, Stack } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 
-import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../components/common/GMAvatar";
-import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../types/chat";
-import { toggleMessagesPane } from "../../../utils";
-import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { addChat } from "../services/addChat";
-import { popSpecificMessages } from "../services/popSpecificMessages";
-import { updatePinnedChats } from "../services/updatePinnedChats";
+import { useChatListItem } from "../hooks/useChatListItem";
+import { ChatListItemProps } from "./ChatListItem.types";
+import { ChatListItemActions } from "./ChatListItemActions";
+import { ChatListItemAvatar } from "./ChatListItemAvatar";
+import { ChatListItemMessage } from "./ChatListItemMessage";
+import { ChatListItemTitle } from "./ChatListItemTitle";
 
-type ChatListItemProps = ListItemButtonProps & {
-    teamMemberProfiles: Record<string, UserProps>;
-    socket: Socket | null;
-    chat: AllChatProps;
-    myself: UserProps;
-    setMyself: (value: UserProps) => void;
-    currentMainChat?: ChatProps;
-    currentSubChat?: ChatProps;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    isTaskPreviewVisible: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    isSubChatVisible: boolean;
-    setIsSubChatVisible: (value: boolean) => void;
-    setOpeningService: (value: number) => void;
-    chatType: number;
-    funcSetAllChats: () => Promise<void>;
-    allChats: AllChatProps[];
-    isPinnedChat: boolean;
-    incompleteTodoCount: number;
-    setIsToDoVisible: (value: boolean) => void;
-};
-
-export const ChatListItem = (props: ChatListItemProps) => {
+export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
         teamMemberProfiles,
         socket,
@@ -81,7 +31,6 @@ export const ChatListItem = (props: ChatListItemProps) => {
         setOpeningService,
         chatType,
         funcSetAllChats,
-        allChats,
         isPinnedChat,
         incompleteTodoCount,
         setIsToDoVisible,
@@ -89,104 +38,44 @@ export const ChatListItem = (props: ChatListItemProps) => {
 
     const { accessToken } = useAuth();
 
-    const [isPinned, setIsPinned] = useState(chat.isPinned);
+    const {
+        isPinned,
+        setIsPinned,
+        selected,
+        isYou,
+        onClickHandler,
+        splitOpenHandler,
+        pinChatHandler,
+    } = useChatListItem({
+        chat,
+        myself,
+        currentMainChat,
+        currentSubChat,
+        isSubChatVisible,
+        isTaskPreviewVisible,
+        isCreatingTask,
+        isPinnedChat,
+        accessToken: accessToken || "",
+    });
 
-    const selected =
-        `${currentMainChat?.chatName}-${currentMainChat?.chatId}` ===
-            `${chat.chatName}-${chat.chatId}` ||
-        (isSubChatVisible &&
-            `${currentSubChat?.chatName}-${currentSubChat?.chatId}` ===
-                `${chat.chatName}-${chat.chatId}`);
-
-    const isYou = myself.userId === chat.dmPartnerUser.userId;
-
-    const defineNewChat = (messages: any) => {
-        const newMessages: ChatProps = {
-            chatId: chat.chatId,
-            chatName: chat.chatName,
-            chatType: chat.chatType,
-            dmPartnerUser: chat.dmPartnerUser,
-            lastReadMessageId: messages[messages.length - 1].messageId,
-            messages: messages,
-            latestMessage: chat.latestMessage,
-            latestMessageText: chat.latestMessageText,
-            TSLastMessage: chat.TSLastMessage,
-            systemUserId: chat.systemUserId,
-            project: chat.project,
-            isPrivate: chat.isPrivate,
-            profileImagePath: chat.profileImagePath,
-            isPinned: chat.isPinned,
-        };
-        return newMessages;
+    const handlePinClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        pinChatHandler(chat.chatId, chat.chatType, funcSetAllChats);
+        setIsPinned(!isPinned);
     };
 
-    const onClickHandler = () => {
-        if (
-            isSubChatVisible === false ||
-            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
-                `${chat.chatId}-${chat.chatName}`
-        ) {
-            toggleMessagesPane();
-            popSpecificMessages(chat.chatId, chat.chatType)
-                .then((messages) => {
-                    const newChat: ChatProps = defineNewChat(messages);
-                    setCurrentMainChat(newChat);
-                    addChat(newChat, chat.chatType);
-
-                    setIsMainChatVisible(true);
-
-                    if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                        setIsThreadVisible(false);
-                    }
-                })
-                .catch((error) => console.error(error));
-
-            if (isPinnedChat) {
-                localStorage.setItem("lastChatType", "4");
-                localStorage.setItem("lastPinnedChatId", chat.chatId.toString() || "");
-                localStorage.setItem("lastPinnedChatType", chat.chatType.toString() || "");
-            }
-        }
+    const handleSplitClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        splitOpenHandler(
+            setCurrentSubChat,
+            setIsMainChatVisible,
+            setIsThreadVisible,
+            setIsSubChatVisible
+        );
     };
 
-    const splitOpenHandler = () => {
-        if (
-            `${currentMainChat?.chatId}-${currentMainChat?.chatName}` !==
-            `${chat.chatId}-${chat.chatName}`
-        ) {
-            toggleMessagesPane();
-            if (chat.chatType === 1) {
-                popSpecificMessages(chat.chatId, chat.chatType)
-                    .then((messages) => {
-                        setCurrentSubChat(defineNewChat(messages));
-                        setIsMainChatVisible(true);
-                        if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                            setIsThreadVisible(false);
-                        }
-                    })
-                    .catch((error) => console.error(error));
-            } else {
-                popSpecificMessages(chat.chatId, chat.chatType)
-                    .then((messages) => {
-                        setCurrentSubChat(defineNewChat(messages));
-                        setIsMainChatVisible(true);
-                        if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                            setIsThreadVisible(false);
-                        }
-                    })
-                    .catch((error) => console.error(error));
-            }
-            setIsSubChatVisible(true);
-        }
-    };
-
-    const pinChatHandler = async (chatId: number, chatType: number) => {
-        await updatePinnedChats(accessToken, myself, {
-            chat_type: chatType,
-            chat_id: chatId,
-        });
-        await addChat({ ...chat, isPinned: !chat.isPinned }, chatType);
-        funcSetAllChats();
+    const handleTodoClick = () => {
+        setIsToDoVisible(true);
     };
 
     return (
@@ -197,7 +86,13 @@ export const ChatListItem = (props: ChatListItemProps) => {
                     selected={selected}
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                     variant="soft"
-                    onClick={onClickHandler}
+                    onClick={() =>
+                        onClickHandler(
+                            setCurrentMainChat,
+                            setIsMainChatVisible,
+                            setIsThreadVisible
+                        )
+                    }
                 >
                     <Stack direction="column">
                         <Stack
@@ -208,198 +103,44 @@ export const ChatListItem = (props: ChatListItemProps) => {
                         >
                             <Stack direction="row" spacing={1}>
                                 <div>
-                                    {chatType === 1 && chat.dmPartnerUser.userId !== "" && (
-                                        <AvatarWithStatus
-                                            chat={chat}
-                                            isYou={isYou}
-                                            myself={myself}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            setMyself={setMyself}
-                                            setOpeningService={setOpeningService}
-                                            socket={socket}
-                                            avatarUser={
-                                                teamMemberProfiles[chat.dmPartnerUser.userId]
-                                            }
-                                        />
-                                    )}
-
-                                    {chatType === 1 && chat.dmPartnerUser.userId === "" && (
-                                        <Avatar size="sm">{chat.chatName[0].toUpperCase()}</Avatar>
-                                    )}
-
-                                    {chatType === 2 && (
-                                        <GMAvatar
-                                            funcSetAllChats={funcSetAllChats}
-                                            gmChat={chat}
-                                            isYou={isYou}
-                                            myself={myself}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            setMyself={setMyself}
-                                            setOpeningService={setOpeningService}
-                                            socket={socket}
-                                            teamMemberProfiles={teamMemberProfiles}
-                                        />
-                                    )}
-
-                                    {chatType === 3 && (
-                                        <ProjectAvatar
-                                            funcSetAllChats={funcSetAllChats}
-                                            myself={myself}
-                                            pmChat={chat}
-                                            setCurrentMainChat={setCurrentMainChat}
-                                            setMyself={setMyself}
-                                            setOpeningService={setOpeningService}
-                                            socket={socket}
-                                            teamMemberProfiles={teamMemberProfiles}
-                                        />
-                                    )}
+                                    <ChatListItemAvatar
+                                        chat={chat}
+                                        chatType={chatType}
+                                        isYou={isYou}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        setCurrentMainChat={setCurrentMainChat}
+                                        setOpeningService={setOpeningService}
+                                        socket={socket}
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        funcSetAllChats={funcSetAllChats}
+                                    />
                                 </div>
 
-                                <Box sx={{ pt: "3px" }}>
-                                    <Stack direction="row" spacing={0.5}>
-                                        <Typography
-                                            level="title-sm"
-                                            sx={{ pl: "5px" }}
-                                            startDecorator={
-                                                chat.isPrivate ? (
-                                                    <LockOutlineIcon sx={{ fontSize: "16px" }} />
-                                                ) : undefined
-                                            }
-                                            noWrap
-                                        >
-                                            {isYou ? `${chat.chatName} (you)` : chat.chatName}
-                                        </Typography>
-
-                                        {/* show my own custom status */}
-                                        {chat.dmPartnerUser.userId !== "" &&
-                                            myself.userId === chat.dmPartnerUser.userId &&
-                                            myself.customStatus != "" && (
-                                                <Chip
-                                                    component="h3"
-                                                    size="sm"
-                                                    sx={{ borderRadius: "sm", height: "10px" }}
-                                                    variant="outlined"
-                                                >
-                                                    {myself.customStatus}
-                                                </Chip>
-                                            )}
-
-                                        {/* show others custom status */}
-                                        {chat.dmPartnerUser.userId !== "" &&
-                                            myself.userId !== chat.dmPartnerUser.userId &&
-                                            teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                                            teamMemberProfiles[chat.dmPartnerUser.userId]
-                                                .customStatus !== "" && (
-                                                <Chip
-                                                    component="h3"
-                                                    size="sm"
-                                                    sx={{ borderRadius: "sm", height: "10px" }}
-                                                    variant="outlined"
-                                                >
-                                                    {
-                                                        teamMemberProfiles[
-                                                            chat.dmPartnerUser.userId
-                                                        ].customStatus
-                                                    }
-                                                </Chip>
-                                            )}
-                                    </Stack>
-                                </Box>
+                                <ChatListItemTitle
+                                    chat={chat}
+                                    isYou={isYou}
+                                    myself={myself}
+                                    teamMemberProfiles={teamMemberProfiles}
+                                />
                             </Stack>
 
-                            {/* Right-aligned content */}
-                            <Stack alignItems="center" direction="row">
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ display: { xs: "none", md: "block" }, mt: 0.6, mr: 1 }}
-                                    noWrap
-                                >
-                                    {chat.latestMessage
-                                        ? extractYYYYMMDDHHMM(chat.latestMessage.tsSent)
-                                        : ""}
-                                </Typography>
-
-                                {chat.dmPartnerUser.userId === myself.userId && (
-                                    <Tooltip size="sm" title="To-Do">
-                                        <Badge
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                            badgeContent={incompleteTodoCount}
-                                            color="primary"
-                                            size="sm"
-                                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.6 }}
-                                        >
-                                            <IconButton
-                                                color="neutral"
-                                                component="a"
-                                                size="sm"
-                                                sx={{ mr: -1 }}
-                                                variant="plain"
-                                                onClick={() => setIsToDoVisible(true)}
-                                            >
-                                                <ChecklistIcon />
-                                            </IconButton>
-                                        </Badge>
-                                    </Tooltip>
-                                )}
-                                <Tooltip
-                                    size="sm"
-                                    title={chat.isPinned ? "Unpin Chat" : "Pin Chat"}
-                                >
-                                    <IconButton
-                                        color={chat.isPinned ? "danger" : "neutral"}
-                                        component="a"
-                                        sx={{ mr: -1, mt: 0.6 }}
-                                        onClick={(event) => {
-                                            event.stopPropagation(); // Stop the click from reaching ListItemButton
-                                            pinChatHandler(chat.chatId, chat.chatType); // Call the intended function
-                                            setIsPinned(!isPinned);
-                                        }}
-                                    >
-                                        <PushPinIcon sx={{ fontSize: isPinned ? 18 : 16 }} />
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip size="sm" title="Split View ">
-                                    <IconButton
-                                        component="a"
-                                        sx={{ mt: 0.6 }}
-                                        onClick={(event) => {
-                                            event.stopPropagation(); // Stop the click from reaching ListItemButton
-                                            splitOpenHandler(); // Call the intended function
-                                        }}
-                                    >
-                                        <OpenInNewIcon sx={{ fontSize: 16 }} />
-                                    </IconButton>
-                                </Tooltip>
-                                {chat.latestMessage &&
-                                    chat.lastReadMessageId < chat.latestMessage?.messageId && (
-                                        <CircleIcon
-                                            color="primary"
-                                            sx={{ mr: 1, fontSize: 12, mt: 1 }}
-                                        />
-                                    )}
-                            </Stack>
+                            <ChatListItemActions
+                                chat={chat}
+                                myself={myself}
+                                incompleteTodoCount={incompleteTodoCount}
+                                isPinned={isPinned || false}
+                                onPinClick={handlePinClick}
+                                onSplitClick={handleSplitClick}
+                                onTodoClick={handleTodoClick}
+                            />
                         </Stack>
 
-                        <Box sx={{ lineHeight: 0, textAlign: "left" }}>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    ml: "45px",
-                                    fontWeight: "bold",
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: "2",
-                                    WebkitBoxOrient: "vertical",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                }}
-                            >
-                                {chat.latestMessageText}
-                            </Typography>
-                        </Box>
+                        <ChatListItemMessage chat={chat} />
                     </Stack>
                 </ListItemButton>
             </ListItem>
             <ListDivider sx={{ margin: 0 }} />
         </React.Fragment>
     );
-};
+});
