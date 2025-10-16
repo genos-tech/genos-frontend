@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 
-import { UserProps } from "../../../types/admin";
-import { ActivityMessageProps } from "../../../types/chat";
-import { GroupedReactionProps } from "../../../types/common";
+import { UserProps } from "../../../../types/admin";
+import { ActivityMessageProps } from "../../../../types/chat";
+import { GroupedReactionProps } from "../../../../types/common";
 import { ActivityReactions } from "./ActivityReactions";
 
 interface ActivityContentProps {

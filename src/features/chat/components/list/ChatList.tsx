@@ -3,22 +3,22 @@ import { List, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../types/admin";
+import { UserProps } from "../../../../types/admin";
 import {
     ActivityMessageProps,
     AllChatProps,
     ChatProps,
     FlaggedMessageProps,
     ThreadProps,
-} from "../../../types/chat";
-import { ProjectProps } from "../../../types/tasks";
+} from "../../../../types/chat";
+import { ProjectProps } from "../../../../types/tasks";
+import { ChatListItemForActivity } from "../activity/chatListItemForActivity";
+import { ChatListItemForFlagMessages } from "../activity/chatListItemForFlagMessages";
 import {
     useScrollToBottomOnChatPaneChange,
     useScrollToBottomOnNewActivity,
-} from "../hooks/messageBubbleHooks";
+} from "../../hooks/messageBubbleHooks";
 import { ChatListItem } from "./chatListItem";
-import { ChatListItemForActivity } from "./chatListItemForActivity";
-import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
 
 // Constants
 const CHAT_TYPES = {

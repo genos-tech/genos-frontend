@@ -2,20 +2,18 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
 
-import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
-import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
-import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
-import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
-import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
-import { UserProps } from "../../../types/admin";
-import { TaskPreview } from "../../tasks/components/contents/TaskPreview";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { CreateTaskForm } from "../../../tasks/components/contents/CreateTaskForm";
 
-interface TaskPreviewPanelProps {
+interface CreateTaskPanelProps {
     CM: ChatManagementState;
     TM: TaskManagementState;
     PM: ProjectManagementState;
     TEM: TeamManagementState;
-    NM: NoteManagementState;
     myself: UserProps;
     openingService: number;
     socket: any;
@@ -23,22 +21,21 @@ interface TaskPreviewPanelProps {
     setOpeningService: (service: number) => void;
 }
 
-export const TaskPreviewPanel = ({
+export const CreateTaskPanel = ({
     CM,
     TM,
     PM,
     TEM,
-    NM,
     myself,
     openingService,
     socket,
     setMyself,
     setOpeningService,
-}: TaskPreviewPanelProps) => {
+}: CreateTaskPanelProps) => {
     const { mode } = useColorScheme();
 
     return (
-        <Panel id={"7"} maxSize={70} minSize={30} order={7}>
+        <Panel id={"6"} maxSize={70} minSize={30} order={6}>
             <Box
                 sx={{
                     px: { xs: 1, md: 2 },
@@ -47,7 +44,7 @@ export const TaskPreviewPanel = ({
                         sm: "calc(12px + var(--Header-height))",
                         md: 2,
                     },
-                    pb: { xs: 2, sm: 2, md: 3 },
+                    pb: { xs: 2, sm: 2, md: 1 },
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
@@ -59,29 +56,25 @@ export const TaskPreviewPanel = ({
                     borderColor: mode === "dark" ? "black" : "white",
                 }}
             >
-                <TaskPreview
-                    handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
-                    isTaskNoteVisible={NM.isTaskNoteVisible}
+                <CreateTaskForm
+                    chatType={CM.currentThreadChat?.chatType || -1}
+                    currentMainChat={CM.currentMainChat}
+                    currentThreadChat={CM.currentThreadChat}
                     isThreadVisible={CM.isThreadVisible}
                     moveToSpecificChat={CM.moveToSpecificChat}
                     myself={myself}
                     openingService={openingService}
+                    parentTaskId={null}
+                    PM={PM}
+                    rootTaskId={null}
                     setCurrentMainChat={CM.setCurrentMainChat}
-                    setCurrentProject={PM.setCurrentProject}
-                    setCurrentTaskNote={NM.setCurrentTaskNote}
                     setIsMainChatVisible={CM.setIsMainChatVisible}
-                    setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
-                    setIsThreadVisible={CM.setIsThreadVisible}
                     setMyself={setMyself}
-                    setOpenCreateProject={PM.setOpenCreateProject}
                     setOpeningService={setOpeningService}
                     setTeamMembers={TEM.setTeamMembers}
-                    setTeamProjects={PM.setTeamProjects}
                     socket={socket}
-                    taskNoteMeta={NM.taskNoteMeta}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     teamMembers={TEM.teamMembers}
-                    teamProjects={PM.teamProjects}
                     TM={TM}
                 />
             </Box>

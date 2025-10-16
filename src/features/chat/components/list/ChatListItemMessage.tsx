@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/joy";
 
-import { AllChatProps } from "../../../types/chat";
+import { AllChatProps } from "../../../../types/chat";
 
 interface ChatListItemMessageProps {
     chat: AllChatProps;

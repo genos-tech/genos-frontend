@@ -1,7 +1,7 @@
 import React from "react";
 import { Chip, Stack } from "@mui/joy";
 
-import { ActivityMessageProps } from "../../../types/chat";
+import { ActivityMessageProps } from "../../../../types/chat";
 
 interface ActivityTypeChipsProps {
     activity: ActivityMessageProps;

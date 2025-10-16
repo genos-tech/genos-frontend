@@ -24,7 +24,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../types/admin";
+import { UserProps } from "../../../../types/admin";
 import {
     ActivityMessageProps,
     AllChatProps,
@@ -32,16 +32,16 @@ import {
     FlaggedMessageProps,
     MessageProps,
     ThreadProps,
-} from "../../../types/chat";
-import { ProjectProps } from "../../../types/tasks";
-import { toggleMessagesPane } from "../../../utils";
-import { popSpecificMessages } from "../services/popSpecificMessages";
-import { defaultChat } from "../utils/defaults";
+} from "../../../../types/chat";
+import { ProjectProps } from "../../../../types/tasks";
+import { toggleMessagesPane } from "../../../../utils";
+import { popSpecificMessages } from "../../services/popSpecificMessages";
+import { defaultChat } from "../../utils/defaults";
+import { ModalCreateGM } from "../modals/ModalCreateGM";
+import { ModalJoinGM } from "../modals/ModalJoinGM";
 import { ChatList } from "./ChatList";
 import { ChatSearch } from "./ChatSearch";
 import { ActivityDivider } from "./ChatSidebarDividers";
-import { ModalCreateGM } from "./modals/ModalCreateGM";
-import { ModalJoinGM } from "./modals/ModalJoinGM";
 
 type ChatSidebarProps = {
     teamMemberProfiles: Record<string, UserProps>;

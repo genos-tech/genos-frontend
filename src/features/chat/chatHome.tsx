@@ -5,15 +5,15 @@ import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
 import { ChatProvider } from "./context/ChatContext";
-import { ChatNotePanel } from "./components/ChatNotePanel";
-import { ChatSidebar } from "./components/ChatSidebar";
-import { CreateTaskPanel } from "./components/CreateTaskPanel";
-import { MainChatPanel } from "./components/MainChatPanel";
-import { ResizeHandle } from "./components/ResizeHandle";
-import { SelectChatPanel } from "./components/SelectChatPanel";
-import { SubChatPanel } from "./components/SubChatPanel";
-import { TaskPreviewPanel } from "./components/TaskPreviewPanel";
-import { ThreadPanel } from "./components/ThreadPanel";
+import { ChatSidebar } from "./components/list/ChatSidebar";
+import { ChatNotePanel } from "./components/panels/ChatNotePanel";
+import { CreateTaskPanel } from "./components/panels/CreateTaskPanel";
+import { MainChatPanel } from "./components/panels/MainChatPanel";
+import { SelectChatPanel } from "./components/panels/SelectChatPanel";
+import { SubChatPanel } from "./components/panels/SubChatPanel";
+import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
+import { ThreadPanel } from "./components/panels/ThreadPanel";
+import { ResizeHandle } from "./components/shared/ResizeHandle";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";

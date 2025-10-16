@@ -1,12 +1,12 @@
 import { Panel } from "react-resizable-panels";
 
-import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
-import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
-import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
-import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
-import { UserProps } from "../../../types/admin";
-import { ToDoFactProps } from "../../../types/chat";
-import { MessagesSubPane } from "../SubChatPane";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { ToDoFactProps } from "../../../../types/chat";
+import { MessagesSubPane } from "../../SubChatPane";
 
 interface SubChatPanelProps {
     CM: ChatManagementState;

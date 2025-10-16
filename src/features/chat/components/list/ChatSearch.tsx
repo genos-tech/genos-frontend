@@ -11,13 +11,13 @@ import {
 import CircularProgress from "@mui/joy/CircularProgress";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../components/common/GMAvatar";
-import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps, SearchListProps } from "../../../types/chat";
-import { loadSearchList } from "../services/loadChatSearchList";
-import { moveToSelectedChat } from "../services/moveToChat";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { GMAvatar } from "../../../../components/common/GMAvatar";
+import { useAuth } from "../../../../context/AuthContext";
+import { UserProps } from "../../../../types/admin";
+import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
+import { loadSearchList } from "../../services/loadChatSearchList";
+import { moveToSelectedChat } from "../../services/moveToChat";
 
 type ChatSearchProps = {
     myself: UserProps;

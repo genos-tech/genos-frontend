@@ -2,13 +2,13 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
 
-import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
-import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
-import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
-import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
-import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
-import { UserProps } from "../../../types/admin";
-import { ChatNoteMain } from "../../notes/chat-notes/components/ChatNoteMain";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
 
 interface ChatNotePanelProps {
     CM: ChatManagementState;

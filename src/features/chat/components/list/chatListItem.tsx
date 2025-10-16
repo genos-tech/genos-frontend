@@ -3,8 +3,8 @@ import { memo } from "react";
 import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 
-import { useAuth } from "../../../context/AuthContext";
-import { useChatListItem } from "../hooks/useChatListItem";
+import { useAuth } from "../../../../context/AuthContext";
+import { useChatListItem } from "../../hooks/useChatListItem";
 import { ChatListItemProps } from "./ChatListItem.types";
 import { ChatListItemActions } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";

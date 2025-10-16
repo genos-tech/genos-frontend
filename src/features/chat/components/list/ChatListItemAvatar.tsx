@@ -2,11 +2,11 @@ import React from "react";
 import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../components/common/GMAvatar";
-import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
-import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../types/chat";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { GMAvatar } from "../../../../components/common/GMAvatar";
+import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { UserProps } from "../../../../types/admin";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
 
 interface ChatListItemAvatarProps {
     chat: AllChatProps;

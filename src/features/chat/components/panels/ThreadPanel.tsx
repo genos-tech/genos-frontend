@@ -2,12 +2,12 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
 
-import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
-import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
-import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
-import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
-import { UserProps } from "../../../types/admin";
-import { ThreadPane } from "../ThreadChatPane";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { ThreadPane } from "../../ThreadChatPane";
 
 interface ThreadPanelProps {
     CM: ChatManagementState;

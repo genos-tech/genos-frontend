@@ -1,8 +1,8 @@
 import { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../types/chat";
+import { UserProps } from "../../../../types/admin";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
 
 export interface ChatListItemProps extends ListItemButtonProps {
     // Chat data

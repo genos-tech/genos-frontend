@@ -2,8 +2,8 @@ import React from "react";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import { Box, Chip, Stack, Typography } from "@mui/joy";
 
-import { UserProps } from "../../../types/admin";
-import { AllChatProps } from "../../../types/chat";
+import { UserProps } from "../../../../types/admin";
+import { AllChatProps } from "../../../../types/chat";
 
 interface ChatListItemTitleProps {
     chat: AllChatProps;

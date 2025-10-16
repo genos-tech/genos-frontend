@@ -8,13 +8,13 @@ import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../components/common/GMAvatar";
-import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
-import { useAuth } from "../../../context/AuthContext";
-import { STORES } from "../../../db/conf";
-import { deleteData } from "../../../db/crud";
-import { UserProps } from "../../../types/admin";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { GMAvatar } from "../../../../components/common/GMAvatar";
+import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { useAuth } from "../../../../context/AuthContext";
+import { STORES } from "../../../../db/conf";
+import { deleteData } from "../../../../db/crud";
+import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
     ChatProps,
@@ -22,14 +22,14 @@ import {
     MessageProps,
     ThreadMessageProps,
     ThreadProps,
-} from "../../../types/chat";
-import { ProjectProps } from "../../../types/tasks";
-import { toggleMessagesPane } from "../../../utils";
-import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { addMessage } from "../services/addMessage";
-import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
-import { popSpecificMessages } from "../services/popSpecificMessages";
-import { updateFlagMessage } from "../services/updateFlagMessage";
+} from "../../../../types/chat";
+import { ProjectProps } from "../../../../types/tasks";
+import { toggleMessagesPane } from "../../../../utils";
+import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { addMessage } from "../../services/addMessage";
+import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
+import { popSpecificMessages } from "../../services/popSpecificMessages";
+import { updateFlagMessage } from "../../services/updateFlagMessage";
 
 // Constants
 const CHAT_TYPES = {

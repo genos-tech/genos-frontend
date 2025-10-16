@@ -1,13 +1,13 @@
 import { Box, IconButton } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 
-import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
-import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
-import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
-import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
-import { UserProps } from "../../../types/admin";
-import { ToDoFactProps } from "../../../types/chat";
-import { MessagesPane } from "../MainChatPane";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { ToDoFactProps } from "../../../../types/chat";
+import { MessagesPane } from "../../MainChatPane";
 
 interface MainChatPanelProps {
     CM: ChatManagementState;
