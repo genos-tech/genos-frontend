@@ -1,84 +1,18 @@
-export const DB_NAME = "originData";
-export const DB_VERSION = 18;
+/**
+ * @deprecated This file is deprecated. Use the new modular structure:
+ * - Import from './config/constants' for constants
+ * - Import from './config/schema' for schema initialization
+ * - Use services from './services' for business logic
+ *
+ * See MIGRATION_GUIDE.md for migration instructions.
+ */
 
-export const STORES = {
-    USER_INFO: "users",
-    INBOX: "inbox",
-    ACTIVITY_MESSAGES: "activityMessages",
-    DM_CHATS: "dmChats",
-    DM_MESSAGES: "dmMessages",
-    DM_THREAD_MESSAGES: "dmThreadMessages",
-    GM_CHATS: "gmChats",
-    GM_MESSAGES: "gmMessages",
-    GM_THREAD_MESSAGES: "gmThreadMessages",
-    PM_CHATS: "pmChats",
-    PM_MESSAGES: "pmMessages",
-    PM_THREAD_MESSAGES: "pmThreadMessages",
-    FLAGGED_MESSAGES: "flaggedMessages",
-    TASKS: "tasks",
-    PERSONAL_NOTES: "personalNotes",
-    TASK_NOTES: "taskNotes",
-    CHAT_NOTES: "chatNotes",
-};
-
-export const KEY_PATH = {
-    USER_INFO: "userId",
-    INBOX: "itemId",
-    ACTIVITY_MESSAGES: "activityId",
-    DM_CHATS: "chatId",
-    DM_MESSAGES: "messageIdWithChatId",
-    DM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
-    GM_CHATS: "chatId",
-    GM_MESSAGES: "messageIdWithChatId",
-    GM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
-    PM_CHATS: "chatId",
-    PM_MESSAGES: "messageIdWithChatId",
-    PM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
-    FLAGGED_MESSAGES: "flaggedMessageId",
-    TASKS: "id",
-    PERSONAL_NOTES: "noteId",
-    TASK_NOTES: "noteId",
-    CHAT_NOTES: "noteId",
-};
-
-export const INDEX = {
-    USER_INFO: "UserInfoIndex",
-    DM_CHATS: "DmTSLastMessageIndex",
-    DM_MESSAGES: "DmMessagesIndex",
-    DM_MESSAGES_COMPOUND: "DmMessagesCompoundIndex",
-    DM_THREAD_MESSAGES: "DmThreadMessagesIndex",
-    DM_THREAD_MESSAGES_COMPOUND: "DmThreadMessagesCompoundIndex",
-    GM_CHATS: "GmTSLastMessageIndex",
-    GM_MESSAGES: "GmMessagesIndex",
-    GM_MESSAGES_COMPOUND: "GmMessagesCompoundIndex",
-    GM_THREAD_MESSAGES: "GmThreadMessagesIndex",
-    GM_THREAD_MESSAGES_COMPOUND: "GmThreadMessagesCompoundIndex",
-    PM_CHATS: "PmTSLastMessageIndex",
-    PM_MESSAGES: "PmMessagesIndex",
-    PM_MESSAGES_COMPOUND: "PmMessagesCompoundIndex",
-    PM_THREAD_MESSAGES: "PmThreadMessagesIndex",
-    PM_THREAD_MESSAGES_COMPOUND: "PmThreadMessagesCompoundIndex",
-    TASKS: "TasksIndex",
-    TASKS_COMPOUND: "TasksCompoundIndex",
-};
-
-export const INDEX_KEY = {
-    USER_INFO: "teamId",
-    DM_CHATS: "TSLastMessage",
-    DM_MESSAGES: "chatId",
-    DM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
-    DM_THREAD_MESSAGES: "chatId",
-    DM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
-    GM_CHATS: "TSLastMessage",
-    GM_MESSAGES: "chatId",
-    GM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
-    GM_THREAD_MESSAGES: "chatId",
-    GM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
-    PM_CHATS: "TSLastMessage",
-    PM_MESSAGES: "chatId",
-    PM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
-    PM_THREAD_MESSAGES: "chatId",
-    PM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
-    TASKS: "projectId",
-    TASKS_COMPOUND: ["projectId", "status"],
-};
+// Re-export from new structure for backward compatibility
+export {
+    DB_NAME,
+    DB_VERSION,
+    STORES,
+    KEY_PATHS as KEY_PATH,
+    INDEX_NAMES as INDEX,
+    INDEX_KEY_PATHS as INDEX_KEY,
+} from "./config/constants";

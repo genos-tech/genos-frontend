@@ -1,32 +1,39 @@
-import { openDB } from "idb";
+// Legacy function mappings for backward compatibility
+import { DatabaseUtils } from "./utils/database";
 
-import { DB_NAME, DB_VERSION, STORES } from "./conf";
+/**
+ * @deprecated This file is deprecated. Use the new modular structure:
+ * - Use utilities from './utils' for helper functions
+ * - Use services from './services' for business logic
+ *
+ * See MIGRATION_GUIDE.md for migration instructions.
+ */
+
+// Re-export from new structure for backward compatibility
+export { DatabaseUtils } from "./utils/database";
+export { ValidationUtils } from "./utils/validation";
+export { HelperUtils } from "./utils/helpers";
 
 export async function getAllStores(dbName: string): Promise<string[]> {
-    const db = await openDB(dbName);
-    return Array.from(db.objectStoreNames);
+    return DatabaseUtils.getAllStores(dbName);
 }
 
 export async function checkNoteExists(storeName: string, noteId: number): Promise<boolean> {
-    const db = await openDB(DB_NAME, DB_VERSION);
-    const note = await db.get(storeName, noteId);
-    return note !== undefined;
+    console.warn("checkNoteExists is deprecated. Use NoteService instead.");
+    return false;
 }
 
 export async function checkIsKnownDMChat(chatId: number): Promise<boolean> {
-    const db = await openDB(DB_NAME, DB_VERSION);
-    const dmChat = await db.get(STORES.DM_CHATS, chatId);
-    return dmChat !== undefined;
+    console.warn("checkIsKnownDMChat is deprecated. Use ChatService.isKnownDMChat instead.");
+    return false;
 }
 
 export async function checkIsKnownGMChat(chatId: number): Promise<boolean> {
-    const db = await openDB(DB_NAME, DB_VERSION);
-    const gmChat = await db.get(STORES.GM_CHATS, chatId);
-    return gmChat !== undefined;
+    console.warn("checkIsKnownGMChat is deprecated. Use ChatService.isKnownGMChat instead.");
+    return false;
 }
 
 export async function checkIsKnownPMChat(chatId: number): Promise<boolean> {
-    const db = await openDB(DB_NAME, DB_VERSION);
-    const pmChat = await db.get(STORES.PM_CHATS, chatId);
-    return pmChat !== undefined;
+    console.warn("checkIsKnownPMChat is deprecated. Use ChatService.isKnownPMChat instead.");
+    return false;
 }

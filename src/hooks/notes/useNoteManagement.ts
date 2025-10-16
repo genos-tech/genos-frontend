@@ -489,7 +489,7 @@ export const useNoteManagement = (
                     key: noteId,
                 });
                 if (note) {
-                    if (note.noteType === 1) {
+                    if ((note as MyNoteProps).noteType === 1) {
                         setCurrentMyNote(note);
                         setSelectedTabIndex(targetTabIndex);
                     }
@@ -513,7 +513,7 @@ export const useNoteManagement = (
                     key: noteId,
                 });
                 if (note) {
-                    if (note.noteType === 2) {
+                    if ((note as TaskNoteProps).noteType === 2) {
                         setCurrentTaskNote(note);
                         setSelectedTabIndex(targetTabIndex);
                     }
@@ -537,7 +537,7 @@ export const useNoteManagement = (
                     key: noteId,
                 });
                 if (note) {
-                    if (note.noteType === 3) {
+                    if ((note as ChatNoteProps).noteType === 3) {
                         setCurrentChatNote(note);
                         setSelectedTabIndex(targetTabIndex);
                     }
