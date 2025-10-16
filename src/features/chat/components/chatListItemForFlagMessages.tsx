@@ -31,19 +31,22 @@ import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessag
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { updateFlagMessage } from "../services/updateFlagMessage";
 
-// chatType = {1: DM, 2: GM, 3: PM, 4: Task}
-// flaggedMessageType = {1: message or comment, 2: reaction, 3: mention}
+// Constants
+const CHAT_TYPES = {
+    DM: 1,
+    GM: 2,
+    PM: 3,
+    TASK: 4,
+} as const;
 
-type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
-    selectedFlaggedMessageId: string;
-    setSelectedFlaggedMessageId: (value: string) => void;
-    teamMemberProfiles: Record<string, UserProps>;
-    socket: Socket | null;
-    flaggedMessage: FlaggedMessageProps;
-    flaggedMessages: FlaggedMessageProps[];
-    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
-    myself: UserProps;
-    setMyself: (value: UserProps) => void;
+const CHAT_TYPE_LABELS = {
+    [CHAT_TYPES.DM]: "DM",
+    [CHAT_TYPES.GM]: "GM",
+    [CHAT_TYPES.PM]: "PM",
+} as const;
+
+// Types
+interface ChatNavigationProps {
     allChats: AllChatProps[];
     currentSubChat?: ChatProps;
     setCurrentMainChat: (chat: ChatProps) => void;
@@ -53,16 +56,83 @@ type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
     isTaskPreviewVisible: boolean;
+    isSubChatVisible: boolean;
+}
+
+interface TaskCreationProps {
     isCreatingTask: {
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
     };
-    isSubChatVisible: boolean;
-    setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
+}
+
+interface FlaggedMessageActions {
+    flaggedMessages: FlaggedMessageProps[];
+    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    selectedFlaggedMessageId: string;
+    setSelectedFlaggedMessageId: (value: string) => void;
+}
+
+type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
+    flaggedMessage: FlaggedMessageProps;
+    teamMemberProfiles: Record<string, UserProps>;
+    socket: Socket | null;
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    setOpeningService: (value: number) => void;
     funcSetAllChats: () => Promise<void>;
+} & ChatNavigationProps &
+    TaskCreationProps &
+    FlaggedMessageActions;
+
+// Helper functions
+const createChatFromMessages = (
+    messages: MessageProps[],
+    moveToSpecificIndex: string,
+    flaggedMessage: FlaggedMessageProps,
+    allChats: AllChatProps[]
+): ChatProps => {
+    const chatType =
+        flaggedMessage.chatType === CHAT_TYPES.TASK ? CHAT_TYPES.PM : flaggedMessage.chatType;
+    const currentChat = allChats.find(
+        (chat) => chat.chatType === chatType && chat.chatId === flaggedMessage.chatId
+    );
+
+    if (!currentChat) {
+        throw new Error(`Chat not found for type ${chatType} and id ${flaggedMessage.chatId}`);
+    }
+
+    return {
+        chatId: flaggedMessage.chatId,
+        chatName: flaggedMessage.chatName,
+        chatType: flaggedMessage.chatType,
+        dmPartnerUser: flaggedMessage.dmPartnerUser,
+        lastReadMessageId: Math.max(flaggedMessage.messageId, currentChat.lastReadMessageId),
+        messages: messages,
+        latestMessage: messages[messages.length - 1],
+        latestMessageText: messages[messages.length - 1].contentText,
+        TSLastMessage: flaggedMessage.tsSent,
+        moveToSpecificIndex: moveToSpecificIndex,
+        isPrivate: currentChat.isPrivate,
+        profileImagePath: currentChat.profileImagePath,
+    };
+};
+
+const isCurrentChat = (
+    currentSubChat: ChatProps | undefined,
+    flaggedMessage: FlaggedMessageProps
+): boolean => {
+    return (
+        currentSubChat?.chatId === flaggedMessage.chatId &&
+        currentSubChat?.chatName === flaggedMessage.chatName
+    );
+};
+
+const shouldHideThread = (isCreatingTask: boolean, isTaskPreviewVisible: boolean): boolean => {
+    return isCreatingTask || isTaskPreviewVisible;
 };
 
 export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesProps) => {
@@ -97,292 +167,447 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     const isYou = myself.userId === flaggedMessage.dmPartnerUser.userId;
     const [tmpIsFlagged, setTmpIsFlagged] = useState(true);
 
-    const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
-        let chatType: number = flaggedMessage.chatType;
-        if (flaggedMessage.chatType === 4) {
-            chatType = 3;
+    // Flag status management
+    const updateFlagStatus = async () => {
+        try {
+            // Update backend
+            await updateFlagMessage(accessToken, myself, {
+                chat_type: flaggedMessage.chatType,
+                chat_id: flaggedMessage.chatId,
+                thread_id: flaggedMessage.threadId,
+                message_id: flaggedMessage.messageId,
+            });
+
+            setTmpIsFlagged(false);
+
+            // Remove from local state
+            setFlaggedMessages(
+                flaggedMessages.filter(
+                    (message) => message.flaggedMessageId !== flaggedMessage.flaggedMessageId
+                )
+            );
+
+            // Remove from IndexedDB
+            await deleteData({
+                storeName: STORES.FLAGGED_MESSAGES,
+                key: flaggedMessage.flaggedMessageId,
+            });
+
+            // Update messages and chat
+            await updateMessagesAndChat();
+        } catch (error) {
+            console.error("Error updating flag status:", error);
         }
-        const currentChat: AllChatProps = allChats.filter(
-            (chat) => chat.chatType === chatType && chat.chatId === flaggedMessage.chatId
-        )[0];
-        const newChat: ChatProps = {
-            chatId: flaggedMessage.chatId,
-            chatName: flaggedMessage.chatName,
-            chatType: flaggedMessage.chatType,
-            dmPartnerUser: flaggedMessage.dmPartnerUser,
-            lastReadMessageId:
-                flaggedMessage.messageId > currentChat.lastReadMessageId
-                    ? flaggedMessage.messageId
-                    : currentChat.lastReadMessageId,
-            messages: messages,
-            latestMessage: messages[messages.length - 1],
-            latestMessageText: messages[messages.length - 1].contentText,
-            TSLastMessage: flaggedMessage.tsSent,
-            moveToSpecificIndex: moveToSpecificIndex,
-            isPrivate: currentChat.isPrivate,
-            profileImagePath: currentChat.profileImagePath,
-        };
-        return newChat;
     };
 
-    const updateFlagStatus = () => {
-        // Update the flagged message status in the backend
-        updateFlagMessage(accessToken, myself, {
-            chat_type: flaggedMessage.chatType,
-            chat_id: flaggedMessage.chatId,
-            thread_id: flaggedMessage.threadId,
-            message_id: flaggedMessage.messageId,
-        });
+    const updateMessagesAndChat = async () => {
+        try {
+            const messages = await popSpecificMessages(
+                flaggedMessage.chatId,
+                flaggedMessage.chatType
+            );
 
-        setTmpIsFlagged(false);
+            // Update the isFlagged status of the target message
+            const updatedMessages: MessageProps[] = messages.map((message: MessageProps) =>
+                message.messageId === flaggedMessage.messageId
+                    ? { ...message, isFlagged: !message.isFlagged }
+                    : message
+            );
 
-        // Delete the flagged message from the flaggedMessages array
-        setFlaggedMessages(
-            flaggedMessages.filter(
-                (message) => message.flaggedMessageId !== flaggedMessage.flaggedMessageId
-            )
-        );
+            // Save updated message to IndexedDB
+            const updatedMessage = updatedMessages.find(
+                (message: MessageProps) => message.messageId === flaggedMessage.messageId
+            );
+            if (updatedMessage) {
+                await addMessage(updatedMessage, flaggedMessage.chatType);
+            }
 
-        // Delete the flagged message from the indexedDB
-        deleteData({
-            storeName: STORES.FLAGGED_MESSAGES,
-            key: flaggedMessage.flaggedMessageId,
-        });
+            // Update current main chat
+            setCurrentMainChat(
+                createChatFromMessages(
+                    updatedMessages,
+                    `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
+                    flaggedMessage,
+                    allChats
+                )
+            );
 
-        popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType)
-            .then((messages) => {
-                // Update the isFlagged status of the target message. Keep the other messages unchanged.
-                const updatedMessages: MessageProps[] = messages.map((message: MessageProps) =>
-                    message.messageId === flaggedMessage.messageId
-                        ? { ...message, isFlagged: !message.isFlagged }
-                        : message
+            setIsMainChatVisible(true);
+
+            if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
+                setIsThreadVisible(false);
+            }
+        } catch (error) {
+            console.error("Error updating messages and chat:", error);
+        }
+    };
+
+    // Navigation handlers
+    const handleNonThreadMessage = async () => {
+        if (flaggedMessage.chatType === CHAT_TYPES.TASK) {
+            await handleTaskComment();
+        } else {
+            await handleRegularMessage();
+        }
+    };
+
+    const handleRegularMessage = async () => {
+        const isCurrentChatVisible = isCurrentChat(currentSubChat, flaggedMessage);
+
+        try {
+            const messages = await popSpecificMessages(
+                flaggedMessage.chatId,
+                flaggedMessage.chatType
+            );
+            const newChat = createChatFromMessages(
+                messages,
+                `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
+                flaggedMessage,
+                allChats
+            );
+
+            toggleMessagesPane();
+
+            if (isSubChatVisible && isCurrentChatVisible) {
+                setCurrentSubChat(newChat);
+            } else {
+                setCurrentMainChat(newChat);
+            }
+
+            setIsMainChatVisible(true);
+
+            if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
+                setIsThreadVisible(false);
+            }
+        } catch (error) {
+            console.error("Error handling regular message:", error);
+        }
+    };
+
+    const handleTaskComment = async () => {
+        if (!isCurrentChat(currentSubChat, flaggedMessage)) {
+            try {
+                const messages = await popSpecificMessages(flaggedMessage.chatId, CHAT_TYPES.PM);
+                const newChat = createChatFromMessages(
+                    messages,
+                    `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
+                    flaggedMessage,
+                    allChats
                 );
 
-                // Add the updated message to the indexedDB
-                const updatedMessage: MessageProps | undefined = updatedMessages.find(
-                    (message: MessageProps) => message.messageId === flaggedMessage.messageId
-                );
-                if (updatedMessage) {
-                    addMessage(updatedMessage, flaggedMessage.chatType);
+                toggleMessagesPane();
+                setCurrentMainChat(newChat);
+
+                if (flaggedMessage.project?.projectId) {
+                    setCurrentProject(flaggedMessage.project);
+                    setCurrentPreviewTaskId(flaggedMessage.taskId);
+                    setIsThreadVisible(false);
+                    setIsTaskPreviewVisible(true);
                 }
 
-                // Update the current main chat
-                setCurrentMainChat(
-                    defineNewChat(
-                        updatedMessages,
-                        `${flaggedMessage.chatId}-${flaggedMessage.messageId}`
-                    )
-                );
-
-                // Set the current main chat visible
                 setIsMainChatVisible(true);
 
-                // Set the thread visible to false if the task preview is visible
-                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
                     setIsThreadVisible(false);
                 }
-            })
-            .catch((error) => console.error(error));
+            } catch (error) {
+                console.error("Error handling task comment:", error);
+            }
+        }
     };
 
-    const onClickHandler = async () => {
-        setSelectedFlaggedMessageId(flaggedMessage.flaggedMessageId);
-
-        if (flaggedMessage.threadId === 0) {
-            // Handling a non-thread message/comment
-            if (flaggedMessage.chatType !== 4) {
-                // Handling a message flaggedMessage in DM, GM, PM
-                if (
-                    isSubChatVisible === false ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
-                        `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType)
-                        .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewChat(
-                                    messages,
-                                    `${flaggedMessage.chatId}-${flaggedMessage.messageId}`
-                                )
-                            );
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-                if (
-                    isSubChatVisible === true ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
-                        `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType)
-                        .then((messages) => {
-                            setCurrentSubChat(
-                                defineNewChat(
-                                    messages,
-                                    `${flaggedMessage.chatId}-${flaggedMessage.messageId}`
-                                )
-                            );
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-            } else {
-                // Handling a task comment flaggedMessage
-                if (
-                    isSubChatVisible === false ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
-                        `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(flaggedMessage.chatId, 3)
-                        .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewChat(
-                                    messages,
-                                    `${flaggedMessage.chatId}-${flaggedMessage.messageId}`
-                                )
-                            );
-                            if (flaggedMessage.project && flaggedMessage.project.projectId) {
-                                setCurrentProject(flaggedMessage.project);
-                                setCurrentPreviewTaskId(flaggedMessage.taskId);
-                                setIsThreadVisible(false);
-                                setIsTaskPreviewVisible(true);
-                            }
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-            }
-        } else {
-            // Handling a thread message
-            const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
+    const handleThreadMessage = async () => {
+        try {
+            const threadMessages = await loadSpecificThreadMessages(
                 myself,
                 flaggedMessage.chatType,
                 flaggedMessage.chatId,
                 flaggedMessage.threadId,
                 accessToken
             );
-            if (threadMessages && threadMessages.length > 0) {
-                const newThread: ThreadProps = {
-                    chatId: flaggedMessage.chatId,
-                    chatName: flaggedMessage.chatName,
-                    threadId: flaggedMessage.threadId,
-                    chatType: flaggedMessage.chatType,
-                    dmPartnerUser: {
-                        teamId: myself.teamId,
-                        teamName: myself.teamName,
-                        userId: flaggedMessage.dmPartnerUser.userId,
-                        userName: flaggedMessage.dmPartnerUser.userName,
-                        userEmail: flaggedMessage.dmPartnerUser.userEmail,
-                        avatarImgPath: "",
-                        tsLastSeen: "",
-                        tsJoined: "",
-                    },
-                    taskId: flaggedMessage.taskId,
-                    messages: threadMessages,
-                    project: flaggedMessage.project,
-                    TSLastMessage: getLocalCurrentTimestamp(),
-                    taskExist: threadMessages[0].taskExist,
-                    moveToSpecificIndex: flaggedMessage.flaggedMessageId,
-                };
-                if (flaggedMessage.project && flaggedMessage.project.projectId) {
+
+            if (threadMessages?.length > 0) {
+                const newThread = createThreadFromMessages(threadMessages);
+                setCurrentThreadChat(newThread);
+
+                if (flaggedMessage.project?.projectId) {
                     setCurrentProject(flaggedMessage.project);
                 }
-                if (newThread) {
-                    setCurrentThreadChat(newThread);
-                    if (newThread.taskExist === true && threadMessages[0].taskId) {
-                        setCurrentPreviewTaskId(threadMessages[0].taskId);
-                    }
+
+                if (newThread.taskExist && threadMessages[0].taskId) {
+                    setCurrentPreviewTaskId(threadMessages[0].taskId);
                 }
 
-                if (
-                    isSubChatVisible === false ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
-                        `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType)
-                        .then((messages) => {
-                            setCurrentMainChat(
-                                defineNewChat(
-                                    messages,
-                                    `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`
-                                )
-                            );
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-                if (
-                    isSubChatVisible === true ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
-                        `${flaggedMessage.chatId}-${flaggedMessage.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType)
-                        .then((messages) => {
-                            setCurrentSubChat(
-                                defineNewChat(
-                                    messages,
-                                    `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`
-                                )
-                            );
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
+                await handleThreadNavigation();
+                setIsThreadVisible(true);
             }
-
-            setIsThreadVisible(true);
+        } catch (error) {
+            console.error("Error handling thread message:", error);
         }
     };
 
-    const chatTypeLookup: { [key: number]: string } = {
-        1: "DM",
-        2: "GM",
-        3: "PM",
+    const createThreadFromMessages = (threadMessages: ThreadMessageProps[]): ThreadProps => {
+        return {
+            chatId: flaggedMessage.chatId,
+            chatName: flaggedMessage.chatName,
+            threadId: flaggedMessage.threadId,
+            chatType: flaggedMessage.chatType,
+            dmPartnerUser: {
+                teamId: myself.teamId,
+                teamName: myself.teamName,
+                userId: flaggedMessage.dmPartnerUser.userId,
+                userName: flaggedMessage.dmPartnerUser.userName,
+                userEmail: flaggedMessage.dmPartnerUser.userEmail,
+                avatarImgPath: "",
+                tsLastSeen: "",
+                tsJoined: "",
+            },
+            taskId: flaggedMessage.taskId,
+            messages: threadMessages,
+            project: flaggedMessage.project,
+            TSLastMessage: getLocalCurrentTimestamp(),
+            taskExist: threadMessages[0].taskExist,
+            moveToSpecificIndex: flaggedMessage.flaggedMessageId,
+        };
     };
 
-    const chat = allChats.find(
-        (chat) =>
-            chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
+    const handleThreadNavigation = async () => {
+        const isCurrentChatVisible = isCurrentChat(currentSubChat, flaggedMessage);
+
+        try {
+            const messages = await popSpecificMessages(
+                flaggedMessage.chatId,
+                flaggedMessage.chatType
+            );
+            const newChat = createChatFromMessages(
+                messages,
+                `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
+                flaggedMessage,
+                allChats
+            );
+
+            toggleMessagesPane();
+
+            if (isSubChatVisible && isCurrentChatVisible) {
+                setCurrentSubChat(newChat);
+            } else {
+                setCurrentMainChat(newChat);
+            }
+
+            setIsMainChatVisible(true);
+
+            if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
+                setIsThreadVisible(false);
+            }
+        } catch (error) {
+            console.error("Error handling thread navigation:", error);
+        }
+    };
+
+    const onClickHandler = async () => {
+        setSelectedFlaggedMessageId(flaggedMessage.flaggedMessageId);
+
+        if (flaggedMessage.threadId === 0) {
+            await handleNonThreadMessage();
+        } else {
+            await handleThreadMessage();
+        }
+    };
+
+    // Avatar rendering components
+    const renderDMAvatar = () => {
+        if (flaggedMessage.dmPartnerUser.userId !== "") {
+            return (
+                <AvatarWithStatus
+                    isYou={isYou}
+                    myself={myself}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    avatarUser={teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
+                />
+            );
+        }
+        return <Avatar size="sm">{flaggedMessage.chatName[0].toUpperCase()}</Avatar>;
+    };
+
+    const renderGMAvatar = () => {
+        const chat = allChats.find(
+            (chat) =>
+                chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
+        );
+
+        if (chat) {
+            return (
+                <GMAvatar
+                    funcSetAllChats={funcSetAllChats}
+                    gmChat={chat}
+                    isYou={isYou}
+                    myself={myself}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    teamMemberProfiles={teamMemberProfiles}
+                />
+            );
+        }
+        return (
+            <Avatar size="sm">
+                <GroupsIcon />
+            </Avatar>
+        );
+    };
+
+    const renderProjectAvatar = () => {
+        const chat = allChats.find(
+            (chat) =>
+                chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
+        );
+
+        if (chat) {
+            return (
+                <ProjectAvatar
+                    funcSetAllChats={funcSetAllChats}
+                    myself={myself}
+                    pmChat={chat}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    teamMemberProfiles={teamMemberProfiles}
+                />
+            );
+        }
+        return (
+            <Avatar size="sm">
+                <AccountTreeIcon />
+            </Avatar>
+        );
+    };
+
+    const renderTaskAvatar = () => (
+        <Avatar size="sm">
+            <AssignmentRoundedIcon />
+        </Avatar>
     );
+
+    const renderAvatar = () => {
+        switch (flaggedMessage.chatType) {
+            case CHAT_TYPES.DM:
+                return renderDMAvatar();
+            case CHAT_TYPES.GM:
+                return renderGMAvatar();
+            case CHAT_TYPES.PM:
+                return renderProjectAvatar();
+            case CHAT_TYPES.TASK:
+                return renderTaskAvatar();
+            default:
+                return null;
+        }
+    };
+
+    // Chip rendering components
+    const renderChatNameChip = () => {
+        if (
+            flaggedMessage.chatType === CHAT_TYPES.DM ||
+            flaggedMessage.chatType === CHAT_TYPES.GM
+        ) {
+            return (
+                <Typography level="title-sm" sx={{ pt: "3px" }} noWrap>
+                    {isYou ? `${flaggedMessage.chatName} (you)` : flaggedMessage.chatName}
+                </Typography>
+            );
+        }
+        return null;
+    };
+
+    const renderProjectChips = () => {
+        if (
+            flaggedMessage.chatType === CHAT_TYPES.PM ||
+            flaggedMessage.chatType === CHAT_TYPES.TASK
+        ) {
+            return (
+                <>
+                    <Chip
+                        color="primary"
+                        size="sm"
+                        variant="soft"
+                        sx={{
+                            fontSize: "12px",
+                            borderRadius: "4px",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        {flaggedMessage.chatName}
+                    </Chip>
+                    <Chip
+                        size="sm"
+                        variant="soft"
+                        sx={{
+                            fontSize: "12px",
+                            borderRadius: "4px",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        ID:{flaggedMessage.taskId}
+                    </Chip>
+                </>
+            );
+        }
+        return null;
+    };
+
+    const renderChatTypeChip = () => (
+        <Chip
+            color="neutral"
+            size="sm"
+            variant="outlined"
+            sx={{
+                fontSize: "12px",
+                borderRadius: "4px",
+                fontWeight: "bold",
+            }}
+        >
+            {CHAT_TYPE_LABELS[flaggedMessage.chatType as keyof typeof CHAT_TYPE_LABELS] ||
+                "Unknown"}
+        </Chip>
+    );
+
+    const renderThreadChip = () => {
+        if (flaggedMessage.threadId !== 0) {
+            return (
+                <Chip
+                    color="neutral"
+                    size="sm"
+                    variant="outlined"
+                    sx={{
+                        fontSize: "12px",
+                        borderRadius: "4px",
+                        fontWeight: "bold",
+                    }}
+                >
+                    Thread
+                </Chip>
+            );
+        }
+        return null;
+    };
+
+    const isSelected = selectedFlaggedMessageId === flaggedMessage.flaggedMessageId;
 
     return (
         <React.Fragment>
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
-                    color={
-                        selectedFlaggedMessageId === flaggedMessage.flaggedMessageId
-                            ? "success"
-                            : "neutral"
-                    }
-                    variant={
-                        selectedFlaggedMessageId === flaggedMessage.flaggedMessageId
-                            ? "soft"
-                            : "outlined"
-                    }
+                    color={isSelected ? "success" : "neutral"}
+                    variant={isSelected ? "soft" : "outlined"}
                     onClick={onClickHandler}
                 >
                     <Stack direction="column">
+                        {/* Header with avatar, name, and actions */}
                         <Stack
                             alignItems="center"
                             direction="row"
@@ -390,149 +615,14 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             spacing={1.5}
                         >
                             <Stack direction="row" spacing={1}>
-                                <div>
-                                    {flaggedMessage.chatType === 1 &&
-                                        flaggedMessage.dmPartnerUser.userId !== "" && (
-                                            <AvatarWithStatus
-                                                isYou={isYou}
-                                                myself={myself}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
-                                                socket={socket}
-                                                avatarUser={
-                                                    teamMemberProfiles[
-                                                        flaggedMessage.dmPartnerUser.userId
-                                                    ]
-                                                }
-                                            />
-                                        )}
-
-                                    {flaggedMessage.chatType === 1 &&
-                                        flaggedMessage.dmPartnerUser.userId === "" && (
-                                            <Avatar size="sm">
-                                                {flaggedMessage.chatName[0].toUpperCase()}
-                                            </Avatar>
-                                        )}
-
-                                    {flaggedMessage.chatType === 2 && (
-                                        <>
-                                            {chat && (
-                                                <GMAvatar
-                                                    funcSetAllChats={funcSetAllChats}
-                                                    gmChat={chat}
-                                                    isYou={isYou}
-                                                    myself={myself}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    setMyself={setMyself}
-                                                    setOpeningService={setOpeningService}
-                                                    socket={socket}
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                />
-                                            )}
-                                            {chat === undefined && (
-                                                <Avatar size="sm">
-                                                    <GroupsIcon />
-                                                </Avatar>
-                                            )}
-                                        </>
-                                    )}
-
-                                    {flaggedMessage.chatType === 3 && (
-                                        <>
-                                            {chat && (
-                                                <ProjectAvatar
-                                                    funcSetAllChats={funcSetAllChats}
-                                                    myself={myself}
-                                                    pmChat={chat}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    setMyself={setMyself}
-                                                    setOpeningService={setOpeningService}
-                                                    socket={socket}
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                />
-                                            )}
-                                            {chat === undefined && (
-                                                <Avatar size="sm">
-                                                    <AccountTreeIcon />
-                                                </Avatar>
-                                            )}
-                                        </>
-                                    )}
-
-                                    {flaggedMessage.chatType === 4 && (
-                                        <Avatar size="sm">
-                                            <AssignmentRoundedIcon />
-                                        </Avatar>
-                                    )}
-                                </div>
+                                <div>{renderAvatar()}</div>
 
                                 <Stack direction="row" spacing={0.5}>
-                                    {flaggedMessage.chatType !== 3 &&
-                                        flaggedMessage.chatType !== 4 && (
-                                            <Typography level="title-sm" sx={{ pt: "3px" }} noWrap>
-                                                {isYou
-                                                    ? `${flaggedMessage.chatName} (you)`
-                                                    : flaggedMessage.chatName}
-                                            </Typography>
-                                        )}
-
+                                    {renderChatNameChip()}
                                     <Box>
-                                        {(flaggedMessage.chatType === 3 ||
-                                            flaggedMessage.chatType === 4) && (
-                                            <>
-                                                <Chip
-                                                    color="primary"
-                                                    size="sm"
-                                                    variant="soft"
-                                                    sx={{
-                                                        fontSize: "12px",
-                                                        borderRadius: "4px",
-                                                        fontWeight: "bold",
-                                                    }}
-                                                >
-                                                    {flaggedMessage.chatName}
-                                                </Chip>
-                                                <Chip
-                                                    size="sm"
-                                                    variant="soft"
-                                                    sx={{
-                                                        fontSize: "12px",
-                                                        borderRadius: "4px",
-                                                        fontWeight: "bold",
-                                                    }}
-                                                >
-                                                    ID:{flaggedMessage.taskId}
-                                                </Chip>
-                                            </>
-                                        )}
-
-                                        <Chip
-                                            color="neutral"
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                fontSize: "12px",
-                                                borderRadius: "4px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            {chatTypeLookup[flaggedMessage.chatType]}
-                                        </Chip>
-                                        {flaggedMessage.threadId !== 0 && (
-                                            <Chip
-                                                color="neutral"
-                                                size="sm"
-                                                variant="outlined"
-                                                sx={{
-                                                    fontSize: "12px",
-                                                    borderRadius: "4px",
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                Thread
-                                            </Chip>
-                                        )}
+                                        {renderProjectChips()}
+                                        {renderChatTypeChip()}
+                                        {renderThreadChip()}
                                     </Box>
                                 </Stack>
                             </Stack>
@@ -557,6 +647,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             </Stack>
                         </Stack>
 
+                        {/* Message content */}
                         <Stack
                             alignItems="flex-start"
                             direction="row"
