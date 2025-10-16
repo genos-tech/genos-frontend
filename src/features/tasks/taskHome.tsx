@@ -47,7 +47,7 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps } from "../../types/chat";
 import { SearchTeamTasksResponse, TaskType, TaskTypesProps } from "../../types/tasks";
-import { TaskNoteMain } from "../notes/components/TaskNoteMain";
+import { TaskNoteMain } from "../notes/task-notes/components/TaskNoteMain";
 
 const taskTypes: TaskTypesProps = {
     ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },

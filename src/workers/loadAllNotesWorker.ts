@@ -1,8 +1,8 @@
 import { STORES } from "../db/conf";
 import { clearStore, miniBatchInsert } from "../db/crud";
-import { loadAllChatNotes } from "../features/notes/services/loadAllChatNotes";
-import { loadAllMyNotes } from "../features/notes/services/loadAllMyNotes";
-import { loadAllTaskNotes } from "../features/notes/services/loadAllTaskNotes";
+import { loadAllChatNotes } from "../features/notes/chat-notes/services/loadAllChatNotes";
+import { loadAllMyNotes } from "../features/notes/my-notes/services/loadAllMyNotes";
+import { loadAllTaskNotes } from "../features/notes/task-notes/services/loadAllTaskNotes";
 import { UserProps } from "../types/admin";
 import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../types/notes";
 

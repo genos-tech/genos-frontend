@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
-import { addNote } from "../../features/notes/services/addNote";
-import { sendUpdatedMyNote } from "../../features/notes/services/sendUpdatedMyNote";
+import { sendUpdatedMyNote } from "../../features/notes/my-notes/services/sendUpdatedMyNote";
+import { addNote } from "../../features/notes/shared/services/addNote";
 import {
     NoteEditorActions,
     NoteEditorProps,
     NoteEditorState,
-} from "../../features/notes/types/noteEditor";
+} from "../../features/notes/shared/types/noteEditor";
 import { UserProps } from "../../types/admin";
 import { MyNoteProps } from "../../types/notes";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";

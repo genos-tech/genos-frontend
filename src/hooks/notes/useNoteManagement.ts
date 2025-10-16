@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 
 import { STORES } from "../../db/conf";
 import { getData } from "../../db/crud";
-import { addNote } from "../../features/notes/services/addNote";
-import { createEmptyChatNote } from "../../features/notes/services/createEmptyChatNote";
-import { createEmptyMyNote } from "../../features/notes/services/createEmptyMyNote";
-import { createEmptyTaskNote } from "../../features/notes/services/createEmptyTaskNote";
-import { loadChatNoteMeta } from "../../features/notes/services/loadChatNoteMeta";
-import { loadChatNotesByChatId } from "../../features/notes/services/loadChatNotesByChatId";
-import { loadMyNoteMeta } from "../../features/notes/services/loadMyNoteMeta";
-import { loadSpecificNote } from "../../features/notes/services/loadSpecificNote";
-import { loadTaskNoteMeta } from "../../features/notes/services/loadTaskNoteMeta";
+import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
+import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
+import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
+import { createEmptyMyNote } from "../../features/notes/my-notes/services/createEmptyMyNote";
+import { loadMyNoteMeta } from "../../features/notes/my-notes/services/loadMyNoteMeta";
+import { addNote } from "../../features/notes/shared/services/addNote";
+import { loadSpecificNote } from "../../features/notes/shared/services/loadSpecificNote";
+import { createEmptyTaskNote } from "../../features/notes/task-notes/services/createEmptyTaskNote";
+import { loadTaskNoteMeta } from "../../features/notes/task-notes/services/loadTaskNoteMeta";
 import { UserProps } from "../../types/admin";
 import {
     ChatNoteMetaProps,

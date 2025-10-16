@@ -8,7 +8,7 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
-import { ChatNoteMain } from "../../notes/components/ChatNoteMain";
+import { ChatNoteMain } from "../../notes/chat-notes/components/ChatNoteMain";
 
 interface ChatNotePanelProps {
     CM: ChatManagementState;

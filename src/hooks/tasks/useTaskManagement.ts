@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
-import { loadTaskMeta } from "../../features/notes/services/loadTaskMeta";
+import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
 import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { UserProps } from "../../types/admin";

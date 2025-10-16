@@ -3,12 +3,6 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
-import { NoteContentRenderer } from "./components/NoteContentRenderer";
-import { NoteSidebar } from "./components/NoteSidebar";
-import { ResizeHandle } from "./components/ResizeHandle";
-import { ResizeHandleStyles } from "./components/ResizeHandleStyles";
-import { TaskPreviewPanel } from "./components/TaskPreviewPanel";
-
 import { Sidebar } from "../../components/layout/sidebar";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -16,6 +10,11 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
+import { NoteContentRenderer } from "./shared/components/NoteContentRenderer";
+import { NoteSidebar } from "./shared/components/NoteSidebar";
+import { ResizeHandle } from "./shared/components/ResizeHandle";
+import { ResizeHandleStyles } from "./shared/components/ResizeHandleStyles";
+import { TaskPreviewPanel } from "./task-notes/components/TaskPreviewPanel";
 
 type NoteHomeProps = {
     TEM: TeamManagementState;

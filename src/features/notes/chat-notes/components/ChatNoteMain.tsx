@@ -1,0 +1,250 @@
+import { useEffect, useState } from "react";
+import { Stack, TabPanel, Tabs } from "@mui/joy";
+import { Socket } from "socket.io-client";
+
+import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useChatNoteEditor } from "../../../../hooks/notes/useChatNoteEditor";
+import { useChatNoteTabs } from "../../../../hooks/notes/useChatNoteTabs";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { UserProps } from "../../../../types/admin";
+import { ChatNoteProps } from "../../../../types/notes";
+import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { ChatNoteEditor } from "./ChatNoteEditor";
+import { ChatNoteEmptyState } from "./ChatNoteEmptyState";
+import { ChatNoteHeader } from "./ChatNoteHeader";
+import { ChatNoteTabList } from "./ChatNoteTabList";
+
+/**
+ * Props for the ChatNoteMain component
+ */
+interface ChatNoteMainProps {
+    /** Team member profiles indexed by user ID */
+    teamMemberProfiles: Record<string, UserProps>;
+    /** Socket connection for real-time updates */
+    socket: Socket | null;
+    /** List of team members */
+    teamMembers: UserProps[];
+    /** Current user information */
+    myself: UserProps;
+    /** Function to update current user */
+    setMyself: (me: UserProps) => void;
+    /** Function to set the opening service */
+    setOpeningService: (service: number) => void;
+    /** Whether the component is in chat page mode */
+    isInChatPage: boolean;
+    /** Function to set the current preview task ID */
+    setCurrentPreviewTaskId: (id: number) => void;
+    /** Function to set the current project */
+    setCurrentProject: (project: any) => void;
+    /** Note management state and actions */
+    NM: NoteManagementState;
+    /** Chat management state and actions */
+    CM: ChatManagementState;
+}
+
+export const ChatNoteMain = (props: ChatNoteMainProps) => {
+    const {
+        teamMemberProfiles,
+        socket,
+        teamMembers,
+        myself,
+        setMyself,
+        setOpeningService,
+        isInChatPage,
+        setCurrentPreviewTaskId,
+        setCurrentProject,
+        NM,
+        CM,
+    } = props;
+
+    const { accessToken } = useAuth();
+
+    // Local state
+    const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
+    const [openSearchBox, setOpenSearchBox] = useState(false);
+    const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
+
+    // Custom hooks for note management
+    const chatNoteEditor = useChatNoteEditor({
+        currentChatNote: NM.currentChatNote,
+        myself,
+        accessToken,
+        onNoteUpdate: (updatedNote: ChatNoteProps) => {
+            // Update tab items
+            NM.setTabItems(
+                NM.tabItems.map((item) =>
+                    item.noteType === NM.currentChatNote?.noteType &&
+                    item.noteId === NM.currentChatNote?.noteId
+                        ? updatedNote
+                        : item
+                )
+            );
+
+            // Update note metadata
+            NM.setChatNoteMeta(
+                NM.chatNoteMeta.map((item) =>
+                    item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
+                        ? {
+                              noteType: updatedNote.noteType,
+                              noteId: updatedNote.noteId,
+                              parentNoteId: updatedNote.parentNoteId,
+                              chatType: updatedNote.chatType,
+                              chatId: updatedNote.chatId,
+                              isThread: updatedNote.isThread,
+                              threadId: updatedNote.threadId,
+                              title: updatedNote.title,
+                              tsUpdated: updatedNote.tsUpdated,
+                          }
+                        : item
+                )
+            );
+        },
+    });
+
+    const { handleCloseTab, handleTabChange } = useChatNoteTabs({ NM });
+
+    // Reset note body saved status when the selected tab index changes
+    useEffect(() => {
+        chatNoteEditor.setNoteBodySaved(false);
+    }, [NM.selectedTabIndex]);
+
+    // Update timestamp when current note changes
+    useEffect(() => {
+        if (NM.currentChatNote) {
+            setTsBody(getLocalCurrentTimestamp());
+        }
+    }, [NM.currentChatNote]);
+
+    // Find the current chat
+    const chat = CM.allChats.find(
+        (chat) =>
+            chat.chatType === NM.currentChatNote?.chatType &&
+            NM.currentChatNote &&
+            chat.chatId === NM.currentChatNote.chatId
+    );
+
+    // Event handlers
+    const handleCreateChildNote = () => {
+        if (NM.currentChatNote) {
+            NM.handleCreateNewChatNote(
+                NM.currentChatNote.noteId,
+                NM.currentChatNote.chatType,
+                NM.currentChatNote.chatId,
+                NM.currentChatNote.isThread,
+                NM.currentChatNote.threadId
+            );
+        } else {
+            console.error("Can't parent note ID to create a child note.");
+        }
+    };
+
+    const handleDeleteNote = () => {
+        setOpenDeleteNote(true);
+    };
+
+    return (
+        <>
+            {(NM.tabItems.length === 0 || NM.currentChatNote === null) && <ChatNoteEmptyState />}
+
+            {!(NM.tabItems.length === 0 || NM.currentChatNote === null) &&
+                NM.chatNoteMeta.length > 0 && (
+                    <Stack direction={"column"} sx={{ width: "100%" }}>
+                        {chatNoteEditor.body && (
+                            <>
+                                {NM.currentNoteType !== 0 && (
+                                    <Stack direction={"column"} sx={{ width: "100%" }}>
+                                        <ChatNoteHeader
+                                            currentChatNote={NM.currentChatNote}
+                                            currentChatNoteChain={NM.currentChatNoteChain}
+                                            chat={chat}
+                                            isInChatPage={isInChatPage}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            setOpeningService={setOpeningService}
+                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                            setCurrentProject={setCurrentProject}
+                                            socket={socket}
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            CM={CM}
+                                            NM={NM}
+                                            openDeleteNote={openDeleteNote}
+                                            setOpenDeleteNote={setOpenDeleteNote}
+                                            openSearchBox={openSearchBox}
+                                            setOpenSearchBox={setOpenSearchBox}
+                                            handleCloseTab={handleCloseTab}
+                                            onCreateChildNote={handleCreateChildNote}
+                                            onDeleteNote={handleDeleteNote}
+                                        />
+
+                                        <Tabs
+                                            sx={{ width: "100%" }}
+                                            value={NM.selectedTabIndex}
+                                            onChange={(_, val) => handleTabChange(Number(val))}
+                                        >
+                                            <ChatNoteTabList
+                                                tabItems={NM.tabItems}
+                                                selectedTabIndex={NM.selectedTabIndex}
+                                                onTabChange={handleTabChange}
+                                                onCloseTab={handleCloseTab}
+                                            />
+
+                                            {NM.tabItems.map((tabNote, index) => (
+                                                <TabPanel
+                                                    key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                                    value={index}
+                                                    sx={{
+                                                        paddingX: "5px",
+                                                        paddingTop: "0px",
+                                                        paddingBottom: "5px",
+                                                    }}
+                                                >
+                                                    {NM.currentChatNote && chatNoteEditor.body && (
+                                                        <ChatNoteEditor
+                                                            currentChatNote={NM.currentChatNote}
+                                                            body={chatNoteEditor.body}
+                                                            currentChatNoteTitle={
+                                                                chatNoteEditor.currentChatNoteTitle
+                                                            }
+                                                            titleInputRef={
+                                                                chatNoteEditor.titleInputRef
+                                                            }
+                                                            noteBodySaved={
+                                                                chatNoteEditor.noteBodySaved
+                                                            }
+                                                            onTitleChange={
+                                                                chatNoteEditor.handleTitleChange
+                                                            }
+                                                            onTitleBlur={
+                                                                chatNoteEditor.handleTitleBlur
+                                                            }
+                                                            onBodyChange={
+                                                                chatNoteEditor.handleBodyChange
+                                                            }
+                                                            setNoteBodyEdited={
+                                                                chatNoteEditor.setNoteBodyEdited
+                                                            }
+                                                            setNoteBodySaved={
+                                                                chatNoteEditor.setNoteBodySaved
+                                                            }
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            socket={socket}
+                                                            teamMembers={teamMembers}
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            setCurrentChat={CM.setCurrentMainChat}
+                                                            setOpeningService={setOpeningService}
+                                                        />
+                                                    )}
+                                                </TabPanel>
+                                            ))}
+                                        </Tabs>
+                                    </Stack>
+                                )}
+                            </>
+                        )}
+                    </Stack>
+                )}
+        </>
+    );
+};

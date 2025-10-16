@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
-import { addNote } from "../../features/notes/services/addNote";
-import { sendUpdatedChatNote } from "../../features/notes/services/sendUpdatedChatNote";
+import { sendUpdatedChatNote } from "../../features/notes/chat-notes/services/sendUpdatedChatNote";
+import { addNote } from "../../features/notes/shared/services/addNote";
 import { UserProps } from "../../types/admin";
 import { ChatNoteProps } from "../../types/notes";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
