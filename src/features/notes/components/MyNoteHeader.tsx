@@ -1,14 +1,12 @@
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import { Breadcrumbs, IconButton, Stack, Typography } from "@mui/joy";
 
-import { TaskNoteProps } from "../../../types/notes";
-
-interface NoteHeaderProps {
-    currentTaskNoteChain: any[] | null;
+interface MyNoteHeaderProps {
+    currentMyNoteChain: any[] | null;
     onLoadNote: (noteType: number, noteId: number, tabIndex: number) => void;
 }
 
-export const NoteHeader = ({ currentTaskNoteChain, onLoadNote }: NoteHeaderProps) => {
+export const MyNoteHeader = ({ currentMyNoteChain, onLoadNote }: MyNoteHeaderProps) => {
     return (
         <Breadcrumbs aria-label="breadcrumbs" separator="›">
             <IconButton
@@ -20,10 +18,10 @@ export const NoteHeader = ({ currentTaskNoteChain, onLoadNote }: NoteHeaderProps
                 }}
             >
                 <AssignmentRoundedIcon sx={{ fontSize: "20px" }} />
-                Task Notes
+                My Notes
             </IconButton>
-            {currentTaskNoteChain &&
-                currentTaskNoteChain.map((node) => (
+            {currentMyNoteChain &&
+                currentMyNoteChain.map((node) => (
                     <Typography
                         key={node.noteId}
                         component="button"
@@ -38,7 +36,7 @@ export const NoteHeader = ({ currentTaskNoteChain, onLoadNote }: NoteHeaderProps
                             fontWeight: "bold",
                         }}
                         onClick={() => {
-                            onLoadNote(2, node.noteId, -1);
+                            onLoadNote(1, node.noteId, -1);
                         }}
                     >
                         {node.title.length > 14 ? `${node.title.slice(0, 14)}...` : node.title}

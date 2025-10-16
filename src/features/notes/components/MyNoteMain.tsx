@@ -11,8 +11,8 @@ import { ChatProps } from "../../../types/chat";
 import { MyNoteProps } from "../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { EmptyState } from "./EmptyState";
+import { MyNoteHeader } from "./MyNoteHeader";
 import { NoteEditor } from "./NoteEditor";
-import { NoteHeader } from "./NoteHeader";
 import { NoteTabList } from "./NoteTabList";
 
 /**
@@ -129,16 +129,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         <>
                             {NM.currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
-                                    <NoteHeader
-                                        currentMyNoteChain={NM.currentMyNoteChain}
-                                        NM={NM}
-                                        onCreateNewNote={handleCreateNewNote}
-                                        onCreateChildNote={handleCreateChildNote}
-                                        onDeleteNote={handleDeleteNote}
-                                        openDeleteNote={openDeleteNote}
-                                        setOpenDeleteNote={setOpenDeleteNote}
-                                        handleCloseTab={handleCloseTab}
-                                        myself={myself}
+                                    <MyNoteHeader
+                                        currentMyNoteChain={NM.currentMyNoteChain || null}
+                                        onLoadNote={NM.loadNote}
                                     />
 
                                     <Tabs

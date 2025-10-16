@@ -1,52 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
-import AddIcon from "@mui/icons-material/Add";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import CancelIcon from "@mui/icons-material/Cancel";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
-import MoreVert from "@mui/icons-material/MoreVert";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import {
-    Box,
-    Breadcrumbs,
-    Button,
-    Chip,
-    Dropdown,
-    FormControl,
-    IconButton,
-    Input,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Stack,
-    Tab,
-    TabList,
-    TabPanel,
-    Tabs,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
+import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { BnTaskNoteEditor } from "../../../components/blockNote/bnTaskNoteEditor";
-import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../context/AuthContext";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { TaskNoteProps } from "../../../types/notes";
-import { TaskProps } from "../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadSpecificTask } from "../../tasks/services/loadSpecificTask";
+import { useNoteAutoSave } from "../hooks/useNoteAutoSave";
+import { useTaskPreview } from "../hooks/useTaskPreview";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
-import { addNote } from "../services/addNote";
-import { sendUpdatedTaskNote } from "../services/sendUpdatedTaskNote";
+import { NoteActions } from "./NoteActions";
+import { NoteHeader } from "./NoteHeader";
+import { NoteTabs } from "./NoteTabs";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -83,120 +52,36 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         TM,
     } = props;
 
-    const { mode } = useColorScheme();
     const { accessToken } = useAuth();
 
-    const [noteUpdated, setNoteUpdated] = useState(false);
-    const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
+    // Local state
     const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>(
         NM.currentTaskNote?.title || ""
     );
-    const [noteBodyEdited, setNoteBodyEdited] = useState(false);
-    const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
     const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
-    // Auto save note body every Nms if needed
-    useEffect(() => {
-        if (startIntervalUpdatingNote) {
-            updateNote();
-        }
-    }, [startIntervalUpdatingNote]);
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (noteBodyEdited === true) {
-                setStartIntervalUpdatingNote(true);
-            }
-        }, 3000);
-
-        // Clean up the interval when the component unmounts
-        return () => clearInterval(intervalId);
-    }, [noteBodyEdited]);
-
-    // Send updated note to the backend when note is updated
-    const updateNote = async () => {
-        if (NM.currentTaskNote) {
-            let newNoteTitle = currentTaskNoteTitle;
-
-            // If the note title is empty, use the note original title.
-            // (not updating the title to empty)
-            if (currentTaskNoteTitle === "") {
-                newNoteTitle = NM.currentTaskNote.title;
-                setCurrentTaskNoteTitle(newNoteTitle);
-            }
-
-            const newNote: TaskNoteProps = {
-                ...NM.currentTaskNote,
-                title: newNoteTitle,
-                body: body || [],
-            };
-            // Send the update note to the backend
-            await sendUpdatedTaskNote(myself, newNote, accessToken);
-
-            // Add the updated note to the indexedDB
-            await addNote(2, newNote);
-
-            setStartIntervalUpdatingNote(false);
-            setNoteBodyEdited(false);
-            setNoteBodySaved(true);
-            setNoteUpdated(false);
-
-            // This needs to update the note title on the tab.
-            NM.setTabItems(
-                NM.tabItems.map((item) =>
-                    item.noteType === NM.currentTaskNote?.noteType &&
-                    item.noteId === NM.currentTaskNote?.noteId
-                        ? newNote
-                        : item
-                )
-            );
-
-            // This needs to update the note title in the sidebar.
-            NM.setTaskNoteMeta(
-                NM.taskNoteMeta.map((item) =>
-                    item.noteType === newNote.noteType && item.noteId === newNote.noteId
-                        ? {
-                              noteType: newNote.noteType,
-                              noteId: newNote.noteId,
-                              parentNoteId: newNote.parentNoteId,
-                              projectId: newNote.projectId,
-                              taskId: newNote.taskId,
-                              title: newNote.title,
-                              tsUpdated: newNote.tsUpdated,
-                          }
-                        : item
-                )
-            );
-        }
-    };
-
-    const [currentTask, setCurrentTask] = useState<TaskProps | undefined>(TM.currentPreviewTask);
-    const setPreviewTask = async (projectId: number, taskId: number) => {
-        const loadedTask: TaskProps[] = await loadSpecificTask(
+    // Custom hooks
+    const { noteBodyEdited, noteBodySaved, setNoteBodyEdited, setNoteBodySaved, updateNote } =
+        useNoteAutoSave({
+            currentTaskNote: NM.currentTaskNote,
+            currentTaskNoteTitle,
+            body,
             myself,
-            projectId,
-            taskId,
-            accessToken
-        );
-        if (loadedTask.length === 1) {
-            TM.setCurrentPreviewTask(loadedTask[0]);
-            setCurrentTask(loadedTask[0]);
-        }
-    };
-    useEffect(() => {
-        if (NM.currentTaskNote) {
-            setPreviewTask(NM.currentTaskNote.projectId, NM.currentTaskNote.taskId);
-        }
-    }, [NM.currentTaskNote]);
+            accessToken: accessToken || "",
+            setTabItems: NM.setTabItems,
+            setTaskNoteMeta: NM.setTaskNoteMeta,
+        });
 
-    useEffect(() => {
-        if (noteUpdated) {
-            updateNote();
-        }
-    }, [noteUpdated]);
+    const { currentTask } = useTaskPreview({
+        currentTaskNote: NM.currentTaskNote,
+        myself,
+        accessToken: accessToken || "",
+        setCurrentPreviewTask: TM.setCurrentPreviewTask,
+    });
 
+    // Effects
     useEffect(() => {
         if (NM.currentTaskNote) {
             setBody(NM.currentTaskNote.body);
@@ -205,20 +90,90 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     }, [NM.currentTaskNote]);
 
-    const handleCloseTab = async (tabIndex: number, closingNoteId: number) => {
-        const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
-        const nextTabIndex = Math.max(tabIndex - 1, 0);
-        NM.setTabItems(NM.tabItems.filter((t) => t.noteId !== closingNoteId));
-        await NM.loadNote(
-            NM.tabItems[indexOfNextNote].noteType,
-            NM.tabItems[indexOfNextNote].noteId,
-            nextTabIndex
-        );
-    };
-
     useEffect(() => {
         setNoteBodySaved(false);
     }, [NM.selectedTabIndex]);
+
+    // Event handlers
+    const handleCloseTab = useCallback(
+        async (tabIndex: number, closingNoteId: number) => {
+            const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
+            const nextTabIndex = Math.max(tabIndex - 1, 0);
+            NM.setTabItems(NM.tabItems.filter((t) => t.noteId !== closingNoteId));
+            await NM.loadNote(
+                NM.tabItems[indexOfNextNote].noteType,
+                NM.tabItems[indexOfNextNote].noteId,
+                nextTabIndex
+            );
+        },
+        [NM]
+    );
+
+    const handleCreateChildNote = useCallback(() => {
+        if (NM.currentTaskNote) {
+            NM.handleCreateNewTaskNote(
+                NM.currentTaskNote.noteId,
+                NM.currentTaskNote.projectId,
+                NM.currentTaskNote.taskId
+            );
+        }
+    }, [NM]);
+
+    const handleOpenInNotes = useCallback(() => {
+        setOpeningService(3);
+    }, [setOpeningService]);
+
+    const handleOpenTask = useCallback(() => {
+        NM.setIsTaskVisibleInNote(true);
+    }, [NM]);
+
+    const handleDeleteNote = useCallback(() => {
+        setOpenDeleteNote(true);
+    }, []);
+
+    const handleCloseNotes = useCallback(() => {
+        NM.setIsTaskNoteVisible(false);
+        if (
+            TM.isCreatingTask.flag === false &&
+            TM.isTaskPreviewVisible === false &&
+            setIsTaskHomeVisible
+        ) {
+            setIsTaskHomeVisible(true);
+        }
+    }, [NM, TM, setIsTaskHomeVisible]);
+
+    const handleTitleChange = useCallback((title: string) => {
+        setCurrentTaskNoteTitle(title);
+    }, []);
+
+    const handleTitleBlur = useCallback(() => {
+        updateNote();
+    }, [updateNote]);
+
+    // Handle note updates after auto-save
+    useEffect(() => {
+        if (noteBodySaved && NM.currentTaskNote) {
+            // Update the note title on the tab
+            NM.setTabItems(
+                NM.tabItems.map((item) =>
+                    item.noteType === NM.currentTaskNote?.noteType &&
+                    item.noteId === NM.currentTaskNote?.noteId
+                        ? { ...item, title: currentTaskNoteTitle }
+                        : item
+                )
+            );
+
+            // Update the note title in the sidebar
+            NM.setTaskNoteMeta(
+                NM.taskNoteMeta.map((item) =>
+                    item.noteType === NM.currentTaskNote?.noteType &&
+                    item.noteId === NM.currentTaskNote?.noteId
+                        ? { ...item, title: currentTaskNoteTitle }
+                        : item
+                )
+            );
+        }
+    }, [noteBodySaved, NM, currentTaskNoteTitle]);
 
     const pmChat = allChats.find(
         (chat) =>
@@ -227,488 +182,111 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             chat.chatId === NM.currentTaskNote.projectId
     );
 
-    return (
-        <>
-            {(NM.tabItems.length === 0 || NM.currentTaskNote === null) && (
-                <Box
+    // Early return for empty state
+    if (NM.tabItems.length === 0 || NM.currentTaskNote === null) {
+        return (
+            <Box
+                sx={{
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                }}
+            >
+                <IconButton
+                    color="neutral"
+                    component="button"
+                    variant="soft"
                     sx={{
-                        height: "100%",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        width: "100%",
+                        fontSize: "15px",
+                        padding: "10px",
                     }}
                 >
-                    <IconButton
-                        color="neutral"
-                        component="button"
-                        variant="soft"
+                    No Chat Selected
+                </IconButton>
+            </Box>
+        );
+    }
+
+    return (
+        <Stack direction={"column"} sx={{ width: "100%" }}>
+            {body && NM.currentNoteType !== 0 && (
+                <>
+                    {/* Note Header */}
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
                         sx={{
-                            fontSize: "15px",
-                            padding: "10px",
+                            width: "100%",
+                            height: "30px",
+                            mt: "10px",
+                            mb: "5px",
                         }}
                     >
-                        No Chat Selected
-                    </IconButton>
-                </Box>
+                        <NoteHeader
+                            currentTaskNoteChain={NM.currentTaskNoteChain || null}
+                            onLoadNote={NM.loadNote}
+                        />
+
+                        <NoteActions
+                            isInTaskPage={isInTaskPage}
+                            currentTask={currentTask}
+                            pmChat={pmChat}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            funcSetAllChats={funcSetAllChats}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setOpeningService={setOpeningService}
+                            teamMemberProfiles={teamMemberProfiles}
+                            onCreateChildNote={handleCreateChildNote}
+                            onOpenInNotes={handleOpenInNotes}
+                            onOpenTask={handleOpenTask}
+                            onDeleteNote={handleDeleteNote}
+                            onCloseNotes={handleCloseNotes}
+                        />
+
+                        {NM.currentTaskNote && (
+                            <ModalDeleteTaskNote
+                                currentTabIndex={NM.selectedTabIndex}
+                                currentTaskNote={NM.currentTaskNote}
+                                handleCloseTab={handleCloseTab}
+                                myself={myself}
+                                openDeleteNote={openDeleteNote}
+                                setOpenDeleteNote={setOpenDeleteNote}
+                                setTaskNoteMeta={NM.setTaskNoteMeta}
+                                taskNoteMeta={NM.taskNoteMeta}
+                            />
+                        )}
+                    </Stack>
+
+                    <NoteTabs
+                        tabItems={NM.tabItems}
+                        selectedTabIndex={NM.selectedTabIndex}
+                        currentTaskNote={NM.currentTaskNote}
+                        currentTaskNoteTitle={currentTaskNoteTitle}
+                        body={body}
+                        noteBodySaved={noteBodySaved}
+                        tsBody={tsBody}
+                        myself={myself}
+                        setBody={setBody}
+                        setCurrentChat={setCurrentChat}
+                        setMyself={setMyself}
+                        setNoteBodyEdited={setNoteBodyEdited}
+                        setNoteBodySaved={setNoteBodySaved}
+                        setOpeningService={setOpeningService}
+                        socket={socket}
+                        teamMemberProfiles={teamMemberProfiles}
+                        teamMembers={teamMembers}
+                        onLoadNote={NM.loadNote}
+                        onCloseTab={handleCloseTab}
+                        onTitleChange={handleTitleChange}
+                        onTitleBlur={handleTitleBlur}
+                    />
+                </>
             )}
-
-            {!(NM.tabItems.length === 0 || NM.currentTaskNote === null) && (
-                <Stack direction={"column"} sx={{ width: "100%" }}>
-                    {body && (
-                        <>
-                            {NM.currentNoteType !== 0 && (
-                                <Stack direction={"column"} sx={{ width: "100%" }}>
-                                    {/* Note Header */}
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        justifyContent="space-between"
-                                        sx={{
-                                            width: "100%",
-                                            height: "30px",
-                                            mt: "10px",
-                                            mb: "5px",
-                                        }}
-                                    >
-                                        <Breadcrumbs aria-label="breadcrumbs" separator="›">
-                                            <IconButton
-                                                color="success"
-                                                component="button"
-                                                variant="soft"
-                                                sx={{
-                                                    fontSize: "14px",
-                                                }}
-                                            >
-                                                <AssignmentRoundedIcon sx={{ fontSize: "20px" }} />
-                                                Task Notes
-                                            </IconButton>
-                                            {NM.currentTaskNoteChain &&
-                                                NM.currentTaskNoteChain.map((node) => (
-                                                    <Typography
-                                                        component="button"
-                                                        level="title-sm"
-                                                        sx={{
-                                                            background: "none",
-                                                            border: "none",
-                                                            padding: 0,
-                                                            cursor: "pointer",
-                                                            color: "#646CFF",
-                                                            textAlign: "left",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                        onClick={() => {
-                                                            NM.loadNote(2, node.noteId, -1);
-                                                        }}
-                                                    >
-                                                        {node.title.length > 14
-                                                            ? `${node.title.slice(0, 14)}...`
-                                                            : node.title}
-                                                    </Typography>
-                                                ))}
-                                        </Breadcrumbs>
-
-                                        <Stack direction={"row"}>
-                                            {isInTaskPage && NM.currentTaskNote && (
-                                                <IconButton
-                                                    color="neutral"
-                                                    component="button"
-                                                    variant="plain"
-                                                    sx={{
-                                                        fontSize: "14px",
-                                                        paddingRight: "10px",
-                                                        height: "5px",
-                                                    }}
-                                                    onClick={() => {
-                                                        if (NM.currentTaskNote) {
-                                                            NM.handleCreateNewTaskNote(
-                                                                NM.currentTaskNote.noteId,
-                                                                NM.currentTaskNote.projectId,
-                                                                NM.currentTaskNote.taskId
-                                                            );
-                                                        }
-                                                    }}
-                                                >
-                                                    <AddIcon />
-                                                    Child Note
-                                                </IconButton>
-                                            )}
-
-                                            {isInTaskPage && (
-                                                <Tooltip title="Open in Notes">
-                                                    <IconButton
-                                                        color="neutral"
-                                                        size="sm"
-                                                        sx={{ mb: "5px" }}
-                                                        variant="plain"
-                                                        onClick={() => {
-                                                            setOpeningService(3);
-                                                        }}
-                                                    >
-                                                        <OpenInNewIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
-
-                                            {isInTaskPage === false && (
-                                                <>
-                                                    {currentTask && (
-                                                        <>
-                                                            {pmChat && (
-                                                                <Box sx={{ mt: "2px" }}>
-                                                                    <ProjectAvatar
-                                                                        myself={myself}
-                                                                        pmChat={pmChat}
-                                                                        setMyself={setMyself}
-                                                                        socket={socket}
-                                                                        funcSetAllChats={
-                                                                            funcSetAllChats
-                                                                        }
-                                                                        setCurrentMainChat={
-                                                                            setCurrentMainChat
-                                                                        }
-                                                                        setOpeningService={
-                                                                            setOpeningService
-                                                                        }
-                                                                        teamMemberProfiles={
-                                                                            teamMemberProfiles
-                                                                        }
-                                                                    />
-                                                                </Box>
-                                                            )}
-                                                            {currentTask.id && (
-                                                                <Tooltip title="Open Task">
-                                                                    <Chip
-                                                                        key={`task-note-task-id${currentTask.id}`}
-                                                                        color="neutral"
-                                                                        size="sm"
-                                                                        variant="outlined"
-                                                                        sx={{
-                                                                            mt: "3px",
-                                                                            mx: "5px",
-                                                                            height: "30px",
-                                                                            borderRadius: "5px",
-                                                                            fontWeight: "bold",
-                                                                        }}
-                                                                        onClick={() => {
-                                                                            NM.setIsTaskVisibleInNote(
-                                                                                true
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        ID: {currentTask.id}
-                                                                    </Chip>
-                                                                </Tooltip>
-                                                            )}
-                                                            <Chip
-                                                                key={`task-title-${currentTask.id}`}
-                                                                color="primary"
-                                                                size="sm"
-                                                                variant="outlined"
-                                                                sx={{
-                                                                    mt: "3px",
-                                                                    mr: "5px",
-                                                                    height: "30px",
-                                                                    borderRadius: "5px",
-                                                                    fontWeight: "bold",
-                                                                }}
-                                                            >
-                                                                Title:{" "}
-                                                                {currentTask.title.length > 14
-                                                                    ? `${currentTask.title.slice(0, 14)}...`
-                                                                    : currentTask.title || "N/A"}
-                                                            </Chip>
-                                                            {currentTask.status.status && (
-                                                                <Chip
-                                                                    key={`task-status-${currentTask.status.status}`}
-                                                                    size="sm"
-                                                                    sx={{
-                                                                        mt: "3px",
-                                                                        mr: "5px",
-                                                                        height: "30px",
-                                                                        backgroundColor:
-                                                                            currentTask.status
-                                                                                .color
-                                                                                ? alpha(
-                                                                                      currentTask
-                                                                                          .status
-                                                                                          .color,
-                                                                                      mode ===
-                                                                                          "dark"
-                                                                                          ? 0.5
-                                                                                          : 0.75
-                                                                                  )
-                                                                                : "transparent",
-                                                                        color: currentTask.status
-                                                                            .textColor,
-                                                                        fontWeight: "bold",
-                                                                        borderRadius: "5px",
-                                                                    }}
-                                                                >
-                                                                    {currentTask.status.status}
-                                                                </Chip>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </>
-                                            )}
-                                            <Dropdown>
-                                                <Tooltip title="More Options">
-                                                    <MenuButton
-                                                        slots={{ root: IconButton }}
-                                                        sx={{ mb: "5px" }}
-                                                        slotProps={{
-                                                            root: { color: "neutral" },
-                                                        }}
-                                                    >
-                                                        <MoreVert />
-                                                    </MenuButton>
-                                                </Tooltip>
-                                                <Menu size="sm">
-                                                    <MenuItem
-                                                        onClick={() => {
-                                                            if (NM.currentTaskNote) {
-                                                                NM.handleCreateNewTaskNote(
-                                                                    NM.currentTaskNote.noteId,
-                                                                    NM.currentTaskNote.projectId,
-                                                                    NM.currentTaskNote.taskId
-                                                                );
-                                                            } else {
-                                                                console.error(
-                                                                    "Can't parent note ID to create a child note."
-                                                                );
-                                                            }
-                                                        }}
-                                                    >
-                                                        <AddIcon />
-                                                        Child Note
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        sx={{
-                                                            color: "red",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                        onClick={() => {
-                                                            setOpenDeleteNote(true);
-                                                        }}
-                                                    >
-                                                        <DeleteIcon sx={{ color: "red" }} />
-                                                        Delete Note
-                                                    </MenuItem>
-                                                </Menu>
-                                            </Dropdown>
-
-                                            {isInTaskPage === true && (
-                                                <Tooltip title="Close Notes">
-                                                    <IconButton
-                                                        color="neutral"
-                                                        size="sm"
-                                                        sx={{ mb: "5px" }}
-                                                        variant="plain"
-                                                        onClick={() => {
-                                                            NM.setIsTaskNoteVisible(false);
-
-                                                            // Open task-home (task table) when both task-preview and task-create-form are closed.
-                                                            if (
-                                                                TM.isCreatingTask.flag === false &&
-                                                                TM.isTaskPreviewVisible ===
-                                                                    false &&
-                                                                setIsTaskHomeVisible
-                                                            ) {
-                                                                setIsTaskHomeVisible(true);
-                                                            }
-                                                        }}
-                                                    >
-                                                        <CancelIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
-                                        </Stack>
-                                        {NM.currentTaskNote && (
-                                            <ModalDeleteTaskNote
-                                                currentTabIndex={NM.selectedTabIndex}
-                                                currentTaskNote={NM.currentTaskNote}
-                                                handleCloseTab={handleCloseTab}
-                                                myself={myself}
-                                                openDeleteNote={openDeleteNote}
-                                                setOpenDeleteNote={setOpenDeleteNote}
-                                                setTaskNoteMeta={NM.setTaskNoteMeta}
-                                                taskNoteMeta={NM.taskNoteMeta}
-                                            />
-                                        )}
-                                    </Stack>
-
-                                    <Tabs
-                                        sx={{ width: "100%" }}
-                                        value={NM.selectedTabIndex}
-                                        onChange={(_, val) => {
-                                            NM.loadNote(
-                                                NM.tabItems[Number(val)].noteType,
-                                                NM.tabItems[Number(val)].noteId,
-                                                Number(val)
-                                            );
-                                        }}
-                                    >
-                                        <TabList
-                                            sx={{
-                                                px: "5px",
-                                                overflow: "auto",
-                                                scrollSnapType: "x mandatory",
-                                                "&::-webkit-scrollbar": { display: "none" },
-                                            }}
-                                        >
-                                            {NM.tabItems.map((tab, index) => (
-                                                <Tab
-                                                    key={`tab-${index}`}
-                                                    variant="soft"
-                                                    sx={{
-                                                        mx: "2px",
-                                                        my: "4px",
-                                                        flex: "none",
-                                                        scrollSnapAlign: "start",
-                                                        borderRadius: "5px",
-                                                    }}
-                                                >
-                                                    <Box
-                                                        sx={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            height: "20px",
-                                                            maxWidth: "200px",
-                                                        }}
-                                                    >
-                                                        {tab.title.length > 14
-                                                            ? `${tab.title.slice(0, 14)}...`
-                                                            : tab.title}
-
-                                                        {NM.tabItems.length > 1 && (
-                                                            <IconButton
-                                                                color="neutral"
-                                                                component="span"
-                                                                size="sm"
-                                                                sx={{ ml: 1 }}
-                                                                variant="plain"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleCloseTab(
-                                                                        index,
-                                                                        Number(tab.noteId)
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <CloseIcon />
-                                                            </IconButton>
-                                                        )}
-                                                    </Box>
-                                                </Tab>
-                                            ))}
-                                        </TabList>
-
-                                        {NM.tabItems.map((tabNote, index) => (
-                                            <TabPanel
-                                                key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                                value={index}
-                                                sx={{
-                                                    paddingX: "5px",
-                                                    paddingTop: "0px",
-                                                    paddingBottom: "5px",
-                                                }}
-                                            >
-                                                <FormControl
-                                                    sx={{
-                                                        mt: "10px",
-                                                        ml: "10px",
-                                                        justifyContent: "center",
-                                                        position: "absolute",
-                                                        zIndex: 100,
-                                                    }}
-                                                    required
-                                                >
-                                                    <Input
-                                                        key={"currentTaskNoteTitle"}
-                                                        placeholder="Note Title"
-                                                        startDecorator={<NoteAltIcon />}
-                                                        value={currentTaskNoteTitle}
-                                                        variant="soft"
-                                                        slotProps={{
-                                                            input: {
-                                                                ref: titleInputRef,
-                                                                onKeyDown: (
-                                                                    e: React.KeyboardEvent<HTMLInputElement>
-                                                                ) => {
-                                                                    if (e.key === "Enter") {
-                                                                        e.preventDefault(); // stop form submission if inside <form>
-                                                                        titleInputRef.current?.blur();
-                                                                    }
-                                                                },
-                                                            },
-                                                        }}
-                                                        sx={{
-                                                            fontSize: "22px",
-                                                            fontWeight: "bold",
-                                                        }}
-                                                        onBlur={() => {
-                                                            setNoteUpdated(true);
-                                                        }}
-                                                        onChange={(e) => {
-                                                            setCurrentTaskNoteTitle(
-                                                                e.target.value
-                                                            );
-                                                        }}
-                                                    />
-                                                </FormControl>
-                                                {noteBodySaved === true && (
-                                                    <Box
-                                                        sx={{
-                                                            position: "absolute",
-                                                            mt: "12px",
-                                                            ml: "335px",
-                                                            zIndex: 100,
-                                                        }}
-                                                    >
-                                                        <Button
-                                                            color="neutral"
-                                                            size="sm"
-                                                            variant="outlined"
-                                                            startDecorator={
-                                                                <CheckIcon
-                                                                    sx={{
-                                                                        fontSize: "15px",
-                                                                    }}
-                                                                />
-                                                            }
-                                                        >
-                                                            Saved
-                                                        </Button>
-                                                    </Box>
-                                                )}
-                                                {NM.currentTaskNote && (
-                                                    <>
-                                                        <BnTaskNoteEditor
-                                                            body={body}
-                                                            currentTaskNote={NM.currentTaskNote}
-                                                            myself={myself}
-                                                            setBody={setBody}
-                                                            setCurrentChat={setCurrentChat}
-                                                            setMyself={setMyself}
-                                                            setNoteBodyEdited={setNoteBodyEdited}
-                                                            setNoteBodySaved={setNoteBodySaved}
-                                                            setOpeningService={setOpeningService}
-                                                            socket={socket}
-                                                            teamMemberProfiles={teamMemberProfiles}
-                                                            teamMembers={teamMembers}
-                                                        />
-                                                    </>
-                                                )}
-                                            </TabPanel>
-                                        ))}
-                                    </Tabs>
-                                </Stack>
-                            )}
-                        </>
-                    )}
-                </Stack>
-            )}
-        </>
+        </Stack>
     );
 };
