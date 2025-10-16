@@ -1,16 +1,8 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import CircleIcon from "@mui/icons-material/Circle";
-import GroupsIcon from "@mui/icons-material/Groups";
-import { Avatar, Box, Chip, ListDivider, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
+import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../components/common/GMAvatar";
-import { ProjectAvatar } from "../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../context/AuthContext";
 import { UserProps } from "../../../types/admin";
 import {
@@ -20,13 +12,14 @@ import {
     ThreadMessageProps,
     ThreadProps,
 } from "../../../types/chat";
-import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { ProjectProps } from "../../../types/tasks";
 import { toggleMessagesPane } from "../../../utils";
-import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { useActivityStatus } from "../hooks/useActivityStatus";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 import { popSpecificMessages } from "../services/popSpecificMessages";
+import { ActivityContent } from "./ActivityContent";
+import { ActivityHeader } from "./ActivityHeader";
 
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task}
 // activityType = {1: message or comment, 2: reaction, 3: mention}
@@ -90,32 +83,15 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         funcSetAllChats,
     } = props;
     const { accessToken } = useAuth();
+    const { groupedReactions, updateActivityReadStatus } = useActivityStatus({
+        activity,
+        activityMessages,
+        setActivityMessages,
+        myself,
+        accessToken,
+    });
 
     const isYou = myself.userId === activity.dmPartnerUserId;
-
-    const updateActivityReadStatus = () => {
-        if (accessToken && activity.activityId) {
-            const updateActivityReadStatusWorker = new UpdateActivityReadStatusWorker();
-            updateActivityReadStatusWorker.postMessage({
-                accessToken: accessToken,
-                myself: myself,
-                activityId: activity.activityId,
-                isRead: true,
-                activityMessages: activityMessages,
-            });
-            updateActivityReadStatusWorker.onmessage = (event) => {
-                const data = event.data;
-                if (data.error) {
-                    console.error("Worker failed:", data.error);
-                } else {
-                    setActivityMessages(data);
-                }
-            };
-            return () => {
-                updateActivityReadStatusWorker.terminate();
-            };
-        }
-    };
 
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
         let chatType: number = activity.chatType;
@@ -156,76 +132,76 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         return newChat;
     };
 
-    const onClickHandler = async () => {
-        setSelectedActivityId(activity.activityId);
+    // Helper function to handle common chat navigation logic
+    const handleChatNavigation = async (chatType: number, messageUniqueKey: string) => {
+        const shouldUseMainChat =
+            isSubChatVisible === false ||
+            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
+                `${activity.chatId}-${activity.chatName}`;
 
-        if (activity.isThread === false) {
-            // Handling a non-thread message/comment
-            if (activity.chatType !== 4) {
-                // Handling a message activity in DM, GM, PM
-                if (
-                    isSubChatVisible === false ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
-                        `${activity.chatId}-${activity.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(activity.chatId, activity.chatType)
-                        .then((messages) => {
-                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-                if (
-                    isSubChatVisible === true ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
-                        `${activity.chatId}-${activity.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(activity.chatId, activity.chatType)
-                        .then((messages) => {
-                            setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-            } else {
-                // Handling a task comment activity
-                if (
-                    isSubChatVisible === false ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
-                        `${activity.chatId}-${activity.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(activity.chatId, 3)
-                        .then((messages) => {
-                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
-                            if (activity.projectId) {
-                                setCurrentProject({
-                                    projectId: activity.projectId,
-                                    projectName: activity.projectName || "",
-                                    projectTags: [],
-                                });
-                                setCurrentPreviewTaskId(activity.taskId);
-                                setIsThreadVisible(false);
-                                setIsTaskPreviewVisible(true);
-                            }
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
+        const shouldUseSubChat =
+            isSubChatVisible === true ||
+            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
+                `${activity.chatId}-${activity.chatName}`;
+
+        const handleMessages = (messages: any) => {
+            if (shouldUseMainChat) {
+                setCurrentMainChat(defineNewChat(messages, messageUniqueKey));
+            } else if (shouldUseSubChat) {
+                setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
             }
-        } else {
-            // Handling a thread message
+            setIsMainChatVisible(true);
+            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                setIsThreadVisible(false);
+            }
+        };
+
+        toggleMessagesPane();
+
+        try {
+            const messages = await popSpecificMessages(activity.chatId, chatType);
+            handleMessages(messages);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    // Handle task comment activity
+    const handleTaskCommentActivity = async () => {
+        const shouldUseMainChat =
+            isSubChatVisible === false ||
+            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
+                `${activity.chatId}-${activity.chatName}`;
+
+        if (shouldUseMainChat) {
+            toggleMessagesPane();
+            try {
+                const messages = await popSpecificMessages(activity.chatId, 3);
+                setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
+
+                if (activity.projectId) {
+                    setCurrentProject({
+                        projectId: activity.projectId,
+                        projectName: activity.projectName || "",
+                        projectTags: [],
+                    });
+                    setCurrentPreviewTaskId(activity.taskId);
+                    setIsThreadVisible(false);
+                    setIsTaskPreviewVisible(true);
+                }
+                setIsMainChatVisible(true);
+                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                    setIsThreadVisible(false);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    };
+
+    // Handle thread message activity
+    const handleThreadMessageActivity = async () => {
+        try {
             const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
                 myself,
                 activity.chatType,
@@ -233,6 +209,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 activity.threadId,
                 accessToken
             );
+
             if (threadMessages && threadMessages.length > 0) {
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
@@ -260,6 +237,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     taskExist: threadMessages[0].taskExist,
                     moveToSpecificIndex: activity.threadMessageUniqueKey,
                 };
+
                 if (activity.projectId) {
                     setCurrentProject({
                         projectId: activity.projectId,
@@ -267,6 +245,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         projectTags: [],
                     });
                 }
+
                 if (newThread) {
                     setCurrentThreadChat(newThread);
                     if (newThread.taskExist === true && threadMessages[0].taskId) {
@@ -274,41 +253,29 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     }
                 }
 
-                if (
-                    isSubChatVisible === false ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
-                        `${activity.chatId}-${activity.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(activity.chatId, activity.chatType)
-                        .then((messages) => {
-                            setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
-                if (
-                    isSubChatVisible === true ||
-                    `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
-                        `${activity.chatId}-${activity.chatName}`
-                ) {
-                    toggleMessagesPane();
-                    popSpecificMessages(activity.chatId, activity.chatType)
-                        .then((messages) => {
-                            setCurrentSubChat(defineNewChat(messages, activity.messageUniqueKey));
-                            setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                                setIsThreadVisible(false);
-                            }
-                        })
-                        .catch((error) => console.error(error));
-                }
+                await handleChatNavigation(activity.chatType, activity.messageUniqueKey);
             }
 
             setIsThreadVisible(true);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const onClickHandler = async () => {
+        setSelectedActivityId(activity.activityId);
+
+        if (activity.isThread === false) {
+            if (activity.chatType !== 4) {
+                // Handling a message activity in DM, GM, PM
+                await handleChatNavigation(activity.chatType, activity.messageUniqueKey);
+            } else {
+                // Handling a task comment activity
+                await handleTaskCommentActivity();
+            }
+        } else {
+            // Handling a thread message
+            await handleThreadMessageActivity();
         }
 
         if (activity.isRead === false) {
@@ -323,42 +290,6 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         4: "Task",
     };
 
-    const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
-        const map = new Map<string, { count: number; senders: UserProps[] }>();
-
-        reactions.forEach(({ emoji, sender }) => {
-            const entry = map.get(emoji);
-            if (entry) {
-                entry.count += 1;
-                entry.senders.push(sender);
-            } else {
-                map.set(emoji, { count: 1, senders: [sender] });
-            }
-        });
-
-        return Array.from(map.entries())
-            .map(([emoji, { count, senders }]) => ({
-                emoji,
-                count,
-                senders,
-            }))
-            .sort((a, b) => b.count - a.count);
-    };
-
-    const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
-        groupEmojis(activity.reactions)
-    );
-    const displayed = groupedReactions.slice(0, 10);
-    const hidden = groupedReactions.slice(10);
-
-    useEffect(() => {
-        setGroupedReactions(groupEmojis(activity.reactions));
-    }, [activity]);
-
-    const chat = allChats.find(
-        (chat) => chat.chatType === activity.chatType && chat.chatId === activity.chatId
-    );
-
     return (
         <React.Fragment>
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
@@ -369,356 +300,25 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     onClick={onClickHandler}
                 >
                     <Stack direction="column">
-                        <Stack
-                            alignItems="center"
-                            direction="row"
-                            justifyContent="space-between"
-                            spacing={1.5}
-                        >
-                            <Stack direction="row" spacing={1}>
-                                <div>
-                                    {activity.chatType === 1 &&
-                                        activity.dmPartnerUserId !== "" && (
-                                            <AvatarWithStatus
-                                                isYou={isYou}
-                                                myself={myself}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
-                                                socket={socket}
-                                                avatarUser={
-                                                    teamMemberProfiles[activity.dmPartnerUserId]
-                                                }
-                                            />
-                                        )}
-                                    {activity.chatType === 1 &&
-                                        activity.dmPartnerUserId === "" && (
-                                            <Avatar size="sm">
-                                                {activity.chatName[0].toUpperCase()}
-                                            </Avatar>
-                                        )}
+                        <ActivityHeader
+                            activity={activity}
+                            myself={myself}
+                            teamMemberProfiles={teamMemberProfiles}
+                            socket={socket}
+                            allChats={allChats}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setMyself={setMyself}
+                            setOpeningService={setOpeningService}
+                            funcSetAllChats={funcSetAllChats}
+                            isYou={isYou}
+                            chatTypeLookup={chatTypeLookup}
+                        />
 
-                                    {activity.chatType === 2 && (
-                                        <>
-                                            {chat && (
-                                                <GMAvatar
-                                                    funcSetAllChats={funcSetAllChats}
-                                                    gmChat={chat}
-                                                    isYou={isYou}
-                                                    myself={myself}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    setMyself={setMyself}
-                                                    setOpeningService={setOpeningService}
-                                                    socket={socket}
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                />
-                                            )}
-                                            {chat === undefined && (
-                                                <Avatar size="sm">
-                                                    <GroupsIcon />
-                                                </Avatar>
-                                            )}
-                                        </>
-                                    )}
-
-                                    {activity.chatType === 3 && (
-                                        <>
-                                            {chat && (
-                                                <ProjectAvatar
-                                                    funcSetAllChats={funcSetAllChats}
-                                                    myself={myself}
-                                                    pmChat={chat}
-                                                    setCurrentMainChat={setCurrentMainChat}
-                                                    setMyself={setMyself}
-                                                    setOpeningService={setOpeningService}
-                                                    socket={socket}
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                />
-                                            )}
-                                            {chat === undefined && (
-                                                <Avatar size="sm">
-                                                    <AccountTreeIcon />
-                                                </Avatar>
-                                            )}
-                                        </>
-                                    )}
-
-                                    {activity.chatType === 4 && (
-                                        <Avatar size="sm">
-                                            <AssignmentRoundedIcon />
-                                        </Avatar>
-                                    )}
-                                </div>
-
-                                {activity.chatType !== 3 && activity.chatType !== 4 && (
-                                    <Box>
-                                        <Typography level="title-sm" noWrap>
-                                            {isYou
-                                                ? `${activity.chatName} (you)`
-                                                : activity.chatName}
-                                        </Typography>
-                                    </Box>
-                                )}
-
-                                <Box>
-                                    {(activity.chatType === 3 || activity.chatType === 4) && (
-                                        <>
-                                            <Chip
-                                                color="primary"
-                                                size="sm"
-                                                variant="soft"
-                                                sx={{
-                                                    fontSize: "12px",
-                                                    borderRadius: "4px",
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                {activity.chatName}
-                                            </Chip>
-                                            <Chip
-                                                size="sm"
-                                                variant="soft"
-                                                sx={{
-                                                    fontSize: "12px",
-                                                    borderRadius: "4px",
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                ID:{activity.taskId}
-                                            </Chip>
-                                        </>
-                                    )}
-
-                                    {/* Reply except task comment */}
-                                    {activity.activityType === 1 && activity.chatType !== 4 && (
-                                        <Chip
-                                            color="success"
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                fontSize: "12px",
-                                                borderRadius: "4px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Reply
-                                        </Chip>
-                                    )}
-
-                                    {activity.activityType === 2 && (
-                                        <Chip
-                                            color="warning"
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                fontSize: "12px",
-                                                borderRadius: "4px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Reaction
-                                        </Chip>
-                                    )}
-
-                                    {activity.activityType === 3 && (
-                                        <Chip
-                                            color="danger"
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                fontSize: "12px",
-                                                borderRadius: "4px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Mention
-                                        </Chip>
-                                    )}
-
-                                    <Chip
-                                        color="neutral"
-                                        size="sm"
-                                        variant="outlined"
-                                        sx={{
-                                            fontSize: "12px",
-                                            borderRadius: "4px",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        {chatTypeLookup[activity.chatType]}
-                                    </Chip>
-
-                                    {activity.isThread === true && (
-                                        <Chip
-                                            color="neutral"
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                fontSize: "12px",
-                                                borderRadius: "4px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            Thread
-                                        </Chip>
-                                    )}
-                                </Box>
-                            </Stack>
-                            {/* Right-aligned content */}
-                            <Stack alignItems="center" direction="row" spacing={1}>
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ display: { xs: "none", md: "block" } }}
-                                    noWrap
-                                >
-                                    {extractYYYYMMDDHHMM(activity.tsSent)}
-                                </Typography>
-                                {activity.isRead === false && (
-                                    <CircleIcon color="primary" sx={{ fontSize: 12 }} />
-                                )}
-                            </Stack>
-                        </Stack>
-
-                        {activity.activityType !== 2 && (
-                            <Stack
-                                alignItems="flex-start"
-                                direction="row"
-                                justifyContent="space-between"
-                            >
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        marginBottom: 0.5,
-                                        ml: "45px",
-                                        fontWeight: "bold",
-                                        display: "-webkit-box",
-                                        WebkitLineClamp: "2",
-                                        WebkitBoxOrient: "vertical",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                    }}
-                                >
-                                    {activity.firstLineContent}
-                                </Typography>
-                            </Stack>
-                        )}
-
-                        {activity.activityType === 2 && (
-                            <>
-                                <Stack
-                                    alignItems="flex-start"
-                                    direction="row"
-                                    justifyContent="space-between"
-                                >
-                                    <Stack
-                                        alignItems="flex-start"
-                                        direction="row"
-                                        justifyContent="space-between"
-                                    >
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                paddingTop: 1.5,
-                                                ml: "45px",
-                                                fontWeight: "bold",
-                                                display: "-webkit-box",
-                                                WebkitLineClamp: "2",
-                                                WebkitBoxOrient: "vertical",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                            }}
-                                        >
-                                            {activity.latestReaction.sender.userName} has reacted
-                                        </Typography>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                fontSize: "25px",
-                                                pl: "10px",
-                                                display: "-webkit-box",
-                                                WebkitLineClamp: "2",
-                                                WebkitBoxOrient: "vertical",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                            }}
-                                        >
-                                            {activity.latestReaction.emoji}
-                                        </Typography>
-                                    </Stack>
-
-                                    <Box sx={{ paddingTop: 0.5 }}>
-                                        {displayed.map(({ senders, emoji, count }, index) => (
-                                            <Tooltip
-                                                key={`tooltip-${index}`}
-                                                title={
-                                                    senders
-                                                        .slice(0, 5)
-                                                        .map((sender) => `${sender.userName} `)
-                                                        .join(" and ") +
-                                                    (senders.length > 5 ? " and more" : "") +
-                                                    " reacted"
-                                                }
-                                            >
-                                                <Chip
-                                                    key={`emoji-chip-${emoji}-${index}`}
-                                                    color="neutral"
-                                                    size="sm"
-                                                    sx={{
-                                                        fontSize: "0.8rem",
-                                                        cursor: "pointer",
-                                                        px: 0.5,
-                                                        py: 0.5,
-                                                    }}
-                                                    variant={
-                                                        senders.some(
-                                                            (u) => u.userId === myself.userId
-                                                        )
-                                                            ? "solid"
-                                                            : "outlined"
-                                                    }
-                                                >
-                                                    {emoji}
-                                                    {count}
-                                                </Chip>
-                                            </Tooltip>
-                                        ))}
-
-                                        {hidden.length > 0 && (
-                                            <Tooltip
-                                                title={hidden
-                                                    .map(({ emoji, count }) => `${emoji} ${count}`)
-                                                    .join(" ")}
-                                            >
-                                                <Chip
-                                                    size="sm"
-                                                    sx={{ fontSize: "0.8rem" }}
-                                                    variant="plain"
-                                                >
-                                                    +{hidden.length} more
-                                                </Chip>
-                                            </Tooltip>
-                                        )}
-                                    </Box>
-                                </Stack>
-                                <Box sx={{ lineHeight: 0, textAlign: "right" }}>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            marginBottom: 0.5,
-                                            ml: "45px",
-                                            fontWeight: "bold",
-                                            display: "-webkit-box",
-                                            WebkitLineClamp: "2",
-                                            WebkitBoxOrient: "vertical",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                        }}
-                                    >
-                                        {activity.firstLineContent}
-                                    </Typography>
-                                </Box>
-                            </>
-                        )}
+                        <ActivityContent
+                            activity={activity}
+                            myself={myself}
+                            groupedReactions={groupedReactions}
+                        />
                     </Stack>
                 </ListItemButton>
             </ListItem>

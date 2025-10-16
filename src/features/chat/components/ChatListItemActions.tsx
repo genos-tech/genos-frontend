@@ -5,9 +5,9 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import { Badge, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 
+import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { UserProps } from "../../../types/admin";
 
 interface ChatListItemActionsProps {
     chat: AllChatProps;
