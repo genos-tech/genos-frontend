@@ -1,5 +1,5 @@
-import { STORES } from "../db/conf";
-import { messageIdWithChatId } from "../db/crud";
+import { STORES } from "../db/config";
+import { MessageRepository } from "../db/repositories";
 
 const storeNameLookup: { [key: number]: string } = {
     1: STORES.DM_MESSAGES,
@@ -12,16 +12,14 @@ self.onmessage = async (event) => {
     const chatType: number = event.data.chatType;
 
     if (chatId && chatType !== undefined) {
-        const messages = await messageIdWithChatId({
-            storeName: storeNameLookup[chatType],
-            chatId: chatId,
-        });
-        // Sort messages by tsSent in ascending order
-        const sortedMessages = [...messages].sort((a, b) => {
-            return Number(a.messageId) - Number(b.messageId);
-        });
+        console.log("chatType", chatType);
+        console.log("storeNameLookup[chatType]", storeNameLookup[chatType]);
+        console.log("chatId", chatId);
 
-        self.postMessage(sortedMessages);
+        const messageRepository = new MessageRepository(storeNameLookup[chatType]);
+        const messages = await messageRepository.getMessagesByChatId(chatType, chatId);
+
+        self.postMessage(messages);
     } else {
         console.error("Invalid parameters for popSpecificMessagesWorker:", {
             chatId: chatId,

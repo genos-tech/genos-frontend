@@ -1,6 +1,4 @@
-import { STORES } from "../db/conf";
-import { ChatRepository, ChatRepositoryFactory, FlaggedRepository } from "../db/repositories";
-import { ChatMessage } from "../db/types";
+import { ChatRepositoryFactory, FlaggedRepository } from "../db/repositories";
 import { loadDMHistory } from "../features/chat/services/loadDMHistory";
 import { UserProps } from "../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../types/chat";
@@ -48,24 +46,11 @@ self.onmessage = async (event) => {
                 // Insert messages by mini-batch
                 for (let i = 0; i < dmChat.messages.length; i += BATCH_SIZE) {
                     const miniBatch: MessageProps[] = dmChat.messages.slice(i, i + BATCH_SIZE);
-                    const convertedMessages: ChatMessage[] = miniBatch.map((message) => ({
-                        messageIdWithChatId:
-                            message.messageIdWithChatId ||
-                            `${message.chatId}-${message.messageId}`,
-                        chatId: message.chatId,
-                        messageId: message.messageId,
-                        content:
-                            typeof message.content === "string"
-                                ? message.content
-                                : JSON.stringify(message.content),
-                        timestamp: new Date(message.tsSent).getTime(),
-                        userId: message.sender.userId,
-                        userName: message.sender.userName,
-                    }));
-                    await dmMessageRepo.batchInsert(convertedMessages);
+                    await dmMessageRepo.batchInsertMessages(miniBatch);
                 }
             }
         }
+
         if (dmHistory.flagged_messages) {
             for (let i = 0; i < dmHistory.flagged_messages.length; i += 1) {
                 const flaggedMessage: FlaggedMessageProps = dmHistory.flagged_messages[i];

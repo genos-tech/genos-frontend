@@ -1,9 +1,12 @@
-import { Chat, ChatMessage, Note, Task, ThreadMessage, User } from "../types";
+import { UserProps } from "../../types/admin";
+import { AllChatProps, MessageProps, ThreadMessageProps } from "../../types/chat";
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
+import { TaskTableProps } from "../../types/tasks";
 
 // Validation utility functions
 export class ValidationUtils {
     // Validate chat object
-    static isValidChat(chat: any): chat is Chat {
+    static isValidChat(chat: any): chat is AllChatProps {
         return (
             chat &&
             typeof chat.chatId === "number" &&
@@ -14,7 +17,7 @@ export class ValidationUtils {
     }
 
     // Validate chat message object
-    static isValidChatMessage(message: any): message is ChatMessage {
+    static isValidChatMessage(message: any): message is MessageProps {
         return (
             message &&
             typeof message.messageIdWithChatId === "string" &&
@@ -27,7 +30,7 @@ export class ValidationUtils {
     }
 
     // Validate thread message object
-    static isValidThreadMessage(message: any): message is ThreadMessage {
+    static isValidThreadMessage(message: any): message is ThreadMessageProps {
         return (
             message &&
             typeof message.messageIdWithChatIdAndThreadId === "string" &&
@@ -41,7 +44,7 @@ export class ValidationUtils {
     }
 
     // Validate user object
-    static isValidUser(user: any): user is User {
+    static isValidUser(user: any): user is UserProps {
         return (
             user &&
             typeof user.userId === "string" &&
@@ -51,7 +54,7 @@ export class ValidationUtils {
     }
 
     // Validate task object
-    static isValidTask(task: any): task is Task {
+    static isValidTask(task: any): task is TaskTableProps {
         return (
             task &&
             typeof task.id === "number" &&
@@ -64,7 +67,7 @@ export class ValidationUtils {
     }
 
     // Validate note object
-    static isValidNote(note: any): note is Note {
+    static isValidNote(note: any): note is MyNoteProps | TaskNoteProps | ChatNoteProps {
         return (
             note &&
             typeof note.noteId === "number" &&

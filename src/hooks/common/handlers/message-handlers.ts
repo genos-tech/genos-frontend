@@ -1,6 +1,5 @@
 import { Socket } from "socket.io-client";
 
-import { STORES } from "../../../db/conf";
 import { ChatService } from "../../../db/services/chat.service";
 import { addMessage } from "../../../features/chat/services/addMessage";
 import { addThreadMessage } from "../../../features/chat/services/addThreadMessage";

@@ -1,27 +1,27 @@
+import { UserProps } from "../../types/admin";
 import { INDEX_NAMES, STORES } from "../config";
-import { User } from "../types";
 import { BaseRepository } from "./base";
 
 // User repository for managing user data
-export class UserRepository extends BaseRepository<User> {
+export class UserRepository extends BaseRepository<UserProps> {
     constructor() {
         super(STORES.USER_INFO);
     }
 
     // Get user by ID
-    async getUser(userId: string): Promise<User | null> {
+    async getUser(userId: string): Promise<UserProps | null> {
         const result = await this.get(userId);
         return result.success && result.data ? result.data : null;
     }
 
     // Get all users
-    async getAllUsers(): Promise<User[]> {
+    async getAllUsers(): Promise<UserProps[]> {
         const result = await this.getAll();
         return result.success && result.data ? result.data : [];
     }
 
     // Get team members by team ID
-    async getTeamMembers(teamId: string): Promise<User[]> {
+    async getTeamMembers(teamId: string): Promise<UserProps[]> {
         try {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
@@ -35,7 +35,7 @@ export class UserRepository extends BaseRepository<User> {
     }
 
     // Add or update user
-    async saveUser(user: User): Promise<boolean> {
+    async saveUser(user: UserProps): Promise<boolean> {
         const result = await this.put(user);
         return result.success;
     }

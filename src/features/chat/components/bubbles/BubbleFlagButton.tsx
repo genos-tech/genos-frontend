@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import FlagIcon from "@mui/icons-material/Flag";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 
-import { STORES } from "../../../../db/conf";
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { UserProps } from "../../../../types/admin";
 import {

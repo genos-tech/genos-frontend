@@ -1,6 +1,5 @@
-import { STORES } from "../db/conf";
-import { ChatRepository, ChatRepositoryFactory, FlaggedRepository } from "../db/repositories";
-import { ChatMessage } from "../db/types";
+import { ChatRepositoryFactory, FlaggedRepository } from "../db/repositories";
+import { ChatService } from "../db/services";
 import { defaultDmPartner } from "../features/chat/services/constants";
 import { loadGMHistory } from "../features/chat/services/loadGMHistory";
 import { UserProps } from "../types/admin";
@@ -49,20 +48,7 @@ self.onmessage = async (event) => {
         // Insert messages by mini-batch
         for (let i = 0; i < gmChat.messages.length; i += BATCH_SIZE) {
             const miniBatch: MessageProps[] = gmChat.messages.slice(i, i + BATCH_SIZE);
-            const convertedMessages: ChatMessage[] = miniBatch.map((message) => ({
-                messageIdWithChatId:
-                    message.messageIdWithChatId || `${message.chatId}-${message.messageId}`,
-                chatId: message.chatId,
-                messageId: message.messageId,
-                content:
-                    typeof message.content === "string"
-                        ? message.content
-                        : JSON.stringify(message.content),
-                timestamp: new Date(message.tsSent).getTime(),
-                userId: message.sender.userId,
-                userName: message.sender.userName,
-            }));
-            await gmMessageRepo.batchInsert(convertedMessages);
+            await new ChatService().batchInsertGMMessages(miniBatch);
         }
     }
 

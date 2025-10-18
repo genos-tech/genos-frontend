@@ -1,5 +1,4 @@
-import { STORES } from "../db/conf";
-import { ChatRepository, ChatRepositoryFactory } from "../db/repositories";
+import { ChatRepositoryFactory } from "../db/repositories";
 import { AllChatProps } from "../types/chat";
 
 self.onmessage = async (event) => {

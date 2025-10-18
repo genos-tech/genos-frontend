@@ -12,7 +12,6 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
-import { STORES } from "../../../../db/conf";
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { UserProps } from "../../../../types/admin";
 import {

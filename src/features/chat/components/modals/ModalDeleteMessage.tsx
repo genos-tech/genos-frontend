@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { STORES } from "../../../../db/conf";
 import { ChatService } from "../../../../db/services/chat.service";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { deleteMessage } from "../../services/deleteMessage";

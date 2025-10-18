@@ -1,27 +1,28 @@
+import { TaskTableProps } from "../../types/tasks";
 import { INDEX_NAMES, STORES } from "../config";
-import { Task, TaskQuery } from "../types";
+import { TaskQuery } from "../types";
 import { BaseRepository } from "./base";
 
 // Task repository for managing task data
-export class TaskRepository extends BaseRepository<Task> {
+export class TaskRepository extends BaseRepository<TaskTableProps> {
     constructor() {
         super(STORES.TASKS);
     }
 
     // Get task by ID
-    async getTask(taskId: number): Promise<Task | null> {
+    async getTask(taskId: number): Promise<TaskTableProps | null> {
         const result = await this.get(taskId);
         return result.success && result.data ? result.data : null;
     }
 
     // Get all tasks
-    async getAllTasks(): Promise<Task[]> {
+    async getAllTasks(): Promise<TaskTableProps[]> {
         const result = await this.getAll();
         return result.success && result.data ? result.data : [];
     }
 
     // Get tasks by project ID
-    async getTasksByProject(projectId: number): Promise<Task[]> {
+    async getTasksByProject(projectId: number): Promise<TaskTableProps[]> {
         try {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
@@ -35,7 +36,7 @@ export class TaskRepository extends BaseRepository<Task> {
     }
 
     // Get tasks by status
-    async getTasksByStatus(projectId: number, status: string): Promise<Task[]> {
+    async getTasksByStatus(projectId: number, status: string): Promise<TaskTableProps[]> {
         try {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
@@ -49,7 +50,10 @@ export class TaskRepository extends BaseRepository<Task> {
     }
 
     // Get tasks by multiple statuses
-    async getTasksByMultipleStatus(projectId: number, statuses: string[]): Promise<Task[]> {
+    async getTasksByMultipleStatus(
+        projectId: number,
+        statuses: string[]
+    ): Promise<TaskTableProps[]> {
         const results = await Promise.all(
             statuses.map((status) => this.getTasksByStatus(projectId, status))
         );
@@ -57,7 +61,7 @@ export class TaskRepository extends BaseRepository<Task> {
     }
 
     // Get tasks with query parameters
-    async getTasks(query: TaskQuery): Promise<Task[]> {
+    async getTasks(query: TaskQuery): Promise<TaskTableProps[]> {
         if (query.status) {
             if (Array.isArray(query.status)) {
                 return this.getTasksByMultipleStatus(query.projectId, query.status);
@@ -69,8 +73,14 @@ export class TaskRepository extends BaseRepository<Task> {
     }
 
     // Add or update task
-    async saveTask(task: Task): Promise<boolean> {
+    async saveTask(task: TaskTableProps): Promise<boolean> {
         const result = await this.put(task);
+        return result.success;
+    }
+
+    // Batch insert tasks
+    async batchInsertTasks(tasks: TaskTableProps[]): Promise<boolean> {
+        const result = await this.batchInsert(tasks);
         return result.success;
     }
 

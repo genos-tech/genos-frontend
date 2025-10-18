@@ -1,9 +1,10 @@
-import { getTeamMembers } from "../db/crud";
+import { UserService } from "../db/services/user.service";
 import { UserProps } from "../types/admin";
 
 self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;
-    const teamMembers = await getTeamMembers(myself.teamId);
+    const userService = new UserService();
+    const teamMembers = await userService.getTeamMembers(myself.teamId);
 
     if (teamMembers) {
         self.postMessage(teamMembers);

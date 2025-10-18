@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 
-import { STORES } from "../../db/conf";
 import { NoteService } from "../../db/services/note.service";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
@@ -498,8 +497,8 @@ export const useNoteManagement = (
                         parentNoteId: null, // Will be updated if needed
                         title: note.title,
                         body: [], // Will be loaded separately if needed
-                        tsCreated: new Date(note.createdAt).toISOString(),
-                        tsUpdated: new Date(note.updatedAt).toISOString(),
+                        tsCreated: new Date(note.tsCreated).toISOString(),
+                        tsUpdated: new Date(note.tsUpdated).toISOString(),
                     };
                     setCurrentMyNote(myNote);
                     setSelectedTabIndex(targetTabIndex);
@@ -529,11 +528,11 @@ export const useNoteManagement = (
                         noteId: note.noteId,
                         parentNoteId: null, // Will be updated if needed
                         projectId: 0, // Will be updated if needed
-                        taskId: note.relatedId || 0,
+                        taskId: note.taskId || 0,
                         title: note.title,
                         body: [], // Will be loaded separately if needed
-                        tsCreated: new Date(note.createdAt).toISOString(),
-                        tsUpdated: new Date(note.updatedAt).toISOString(),
+                        tsCreated: new Date(note.tsCreated).toISOString(),
+                        tsUpdated: new Date(note.tsUpdated).toISOString(),
                     };
                     setCurrentTaskNote(taskNote);
                     setSelectedTabIndex(targetTabIndex);
@@ -563,13 +562,13 @@ export const useNoteManagement = (
                         noteId: note.noteId,
                         parentNoteId: null, // Will be updated if needed
                         chatType: 0, // Will be updated if needed
-                        chatId: note.relatedId || 0,
+                        chatId: note.chatId || 0,
                         isThread: false, // Will be updated if needed
                         threadId: 0, // Will be updated if needed
                         title: note.title,
                         body: [], // Will be loaded separately if needed
-                        tsCreated: new Date(note.createdAt).toISOString(),
-                        tsUpdated: new Date(note.updatedAt).toISOString(),
+                        tsCreated: new Date(note.tsCreated).toISOString(),
+                        tsUpdated: new Date(note.tsUpdated).toISOString(),
                     };
                     setCurrentChatNote(chatNote);
                     setSelectedTabIndex(targetTabIndex);

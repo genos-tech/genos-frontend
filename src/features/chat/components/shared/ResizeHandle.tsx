@@ -2,16 +2,14 @@ import { useColorScheme } from "@mui/joy/styles";
 import { PanelResizeHandle } from "react-resizable-panels";
 
 interface ResizeHandleProps {
-    key: string;
     className?: string;
 }
-
-export const ResizeHandle = ({ key, className = "chat-resize-handle" }: ResizeHandleProps) => {
+export const ResizeHandle = (props: ResizeHandleProps) => {
+    const { className = "chat-resize-handle" } = props;
     const { mode } = useColorScheme();
 
     return (
         <PanelResizeHandle
-            key={key}
             className={className}
             style={{
                 width: "1px",

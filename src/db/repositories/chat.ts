@@ -1,32 +1,63 @@
+import { AllChatProps, MessageProps, ThreadMessageProps } from "../../types/chat";
 import { INDEX_NAMES, STORES } from "../config";
-import { Chat, ChatMessage, MessageQuery, ThreadMessage } from "../types";
+import { MessageQuery } from "../types";
 import { BaseRepository } from "./base";
 
+const ChatIndexMap = {
+    1: INDEX_NAMES.DM_CHATS,
+    2: INDEX_NAMES.GM_CHATS,
+    3: INDEX_NAMES.PM_CHATS,
+};
+
+const MessageIndexMap = {
+    1: INDEX_NAMES.DM_MESSAGES,
+    2: INDEX_NAMES.GM_MESSAGES,
+    3: INDEX_NAMES.PM_MESSAGES,
+};
+
+const MessageCompoundIndexMap = {
+    1: INDEX_NAMES.DM_MESSAGES_COMPOUND,
+    2: INDEX_NAMES.GM_MESSAGES_COMPOUND,
+    3: INDEX_NAMES.PM_MESSAGES_COMPOUND,
+};
+
+const ThreadMessageIndexMap = {
+    1: INDEX_NAMES.DM_THREAD_MESSAGES,
+    2: INDEX_NAMES.GM_THREAD_MESSAGES,
+    3: INDEX_NAMES.PM_THREAD_MESSAGES,
+};
+
+const ThreadMessageCompoundIndexMap = {
+    1: INDEX_NAMES.DM_THREAD_MESSAGES_COMPOUND,
+    2: INDEX_NAMES.GM_THREAD_MESSAGES_COMPOUND,
+    3: INDEX_NAMES.PM_THREAD_MESSAGES_COMPOUND,
+};
+
 // Chat repository for managing chat-related data
-export class ChatRepository extends BaseRepository<Chat> {
-    constructor() {
-        super(STORES.DM_CHATS); // Default to DM chats, can be overridden
+export class ChatRepository extends BaseRepository<AllChatProps> {
+    constructor(storeName: string) {
+        super(storeName);
     }
 
     // Get chat by ID
-    async getChat(chatId: number): Promise<Chat | null> {
+    async getChat(chatId: number): Promise<AllChatProps | null> {
         const result = await this.get(chatId);
         return result.success && result.data ? result.data : null;
     }
 
     // Get all chats
-    async getAllChats(): Promise<Chat[]> {
+    async getAllChats(): Promise<AllChatProps[]> {
         const result = await this.getAll();
         return result.success && result.data ? result.data : [];
     }
 
     // Get latest chat
-    async getLatestChat(): Promise<Chat | null> {
+    async getLatestChat(chatType: number): Promise<AllChatProps | null> {
         try {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
             const store = tx.objectStore(this.storeName);
-            const index = store.index(INDEX_NAMES.DM_CHATS);
+            const index = store.index(ChatIndexMap[chatType as keyof typeof ChatIndexMap]);
             const cursor = await index.openCursor(null, "prev");
             return cursor ? cursor.value : null;
         } catch {
@@ -35,25 +66,25 @@ export class ChatRepository extends BaseRepository<Chat> {
     }
 
     // Update chat
-    async updateChat(chat: Chat): Promise<boolean> {
+    async updateChat(chat: AllChatProps): Promise<boolean> {
         const result = await this.put(chat);
         return result.success;
     }
 }
 
 // Message repository for managing chat messages
-export class MessageRepository extends BaseRepository<ChatMessage> {
+export class MessageRepository extends BaseRepository<MessageProps> {
     constructor(storeName: string) {
         super(storeName);
     }
 
     // Get messages by chat ID
-    async getMessagesByChatId(chatId: number): Promise<ChatMessage[]> {
+    async getMessagesByChatId(chatType: number, chatId: number): Promise<MessageProps[]> {
         try {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
             const store = tx.objectStore(this.storeName);
-            const index = store.index(INDEX_NAMES.DM_MESSAGES);
+            const index = store.index(MessageIndexMap[chatType as keyof typeof MessageIndexMap]);
             const messages = await index.getAll(chatId);
             return messages;
         } catch {
@@ -62,12 +93,14 @@ export class MessageRepository extends BaseRepository<ChatMessage> {
     }
 
     // Get messages with query parameters
-    async getMessages(query: MessageQuery): Promise<ChatMessage[]> {
+    async getMessages(query: MessageQuery): Promise<MessageProps[]> {
         try {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
             const store = tx.objectStore(this.storeName);
-            const index = store.index(INDEX_NAMES.DM_MESSAGES);
+            const index = store.index(
+                MessageIndexMap[query.chatType as keyof typeof MessageIndexMap]
+            );
 
             let messages = await index.getAll(query.chatId);
 
@@ -84,31 +117,37 @@ export class MessageRepository extends BaseRepository<ChatMessage> {
     }
 
     // Add message
-    async addMessage(message: ChatMessage): Promise<boolean> {
+    async addMessage(message: MessageProps): Promise<boolean> {
         const result = await this.put(message);
         return result.success;
     }
 
     // Batch insert messages
-    async batchInsertMessages(messages: ChatMessage[]): Promise<boolean> {
+    async batchInsertMessages(messages: MessageProps[]): Promise<boolean> {
         const result = await this.batchInsert(messages);
         return result.success;
     }
 }
 
 // Thread message repository
-export class ThreadMessageRepository extends BaseRepository<ThreadMessage> {
+export class ThreadMessageRepository extends BaseRepository<ThreadMessageProps> {
     constructor(storeName: string) {
         super(storeName);
     }
 
     // Get thread messages by chat ID and thread ID
-    async getThreadMessages(chatId: number, threadId: number): Promise<ThreadMessage[]> {
+    async getThreadMessages(
+        chatType: number,
+        chatId: number,
+        threadId: number
+    ): Promise<ThreadMessageProps[]> {
         try {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
             const store = tx.objectStore(this.storeName);
-            const index = store.index(INDEX_NAMES.DM_THREAD_MESSAGES_COMPOUND);
+            const index = store.index(
+                ThreadMessageIndexMap[chatType as keyof typeof ThreadMessageIndexMap]
+            );
             const messages = await index.getAll([chatId, threadId]);
             return messages;
         } catch {
@@ -117,13 +156,13 @@ export class ThreadMessageRepository extends BaseRepository<ThreadMessage> {
     }
 
     // Add thread message
-    async addThreadMessage(message: ThreadMessage): Promise<boolean> {
+    async addThreadMessage(message: ThreadMessageProps): Promise<boolean> {
         const result = await this.put(message);
         return result.success;
     }
 
     // Batch insert thread messages
-    async batchInsertThreadMessages(messages: ThreadMessage[]): Promise<boolean> {
+    async batchInsertThreadMessages(messages: ThreadMessageProps[]): Promise<boolean> {
         const result = await this.batchInsert(messages);
         return result.success;
     }
@@ -132,17 +171,17 @@ export class ThreadMessageRepository extends BaseRepository<ThreadMessage> {
 // Factory for creating chat repositories
 export class ChatRepositoryFactory {
     static createDMChatRepository(): ChatRepository {
-        return new ChatRepository();
+        return new ChatRepository(STORES.DM_CHATS);
     }
 
     static createGMChatRepository(): ChatRepository {
-        const repo = new ChatRepository();
+        const repo = new ChatRepository(STORES.GM_CHATS);
         (repo as any).storeName = STORES.GM_CHATS;
         return repo;
     }
 
     static createPMChatRepository(): ChatRepository {
-        const repo = new ChatRepository();
+        const repo = new ChatRepository(STORES.PM_CHATS);
         (repo as any).storeName = STORES.PM_CHATS;
         return repo;
     }

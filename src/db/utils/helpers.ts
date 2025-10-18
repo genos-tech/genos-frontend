@@ -1,5 +1,3 @@
-import { ChatMessage, Note, ThreadMessage } from "../types";
-
 // Helper utility functions
 export class HelperUtils {
     // Generate unique message ID with chat ID

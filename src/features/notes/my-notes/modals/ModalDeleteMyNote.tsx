@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
-import { STORES } from "../../../../db/conf";
 import { NoteService } from "../../../../db/services/note.service";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteMetaProps, MyNoteProps } from "../../../../types/notes";

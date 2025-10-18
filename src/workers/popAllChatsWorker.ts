@@ -1,19 +1,11 @@
-import { STORES } from "../db/conf";
-import { messageIdWithChatId } from "../db/crud";
+import { ChatService } from "../db/services";
 import { AllChatProps } from "../types/chat";
 
 self.onmessage = async (event) => {
-    const dmChats: AllChatProps[] = await messageIdWithChatId({
-        storeName: STORES.DM_CHATS,
-    });
-
-    const gmChats: AllChatProps[] = await messageIdWithChatId({
-        storeName: STORES.GM_CHATS,
-    });
-
-    const pmChats: AllChatProps[] = await messageIdWithChatId({
-        storeName: STORES.PM_CHATS,
-    });
+    const chatService = new ChatService();
+    const dmChats: AllChatProps[] = await chatService.getDMChats();
+    const gmChats: AllChatProps[] = await chatService.getGMChats();
+    const pmChats: AllChatProps[] = await chatService.getPMChats();
 
     // Sort messages by TSLastMessage in desc
     const sortedAllChats = [...dmChats, ...gmChats, ...pmChats].sort((a, b) => {

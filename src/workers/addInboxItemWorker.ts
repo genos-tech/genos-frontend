@@ -1,4 +1,3 @@
-import { STORES } from "../db/conf";
 import { InboxRepository } from "../db/repositories";
 import { InboxItemProps } from "../types/common";
 

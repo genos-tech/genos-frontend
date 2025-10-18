@@ -1,5 +1,4 @@
-import { STORES } from "../db/conf";
-import { clearStore, miniBatchInsert } from "../db/crud";
+import { ActivityService } from "../db/services";
 import { loadActivityHistory } from "../features/chat/services/loadActivityHistory";
 import { UserProps } from "../types/admin";
 import { ActivityMessageProps } from "../types/chat";
@@ -10,7 +9,8 @@ self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;
     const accessToken: string = event.data.accessToken;
 
-    await clearStore(STORES.ACTIVITY_MESSAGES);
+    const activityService = new ActivityService();
+    await activityService.clearActivityMessages();
 
     // Load data from backend
     const activityHistory: ActivityMessageProps[] | undefined = await loadActivityHistory(
@@ -21,10 +21,7 @@ self.onmessage = async (event) => {
     if (activityHistory) {
         for (let i = 0; i < activityHistory.length; i += BATCH_SIZE) {
             const miniBatch: ActivityMessageProps[] = activityHistory.slice(i, i + BATCH_SIZE);
-            await miniBatchInsert({
-                storeName: STORES.ACTIVITY_MESSAGES,
-                miniBatch: miniBatch,
-            });
+            await activityService.batchInsertActivityMessages(miniBatch);
         }
 
         // Send finish a message

@@ -1,5 +1,5 @@
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
 import { NoteRepository, NoteRepositoryFactory } from "../repositories";
-import { Note, NoteQuery } from "../types";
 
 // Note service for business logic related to notes
 export class NoteService {
@@ -14,72 +14,99 @@ export class NoteService {
     }
 
     // Get personal note by ID
-    async getPersonalNote(noteId: number): Promise<Note | null> {
-        return this.personalNoteRepo.getNote(noteId);
+    async getPersonalNote(noteId: number): Promise<MyNoteProps | null> {
+        return this.personalNoteRepo.getMyNote(noteId);
     }
 
     // Get task note by ID
-    async getTaskNote(noteId: number): Promise<Note | null> {
-        return this.taskNoteRepo.getNote(noteId);
+    async getTaskNote(noteId: number): Promise<TaskNoteProps | null> {
+        return this.taskNoteRepo.getTaskNote(noteId);
     }
 
     // Get chat note by ID
-    async getChatNote(noteId: number): Promise<Note | null> {
-        return this.chatNoteRepo.getNote(noteId);
+    async getChatNote(noteId: number): Promise<ChatNoteProps | null> {
+        return this.chatNoteRepo.getChatNote(noteId);
     }
 
     // Get all personal notes
-    async getAllPersonalNotes(): Promise<Note[]> {
+    async getAllPersonalNotes(): Promise<MyNoteProps[]> {
         return this.personalNoteRepo.getAllNotes();
     }
 
     // Get all task notes
-    async getAllTaskNotes(): Promise<Note[]> {
+    async getAllTaskNotes(): Promise<any[]> {
         return this.taskNoteRepo.getAllNotes();
     }
 
     // Get all chat notes
-    async getAllChatNotes(): Promise<Note[]> {
+    async getAllChatNotes(): Promise<any[]> {
         return this.chatNoteRepo.getAllNotes();
     }
 
     // Get personal notes by user
-    async getPersonalNotesByUser(userId: string): Promise<Note[]> {
-        return this.personalNoteRepo.getNotes({ type: "personal", userId });
+    async getPersonalNotesByUser(userId: string): Promise<MyNoteProps[]> {
+        return this.personalNoteRepo.getNotes({ noteType: 1, userId });
     }
 
     // Get task notes by user
-    async getTaskNotesByUser(userId: string): Promise<Note[]> {
-        return this.taskNoteRepo.getNotes({ type: "task", userId });
+    async getTaskNotesByUser(userId: string): Promise<TaskNoteProps[]> {
+        const notes = await this.taskNoteRepo.getNotes({ noteType: 2, userId });
+        return notes as TaskNoteProps[];
     }
 
     // Get chat notes by user
-    async getChatNotesByUser(userId: string): Promise<Note[]> {
-        return this.chatNoteRepo.getNotes({ type: "chat", userId });
+    async getChatNotesByUser(userId: string): Promise<ChatNoteProps[]> {
+        const notes = await this.chatNoteRepo.getNotes({ noteType: 3, userId });
+        return notes as ChatNoteProps[];
     }
 
     // Get task notes by task ID
-    async getTaskNotesByTaskId(taskId: number): Promise<Note[]> {
-        return this.taskNoteRepo.getNotes({ type: "task", userId: "", relatedId: taskId });
+    async getTaskNotesByTaskId(taskId: number): Promise<TaskNoteProps[]> {
+        const notes = await this.taskNoteRepo.getNotes({
+            noteType: 2,
+            userId: "",
+            relatedId: taskId,
+        });
+        return notes as TaskNoteProps[];
     }
 
     // Get chat notes by chat ID
-    async getChatNotesByChatId(chatId: number): Promise<Note[]> {
-        return this.chatNoteRepo.getNotes({ type: "chat", userId: "", relatedId: chatId });
+    async getChatNotesByChatId(chatId: number): Promise<ChatNoteProps[]> {
+        const notes = await this.chatNoteRepo.getNotes({
+            noteType: 3,
+            userId: "",
+            relatedId: chatId,
+        });
+        return notes as ChatNoteProps[];
+    }
+
+    // Batch insert personal notes
+    async batchInsertPersonalNotes(notes: MyNoteProps[]): Promise<boolean> {
+        return this.personalNoteRepo.batchInsertNotes(notes);
+    }
+
+    // Batch insert task notes
+    async batchInsertTaskNotes(notes: TaskNoteProps[]): Promise<boolean> {
+        return this.taskNoteRepo.batchInsertNotes(notes);
+    }
+
+    // Batch insert chat notes
+    async batchInsertChatNotes(notes: ChatNoteProps[]): Promise<boolean> {
+        return this.chatNoteRepo.batchInsertNotes(notes);
     }
 
     // Add or update personal note
-    async savePersonalNote(note: Note): Promise<boolean> {
+    async savePersonalNote(note: MyNoteProps): Promise<boolean> {
         return this.personalNoteRepo.saveNote(note);
     }
 
     // Add or update task note
-    async saveTaskNote(note: Note): Promise<boolean> {
+    async saveTaskNote(note: TaskNoteProps): Promise<boolean> {
         return this.taskNoteRepo.saveNote(note);
     }
 
     // Add or update chat note
-    async saveChatNote(note: Note): Promise<boolean> {
+    async saveChatNote(note: ChatNoteProps): Promise<boolean> {
         return this.chatNoteRepo.saveNote(note);
     }
 
@@ -117,8 +144,8 @@ export class NoteService {
     async searchNotesByContent(
         searchTerm: string,
         type?: "personal" | "task" | "chat"
-    ): Promise<Note[]> {
-        const allNotes: Note[] = [];
+    ): Promise<any[]> {
+        const allNotes: any[] = [];
 
         if (!type || type === "personal") {
             allNotes.push(...(await this.getAllPersonalNotes()));
@@ -142,8 +169,8 @@ export class NoteService {
         startDate: number,
         endDate: number,
         type?: "personal" | "task" | "chat"
-    ): Promise<Note[]> {
-        const allNotes: Note[] = [];
+    ): Promise<any[]> {
+        const allNotes: any[] = [];
 
         if (!type || type === "personal") {
             allNotes.push(...(await this.getAllPersonalNotes()));
@@ -159,13 +186,13 @@ export class NoteService {
     }
 
     // Get all notes for a user
-    async getAllNotesForUser(userId: string): Promise<Note[]> {
+    async getAllNotesForUser(userId: string): Promise<any[]> {
         const personalNotes = await this.getPersonalNotesByUser(userId);
         const taskNotes = await this.getTaskNotesByUser(userId);
         const chatNotes = await this.getChatNotesByUser(userId);
 
         return [...personalNotes, ...taskNotes, ...chatNotes].sort(
-            (a, b) => b.createdAt - a.createdAt
+            (a, b) => new Date(b.tsCreated).getTime() - new Date(a.tsCreated).getTime()
         );
     }
 }

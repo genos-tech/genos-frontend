@@ -1,5 +1,5 @@
+import { UserProps } from "../../types/admin";
 import { UserRepository } from "../repositories";
-import { User } from "../types";
 
 // User service for business logic related to users
 export class UserService {
@@ -10,22 +10,22 @@ export class UserService {
     }
 
     // Get user by ID
-    async getUser(userId: string): Promise<User | null> {
+    async getUser(userId: string): Promise<UserProps | null> {
         return this.userRepo.getUser(userId);
     }
 
     // Get all users
-    async getAllUsers(): Promise<User[]> {
+    async getAllUsers(): Promise<UserProps[]> {
         return this.userRepo.getAllUsers();
     }
 
     // Get team members by team ID
-    async getTeamMembers(teamId: string): Promise<User[]> {
+    async getTeamMembers(teamId: string): Promise<UserProps[]> {
         return this.userRepo.getTeamMembers(teamId);
     }
 
     // Add or update user
-    async saveUser(user: User): Promise<boolean> {
+    async saveUser(user: UserProps): Promise<boolean> {
         return this.userRepo.saveUser(user);
     }
 
@@ -40,13 +40,13 @@ export class UserService {
     }
 
     // Get user by email (if email is stored)
-    async getUserByEmail(email: string): Promise<User | null> {
+    async getUserByEmail(email: string): Promise<UserProps | null> {
         const users = await this.getAllUsers();
         return users.find((user) => user.userEmail === email) || null;
     }
 
     // Search users by name
-    async searchUsersByName(searchTerm: string): Promise<User[]> {
+    async searchUsersByName(searchTerm: string): Promise<UserProps[]> {
         const users = await this.getAllUsers();
         return users.filter((user) =>
             user.userName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -54,8 +54,8 @@ export class UserService {
     }
 
     // Get users by multiple IDs
-    async getUsersByIds(userIds: string[]): Promise<User[]> {
+    async getUsersByIds(userIds: string[]): Promise<UserProps[]> {
         const users = await Promise.all(userIds.map((id) => this.getUser(id)));
-        return users.filter((user) => user !== null) as User[];
+        return users.filter((user) => user !== null) as UserProps[];
     }
 }

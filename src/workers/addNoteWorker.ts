@@ -1,9 +1,9 @@
-import { STORES } from "../db/conf";
-import { NoteRepository, NoteRepositoryFactory } from "../db/repositories";
+import { NoteRepositoryFactory } from "../db/repositories";
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../types/notes";
 
 self.onmessage = async (event) => {
     const noteType: number = event.data.noteType;
-    const note: any = event.data.note;
+    const note: MyNoteProps | TaskNoteProps | ChatNoteProps = event.data.note;
 
     if (noteType === 1) {
         const personalNoteRepo = NoteRepositoryFactory.createPersonalNoteRepository();

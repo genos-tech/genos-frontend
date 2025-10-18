@@ -1,10 +1,11 @@
+import { AllChatProps, MessageProps, ThreadMessageProps } from "../../types/chat";
 import {
     ChatRepository,
     ChatRepositoryFactory,
     MessageRepository,
     ThreadMessageRepository,
 } from "../repositories";
-import { Chat, ChatMessage, MessageQuery, ThreadMessage } from "../types";
+import { MessageQuery } from "../types";
 
 // Chat service for business logic related to chats
 export class ChatService {
@@ -31,137 +32,137 @@ export class ChatService {
     }
 
     // Get all DM chats
-    async getDMChats(): Promise<Chat[]> {
+    async getDMChats(): Promise<AllChatProps[]> {
         return this.dmChatRepo.getAllChats();
     }
 
     // Get all GM chats
-    async getGMChats(): Promise<Chat[]> {
+    async getGMChats(): Promise<AllChatProps[]> {
         return this.gmChatRepo.getAllChats();
     }
 
     // Get all PM chats
-    async getPMChats(): Promise<Chat[]> {
+    async getPMChats(): Promise<AllChatProps[]> {
         return this.pmChatRepo.getAllChats();
     }
 
     // Get DM chat by ID
-    async getDMChat(chatId: number): Promise<Chat | null> {
+    async getDMChat(chatId: number): Promise<AllChatProps | null> {
         return this.dmChatRepo.getChat(chatId);
     }
 
     // Get GM chat by ID
-    async getGMChat(chatId: number): Promise<Chat | null> {
+    async getGMChat(chatId: number): Promise<AllChatProps | null> {
         return this.gmChatRepo.getChat(chatId);
     }
 
     // Get PM chat by ID
-    async getPMChat(chatId: number): Promise<Chat | null> {
+    async getPMChat(chatId: number): Promise<AllChatProps | null> {
         return this.pmChatRepo.getChat(chatId);
     }
 
     // Get latest DM chat
-    async getLatestDMChat(): Promise<Chat | null> {
-        return this.dmChatRepo.getLatestChat();
+    async getLatestDMChat(): Promise<AllChatProps | null> {
+        return this.dmChatRepo.getLatestChat(1);
     }
 
     // Get latest GM chat
-    async getLatestGMChat(): Promise<Chat | null> {
-        return this.gmChatRepo.getLatestChat();
+    async getLatestGMChat(): Promise<AllChatProps | null> {
+        return this.gmChatRepo.getLatestChat(2);
     }
 
     // Get latest PM chat
-    async getLatestPMChat(): Promise<Chat | null> {
-        return this.pmChatRepo.getLatestChat();
+    async getLatestPMChat(): Promise<AllChatProps | null> {
+        return this.pmChatRepo.getLatestChat(3);
     }
 
     // Get DM messages
-    async getDMMessages(query: MessageQuery): Promise<ChatMessage[]> {
+    async getDMMessages(query: MessageQuery): Promise<MessageProps[]> {
         return this.dmMessageRepo.getMessages(query);
     }
 
     // Get GM messages
-    async getGMMessages(query: MessageQuery): Promise<ChatMessage[]> {
+    async getGMMessages(query: MessageQuery): Promise<MessageProps[]> {
         return this.gmMessageRepo.getMessages(query);
     }
 
     // Get PM messages
-    async getPMMessages(query: MessageQuery): Promise<ChatMessage[]> {
+    async getPMMessages(query: MessageQuery): Promise<MessageProps[]> {
         return this.pmMessageRepo.getMessages(query);
     }
 
     // Get DM thread messages
-    async getDMThreadMessages(chatId: number, threadId: number): Promise<ThreadMessage[]> {
-        return this.dmThreadRepo.getThreadMessages(chatId, threadId);
+    async getDMThreadMessages(chatId: number, threadId: number): Promise<ThreadMessageProps[]> {
+        return this.dmThreadRepo.getThreadMessages(1, chatId, threadId);
     }
 
     // Get GM thread messages
-    async getGMThreadMessages(chatId: number, threadId: number): Promise<ThreadMessage[]> {
-        return this.gmThreadRepo.getThreadMessages(chatId, threadId);
+    async getGMThreadMessages(chatId: number, threadId: number): Promise<ThreadMessageProps[]> {
+        return this.gmThreadRepo.getThreadMessages(2, chatId, threadId);
     }
 
     // Get PM thread messages
-    async getPMThreadMessages(chatId: number, threadId: number): Promise<ThreadMessage[]> {
-        return this.pmThreadRepo.getThreadMessages(chatId, threadId);
+    async getPMThreadMessages(chatId: number, threadId: number): Promise<ThreadMessageProps[]> {
+        return this.pmThreadRepo.getThreadMessages(3, chatId, threadId);
     }
 
     // Add DM message
-    async addDMMessage(message: ChatMessage): Promise<boolean> {
+    async addDMMessage(message: MessageProps): Promise<boolean> {
         return this.dmMessageRepo.addMessage(message);
     }
 
     // Add GM message
-    async addGMMessage(message: ChatMessage): Promise<boolean> {
+    async addGMMessage(message: MessageProps): Promise<boolean> {
         return this.gmMessageRepo.addMessage(message);
     }
 
     // Add PM message
-    async addPMMessage(message: ChatMessage): Promise<boolean> {
+    async addPMMessage(message: MessageProps): Promise<boolean> {
         return this.pmMessageRepo.addMessage(message);
     }
 
     // Add DM thread message
-    async addDMThreadMessage(message: ThreadMessage): Promise<boolean> {
+    async addDMThreadMessage(message: ThreadMessageProps): Promise<boolean> {
         return this.dmThreadRepo.addThreadMessage(message);
     }
 
     // Add GM thread message
-    async addGMThreadMessage(message: ThreadMessage): Promise<boolean> {
+    async addGMThreadMessage(message: ThreadMessageProps): Promise<boolean> {
         return this.gmThreadRepo.addThreadMessage(message);
     }
 
     // Add PM thread message
-    async addPMThreadMessage(message: ThreadMessage): Promise<boolean> {
+    async addPMThreadMessage(message: ThreadMessageProps): Promise<boolean> {
         return this.pmThreadRepo.addThreadMessage(message);
     }
 
     // Batch insert DM messages
-    async batchInsertDMMessages(messages: ChatMessage[]): Promise<boolean> {
+    async batchInsertDMMessages(messages: MessageProps[]): Promise<boolean> {
         return this.dmMessageRepo.batchInsertMessages(messages);
     }
 
     // Batch insert GM messages
-    async batchInsertGMMessages(messages: ChatMessage[]): Promise<boolean> {
+    async batchInsertGMMessages(messages: MessageProps[]): Promise<boolean> {
         return this.gmMessageRepo.batchInsertMessages(messages);
     }
 
     // Batch insert PM messages
-    async batchInsertPMMessages(messages: ChatMessage[]): Promise<boolean> {
+    async batchInsertPMMessages(messages: MessageProps[]): Promise<boolean> {
         return this.pmMessageRepo.batchInsertMessages(messages);
     }
 
     // Batch insert DM thread messages
-    async batchInsertDMThreadMessages(messages: ThreadMessage[]): Promise<boolean> {
+    async batchInsertDMThreadMessages(messages: ThreadMessageProps[]): Promise<boolean> {
         return this.dmThreadRepo.batchInsertThreadMessages(messages);
     }
 
     // Batch insert GM thread messages
-    async batchInsertGMThreadMessages(messages: ThreadMessage[]): Promise<boolean> {
+    async batchInsertGMThreadMessages(messages: ThreadMessageProps[]): Promise<boolean> {
         return this.gmThreadRepo.batchInsertThreadMessages(messages);
     }
 
     // Batch insert PM thread messages
-    async batchInsertPMThreadMessages(messages: ThreadMessage[]): Promise<boolean> {
+    async batchInsertPMThreadMessages(messages: ThreadMessageProps[]): Promise<boolean> {
         return this.pmThreadRepo.batchInsertThreadMessages(messages);
     }
 

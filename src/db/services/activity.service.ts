@@ -1,9 +1,9 @@
+import { ActivityMessageProps } from "../../types/chat";
 import { STORES } from "../config";
 import { BaseRepository } from "../repositories";
-import { ActivityMessage } from "../types";
 
 // Activity message repository
-class ActivityMessageRepository extends BaseRepository<ActivityMessage> {
+class ActivityMessageRepository extends BaseRepository<ActivityMessageProps> {
     constructor() {
         super(STORES.ACTIVITY_MESSAGES);
     }
@@ -18,25 +18,25 @@ export class ActivityService {
     }
 
     // Get all activity messages
-    async getAllActivityMessages(): Promise<ActivityMessage[]> {
+    async getAllActivityMessages(): Promise<ActivityMessageProps[]> {
         const result = await this.activityRepo.getAll();
         return result.success && result.data ? result.data : [];
     }
 
     // Get activity message by ID
-    async getActivityMessage(activityId: string): Promise<ActivityMessage | null> {
+    async getActivityMessage(activityId: string): Promise<ActivityMessageProps | null> {
         const result = await this.activityRepo.get(activityId);
         return result.success && result.data ? result.data : null;
     }
 
     // Add activity message
-    async addActivityMessage(activityMessage: ActivityMessage): Promise<boolean> {
+    async addActivityMessage(activityMessage: ActivityMessageProps): Promise<boolean> {
         const result = await this.activityRepo.put(activityMessage);
         return result.success;
     }
 
     // Batch insert activity messages
-    async batchInsertActivityMessages(messages: ActivityMessage[]): Promise<boolean> {
+    async batchInsertActivityMessages(messages: ActivityMessageProps[]): Promise<boolean> {
         const result = await this.activityRepo.batchInsert(messages);
         return result.success;
     }

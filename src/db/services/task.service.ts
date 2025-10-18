@@ -1,5 +1,7 @@
+import { TaskStatusProps, TaskTableProps } from "../../types/tasks";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { TaskRepository } from "../repositories";
-import { Task, TaskQuery } from "../types";
+import { TaskQuery } from "../types";
 
 // Task service for business logic related to tasks
 export class TaskService {
@@ -10,37 +12,40 @@ export class TaskService {
     }
 
     // Get task by ID
-    async getTask(taskId: number): Promise<Task | null> {
+    async getTask(taskId: number): Promise<TaskTableProps | null> {
         return this.taskRepo.getTask(taskId);
     }
 
     // Get all tasks
-    async getAllTasks(): Promise<Task[]> {
+    async getAllTasks(): Promise<TaskTableProps[]> {
         return this.taskRepo.getAllTasks();
     }
 
     // Get tasks by project ID
-    async getTasksByProject(projectId: number): Promise<Task[]> {
+    async getTasksByProject(projectId: number): Promise<TaskTableProps[]> {
         return this.taskRepo.getTasksByProject(projectId);
     }
 
     // Get tasks by status
-    async getTasksByStatus(projectId: number, status: string): Promise<Task[]> {
+    async getTasksByStatus(projectId: number, status: string): Promise<TaskTableProps[]> {
         return this.taskRepo.getTasksByStatus(projectId, status);
     }
 
     // Get tasks by multiple statuses
-    async getTasksByMultipleStatus(projectId: number, statuses: string[]): Promise<Task[]> {
+    async getTasksByMultipleStatus(
+        projectId: number,
+        statuses: string[]
+    ): Promise<TaskTableProps[]> {
         return this.taskRepo.getTasksByMultipleStatus(projectId, statuses);
     }
 
     // Get tasks with query parameters
-    async getTasks(query: TaskQuery): Promise<Task[]> {
+    async getTasks(query: TaskQuery): Promise<TaskTableProps[]> {
         return this.taskRepo.getTasks(query);
     }
 
     // Add or update task
-    async saveTask(task: Task): Promise<boolean> {
+    async saveTask(task: TaskTableProps): Promise<boolean> {
         return this.taskRepo.saveTask(task);
     }
 
@@ -55,24 +60,33 @@ export class TaskService {
     }
 
     // Get tasks assigned to a user
-    async getTasksByAssignee(assigneeId: string): Promise<Task[]> {
+    async getTasksByAssignee(assigneeId: string): Promise<TaskTableProps[]> {
         const allTasks = await this.getAllTasks();
         return allTasks.filter((task) => task.assigneeId === assigneeId);
     }
 
     // Get tasks by assignee and project
-    async getTasksByAssigneeAndProject(assigneeId: string, projectId: number): Promise<Task[]> {
+    async getTasksByAssigneeAndProject(
+        assigneeId: string,
+        projectId: number
+    ): Promise<TaskTableProps[]> {
         const projectTasks = await this.getTasksByProject(projectId);
         return projectTasks.filter((task) => task.assigneeId === assigneeId);
     }
 
+    // Batch insert tasks
+    async batchInsertTasks(tasks: TaskTableProps[]): Promise<boolean> {
+        console.log("batchInsertTasks", tasks);
+        return this.taskRepo.batchInsertTasks(tasks);
+    }
+
     // Update task status
-    async updateTaskStatus(taskId: number, status: string): Promise<boolean> {
+    async updateTaskStatus(taskId: number, status: TaskStatusProps): Promise<boolean> {
         const task = await this.getTask(taskId);
         if (!task) return false;
 
-        task.status = status;
-        task.updatedAt = Date.now();
+        task.status = status.status;
+        task.updatedAt = getLocalCurrentTimestamp();
         return this.saveTask(task);
     }
 
@@ -82,7 +96,7 @@ export class TaskService {
         if (!task) return false;
 
         task.assigneeId = assigneeId;
-        task.updatedAt = Date.now();
+        task.updatedAt = getLocalCurrentTimestamp();
         return this.saveTask(task);
     }
 
@@ -98,7 +112,7 @@ export class TaskService {
         const byAssignee: Record<string, number> = {};
 
         tasks.forEach((task) => {
-            byStatus[task.status] = (byStatus[task.status] || 0) + 1;
+            byStatus[task.status || ""] = (byStatus[task.status || ""] || 0) + 1;
             if (task.assigneeId) {
                 byAssignee[task.assigneeId] = (byAssignee[task.assigneeId] || 0) + 1;
             }

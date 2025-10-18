@@ -1,9 +1,9 @@
+import { FlaggedMessageProps } from "../../types/chat";
 import { STORES } from "../config";
 import { BaseRepository } from "../repositories";
-import { FlaggedMessage } from "../types";
 
 // Flagged message repository
-class FlaggedMessageRepository extends BaseRepository<FlaggedMessage> {
+class FlaggedMessageRepository extends BaseRepository<FlaggedMessageProps> {
     constructor() {
         super(STORES.FLAGGED_MESSAGES);
     }
@@ -18,25 +18,25 @@ export class FlaggedService {
     }
 
     // Get all flagged messages
-    async getAllFlaggedMessages(): Promise<FlaggedMessage[]> {
+    async getAllFlaggedMessages(): Promise<FlaggedMessageProps[]> {
         const result = await this.flaggedRepo.getAll();
         return result.success && result.data ? result.data : [];
     }
 
     // Get flagged message by ID
-    async getFlaggedMessage(flaggedMessageId: string): Promise<FlaggedMessage | null> {
+    async getFlaggedMessage(flaggedMessageId: string): Promise<FlaggedMessageProps | null> {
         const result = await this.flaggedRepo.get(flaggedMessageId);
         return result.success && result.data ? result.data : null;
     }
 
     // Add flagged message
-    async addFlaggedMessage(flaggedMessage: FlaggedMessage): Promise<boolean> {
+    async addFlaggedMessage(flaggedMessage: FlaggedMessageProps): Promise<boolean> {
         const result = await this.flaggedRepo.put(flaggedMessage);
         return result.success;
     }
 
     // Batch insert flagged messages
-    async batchInsertFlaggedMessages(messages: FlaggedMessage[]): Promise<boolean> {
+    async batchInsertFlaggedMessages(messages: FlaggedMessageProps[]): Promise<boolean> {
         const result = await this.flaggedRepo.batchInsert(messages);
         return result.success;
     }

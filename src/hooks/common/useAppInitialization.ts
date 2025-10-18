@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { useAuth } from "../../context/AuthContext";
-import { initDB } from "../../db/schema";
+import { initDB } from "../../db/config/schema";
 import PopTeamUsersWorker from "../../workers/popTeamUsersWorker.ts?worker";
 import { useMyself } from "./useAuth";
 import { useTeamManagement } from "./useTeamManagement";
