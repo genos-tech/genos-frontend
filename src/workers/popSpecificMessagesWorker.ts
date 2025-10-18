@@ -12,10 +12,6 @@ self.onmessage = async (event) => {
     const chatType: number = event.data.chatType;
 
     if (chatId && chatType !== undefined) {
-        console.log("chatType", chatType);
-        console.log("storeNameLookup[chatType]", storeNameLookup[chatType]);
-        console.log("chatId", chatId);
-
         const messageRepository = new MessageRepository(storeNameLookup[chatType]);
         const messages = await messageRepository.getMessagesByChatId(chatType, chatId);
 
