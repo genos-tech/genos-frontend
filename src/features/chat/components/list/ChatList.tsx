@@ -12,12 +12,12 @@ import {
     ThreadProps,
 } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
-import { ChatListItemForActivity } from "../activity/chatListItemForActivity";
-import { ChatListItemForFlagMessages } from "../activity/chatListItemForFlagMessages";
 import {
     useScrollToBottomOnChatPaneChange,
     useScrollToBottomOnNewActivity,
 } from "../../hooks/messageBubbleHooks";
+import { ChatListItemForActivity } from "../activity/chatListItemForActivity";
+import { ChatListItemForFlagMessages } from "../activity/chatListItemForFlagMessages";
 import { ChatListItem } from "./chatListItem";
 
 // Constants

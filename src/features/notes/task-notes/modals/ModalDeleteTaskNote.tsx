@@ -3,7 +3,7 @@ import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { STORES } from "../../../../db/conf";
-import { deleteData } from "../../../../db/crud";
+import { NoteService } from "../../../../db/services/note.service";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
 import { deleteTaskNote } from "../services/deleteTaskNote";
@@ -31,6 +31,8 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const noteService = new NoteService();
+
     const handleDeleteNote = async () => {
         let childExist: boolean;
         const childNotes = taskNoteMeta.filter(
@@ -47,10 +49,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
             // Delete from backend
             await deleteTaskNote(myself, currentTaskNote.noteId, accessToken);
             // Delete from indexedDB
-            await deleteData({
-                storeName: STORES.TASK_NOTES,
-                key: currentTaskNote.noteId,
-            });
+            await noteService.deleteTaskNote(currentTaskNote.noteId);
             // Delete the deleted noteId from the meta object
             setTaskNoteMeta(taskNoteMeta.filter((note) => note.noteId !== currentTaskNote.noteId));
             handleCloseTab(currentTabIndex, currentTaskNote.noteId);

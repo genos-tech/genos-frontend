@@ -3,7 +3,7 @@ import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { STORES } from "../../../../db/conf";
-import { deleteData } from "../../../../db/crud";
+import { NoteService } from "../../../../db/services/note.service";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteMetaProps, MyNoteProps } from "../../../../types/notes";
 import { deleteMyNote } from "../services/deleteMyNote";
@@ -30,6 +30,8 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const noteService = new NoteService();
+
     const handleDeleteNote = async () => {
         let childExist: boolean;
         const childNotes = myNoteMeta.filter((note) => note.parentNoteId === currentMyNote.noteId);
@@ -44,10 +46,7 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
             // Delete from backend
             await deleteMyNote(myself, currentMyNote.noteId, accessToken);
             // Delete from indexedDB
-            await deleteData({
-                storeName: STORES.PERSONAL_NOTES,
-                key: currentMyNote.noteId,
-            });
+            await noteService.deletePersonalNote(currentMyNote.noteId);
             // Delete the deleted noteId from the meta object
             setMyNoteMeta(myNoteMeta.filter((note) => note.noteId !== currentMyNote.noteId));
             handleCloseTab(currentTabIndex, currentMyNote.noteId);

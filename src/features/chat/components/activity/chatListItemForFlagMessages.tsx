@@ -13,7 +13,7 @@ import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { STORES } from "../../../../db/conf";
-import { deleteData } from "../../../../db/crud";
+import { FlaggedService } from "../../../../db/services/flagged.service";
 import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
@@ -187,11 +187,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 )
             );
 
-            // Remove from IndexedDB
-            await deleteData({
-                storeName: STORES.FLAGGED_MESSAGES,
-                key: flaggedMessage.flaggedMessageId,
-            });
+            // Remove from IndexedDB using FlaggedService
+            const flaggedService = new FlaggedService();
+            await flaggedService.deleteFlaggedMessage(flaggedMessage.flaggedMessageId);
 
             // Update messages and chat
             await updateMessagesAndChat();

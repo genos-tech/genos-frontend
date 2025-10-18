@@ -179,4 +179,46 @@ export class ChatService {
     async isKnownPMChat(chatId: number): Promise<boolean> {
         return this.pmChatRepo.exists(chatId);
     }
+
+    // Delete DM message
+    async deleteDMMessage(chatId: number, messageId: number): Promise<boolean> {
+        const key = `${chatId}-${messageId}`;
+        const result = await this.dmMessageRepo.delete(key);
+        return result.success;
+    }
+
+    // Delete GM message
+    async deleteGMMessage(chatId: number, messageId: number): Promise<boolean> {
+        const key = `${chatId}-${messageId}`;
+        const result = await this.gmMessageRepo.delete(key);
+        return result.success;
+    }
+
+    // Delete PM message
+    async deletePMMessage(chatId: number, messageId: number, taskId?: number): Promise<boolean> {
+        const key = taskId ? `${chatId}-${taskId}-${messageId}` : `${chatId}-${messageId}`;
+        const result = await this.pmMessageRepo.delete(key);
+        return result.success;
+    }
+
+    // Delete DM thread message
+    async deleteDMThreadMessage(chatId: number, messageId: number): Promise<boolean> {
+        const key = `${chatId}-${messageId}`;
+        const result = await this.dmThreadRepo.delete(key);
+        return result.success;
+    }
+
+    // Delete GM thread message
+    async deleteGMThreadMessage(chatId: number, messageId: number): Promise<boolean> {
+        const key = `${chatId}-${messageId}`;
+        const result = await this.gmThreadRepo.delete(key);
+        return result.success;
+    }
+
+    // Delete PM thread message
+    async deletePMThreadMessage(chatId: number, messageId: number): Promise<boolean> {
+        const key = `${chatId}-${messageId}`;
+        const result = await this.pmThreadRepo.delete(key);
+        return result.success;
+    }
 }

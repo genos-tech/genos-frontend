@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { STORES } from "../../db/conf";
-import { getData } from "../../db/crud";
+import { NoteService } from "../../db/services/note.service";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
@@ -125,6 +125,8 @@ export const useNoteManagement = (
     myself: UserProps,
     accessToken: string | null
 ): NoteManagementState => {
+    // Initialize NoteService
+    const noteService = new NoteService();
     // Note type and tabs
     const [currentNoteType, setCurrentNoteType] = useState<number>(
         Number(localStorage.getItem("currentNoteType") || "1")
@@ -484,15 +486,23 @@ export const useNoteManagement = (
 
         try {
             if (noteType === 1) {
-                const note = await getData({
-                    storeName: STORES.PERSONAL_NOTES,
-                    key: noteId,
-                });
+                const note = await noteService.getPersonalNote(noteId);
                 if (note) {
-                    if ((note as MyNoteProps).noteType === 1) {
-                        setCurrentMyNote(note);
-                        setSelectedTabIndex(targetTabIndex);
-                    }
+                    // Convert Note type to MyNoteProps by adding missing fields
+                    const myNote: MyNoteProps = {
+                        noteType: 1,
+                        teamId: myself.teamId,
+                        ownerId: myself.userId,
+                        roleId: myself.role ? parseInt(myself.role) || 0 : 0,
+                        noteId: note.noteId,
+                        parentNoteId: null, // Will be updated if needed
+                        title: note.title,
+                        body: [], // Will be loaded separately if needed
+                        tsCreated: new Date(note.createdAt).toISOString(),
+                        tsUpdated: new Date(note.updatedAt).toISOString(),
+                    };
+                    setCurrentMyNote(myNote);
+                    setSelectedTabIndex(targetTabIndex);
                 } else {
                     const note: MyNoteProps = await loadSpecificNote(
                         myself,
@@ -508,15 +518,25 @@ export const useNoteManagement = (
                 }
                 setCurrentNoteType(1);
             } else if (noteType === 2) {
-                const note = await getData({
-                    storeName: STORES.TASK_NOTES,
-                    key: noteId,
-                });
+                const note = await noteService.getTaskNote(noteId);
                 if (note) {
-                    if ((note as TaskNoteProps).noteType === 2) {
-                        setCurrentTaskNote(note);
-                        setSelectedTabIndex(targetTabIndex);
-                    }
+                    // Convert Note type to TaskNoteProps by adding missing fields
+                    const taskNote: TaskNoteProps = {
+                        noteType: 2,
+                        teamId: myself.teamId,
+                        ownerId: myself.userId,
+                        roleId: myself.role ? parseInt(myself.role) || 0 : 0,
+                        noteId: note.noteId,
+                        parentNoteId: null, // Will be updated if needed
+                        projectId: 0, // Will be updated if needed
+                        taskId: note.relatedId || 0,
+                        title: note.title,
+                        body: [], // Will be loaded separately if needed
+                        tsCreated: new Date(note.createdAt).toISOString(),
+                        tsUpdated: new Date(note.updatedAt).toISOString(),
+                    };
+                    setCurrentTaskNote(taskNote);
+                    setSelectedTabIndex(targetTabIndex);
                 } else {
                     const note: TaskNoteProps = await loadSpecificNote(
                         myself,
@@ -532,15 +552,27 @@ export const useNoteManagement = (
                 }
                 setCurrentNoteType(2);
             } else if (noteType === 3) {
-                const note = await getData({
-                    storeName: STORES.CHAT_NOTES,
-                    key: noteId,
-                });
+                const note = await noteService.getChatNote(noteId);
                 if (note) {
-                    if ((note as ChatNoteProps).noteType === 3) {
-                        setCurrentChatNote(note);
-                        setSelectedTabIndex(targetTabIndex);
-                    }
+                    // Convert Note type to ChatNoteProps by adding missing fields
+                    const chatNote: ChatNoteProps = {
+                        noteType: 3,
+                        teamId: myself.teamId,
+                        ownerId: myself.userId,
+                        roleId: myself.role ? parseInt(myself.role) || 0 : 0,
+                        noteId: note.noteId,
+                        parentNoteId: null, // Will be updated if needed
+                        chatType: 0, // Will be updated if needed
+                        chatId: note.relatedId || 0,
+                        isThread: false, // Will be updated if needed
+                        threadId: 0, // Will be updated if needed
+                        title: note.title,
+                        body: [], // Will be loaded separately if needed
+                        tsCreated: new Date(note.createdAt).toISOString(),
+                        tsUpdated: new Date(note.updatedAt).toISOString(),
+                    };
+                    setCurrentChatNote(chatNote);
+                    setSelectedTabIndex(targetTabIndex);
                 } else {
                     const note: ChatNoteProps = await loadSpecificNote(
                         myself,

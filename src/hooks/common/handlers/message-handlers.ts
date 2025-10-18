@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 
 import { STORES } from "../../../db/conf";
-import { deleteData } from "../../../db/crud";
+import { ChatService } from "../../../db/services/chat.service";
 import { addMessage } from "../../../features/chat/services/addMessage";
 import { addThreadMessage } from "../../../features/chat/services/addThreadMessage";
 import { loadSpecificThreadMessages } from "../../../features/chat/services/loadSpecificThreadMessages";
@@ -177,19 +177,20 @@ export const handleRegularMessage = async (
 };
 
 const handleMessageDeletion = async (newMessage: NewMessageProps, CM: ChatManagementState) => {
-    const storeName =
-        newMessage.chatType === 1
-            ? STORES.DM_MESSAGES
-            : newMessage.chatType === 2
-              ? STORES.GM_MESSAGES
-              : STORES.PM_MESSAGES;
+    const chatService = new ChatService();
 
-    const key =
-        newMessage.chatType === 3
-            ? `${newMessage.chatId}-${newMessage.taskId}-${newMessage.messageId}`
-            : `${newMessage.chatId}-${newMessage.messageId}`;
-
-    await deleteData({ storeName, key });
+    // Delete message from indexedDB based on chat type
+    if (newMessage.chatType === 1) {
+        await chatService.deleteDMMessage(newMessage.chatId, newMessage.messageId);
+    } else if (newMessage.chatType === 2) {
+        await chatService.deleteGMMessage(newMessage.chatId, newMessage.messageId);
+    } else if (newMessage.chatType === 3) {
+        await chatService.deletePMMessage(
+            newMessage.chatId,
+            newMessage.messageId,
+            newMessage.taskId || undefined
+        );
+    }
 
     // Update current chat if it matches
     if (

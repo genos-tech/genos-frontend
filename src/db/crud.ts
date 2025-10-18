@@ -136,11 +136,6 @@ export const getAllData = async (storeName: string) => {
     return [];
 };
 
-export const deleteData = async (props: any) => {
-    console.warn("deleteData is deprecated. Use specific service methods instead.");
-    return false;
-};
-
 export const deleteIndexedDB = async () => {
     return DatabaseUtils.deleteDatabase();
 };
