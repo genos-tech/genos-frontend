@@ -316,7 +316,7 @@ export const TaskHomeHeader = ({
             </Box>
 
             <Box>
-                <Tooltip title="Create New Task">
+                <Tooltip size="sm" title="Create New Task">
                     <IconButton
                         component="p"
                         size="sm"
@@ -332,7 +332,7 @@ export const TaskHomeHeader = ({
                     </IconButton>
                 </Tooltip>
                 <Dropdown>
-                    <Tooltip title="More Options" placement="left-start">
+                    <Tooltip size="sm" title="More Options" placement="left">
                         <MenuButton
                             slots={{ root: IconButton }}
                             slotProps={{
@@ -364,7 +364,7 @@ export const TaskHomeHeader = ({
                     </Menu>
                 </Dropdown>
                 {(isTaskPreviewVisible === true || isCreatingTask === true) && (
-                    <Tooltip title="Close">
+                    <Tooltip size="sm" title="Close">
                         <IconButton
                             color="neutral"
                             size="sm"

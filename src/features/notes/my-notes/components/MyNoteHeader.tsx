@@ -23,7 +23,7 @@ export const MyNoteHeader = ({ currentMyNoteChain, onLoadNote }: MyNoteHeaderPro
 
             {currentMyNoteChain &&
                 currentMyNoteChain.map((node, index) => (
-                    <Tooltip title={node.title} key={`my-note-tooltip-${index}`}>
+                    <Tooltip size="sm" title={node.title} key={`my-note-tooltip-${index}`}>
                         <Typography
                             key={node.noteId}
                             component="button"

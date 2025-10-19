@@ -119,7 +119,11 @@ export const ChatNoteHeader = ({
                     </IconButton>
                     {currentChatNoteChain &&
                         currentChatNoteChain.map((node, index) => (
-                            <Tooltip title={node.title} key={`chat-note-tooltip-${index}`}>
+                            <Tooltip
+                                size="sm"
+                                title={node.title}
+                                key={`chat-note-tooltip-${index}`}
+                            >
                                 <Typography
                                     key={node.noteId}
                                     component="button"
@@ -211,7 +215,7 @@ export const ChatNoteHeader = ({
                 )}
 
                 {isInChatPage && (
-                    <Tooltip title="Open in Notes">
+                    <Tooltip size="sm" title="Open in Notes">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -227,7 +231,7 @@ export const ChatNoteHeader = ({
                 )}
 
                 {isInChatPage === false && (
-                    <Tooltip title="Open Related Chat">
+                    <Tooltip size="sm" title="Open Related Chat">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -253,7 +257,7 @@ export const ChatNoteHeader = ({
 
                 {/* More Options Dropdown */}
                 <Dropdown>
-                    <Tooltip title="More Options" placement="left-start">
+                    <Tooltip size="sm" title="More Options" placement="left">
                         <MenuButton
                             slots={{ root: IconButton }}
                             sx={{ mb: "5px" }}
@@ -283,7 +287,7 @@ export const ChatNoteHeader = ({
                 </Dropdown>
 
                 {isInChatPage === true && (
-                    <Tooltip title="Close Notes">
+                    <Tooltip size="sm" title="Close Notes">
                         <IconButton
                             color="neutral"
                             size="sm"

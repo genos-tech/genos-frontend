@@ -202,7 +202,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                 {/* If the task is visible in the task note, do not show the expand button. */}
                 {isPreviewMode === true && setIsTaskVisibleInNote === undefined && (
-                    <Tooltip title="Expand" placement="top">
+                    <Tooltip size="sm" title="Expand" placement="top">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -219,7 +219,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 {openingService === 2 && taskContents.threadId !== null && (
-                    <Tooltip title="Check Thread" placement="top">
+                    <Tooltip size="sm" title="Check Thread" placement="top">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -250,7 +250,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 <Dropdown>
-                    <Tooltip title="More Options" placement="left-start">
+                    <Tooltip size="sm" title="More Options" placement="left">
                         <MenuButton
                             size="sm"
                             slotProps={{ root: { color: "neutral" } }}
@@ -325,7 +325,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </Menu>
                 </Dropdown>
 
-                <Tooltip title="Close">
+                <Tooltip size="sm" title="Close">
                     <IconButton
                         color="neutral"
                         size="sm"

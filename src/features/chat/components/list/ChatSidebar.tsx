@@ -402,7 +402,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                         {/* For Pinned */}
                         {unReadChatCounts && (unReadChatCounts[4] || 0) > 0 && (
-                            <Tooltip placement="top" sx={{ zIndex: "10020" }} title="Pinned Chats">
+                            <Tooltip
+                                size="sm"
+                                placement="top"
+                                sx={{ zIndex: "10020" }}
+                                title="Pinned Chats"
+                            >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                     badgeContent={unReadChatCounts[4]}
@@ -426,7 +431,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             </Tooltip>
                         )}
                         {!(unReadChatCounts && (unReadChatCounts[4] || 0) > 0) && (
-                            <Tooltip placement="top" sx={{ zIndex: "10020" }} title="Pinned Chats">
+                            <Tooltip
+                                size="sm"
+                                placement="top"
+                                sx={{ zIndex: "10020" }}
+                                title="Pinned Chats"
+                            >
                                 <IconButton
                                     component="p"
                                     size="sm"
@@ -571,7 +581,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     />
 
                     <Dropdown>
-                        <Tooltip title="More Options">
+                        <Tooltip size="sm" title="More Options">
                             <MenuButton
                                 slots={{ root: IconButton }}
                                 slotProps={{

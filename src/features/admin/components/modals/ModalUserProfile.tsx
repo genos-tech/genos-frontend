@@ -211,7 +211,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     type="file"
                                                     onChange={handleSelectedFiles}
                                                 />
-                                                <Tooltip sx={{ zIndex: 9000 }} title="EDIT (TBD)">
+                                                <Tooltip
+                                                    size="sm"
+                                                    sx={{ zIndex: 9000 }}
+                                                    title="EDIT (TBD)"
+                                                >
                                                     <IconButton
                                                         variant="soft"
                                                         onClick={handleButtonClick}

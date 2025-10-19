@@ -18,7 +18,7 @@ export const ColorSchemeToggle = (props: IconButtonProps) => {
         );
     }
     return (
-        <Tooltip placement="right-start" title="Switch Theme">
+        <Tooltip size="sm" placement="right-start" title="Switch Theme">
             <IconButton
                 color="neutral"
                 data-screenshot="toggle-mode"

@@ -171,7 +171,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <Tooltip placement="right-start" title="Switch Team">
+                <Tooltip size="sm" placement="right-start" title="Switch Team">
                     <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
                         <Avatar
                             src={`${media_url}/${currentTeam.teamImgPath}`}

@@ -274,7 +274,10 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
             ))}
 
             {hidden.length > 0 && (
-                <Tooltip title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}>
+                <Tooltip
+                    size="sm"
+                    title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
+                >
                     <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         +{hidden.length} more
                     </Chip>

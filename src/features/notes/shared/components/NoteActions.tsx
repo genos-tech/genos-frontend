@@ -66,7 +66,7 @@ export const NoteActions = ({
     return (
         <Stack direction={"row"}>
             {noteType === 1 && (
-                <Tooltip title="Create a New Note">
+                <Tooltip size="sm" title="Create a New Note">
                     <IconButton
                         color="neutral"
                         size="sm"
@@ -100,7 +100,7 @@ export const NoteActions = ({
                         />
                     </Box>
 
-                    <Tooltip title="Open Task">
+                    <Tooltip size="sm" title="Open Task">
                         <Chip
                             key={`task-note-task-id${currentTask.id}`}
                             color="neutral"
@@ -119,7 +119,7 @@ export const NoteActions = ({
                         </Chip>
                     </Tooltip>
 
-                    <Tooltip title="Open Task">
+                    <Tooltip size="sm" title="Open Task">
                         <Chip
                             key={`task-title-${currentTask.id}`}
                             color="primary"
@@ -162,7 +162,7 @@ export const NoteActions = ({
             )}
 
             <Dropdown>
-                <Tooltip title="More Options" placement="left-start">
+                <Tooltip size="sm" title="More Options" placement="left">
                     <MenuButton
                         slots={{ root: IconButton }}
                         sx={{ mb: "5px" }}
@@ -222,7 +222,7 @@ export const NoteActions = ({
             </Dropdown>
 
             {isInTaskPage && (
-                <Tooltip title="Close">
+                <Tooltip size="sm" title="Close">
                     <IconButton
                         color="neutral"
                         size="sm"

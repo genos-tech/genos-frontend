@@ -261,7 +261,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         }
                     }}
                 >
-                    <Tooltip title="Edit in Modal (TBD)">
+                    <Tooltip size="sm" title="Edit in Modal (TBD)">
                         <IconButton
                             color="neutral"
                             size="sm"

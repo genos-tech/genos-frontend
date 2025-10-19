@@ -90,7 +90,7 @@ export const NoteTabs = ({
                 }}
             >
                 {tabItems.map((tab, index) => (
-                    <Tooltip title={tab.title} key={`tab-tooltip-${index}`}>
+                    <Tooltip size="sm" title={tab.title} key={`tab-tooltip-${index}`}>
                         <Tab
                             key={`tab-${index}`}
                             variant="soft"
