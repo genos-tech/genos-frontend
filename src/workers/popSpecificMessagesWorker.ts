@@ -15,7 +15,12 @@ self.onmessage = async (event) => {
         const messageRepository = new MessageRepository(storeNameLookup[chatType]);
         const messages = await messageRepository.getMessagesByChatId(chatType, chatId);
 
-        self.postMessage(messages);
+        // Sort messages by tsSent in ascending order
+        const sortedMessages = [...messages].sort((a, b) => {
+            return Number(a.messageId) - Number(b.messageId);
+        });
+
+        self.postMessage(sortedMessages);
     } else {
         console.error("Invalid parameters for popSpecificMessagesWorker:", {
             chatId: chatId,

@@ -83,7 +83,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
 
             {/* Unread Indicator */}
             {chat.latestMessage && chat.lastReadMessageId < chat.latestMessage?.messageId && (
-                <CircleIcon color="primary" sx={{ mr: 1, fontSize: 12, mt: 1 }} />
+                <CircleIcon color="primary" sx={{ mr: 1, fontSize: 12, mt: 0.5 }} />
             )}
         </Stack>
     );

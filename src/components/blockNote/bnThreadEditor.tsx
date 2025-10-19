@@ -189,7 +189,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const sendingThreadMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
             // Set input text
-            const content: any[] | any = editor.document.slice(-2, -1)[0].content;
+            const content: any[] | any = editor.document;
             let contentText: string = "Something wrong....";
             if (content && content.length > 0) {
                 contentText = getFirstLine(content[0]);
