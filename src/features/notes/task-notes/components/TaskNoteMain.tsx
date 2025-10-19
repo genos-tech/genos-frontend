@@ -14,6 +14,7 @@ import { NoteTabs } from "../../shared/components/NoteTabs";
 import { useNoteAutoSave } from "../../shared/hooks/useNoteAutoSave";
 import { useTaskPreview } from "../../shared/hooks/useTaskPreview";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
+import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
 import { TaskNoteHeader } from "./TaskNoteHeader";
 
 type TaskNoteMainProps = {
@@ -57,6 +58,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>(
         NM.currentTaskNote?.title || ""
     );
+    const [openSearchBox, setOpenSearchBox] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
     const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
@@ -118,10 +120,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     }, [NM]);
 
-    const handleOpenInNotes = useCallback(() => {
-        setOpeningService(3);
-    }, [setOpeningService]);
-
     const handleOpenTask = useCallback(() => {
         NM.setIsTaskVisibleInNote(true);
     }, [NM]);
@@ -175,6 +173,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         : item
                 )
             );
+
+            NM.setCurrentTaskNote({
+                ...NM.currentTaskNote,
+                title: currentTaskNoteTitle,
+            });
         }
     }, [noteBodySaved, NM, currentTaskNoteTitle]);
 
@@ -228,12 +231,34 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             mb: "5px",
                         }}
                     >
-                        <TaskNoteHeader
-                            currentTaskNoteChain={NM.currentTaskNoteChain || null}
-                            onLoadNote={NM.loadNote}
-                        />
+                        {isInTaskPage === true && (
+                            <Box
+                                sx={{
+                                    ml: "5px",
+                                    mb: "10px",
+                                    width: "40%",
+                                }}
+                            >
+                                <ACTaskNotes
+                                    myself={myself}
+                                    projectId={NM.currentTaskNote.projectId}
+                                    taskId={NM.currentTaskNote.taskId}
+                                    openSearchBox={openSearchBox}
+                                    setCurrentTaskNote={NM.setCurrentTaskNote}
+                                    setOpenSearchBox={setOpenSearchBox}
+                                />
+                            </Box>
+                        )}
+
+                        {isInTaskPage === false && (
+                            <TaskNoteHeader
+                                currentTaskNoteChain={NM.currentTaskNoteChain || null}
+                                onLoadNote={NM.loadNote}
+                            />
+                        )}
 
                         <NoteActions
+                            noteType={2}
                             isInTaskPage={isInTaskPage}
                             currentTask={currentTask}
                             pmChat={pmChat}
@@ -244,8 +269,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             setCurrentMainChat={setCurrentMainChat}
                             setOpeningService={setOpeningService}
                             teamMemberProfiles={teamMemberProfiles}
+                            onCreateNewNote={() => {}} // Don't create new task note in task note page
                             onCreateChildNote={handleCreateChildNote}
-                            onOpenInNotes={handleOpenInNotes}
                             onOpenTask={handleOpenTask}
                             onDeleteNote={handleDeleteNote}
                             onCloseNotes={handleCloseNotes}

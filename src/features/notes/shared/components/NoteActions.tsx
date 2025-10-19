@@ -3,7 +3,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import {
     Box,
     Chip,
@@ -25,6 +25,7 @@ import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 
 interface NoteActionsProps {
+    noteType: number;
     isInTaskPage: boolean;
     currentTask: TaskProps | undefined;
     pmChat: AllChatProps | undefined;
@@ -35,14 +36,15 @@ interface NoteActionsProps {
     setCurrentMainChat: (chat: any) => void;
     setOpeningService: (service: number) => void;
     teamMemberProfiles: Record<string, UserProps>;
+    onCreateNewNote: () => void;
     onCreateChildNote: () => void;
-    onOpenInNotes: () => void;
     onOpenTask: () => void;
     onDeleteNote: () => void;
     onCloseNotes: () => void;
 }
 
 export const NoteActions = ({
+    noteType,
     isInTaskPage,
     currentTask,
     pmChat,
@@ -53,8 +55,8 @@ export const NoteActions = ({
     setCurrentMainChat,
     setOpeningService,
     teamMemberProfiles,
+    onCreateNewNote,
     onCreateChildNote,
-    onOpenInNotes,
     onOpenTask,
     onDeleteNote,
     onCloseNotes,
@@ -63,37 +65,6 @@ export const NoteActions = ({
 
     return (
         <Stack direction={"row"}>
-            {isInTaskPage && (
-                <IconButton
-                    color="neutral"
-                    component="button"
-                    variant="plain"
-                    sx={{
-                        fontSize: "14px",
-                        paddingRight: "10px",
-                        height: "5px",
-                    }}
-                    onClick={onCreateChildNote}
-                >
-                    <AddIcon />
-                    Child Note
-                </IconButton>
-            )}
-
-            {isInTaskPage && (
-                <Tooltip title="Open in Notes">
-                    <IconButton
-                        color="neutral"
-                        size="sm"
-                        sx={{ mb: "5px" }}
-                        variant="plain"
-                        onClick={onOpenInNotes}
-                    >
-                        <OpenInNewIcon />
-                    </IconButton>
-                </Tooltip>
-            )}
-
             {!isInTaskPage && (
                 <>
                     {currentTask && (
@@ -184,7 +155,7 @@ export const NoteActions = ({
             )}
 
             <Dropdown>
-                <Tooltip title="More Options">
+                <Tooltip title="More Options" placement="left-start">
                     <MenuButton
                         slots={{ root: IconButton }}
                         sx={{ mb: "5px" }}
@@ -196,7 +167,7 @@ export const NoteActions = ({
                     </MenuButton>
                 </Tooltip>
                 <Menu size="sm">
-                    {currentTask && currentTask.id && (
+                    {noteType === 2 && currentTask && currentTask.id && (
                         <MenuItem onClick={onOpenTask}>
                             <AssignmentRoundedIcon />
                             <Typography level="title-sm" sx={{ mb: "3px" }}>
@@ -204,6 +175,24 @@ export const NoteActions = ({
                             </Typography>
                         </MenuItem>
                     )}
+                    {noteType === 2 && isInTaskPage && (
+                        <MenuItem onClick={onOpenTask}>
+                            <NoteAltIcon />
+                            <Typography level="title-sm" sx={{ mb: "3px" }}>
+                                Move to Notes
+                            </Typography>
+                        </MenuItem>
+                    )}
+
+                    {noteType === 1 && (
+                        <MenuItem onClick={onCreateNewNote}>
+                            <AddIcon />
+                            <Typography level="title-sm" sx={{ mb: "3px" }}>
+                                New Note
+                            </Typography>
+                        </MenuItem>
+                    )}
+
                     <MenuItem onClick={onCreateChildNote}>
                         <AddIcon />
                         <Typography level="title-sm" sx={{ mb: "3px" }}>
@@ -226,7 +215,7 @@ export const NoteActions = ({
             </Dropdown>
 
             {isInTaskPage && (
-                <Tooltip title="Close Notes">
+                <Tooltip title="Close">
                     <IconButton
                         color="neutral"
                         size="sm"

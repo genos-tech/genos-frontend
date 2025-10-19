@@ -1,5 +1,5 @@
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import { Breadcrumbs, IconButton, Typography } from "@mui/joy";
+import { Breadcrumbs, IconButton, Tooltip, Typography } from "@mui/joy";
 
 interface TaskNoteHeaderProps {
     currentTaskNoteChain: any[] | null;
@@ -20,27 +20,30 @@ export const TaskNoteHeader = ({ currentTaskNoteChain, onLoadNote }: TaskNoteHea
                 <AssignmentRoundedIcon sx={{ fontSize: "20px" }} />
                 Task Notes
             </IconButton>
+
             {currentTaskNoteChain &&
-                currentTaskNoteChain.map((node) => (
-                    <Typography
-                        key={node.noteId}
-                        component="button"
-                        level="title-sm"
-                        sx={{
-                            background: "none",
-                            border: "none",
-                            padding: 0,
-                            cursor: "pointer",
-                            color: "#646CFF",
-                            textAlign: "left",
-                            fontWeight: "bold",
-                        }}
-                        onClick={() => {
-                            onLoadNote(2, node.noteId, -1);
-                        }}
-                    >
-                        {node.title.length > 14 ? `${node.title.slice(0, 14)}...` : node.title}
-                    </Typography>
+                currentTaskNoteChain.map((node, index) => (
+                    <Tooltip title={node.title} key={`task-note-tooltip-${index}`}>
+                        <Typography
+                            key={node.noteId}
+                            component="button"
+                            level="title-sm"
+                            sx={{
+                                background: "none",
+                                border: "none",
+                                padding: 0,
+                                cursor: "pointer",
+                                color: "#646CFF",
+                                textAlign: "left",
+                                fontWeight: "bold",
+                            }}
+                            onClick={() => {
+                                onLoadNote(2, node.noteId, -1);
+                            }}
+                        >
+                            {node.title.length > 14 ? `${node.title.slice(0, 14)}...` : node.title}
+                        </Typography>
+                    </Tooltip>
                 ))}
         </Breadcrumbs>
     );

@@ -15,15 +15,14 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../types/tasks";
+import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { loadTaskComments } from "../../services/loadTaskComments";
-import { loadTaskNotes } from "../../services/loadTaskNotes";
 import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import {
     updateProjectOptions,
     updateTagOptions,
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
-import { TaskCommentEditorBlock } from "./base/sub/TaskCommentEditorBlock";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
@@ -340,7 +339,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskNotes([]);
             }
         })();
-    }, [TM.isTaskCommentUpdated, currentTaskId, taskNoteMeta]);
+    }, [currentTaskId, taskNoteMeta]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -420,6 +419,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskTitle={setTaskTitle}
                         setTaskUpdated={setTaskUpdated}
+                        setIsTaskNoteVisible={setIsTaskNoteVisible}
+                        taskNotes={taskNotes}
+                        setCurrentTaskNote={setCurrentTaskNote}
+                        handleCreateNewTaskNote={handleCreateNewTaskNote}
                         taskContents={tmpCurrentTaskContent}
                         taskTitle={taskTitle}
                         TM={TM}

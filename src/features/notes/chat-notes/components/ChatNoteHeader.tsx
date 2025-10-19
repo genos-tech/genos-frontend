@@ -118,28 +118,30 @@ export const ChatNoteHeader = ({
                         Chat Notes
                     </IconButton>
                     {currentChatNoteChain &&
-                        currentChatNoteChain.map((node) => (
-                            <Typography
-                                key={node.noteId}
-                                component="button"
-                                level="title-sm"
-                                sx={{
-                                    background: "none",
-                                    border: "none",
-                                    padding: 0,
-                                    cursor: "pointer",
-                                    color: "#646CFF",
-                                    textAlign: "left",
-                                    fontWeight: "bold",
-                                }}
-                                onClick={() => {
-                                    NM.loadNote(3, node.noteId, -1);
-                                }}
-                            >
-                                {node.title.length > 14
-                                    ? `${node.title.slice(0, 14)}...`
-                                    : node.title}
-                            </Typography>
+                        currentChatNoteChain.map((node, index) => (
+                            <Tooltip title={node.title} key={`chat-note-tooltip-${index}`}>
+                                <Typography
+                                    key={node.noteId}
+                                    component="button"
+                                    level="title-sm"
+                                    sx={{
+                                        background: "none",
+                                        border: "none",
+                                        padding: 0,
+                                        cursor: "pointer",
+                                        color: "#646CFF",
+                                        textAlign: "left",
+                                        fontWeight: "bold",
+                                    }}
+                                    onClick={() => {
+                                        NM.loadNote(3, node.noteId, -1);
+                                    }}
+                                >
+                                    {node.title.length > 14
+                                        ? `${node.title.slice(0, 14)}...`
+                                        : node.title}
+                                </Typography>
+                            </Tooltip>
                         ))}
                 </Breadcrumbs>
             )}
@@ -251,7 +253,7 @@ export const ChatNoteHeader = ({
 
                 {/* More Options Dropdown */}
                 <Dropdown>
-                    <Tooltip title="More Options">
+                    <Tooltip title="More Options" placement="left-start">
                         <MenuButton
                             slots={{ root: IconButton }}
                             sx={{ mb: "5px" }}

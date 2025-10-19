@@ -2,11 +2,10 @@ import { useState } from "react";
 import { Box, CssBaseline } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
 
-import { TaskHomeHeader } from "./components/header/TaskHomeHeader";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskSearch } from "./hooks/useTaskSearch";
-import { TaskHomeActions, TaskHomeProps, TaskHomeState } from "./types/TaskHomeTypes";
+import { TaskHomeProps } from "./types/TaskHomeTypes";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";

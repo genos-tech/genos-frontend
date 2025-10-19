@@ -3,6 +3,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import {
@@ -25,6 +26,7 @@ import { alpha } from "@mui/system";
 import { useAuth } from "../../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
+import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
@@ -63,6 +65,15 @@ type TaskTitleBlockProps = {
     setOpeningService: (service: number) => void;
     setCurrentProject: (project: any) => void;
     TM: TaskManagementState;
+    setIsTaskNoteVisible?: (value: boolean) => void;
+    taskNotes: TaskNoteProps[];
+    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    handleCreateNewTaskNote: (
+        parentNoteId: number | null,
+        projectId: number,
+        taskId: number,
+        title?: string
+    ) => Promise<void>;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -90,6 +101,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setOpeningService,
         setCurrentProject,
         TM,
+        setIsTaskNoteVisible,
+        taskNotes,
+        setCurrentTaskNote,
+        handleCreateNewTaskNote,
     } = props;
 
     const { accessToken } = useAuth();
@@ -187,7 +202,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                 {/* If the task is visible in the task note, do not show the expand button. */}
                 {isPreviewMode === true && setIsTaskVisibleInNote === undefined && (
-                    <Tooltip title="Expand">
+                    <Tooltip title="Expand" placement="top">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -204,7 +219,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 {openingService === 2 && taskContents.threadId !== null && (
-                    <Tooltip title="Check Thread">
+                    <Tooltip title="Check Thread" placement="top">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -235,7 +250,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 <Dropdown>
-                    <Tooltip title="More Options">
+                    <Tooltip title="More Options" placement="left-start">
                         <MenuButton
                             size="sm"
                             slotProps={{ root: { color: "neutral" } }}
@@ -246,12 +261,36 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </Tooltip>
                     <Menu size="sm">
                         <MenuItem
+                            key="open-note"
                             onClick={() => {
-                                setOpenCreateProject(true);
+                                if (
+                                    setIsTaskHomeVisible &&
+                                    setIsTaskNoteVisible &&
+                                    taskContents.project
+                                ) {
+                                    setIsTaskHomeVisible(false);
+                                    setIsTaskNoteVisible(true);
+                                    if (taskNotes.length > 0) {
+                                        setCurrentTaskNote(taskNotes[0]);
+                                    } else {
+                                        if (taskContents.project && taskContents.id) {
+                                            handleCreateNewTaskNote(
+                                                null,
+                                                taskContents.project.projectId,
+                                                taskContents.id,
+                                                taskContents.title
+                                            );
+                                        }
+                                    }
+                                } else {
+                                    console.error(
+                                        "Can't parent note ID to create a child note. Project ID is not defined."
+                                    );
+                                }
                             }}
                         >
-                            <AddIcon />
-                            New Project
+                            <NoteAltIcon />
+                            Open Note
                         </MenuItem>
                         <MenuItem
                             onClick={() => {
@@ -260,6 +299,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         >
                             <AddIcon />
                             New Tag
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                setOpenCreateProject(true);
+                            }}
+                        >
+                            <AddIcon />
+                            New Project
                         </MenuItem>
                         {taskContents.status.status !== "Closed" && (
                             <MenuItem

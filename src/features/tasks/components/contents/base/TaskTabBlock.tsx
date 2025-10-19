@@ -787,9 +787,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 onChange={handleSelectedFiles}
                             />
                             <IconButton
-                                color="neutral"
+                                color="primary"
                                 size="sm"
-                                variant="outlined"
+                                variant="soft"
                                 onClick={handleButtonClick}
                             >
                                 <FolderIcon />

@@ -181,7 +181,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </div>
                     )}
 
-                    <Tooltip title="More Options">
+                    <Tooltip title="More Options" placement="left-start">
                         <IconButton color="neutral" component="a" size="sm" variant="plain">
                             <MoreVert />
                         </IconButton>

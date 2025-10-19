@@ -185,7 +185,7 @@ export const useNoteManagement = (
         if (!accessToken) return;
 
         try {
-            const title = `${parentNoteId ? "Child" : "New"} Note (${
+            const title = `${parentNoteId ? "Child" : "New"} Chat Note (${
                 newlyCreatedChatNotes.length + 1
             })`;
             const newNote = await createEmptyChatNote(
@@ -301,7 +301,7 @@ export const useNoteManagement = (
         if (!accessToken) return;
 
         try {
-            const noteTitle = `${parentNoteId ? "Child" : "New"} Note (${
+            const noteTitle = `${parentNoteId ? "Child" : "New"} Task Note (${
                 newlyCreatedTaskNotes.length + 1
             })`;
             const newNote = await createEmptyTaskNote(
@@ -372,7 +372,7 @@ export const useNoteManagement = (
         if (!accessToken) return;
 
         try {
-            const noteTitle = `${parentNoteId ? "Child" : "New"} Note (${
+            const noteTitle = `${parentNoteId ? "Child" : "New"} My Note (${
                 newlyCreatedMyNotes.length + 1
             })`;
             const newNote = await createEmptyMyNote(myself, parentNoteId, noteTitle, accessToken);

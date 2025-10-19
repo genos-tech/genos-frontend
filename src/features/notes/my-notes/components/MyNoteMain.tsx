@@ -11,6 +11,7 @@ import { ChatProps } from "../../../../types/chat";
 import { MyNoteProps } from "../../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { EmptyState } from "../../shared/components/EmptyState";
+import { NoteActions } from "../../shared/components/NoteActions";
 import { NoteEditor } from "../../shared/components/NoteEditor";
 import { NoteTabList } from "../../shared/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
@@ -143,6 +144,25 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         <MyNoteHeader
                                             currentMyNoteChain={NM.currentMyNoteChain || null}
                                             onLoadNote={NM.loadNote}
+                                        />
+
+                                        <NoteActions
+                                            noteType={1}
+                                            isInTaskPage={false}
+                                            currentTask={undefined}
+                                            pmChat={undefined}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            funcSetAllChats={() => Promise.resolve()}
+                                            setCurrentMainChat={() => {}}
+                                            setOpeningService={setOpeningService}
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            onCreateNewNote={handleCreateNewNote}
+                                            onCreateChildNote={handleCreateChildNote}
+                                            onOpenTask={() => {}}
+                                            onDeleteNote={handleDeleteNote}
+                                            onCloseNotes={() => {}}
                                         />
                                     </Stack>
 
