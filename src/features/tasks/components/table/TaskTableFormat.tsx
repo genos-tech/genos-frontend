@@ -82,7 +82,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             field: "title",
             headerName: "Title",
             headerClassName: "task-col--header",
-            width: 350,
+            width: 300,
             editable: true,
             headerAlign: "left",
         },
@@ -153,6 +153,76 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                     {teamMembers.map((option) => (
                         <MenuItem key={option.userId} value={option.userEmail}>
                             {option.userName} | {option.userEmail}
+                        </MenuItem>
+                    ))}
+                </Select>
+            ),
+        },
+        {
+            field: "status",
+            headerName: "Status",
+            headerClassName: "task-col--header",
+            width: 120,
+            editable: true,
+            align: "center",
+            headerAlign: "center",
+            renderCell: (params: GridRenderCellParams) => {
+                const option = getStatusOption(params.value);
+                const color = option?.color;
+                const textColor = option?.textColor;
+                return option ? (
+                    <Chip
+                        icon={option.icon}
+                        label={option.label}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                            backgroundColor: alpha(
+                                color || "#ff2323",
+                                mode === "dark" ? 0.5 : 0.75
+                            ),
+                            color: textColor,
+                            fontWeight: "bold",
+                            borderRadius: "5px",
+                        }}
+                    />
+                ) : null;
+            },
+            renderEditCell: (params: GridRenderEditCellParams) => (
+                <Select
+                    value={params.value}
+                    fullWidth
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        params.api.setEditCellValue(
+                            {
+                                id: params.id,
+                                field: params.field,
+                                value: value,
+                            },
+                            event
+                        );
+
+                        // Exit edit mode after value is set
+                        params.api.stopCellEditMode({
+                            id: params.id,
+                            field: params.field,
+                        });
+                    }}
+                >
+                    {statusOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                            <Chip
+                                label={option.label}
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                    backgroundColor: alpha(option.color || "#ff2323", 0.75),
+                                    color: option.textColor,
+                                    fontWeight: "bold",
+                                    borderRadius: "5px",
+                                }}
+                            />
                         </MenuItem>
                     ))}
                 </Select>
@@ -342,76 +412,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             ),
         },
         {
-            field: "status",
-            headerName: "Status",
-            headerClassName: "task-col--header",
-            width: 120,
-            editable: true,
-            align: "center",
-            headerAlign: "center",
-            renderCell: (params: GridRenderCellParams) => {
-                const option = getStatusOption(params.value);
-                const color = option?.color;
-                const textColor = option?.textColor;
-                return option ? (
-                    <Chip
-                        icon={option.icon}
-                        label={option.label}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                            backgroundColor: alpha(
-                                color || "#ff2323",
-                                mode === "dark" ? 0.5 : 0.75
-                            ),
-                            color: textColor,
-                            fontWeight: "bold",
-                            borderRadius: "5px",
-                        }}
-                    />
-                ) : null;
-            },
-            renderEditCell: (params: GridRenderEditCellParams) => (
-                <Select
-                    value={params.value}
-                    fullWidth
-                    onChange={(event) => {
-                        const value = event.target.value;
-                        params.api.setEditCellValue(
-                            {
-                                id: params.id,
-                                field: params.field,
-                                value: value,
-                            },
-                            event
-                        );
-
-                        // Exit edit mode after value is set
-                        params.api.stopCellEditMode({
-                            id: params.id,
-                            field: params.field,
-                        });
-                    }}
-                >
-                    {statusOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                            <Chip
-                                label={option.label}
-                                size="small"
-                                variant="outlined"
-                                sx={{
-                                    backgroundColor: alpha(option.color || "#ff2323", 0.75),
-                                    color: option.textColor,
-                                    fontWeight: "bold",
-                                    borderRadius: "5px",
-                                }}
-                            />
-                        </MenuItem>
-                    ))}
-                </Select>
-            ),
-        },
-        {
             field: "dueDate",
             headerName: "Due Date",
             headerClassName: "task-col--header",
@@ -449,22 +449,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             },
         },
         {
-            field: "threadId",
-            headerName: "Thread ID",
-            headerClassName: "task-col--header",
-            width: 120,
-            align: "center",
-            headerAlign: "center",
-        },
-        {
-            field: "parentTaskId",
-            headerName: "Parent Task ID",
-            headerClassName: "task-col--header",
-            width: 150,
-            align: "center",
-            headerAlign: "center",
-        },
-        {
             field: "createdDate",
             headerName: "Created On",
             headerClassName: "task-col--header",
@@ -473,16 +457,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             align: "left",
             headerAlign: "left",
             valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD"),
-        },
-        {
-            field: "updatedAt",
-            headerName: "Updated at",
-            headerClassName: "task-col--header",
-            type: "dateTime",
-            width: 150,
-            align: "left",
-            headerAlign: "left",
-            valueFormatter: (params) => dayjs(params).format("YYYY-MM-DD HH:mm:ss"),
         },
         {
             field: "concatTags",

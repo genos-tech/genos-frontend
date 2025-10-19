@@ -202,7 +202,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                 {/* If the task is visible in the task note, do not show the expand button. */}
                 {isPreviewMode === true && setIsTaskVisibleInNote === undefined && (
-                    <Tooltip size="sm" title="Expand" placement="top">
+                    <Tooltip size="sm" title="Expand">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -219,7 +219,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 {openingService === 2 && taskContents.threadId !== null && (
-                    <Tooltip size="sm" title="Check Thread" placement="top">
+                    <Tooltip size="sm" title="Check Thread">
                         <IconButton
                             color="neutral"
                             size="sm"
