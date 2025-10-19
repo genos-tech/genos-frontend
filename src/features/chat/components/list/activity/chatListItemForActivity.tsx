@@ -3,21 +3,21 @@ import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../../context/AuthContext";
-import { UserProps } from "../../../../types/admin";
+import { useAuth } from "../../../../../context/AuthContext";
+import { UserProps } from "../../../../../types/admin";
 import {
     ActivityMessageProps,
     AllChatProps,
     ChatProps,
     ThreadMessageProps,
     ThreadProps,
-} from "../../../../types/chat";
-import { ProjectProps } from "../../../../types/tasks";
-import { toggleMessagesPane } from "../../../../utils";
-import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
-import { useActivityStatus } from "../../hooks/useActivityStatus";
-import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
-import { popSpecificMessages } from "../../services/popSpecificMessages";
+} from "../../../../../types/chat";
+import { ProjectProps } from "../../../../../types/tasks";
+import { toggleMessagesPane } from "../../../../../utils";
+import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
+import { useActivityStatus } from "../../../hooks/useActivityStatus";
+import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";
+import { popSpecificMessages } from "../../../services/popSpecificMessages";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 

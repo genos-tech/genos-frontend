@@ -16,7 +16,7 @@ import {
     useScrollToBottomOnChatPaneChange,
     useScrollToBottomOnNewActivity,
 } from "../../hooks/messageBubbleHooks";
-import { ChatListItemForActivity } from "../activity/chatListItemForActivity";
+import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
 import { ChatListItem } from "./chatListItem";
 

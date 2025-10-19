@@ -3,9 +3,9 @@ import CircleIcon from "@mui/icons-material/Circle";
 import { Box, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../../types/admin";
-import { ActivityMessageProps, AllChatProps } from "../../../../types/chat";
-import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
+import { UserProps } from "../../../../../types/admin";
+import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
+import { extractYYYYMMDDHHMM } from "../../../../../utils/dateUtils";
 import { ActivityAvatar } from "./ActivityAvatar";
 import { ActivityTypeChips } from "./ActivityTypeChips";
 
