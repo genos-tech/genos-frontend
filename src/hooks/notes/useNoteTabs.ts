@@ -37,11 +37,17 @@ export const useNoteTabs = ({ NM }: UseNoteTabsProps): UseNoteTabsReturn => {
 
     const handleTabChange = useCallback(
         (newValue: number) => {
-            NM.loadNote(
-                NM.tabItems[Number(newValue)].noteType,
-                NM.tabItems[Number(newValue)].noteId,
-                Number(newValue)
-            );
+            if (
+                NM.tabItems[Number(newValue)] &&
+                NM.tabItems[Number(newValue)].noteId &&
+                NM.tabItems[Number(newValue)].noteType
+            ) {
+                NM.loadNote(
+                    NM.tabItems[Number(newValue)].noteType,
+                    NM.tabItems[Number(newValue)].noteId,
+                    Number(newValue)
+                );
+            }
         },
         [NM]
     );

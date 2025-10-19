@@ -169,7 +169,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     <Tabs
                                         sx={{ width: "100%" }}
                                         value={NM.selectedTabIndex}
-                                        onChange={(_, val) => handleTabChange(Number(val))}
+                                        onChange={(_, val) => {
+                                            handleTabChange(Number(val));
+                                        }}
                                     >
                                         <NoteTabList
                                             tabItems={NM.tabItems}

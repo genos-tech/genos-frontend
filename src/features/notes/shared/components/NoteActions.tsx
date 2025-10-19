@@ -65,92 +65,99 @@ export const NoteActions = ({
 
     return (
         <Stack direction={"row"}>
-            {!isInTaskPage && (
+            {noteType === 1 && (
+                <Tooltip title="Create a New Note">
+                    <IconButton
+                        color="neutral"
+                        size="sm"
+                        variant="plain"
+                        sx={{
+                            mt: "3px",
+                            mx: "5px",
+                            height: "30px",
+                            borderRadius: "5px",
+                        }}
+                        onClick={onCreateNewNote}
+                    >
+                        <AddIcon />
+                        New Note
+                    </IconButton>
+                </Tooltip>
+            )}
+
+            {noteType === 2 && !isInTaskPage && currentTask && currentTask.id && pmChat && (
                 <>
-                    {currentTask && (
-                        <>
-                            {pmChat && (
-                                <Box sx={{ mt: "2px" }}>
-                                    <ProjectAvatar
-                                        myself={myself}
-                                        pmChat={pmChat}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        funcSetAllChats={funcSetAllChats}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setOpeningService={setOpeningService}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                    />
-                                </Box>
-                            )}
+                    <Box sx={{ mt: "2px" }}>
+                        <ProjectAvatar
+                            myself={myself}
+                            pmChat={pmChat}
+                            setMyself={setMyself}
+                            socket={socket}
+                            funcSetAllChats={funcSetAllChats}
+                            setCurrentMainChat={setCurrentMainChat}
+                            setOpeningService={setOpeningService}
+                            teamMemberProfiles={teamMemberProfiles}
+                        />
+                    </Box>
 
-                            {currentTask.id && (
-                                <>
-                                    <Tooltip title="Open Task">
-                                        <Chip
-                                            key={`task-note-task-id${currentTask.id}`}
-                                            color="neutral"
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                mt: "3px",
-                                                mx: "5px",
-                                                height: "30px",
-                                                borderRadius: "5px",
-                                                fontWeight: "bold",
-                                            }}
-                                            onClick={onOpenTask}
-                                        >
-                                            ID: {currentTask.id}
-                                        </Chip>
-                                    </Tooltip>
+                    <Tooltip title="Open Task">
+                        <Chip
+                            key={`task-note-task-id${currentTask.id}`}
+                            color="neutral"
+                            size="sm"
+                            variant="outlined"
+                            sx={{
+                                mt: "3px",
+                                mx: "5px",
+                                height: "30px",
+                                borderRadius: "5px",
+                                fontWeight: "bold",
+                            }}
+                            onClick={onOpenTask}
+                        >
+                            ID: {currentTask.id}
+                        </Chip>
+                    </Tooltip>
 
-                                    <Tooltip title="Open Task">
-                                        <Chip
-                                            key={`task-title-${currentTask.id}`}
-                                            color="primary"
-                                            size="sm"
-                                            variant="outlined"
-                                            sx={{
-                                                mt: "3px",
-                                                mr: "5px",
-                                                height: "30px",
-                                                borderRadius: "5px",
-                                                fontWeight: "bold",
-                                            }}
-                                            onClick={onOpenTask}
-                                        >
-                                            Title:{" "}
-                                            {currentTask.title.length > 14
-                                                ? `${currentTask.title.slice(0, 14)}...`
-                                                : currentTask.title || "N/A"}
-                                        </Chip>
-                                    </Tooltip>
+                    <Tooltip title="Open Task">
+                        <Chip
+                            key={`task-title-${currentTask.id}`}
+                            color="primary"
+                            size="sm"
+                            variant="outlined"
+                            sx={{
+                                mt: "3px",
+                                mr: "5px",
+                                height: "30px",
+                                borderRadius: "5px",
+                                fontWeight: "bold",
+                            }}
+                            onClick={onOpenTask}
+                        >
+                            Title:{" "}
+                            {currentTask.title.length > 14
+                                ? `${currentTask.title.slice(0, 14)}...`
+                                : currentTask.title || "N/A"}
+                        </Chip>
+                    </Tooltip>
 
-                                    <Chip
-                                        key={`task-status-${currentTask.status.status}`}
-                                        size="sm"
-                                        sx={{
-                                            mt: "3px",
-                                            mr: "5px",
-                                            height: "30px",
-                                            backgroundColor: currentTask.status.color
-                                                ? alpha(
-                                                      currentTask.status.color,
-                                                      mode === "dark" ? 0.5 : 0.75
-                                                  )
-                                                : "transparent",
-                                            color: currentTask.status.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                        }}
-                                    >
-                                        {currentTask.status.status}
-                                    </Chip>
-                                </>
-                            )}
-                        </>
-                    )}
+                    <Chip
+                        key={`task-status-${currentTask.status.status}`}
+                        size="sm"
+                        sx={{
+                            mt: "3px",
+                            mr: "5px",
+                            height: "30px",
+                            backgroundColor: currentTask.status.color
+                                ? alpha(currentTask.status.color, mode === "dark" ? 0.5 : 0.75)
+                                : "transparent",
+                            color: currentTask.status.textColor,
+                            fontWeight: "bold",
+                            borderRadius: "5px",
+                        }}
+                    >
+                        {currentTask.status.status}
+                    </Chip>
                 </>
             )}
 
