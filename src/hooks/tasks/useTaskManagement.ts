@@ -66,14 +66,8 @@ export interface TaskManagementState {
     setIsTaskUpdatedBySomeone: (updated: boolean) => void;
 
     // Task lists
-    ongoingTasks: TaskTableProps[];
-    setOngoingTasks: (tasks: TaskTableProps[]) => void;
-    closedTasks: TaskTableProps[];
-    setClosedTasks: (tasks: TaskTableProps[]) => void;
-    deletedTasks: TaskTableProps[];
-    setDeletedTasks: (tasks: TaskTableProps[]) => void;
-    expiredTasks: TaskTableProps[];
-    setExpiredTasks: (tasks: TaskTableProps[]) => void;
+    allTasks: TaskTableProps[];
+    setAllTasks: (tasks: TaskTableProps[]) => void;
 
     // Task metadata
     taskMetaTree: TaskMetaTreeNode[];
@@ -139,14 +133,12 @@ export const useTaskManagement = (
 
     // Task lists
     const taskTypes: TaskTypesProps = {
+        all: { id: 0, statuses: ["Open", "WIP", "Pending", "Closed", "Deleted"], name: "All" },
         ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
         closed: { id: 2, statuses: ["Closed"], name: "Closed" },
         deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
     };
-    const [ongoingTasks, setOngoingTasks] = useState<TaskTableProps[]>([]);
-    const [closedTasks, setClosedTasks] = useState<TaskTableProps[]>([]);
-    const [deletedTasks, setDeletedTasks] = useState<TaskTableProps[]>([]);
-    const [expiredTasks, setExpiredTasks] = useState<TaskTableProps[]>([]);
+    const [allTasks, setAllTasks] = useState<TaskTableProps[]>([]);
 
     // Task metadata
     const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
@@ -160,10 +152,7 @@ export const useTaskManagement = (
     const initializeTaskStates = () => {
         setIsNewTaskCreated(false);
         setIsTaskUpdated(false);
-        setOngoingTasks([]);
-        setClosedTasks([]);
-        setDeletedTasks([]);
-        setExpiredTasks([]);
+        setAllTasks([]);
         setTaskMetaTree([]);
         setCurrentTaskChain([]);
         setIsTaskVisibleInNote(false);
@@ -206,8 +195,8 @@ export const useTaskManagement = (
 
             // Add a new ongoing task
             if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
-                setOngoingTasks([
-                    ...ongoingTasks,
+                setAllTasks([
+                    ...allTasks,
                     {
                         id: String(loadedTask[0].id) || null,
                         title: loadedTask[0].title || "",
@@ -254,23 +243,11 @@ export const useTaskManagement = (
 
     const fetchProjectTasks = async (projectId: number) => {
         setTsLastLoadProjectTasks(Date.now());
-        const _onGoingTasks: TaskTableProps[] = await popSpecificProjectTasks(
+        const _allTasks: TaskTableProps[] = await popSpecificProjectTasks(
             projectId,
             taskTypes.ongoing.statuses
         );
-        const _closedTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.closed.statuses
-        );
-        const _deletedTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.deleted.statuses
-        );
-        const _expiredTasks: TaskTableProps[] = await getExpiredTasks(_onGoingTasks);
-        setOngoingTasks(_onGoingTasks);
-        setClosedTasks(_closedTasks);
-        setDeletedTasks(_deletedTasks);
-        setExpiredTasks(_expiredTasks);
+        setAllTasks(_allTasks);
     };
 
     initCurrentTaskChain({
@@ -287,7 +264,7 @@ export const useTaskManagement = (
     useEffect(() => {
         // Update an ongoing task
         if (isTaskUpdated && currentPreviewTask) {
-            setOngoingTasks((prevTasks) =>
+            setAllTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === String(currentPreviewTask.id)
                         ? {
@@ -365,14 +342,8 @@ export const useTaskManagement = (
         setIsTaskUpdatedBySomeone,
 
         // Task lists
-        ongoingTasks,
-        setOngoingTasks,
-        closedTasks,
-        setClosedTasks,
-        deletedTasks,
-        setDeletedTasks,
-        expiredTasks,
-        setExpiredTasks,
+        allTasks,
+        setAllTasks,
 
         // Task metadata
         taskMetaTree,

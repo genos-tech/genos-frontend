@@ -34,9 +34,7 @@ export const useServiceInitialization = ({
         NM.initializeNoteStates();
         NM.setIsTaskNoteVisible(false);
 
-        TM.setOngoingTasks([]);
-        TM.setClosedTasks([]);
-        TM.setDeletedTasks([]);
+        TM.setAllTasks([]);
         TM.setIsTaskPreviewVisible(false);
 
         CM.setIsThreadTaskVisible(false);

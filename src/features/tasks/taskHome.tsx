@@ -6,16 +6,12 @@ import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskSearch } from "./hooks/useTaskSearch";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
+import { taskTypes } from "./types/TaskTableTypes";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { TaskType, TaskTypesProps } from "../../types/tasks";
+import { TaskType } from "../../types/tasks";
 
-const taskTypes: TaskTypesProps = {
-    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
-    closed: { id: 2, statuses: ["Closed"], name: "Closed" },
-    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
-};
 export const TaskHome = (props: TaskHomeProps) => {
     const {
         TEM,
@@ -46,7 +42,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     const [currentFilterName, setCurrentFilterName] = useState<string>("");
     const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
     const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
-    const [displayTaskType, setDisplayTaskType] = useState<TaskType>(taskTypes.ongoing);
+    const [displayTaskType, setDisplayTaskType] = useState<TaskType>(taskTypes.all);
     const [openJoinProject, setOpenJoinProject] = useState({
         flag: false,
         projectId: -1,

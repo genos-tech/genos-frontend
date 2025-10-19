@@ -26,13 +26,8 @@ import { alpha } from "@mui/system";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
-import { SearchTeamTasksResponse, TaskType, TaskTypesProps } from "../../../../types/tasks";
-
-const taskTypes: TaskTypesProps = {
-    ongoing: { id: 1, statuses: ["Open", "WIP", "Pending"], name: "Ongoing" },
-    closed: { id: 2, statuses: ["Closed"], name: "Closed" },
-    deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
-};
+import { SearchTeamTasksResponse, TaskType } from "../../../../types/tasks";
+import { taskTypes } from "../../types/TaskTableTypes";
 
 interface TaskHomeHeaderProps {
     myself: UserProps;
@@ -146,67 +141,6 @@ export const TaskHomeHeader = ({
                 }}
             >
                 {currentProject?.projectName}
-                <Dropdown>
-                    <MenuButton
-                        slots={{ root: IconButton }}
-                        slotProps={{
-                            root: { color: "neutral" },
-                        }}
-                    >
-                        <Chip
-                            size="lg"
-                            variant="outlined"
-                            color={
-                                displayTaskType.id === 1
-                                    ? "primary"
-                                    : displayTaskType.id === 2
-                                      ? "success"
-                                      : displayTaskType.id === 3
-                                        ? "danger"
-                                        : "neutral"
-                            }
-                            sx={{
-                                mx: "8px",
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                        >
-                            {displayTaskType.name}
-                        </Chip>
-                    </MenuButton>
-                    <Menu size="sm">
-                        <MenuItem onClick={() => setDisplayTaskType(taskTypes.ongoing)}>
-                            <Chip
-                                color="primary"
-                                size="lg"
-                                variant="outlined"
-                                sx={{ borderRadius: "5px" }}
-                            >
-                                {taskTypes.ongoing.name}
-                            </Chip>
-                        </MenuItem>
-                        <MenuItem onClick={() => setDisplayTaskType(taskTypes.closed)}>
-                            <Chip
-                                color="success"
-                                size="lg"
-                                variant="outlined"
-                                sx={{ borderRadius: "5px" }}
-                            >
-                                {taskTypes.closed.name}
-                            </Chip>
-                        </MenuItem>
-                        <MenuItem onClick={() => setDisplayTaskType(taskTypes.deleted)}>
-                            <Chip
-                                color="danger"
-                                size="lg"
-                                variant="outlined"
-                                sx={{ borderRadius: "5px" }}
-                            >
-                                {taskTypes.deleted.name}
-                            </Chip>
-                        </MenuItem>
-                    </Menu>
-                </Dropdown>
             </Typography>
 
             <Box sx={{ width: "40%" }}>

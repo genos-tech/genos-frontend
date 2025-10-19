@@ -115,9 +115,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         projectId !== PM.currentProject?.projectId
                                                     ) {
                                                         // Reset the task table...
-                                                        TM.setOngoingTasks([]);
-                                                        TM.setClosedTasks([]);
-                                                        TM.setDeletedTasks([]);
+                                                        TM.setAllTasks([]);
                                                         (async () => {
                                                             await PM.loadProjectsAndTasks(
                                                                 projectId

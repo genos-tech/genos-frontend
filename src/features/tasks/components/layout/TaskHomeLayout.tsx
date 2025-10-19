@@ -180,18 +180,12 @@ export const TaskHomeLayout = ({
             {isDashboardVisible && <TaskDashboard />}
             {isTaskTableVisible && (
                 <ProjectTaskTable
-                    currentFilterName={currentFilterName}
                     currentProject={PM.currentProject}
                     displayTaskType={displayTaskType}
-                    filterBy={filterBy}
                     myself={myself}
-                    setFilterBy={setFilterBy}
                     setTeamMembers={TEM.setTeamMembers}
                     teamMembers={TEM.teamMembers}
                     TM={TM}
-                    selectedTagForFiltering={selectedTagForFiltering}
-                    setCurrentFilterName={setCurrentFilterName}
-                    setSelectedTagForFiltering={setSelectedTagForFiltering}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                 />
             )}

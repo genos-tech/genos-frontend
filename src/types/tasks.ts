@@ -140,6 +140,7 @@ export type TaskType = {
 };
 
 export type TaskTypesProps = {
+    all: TaskType;
     ongoing: TaskType;
     closed: TaskType;
     deleted: TaskType;

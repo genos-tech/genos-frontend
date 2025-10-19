@@ -339,6 +339,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         titleError={titleError}
                         titleErrorOpen={titleErrorOpen}
                         TM={TM}
+                        taskNotes={[]}
+                        setCurrentTaskNote={() => {}}
+                        handleCreateNewTaskNote={async () => {}}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
