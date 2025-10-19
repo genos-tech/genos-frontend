@@ -102,14 +102,13 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     teamMemberProfiles={teamMemberProfiles}
                 />
             </Stack>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+            <Stack direction="row" sx={{ alignItems: "center" }}>
                 {(chat.chatType === 3 || chat.chatType === 4) && (
                     <Tooltip size="sm" title="Create a new task">
                         <IconButton
                             color="neutral"
                             component="a"
                             size="sm"
-                            sx={{ px: "10px" }}
                             variant="plain"
                             onClick={() => {
                                 setIsMainChatVisible(true);
@@ -123,12 +122,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             }}
                         >
                             <PlaylistAddIcon />
-                            New Task
                         </IconButton>
                     </Tooltip>
                 )}
 
-                <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                <Stack direction="row" sx={{ alignItems: "center" }}>
                     {isYou === true ? (
                         <>
                             {isToDoVisible === true ? (

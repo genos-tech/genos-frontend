@@ -93,14 +93,13 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     teamMemberProfiles={teamMemberProfiles}
                 />
             </Stack>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+            <Stack direction="row" spacing={0} sx={{ alignItems: "center" }}>
                 {subChat && (subChat.chatType === 3 || subChat.chatType === 4) && (
                     <Tooltip size="sm" title="Create a new task">
                         <IconButton
                             color="neutral"
                             component="a"
                             size="sm"
-                            sx={{ px: "10px" }}
                             variant="plain"
                             onClick={() => {
                                 setIsMainChatVisible(true);
@@ -114,12 +113,11 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             }}
                         >
                             <PlaylistAddIcon />
-                            New Task
                         </IconButton>
                     </Tooltip>
                 )}
 
-                <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+                <Stack direction="row" sx={{ alignItems: "center" }}>
                     <IconButton
                         color="neutral"
                         component="a"

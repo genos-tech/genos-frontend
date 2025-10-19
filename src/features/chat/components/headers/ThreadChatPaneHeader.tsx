@@ -94,8 +94,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {/* Custom header in PM and DM/GM (having a task) thread */}
                 {(((thread.chatType === 3 || thread.chatType === 4) &&
                     TM.currentPreviewTaskId !== -1) ||
-                    (TM.isTaskPreviewVisible === false &&
-                        TM.currentPreviewTaskId !== -1 &&
+                    (TM.currentPreviewTaskId !== -1 &&
                         TM.currentPreviewTask &&
                         thread.taskExist === true)) && (
                     <>
@@ -140,12 +139,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     thread.chatType !== 4 &&
                     TM.currentPreviewTaskId === -1 && (
                         <>
-                            <Tooltip size="sm" title="New Task">
+                            <Tooltip size="sm" title="Create a New Task">
                                 <IconButton
                                     color="neutral"
                                     component="a"
                                     size="sm"
-                                    sx={{ px: "10px" }}
                                     variant="plain"
                                     onClick={() => {
                                         setIsMainChatVisible(true);

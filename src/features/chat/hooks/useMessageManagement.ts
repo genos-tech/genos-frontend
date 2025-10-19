@@ -20,7 +20,7 @@ export const useMessageManagement = ({ chat, isThread = false }: UseMessageManag
 
     useEffect(() => {
         // For DM chat, remove the first message because it is the "has joined" message.
-        if (chat.chatType === 1) {
+        if (chat.chatType === 1 && isThread === false) {
             setMessages(chat.messages.slice(1));
         } else {
             setMessages(chat.messages);

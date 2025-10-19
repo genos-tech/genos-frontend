@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Box, Sheet } from "@mui/joy";
+import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
