@@ -1,11 +1,11 @@
-import { Box, Typography } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { BnTaskCommentEditor } from "../../../../../components/blockNote/bnTaskCommentEditor";
-import { BnUpdateTaskCommentEditor } from "../../../../../components/blockNote/bnUpdateTaskCommentEditor";
-import { UserProps } from "../../../../../types/admin";
-import { ChatProps } from "../../../../../types/chat";
-import { TaskCommentProps, TaskProps } from "../../../../../types/tasks";
+import { BnTaskCommentEditor } from "../../../../../../components/blockNote/bnTaskCommentEditor";
+import { BnUpdateTaskCommentEditor } from "../../../../../../components/blockNote/bnUpdateTaskCommentEditor";
+import { UserProps } from "../../../../../../types/admin";
+import { ChatProps } from "../../../../../../types/chat";
+import { TaskCommentProps, TaskProps } from "../../../../../../types/tasks";
 
 type TaskCommentEditorBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -50,10 +50,6 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
 
     return (
         <Box sx={{ mt: 2 }}>
-            <Typography level="h4" sx={{ mt: 2, mb: 2 }}>
-                Send a Comment
-            </Typography>
-
             {isInEdit === true && editTargetComment && (
                 <BnUpdateTaskCommentEditor
                     isCommentUpdated={isCommentUpdated}

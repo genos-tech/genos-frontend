@@ -3,8 +3,8 @@ import { PartialBlock } from "@blocknote/core";
 
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
-import { addNote } from "../services/addNote";
 import { sendUpdatedTaskNote } from "../../task-notes/services/sendUpdatedTaskNote";
+import { addNote } from "../services/addNote";
 
 interface UseNoteAutoSaveProps {
     currentTaskNote: TaskNoteProps | null;

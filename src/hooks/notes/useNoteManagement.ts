@@ -485,20 +485,17 @@ export const useNoteManagement = (
                     // Convert Note type to MyNoteProps by adding missing fields
                     const myNote: MyNoteProps = {
                         noteType: 1,
-                        teamId: myself.teamId,
-                        ownerId: myself.userId,
-                        roleId: myself.role ? parseInt(myself.role) || 0 : 0,
+                        teamId: note.teamId,
+                        ownerId: note.ownerId,
+                        roleId: note.roleId,
                         noteId: note.noteId,
-                        parentNoteId: null, // Will be updated if needed
+                        parentNoteId: note.parentNoteId,
                         title: note.title,
-                        body: [], // Will be loaded separately if needed
-                        tsCreated: new Date(note.tsCreated).toISOString(),
-                        tsUpdated: new Date(note.tsUpdated).toISOString(),
+                        body: note.body,
+                        tsCreated: note.tsCreated,
+                        tsUpdated: note.tsUpdated,
                     };
                     setCurrentMyNote(myNote);
-                    if (targetTabIndex !== -1) {
-                        setSelectedTabIndex(targetTabIndex);
-                    }
                 } else {
                     const note: MyNoteProps = await loadSpecificNote(
                         myself,
@@ -521,17 +518,17 @@ export const useNoteManagement = (
                     // Convert Note type to TaskNoteProps by adding missing fields
                     const taskNote: TaskNoteProps = {
                         noteType: 2,
-                        teamId: myself.teamId,
-                        ownerId: myself.userId,
-                        roleId: myself.role ? parseInt(myself.role) || 0 : 0,
+                        teamId: note.teamId,
+                        ownerId: note.ownerId,
+                        roleId: note.roleId,
                         noteId: note.noteId,
-                        parentNoteId: null, // Will be updated if needed
-                        projectId: 0, // Will be updated if needed
-                        taskId: note.taskId || 0,
+                        parentNoteId: note.parentNoteId,
+                        projectId: note.projectId,
+                        taskId: note.taskId,
                         title: note.title,
-                        body: [], // Will be loaded separately if needed
-                        tsCreated: new Date(note.tsCreated).toISOString(),
-                        tsUpdated: new Date(note.tsUpdated).toISOString(),
+                        body: note.body,
+                        tsCreated: note.tsCreated,
+                        tsUpdated: note.tsUpdated,
                     };
                     setCurrentTaskNote(taskNote);
                     if (targetTabIndex !== -1) {
@@ -559,19 +556,19 @@ export const useNoteManagement = (
                     // Convert Note type to ChatNoteProps by adding missing fields
                     const chatNote: ChatNoteProps = {
                         noteType: 3,
-                        teamId: myself.teamId,
-                        ownerId: myself.userId,
-                        roleId: myself.role ? parseInt(myself.role) || 0 : 0,
+                        teamId: note.teamId,
+                        ownerId: note.ownerId,
+                        roleId: note.roleId,
                         noteId: note.noteId,
-                        parentNoteId: null, // Will be updated if needed
-                        chatType: 0, // Will be updated if needed
-                        chatId: note.chatId || 0,
-                        isThread: false, // Will be updated if needed
-                        threadId: 0, // Will be updated if needed
+                        parentNoteId: note.parentNoteId,
+                        chatType: note.chatType,
+                        chatId: note.chatId,
+                        isThread: note.isThread,
+                        threadId: note.threadId,
                         title: note.title,
-                        body: [], // Will be loaded separately if needed
-                        tsCreated: new Date(note.tsCreated).toISOString(),
-                        tsUpdated: new Date(note.tsUpdated).toISOString(),
+                        body: note.body,
+                        tsCreated: note.tsCreated,
+                        tsUpdated: note.tsUpdated,
                     };
                     setCurrentChatNote(chatNote);
                     if (targetTabIndex !== -1) {

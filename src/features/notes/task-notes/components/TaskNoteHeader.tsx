@@ -1,14 +1,12 @@
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import { Breadcrumbs, IconButton, Stack, Typography } from "@mui/joy";
+import { Breadcrumbs, IconButton, Typography } from "@mui/joy";
 
-import { TaskNoteProps } from "../../../../types/notes";
-
-interface NoteHeaderProps {
+interface TaskNoteHeaderProps {
     currentTaskNoteChain: any[] | null;
     onLoadNote: (noteType: number, noteId: number, tabIndex: number) => void;
 }
 
-export const NoteHeader = ({ currentTaskNoteChain, onLoadNote }: NoteHeaderProps) => {
+export const TaskNoteHeader = ({ currentTaskNoteChain, onLoadNote }: TaskNoteHeaderProps) => {
     return (
         <Breadcrumbs aria-label="breadcrumbs" separator="›">
             <IconButton

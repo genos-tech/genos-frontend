@@ -10,7 +10,7 @@ export const MyNoteHeader = ({ currentMyNoteChain, onLoadNote }: MyNoteHeaderPro
     return (
         <Breadcrumbs aria-label="breadcrumbs" separator="›">
             <IconButton
-                color="success"
+                color="primary"
                 component="button"
                 variant="soft"
                 sx={{

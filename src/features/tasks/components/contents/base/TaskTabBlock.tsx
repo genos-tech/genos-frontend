@@ -28,6 +28,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 import { TaskNoteProps } from "../../../../../types/notes";
@@ -43,6 +44,7 @@ import { downloadFile } from "../../../../../utils/downloadUtils";
 import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
 import { TaskCommentBubble } from "./sub/TaskCommentBubble";
+import { TaskCommentEditorBlock } from "./sub/TaskCommentEditorBlock";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -87,6 +89,15 @@ type TaskTabBlockProps = {
     ) => Promise<void>;
     taskNotes: TaskNoteProps[];
     setCurrentTaskNote: (value: TaskNoteProps) => void;
+    editTargetComment: TaskCommentProps | undefined;
+    isInEdit: boolean;
+    setCurrentMainChat: (chat: ChatProps) => void;
+    setTaskCommentLines: (value: number) => void;
+    setTaskComments: (value: TaskCommentProps[]) => void;
+    tmpCurrentTaskContent: TaskProps;
+    taskCommentLines: number;
+    teamMembers: UserProps[];
+    TM: TaskManagementState;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -114,6 +125,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         handleCreateNewTaskNote,
         taskNotes,
         setCurrentTaskNote,
+        editTargetComment,
+        isInEdit,
+        setCurrentMainChat,
+        setTaskCommentLines,
+        setTaskComments,
+        tmpCurrentTaskContent,
+        taskCommentLines,
+        teamMembers,
+        TM,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -415,42 +435,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         History
                     </Tab> */}
 
-                    {tabIndex === 1 && (
-                        <>
-                            <Box sx={{ flexGrow: 1 }} />
-                            <IconButton
-                                color="neutral"
-                                component="p"
-                                size="sm"
-                                sx={{ mr: "23px", mb: "3px", px: "5px" }}
-                                variant="plain"
-                                onClick={() => {
-                                    if (
-                                        setIsTaskHomeVisible &&
-                                        setIsTaskNoteVisible &&
-                                        taskContents.project
-                                    ) {
-                                        setIsTaskHomeVisible(false);
-                                        setIsTaskNoteVisible(true);
-                                        handleCreateNewTaskNote(
-                                            null,
-                                            taskContents.project.projectId,
-                                            currentPreviewTaskId,
-                                            taskContents.title
-                                        );
-                                    } else {
-                                        console.error(
-                                            "Can't parent note ID to create a child note. Project ID is not defined."
-                                        );
-                                    }
-                                }}
-                            >
-                                <AddIcon />
-                                New Note
-                            </IconButton>
-                        </>
-                    )}
-
                     {tabIndex === 2 && (
                         <Box
                             sx={{
@@ -491,6 +475,20 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 >
                     <TabPanel value={0}>
                         <>
+                            {taskComments.length === 0 && (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        flex: 1,
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    <Typography level="title-md">No comments yet</Typography>
+                                </Box>
+                            )}
+
                             {taskComments.length > 0 && (
                                 <Box sx={{ mb: 1 }}>
                                     <Virtuoso
@@ -532,71 +530,123 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     />
                                 </Box>
                             )}
+                            <TaskCommentEditorBlock
+                                editTargetComment={editTargetComment}
+                                isCommentUpdated={TM.isTaskCommentUpdated}
+                                isInEdit={isInEdit}
+                                myself={myself}
+                                setCurrentChat={setCurrentMainChat}
+                                setIsCommentUpdated={TM.setIsTaskCommentUpdated}
+                                setIsInEdit={setIsInEdit}
+                                setMyself={setMyself}
+                                setOpeningService={setOpeningService}
+                                setTaskCommentLines={setTaskCommentLines}
+                                setTaskComments={setTaskComments}
+                                socket={socket}
+                                task={tmpCurrentTaskContent}
+                                taskCommentLines={taskCommentLines}
+                                taskComments={taskComments}
+                                teamMemberProfiles={teamMemberProfiles}
+                                teamMembers={teamMembers}
+                            />
                         </>
                     </TabPanel>
 
                     <TabPanel value={1}>
                         <>
-                            {taskNotes.length > 0 && (
-                                <Stack
-                                    className="custom-scrollbar"
-                                    direction="row"
-                                    sx={{
-                                        width: "100%",
-                                        minHeight: "40px",
-                                        maxHeight: "200px",
-                                        overflowY: "scroll",
-                                    }}
-                                >
-                                    <ListItem sx={{ width: "100%" }} nested>
-                                        <List sx={{ gap: 0.5 }}>
-                                            {taskNotes.map((taskNote, index) => {
-                                                return (
-                                                    <ListItem
-                                                        key={`listitem-${taskNote.noteType}-${taskNote.noteId}-${index}`}
+                            <Stack
+                                className="custom-scrollbar"
+                                direction="row"
+                                sx={{
+                                    width: "100%",
+                                    minHeight: "40px",
+                                    maxHeight: "200px",
+                                    overflowY: "scroll",
+                                }}
+                            >
+                                <ListItem sx={{ width: "100%" }} nested>
+                                    <List sx={{ gap: 0.5 }}>
+                                        {taskNotes.map((taskNote, index) => {
+                                            return (
+                                                <ListItem
+                                                    key={`listitem-${taskNote.noteType}-${taskNote.noteId}-${index}`}
+                                                >
+                                                    <ListItemButton
+                                                        variant="soft"
+                                                        sx={{
+                                                            justifyContent: "flex-start",
+                                                            alignItems: "center",
+                                                            borderRadius: "5px",
+                                                        }}
+                                                        onClick={() => {
+                                                            if (
+                                                                setIsTaskHomeVisible &&
+                                                                setIsTaskNoteVisible
+                                                            ) {
+                                                                setIsTaskHomeVisible(false);
+                                                                setIsTaskNoteVisible(true);
+                                                                setCurrentTaskNote(taskNote);
+                                                            }
+                                                        }}
                                                     >
-                                                        <ListItemButton
-                                                            variant="soft"
+                                                        <Typography
+                                                            level="title-md"
                                                             sx={{
-                                                                justifyContent: "flex-start",
+                                                                px: "10px",
+                                                                overflow: "hidden",
+                                                                textOverflow: "ellipsis",
+                                                                whiteSpace: "nowrap",
+                                                                width: "100%",
+                                                                height: "30px",
+                                                                display: "flex",
                                                                 alignItems: "center",
-                                                                borderRadius: "5px",
                                                             }}
-                                                            onClick={() => {
-                                                                if (
-                                                                    setIsTaskHomeVisible &&
-                                                                    setIsTaskNoteVisible
-                                                                ) {
-                                                                    setIsTaskHomeVisible(false);
-                                                                    setIsTaskNoteVisible(true);
-                                                                    setCurrentTaskNote(taskNote);
-                                                                }
-                                                            }}
+                                                            noWrap
                                                         >
-                                                            <Typography
-                                                                level="title-md"
-                                                                sx={{
-                                                                    px: "10px",
-                                                                    overflow: "hidden",
-                                                                    textOverflow: "ellipsis",
-                                                                    whiteSpace: "nowrap",
-                                                                    width: "100%",
-                                                                    height: "30px",
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                }}
-                                                                noWrap
-                                                            >
-                                                                {`${taskNote.title}`}
-                                                            </Typography>
-                                                        </ListItemButton>
-                                                    </ListItem>
-                                                );
-                                            })}
-                                        </List>
-                                    </ListItem>
-                                </Stack>
-                            )}
+                                                            {`${taskNote.title}`}
+                                                        </Typography>
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            );
+                                        })}
+                                        <ListItem>
+                                            <ListItemButton
+                                                variant="soft"
+                                                color="primary"
+                                                sx={{
+                                                    justifyContent: "flex-start",
+                                                    alignItems: "center",
+                                                    height: "30px",
+                                                    borderRadius: "5px",
+                                                }}
+                                                onClick={() => {
+                                                    if (
+                                                        setIsTaskHomeVisible &&
+                                                        setIsTaskNoteVisible &&
+                                                        taskContents.project
+                                                    ) {
+                                                        setIsTaskHomeVisible(false);
+                                                        setIsTaskNoteVisible(true);
+                                                        handleCreateNewTaskNote(
+                                                            null,
+                                                            taskContents.project.projectId,
+                                                            currentPreviewTaskId,
+                                                            taskContents.title
+                                                        );
+                                                    } else {
+                                                        console.error(
+                                                            "Can't parent note ID to create a child note. Project ID is not defined."
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                <AddIcon />
+                                                New Note
+                                            </ListItemButton>
+                                        </ListItem>
+                                    </List>
+                                </ListItem>
+                            </Stack>
                         </>
                     </TabPanel>
 

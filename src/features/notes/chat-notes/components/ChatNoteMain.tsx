@@ -154,28 +154,40 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                             <>
                                 {NM.currentNoteType !== 0 && (
                                     <Stack direction={"column"} sx={{ width: "100%" }}>
-                                        <ChatNoteHeader
-                                            currentChatNote={NM.currentChatNote}
-                                            currentChatNoteChain={NM.currentChatNoteChain}
-                                            chat={chat}
-                                            isInChatPage={isInChatPage}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            setOpeningService={setOpeningService}
-                                            setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                            setCurrentProject={setCurrentProject}
-                                            socket={socket}
-                                            teamMemberProfiles={teamMemberProfiles}
-                                            CM={CM}
-                                            NM={NM}
-                                            openDeleteNote={openDeleteNote}
-                                            setOpenDeleteNote={setOpenDeleteNote}
-                                            openSearchBox={openSearchBox}
-                                            setOpenSearchBox={setOpenSearchBox}
-                                            handleCloseTab={handleCloseTab}
-                                            onCreateChildNote={handleCreateChildNote}
-                                            onDeleteNote={handleDeleteNote}
-                                        />
+                                        <Stack
+                                            alignItems="center"
+                                            direction="row"
+                                            justifyContent="space-between"
+                                            sx={{
+                                                width: "100%",
+                                                height: "30px",
+                                                mt: "10px",
+                                                mb: "5px",
+                                            }}
+                                        >
+                                            <ChatNoteHeader
+                                                currentChatNote={NM.currentChatNote}
+                                                currentChatNoteChain={NM.currentChatNoteChain}
+                                                chat={chat}
+                                                isInChatPage={isInChatPage}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                setOpeningService={setOpeningService}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setCurrentProject={setCurrentProject}
+                                                socket={socket}
+                                                teamMemberProfiles={teamMemberProfiles}
+                                                CM={CM}
+                                                NM={NM}
+                                                openDeleteNote={openDeleteNote}
+                                                setOpenDeleteNote={setOpenDeleteNote}
+                                                openSearchBox={openSearchBox}
+                                                setOpenSearchBox={setOpenSearchBox}
+                                                handleCloseTab={handleCloseTab}
+                                                onCreateChildNote={handleCreateChildNote}
+                                                onDeleteNote={handleDeleteNote}
+                                            />
+                                        </Stack>
 
                                         <Tabs
                                             sx={{ width: "100%" }}

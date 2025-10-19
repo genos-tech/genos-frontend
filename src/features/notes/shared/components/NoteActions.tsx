@@ -1,4 +1,5 @@
 import AddIcon from "@mui/icons-material/Add";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
@@ -13,6 +14,7 @@ import {
     MenuItem,
     Stack,
     Tooltip,
+    Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
@@ -110,65 +112,71 @@ export const NoteActions = ({
                                     />
                                 </Box>
                             )}
+
                             {currentTask.id && (
-                                <Tooltip title="Open Task">
+                                <>
+                                    <Tooltip title="Open Task">
+                                        <Chip
+                                            key={`task-note-task-id${currentTask.id}`}
+                                            color="neutral"
+                                            size="sm"
+                                            variant="outlined"
+                                            sx={{
+                                                mt: "3px",
+                                                mx: "5px",
+                                                height: "30px",
+                                                borderRadius: "5px",
+                                                fontWeight: "bold",
+                                            }}
+                                            onClick={onOpenTask}
+                                        >
+                                            ID: {currentTask.id}
+                                        </Chip>
+                                    </Tooltip>
+
+                                    <Tooltip title="Open Task">
+                                        <Chip
+                                            key={`task-title-${currentTask.id}`}
+                                            color="primary"
+                                            size="sm"
+                                            variant="outlined"
+                                            sx={{
+                                                mt: "3px",
+                                                mr: "5px",
+                                                height: "30px",
+                                                borderRadius: "5px",
+                                                fontWeight: "bold",
+                                            }}
+                                            onClick={onOpenTask}
+                                        >
+                                            Title:{" "}
+                                            {currentTask.title.length > 14
+                                                ? `${currentTask.title.slice(0, 14)}...`
+                                                : currentTask.title || "N/A"}
+                                        </Chip>
+                                    </Tooltip>
+
                                     <Chip
-                                        key={`task-note-task-id${currentTask.id}`}
-                                        color="neutral"
+                                        key={`task-status-${currentTask.status.status}`}
                                         size="sm"
-                                        variant="outlined"
                                         sx={{
                                             mt: "3px",
-                                            mx: "5px",
+                                            mr: "5px",
                                             height: "30px",
-                                            borderRadius: "5px",
+                                            backgroundColor: currentTask.status.color
+                                                ? alpha(
+                                                      currentTask.status.color,
+                                                      mode === "dark" ? 0.5 : 0.75
+                                                  )
+                                                : "transparent",
+                                            color: currentTask.status.textColor,
                                             fontWeight: "bold",
+                                            borderRadius: "5px",
                                         }}
-                                        onClick={onOpenTask}
                                     >
-                                        ID: {currentTask.id}
+                                        {currentTask.status.status}
                                     </Chip>
-                                </Tooltip>
-                            )}
-                            <Chip
-                                key={`task-title-${currentTask.id}`}
-                                color="primary"
-                                size="sm"
-                                variant="outlined"
-                                sx={{
-                                    mt: "3px",
-                                    mr: "5px",
-                                    height: "30px",
-                                    borderRadius: "5px",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                Title:{" "}
-                                {currentTask.title.length > 14
-                                    ? `${currentTask.title.slice(0, 14)}...`
-                                    : currentTask.title || "N/A"}
-                            </Chip>
-                            {currentTask.status.status && (
-                                <Chip
-                                    key={`task-status-${currentTask.status.status}`}
-                                    size="sm"
-                                    sx={{
-                                        mt: "3px",
-                                        mr: "5px",
-                                        height: "30px",
-                                        backgroundColor: currentTask.status.color
-                                            ? alpha(
-                                                  currentTask.status.color,
-                                                  mode === "dark" ? 0.5 : 0.75
-                                              )
-                                            : "transparent",
-                                        color: currentTask.status.textColor,
-                                        fontWeight: "bold",
-                                        borderRadius: "5px",
-                                    }}
-                                >
-                                    {currentTask.status.status}
-                                </Chip>
+                                </>
                             )}
                         </>
                     )}
@@ -188,9 +196,19 @@ export const NoteActions = ({
                     </MenuButton>
                 </Tooltip>
                 <Menu size="sm">
+                    {currentTask && currentTask.id && (
+                        <MenuItem onClick={onOpenTask}>
+                            <AssignmentRoundedIcon />
+                            <Typography level="title-sm" sx={{ mb: "3px" }}>
+                                Open Task
+                            </Typography>
+                        </MenuItem>
+                    )}
                     <MenuItem onClick={onCreateChildNote}>
                         <AddIcon />
-                        Child Note
+                        <Typography level="title-sm" sx={{ mb: "3px" }}>
+                            Child Note
+                        </Typography>
                     </MenuItem>
                     <MenuItem
                         sx={{
@@ -200,7 +218,9 @@ export const NoteActions = ({
                         onClick={onDeleteNote}
                     >
                         <DeleteIcon sx={{ color: "red" }} />
-                        Delete Note
+                        <Typography color="danger" level="title-sm" sx={{ mb: "3px" }}>
+                            Delete Note
+                        </Typography>
                     </MenuItem>
                 </Menu>
             </Dropdown>

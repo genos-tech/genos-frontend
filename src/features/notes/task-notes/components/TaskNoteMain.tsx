@@ -9,12 +9,12 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { NoteActions } from "../../shared/components/NoteActions";
+import { NoteTabs } from "../../shared/components/NoteTabs";
 import { useNoteAutoSave } from "../../shared/hooks/useNoteAutoSave";
 import { useTaskPreview } from "../../shared/hooks/useTaskPreview";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
-import { NoteActions } from "../../shared/components/NoteActions";
-import { NoteHeader } from "../../shared/components/NoteHeader";
-import { NoteTabs } from "../../shared/components/NoteTabs";
+import { TaskNoteHeader } from "./TaskNoteHeader";
 
 type TaskNoteMainProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -151,7 +151,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     // Handle note updates after auto-save
     useEffect(() => {
-        if (noteBodySaved && NM.currentTaskNote) {
+        if (
+            noteBodySaved &&
+            NM.currentTaskNote &&
+            currentTaskNoteTitle !== NM.currentTaskNote.title
+        ) {
             // Update the note title on the tab
             NM.setTabItems(
                 NM.tabItems.map((item) =>
@@ -224,7 +228,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             mb: "5px",
                         }}
                     >
-                        <NoteHeader
+                        <TaskNoteHeader
                             currentTaskNoteChain={NM.currentTaskNoteChain || null}
                             onLoadNote={NM.loadNote}
                         />

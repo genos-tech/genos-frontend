@@ -23,8 +23,8 @@ import {
     updateTagOptions,
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
+import { TaskCommentEditorBlock } from "./base/sub/TaskCommentEditorBlock";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
-import { TaskCommentEditorBlock } from "./base/TaskCommentEditorBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
@@ -524,28 +524,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         taskNotes={taskNotes}
                         teamMemberProfiles={teamMemberProfiles}
                         uploadedFiles={uploadedFiles}
-                    />
-
-                    <Divider sx={{ m: 2 }} />
-
-                    <TaskCommentEditorBlock
                         editTargetComment={editTargetComment}
-                        isCommentUpdated={TM.isTaskCommentUpdated}
                         isInEdit={isInEdit}
-                        myself={myself}
-                        setCurrentChat={setCurrentMainChat}
-                        setIsCommentUpdated={TM.setIsTaskCommentUpdated}
-                        setIsInEdit={setIsInEdit}
-                        setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        setCurrentMainChat={setCurrentMainChat}
                         setTaskCommentLines={setTaskCommentLines}
                         setTaskComments={setTaskComments}
-                        socket={socket}
-                        task={tmpCurrentTaskContent}
+                        tmpCurrentTaskContent={tmpCurrentTaskContent}
                         taskCommentLines={taskCommentLines}
-                        taskComments={taskComments}
-                        teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
+                        TM={TM}
                     />
                 </Sheet>
             )}

@@ -11,9 +11,9 @@ import { ChatProps } from "../../../../types/chat";
 import { MyNoteProps } from "../../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { EmptyState } from "../../shared/components/EmptyState";
-import { MyNoteHeader } from "../components/MyNoteHeader";
 import { NoteEditor } from "../../shared/components/NoteEditor";
 import { NoteTabList } from "../../shared/components/NoteTabList";
+import { MyNoteHeader } from "../components/MyNoteHeader";
 
 /**
  * Props for the MyNoteMain component
@@ -129,10 +129,22 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         <>
                             {NM.currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
-                                    <MyNoteHeader
-                                        currentMyNoteChain={NM.currentMyNoteChain || null}
-                                        onLoadNote={NM.loadNote}
-                                    />
+                                    <Stack
+                                        alignItems="center"
+                                        direction="row"
+                                        justifyContent="space-between"
+                                        sx={{
+                                            width: "100%",
+                                            height: "30px",
+                                            mt: "10px",
+                                            mb: "5px",
+                                        }}
+                                    >
+                                        <MyNoteHeader
+                                            currentMyNoteChain={NM.currentMyNoteChain || null}
+                                            onLoadNote={NM.loadNote}
+                                        />
+                                    </Stack>
 
                                     <Tabs
                                         sx={{ width: "100%" }}
