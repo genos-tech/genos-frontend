@@ -108,6 +108,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
             color="neutral"
             sx={{ ml: "45px", mr: "8px", pl: "30px" }}
             onClick={() => {
+                TM.getTaskMeta();
                 setOpen(!open);
             }}
         >

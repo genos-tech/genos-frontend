@@ -280,7 +280,8 @@ export const useTaskManagement = (
     });
 
     useEffect(() => {
-        setTaskMetaTree(buildTaskTree(taskMeta));
+        const newTaskMetaTree = buildTaskTree(taskMeta);
+        setTaskMetaTree([...newTaskMetaTree]);
     }, [taskMeta]);
 
     useEffect(() => {

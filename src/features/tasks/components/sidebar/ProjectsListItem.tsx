@@ -132,10 +132,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                                 systemUserId: systemUserId,
                                                             });
                                                         })();
-                                                    } else {
-                                                        console.error(
-                                                            "Failed to set the current project"
-                                                        );
                                                     }
                                                 }}
                                             >
