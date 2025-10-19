@@ -32,6 +32,15 @@ export const updateTabFromMyNoteUpdate = (props: updateTabFromMyNoteUpdateProps)
             ) {
                 setSelectedTabIndex(tabItems.length);
                 setTabItems([...tabItems, currentMyNote]);
+            } else {
+                const targetTabIndex = tabItems.findIndex(
+                    (item) =>
+                        `${item.noteType}-${item.noteId}` ===
+                        `${currentMyNote.noteType}-${currentMyNote.noteId}`
+                );
+                if (targetTabIndex !== -1) {
+                    setSelectedTabIndex(targetTabIndex);
+                }
             }
         }
     }, [currentMyNote]);
@@ -66,6 +75,15 @@ export const updateTabFromTaskNoteUpdate = (props: updateTabFromTaskNoteUpdatePr
             ) {
                 setSelectedTabIndex(tabItems.length);
                 setTabItems([...tabItems, currentTaskNote]);
+            } else {
+                const targetTabIndex = tabItems.findIndex(
+                    (item) =>
+                        `${item.noteType}-${item.noteId}` ===
+                        `${currentTaskNote.noteType}-${currentTaskNote.noteId}`
+                );
+                if (targetTabIndex !== -1) {
+                    setSelectedTabIndex(targetTabIndex);
+                }
             }
         }
     }, [currentTaskNote]);
@@ -100,6 +118,15 @@ export const updateTabFromChatNoteUpdate = (props: updateTabFromChatNoteUpdatePr
             ) {
                 setSelectedTabIndex(tabItems.length);
                 setTabItems([...tabItems, currentChatNote]);
+            } else {
+                const targetTabIndex = tabItems.findIndex(
+                    (item) =>
+                        `${item.noteType}-${item.noteId}` ===
+                        `${currentChatNote.noteType}-${currentChatNote.noteId}`
+                );
+                if (targetTabIndex !== -1) {
+                    setSelectedTabIndex(targetTabIndex);
+                }
             }
         }
     }, [currentChatNote]);

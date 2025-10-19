@@ -434,35 +434,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </ListItemDecorator>
                         History
                     </Tab> */}
-
-                    {tabIndex === 2 && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                alignItems: "center",
-                            }}
-                        >
-                            <input
-                                ref={inputRef}
-                                accept="*"
-                                multiple={true}
-                                style={{ display: "none" }}
-                                type="file"
-                                onChange={handleSelectedFiles}
-                            />
-                            <IconButton
-                                color="neutral"
-                                component="p"
-                                size="sm"
-                                sx={{ mr: "15px", mb: "3px", px: "3px" }}
-                                variant="plain"
-                                onClick={handleButtonClick}
-                            >
-                                <FolderIcon sx={{ pr: "5px", fontSize: "25px" }} /> Select Files
-                            </IconButton>
-                        </Box>
-                    )}
                 </TabList>
 
                 <Box
@@ -797,6 +768,35 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     </Box>
                                 ))}
                             </Box>
+                        </Box>
+
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                alignItems: "center",
+                                mt: "10px",
+                            }}
+                        >
+                            <input
+                                ref={inputRef}
+                                accept="*"
+                                multiple={true}
+                                style={{ display: "none" }}
+                                type="file"
+                                onChange={handleSelectedFiles}
+                            />
+                            <IconButton
+                                color="neutral"
+                                size="sm"
+                                variant="outlined"
+                                onClick={handleButtonClick}
+                            >
+                                <FolderIcon />
+                                <Typography level="title-sm" sx={{ mx: "5px" }}>
+                                    Select Files
+                                </Typography>
+                            </IconButton>
                         </Box>
 
                         <Modal

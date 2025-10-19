@@ -474,9 +474,14 @@ export const useNoteManagement = (
     const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
         if (!accessToken) return;
 
-        const targetTabIndex: number = tabItems.findIndex(
-            (note) => note.noteType === noteType && note.noteId === noteId
-        );
+        let targetTabIndex: number = -1;
+        if (nextTabIndex !== -1) {
+            targetTabIndex = nextTabIndex;
+        } else {
+            targetTabIndex = tabItems.findIndex(
+                (note) => note.noteType === noteType && note.noteId === noteId
+            );
+        }
 
         try {
             if (noteType === 1) {

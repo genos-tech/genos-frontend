@@ -51,7 +51,9 @@ export function useNoteTreeState<T extends BaseNoteTreeNode>({
 
     // Update meta tree when current note changes
     useEffect(() => {
-        setTmpMetaTree(metaTree);
+        if (areObjectsEqual(tmpMetaTree, metaTree) === false) {
+            setTmpMetaTree(metaTree);
+        }
     }, [currentNote, metaTree]);
 
     return {
