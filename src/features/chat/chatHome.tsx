@@ -258,6 +258,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         incompleteTodoCount={incompleteTodoCount}
                                         isExistingTodaysTodo={isExistingTodaysTodo}
                                         isToDoVisible={isToDoVisible}
+                                        setIsToDoVisible={setIsToDoVisible}
                                         todos={todos}
                                         setTodos={setTodos}
                                         setIsExistingTodaysTodo={setIsExistingTodaysTodo}

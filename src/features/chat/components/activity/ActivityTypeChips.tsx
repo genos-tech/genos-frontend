@@ -13,7 +13,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     chatTypeLookup,
 }) => {
     return (
-        <Stack direction="row" spacing={1} flexWrap="wrap">
+        <Stack direction="row" spacing={0.3} flexWrap="wrap">
             {/* Chat Name and Task ID for PM and Task */}
             {(activity.chatType === 3 || activity.chatType === 4) && (
                 <>
@@ -22,6 +22,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                         size="sm"
                         variant="soft"
                         sx={{
+                            height: "24px",
                             fontSize: "12px",
                             borderRadius: "4px",
                             fontWeight: "bold",
@@ -33,6 +34,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                         size="sm"
                         variant="soft"
                         sx={{
+                            height: "24px",
                             fontSize: "12px",
                             borderRadius: "4px",
                             fontWeight: "bold",
@@ -50,6 +52,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                     size="sm"
                     variant="outlined"
                     sx={{
+                        height: "24px",
                         fontSize: "12px",
                         borderRadius: "4px",
                         fontWeight: "bold",
@@ -65,6 +68,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                     size="sm"
                     variant="outlined"
                     sx={{
+                        height: "24px",
                         fontSize: "12px",
                         borderRadius: "4px",
                         fontWeight: "bold",
@@ -80,6 +84,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                     size="sm"
                     variant="outlined"
                     sx={{
+                        height: "24px",
                         fontSize: "12px",
                         borderRadius: "4px",
                         fontWeight: "bold",
@@ -95,6 +100,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                 size="sm"
                 variant="outlined"
                 sx={{
+                    height: "24px",
                     fontSize: "12px",
                     borderRadius: "4px",
                     fontWeight: "bold",
@@ -110,6 +116,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                     size="sm"
                     variant="outlined"
                     sx={{
+                        height: "24px",
                         fontSize: "12px",
                         borderRadius: "4px",
                         fontWeight: "bold",

@@ -16,8 +16,8 @@ import {
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
+import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { NoteToggleButton } from "./NoteToggleButton";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";

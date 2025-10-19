@@ -474,13 +474,8 @@ export const useNoteManagement = (
     const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
         if (!accessToken) return;
 
-        const targetTabIndex: number = Math.max(
-            nextTabIndex !== -1
-                ? nextTabIndex
-                : tabItems.findIndex(
-                      (note) => note.noteType === noteType && note.noteId === noteId
-                  ),
-            0
+        const targetTabIndex: number = tabItems.findIndex(
+            (note) => note.noteType === noteType && note.noteId === noteId
         );
 
         try {
@@ -501,7 +496,9 @@ export const useNoteManagement = (
                         tsUpdated: new Date(note.tsUpdated).toISOString(),
                     };
                     setCurrentMyNote(myNote);
-                    setSelectedTabIndex(targetTabIndex);
+                    if (targetTabIndex !== -1) {
+                        setSelectedTabIndex(targetTabIndex);
+                    }
                 } else {
                     const note: MyNoteProps = await loadSpecificNote(
                         myself,
@@ -512,7 +509,9 @@ export const useNoteManagement = (
                     if (!note.error && note.noteType === 1) {
                         addNote(1, note);
                         setCurrentMyNote(note);
-                        setSelectedTabIndex(targetTabIndex);
+                        if (targetTabIndex !== -1) {
+                            setSelectedTabIndex(targetTabIndex);
+                        }
                     }
                 }
                 setCurrentNoteType(1);
@@ -535,7 +534,9 @@ export const useNoteManagement = (
                         tsUpdated: new Date(note.tsUpdated).toISOString(),
                     };
                     setCurrentTaskNote(taskNote);
-                    setSelectedTabIndex(targetTabIndex);
+                    if (targetTabIndex !== -1) {
+                        setSelectedTabIndex(targetTabIndex);
+                    }
                 } else {
                     const note: TaskNoteProps = await loadSpecificNote(
                         myself,
@@ -546,7 +547,9 @@ export const useNoteManagement = (
                     if (!note.error && note.noteType === 2) {
                         addNote(2, note);
                         setCurrentTaskNote(note);
-                        setSelectedTabIndex(targetTabIndex);
+                        if (targetTabIndex !== -1) {
+                            setSelectedTabIndex(targetTabIndex);
+                        }
                     }
                 }
                 setCurrentNoteType(2);
@@ -571,7 +574,9 @@ export const useNoteManagement = (
                         tsUpdated: new Date(note.tsUpdated).toISOString(),
                     };
                     setCurrentChatNote(chatNote);
-                    setSelectedTabIndex(targetTabIndex);
+                    if (targetTabIndex !== -1) {
+                        setSelectedTabIndex(targetTabIndex);
+                    }
                 } else {
                     const note: ChatNoteProps = await loadSpecificNote(
                         myself,
@@ -582,7 +587,9 @@ export const useNoteManagement = (
                     if (note && !note.error && note.noteType === 3) {
                         addNote(3, note);
                         setCurrentChatNote(note);
-                        setSelectedTabIndex(targetTabIndex);
+                        if (targetTabIndex !== -1) {
+                            setSelectedTabIndex(targetTabIndex);
+                        }
                     }
                 }
                 setCurrentNoteType(3);

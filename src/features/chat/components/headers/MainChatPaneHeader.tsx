@@ -157,7 +157,9 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                             component="a"
                                             size="sm"
                                             variant="plain"
-                                            onClick={() => setIsToDoVisible(true)}
+                                            onClick={() => {
+                                                setIsToDoVisible(true);
+                                            }}
                                         >
                                             <ChecklistIcon />
                                         </IconButton>

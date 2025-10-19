@@ -474,7 +474,7 @@ input[type="checkbox"] {
 /* Task body editor styles */
 .bn-task-body-box-light .bn-editor {
     background-color: var(--editor-light-bg);
-    padding: 20px 0;
+    padding: 30px 50px;
     height: var(--task-body-editor-height, 500px);
     overflow-y: scroll;
 }
@@ -486,7 +486,7 @@ input[type="checkbox"] {
 
 .bn-task-body-box-dark .bn-editor {
     background-color: var(--editor-dark-bg);
-    padding: 20px 0;
+    padding: 30px 50px;
     height: var(--task-body-editor-height, 500px);
     overflow-y: scroll;
 }
@@ -509,7 +509,7 @@ input[type="checkbox"] {
 /* Note body editor styles */
 .bn-note-body-box-light .bn-editor {
     background-color: var(--editor-light-bg);
-    padding: 50px 0 20px;
+    padding: 50px 45px 20px;
     height: 92dvh;
     overflow-y: scroll;
 }
@@ -521,7 +521,7 @@ input[type="checkbox"] {
 
 .bn-note-body-box-dark .bn-editor {
     background-color: var(--editor-dark-bg);
-    padding: 50px 0 20px;
+    padding: 50px 45px 20px;
     height: 92dvh;
     overflow-y: scroll;
 }

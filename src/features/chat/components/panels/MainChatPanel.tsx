@@ -22,6 +22,7 @@ interface MainChatPanelProps {
     incompleteTodoCount: number;
     isExistingTodaysTodo: boolean;
     isToDoVisible: boolean;
+    setIsToDoVisible: (value: boolean) => void;
     todos: ToDoFactProps[];
     setTodos: (todos: ToDoFactProps[]) => void;
     setIsExistingTodaysTodo: (value: boolean) => void;
@@ -43,6 +44,7 @@ export const MainChatPanel = ({
     incompleteTodoCount,
     isExistingTodaysTodo,
     isToDoVisible,
+    setIsToDoVisible,
     todos,
     setTodos,
     setIsExistingTodaysTodo,
@@ -108,7 +110,7 @@ export const MainChatPanel = ({
                     setIsSubChatVisible={CM.setIsSubChatVisible}
                     setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                     setIsThreadVisible={CM.setIsThreadVisible}
-                    setIsToDoVisible={() => {}}
+                    setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     setTodos={setTodos}
