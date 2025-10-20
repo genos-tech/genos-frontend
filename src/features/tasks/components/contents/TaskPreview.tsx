@@ -40,14 +40,12 @@ type TaskPreviewProps = {
     setCurrentProject: (value: ProjectProps) => void;
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
-    isThreadVisible?: boolean;
     setOpenCreateProject: (value: boolean) => void;
     isTaskUpdated?: boolean;
     setIsTaskUpdated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskPreviewVisible?: boolean;
     setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
@@ -86,14 +84,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setCurrentProject,
         setIsMainChatVisible,
         setIsThreadVisible,
-        isThreadVisible,
         setOpenCreateProject,
         isTaskUpdated,
         setIsTaskUpdated,
         setOpeningService,
         setCurrentMainChat,
         setIsTaskHomeVisible,
-        isTaskPreviewVisible,
         setIsTaskNoteVisible,
         handleCreateNewTaskNote,
         setCurrentTaskNote,
@@ -128,6 +124,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [currentTaskId, setCurrentTaskId] = useState<number | undefined>(
         TM.currentPreviewTask?.id
     );
+
+    const [tabIndex, setTabIndex] = useState(0);
 
     // Save initial task title to restore it when use input empty title
     const [initTaskTitle, setInitTaskTitle] = useState<string>(TM.currentPreviewTask?.title || "");
@@ -385,6 +383,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [taskCommentLines]); // re-run whenever content changes
 
+    // This is for auto scrolling to the bottom when an user switches the tab.
+    useEffect(() => {
+        const sheet = sheetRef.current;
+        if (sheet) {
+            sheet.scrollTop = sheet.scrollHeight; // scroll to bottom
+        }
+    }, [tabIndex]); // re-run whenever content changes
+
     return (
         <>
             {tmpCurrentTaskContent?.id && (
@@ -535,6 +541,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         tmpCurrentTaskContent={tmpCurrentTaskContent}
                         taskCommentLines={taskCommentLines}
                         teamMembers={teamMembers}
+                        tabIndex={tabIndex}
+                        setTabIndex={setTabIndex}
                         TM={TM}
                     />
                 </Sheet>

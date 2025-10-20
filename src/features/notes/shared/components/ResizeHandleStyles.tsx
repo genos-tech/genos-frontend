@@ -1,11 +1,11 @@
 export const ResizeHandleStyles = () => (
     <style>
         {`
-            .resize-handle {
+            .note-resize-handle {
                 transition: all 0.3s ease-in-out;
             }
-            .resize-handle:hover {
-                background-color: lightgray !important;
+            .note-resize-handle:hover {
+                background-color: grey !important;
                 width: 8px !important;
             }
         `}

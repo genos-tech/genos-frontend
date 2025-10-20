@@ -3,21 +3,18 @@ import { ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 
 type TaskTableListItemProps = {
-    taskTableVisible: boolean;
-    setTaskTableVisible: (value: boolean) => void;
+    isTaskHomeVisible: boolean;
     setIsDashboardVisible: (value: boolean) => void;
     setIsTaskHomeVisible: (value: boolean) => void;
 };
 export const TaskTableListItem = (props: TaskTableListItemProps) => {
-    const { taskTableVisible, setTaskTableVisible, setIsDashboardVisible, setIsTaskHomeVisible } =
-        props;
+    const { isTaskHomeVisible, setIsDashboardVisible, setIsTaskHomeVisible } = props;
     return (
         <ListItem>
             <ListItemButton
                 color="primary"
-                variant={taskTableVisible === true ? "outlined" : "plain"}
+                variant={isTaskHomeVisible === true ? "soft" : "plain"}
                 onClick={() => {
-                    setTaskTableVisible(true);
                     setIsDashboardVisible(false);
                     setIsTaskHomeVisible(true);
                 }}

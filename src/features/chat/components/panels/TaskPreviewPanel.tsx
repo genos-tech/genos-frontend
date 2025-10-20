@@ -54,15 +54,14 @@ export const TaskPreviewPanel = ({
                     minWidth: 0,
                     height: "100dvh",
                     gap: 1,
-                    ml: "1px",
                     boxShadow: "0 0 0 1px grey",
                     borderColor: mode === "dark" ? "black" : "white",
+                    borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                 }}
             >
                 <TaskPreview
                     handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                     isTaskNoteVisible={NM.isTaskNoteVisible}
-                    isThreadVisible={CM.isThreadVisible}
                     moveToSpecificChat={CM.moveToSpecificChat}
                     myself={myself}
                     openingService={openingService}
@@ -71,7 +70,6 @@ export const TaskPreviewPanel = ({
                     setCurrentTaskNote={NM.setCurrentTaskNote}
                     setIsMainChatVisible={CM.setIsMainChatVisible}
                     setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
-                    setIsThreadVisible={CM.setIsThreadVisible}
                     setMyself={setMyself}
                     setOpenCreateProject={PM.setOpenCreateProject}
                     setOpeningService={setOpeningService}

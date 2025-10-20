@@ -1,4 +1,4 @@
-import { Box, IconButton } from "@mui/joy";
+import { Box, IconButton, useColorScheme } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -52,6 +52,8 @@ export const MainChatPanel = ({
     setMyself,
     setOpeningService,
 }: MainChatPanelProps) => {
+    const { mode } = useColorScheme();
+
     return (
         <Panel id={"4"} maxSize={80} minSize={30} order={4} onResize={setMainChatPanelSize}>
             {/* No chat selected */}
@@ -63,6 +65,7 @@ export const MainChatPanel = ({
                         justifyContent: "center",
                         alignItems: "center",
                         width: "100%",
+                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                     }}
                 >
                     <IconButton

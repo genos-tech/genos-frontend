@@ -311,7 +311,7 @@ export const Sidebar = (props: SidebarProps) => {
             <Divider />
 
             <Box sx={{ pl: "12px" }} onClick={() => setOpenUserProfile(true)}>
-                <Tooltip size="sm" placement="right-start" title="Open User Profile">
+                <Tooltip size="sm" placement="right-start" title="Open My Profile">
                     <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`} variant="solid">
                         {myself.userName[0].toUpperCase()}
                     </Avatar>

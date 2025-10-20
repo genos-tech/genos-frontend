@@ -1,5 +1,5 @@
 import { Box, CssBaseline } from "@mui/joy";
-import { CssVarsProvider } from "@mui/joy/styles";
+import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
@@ -44,11 +44,20 @@ export const NoteHome = (props: NoteHomeProps) => {
         TM,
     } = props;
 
+    const { mode } = useColorScheme();
+
     const renderMainContent = () => {
         if (NM.currentNoteType === 0) {
             return (
                 <Panel id={"2"} maxSize={85} minSize={35} order={2}>
-                    <Box sx={{ paddingX: 1, height: "100dvh" }}>
+                    <Box
+                        sx={{
+                            paddingX: 1,
+                            height: "100dvh",
+                            borderRight:
+                                mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        }}
+                    >
                         <NoteContentRenderer
                             noteType={NM.currentNoteType}
                             myself={myself}
@@ -69,7 +78,13 @@ export const NoteHome = (props: NoteHomeProps) => {
 
         return (
             <Panel id={"3"} maxSize={85} minSize={35} order={3}>
-                <Box sx={{ paddingX: 1, height: "100dvh" }}>
+                <Box
+                    sx={{
+                        paddingX: 1,
+                        height: "100dvh",
+                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                    }}
+                >
                     <NoteContentRenderer
                         noteType={NM.currentNoteType}
                         myself={myself}
@@ -108,7 +123,17 @@ export const NoteHome = (props: NoteHomeProps) => {
 
                 <PanelGroup direction="horizontal">
                     <Panel id={"1"} maxSize={25} minSize={10} order={1}>
-                        <NoteSidebar NM={NM} />
+                        <Box
+                            sx={{
+                                height: "100%",
+                                width: "100%",
+                                borderColor: mode === "dark" ? "black" : "white",
+                                borderRight:
+                                    mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                            }}
+                        >
+                            <NoteSidebar NM={NM} />
+                        </Box>
                     </Panel>
 
                     <ResizeHandle />

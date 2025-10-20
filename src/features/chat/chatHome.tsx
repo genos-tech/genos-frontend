@@ -152,7 +152,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 width: "100%",
                                 borderColor: mode === "dark" ? "black" : "white",
                                 borderRight:
-                                    mode === "dark" ? "2px black groove" : "2px white groove",
+                                    mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                             }}
                         >
                             <Sheet
@@ -374,7 +374,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         transition: all 0.3s ease-in-out;
                     }
                     .chat-resize-handle:hover {
-                        background-color: lightgray !important;
+                        background-color: grey !important;
                         width: 8px !important;
                     }
                     `}

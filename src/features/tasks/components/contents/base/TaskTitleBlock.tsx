@@ -350,6 +350,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             if (TM.setIsTaskPreviewVisible) {
                                 if (isPreviewMode === true) {
                                     TM.setIsTaskPreviewVisible(false);
+                                    TM.setCurrentPreviewTaskId(-1);
                                 }
                                 // Open task-home when both task-preview and task-create-form are closed.
                                 if (

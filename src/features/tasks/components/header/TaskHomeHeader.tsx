@@ -1,4 +1,3 @@
-import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -26,8 +25,7 @@ import { alpha } from "@mui/system";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
-import { SearchTeamTasksResponse, TaskType } from "../../../../types/tasks";
-import { taskTypes } from "../../types/TaskTableTypes";
+import { SearchTeamTasksResponse } from "../../../../types/tasks";
 
 interface TaskHomeHeaderProps {
     myself: UserProps;
@@ -35,12 +33,9 @@ interface TaskHomeHeaderProps {
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     setOpeningService: (service: number) => void;
-    openingService: number;
     teamMemberProfiles: Record<string, UserProps>;
     funcSetAllChats: () => Promise<void>;
     currentProject: any;
-    displayTaskType: TaskType;
-    setDisplayTaskType: (type: TaskType) => void;
     teamTaskSearchOptions: SearchTeamTasksResponse[];
     loading: boolean;
     openSearch: boolean;
@@ -61,12 +56,9 @@ export const TaskHomeHeader = ({
     allChats,
     setCurrentMainChat,
     setOpeningService,
-    openingService,
     teamMemberProfiles,
     funcSetAllChats,
     currentProject,
-    displayTaskType,
-    setDisplayTaskType,
     teamTaskSearchOptions,
     loading,
     openSearch,

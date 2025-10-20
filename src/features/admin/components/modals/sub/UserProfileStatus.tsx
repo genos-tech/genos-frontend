@@ -156,6 +156,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                             localStorage.setItem("isOfflineForced", "false");
                                         }}
                                     >
+                                        <PulseDot color={"#4caf50"} />
                                         Set Online
                                     </MenuItem>
                                     <MenuItem
@@ -172,6 +173,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                             localStorage.setItem("isOfflineForced", "true");
                                         }}
                                     >
+                                        <PulseDot color={"#999"} />
                                         Set Always Offline
                                     </MenuItem>
                                 </Menu>

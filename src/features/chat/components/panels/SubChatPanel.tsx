@@ -1,3 +1,4 @@
+import { Box, useColorScheme } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -49,46 +50,57 @@ export const SubChatPanel = ({
     setMyself,
     setOpeningService,
 }: SubChatPanelProps) => {
+    const { mode } = useColorScheme();
+
     return (
         <Panel id={"3"} maxSize={80} minSize={30} order={3} onResize={setSubChatPanelSize}>
-            <MessagesSubPane
-                chat={CM.currentMainChat}
-                currentSubChat={CM.currentSubChat}
-                currentSubChatId={currentSubChatId}
-                currentThreadChat={CM.currentThreadChat}
-                currentWindowHeight={currentWindowHeight}
-                flaggedMessages={CM.flaggedMessages}
-                funcSetAllChats={CM.funcSetAllChats}
-                incompleteTodoCount={incompleteTodoCount}
-                isCreatingTask={TM.isCreatingTask}
-                isExistingTodaysTodo={isExistingTodaysTodo}
-                isThreadVisible={CM.isThreadVisible}
-                isToDoVisible={isToDoVisible}
-                myself={myself}
-                paneSizePCT={subChatPanelSize}
-                setCurrentMainChat={CM.setCurrentMainChat}
-                setCurrentPreviewTask={TM.setCurrentPreviewTask}
-                setCurrentProject={PM.setCurrentProject}
-                setCurrentSubChat={CM.setCurrentSubChat}
-                setCurrentThreadChat={CM.setCurrentThreadChat}
-                setFlaggedMessages={CM.setFlaggedMessages}
-                setIsCreatingTask={TM.setIsCreatingTask}
-                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
-                setIsMainChatVisible={CM.setIsMainChatVisible}
-                setIsSubChatVisible={CM.setIsSubChatVisible}
-                setIsThreadVisible={CM.setIsThreadVisible}
-                setIsToDoVisible={() => {}}
-                setMyself={setMyself}
-                setOpeningService={setOpeningService}
-                setTodos={setTodos}
-                socket={socket}
-                teamMemberProfiles={TEM.teamMemberProfiles}
-                teamMembers={TEM.teamMembers}
-                todos={todos}
-                setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
-                setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
-                subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}
-            />
+            <Box
+                sx={{
+                    height: "100%",
+                    width: "100%",
+                    borderColor: mode === "dark" ? "black" : "white",
+                    borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                }}
+            >
+                <MessagesSubPane
+                    chat={CM.currentMainChat}
+                    currentSubChat={CM.currentSubChat}
+                    currentSubChatId={currentSubChatId}
+                    currentThreadChat={CM.currentThreadChat}
+                    currentWindowHeight={currentWindowHeight}
+                    flaggedMessages={CM.flaggedMessages}
+                    funcSetAllChats={CM.funcSetAllChats}
+                    incompleteTodoCount={incompleteTodoCount}
+                    isCreatingTask={TM.isCreatingTask}
+                    isExistingTodaysTodo={isExistingTodaysTodo}
+                    isThreadVisible={CM.isThreadVisible}
+                    isToDoVisible={isToDoVisible}
+                    myself={myself}
+                    paneSizePCT={subChatPanelSize}
+                    setCurrentMainChat={CM.setCurrentMainChat}
+                    setCurrentPreviewTask={TM.setCurrentPreviewTask}
+                    setCurrentProject={PM.setCurrentProject}
+                    setCurrentSubChat={CM.setCurrentSubChat}
+                    setCurrentThreadChat={CM.setCurrentThreadChat}
+                    setFlaggedMessages={CM.setFlaggedMessages}
+                    setIsCreatingTask={TM.setIsCreatingTask}
+                    setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                    setIsMainChatVisible={CM.setIsMainChatVisible}
+                    setIsSubChatVisible={CM.setIsSubChatVisible}
+                    setIsThreadVisible={CM.setIsThreadVisible}
+                    setIsToDoVisible={() => {}}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    setTodos={setTodos}
+                    socket={socket}
+                    teamMemberProfiles={TEM.teamMemberProfiles}
+                    teamMembers={TEM.teamMembers}
+                    todos={todos}
+                    setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
+                    setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
+                    subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}
+                />
+            </Box>
         </Panel>
     );
 };

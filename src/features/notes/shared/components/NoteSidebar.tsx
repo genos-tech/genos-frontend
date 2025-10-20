@@ -170,8 +170,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
-                borderRight: "1px solid",
-                borderColor: "divider",
             }}
         >
             <GlobalStyles

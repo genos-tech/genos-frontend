@@ -133,7 +133,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     // Helper function to handle common chat navigation logic
-    const handleChatNavigation = async (chatType: number, messageUniqueKey: string) => {
+    const handleChatNavigation = async (
+        chatType: number,
+        isThread: boolean,
+        messageUniqueKey: string
+    ) => {
         const shouldUseMainChat =
             isSubChatVisible === false ||
             `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
@@ -150,7 +154,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             } else if (shouldUseSubChat) {
                 setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
             }
-            setIsMainChatVisible(true);
+            if (chatType !== 3 && isThread === false) {
+                setIsMainChatVisible(true);
+            } else {
+                setIsMainChatVisible(false);
+            }
             if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                 setIsThreadVisible(false);
             }
@@ -253,7 +261,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     }
                 }
 
-                await handleChatNavigation(activity.chatType, activity.messageUniqueKey);
+                await handleChatNavigation(
+                    activity.chatType,
+                    activity.isThread,
+                    activity.messageUniqueKey
+                );
             }
 
             setIsThreadVisible(true);
@@ -268,7 +280,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         if (activity.isThread === false) {
             if (activity.chatType !== 4) {
                 // Handling a message activity in DM, GM, PM
-                await handleChatNavigation(activity.chatType, activity.messageUniqueKey);
+                await handleChatNavigation(
+                    activity.chatType,
+                    activity.isThread,
+                    activity.messageUniqueKey
+                );
             } else {
                 // Handling a task comment activity
                 await handleTaskCommentActivity();

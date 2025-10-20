@@ -97,6 +97,8 @@ type TaskTabBlockProps = {
     tmpCurrentTaskContent: TaskProps;
     taskCommentLines: number;
     teamMembers: UserProps[];
+    tabIndex: number;
+    setTabIndex: (value: number) => void;
     TM: TaskManagementState;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
@@ -133,6 +135,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         tmpCurrentTaskContent,
         taskCommentLines,
         teamMembers,
+        tabIndex,
+        setTabIndex,
         TM,
     } = props;
 
@@ -141,7 +145,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
-    const [tabIndex, setTabIndex] = React.useState(0);
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         if (attachmentId > 0) {

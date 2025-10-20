@@ -38,7 +38,6 @@ export const TaskHome = (props: TaskHomeProps) => {
     // Task Related State
     const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
-    const [isTaskTableVisible, setTaskTableVisible] = useState(true);
     const [currentFilterName, setCurrentFilterName] = useState<string>("");
     const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
     const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
@@ -79,6 +78,10 @@ export const TaskHome = (props: TaskHomeProps) => {
             parentTaskId: null,
             rootTaskId: null,
         });
+
+        if (TM.isTaskPreviewVisible === true) {
+            setIsTaskHomeVisible(false);
+        }
     };
 
     const handleCreateProject = () => {
@@ -124,10 +127,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                 <TaskHomeLayout
                     isTaskHomeVisible={isTaskHomeVisible}
                     isDashboardVisible={isDashboardVisible}
-                    isTaskTableVisible={isTaskTableVisible}
-                    currentFilterName={currentFilterName}
-                    filterBy={filterBy}
-                    selectedTagForFiltering={selectedTagForFiltering}
                     displayTaskType={displayTaskType}
                     TEM={TEM}
                     PM={PM}
@@ -139,7 +138,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setOpeningService={setOpeningService}
                     openingService={openingService}
                     allChats={allChats}
-                    setAllChats={setAllChats}
                     funcSetAllChats={funcSetAllChats}
                     moveToSpecificChat={moveToSpecificChat}
                     socket={socket}
@@ -148,7 +146,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                     setSelectedTagForFiltering={setSelectedTagForFiltering}
                     setIsTaskHomeVisible={setIsTaskHomeVisible}
                     setIsDashboardVisible={setIsDashboardVisible}
-                    setTaskTableVisible={setTaskTableVisible}
                     teamTaskSearchOptions={searchHook.teamTaskSearchOptions}
                     loading={searchHook.loading}
                     openSearch={searchHook.openSearch}
@@ -161,7 +158,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                     onCreateTag={handleCreateTag}
                     onDeleteProject={handleDeleteProject}
                     onCloseTaskHome={handleCloseTaskHome}
-                    setDisplayTaskType={setDisplayTaskType}
                 />
 
                 <TaskHomeModals
@@ -180,11 +176,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                 {/* Hover Animation with CSS */}
                 <style>
                     {`
-                .resize-handle {
+                .task-resize-handle {
                     transition: all 0.3s ease-in-out;
                 }
-                .resize-handle:hover {
-                    background-color: lightgray !important;
+                .task-resize-handle:hover {
+                    background-color: grey !important;
                     width: 8px !important;
                 }
                 `}

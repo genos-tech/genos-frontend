@@ -39,7 +39,6 @@ export interface TaskHomeProps {
 export interface TaskHomeState {
     isTaskHomeVisible: boolean;
     isDashboardVisible: boolean;
-    isTaskTableVisible: boolean;
     currentFilterName: string;
     filterBy: number;
     selectedTagForFiltering?: string;
@@ -61,7 +60,6 @@ export interface TaskHomeState {
 export interface TaskHomeActions {
     setIsTaskHomeVisible: (visible: boolean) => void;
     setIsDashboardVisible: (visible: boolean) => void;
-    setTaskTableVisible: (visible: boolean) => void;
     setCurrentFilterName: (name: string) => void;
     setFilterBy: (filter: number) => void;
     setSelectedTagForFiltering: (tag: string) => void;
@@ -110,7 +108,6 @@ export interface TaskHomeLayoutProps {
     // Layout state
     isTaskHomeVisible: boolean;
     isDashboardVisible: boolean;
-    isTaskTableVisible: boolean;
     currentFilterName: string;
     filterBy: number;
     selectedTagForFiltering?: string;
@@ -149,7 +146,6 @@ export interface TaskHomeLayoutProps {
     setSelectedTagForFiltering: (tag: string) => void;
     setIsTaskHomeVisible: (visible: boolean) => void;
     setIsDashboardVisible: (visible: boolean) => void;
-    setTaskTableVisible: (visible: boolean) => void;
 }
 
 export interface TaskHomeModalsProps {

@@ -109,7 +109,6 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
                     <TaskPreview
                         isTaskNoteVisible={NM.isTaskNoteVisible}
-                        isThreadVisible={CM.isThreadVisible}
                         moveToSpecificChat={CM.moveToSpecificChat}
                         myself={myself}
                         openingService={openingService}
@@ -118,7 +117,6 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                         setCurrentTaskNote={NM.setCurrentTaskNote}
                         setIsMainChatVisible={CM.setIsMainChatVisible}
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
-                        setIsThreadVisible={CM.setIsThreadVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setOpeningService={setOpeningService}

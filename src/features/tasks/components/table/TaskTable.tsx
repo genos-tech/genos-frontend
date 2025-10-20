@@ -178,8 +178,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                 backgroundColor: "rgba(0, 123, 255, 0.3) !important", // slightly darker on hover
                             },
                         }}
-                        checkboxSelection
-                        disableRowSelectionOnClick
+                        // disableRowSelectionOnClick
                         keepNonExistentRowsSelected
                         onCellClick={(params) => {
                             // setIsTaskPreviewVisible(true);

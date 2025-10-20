@@ -6,7 +6,7 @@ type ResizeHandleProps = {
 };
 
 export const ResizeHandle = (props: ResizeHandleProps) => {
-    const { className = "resize-handle" } = props;
+    const { className = "note-resize-handle" } = props;
     const { mode } = useColorScheme();
 
     return (
@@ -14,7 +14,7 @@ export const ResizeHandle = (props: ResizeHandleProps) => {
             className={className}
             style={{
                 width: "1px",
-                backgroundColor: mode === "dark" ? "grey" : "lightgrey",
+                backgroundColor: mode === "dark" ? "black" : "white",
                 transition: "all 0.3s ease-in-out",
                 cursor: "col-resize",
             }}

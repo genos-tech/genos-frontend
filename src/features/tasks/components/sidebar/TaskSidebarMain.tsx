@@ -17,8 +17,7 @@ import { TaskTableListItem } from "./TaskTableListItem";
 type TaskSidebarProps = {
     myself: UserProps;
     setIsDashboardVisible: (value: boolean) => void;
-    taskTableVisible: boolean;
-    setTaskTableVisible: (value: boolean) => void;
+    isTaskHomeVisible: boolean;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -38,8 +37,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     const {
         myself,
         setIsDashboardVisible,
-        taskTableVisible,
-        setTaskTableVisible,
+        isTaskHomeVisible,
         setOpenJoinProject,
         setIsTaskHomeVisible,
         setFilterBy,
@@ -143,8 +141,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
-                borderRight: "1px solid",
-                borderColor: "divider",
             }}
         >
             <GlobalStyles
@@ -191,15 +187,13 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     }}
                 >
                     {/* <DashboardListItem
-                        setTaskTableVisible={setTaskTableVisible}
                         setIsDashboardVisible={setIsDashboardVisible}
                     /> */}
 
                     <TaskTableListItem
                         setIsDashboardVisible={setIsDashboardVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        setTaskTableVisible={setTaskTableVisible}
-                        taskTableVisible={taskTableVisible}
+                        isTaskHomeVisible={isTaskHomeVisible}
                     />
 
                     <RecentsListItem

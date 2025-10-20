@@ -23,10 +23,6 @@ interface TaskHomeLayoutProps {
     // Layout state
     isTaskHomeVisible: boolean;
     isDashboardVisible: boolean;
-    isTaskTableVisible: boolean;
-    currentFilterName: string;
-    filterBy: number;
-    selectedTagForFiltering?: string;
     displayTaskType: TaskType;
 
     // Management states
@@ -42,7 +38,6 @@ interface TaskHomeLayoutProps {
     setOpeningService: (service: number) => void;
     openingService: number;
     allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
     funcSetAllChats: () => Promise<void>;
     moveToSpecificChat: (
         chatType: number,
@@ -62,7 +57,6 @@ interface TaskHomeLayoutProps {
     setSelectedTagForFiltering: (value: string | undefined) => void;
     setIsTaskHomeVisible: (visible: boolean) => void;
     setIsDashboardVisible: (visible: boolean) => void;
-    setTaskTableVisible: (visible: boolean) => void;
 
     // Header props
     teamTaskSearchOptions: any[];
@@ -75,16 +69,11 @@ interface TaskHomeLayoutProps {
     onCreateTag: () => void;
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
-    setDisplayTaskType: (type: TaskType) => void;
 }
 
 export const TaskHomeLayout = ({
     isTaskHomeVisible,
     isDashboardVisible,
-    isTaskTableVisible,
-    currentFilterName,
-    filterBy,
-    selectedTagForFiltering,
     displayTaskType,
     TEM,
     PM,
@@ -96,7 +85,6 @@ export const TaskHomeLayout = ({
     setOpeningService,
     openingService,
     allChats,
-    setAllChats,
     funcSetAllChats,
     moveToSpecificChat,
     socket,
@@ -105,7 +93,6 @@ export const TaskHomeLayout = ({
     setSelectedTagForFiltering,
     setIsTaskHomeVisible,
     setIsDashboardVisible,
-    setTaskTableVisible,
     teamTaskSearchOptions,
     loading,
     openSearch,
@@ -116,16 +103,15 @@ export const TaskHomeLayout = ({
     onCreateTag,
     onDeleteProject,
     onCloseTaskHome,
-    setDisplayTaskType,
 }: TaskHomeLayoutProps) => {
     const { mode } = useColorScheme();
 
     const renderResizeHandle = () => (
         <PanelResizeHandle
-            className="resize-handle"
+            className="task-resize-handle"
             style={{
                 width: "1px",
-                backgroundColor: mode === "dark" ? "grey" : "lightgrey",
+                backgroundColor: mode === "dark" ? "black" : "white",
                 transition: "all 0.3s ease-in-out",
                 cursor: "col-resize",
             }}
@@ -151,44 +137,44 @@ export const TaskHomeLayout = ({
                 height: "100dvh",
                 overflow: "hidden",
                 gap: 1,
+                borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
             }}
         >
-            <TaskHomeHeader
-                myself={myself}
-                setMyself={setMyself}
-                allChats={allChats}
-                setCurrentMainChat={setCurrentMainChat}
-                setOpeningService={setOpeningService}
-                openingService={openingService}
-                teamMemberProfiles={TEM.teamMemberProfiles}
-                funcSetAllChats={funcSetAllChats}
-                currentProject={PM.currentProject}
-                displayTaskType={displayTaskType}
-                setDisplayTaskType={setDisplayTaskType}
-                teamTaskSearchOptions={teamTaskSearchOptions}
-                loading={loading}
-                openSearch={openSearch}
-                setOpenSearch={setOpenSearch}
-                onSearchChange={onSearchChange}
-                onCreateTask={onCreateTask}
-                onCreateProject={onCreateProject}
-                onCreateTag={onCreateTag}
-                onDeleteProject={onDeleteProject}
-                onCloseTaskHome={onCloseTaskHome}
-                isTaskPreviewVisible={TM.isTaskPreviewVisible}
-                isCreatingTask={TM.isCreatingTask.flag}
-            />
             {isDashboardVisible && <TaskDashboard />}
-            {isTaskTableVisible && (
-                <ProjectTaskTable
-                    currentProject={PM.currentProject}
-                    displayTaskType={displayTaskType}
-                    myself={myself}
-                    setTeamMembers={TEM.setTeamMembers}
-                    teamMembers={TEM.teamMembers}
-                    TM={TM}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
-                />
+            {isTaskHomeVisible && (
+                <>
+                    <TaskHomeHeader
+                        myself={myself}
+                        setMyself={setMyself}
+                        allChats={allChats}
+                        setCurrentMainChat={setCurrentMainChat}
+                        setOpeningService={setOpeningService}
+                        teamMemberProfiles={TEM.teamMemberProfiles}
+                        funcSetAllChats={funcSetAllChats}
+                        currentProject={PM.currentProject}
+                        teamTaskSearchOptions={teamTaskSearchOptions}
+                        loading={loading}
+                        openSearch={openSearch}
+                        setOpenSearch={setOpenSearch}
+                        onSearchChange={onSearchChange}
+                        onCreateTask={onCreateTask}
+                        onCreateProject={onCreateProject}
+                        onCreateTag={onCreateTag}
+                        onDeleteProject={onDeleteProject}
+                        onCloseTaskHome={onCloseTaskHome}
+                        isTaskPreviewVisible={TM.isTaskPreviewVisible}
+                        isCreatingTask={TM.isCreatingTask.flag}
+                    />
+                    <ProjectTaskTable
+                        currentProject={PM.currentProject}
+                        displayTaskType={displayTaskType}
+                        myself={myself}
+                        setTeamMembers={TEM.setTeamMembers}
+                        teamMembers={TEM.teamMembers}
+                        TM={TM}
+                        teamMemberProfiles={TEM.teamMemberProfiles}
+                    />
+                </>
             )}
         </Box>
     );
@@ -212,6 +198,7 @@ export const TaskHomeLayout = ({
                         minWidth: 0,
                         height: "100dvh",
                         gap: 1,
+                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                     }}
                 >
                     <CreateTaskForm
@@ -315,6 +302,7 @@ export const TaskHomeLayout = ({
                         minWidth: 0,
                         height: "100dvh",
                         gap: 1,
+                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                     }}
                 >
                     <TaskNoteMain
@@ -349,6 +337,7 @@ export const TaskHomeLayout = ({
                         justifyContent: "center",
                         alignItems: "center",
                         width: "100%",
+                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                     }}
                 >
                     <IconButton
@@ -374,19 +363,27 @@ export const TaskHomeLayout = ({
     return (
         <PanelGroup autoSaveId="conditional" direction="horizontal">
             <Panel defaultSize={10} id={"1"} maxSize={30} minSize={10} order={1}>
-                <TaskSidebar
-                    myself={myself}
-                    PM={PM}
-                    setCurrentFilterName={setCurrentFilterName}
-                    setFilterBy={setFilterBy}
-                    setIsDashboardVisible={setIsDashboardVisible}
-                    setIsTaskHomeVisible={setIsTaskHomeVisible}
-                    setOpenJoinProject={() => {}}
-                    setSelectedTagForFiltering={setSelectedTagForFiltering}
-                    setTaskTableVisible={setTaskTableVisible}
-                    taskTableVisible={isTaskTableVisible}
-                    TM={TM}
-                />
+                <Box
+                    sx={{
+                        height: "100%",
+                        width: "100%",
+                        borderColor: mode === "dark" ? "black" : "white",
+                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                    }}
+                >
+                    <TaskSidebar
+                        myself={myself}
+                        PM={PM}
+                        setCurrentFilterName={setCurrentFilterName}
+                        setFilterBy={setFilterBy}
+                        setIsDashboardVisible={setIsDashboardVisible}
+                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                        setOpenJoinProject={() => {}}
+                        setSelectedTagForFiltering={setSelectedTagForFiltering}
+                        isTaskHomeVisible={isTaskHomeVisible}
+                        TM={TM}
+                    />
+                </Box>
             </Panel>
 
             {PM.currentProject && PM.currentProject.projectId ? (
@@ -400,8 +397,8 @@ export const TaskHomeLayout = ({
                         </>
                     )}
 
-                    {TM.isCreatingTask.flag && renderCreateTaskPanel()}
                     {TM.isTaskPreviewVisible && TM.currentPreviewTask && renderTaskPreviewPanel()}
+                    {TM.isCreatingTask.flag && renderCreateTaskPanel()}
                     {NM.isTaskNoteVisible && NM.currentTaskNoteChain && renderTaskNotePanel()}
                 </>
             ) : (
