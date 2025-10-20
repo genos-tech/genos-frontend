@@ -162,10 +162,11 @@ export const MessageListRenderer = ({
         let paddingBottom = 0.3;
 
         let numRepliesWithoutFirstMessage: number;
-        if (chat.chatType !== 3) {
-            numRepliesWithoutFirstMessage = (message as MessageProps).numReplies - 1;
-        } else if (isThread) {
+
+        if (chat.chatType === 3 || isThread) {
             numRepliesWithoutFirstMessage = (message as MessageProps).numReplies;
+        } else if (chat.chatType !== 3) {
+            numRepliesWithoutFirstMessage = (message as MessageProps).numReplies - 1;
         } else {
             numRepliesWithoutFirstMessage = 0;
         }
