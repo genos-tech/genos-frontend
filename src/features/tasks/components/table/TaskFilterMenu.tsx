@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useEffect } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Stack, Tooltip, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
@@ -11,7 +12,6 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { TaskTableProps } from "../../../../types/tasks";
 import {
     FilterProps,
-    predefinedCategoryFilters,
     predefinedEffortLevelFilters,
     predefinedPriorityFilters,
     predefinedStatusFilters,
@@ -27,34 +27,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const { TM, predefinedTagsFilters, setCurrentDisplayingTasks } = props;
     const { mode } = useColorScheme();
 
-    // Category filter
-    const [selectedCategory, setSelectedCategory] = React.useState<FilterProps>(
-        predefinedCategoryFilters[0]
-    );
-    const [anchorElCategoryFilter, setAnchorElCategoryFilter] = React.useState<null | HTMLElement>(
-        null
-    );
-    const openCategoryFilter = Boolean(anchorElCategoryFilter);
-    const handleClickCategoryFilter = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorElCategoryFilter(event.currentTarget);
-    };
-    const handleCloseCategoryFilter = (category: FilterProps | null) => {
-        if (category) {
-            setSelectedCategory(category);
-            applyFilters(
-                category,
-                selectedStatus,
-                selectedTags,
-                selectedPriority,
-                selectedEffortLevel
-            );
-        }
-        setAnchorElCategoryFilter(null);
-    };
-
     // Status filter
-    const [selectedStatus, setSelectedStatus] = React.useState<FilterProps>(
-        predefinedStatusFilters[0]
+    const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(
+        predefinedStatusFilters.slice(1, 4)
     );
     const [anchorElStatusFilter, setAnchorElStatusFilter] = React.useState<null | HTMLElement>(
         null
@@ -65,16 +40,31 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     };
     const handleCloseStatusFilter = (status: FilterProps | null) => {
         if (status) {
-            setSelectedStatus(status);
-            applyFilters(
-                selectedCategory,
-                status,
-                selectedTags,
-                selectedPriority,
-                selectedEffortLevel
-            );
+            let newStatuses: FilterProps[];
+            if (status.label === "All") {
+                // If the status is "All", set it to "All". Remove all other statuses.
+                newStatuses = [predefinedStatusFilters[0]];
+                setSelectedStatus(newStatuses);
+                setAnchorElStatusFilter(null);
+            } else if (selectedStatus.some((items) => items.label === status.label) === true) {
+                // If the status is already selected, remove it
+                newStatuses = selectedStatus.filter((item) => item.label != status.label);
+                setSelectedStatus(newStatuses);
+            } else {
+                // If the status is not selected, add it. Remove "All" if it exists.
+                newStatuses = [...selectedStatus.filter((item) => item.label != "All"), status];
+                setSelectedStatus(newStatuses);
+            }
+
+            // If no status is selected, set it to "All"
+            if (newStatuses.length === 0) {
+                newStatuses = [predefinedStatusFilters[0]];
+                setSelectedStatus(newStatuses);
+                setAnchorElStatusFilter(null);
+            }
+
+            applyFilters(newStatuses, selectedTags, selectedPriority, selectedEffortLevel);
         }
-        setAnchorElStatusFilter(null);
     };
 
     // Tags filter
@@ -89,13 +79,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const handleCloseTagsFilter = (tag: FilterProps | null) => {
         if (tag) {
             setSelectedTags(tag);
-            applyFilters(
-                selectedCategory,
-                selectedStatus,
-                tag,
-                selectedPriority,
-                selectedEffortLevel
-            );
+            applyFilters(selectedStatus, tag, selectedPriority, selectedEffortLevel);
         }
         setAnchorElTagsFilter(null);
     };
@@ -120,13 +104,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const handleClosePriorityFilter = (priority: FilterProps | null) => {
         if (priority) {
             setSelectedPriority(priority);
-            applyFilters(
-                selectedCategory,
-                selectedStatus,
-                selectedTags,
-                priority,
-                selectedEffortLevel
-            );
+            applyFilters(selectedStatus, selectedTags, priority, selectedEffortLevel);
         }
         setAnchorElPriorityFilter(null);
     };
@@ -144,21 +122,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const handleCloseEffortLevelFilter = (effortLevel: FilterProps | null) => {
         if (effortLevel) {
             setSelectedEffortLevel(effortLevel);
-            applyFilters(
-                selectedCategory,
-                selectedStatus,
-                selectedTags,
-                selectedPriority,
-                effortLevel
-            );
+            applyFilters(selectedStatus, selectedTags, selectedPriority, effortLevel);
         }
         setAnchorElEffortLevelFilter(null);
     };
 
     // Apply filters
     const applyFilters = (
-        category: FilterProps,
-        status: FilterProps,
+        statuses: FilterProps[],
         tags: FilterProps | undefined,
         priority: FilterProps,
         effortLevel: FilterProps
@@ -167,25 +138,27 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // Filters: status, tags, priority, effort level
         let filteredTasks = TM.allTasks;
 
-        // Filter by category
-        if (category.label === "Ongoing") {
-            filteredTasks = filteredTasks.filter(
-                (task) =>
-                    task.status === "Open" || task.status === "WIP" || task.status === "Pending"
-            );
-        } else {
-            filteredTasks = filteredTasks.filter((task) => task.status === status.label);
-        }
-
         // Filter by status
-        if (status.label === "All") {
-            filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
-        } else if (status.label === "Expired") {
-            filteredTasks = filteredTasks.filter(
-                (task) => task.dueDate && new Date(task.dueDate) < new Date()
-            );
+        if (statuses.length === 1) {
+            if (statuses[0].label === "All") {
+                filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+            } else if (statuses[0].label === "Expired") {
+                filteredTasks = filteredTasks.filter(
+                    (task) => task.dueDate && new Date(task.dueDate) < new Date()
+                );
+            } else {
+                filteredTasks = filteredTasks.filter((task) => task.status === statuses[0].label);
+            }
         } else {
-            filteredTasks = filteredTasks.filter((task) => task.status === status.label);
+            filteredTasks = filteredTasks.filter((task) =>
+                statuses.some((status) => status.label === task.status)
+            );
+
+            if (statuses.some((status) => status.label === "Expired")) {
+                filteredTasks = filteredTasks.filter(
+                    (task) => task.dueDate && new Date(task.dueDate) < new Date()
+                );
+            }
         }
 
         // Filter by tags
@@ -221,19 +194,21 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     };
 
     const resetFilters = () => {
-        setSelectedCategory(predefinedCategoryFilters[0]);
-        setSelectedStatus(predefinedStatusFilters[0]);
+        setSelectedStatus([predefinedStatusFilters[0]]);
         setSelectedTags(predefinedTagsFilters[0]);
         setSelectedPriority(predefinedPriorityFilters[0]);
         setSelectedEffortLevel(predefinedEffortLevelFilters[0]);
         applyFilters(
-            predefinedCategoryFilters[0],
-            predefinedStatusFilters[0],
+            [predefinedStatusFilters[0]],
             predefinedTagsFilters[0],
             predefinedPriorityFilters[0],
             predefinedEffortLevelFilters[0]
         );
     };
+
+    useEffect(() => {
+        applyFilters(selectedStatus, selectedTags, selectedPriority, selectedEffortLevel);
+    }, [TM.allTasks]);
 
     return (
         <Stack direction="row" gap={1} m={1}>
@@ -241,11 +216,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 <Button
                     id="fade-button"
                     sx={{
-                        color: selectedCategory.label === "All" ? "black" : "white",
+                        color: selectedStatus[0].label === "All" ? "black" : "white",
                         backgroundColor:
                             mode === "dark"
-                                ? alpha(selectedCategory.darkModeColor, 0.5)
-                                : alpha(selectedCategory.lightModeColor, 0.8),
+                                ? alpha(selectedStatus[0].darkModeColor, 0.5)
+                                : alpha(selectedStatus[0].lightModeColor, 0.8),
                         borderWidth: "3px",
                         fontSize: "13px",
                         fontWeight: "bold",
@@ -254,107 +229,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         "&:hover": {
                             backgroundColor:
                                 mode === "dark"
-                                    ? alpha(selectedCategory.darkModeColor, 0.5)
-                                    : alpha(selectedCategory.lightModeColor, 0.8),
-                            color: selectedCategory.label === "All" ? "black" : "white",
-                        },
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                    }}
-                    variant={"contained"}
-                    aria-controls={openCategoryFilter ? "fade-menu" : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={openCategoryFilter ? "true" : undefined}
-                    onClick={handleClickCategoryFilter}
-                >
-                    Category: {selectedCategory.label}
-                </Button>
-                <Menu
-                    id="fade-menu"
-                    slotProps={{
-                        list: {
-                            "aria-labelledby": "fade-button",
-                        },
-                        paper: {
-                            sx: {
-                                backgroundColor: mode === "dark" ? "#121212" : "#f0f0f0",
-                            },
-                        },
-                    }}
-                    slots={{ transition: Fade }}
-                    anchorEl={anchorElCategoryFilter}
-                    open={openCategoryFilter}
-                    onClose={() => handleCloseCategoryFilter(null)}
-                >
-                    {predefinedCategoryFilters.map((status) => (
-                        <MenuItem
-                            key={status.label}
-                            onClick={() => handleCloseCategoryFilter(status)}
-                        >
-                            <Button
-                                key={`status-filter-${status.label}`}
-                                component="button"
-                                color={
-                                    selectedCategory?.label === status.label ? "info" : "inherit"
-                                }
-                                sx={{
-                                    color: mode === "dark" ? "white" : "Black",
-                                    borderColor:
-                                        mode === "dark"
-                                            ? status.darkModeColor
-                                            : status.lightModeColor,
-                                    borderWidth: "3px",
-                                    fontSize: "13px",
-                                    fontWeight: "bold",
-                                    opacity: 0.85,
-                                    height: "25px",
-                                }}
-                                variant={
-                                    selectedCategory?.label === status.label
-                                        ? "contained"
-                                        : "outlined"
-                                }
-                                onClick={() => {
-                                    handleCloseCategoryFilter(status);
-                                }}
-                            >
-                                {status.label === "Ongoing" && (
-                                    <Tooltip title="Open, WIP, and Pending" placement="top">
-                                        <Typography variant="body2" fontWeight="bold">
-                                            {status.label}
-                                        </Typography>
-                                    </Tooltip>
-                                )}
-                                {status.label !== "Ongoing" && (
-                                    <Typography variant="body2" fontWeight="bold">
-                                        {status.label}
-                                    </Typography>
-                                )}
-                            </Button>
-                        </MenuItem>
-                    ))}
-                </Menu>
-
-                <Button
-                    id="fade-button"
-                    sx={{
-                        color: selectedStatus.label === "All" ? "black" : "white",
-                        backgroundColor:
-                            mode === "dark"
-                                ? alpha(selectedStatus.darkModeColor, 0.5)
-                                : alpha(selectedStatus.lightModeColor, 0.8),
-                        borderWidth: "3px",
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        opacity: 0.85,
-                        height: "25px",
-                        "&:hover": {
-                            backgroundColor:
-                                mode === "dark"
-                                    ? alpha(selectedStatus.darkModeColor, 0.5)
-                                    : alpha(selectedStatus.lightModeColor, 0.8),
-                            color: selectedStatus.label === "All" ? "black" : "white",
+                                    ? alpha(selectedStatus[0].darkModeColor, 0.5)
+                                    : alpha(selectedStatus[0].lightModeColor, 0.8),
+                            color: selectedStatus[0].label === "All" ? "black" : "white",
                         },
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -366,7 +243,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     aria-expanded={openStatusFilter ? "true" : undefined}
                     onClick={handleClickStatusFilter}
                 >
-                    Status: {selectedStatus.label}
+                    Status: {selectedStatus[0].label}
+                    {selectedStatus.length > 1 && `+${selectedStatus.length - 1}`}
                 </Button>
                 <Menu
                     id="fade-menu"
@@ -383,7 +261,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     slots={{ transition: Fade }}
                     anchorEl={anchorElStatusFilter}
                     open={openStatusFilter}
-                    onClose={() => handleCloseStatusFilter(null)}
+                    onClose={() => setAnchorElStatusFilter(null)}
                 >
                     {predefinedStatusFilters.map((status) => (
                         <MenuItem
@@ -393,7 +271,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             <Button
                                 key={`status-filter-${status.label}`}
                                 component="button"
-                                color={selectedStatus?.label === status.label ? "info" : "inherit"}
+                                color={
+                                    selectedStatus.some(
+                                        (items) => items.label === status.label
+                                    ) === true
+                                        ? "info"
+                                        : "inherit"
+                                }
                                 sx={{
                                     color: mode === "dark" ? "white" : "Black",
                                     borderColor:
@@ -407,7 +291,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     height: "25px",
                                 }}
                                 variant={
-                                    selectedStatus?.label === status.label
+                                    selectedStatus.some(
+                                        (items) => items.label === status.label
+                                    ) === true
                                         ? "contained"
                                         : "outlined"
                                 }

@@ -41,9 +41,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const className = `task-datagrid-${mode}`;
     const apiRef = useGridApiRef();
 
-    const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>(
-        TM.allTasks.filter((task) => task.parentTaskId === null)
-    );
+    const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>([]);
 
     // Update Project and Tag list
     const getTeamMembers = () => {
@@ -98,7 +96,6 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
 
     useEffect(() => {
         updateTagOptions();
-        setCurrentDisplayingTasks(TM.allTasks.filter((task) => task.parentTaskId === null));
     }, [currentProject, TM.allTasks]);
 
     // Reset filter

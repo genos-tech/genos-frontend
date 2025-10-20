@@ -1,4 +1,5 @@
-import { Box } from "@mui/joy";
+import AddIcon from "@mui/icons-material/Add";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
@@ -339,23 +340,8 @@ export const TaskHomeLayout = ({
 
     const renderNoProjectPanel = () => (
         <>
-            <Panel id={"5"} maxSize={30} minSize={5} order={5}>
-                <TaskSidebar
-                    myself={myself}
-                    PM={PM}
-                    setCurrentFilterName={setCurrentFilterName}
-                    setFilterBy={setFilterBy}
-                    setIsDashboardVisible={setIsDashboardVisible}
-                    setIsTaskHomeVisible={setIsTaskHomeVisible}
-                    setOpenJoinProject={() => {}}
-                    setSelectedTagForFiltering={setSelectedTagForFiltering}
-                    setTaskTableVisible={setTaskTableVisible}
-                    taskTableVisible={isTaskTableVisible}
-                    TM={TM}
-                />
-            </Panel>
             {renderResizeHandle()}
-            <Panel id={"6"} maxSize={100} minSize={80} order={6}>
+            <Panel id={"6"} maxSize={100} minSize={70} order={6}>
                 <Box
                     sx={{
                         height: "100%",
@@ -365,7 +351,21 @@ export const TaskHomeLayout = ({
                         width: "100%",
                     }}
                 >
-                    {/* This would be the "New Project / Choose Project" button */}
+                    <IconButton
+                        component="button"
+                        variant="soft"
+                        color="neutral"
+                        sx={{
+                            fontSize: "15px",
+                            paddingRight: "10px",
+                        }}
+                        onClick={() => {
+                            PM.setOpenCreateProject(true);
+                        }}
+                    >
+                        <AddIcon />
+                        New Project
+                    </IconButton>
                 </Box>
             </Panel>
         </>
