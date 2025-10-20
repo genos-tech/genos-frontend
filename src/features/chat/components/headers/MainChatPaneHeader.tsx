@@ -130,7 +130,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     {isYou === true ? (
                         <>
                             {isToDoVisible === true ? (
-                                <Tooltip size="sm" title="DM">
+                                <Tooltip size="sm" title="Back to DM">
                                     <IconButton
                                         color="neutral"
                                         component="a"

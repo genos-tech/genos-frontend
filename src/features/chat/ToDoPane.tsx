@@ -44,7 +44,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     } = props;
     const { accessToken } = useAuth();
     const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
-    const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState(false);
+    const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState(true);
 
     const handleCreateNewTodo = async () => {
         const todoContent = await createNewTodo(

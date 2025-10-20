@@ -119,6 +119,23 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                         );
                     }
                 )}
+
+                {PM.teamProjects.filter((project) => project.isJoined === false).length === 0 && (
+                    <ListItem>
+                        <Typography
+                            sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                width: "100%",
+                                ml: "40px",
+                            }}
+                            noWrap
+                        >
+                            No projects to join
+                        </Typography>
+                    </ListItem>
+                )}
             </List>
         </Toggler>
     );

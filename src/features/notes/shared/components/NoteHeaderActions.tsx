@@ -24,7 +24,7 @@ import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 
-interface NoteActionsProps {
+interface NoteHeaderActionsProps {
     noteType: number;
     isInTaskPage: boolean;
     currentTask: TaskProps | undefined;
@@ -43,7 +43,7 @@ interface NoteActionsProps {
     onCloseNotes: () => void;
 }
 
-export const NoteActions = ({
+export const NoteHeaderActions = ({
     noteType,
     isInTaskPage,
     currentTask,
@@ -60,7 +60,7 @@ export const NoteActions = ({
     onOpenTask,
     onDeleteNote,
     onCloseNotes,
-}: NoteActionsProps) => {
+}: NoteHeaderActionsProps) => {
     const { mode } = useColorScheme();
 
     return (
@@ -100,7 +100,7 @@ export const NoteActions = ({
                         />
                     </Box>
 
-                    <Tooltip size="sm" title="Open Task">
+                    <Tooltip size="sm" title="Open Task on Click">
                         <Chip
                             key={`task-note-task-id${currentTask.id}`}
                             color="neutral"
@@ -119,7 +119,7 @@ export const NoteActions = ({
                         </Chip>
                     </Tooltip>
 
-                    <Tooltip size="sm" title="Open Task">
+                    <Tooltip size="sm" title={currentTask.title}>
                         <Chip
                             key={`task-title-${currentTask.id}`}
                             color="primary"
@@ -135,8 +135,8 @@ export const NoteActions = ({
                             onClick={onOpenTask}
                         >
                             Title:{" "}
-                            {currentTask.title.length > 14
-                                ? `${currentTask.title.slice(0, 14)}...`
+                            {currentTask.title.length > 30
+                                ? `${currentTask.title.slice(0, 30)}...`
                                 : currentTask.title || "N/A"}
                         </Chip>
                     </Tooltip>

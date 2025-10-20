@@ -64,7 +64,7 @@ frontend/weikiy/src/features/notes/
     │   ├── sub/
     │   │   └── NoteTreeToggler.tsx
     │   ├── EmptyState.tsx
-    │   ├── NoteActions.tsx
+    │   ├── NoteHeaderActions.tsx
     │   ├── NoteContentRenderer.tsx
     │   ├── NoteEditor.tsx
     │   ├── NoteHeader.tsx

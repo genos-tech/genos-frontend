@@ -11,8 +11,8 @@ import { ChatProps } from "../../../../types/chat";
 import { MyNoteProps } from "../../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { EmptyState } from "../../shared/components/EmptyState";
-import { NoteActions } from "../../shared/components/NoteActions";
 import { NoteEditor } from "../../shared/components/NoteEditor";
+import { NoteHeaderActions } from "../../shared/components/NoteHeaderActions";
 import { NoteTabList } from "../../shared/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
 
@@ -146,7 +146,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             onLoadNote={NM.loadNote}
                                         />
 
-                                        <NoteActions
+                                        <NoteHeaderActions
                                             noteType={1}
                                             isInTaskPage={false}
                                             currentTask={undefined}

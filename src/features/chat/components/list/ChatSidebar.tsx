@@ -581,7 +581,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     />
 
                     <Dropdown>
-                        <Tooltip size="sm" title="More Options">
+                        <Tooltip size="sm" title="More Options" placement="top">
                             <MenuButton
                                 slots={{ root: IconButton }}
                                 slotProps={{

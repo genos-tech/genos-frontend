@@ -9,7 +9,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
-import { NoteActions } from "../../shared/components/NoteActions";
+import { NoteHeaderActions } from "../../shared/components/NoteHeaderActions";
 import { NoteTabs } from "../../shared/components/NoteTabs";
 import { useNoteAutoSave } from "../../shared/hooks/useNoteAutoSave";
 import { useTaskPreview } from "../../shared/hooks/useTaskPreview";
@@ -257,7 +257,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             />
                         )}
 
-                        <NoteActions
+                        <NoteHeaderActions
                             noteType={2}
                             isInTaskPage={isInTaskPage}
                             currentTask={currentTask}
