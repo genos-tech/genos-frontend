@@ -1,8 +1,8 @@
+import React from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Avatar } from "@mui/joy";
-import React from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
@@ -37,7 +37,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
     isYou,
 }) => {
     const chat = allChats.find(
-        (chat) => chat.chatType === activity.chatType && chat.chatId === activity.chatId
+        (chat) =>
+            chat.chatType === (activity.chatType === 4 ? 3 : activity.chatType) &&
+            chat.chatId === activity.chatId
     );
 
     // DM Avatar (chatType === 1)
@@ -110,11 +112,26 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
 
     // Task Avatar (chatType === 4)
     if (activity.chatType === 4) {
-        return (
-            <Avatar size="sm">
-                <AssignmentRoundedIcon />
-            </Avatar>
-        );
+        if (chat) {
+            return (
+                <ProjectAvatar
+                    funcSetAllChats={funcSetAllChats}
+                    myself={myself}
+                    pmChat={chat}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    teamMemberProfiles={teamMemberProfiles}
+                />
+            );
+        } else {
+            return (
+                <Avatar size="sm">
+                    <AssignmentRoundedIcon />
+                </Avatar>
+            );
+        }
     }
 
     return null;

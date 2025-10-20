@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -16,7 +17,6 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -290,6 +290,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     {projectProfile?.projectMembers.map(
                                                         (member) => (
                                                             <ListItemButton
+                                                                key={`project-member-${member.userId}`}
                                                                 sx={{ ml: 2, my: 0.2 }}
                                                             >
                                                                 <AvatarWithStatus

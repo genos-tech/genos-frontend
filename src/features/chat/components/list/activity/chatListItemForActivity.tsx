@@ -1,6 +1,6 @@
+import * as React from "react";
 import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import * as React from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
@@ -104,7 +104,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         const newChat: ChatProps = {
             chatId: activity.chatId,
             chatName: activity.chatName,
-            chatType: activity.chatType,
+            chatType: chatType,
             dmPartnerUser: {
                 teamId: myself.teamId,
                 teamName: myself.teamName,
