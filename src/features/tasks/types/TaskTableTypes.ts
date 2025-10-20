@@ -16,6 +16,33 @@ export type FilterProps = {
     darkModeColor: string;
 };
 
+export const predefinedCategoryFilters: FilterProps[] = [
+    {
+        label: "Ongoing",
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "Ongoing" }],
+        },
+        lightModeColor: "#0044c2",
+        darkModeColor: "#0044c2",
+    },
+    {
+        label: "Closed",
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "Closed" }],
+        },
+        lightModeColor: "#1dc200",
+        darkModeColor: "#1dc200",
+    },
+    {
+        label: "Deleted",
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "Deleted" }],
+        },
+        lightModeColor: "#ff2323",
+        darkModeColor: "#ff2323",
+    },
+];
+
 export const predefinedStatusFilters: FilterProps[] = [
     {
         label: "All",

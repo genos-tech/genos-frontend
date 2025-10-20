@@ -6,7 +6,6 @@ import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { UserProps } from "../../types/admin";
 import {
-    ProjectProps,
     TaskMetaProps,
     TaskMetaTreeNode,
     TaskProps,
@@ -245,7 +244,7 @@ export const useTaskManagement = (
         setTsLastLoadProjectTasks(Date.now());
         const _allTasks: TaskTableProps[] = await popSpecificProjectTasks(
             projectId,
-            taskTypes.ongoing.statuses
+            taskTypes.all.statuses
         );
         setAllTasks(_allTasks);
     };
