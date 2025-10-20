@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import { List, Stack } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -17,8 +17,8 @@ import {
     useScrollToBottomOnNewActivity,
 } from "../../hooks/messageBubbleHooks";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
-import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
 import { ChatListItem } from "./chatListItem";
+import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
 
 // Constants
 const CHAT_TYPES = {
@@ -428,13 +428,13 @@ export const ChatList = (props: ChatListProps) => {
             const virtuosoRef = chatTypeLookup[chatType];
             return (
                 <ChatListRenderer
-                    tmpAllChats={tmpAllChats}
-                    allChats={data.allChats}
-                    virtuosoRef={virtuosoRef}
-                    state={state}
                     actions={actions}
+                    allChats={data.allChats}
                     data={data}
                     socket={socket}
+                    state={state}
+                    tmpAllChats={tmpAllChats}
+                    virtuosoRef={virtuosoRef}
                 />
             );
         }
@@ -445,15 +445,15 @@ export const ChatList = (props: ChatListProps) => {
         if (chatType === CHAT_TYPES.ACTIVITY && tmpActivityMessages.length > 0) {
             return (
                 <ActivityListRenderer
-                    tmpActivityMessages={tmpActivityMessages}
-                    activityMessages={data.activityMessages}
-                    virtuosoRef={virtuosoActivityRef}
-                    state={state}
                     actions={actions}
+                    activityMessages={data.activityMessages}
                     data={data}
-                    socket={socket}
                     selectedActivityId={selectedActivityId}
                     setSelectedActivityId={setSelectedActivityId}
+                    socket={socket}
+                    state={state}
+                    tmpActivityMessages={tmpActivityMessages}
+                    virtuosoRef={virtuosoActivityRef}
                 />
             );
         }
@@ -464,15 +464,15 @@ export const ChatList = (props: ChatListProps) => {
         if (chatType === CHAT_TYPES.FLAGGED && tmpFlaggedMessages.length > 0) {
             return (
                 <FlaggedListRenderer
-                    tmpFlaggedMessages={tmpFlaggedMessages}
-                    flaggedMessages={data.flaggedMessages}
-                    virtuosoRef={virtuosoFlaggedRef}
-                    state={state}
                     actions={actions}
                     data={data}
-                    socket={socket}
+                    flaggedMessages={data.flaggedMessages}
                     selectedFlaggedMessageId={selectedFlaggedMessageId}
                     setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
+                    socket={socket}
+                    state={state}
+                    tmpFlaggedMessages={tmpFlaggedMessages}
+                    virtuosoRef={virtuosoFlaggedRef}
                 />
             );
         }

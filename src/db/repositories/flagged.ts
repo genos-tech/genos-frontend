@@ -1,5 +1,5 @@
-import { STORES } from "../config";
 import { FlaggedMessageProps } from "../../types/chat";
+import { STORES } from "../config";
 import { BaseRepository } from "./base";
 
 // Flagged repository for managing flagged messages

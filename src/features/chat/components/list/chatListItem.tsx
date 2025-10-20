@@ -1,7 +1,7 @@
-import * as React from "react";
-import { memo } from "react";
 import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
+import * as React from "react";
+import { memo } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { useChatListItem } from "../../hooks/useChatListItem";
@@ -106,14 +106,14 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                     <ChatListItemAvatar
                                         chat={chat}
                                         chatType={chatType}
+                                        funcSetAllChats={funcSetAllChats}
                                         isYou={isYou}
                                         myself={myself}
-                                        setMyself={setMyself}
                                         setCurrentMainChat={setCurrentMainChat}
+                                        setMyself={setMyself}
                                         setOpeningService={setOpeningService}
                                         socket={socket}
                                         teamMemberProfiles={teamMemberProfiles}
-                                        funcSetAllChats={funcSetAllChats}
                                     />
                                 </div>
 
@@ -127,9 +127,9 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
 
                             <ChatListItemActions
                                 chat={chat}
-                                myself={myself}
                                 incompleteTodoCount={incompleteTodoCount}
                                 isPinned={isPinned || false}
+                                myself={myself}
                                 onPinClick={handlePinClick}
                                 onSplitClick={handleSplitClick}
                                 onTodoClick={handleTodoClick}

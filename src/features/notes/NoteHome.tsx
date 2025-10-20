@@ -59,16 +59,16 @@ export const NoteHome = (props: NoteHomeProps) => {
                         }}
                     >
                         <NoteContentRenderer
-                            noteType={NM.currentNoteType}
+                            CM={CM}
                             myself={myself}
-                            setMyself={setMyself}
+                            NM={NM}
+                            noteType={NM.currentNoteType}
                             openingService={openingService}
+                            PM={PM}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
                             socket={socket}
                             TEM={TEM}
-                            PM={PM}
-                            NM={NM}
-                            CM={CM}
                             TM={TM}
                         />
                     </Box>
@@ -86,16 +86,16 @@ export const NoteHome = (props: NoteHomeProps) => {
                     }}
                 >
                     <NoteContentRenderer
-                        noteType={NM.currentNoteType}
+                        CM={CM}
                         myself={myself}
-                        setMyself={setMyself}
+                        NM={NM}
+                        noteType={NM.currentNoteType}
                         openingService={openingService}
+                        PM={PM}
+                        setMyself={setMyself}
                         setOpeningService={setOpeningService}
                         socket={socket}
                         TEM={TEM}
-                        PM={PM}
-                        NM={NM}
-                        CM={CM}
                         TM={TM}
                     />
                 </Box>
@@ -141,15 +141,15 @@ export const NoteHome = (props: NoteHomeProps) => {
                     {renderMainContent()}
 
                     <TaskPreviewPanel
+                        CM={CM}
                         myself={myself}
-                        setMyself={setMyself}
+                        NM={NM}
                         openingService={openingService}
+                        PM={PM}
+                        setMyself={setMyself}
                         setOpeningService={setOpeningService}
                         socket={socket}
                         TEM={TEM}
-                        PM={PM}
-                        NM={NM}
-                        CM={CM}
                         TM={TM}
                     />
                 </PanelGroup>

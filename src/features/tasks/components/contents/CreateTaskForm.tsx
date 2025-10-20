@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -322,11 +322,13 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     }}
                 >
                     <TaskTitleBlock
+                        handleCreateNewTaskNote={async () => {}}
                         isPreviewMode={false}
                         moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
                         openingService={openingService}
                         setCurrentProject={PM.setCurrentProject}
+                        setCurrentTaskNote={() => {}}
                         setIsMainChatVisible={setIsMainChatVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setOpenCreateProject={PM.setOpenCreateProject}
@@ -335,13 +337,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
                         taskContents={taskContents}
+                        taskNotes={[]}
                         taskTitle={taskTitle}
                         titleError={titleError}
                         titleErrorOpen={titleErrorOpen}
                         TM={TM}
-                        taskNotes={[]}
-                        setCurrentTaskNote={() => {}}
-                        handleCreateNewTaskNote={async () => {}}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />

@@ -37,7 +37,7 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
     } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip size="sm" title="Open Task">
+            <Tooltip size="sm" title="Open Task" variant="outlined">
                 <IconButton
                     size="sm"
                     sx={{

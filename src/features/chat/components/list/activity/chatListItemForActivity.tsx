@@ -1,6 +1,6 @@
-import * as React from "react";
 import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import * as React from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
@@ -318,22 +318,22 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     <Stack direction="column">
                         <ActivityHeader
                             activity={activity}
-                            myself={myself}
-                            teamMemberProfiles={teamMemberProfiles}
-                            socket={socket}
                             allChats={allChats}
+                            chatTypeLookup={chatTypeLookup}
+                            funcSetAllChats={funcSetAllChats}
+                            isYou={isYou}
+                            myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
                             setOpeningService={setOpeningService}
-                            funcSetAllChats={funcSetAllChats}
-                            isYou={isYou}
-                            chatTypeLookup={chatTypeLookup}
+                            socket={socket}
+                            teamMemberProfiles={teamMemberProfiles}
                         />
 
                         <ActivityContent
                             activity={activity}
-                            myself={myself}
                             groupedReactions={groupedReactions}
+                            myself={myself}
                         />
                     </Stack>
                 </ListItemButton>

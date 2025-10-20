@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Box, Button, Chip, IconButton, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -126,6 +126,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
             {displayed.map(({ senders, emoji, count }, index) => (
                 <Tooltip
                     key={`tooltip-${index}`}
+                    variant="outlined"
                     title={
                         senders
                             .slice(0, 5)
@@ -162,6 +163,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                 <Tooltip
                     size="sm"
                     title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
+                    variant="outlined"
                 >
                     <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         +{hidden.length} more

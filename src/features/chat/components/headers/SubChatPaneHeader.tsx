@@ -95,7 +95,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
             </Stack>
             <Stack direction="row" spacing={0} sx={{ alignItems: "center" }}>
                 {subChat && (subChat.chatType === 3 || subChat.chatType === 4) && (
-                    <Tooltip size="sm" title="Create a new task">
+                    <Tooltip size="sm" title="Create a new task" variant="outlined">
                         <IconButton
                             color="neutral"
                             component="a"
@@ -132,7 +132,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     {isYou === true ? (
                         <>
                             {isToDoVisible === true ? (
-                                <Tooltip size="sm" title="Back to DM">
+                                <Tooltip size="sm" title="Back to DM" variant="outlined">
                                     <IconButton
                                         color="neutral"
                                         component="a"
@@ -144,7 +144,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                     </IconButton>
                                 </Tooltip>
                             ) : (
-                                <Tooltip size="sm" title="To-Do">
+                                <Tooltip size="sm" title="To-Do" variant="outlined">
                                     <Badge
                                         anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                         badgeContent={incompleteTodoCount}
@@ -167,13 +167,13 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         </>
                     ) : null}
 
-                    <Tooltip size="sm" title="More Options" placement="left">
+                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
                         <IconButton color="neutral" component="a" size="sm" variant="plain">
                             <MoreVert />
                         </IconButton>
                     </Tooltip>
 
-                    <Tooltip size="sm" title="Close">
+                    <Tooltip size="sm" title="Close" variant="outlined">
                         <IconButton
                             color="neutral"
                             component="a"

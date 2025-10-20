@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Box, IconButton, Stack } from "@mui/joy";
+import { useCallback, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -241,11 +241,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             >
                                 <ACTaskNotes
                                     myself={myself}
-                                    projectId={NM.currentTaskNote.projectId}
-                                    taskId={NM.currentTaskNote.taskId}
                                     openSearchBox={openSearchBox}
+                                    projectId={NM.currentTaskNote.projectId}
                                     setCurrentTaskNote={NM.setCurrentTaskNote}
                                     setOpenSearchBox={setOpenSearchBox}
+                                    taskId={NM.currentTaskNote.taskId}
                                 />
                             </Box>
                         )}
@@ -258,22 +258,22 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         )}
 
                         <NoteHeaderActions
-                            noteType={2}
-                            isInTaskPage={isInTaskPage}
                             currentTask={currentTask}
-                            pmChat={pmChat}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
                             funcSetAllChats={funcSetAllChats}
+                            isInTaskPage={isInTaskPage}
+                            myself={myself}
+                            noteType={2}
+                            pmChat={pmChat}
                             setCurrentMainChat={setCurrentMainChat}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
+                            socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
-                            onCreateNewNote={() => {}} // Don't create new task note in task note page
-                            onCreateChildNote={handleCreateChildNote}
-                            onOpenTask={handleOpenTask}
-                            onDeleteNote={handleDeleteNote}
                             onCloseNotes={handleCloseNotes}
+                            onCreateChildNote={handleCreateChildNote}
+                            onCreateNewNote={() => {}} // Don't create new task note in task note page
+                            onDeleteNote={handleDeleteNote}
+                            onOpenTask={handleOpenTask}
                         />
 
                         {NM.currentTaskNote && (
@@ -291,14 +291,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                     </Stack>
 
                     <NoteTabs
-                        tabItems={NM.tabItems}
-                        selectedTabIndex={NM.selectedTabIndex}
+                        body={body}
                         currentTaskNote={NM.currentTaskNote}
                         currentTaskNoteTitle={currentTaskNoteTitle}
-                        body={body}
-                        noteBodySaved={noteBodySaved}
-                        tsBody={tsBody}
                         myself={myself}
+                        noteBodySaved={noteBodySaved}
+                        selectedTabIndex={NM.selectedTabIndex}
                         setBody={setBody}
                         setCurrentChat={setCurrentChat}
                         setMyself={setMyself}
@@ -306,12 +304,14 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         setNoteBodySaved={setNoteBodySaved}
                         setOpeningService={setOpeningService}
                         socket={socket}
+                        tabItems={NM.tabItems}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
-                        onLoadNote={NM.loadNote}
+                        tsBody={tsBody}
                         onCloseTab={handleCloseTab}
-                        onTitleChange={handleTitleChange}
+                        onLoadNote={NM.loadNote}
                         onTitleBlur={handleTitleBlur}
+                        onTitleChange={handleTitleChange}
                     />
                 </>
             )}

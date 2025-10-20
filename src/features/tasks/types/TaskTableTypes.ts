@@ -16,7 +16,6 @@ export type FilterProps = {
     darkModeColor: string;
 };
 
-
 export const predefinedStatusFilters: FilterProps[] = [
     {
         label: "All",

@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -17,6 +16,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -195,6 +195,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 size="sm"
                                                 sx={{ zIndex: 9000 }}
                                                 title="EDIT (TBD)"
+                                                variant="outlined"
                                             >
                                                 <IconButton
                                                     variant="soft"

@@ -139,7 +139,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     thread.chatType !== 4 &&
                     TM.currentPreviewTaskId === -1 && (
                         <>
-                            <Tooltip size="sm" title="Create a New Task">
+                            <Tooltip size="sm" title="Create a New Task" variant="outlined">
                                 <IconButton
                                     color="neutral"
                                     component="a"
@@ -167,7 +167,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     thread.chatType !== 4 &&
                     TM.currentPreviewTaskId === -1
                 ) && (
-                    <Tooltip size="sm" title="Open Task">
+                    <Tooltip size="sm" title="Open Task" variant="outlined">
                         <IconButton
                             size="sm"
                             onClick={() => {
@@ -186,7 +186,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Tooltip size="sm" title="Open Note">
+                <Tooltip size="sm" title="Open Note" variant="outlined">
                     <IconButton
                         color="neutral"
                         component="a"
@@ -210,7 +210,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip size="sm" title="Close">
+                <Tooltip size="sm" title="Close" variant="outlined">
                     <IconButton
                         color="neutral"
                         size="sm"

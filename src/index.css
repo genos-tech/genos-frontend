@@ -3,7 +3,7 @@
     --font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     --line-height: 1.5;
     --font-weight: 400;
-    
+
     /* Colors - Dark theme (default) */
     --color-text: rgba(255, 255, 255, 0.87);
     --color-background: #242424;
@@ -12,21 +12,21 @@
     --color-button-bg: #1a1a1a;
     --color-button-border: transparent;
     --color-button-border-hover: #646cff;
-    
+
     /* Layout */
     --min-width: 320px;
     --min-height: 100vh;
-    
+
     /* Responsive breakpoints */
     --breakpoint-mobile: 480px;
     --breakpoint-tablet: 768px;
     --breakpoint-desktop: 1024px;
-    
+
     /* Transitions */
     --transition-duration: 0.25s;
     --transition-duration-fast: 0.15s;
     --transition-duration-slow: 0.4s;
-    
+
     /* Font rendering */
     font-family: var(--font-family);
     line-height: var(--line-height);
@@ -107,11 +107,11 @@ button:focus-visible {
     :root {
         --min-width: 280px;
     }
-    
+
     h1 {
         font-size: 2.5em;
     }
-    
+
     button {
         padding: 0.5em 1em;
         font-size: 0.9em;

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Box, Stack, Tab, TabPanel, Tabs } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -147,22 +147,22 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         />
 
                                         <NoteHeaderActions
-                                            noteType={1}
-                                            isInTaskPage={false}
                                             currentTask={undefined}
-                                            pmChat={undefined}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
                                             funcSetAllChats={() => Promise.resolve()}
+                                            isInTaskPage={false}
+                                            myself={myself}
+                                            noteType={1}
+                                            pmChat={undefined}
                                             setCurrentMainChat={() => {}}
+                                            setMyself={setMyself}
                                             setOpeningService={setOpeningService}
+                                            socket={socket}
                                             teamMemberProfiles={teamMemberProfiles}
-                                            onCreateNewNote={handleCreateNewNote}
-                                            onCreateChildNote={handleCreateChildNote}
-                                            onOpenTask={() => {}}
-                                            onDeleteNote={handleDeleteNote}
                                             onCloseNotes={() => {}}
+                                            onCreateChildNote={handleCreateChildNote}
+                                            onCreateNewNote={handleCreateNewNote}
+                                            onDeleteNote={handleDeleteNote}
+                                            onOpenTask={() => {}}
                                         />
                                     </Stack>
 
@@ -174,10 +174,10 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         }}
                                     >
                                         <NoteTabList
-                                            tabItems={NM.tabItems}
                                             selectedTabIndex={NM.selectedTabIndex}
-                                            onTabChange={handleTabChange}
+                                            tabItems={NM.tabItems}
                                             onCloseTab={handleCloseTab}
+                                            onTabChange={handleTabChange}
                                         />
 
                                         {NM.tabItems.map((tabNote, index) => (
@@ -192,25 +192,25 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             >
                                                 {NM.currentMyNote && (
                                                     <NoteEditor
-                                                        currentMyNote={NM.currentMyNote}
                                                         body={noteEditor.body}
-                                                        currentMyNoteTitle={
-                                                            noteEditor.currentMyNoteTitle
-                                                        }
-                                                        titleInputRef={noteEditor.titleInputRef}
+                                                        currentMyNote={NM.currentMyNote}
+                                                        myself={myself}
                                                         noteBodySaved={noteEditor.noteBodySaved}
-                                                        onTitleChange={
-                                                            noteEditor.handleTitleChange
-                                                        }
-                                                        onTitleBlur={noteEditor.handleTitleBlur}
-                                                        onBodyChange={noteEditor.handleBodyChange}
                                                         setCurrentChat={setCurrentChat}
                                                         setMyself={setMyself}
                                                         setOpeningService={setOpeningService}
                                                         socket={socket}
                                                         teamMemberProfiles={teamMemberProfiles}
                                                         teamMembers={teamMembers}
-                                                        myself={myself}
+                                                        titleInputRef={noteEditor.titleInputRef}
+                                                        currentMyNoteTitle={
+                                                            noteEditor.currentMyNoteTitle
+                                                        }
+                                                        onBodyChange={noteEditor.handleBodyChange}
+                                                        onTitleBlur={noteEditor.handleTitleBlur}
+                                                        onTitleChange={
+                                                            noteEditor.handleTitleChange
+                                                        }
                                                     />
                                                 )}
                                             </TabPanel>

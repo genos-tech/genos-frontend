@@ -1,5 +1,5 @@
-import React from "react";
 import { Box, Stack, Typography } from "@mui/joy";
+import React from "react";
 
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
@@ -45,8 +45,8 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
         <>
             <ActivityReactions
                 activity={activity}
-                myself={myself}
                 groupedReactions={groupedReactions}
+                myself={myself}
             />
             <Box sx={{ lineHeight: 0, textAlign: "right" }}>
                 <Typography

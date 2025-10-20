@@ -144,35 +144,35 @@ export const TaskHomeLayout = ({
             {isTaskHomeVisible && (
                 <>
                     <TaskHomeHeader
-                        myself={myself}
-                        setMyself={setMyself}
                         allChats={allChats}
-                        setCurrentMainChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        funcSetAllChats={funcSetAllChats}
                         currentProject={PM.currentProject}
-                        teamTaskSearchOptions={teamTaskSearchOptions}
+                        funcSetAllChats={funcSetAllChats}
+                        isCreatingTask={TM.isCreatingTask.flag}
+                        isTaskPreviewVisible={TM.isTaskPreviewVisible}
                         loading={loading}
+                        myself={myself}
                         openSearch={openSearch}
+                        setCurrentMainChat={setCurrentMainChat}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
                         setOpenSearch={setOpenSearch}
-                        onSearchChange={onSearchChange}
-                        onCreateTask={onCreateTask}
+                        teamMemberProfiles={TEM.teamMemberProfiles}
+                        teamTaskSearchOptions={teamTaskSearchOptions}
+                        onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
                         onCreateTag={onCreateTag}
+                        onCreateTask={onCreateTask}
                         onDeleteProject={onDeleteProject}
-                        onCloseTaskHome={onCloseTaskHome}
-                        isTaskPreviewVisible={TM.isTaskPreviewVisible}
-                        isCreatingTask={TM.isCreatingTask.flag}
+                        onSearchChange={onSearchChange}
                     />
                     <ProjectTaskTable
                         currentProject={PM.currentProject}
                         displayTaskType={displayTaskType}
                         myself={myself}
                         setTeamMembers={TEM.setTeamMembers}
+                        teamMemberProfiles={TEM.teamMemberProfiles}
                         teamMembers={TEM.teamMembers}
                         TM={TM}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
                     />
                 </>
             )}
@@ -248,6 +248,7 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskPreview
+                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                         isTaskNoteVisible={NM.isTaskNoteVisible}
                         moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
@@ -268,7 +269,6 @@ export const TaskHomeLayout = ({
                         teamMembers={TEM.teamMembers}
                         teamProjects={PM.teamProjects}
                         TM={TM}
-                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                     />
                 </Box>
             </Panel>
@@ -341,9 +341,9 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <IconButton
+                        color="neutral"
                         component="button"
                         variant="soft"
-                        color="neutral"
                         sx={{
                             fontSize: "15px",
                             paddingRight: "10px",
@@ -372,6 +372,7 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskSidebar
+                        isTaskHomeVisible={isTaskHomeVisible}
                         myself={myself}
                         PM={PM}
                         setCurrentFilterName={setCurrentFilterName}
@@ -380,7 +381,6 @@ export const TaskHomeLayout = ({
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setOpenJoinProject={() => {}}
                         setSelectedTagForFiltering={setSelectedTagForFiltering}
-                        isTaskHomeVisible={isTaskHomeVisible}
                         TM={TM}
                     />
                 </Box>

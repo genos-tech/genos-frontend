@@ -1,9 +1,9 @@
-import React from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import CircleIcon from "@mui/icons-material/Circle";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import { Badge, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import React from "react";
 
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -40,7 +40,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
 
             {/* To-Do Button */}
             {chat.dmPartnerUser.userId === myself.userId && (
-                <Tooltip size="sm" title="To-Do">
+                <Tooltip size="sm" title="To-Do" variant="outlined">
                     <Badge
                         anchorOrigin={{ vertical: "top", horizontal: "right" }}
                         badgeContent={incompleteTodoCount}
@@ -63,7 +63,11 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             )}
 
             {/* Pin Button */}
-            <Tooltip size="sm" title={chat.isPinned ? "Unpin Chat" : "Pin Chat"}>
+            <Tooltip
+                size="sm"
+                title={chat.isPinned ? "Unpin Chat" : "Pin Chat"}
+                variant="outlined"
+            >
                 <IconButton
                     color={chat.isPinned ? "danger" : "neutral"}
                     component="a"
@@ -75,7 +79,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             </Tooltip>
 
             {/* Split View Button */}
-            <Tooltip size="sm" title="Split View">
+            <Tooltip size="sm" title="Split View" variant="outlined">
                 <IconButton component="a" sx={{ mt: 0.6 }} onClick={onSplitClick}>
                     <OpenInNewIcon sx={{ fontSize: 16 }} />
                 </IconButton>

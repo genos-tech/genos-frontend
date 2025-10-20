@@ -1,8 +1,8 @@
-import React from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Avatar } from "@mui/joy";
+import React from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
@@ -45,13 +45,13 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (activity.dmPartnerUserId !== "") {
             return (
                 <AvatarWithStatus
+                    avatarUser={teamMemberProfiles[activity.dmPartnerUserId]}
                     isYou={isYou}
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     socket={socket}
-                    avatarUser={teamMemberProfiles[activity.dmPartnerUserId]}
                 />
             );
         } else {

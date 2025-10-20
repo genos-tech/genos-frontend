@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { Box, Button, IconButton, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -260,7 +260,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             ))}
                         </>
                     )}
-                    <Tooltip size="sm" title="React">
+                    <Tooltip size="sm" title="React" variant="outlined">
                         <IconButton
                             key={`emoji-icon-${message.messageId}`}
                             size="sm"

@@ -1,16 +1,15 @@
-import { useState } from "react";
 import { Box, CssBaseline } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
+import { useState } from "react";
 
+import { Sidebar } from "../../components/layout/sidebar";
+import { useAuth } from "../../context/AuthContext";
+import { TaskType } from "../../types/tasks";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskSearch } from "./hooks/useTaskSearch";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 import { taskTypes } from "./types/TaskTableTypes";
-
-import { Sidebar } from "../../components/layout/sidebar";
-import { useAuth } from "../../context/AuthContext";
-import { TaskType } from "../../types/tasks";
 
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -125,52 +124,52 @@ export const TaskHome = (props: TaskHomeProps) => {
                 />
 
                 <TaskHomeLayout
-                    isTaskHomeVisible={isTaskHomeVisible}
-                    isDashboardVisible={isDashboardVisible}
-                    displayTaskType={displayTaskType}
-                    TEM={TEM}
-                    PM={PM}
-                    TM={TM}
-                    NM={NM}
-                    myself={myself}
-                    setMyself={setMyself}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setOpeningService={setOpeningService}
-                    openingService={openingService}
                     allChats={allChats}
+                    displayTaskType={displayTaskType}
                     funcSetAllChats={funcSetAllChats}
-                    moveToSpecificChat={moveToSpecificChat}
-                    socket={socket}
-                    setCurrentFilterName={setCurrentFilterName}
-                    setFilterBy={setFilterBy}
-                    setSelectedTagForFiltering={setSelectedTagForFiltering}
-                    setIsTaskHomeVisible={setIsTaskHomeVisible}
-                    setIsDashboardVisible={setIsDashboardVisible}
-                    teamTaskSearchOptions={searchHook.teamTaskSearchOptions}
+                    isDashboardVisible={isDashboardVisible}
+                    isTaskHomeVisible={isTaskHomeVisible}
                     loading={searchHook.loading}
+                    moveToSpecificChat={moveToSpecificChat}
+                    myself={myself}
+                    NM={NM}
+                    openingService={openingService}
                     openSearch={searchHook.openSearch}
+                    PM={PM}
+                    setCurrentFilterName={setCurrentFilterName}
+                    setCurrentMainChat={setCurrentMainChat}
+                    setFilterBy={setFilterBy}
+                    setIsDashboardVisible={setIsDashboardVisible}
+                    setIsTaskHomeVisible={setIsTaskHomeVisible}
+                    setMyself={setMyself}
+                    setOpeningService={setOpeningService}
+                    setSelectedTagForFiltering={setSelectedTagForFiltering}
+                    socket={socket}
+                    teamTaskSearchOptions={searchHook.teamTaskSearchOptions}
+                    TEM={TEM}
+                    TM={TM}
                     setOpenSearch={(open) =>
                         open ? searchHook.handleSearchOpen() : searchHook.handleSearchClose()
                     }
-                    onSearchChange={handleSearchChange}
-                    onCreateTask={handleCreateTask}
+                    onCloseTaskHome={handleCloseTaskHome}
                     onCreateProject={handleCreateProject}
                     onCreateTag={handleCreateTag}
+                    onCreateTask={handleCreateTask}
                     onDeleteProject={handleDeleteProject}
-                    onCloseTaskHome={handleCloseTaskHome}
+                    onSearchChange={handleSearchChange}
                 />
 
                 <TaskHomeModals
-                    myself={myself}
-                    PM={PM}
-                    TM={TM}
                     allChats={allChats}
-                    setAllChats={setAllChats}
-                    socket={socket}
-                    openJoinProject={openJoinProject}
-                    setOpenJoinProject={setOpenJoinProject}
+                    myself={myself}
                     openDeleteProject={openDeleteProject}
+                    openJoinProject={openJoinProject}
+                    PM={PM}
+                    setAllChats={setAllChats}
                     setOpenDeleteProject={setOpenDeleteProject}
+                    setOpenJoinProject={setOpenJoinProject}
+                    socket={socket}
+                    TM={TM}
                 />
 
                 {/* Hover Animation with CSS */}

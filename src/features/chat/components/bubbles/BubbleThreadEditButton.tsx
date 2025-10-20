@@ -21,7 +21,7 @@ export const BubbleThreadEditButton = (props: BubbleThreadEditButtonTypes) => {
     return (
         <Box sx={{ textAlign: "right" }}>
             <>
-                <Tooltip size="sm" title="Edit">
+                <Tooltip size="sm" title="Edit" variant="outlined">
                     <IconButton
                         size="sm"
                         sx={{ ml: "0px" }}

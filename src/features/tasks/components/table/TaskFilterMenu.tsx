@@ -1,5 +1,3 @@
-import * as React from "react";
-import { useEffect } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Stack, Tooltip, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
@@ -7,6 +5,8 @@ import Fade from "@mui/material/Fade";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { alpha } from "@mui/system";
+import * as React from "react";
+import { useEffect } from "react";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -282,11 +282,15 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         <Stack direction="row" gap={1} m={1}>
             <Stack direction="row" gap={1}>
                 <Tooltip
-                    title={selectedStatus.map((status) => status.label).join(", ")}
                     placement="top"
+                    title={selectedStatus.map((status) => status.label).join(", ")}
                 >
                     <Button
+                        aria-controls={openStatusFilter ? "fade-menu" : undefined}
+                        aria-expanded={openStatusFilter ? "true" : undefined}
+                        aria-haspopup="true"
                         id="fade-button"
+                        variant={"contained"}
                         sx={{
                             color: selectedStatus[0].label === "All" ? "black" : "white",
                             backgroundColor:
@@ -309,10 +313,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                         }}
-                        variant={"contained"}
-                        aria-controls={openStatusFilter ? "fade-menu" : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={openStatusFilter ? "true" : undefined}
                         onClick={handleClickStatusFilter}
                     >
                         Status: {selectedStatus[0].label}{" "}
@@ -320,7 +320,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     </Button>
                 </Tooltip>
                 <Menu
+                    anchorEl={anchorElStatusFilter}
                     id="fade-menu"
+                    open={openStatusFilter}
+                    slots={{ transition: Fade }}
                     slotProps={{
                         list: {
                             "aria-labelledby": "fade-button",
@@ -331,9 +334,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             },
                         },
                     }}
-                    slots={{ transition: Fade }}
-                    anchorEl={anchorElStatusFilter}
-                    open={openStatusFilter}
                     onClose={() => setAnchorElStatusFilter(null)}
                 >
                     {predefinedStatusFilters.map((status) => (
@@ -374,7 +374,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     handleCloseStatusFilter(status);
                                 }}
                             >
-                                <Typography variant="body2" fontWeight="bold">
+                                <Typography fontWeight="bold" variant="body2">
                                     {status.label}
                                 </Typography>
                             </Button>
@@ -385,11 +385,15 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 {selectedTags.length > 0 && (
                     <>
                         <Tooltip
-                            title={selectedTags.map((tag) => tag.label).join(", ")}
                             placement="top"
+                            title={selectedTags.map((tag) => tag.label).join(", ")}
                         >
                             <Button
+                                aria-controls={openTagsFilter ? "fade-menu" : undefined}
+                                aria-expanded={openTagsFilter ? "true" : undefined}
+                                aria-haspopup="true"
                                 id="fade-button"
+                                variant={"contained"}
                                 sx={{
                                     color: selectedTags.some((tag) => tag.label === "All")
                                         ? "black"
@@ -416,10 +420,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     textOverflow: "ellipsis",
                                     whiteSpace: "nowrap",
                                 }}
-                                variant={"contained"}
-                                aria-controls={openTagsFilter ? "fade-menu" : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={openTagsFilter ? "true" : undefined}
                                 onClick={handleClickTagsFilter}
                             >
                                 Tags: {selectedTags[0].label}{" "}
@@ -427,7 +427,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             </Button>
                         </Tooltip>
                         <Menu
+                            anchorEl={anchorElTagsFilter}
                             id="fade-menu"
+                            open={openTagsFilter}
+                            slots={{ transition: Fade }}
                             slotProps={{
                                 list: {
                                     "aria-labelledby": "fade-button",
@@ -438,9 +441,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     },
                                 },
                             }}
-                            slots={{ transition: Fade }}
-                            anchorEl={anchorElTagsFilter}
-                            open={openTagsFilter}
                             onClose={() => setAnchorElTagsFilter(null)}
                         >
                             {predefinedTagsFilters.map((tag) => (
@@ -481,7 +481,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                             handleCloseTagsFilter(tag);
                                         }}
                                     >
-                                        <Typography variant="body2" fontWeight="bold">
+                                        <Typography fontWeight="bold" variant="body2">
                                             {tag.label}
                                         </Typography>
                                     </Button>
@@ -492,11 +492,15 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 )}
 
                 <Tooltip
-                    title={selectedPriorities.map((priority) => priority.label).join(", ")}
                     placement="top"
+                    title={selectedPriorities.map((priority) => priority.label).join(", ")}
                 >
                     <Button
+                        aria-controls={openPriorityFilter ? "fade-menu" : undefined}
+                        aria-expanded={openPriorityFilter ? "true" : undefined}
+                        aria-haspopup="true"
                         id="fade-button"
+                        variant={"contained"}
                         sx={{
                             color: selectedPriorities.some((priority) => priority.label === "All")
                                 ? "black"
@@ -525,10 +529,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                         }}
-                        variant={"contained"}
-                        aria-controls={openPriorityFilter ? "fade-menu" : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={openPriorityFilter ? "true" : undefined}
                         onClick={handleClickPriorityFilter}
                     >
                         Priority: {selectedPriorities[0].label}{" "}
@@ -536,7 +536,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     </Button>
                 </Tooltip>
                 <Menu
+                    anchorEl={anchorElPriorityFilter}
                     id="fade-menu"
+                    open={openPriorityFilter}
+                    slots={{ transition: Fade }}
                     slotProps={{
                         list: {
                             "aria-labelledby": "fade-button",
@@ -547,9 +550,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             },
                         },
                     }}
-                    slots={{ transition: Fade }}
-                    anchorEl={anchorElPriorityFilter}
-                    open={openPriorityFilter}
                     onClose={() => setAnchorElPriorityFilter(null)}
                 >
                     {predefinedPriorityFilters.map((priority) => (
@@ -590,7 +590,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     handleClosePriorityFilter(priority);
                                 }}
                             >
-                                <Typography variant="body2" fontWeight="bold">
+                                <Typography fontWeight="bold" variant="body2">
                                     {priority.label}
                                 </Typography>
                             </Button>
@@ -599,11 +599,15 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 </Menu>
 
                 <Tooltip
-                    title={selectedEffortLevels.map((effortLevel) => effortLevel.label).join(", ")}
                     placement="top"
+                    title={selectedEffortLevels.map((effortLevel) => effortLevel.label).join(", ")}
                 >
                     <Button
+                        aria-controls={openEffortLevelFilter ? "fade-menu" : undefined}
+                        aria-expanded={openEffortLevelFilter ? "true" : undefined}
+                        aria-haspopup="true"
                         id="fade-button"
+                        variant={"contained"}
                         sx={{
                             color: selectedEffortLevels.some(
                                 (effortLevel) => effortLevel.label === "All"
@@ -634,10 +638,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
                         }}
-                        variant={"contained"}
-                        aria-controls={openEffortLevelFilter ? "fade-menu" : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={openEffortLevelFilter ? "true" : undefined}
                         onClick={handleClickEffortLevelFilter}
                     >
                         Effort Level: {selectedEffortLevels[0].label}{" "}
@@ -645,7 +645,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     </Button>
                 </Tooltip>
                 <Menu
+                    anchorEl={anchorElEffortLevelFilter}
                     id="fade-menu"
+                    open={openEffortLevelFilter}
+                    slots={{ transition: Fade }}
                     slotProps={{
                         list: {
                             "aria-labelledby": "fade-button",
@@ -656,9 +659,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             },
                         },
                     }}
-                    slots={{ transition: Fade }}
-                    anchorEl={anchorElEffortLevelFilter}
-                    open={openEffortLevelFilter}
                     onClose={() => setAnchorElEffortLevelFilter(null)}
                 >
                     {predefinedEffortLevelFilters.map((effortLevel) => (
@@ -699,7 +699,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     handleCloseEffortLevelFilter(effortLevel);
                                 }}
                             >
-                                <Typography variant="body2" fontWeight="bold">
+                                <Typography fontWeight="bold" variant="body2">
                                     {effortLevel.label}
                                 </Typography>
                             </Button>
@@ -708,10 +708,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 </Menu>
             </Stack>
 
-            <Stack flex={1} direction="row" justifyContent="flex-end">
+            <Stack direction="row" flex={1} justifyContent="flex-end">
                 <Button
                     variant="contained"
-                    onClick={resetFilters}
                     sx={{
                         color: "black",
                         backgroundColor: "white",
@@ -724,6 +723,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                     }}
+                    onClick={resetFilters}
                 >
                     Reset Filters
                 </Button>

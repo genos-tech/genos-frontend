@@ -1,9 +1,9 @@
-import * as React from "react";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import { Tooltip } from "@mui/joy";
 import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
+import * as React from "react";
 
 export const ColorSchemeToggle = (props: IconButtonProps) => {
     const { onClick, sx, ...other } = props;
@@ -18,7 +18,7 @@ export const ColorSchemeToggle = (props: IconButtonProps) => {
         );
     }
     return (
-        <Tooltip size="sm" placement="right-start" title="Switch Theme">
+        <Tooltip placement="right-start" size="sm" title="Switch Theme" variant="outlined">
             <IconButton
                 color="neutral"
                 data-screenshot="toggle-mode"

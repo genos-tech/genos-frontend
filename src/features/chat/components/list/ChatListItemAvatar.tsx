@@ -1,5 +1,5 @@
-import React from "react";
 import { Avatar } from "@mui/joy";
+import React from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -37,6 +37,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     if (chatType === 1 && chat.dmPartnerUser.userId !== "") {
         return (
             <AvatarWithStatus
+                avatarUser={teamMemberProfiles[chat.dmPartnerUser.userId]}
                 chat={chat}
                 isYou={isYou}
                 myself={myself}
@@ -44,7 +45,6 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
                 setMyself={setMyself}
                 setOpeningService={setOpeningService}
                 socket={socket}
-                avatarUser={teamMemberProfiles[chat.dmPartnerUser.userId]}
             />
         );
     }

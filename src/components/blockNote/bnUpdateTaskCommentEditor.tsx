@@ -2,7 +2,6 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useRef, useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -28,6 +27,7 @@ import {
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -291,7 +291,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         }
                     }}
                 >
-                    <Tooltip size="sm" title="Edit in Modal (TBD)">
+                    <Tooltip size="sm" title="Edit in Modal (TBD)" variant="outlined">
                         <IconButton
                             color="neutral"
                             size="sm"

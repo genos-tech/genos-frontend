@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -107,9 +107,9 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         <ThemeProvider theme={theme}>
             <div style={{ height: "100%", overflow: "hidden", borderRadius: "5px" }}>
                 <TaskFilterMenu
-                    TM={TM}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasks}
+                    TM={TM}
                 />
                 <Box
                     sx={{

@@ -8,7 +8,7 @@ export const BubbleReplyButton = (props: BubbleReplyButtonTypes) => {
     const { replayHandler } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip size="sm" title="Reply">
+            <Tooltip size="sm" title="Reply" variant="outlined">
                 <IconButton size="sm" sx={{}} onClick={replayHandler}>
                     <ReplyIcon />
                 </IconButton>

@@ -1,6 +1,6 @@
-import { useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -31,7 +31,7 @@ export const BubbleDeleteButton = (props: BubbleDeleteButtonTypes) => {
 
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip size="sm" title="Delete">
+            <Tooltip size="sm" title="Delete" variant="outlined">
                 <IconButton
                     color={"danger"}
                     size="sm"

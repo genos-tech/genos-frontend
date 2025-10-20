@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Box, Chip, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -242,6 +242,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
             {displayed.map(({ senders, emoji, count }, index) => (
                 <Tooltip
                     key={`tooltip-${index}`}
+                    variant="outlined"
                     title={
                         senders
                             .slice(0, 5)
@@ -277,6 +278,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                 <Tooltip
                     size="sm"
                     title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
+                    variant="outlined"
                 >
                     <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         +{hidden.length} more

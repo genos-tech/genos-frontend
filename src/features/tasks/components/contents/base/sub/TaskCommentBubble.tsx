@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPreview";
@@ -201,7 +201,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 socket={socket}
                             />
                         </Box>
-                        <Tooltip size="sm" title="Edit">
+                        <Tooltip size="sm" title="Edit" variant="outlined">
                             <IconButton
                                 size="sm"
                                 sx={{

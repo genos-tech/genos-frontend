@@ -118,10 +118,10 @@ export const MainChatPanel = ({
                     setOpeningService={setOpeningService}
                     setTodos={setTodos}
                     socket={socket}
+                    subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     teamMembers={TEM.teamMembers}
                     todos={todos}
-                    subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}
                 />
             )}
         </Panel>

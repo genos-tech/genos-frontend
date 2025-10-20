@@ -104,13 +104,13 @@ export const TaskHomeHeader = ({
                         {pmChat && (
                             <ProjectAvatar
                                 avatarSize={40}
+                                funcSetAllChats={funcSetAllChats}
                                 myself={myself}
                                 pmChat={pmChat}
-                                setMyself={setMyself}
-                                socket={null}
-                                funcSetAllChats={funcSetAllChats}
                                 setCurrentMainChat={setCurrentMainChat}
+                                setMyself={setMyself}
                                 setOpeningService={setOpeningService}
+                                socket={null}
                                 teamMemberProfiles={teamMemberProfiles}
                             />
                         )}
@@ -139,6 +139,9 @@ export const TaskHomeHeader = ({
                 <Autocomplete
                     key={`ac-project-tags-${currentProject?.projectId}`}
                     aria-label="Search"
+                    getOptionLabel={(option) => option.title}
+                    groupBy={(option) => option.status.status || "N/A"}
+                    isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
                     loading={loading}
                     open={openSearch}
                     options={teamTaskSearchOptions}
@@ -157,9 +160,6 @@ export const TaskHomeHeader = ({
                             />
                         ) : null
                     }
-                    getOptionLabel={(option) => option.title}
-                    groupBy={(option) => option.status.status || "N/A"}
-                    isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
                     renderOption={(props, option) => (
                         <AutocompleteOption
                             {...props}
@@ -242,7 +242,7 @@ export const TaskHomeHeader = ({
             </Box>
 
             <Box>
-                <Tooltip size="sm" title="Create New Task">
+                <Tooltip size="sm" title="Create New Task" variant="outlined">
                     <IconButton
                         component="p"
                         size="sm"
@@ -258,7 +258,7 @@ export const TaskHomeHeader = ({
                     </IconButton>
                 </Tooltip>
                 <Dropdown>
-                    <Tooltip size="sm" title="More Options" placement="left">
+                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
                         <MenuButton
                             slots={{ root: IconButton }}
                             slotProps={{
@@ -290,7 +290,7 @@ export const TaskHomeHeader = ({
                     </Menu>
                 </Dropdown>
                 {(isTaskPreviewVisible === true || isCreatingTask === true) && (
-                    <Tooltip size="sm" title="Close">
+                    <Tooltip size="sm" title="Close" variant="outlined">
                         <IconButton
                             color="neutral"
                             size="sm"

@@ -79,6 +79,7 @@ export const SubChatPanel = ({
                     paneSizePCT={subChatPanelSize}
                     setCurrentMainChat={CM.setCurrentMainChat}
                     setCurrentPreviewTask={TM.setCurrentPreviewTask}
+                    setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                     setCurrentProject={PM.setCurrentProject}
                     setCurrentSubChat={CM.setCurrentSubChat}
                     setCurrentThreadChat={CM.setCurrentThreadChat}
@@ -87,18 +88,17 @@ export const SubChatPanel = ({
                     setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                     setIsMainChatVisible={CM.setIsMainChatVisible}
                     setIsSubChatVisible={CM.setIsSubChatVisible}
+                    setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                     setIsThreadVisible={CM.setIsThreadVisible}
                     setIsToDoVisible={() => {}}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     setTodos={setTodos}
                     socket={socket}
+                    subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     teamMembers={TEM.teamMembers}
                     todos={todos}
-                    setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
-                    setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
-                    subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}
                 />
             </Box>
         </Panel>

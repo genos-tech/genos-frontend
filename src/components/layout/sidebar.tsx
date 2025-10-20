@@ -1,4 +1,3 @@
-import { useState } from "react";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -17,6 +16,7 @@ import {
     Tooltip,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -192,7 +192,12 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <Tooltip size="sm" placement="right-start" title="Inbox">
+                        <Tooltip
+                            placement="right-start"
+                            size="sm"
+                            title="Inbox"
+                            variant="outlined"
+                        >
                             <ListItemButton onClick={handleMoveToInbox}>
                                 <Box
                                     sx={{
@@ -227,7 +232,12 @@ export const Sidebar = (props: SidebarProps) => {
                         </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip size="sm" placement="right-start" title="Chats">
+                        <Tooltip
+                            placement="right-start"
+                            size="sm"
+                            title="Chats"
+                            variant="outlined"
+                        >
                             <ListItemButton onClick={handleMoveToChat}>
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     {unReadChatAndActivityCounts > 0 && (
@@ -256,7 +266,12 @@ export const Sidebar = (props: SidebarProps) => {
                         </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip size="sm" placement="right-start" title="Tasks">
+                        <Tooltip
+                            placement="right-start"
+                            size="sm"
+                            title="Tasks"
+                            variant="outlined"
+                        >
                             <ListItemButton onClick={handleMoveToTasks}>
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <AssignmentRoundedIcon
@@ -268,7 +283,12 @@ export const Sidebar = (props: SidebarProps) => {
                         </Tooltip>
                     </ListItem>
                     <ListItem>
-                        <Tooltip size="sm" placement="right-start" title="Notes">
+                        <Tooltip
+                            placement="right-start"
+                            size="sm"
+                            title="Notes"
+                            variant="outlined"
+                        >
                             <ListItemButton onClick={handleMoveToNote}>
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <NoteAltIcon
@@ -291,7 +311,7 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     {/* <ListItem>
-                        <Tooltip title="Settings" placement="right-start">
+                        <Tooltip variant="outlined"  title="Settings" placement="right-start">
                             <ListItemButton>
                                 <SettingsRoundedIcon sx={{ fontSize: 24 }} />
                             </ListItemButton>
@@ -299,7 +319,12 @@ export const Sidebar = (props: SidebarProps) => {
                     </ListItem> */}
 
                     <ListItem sx={{ mt: 1 }}>
-                        <Tooltip size="sm" placement="right-start" title="Sign out">
+                        <Tooltip
+                            placement="right-start"
+                            size="sm"
+                            title="Sign out"
+                            variant="outlined"
+                        >
                             <ListItemButton onClick={handleLogout}>
                                 <LogoutRoundedIcon sx={{ fontSize: 24 }} />
                             </ListItemButton>
@@ -311,7 +336,12 @@ export const Sidebar = (props: SidebarProps) => {
             <Divider />
 
             <Box sx={{ pl: "12px" }} onClick={() => setOpenUserProfile(true)}>
-                <Tooltip size="sm" placement="right-start" title="Open My Profile">
+                <Tooltip
+                    placement="right-start"
+                    size="sm"
+                    title="Open My Profile"
+                    variant="outlined"
+                >
                     <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`} variant="solid">
                         {myself.userName[0].toUpperCase()}
                     </Avatar>

@@ -18,23 +18,23 @@ export * from "./utils";
 
 // Legacy compatibility exports (for backward compatibility)
 // These maintain the same API as the original files
-export { initDB } from "./config/schema";
 export {
     DB_NAME,
     DB_VERSION,
-    STORES,
-    KEY_PATHS,
-    INDEX_NAMES,
     INDEX_KEY_PATHS,
+    INDEX_NAMES,
+    KEY_PATHS,
+    STORES,
 } from "./config/constants";
+export { initDB } from "./config/schema";
 
 // Convenience exports for common operations
 export { ChatService } from "./services/chat.service";
-export { UserService } from "./services/user.service";
-export { TaskService } from "./services/task.service";
 export { NoteService } from "./services/note.service";
+export { TaskService } from "./services/task.service";
+export { UserService } from "./services/user.service";
 
 // Utility classes
 export { DatabaseUtils } from "./utils/database";
-export { ValidationUtils } from "./utils/validation";
 export { HelperUtils } from "./utils/helpers";
+export { ValidationUtils } from "./utils/validation";

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import FlagIcon from "@mui/icons-material/Flag";
 import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
 
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { UserProps } from "../../../../types/admin";
@@ -49,7 +49,7 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
 
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip size="sm" title={tmpIsFlagged ? "Unflag" : "Flag"}>
+            <Tooltip size="sm" title={tmpIsFlagged ? "Unflag" : "Flag"} variant="outlined">
                 <IconButton
                     color={tmpIsFlagged ? "danger" : "neutral"}
                     size="sm"

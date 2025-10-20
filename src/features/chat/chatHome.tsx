@@ -1,19 +1,8 @@
-import { useEffect, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
-
-import { ChatProvider } from "./context/ChatContext";
-import { ChatSidebar } from "./components/list/ChatSidebar";
-import { ChatNotePanel } from "./components/panels/ChatNotePanel";
-import { CreateTaskPanel } from "./components/panels/CreateTaskPanel";
-import { MainChatPanel } from "./components/panels/MainChatPanel";
-import { SelectChatPanel } from "./components/panels/SelectChatPanel";
-import { SubChatPanel } from "./components/panels/SubChatPanel";
-import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
-import { ThreadPanel } from "./components/panels/ThreadPanel";
-import { ResizeHandle } from "./components/shared/ResizeHandle";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
@@ -28,6 +17,16 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserProps } from "../../types/admin";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
+import { ChatSidebar } from "./components/list/ChatSidebar";
+import { ChatNotePanel } from "./components/panels/ChatNotePanel";
+import { CreateTaskPanel } from "./components/panels/CreateTaskPanel";
+import { MainChatPanel } from "./components/panels/MainChatPanel";
+import { SelectChatPanel } from "./components/panels/SelectChatPanel";
+import { SubChatPanel } from "./components/panels/SubChatPanel";
+import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
+import { ThreadPanel } from "./components/panels/ThreadPanel";
+import { ResizeHandle } from "./components/shared/ResizeHandle";
+import { ChatProvider } from "./context/ChatContext";
 
 type ChatHomeProps = {
     TEM: TeamManagementState;
@@ -117,15 +116,15 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     return (
         <ChatProvider
-            socket={socket}
-            myself={myself}
-            setMyself={setMyself}
-            openingService={openingService}
-            setOpeningService={setOpeningService}
             CM={CM}
-            PM={PM}
-            TEM={TEM}
+            myself={myself}
             NM={NM}
+            openingService={openingService}
+            PM={PM}
+            setMyself={setMyself}
+            setOpeningService={setOpeningService}
+            socket={socket}
+            TEM={TEM}
             TM={TM}
         >
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
@@ -219,23 +218,23 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         <>
                                             <SubChatPanel
                                                 CM={CM}
-                                                TM={TM}
-                                                PM={PM}
-                                                TEM={TEM}
-                                                myself={myself}
                                                 currentSubChatId={currentSubChatId}
                                                 currentWindowHeight={height}
-                                                subChatPanelSize={subChatPanelSize}
-                                                setSubChatPanelSize={setSubChatPanelSize}
                                                 incompleteTodoCount={incompleteTodoCount}
                                                 isExistingTodaysTodo={isExistingTodaysTodo}
                                                 isToDoVisible={isToDoVisible}
-                                                todos={todos}
-                                                setTodos={setTodos}
+                                                myself={myself}
+                                                PM={PM}
                                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
-                                                socket={socket}
                                                 setMyself={setMyself}
                                                 setOpeningService={setOpeningService}
+                                                setSubChatPanelSize={setSubChatPanelSize}
+                                                setTodos={setTodos}
+                                                socket={socket}
+                                                subChatPanelSize={subChatPanelSize}
+                                                TEM={TEM}
+                                                TM={TM}
+                                                todos={todos}
                                             />
                                             <ResizeHandle
                                                 key="sub-chat-resize-handle"
@@ -247,24 +246,24 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     {/* Main Chat Pane */}
                                     <MainChatPanel
                                         CM={CM}
-                                        TM={TM}
-                                        PM={PM}
-                                        TEM={TEM}
-                                        myself={myself}
                                         currentMainChatId={currentMainChatId}
                                         currentWindowHeight={height}
-                                        mainChatPanelSize={mainChatPanelSize}
-                                        setMainChatPanelSize={setMainChatPanelSize}
                                         incompleteTodoCount={incompleteTodoCount}
                                         isExistingTodaysTodo={isExistingTodaysTodo}
                                         isToDoVisible={isToDoVisible}
-                                        setIsToDoVisible={setIsToDoVisible}
-                                        todos={todos}
-                                        setTodos={setTodos}
+                                        mainChatPanelSize={mainChatPanelSize}
+                                        myself={myself}
+                                        PM={PM}
                                         setIsExistingTodaysTodo={setIsExistingTodaysTodo}
-                                        socket={socket}
+                                        setIsToDoVisible={setIsToDoVisible}
+                                        setMainChatPanelSize={setMainChatPanelSize}
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
+                                        setTodos={setTodos}
+                                        socket={socket}
+                                        TEM={TEM}
+                                        TM={TM}
+                                        todos={todos}
                                     />
                                 </PanelGroup>
                             </Panel>
@@ -277,15 +276,15 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <ResizeHandle key="thread-chat-resize-handle" />
                             <ThreadPanel
                                 CM={CM}
-                                TM={TM}
-                                TEM={TEM}
-                                NM={NM}
-                                myself={myself}
                                 currentThreadChatId={currentThreadChatId}
                                 currentWindowHeight={height}
-                                socket={socket}
+                                myself={myself}
+                                NM={NM}
                                 setMyself={setMyself}
                                 setOpeningService={setOpeningService}
+                                socket={socket}
+                                TEM={TEM}
+                                TM={TM}
                             />
                         </>
                     )}
@@ -296,14 +295,14 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <ResizeHandle key="create-task-resize-handle" />
                             <CreateTaskPanel
                                 CM={CM}
-                                TM={TM}
-                                PM={PM}
-                                TEM={TEM}
                                 myself={myself}
                                 openingService={openingService}
-                                socket={socket}
+                                PM={PM}
                                 setMyself={setMyself}
                                 setOpeningService={setOpeningService}
+                                socket={socket}
+                                TEM={TEM}
+                                TM={TM}
                             />
                         </>
                     )}
@@ -314,15 +313,15 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <ResizeHandle key="task-preview-resize-handle" />
                             <TaskPreviewPanel
                                 CM={CM}
-                                TM={TM}
-                                PM={PM}
-                                TEM={TEM}
-                                NM={NM}
                                 myself={myself}
+                                NM={NM}
                                 openingService={openingService}
-                                socket={socket}
+                                PM={PM}
                                 setMyself={setMyself}
                                 setOpeningService={setOpeningService}
+                                socket={socket}
+                                TEM={TEM}
+                                TM={TM}
                             />
                         </>
                     )}
@@ -333,14 +332,14 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <ResizeHandle key="chat-note-resize-handle" />
                             <ChatNotePanel
                                 CM={CM}
-                                TM={TM}
-                                PM={PM}
-                                TEM={TEM}
-                                NM={NM}
                                 myself={myself}
-                                socket={socket}
+                                NM={NM}
+                                PM={PM}
                                 setMyself={setMyself}
                                 setOpeningService={setOpeningService}
+                                socket={socket}
+                                TEM={TEM}
+                                TM={TM}
                             />
                         </>
                     )}

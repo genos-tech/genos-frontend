@@ -1,5 +1,5 @@
-import React from "react";
 import { Chip, Stack } from "@mui/joy";
+import React from "react";
 
 import { ActivityMessageProps } from "../../../../../types/chat";
 
@@ -13,7 +13,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     chatTypeLookup,
 }) => {
     return (
-        <Stack direction="row" spacing={0.3} flexWrap="wrap">
+        <Stack direction="row" flexWrap="wrap" spacing={0.3}>
             {/* Chat Name and Task ID for PM and Task */}
             {(activity.chatType === 3 || activity.chatType === 4) && (
                 <>

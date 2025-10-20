@@ -1,5 +1,5 @@
-import React from "react";
 import { Box, Chip, Stack, Tooltip, Typography } from "@mui/joy";
+import React from "react";
 
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
@@ -57,6 +57,8 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                 {displayed.map(({ senders, emoji, count }, index) => (
                     <Tooltip
                         key={`tooltip-${index}`}
+                        size="sm"
+                        variant="outlined"
                         title={
                             senders
                                 .slice(0, 5)
@@ -90,7 +92,9 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
 
                 {hidden.length > 0 && (
                     <Tooltip
+                        size="sm"
                         title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
+                        variant="outlined"
                     >
                         <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                             +{hidden.length} more

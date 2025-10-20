@@ -1,4 +1,3 @@
-import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
 import FlagIcon from "@mui/icons-material/Flag";
@@ -22,6 +21,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../../types/admin";
@@ -254,8 +254,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {unReadChatCounts && (unReadChatCounts[1] || 0) > 0 && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Direct Messages"
+                                variant="outlined"
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -282,8 +284,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {!(unReadChatCounts && (unReadChatCounts[1] || 0) > 0) && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Direct Messages"
+                                variant="outlined"
                             >
                                 <IconButton
                                     component="p"
@@ -304,8 +308,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {unReadChatCounts && (unReadChatCounts[2] || 0) > 0 && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Group Messages"
+                                variant="outlined"
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -332,8 +338,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {!(unReadChatCounts && (unReadChatCounts[2] || 0) > 0) && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Group Messages"
+                                variant="outlined"
                             >
                                 <IconButton
                                     component="p"
@@ -354,8 +362,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {unReadChatCounts && (unReadChatCounts[3] || 0) > 0 && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Project Messages"
+                                variant="outlined"
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -382,8 +392,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {!(unReadChatCounts && (unReadChatCounts[3] || 0) > 0) && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Project Messages"
+                                variant="outlined"
                             >
                                 <IconButton
                                     component="p"
@@ -403,10 +415,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {/* For Pinned */}
                         {unReadChatCounts && (unReadChatCounts[4] || 0) > 0 && (
                             <Tooltip
-                                size="sm"
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Pinned Chats"
+                                variant="outlined"
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -432,10 +445,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
                         {!(unReadChatCounts && (unReadChatCounts[4] || 0) > 0) && (
                             <Tooltip
-                                size="sm"
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Pinned Chats"
+                                variant="outlined"
                             >
                                 <IconButton
                                     component="p"
@@ -456,8 +470,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {flaggedMessages.length > 0 && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Flagged Messages"
+                                variant="outlined"
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -483,8 +499,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {!(flaggedMessages.length > 0) && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Flagged Messages"
+                                variant="outlined"
                             >
                                 <IconButton
                                     component="p"
@@ -504,8 +522,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {unReadActivityMessageCounts > 0 && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Recent Activities"
+                                variant="outlined"
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -533,8 +553,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         {unReadActivityMessageCounts === 0 && (
                             <Tooltip
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: "10020" }}
                                 title="Recent Activities"
+                                variant="outlined"
                             >
                                 <IconButton
                                     component="p"
@@ -581,7 +603,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     />
 
                     <Dropdown>
-                        <Tooltip size="sm" title="More Options" placement="top">
+                        <Tooltip placement="top" size="sm" title="More Options" variant="outlined">
                             <MenuButton
                                 slots={{ root: IconButton }}
                                 slotProps={{
@@ -608,18 +630,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {currentChatPaneType === 1 && (
                     <Box>
                         <ChatList
-                            socket={socket}
                             chatType={1}
                             currentActivityMessageType={-1}
-                            state={{
-                                currentMainChat,
-                                currentSubChat,
-                                isTaskPreviewVisible,
-                                isSubChatVisible,
-                                isCreatingTask,
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            socket={socket}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -644,17 +657,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 flaggedMessages,
                                 setFlaggedMessages,
                             }}
-                        />
-                    </Box>
-                )}
-
-                {/* For Group Messages */}
-                {currentChatPaneType === 2 && (
-                    <Box>
-                        <ChatList
-                            socket={socket}
-                            chatType={2}
-                            currentActivityMessageType={-1}
                             state={{
                                 currentMainChat,
                                 currentSubChat,
@@ -664,6 +666,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}
+                        />
+                    </Box>
+                )}
+
+                {/* For Group Messages */}
+                {currentChatPaneType === 2 && (
+                    <Box>
+                        <ChatList
+                            chatType={2}
+                            currentActivityMessageType={-1}
+                            socket={socket}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -688,17 +701,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 flaggedMessages,
                                 setFlaggedMessages,
                             }}
-                        />
-                    </Box>
-                )}
-
-                {/* For PM Chats */}
-                {currentChatPaneType === 3 && (
-                    <Box>
-                        <ChatList
-                            socket={socket}
-                            chatType={3}
-                            currentActivityMessageType={-1}
                             state={{
                                 currentMainChat,
                                 currentSubChat,
@@ -708,6 +710,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}
+                        />
+                    </Box>
+                )}
+
+                {/* For PM Chats */}
+                {currentChatPaneType === 3 && (
+                    <Box>
+                        <ChatList
+                            chatType={3}
+                            currentActivityMessageType={-1}
+                            socket={socket}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -732,17 +745,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 flaggedMessages,
                                 setFlaggedMessages,
                             }}
-                        />
-                    </Box>
-                )}
-
-                {/* For Pinned Chats */}
-                {currentChatPaneType === 4 && (
-                    <Box>
-                        <ChatList
-                            socket={socket}
-                            chatType={4}
-                            currentActivityMessageType={-1}
                             state={{
                                 currentMainChat,
                                 currentSubChat,
@@ -752,6 +754,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}
+                        />
+                    </Box>
+                )}
+
+                {/* For Pinned Chats */}
+                {currentChatPaneType === 4 && (
+                    <Box>
+                        <ChatList
+                            chatType={4}
+                            currentActivityMessageType={-1}
+                            socket={socket}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -776,6 +789,15 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 flaggedMessages,
                                 setFlaggedMessages,
                             }}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
+                            }}
                         />
                     </Box>
                 )}
@@ -788,18 +810,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentActivityMessageType={setCurrentActivityMessageType}
                         />
                         <ChatList
-                            socket={socket}
                             chatType={5}
                             currentActivityMessageType={currentActivityMessageType}
-                            state={{
-                                currentMainChat,
-                                currentSubChat,
-                                isTaskPreviewVisible,
-                                isSubChatVisible,
-                                isCreatingTask,
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            socket={socket}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -823,6 +836,15 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setActivityMessages,
                                 flaggedMessages,
                                 setFlaggedMessages,
+                            }}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
                             }}
                         />
                     </Box>
@@ -832,18 +854,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {currentChatPaneType === 6 && (
                     <Box>
                         <ChatList
-                            socket={socket}
                             chatType={6}
                             currentActivityMessageType={currentActivityMessageType}
-                            state={{
-                                currentMainChat,
-                                currentSubChat,
-                                isTaskPreviewVisible,
-                                isSubChatVisible,
-                                isCreatingTask,
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            socket={socket}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -867,6 +880,15 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setActivityMessages,
                                 flaggedMessages,
                                 setFlaggedMessages,
+                            }}
+                            state={{
+                                currentMainChat,
+                                currentSubChat,
+                                isTaskPreviewVisible,
+                                isSubChatVisible,
+                                isCreatingTask,
+                                showOnlyUnreadItems,
+                                incompleteTodoCount,
                             }}
                         />
                     </Box>

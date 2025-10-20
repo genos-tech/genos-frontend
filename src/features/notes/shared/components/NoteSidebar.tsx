@@ -55,16 +55,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderMyNoteTree = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            node={node}
-            timestamp={myNoteState.timestamp}
             currentChain={myNoteState.tmpCurrentChain}
-            noteType={1}
             NM={NM}
-            renderToggle={(open, setOpen, node) => (
-                <NoteToggleButton open={open} setOpen={setOpen} noteType={1} node={node} NM={NM} />
-            )}
+            node={node}
+            noteType={1}
+            timestamp={myNoteState.timestamp}
             createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={myNoteState.timestamp} NM={NM} />
+                <ChildNoteCreator NM={NM} node={node} timestamp={myNoteState.timestamp} />
+            )}
+            renderToggle={(open, setOpen, node) => (
+                <NoteToggleButton NM={NM} node={node} noteType={1} open={open} setOpen={setOpen} />
             )}
         />
     );
@@ -72,16 +72,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderTaskNoteTree = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            node={node}
-            timestamp={taskNoteState.timestamp}
             currentChain={taskNoteState.tmpCurrentChain}
-            noteType={2}
             NM={NM}
-            renderToggle={(open, setOpen, node) => (
-                <NoteToggleButton open={open} setOpen={setOpen} noteType={2} node={node} NM={NM} />
-            )}
+            node={node}
+            noteType={2}
+            timestamp={taskNoteState.timestamp}
             createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={taskNoteState.timestamp} NM={NM} />
+                <ChildNoteCreator NM={NM} node={node} timestamp={taskNoteState.timestamp} />
+            )}
+            renderToggle={(open, setOpen, node) => (
+                <NoteToggleButton NM={NM} node={node} noteType={2} open={open} setOpen={setOpen} />
             )}
         />
     );
@@ -89,16 +89,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderChatNoteTree = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            node={node}
-            timestamp={chatNoteState.timestamp}
             currentChain={chatNoteState.tmpCurrentChain}
-            noteType={3}
             NM={NM}
-            renderToggle={(open, setOpen, node) => (
-                <NoteToggleButton open={open} setOpen={setOpen} noteType={3} node={node} NM={NM} />
-            )}
+            node={node}
+            noteType={3}
+            timestamp={chatNoteState.timestamp}
             createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={chatNoteState.timestamp} NM={NM} />
+                <ChildNoteCreator NM={NM} node={node} timestamp={chatNoteState.timestamp} />
+            )}
+            renderToggle={(open, setOpen, node) => (
+                <NoteToggleButton NM={NM} node={node} noteType={3} open={open} setOpen={setOpen} />
             )}
         />
     );
@@ -141,13 +141,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
         return (
             <NoteToggleButton
+                icon={getIcon()}
+                isOuter={true}
+                NM={NM}
+                noteType={noteType}
                 open={open}
                 setOpen={setOpen}
-                noteType={noteType}
                 title={getTitle()}
-                icon={getIcon()}
-                NM={NM}
-                isOuter={true}
             />
         );
     };
@@ -219,41 +219,41 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     </ListItem>
 
                     <NoteTypeSection
-                        title="My Notes"
-                        noteType={1}
                         icon={<WindowIcon />}
                         NM={NM}
+                        noteType={1}
                         renderToggle={renderOuterToggle}
+                        title="My Notes"
                     >
                         {myNoteState.tmpMetaTree.map((root) => renderMyNoteTree(root))}
                     </NoteTypeSection>
 
                     <NoteTypeSection
-                        title="Task Notes"
-                        noteType={2}
                         icon={<AssignmentRoundedIcon />}
                         NM={NM}
+                        noteType={2}
                         renderToggle={renderOuterToggle}
+                        title="Task Notes"
                     >
                         {taskNoteState.tmpMetaTree.map((root) => renderTaskNoteTree(root))}
                     </NoteTypeSection>
 
                     <NoteTypeSection
-                        title="Chat Notes"
-                        noteType={3}
                         icon={<QuestionAnswerRoundedIcon />}
                         NM={NM}
+                        noteType={3}
                         renderToggle={renderOuterToggle}
+                        title="Chat Notes"
                     >
                         {chatNoteState.tmpMetaTree.map((root) => renderChatNoteTree(root))}
                     </NoteTypeSection>
 
                     <NoteTypeSection
-                        title="Shared Notes (TBD)"
-                        noteType={4}
                         icon={<ShareIcon />}
                         NM={NM}
+                        noteType={4}
                         renderToggle={renderOuterToggle}
+                        title="Shared Notes (TBD)"
                     >
                         <ListItemContent>
                             <Typography level="title-sm"></Typography>

@@ -1,4 +1,3 @@
-import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -22,6 +21,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useRef, useState } from "react";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
@@ -202,7 +202,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                 {/* If the task is visible in the task note, do not show the expand button. */}
                 {isPreviewMode === true && setIsTaskVisibleInNote === undefined && (
-                    <Tooltip size="sm" title="Expand">
+                    <Tooltip size="sm" title="Expand" variant="outlined">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -219,7 +219,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 {openingService === 2 && taskContents.threadId !== null && (
-                    <Tooltip size="sm" title="Check Thread">
+                    <Tooltip size="sm" title="Check Thread" variant="outlined">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -250,7 +250,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 <Dropdown>
-                    <Tooltip size="sm" title="More Options" placement="left">
+                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
                         <MenuButton
                             size="sm"
                             slotProps={{ root: { color: "neutral" } }}
@@ -325,7 +325,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </Menu>
                 </Dropdown>
 
-                <Tooltip size="sm" title="Close">
+                <Tooltip size="sm" title="Close" variant="outlined">
                     <IconButton
                         color="neutral"
                         size="sm"

@@ -1,6 +1,7 @@
 # Notes Feature Organization Summary
 
 ## Overview
+
 The notes feature has been reorganized to separate the three distinct note types (MyNote, TaskNote, ChatNote) into their own dedicated folders, with shared components and utilities in a common folder.
 
 ## New Structure
@@ -92,21 +93,25 @@ frontend/weikiy/src/features/notes/
 ## Benefits of This Organization
 
 ### 1. **Clear Separation of Concerns**
+
 - Each note type has its own dedicated folder
 - Related components, services, and modals are grouped together
 - Easy to understand what belongs to which note type
 
 ### 2. **Improved Maintainability**
+
 - Changes to one note type don't affect others
 - Easier to locate specific functionality
 - Reduced cognitive load when working on specific note types
 
 ### 3. **Better Scalability**
+
 - Easy to add new note types by creating new folders
 - Shared functionality is clearly separated
 - Consistent folder structure across note types
 
 ### 4. **Enhanced Developer Experience**
+
 - Intuitive file organization
 - Clear import paths
 - Easier to onboard new developers

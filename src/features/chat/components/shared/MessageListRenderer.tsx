@@ -158,7 +158,7 @@ export const MessageListRenderer = ({
     };
 
     const calculatePadding = (index: number, message: MessageProps | ThreadMessageProps) => {
-        let paddingTop = 0.3;
+        const paddingTop = 0.3;
         let paddingBottom = 0.3;
 
         let numRepliesWithoutFirstMessage: number;
@@ -215,6 +215,7 @@ export const MessageListRenderer = ({
                 initialTopMostItemIndex={messages.length - 1}
                 isScrolling={setIsScrolling}
                 rangeChanged={setVisibleRange}
+                style={{ height }}
                 totalCount={messages.length}
                 itemContent={(index, _, { isScrolling }) => {
                     const message = messages[index];
@@ -261,8 +262,6 @@ export const MessageListRenderer = ({
                                     />
                                 ) : (
                                     <MessageBubble
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        socket={socket}
                                         chat={chat as ChatProps}
                                         currentMessageIndex={index}
                                         flaggedMessages={flaggedMessages}
@@ -274,6 +273,7 @@ export const MessageListRenderer = ({
                                         myself={myself}
                                         setCurrentMainChat={setCurrentMainChat}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
+                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setCurrentProject={setCurrentProject}
                                         setCurrentThreadChat={setCurrentThreadChat}
                                         setEditTargetMessage={setEditTargetMessage}
@@ -281,19 +281,19 @@ export const MessageListRenderer = ({
                                         setIsCreatingTask={setIsCreatingTask}
                                         setIsInEdit={setIsInEdit}
                                         setIsMainChatVisible={setIsMainChatVisible}
+                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                         setIsThreadVisible={setIsThreadVisible}
                                         setMyself={setMyself}
                                         setOpeningService={setOpeningService}
+                                        socket={socket}
+                                        teamMemberProfiles={teamMemberProfiles}
                                         variant={isYou ? "sent" : "received"}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                     />
                                 )}
                             </Stack>
                         </div>
                     );
                 }}
-                style={{ height }}
             />
         </Box>
     );

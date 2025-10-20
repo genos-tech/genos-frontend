@@ -1,6 +1,6 @@
-import { memo, ReactNode } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { ListItemButton, ListItemContent, Typography } from "@mui/joy";
+import { memo, ReactNode } from "react";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 
@@ -53,14 +53,14 @@ export const NoteToggleButton = memo(function NoteToggleButton({
         <ListItemButton
             color={isOuter ? "primary" : undefined}
             selected={isSelected}
-            variant={isOuter ? "outlined" : "plain"}
             sx={isOuter ? {} : { my: "1px" }}
+            variant={isOuter ? "outlined" : "plain"}
             onClick={handleClick}
         >
             {icon}
             <ListItemContent
-                onClick={!isOuter ? handleClick : undefined}
                 sx={!isOuter ? { ml: "20px" } : {}}
+                onClick={!isOuter ? handleClick : undefined}
             >
                 <Typography
                     level="title-sm"

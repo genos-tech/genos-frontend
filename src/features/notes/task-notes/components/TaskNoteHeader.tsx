@@ -23,7 +23,12 @@ export const TaskNoteHeader = ({ currentTaskNoteChain, onLoadNote }: TaskNoteHea
 
             {currentTaskNoteChain &&
                 currentTaskNoteChain.map((node, index) => (
-                    <Tooltip size="sm" title={node.title} key={`task-note-tooltip-${index}`}>
+                    <Tooltip
+                        key={`task-note-tooltip-${index}`}
+                        size="sm"
+                        title={node.title}
+                        variant="outlined"
+                    >
                         <Typography
                             key={node.noteId}
                             component="button"

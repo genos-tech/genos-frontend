@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Stack, TabPanel, Tabs } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -166,24 +166,24 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             }}
                                         >
                                             <ChatNoteHeader
+                                                chat={chat}
+                                                CM={CM}
                                                 currentChatNote={NM.currentChatNote}
                                                 currentChatNoteChain={NM.currentChatNoteChain}
-                                                chat={chat}
+                                                handleCloseTab={handleCloseTab}
                                                 isInChatPage={isInChatPage}
                                                 myself={myself}
-                                                setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                setCurrentProject={setCurrentProject}
-                                                socket={socket}
-                                                teamMemberProfiles={teamMemberProfiles}
-                                                CM={CM}
                                                 NM={NM}
                                                 openDeleteNote={openDeleteNote}
-                                                setOpenDeleteNote={setOpenDeleteNote}
                                                 openSearchBox={openSearchBox}
+                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                setCurrentProject={setCurrentProject}
+                                                setMyself={setMyself}
+                                                setOpenDeleteNote={setOpenDeleteNote}
+                                                setOpeningService={setOpeningService}
                                                 setOpenSearchBox={setOpenSearchBox}
-                                                handleCloseTab={handleCloseTab}
+                                                socket={socket}
+                                                teamMemberProfiles={teamMemberProfiles}
                                                 onCreateChildNote={handleCreateChildNote}
                                                 onDeleteNote={handleDeleteNote}
                                             />
@@ -195,10 +195,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             onChange={(_, val) => handleTabChange(Number(val))}
                                         >
                                             <ChatNoteTabList
-                                                tabItems={NM.tabItems}
                                                 selectedTabIndex={NM.selectedTabIndex}
-                                                onTabChange={handleTabChange}
+                                                tabItems={NM.tabItems}
                                                 onCloseTab={handleCloseTab}
+                                                onTabChange={handleTabChange}
                                             />
 
                                             {NM.tabItems.map((tabNote, index) => (
@@ -213,25 +213,20 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 >
                                                     {NM.currentChatNote && chatNoteEditor.body && (
                                                         <ChatNoteEditor
-                                                            currentChatNote={NM.currentChatNote}
                                                             body={chatNoteEditor.body}
+                                                            currentChatNote={NM.currentChatNote}
+                                                            myself={myself}
+                                                            setCurrentChat={CM.setCurrentMainChat}
+                                                            setMyself={setMyself}
+                                                            setOpeningService={setOpeningService}
+                                                            socket={socket}
+                                                            teamMemberProfiles={teamMemberProfiles}
+                                                            teamMembers={teamMembers}
                                                             currentChatNoteTitle={
                                                                 chatNoteEditor.currentChatNoteTitle
                                                             }
-                                                            titleInputRef={
-                                                                chatNoteEditor.titleInputRef
-                                                            }
                                                             noteBodySaved={
                                                                 chatNoteEditor.noteBodySaved
-                                                            }
-                                                            onTitleChange={
-                                                                chatNoteEditor.handleTitleChange
-                                                            }
-                                                            onTitleBlur={
-                                                                chatNoteEditor.handleTitleBlur
-                                                            }
-                                                            onBodyChange={
-                                                                chatNoteEditor.handleBodyChange
                                                             }
                                                             setNoteBodyEdited={
                                                                 chatNoteEditor.setNoteBodyEdited
@@ -239,13 +234,18 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             setNoteBodySaved={
                                                                 chatNoteEditor.setNoteBodySaved
                                                             }
-                                                            myself={myself}
-                                                            setMyself={setMyself}
-                                                            socket={socket}
-                                                            teamMembers={teamMembers}
-                                                            teamMemberProfiles={teamMemberProfiles}
-                                                            setCurrentChat={CM.setCurrentMainChat}
-                                                            setOpeningService={setOpeningService}
+                                                            titleInputRef={
+                                                                chatNoteEditor.titleInputRef
+                                                            }
+                                                            onBodyChange={
+                                                                chatNoteEditor.handleBodyChange
+                                                            }
+                                                            onTitleBlur={
+                                                                chatNoteEditor.handleTitleBlur
+                                                            }
+                                                            onTitleChange={
+                                                                chatNoteEditor.handleTitleChange
+                                                            }
                                                         />
                                                     )}
                                                 </TabPanel>

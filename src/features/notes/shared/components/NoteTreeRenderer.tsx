@@ -1,5 +1,5 @@
-import { memo, ReactNode } from "react";
 import { Box, List, ListItem } from "@mui/joy";
+import { memo, ReactNode } from "react";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { BaseNoteTreeNode } from "../types/noteTypes";
@@ -45,13 +45,13 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                 {node.children.map((child) => (
                                     <NoteTreeRenderer
                                         key={child.noteId}
-                                        node={child as T}
-                                        timestamp={timestamp}
-                                        currentChain={currentChain}
-                                        noteType={noteType}
-                                        NM={NM}
-                                        renderToggle={renderToggle}
                                         createChildNoteList={createChildNoteList}
+                                        currentChain={currentChain}
+                                        NM={NM}
+                                        node={child as T}
+                                        noteType={noteType}
+                                        renderToggle={renderToggle}
+                                        timestamp={timestamp}
                                     />
                                 ))}
                             </List>

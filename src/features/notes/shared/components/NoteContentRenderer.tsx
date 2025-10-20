@@ -7,10 +7,10 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 import { ChatNoteMain } from "../../chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../../my-notes/components/MyNoteMain";
 import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
-import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 
 type NoteContentRendererProps = {
     noteType: number;
@@ -108,6 +108,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
                 {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
                     <TaskPreview
+                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                         isTaskNoteVisible={NM.isTaskNoteVisible}
                         moveToSpecificChat={CM.moveToSpecificChat}
                         myself={myself}
@@ -128,7 +129,6 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                         teamMembers={TEM.teamMembers}
                         teamProjects={PM.teamProjects}
                         TM={TM}
-                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                     />
                 )}
             </>

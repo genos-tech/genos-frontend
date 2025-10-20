@@ -94,8 +94,8 @@ export const NoteEditor = ({
                     <Button
                         color="neutral"
                         size="sm"
-                        variant="outlined"
                         startDecorator={<CheckIcon sx={{ fontSize: "15px" }} />}
+                        variant="outlined"
                     >
                         Saved
                     </Button>

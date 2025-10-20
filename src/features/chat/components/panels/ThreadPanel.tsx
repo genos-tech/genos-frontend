@@ -52,6 +52,7 @@ export const ThreadPanel = ({
                         currentThreadChatId={currentThreadChatId}
                         currentWindowHeight={currentWindowHeight}
                         flaggedMessages={CM.flaggedMessages}
+                        handleCreateNewChatNoteIfNotExist={NM.handleCreateNewChatNoteIfNotExist}
                         isChatNoteVisibleInChat={CM.isChatNoteVisibleInChat}
                         myself={myself}
                         setCurrentMainChat={CM.setCurrentMainChat}
@@ -67,7 +68,6 @@ export const ThreadPanel = ({
                         teamMembers={TEM.teamMembers}
                         thread={CM.currentThreadChat}
                         TM={TM}
-                        handleCreateNewChatNoteIfNotExist={NM.handleCreateNewChatNoteIfNotExist}
                     />
                 )}
             </Box>

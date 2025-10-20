@@ -5,6 +5,7 @@ This document outlines the changes made to the database module and how to migrat
 ## Overview of Changes
 
 The database module has been completely refactored to improve:
+
 - **Type Safety**: Full TypeScript support with proper interfaces
 - **Separation of Concerns**: Clear separation between data access, business logic, and utilities
 - **Maintainability**: Modular structure with single responsibility principle
@@ -46,8 +47,10 @@ src/db/
 ## Migration Examples
 
 ### Before (Old Structure)
+
 ```typescript
 import { openDB } from "idb";
+
 import { DB_NAME, DB_VERSION, STORES } from "./db/conf";
 import { initDB } from "./db/schema";
 
@@ -57,6 +60,7 @@ const messages = await db.getAll(STORES.DM_MESSAGES);
 ```
 
 ### After (New Structure)
+
 ```typescript
 import { ChatService } from "./db";
 
@@ -68,42 +72,57 @@ const messages = await chatService.getDMMessages({ chatId: 123 });
 ## Key Changes
 
 ### 1. Configuration
+
 - **Before**: All constants in `conf.ts`
 - **After**: Organized in `config/constants.ts` and `config/schema.ts`
 
 ### 2. Data Access
+
 - **Before**: Direct IndexedDB operations scattered throughout
 - **After**: Repository pattern with `BaseRepository` and specific repositories
 
 ### 3. Business Logic
+
 - **Before**: Mixed with data access in `crud.ts`
 - **After**: Separate service layer with clear business logic
 
 ### 4. Type Safety
+
 - **Before**: Using `any` types extensively
 - **After**: Full TypeScript interfaces and type checking
 
 ### 5. Utilities
+
 - **Before**: Mixed utility functions in `utils.ts`
 - **After**: Organized utility classes by purpose
 
 ## Migration Steps
 
 ### Step 1: Update Imports
+
 Replace old imports with new ones:
 
 ```typescript
 // Old
 import { DB_NAME, DB_VERSION, STORES } from "./db/conf";
+import { addData, getAllData } from "./db/crud";
 import { initDB } from "./db/schema";
-import { getAllData, addData } from "./db/crud";
 
 // New
-import { DB_NAME, DB_VERSION, STORES, initDB } from "./db";
-import { ChatService, UserService, TaskService, NoteService } from "./db";
+import {
+    ChatService,
+    DB_NAME,
+    DB_VERSION,
+    initDB,
+    NoteService,
+    STORES,
+    TaskService,
+    UserService,
+} from "./db";
 ```
 
 ### Step 2: Replace Direct Database Operations
+
 Replace direct IndexedDB calls with service methods:
 
 ```typescript
@@ -117,35 +136,39 @@ const messages = await chatService.getDMMessages({ chatId: 123 });
 ```
 
 ### Step 3: Use Type Safety
+
 Replace `any` types with proper interfaces:
 
 ```typescript
-// Old
-function processMessage(message: any) {
-  // ...
-}
-
 // New
 import { ChatMessage } from "./db";
+
+// Old
+function processMessage(message: any) {
+    // ...
+}
+
 function processMessage(message: ChatMessage) {
-  // ...
+    // ...
 }
 ```
 
 ### Step 4: Use Validation
+
 Add data validation where needed:
 
 ```typescript
 import { ValidationUtils } from "./db";
 
 if (ValidationUtils.isValidChatMessage(message)) {
-  // Process valid message
+    // Process valid message
 }
 ```
 
 ## Backward Compatibility
 
 The new structure maintains backward compatibility through:
+
 - Legacy exports in the main `index.ts`
 - Same function names where possible
 - Gradual migration support
@@ -163,6 +186,7 @@ The new structure maintains backward compatibility through:
 ## Common Patterns
 
 ### Getting Data
+
 ```typescript
 // Old
 const data = await getAllData(storeName);
@@ -173,6 +197,7 @@ const data = await service.getDMMessages({ chatId: 123 });
 ```
 
 ### Adding Data
+
 ```typescript
 // Old
 await addData({ storeName, data });
@@ -183,6 +208,7 @@ await service.addDMMessage(message);
 ```
 
 ### Batch Operations
+
 ```typescript
 // Old
 await batchInsertMessages({ storeName, messages });
@@ -199,9 +225,9 @@ The new structure makes testing much easier:
 ```typescript
 // Mock repositories for testing
 const mockChatRepo = {
-  getChat: jest.fn(),
-  getAllChats: jest.fn(),
-  // ... other methods
+    getChat: jest.fn(),
+    getAllChats: jest.fn(),
+    // ... other methods
 };
 
 const chatService = new ChatService();

@@ -1,4 +1,3 @@
-import React, { useEffect, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -24,6 +23,7 @@ import {
     Typography,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
+import React, { useEffect, useRef, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -585,8 +585,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         })}
                                         <ListItem>
                                             <ListItemButton
-                                                variant="soft"
                                                 color="primary"
+                                                variant="soft"
                                                 sx={{
                                                     justifyContent: "flex-start",
                                                     alignItems: "center",
@@ -685,8 +685,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         <Tooltip
                                             component="div"
                                             placement="top"
+                                            size="sm"
                                             sx={{ zIndex: 10010 }}
                                             title={`Download \`${file.name}\``}
+                                            variant="outlined"
                                         >
                                             <div
                                                 style={{
@@ -814,8 +816,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         <Tooltip
                                             component="div"
                                             placement="top"
+                                            size="sm"
                                             sx={{ zIndex: 10010 }}
                                             title="Download"
+                                            variant="outlined"
                                         >
                                             <IconButton
                                                 color="neutral"

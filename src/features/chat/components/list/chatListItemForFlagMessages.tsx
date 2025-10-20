@@ -1,11 +1,21 @@
-import * as React from "react";
-import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
-import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
+import {
+    Avatar,
+    Box,
+    Chip,
+    IconButton,
+    ListDivider,
+    ListItem,
+    Stack,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import * as React from "react";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -416,13 +426,13 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         if (flaggedMessage.dmPartnerUser.userId !== "") {
             return (
                 <AvatarWithStatus
+                    avatarUser={teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
                     isYou={isYou}
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     socket={socket}
-                    avatarUser={teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
                 />
             );
         }
@@ -598,8 +608,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         <React.Fragment>
             <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
                 <ListItemButton
-                    sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                     color={isSelected ? "success" : "neutral"}
+                    sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                     variant={isSelected ? "soft" : "outlined"}
                     onClick={onClickHandler}
                 >
@@ -633,14 +643,16 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 >
                                     {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                                 </Typography>
-                                <IconButton
-                                    color={tmpIsFlagged ? "danger" : "neutral"}
-                                    size="sm"
-                                    variant="plain"
-                                    onClick={updateFlagStatus}
-                                >
-                                    <FlagIcon sx={{ fontSize: 16 }} />
-                                </IconButton>
+                                <Tooltip size="sm" title="Unflag" variant="outlined">
+                                    <IconButton
+                                        color={tmpIsFlagged ? "danger" : "neutral"}
+                                        size="sm"
+                                        variant="plain"
+                                        onClick={updateFlagStatus}
+                                    >
+                                        <FlagIcon sx={{ fontSize: 16 }} />
+                                    </IconButton>
+                                </Tooltip>
                             </Stack>
                         </Stack>
 

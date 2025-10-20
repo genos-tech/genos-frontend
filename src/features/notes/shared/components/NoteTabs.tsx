@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { PartialBlock } from "@blocknote/core";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -16,6 +15,7 @@ import {
     Tabs,
     Tooltip,
 } from "@mui/joy";
+import { useRef } from "react";
 
 import { BnTaskNoteEditor } from "../../../../components/blockNote/bnTaskNoteEditor";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -90,7 +90,12 @@ export const NoteTabs = ({
                 }}
             >
                 {tabItems.map((tab, index) => (
-                    <Tooltip size="sm" title={tab.title} key={`tab-tooltip-${index}`}>
+                    <Tooltip
+                        key={`tab-tooltip-${index}`}
+                        size="sm"
+                        title={tab.title}
+                        variant="outlined"
+                    >
                         <Tab
                             key={`tab-${index}`}
                             variant="soft"

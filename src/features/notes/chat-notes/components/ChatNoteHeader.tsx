@@ -120,9 +120,10 @@ export const ChatNoteHeader = ({
                     {currentChatNoteChain &&
                         currentChatNoteChain.map((node, index) => (
                             <Tooltip
+                                key={`chat-note-tooltip-${index}`}
                                 size="sm"
                                 title={node.title}
-                                key={`chat-note-tooltip-${index}`}
+                                variant="outlined"
                             >
                                 <Typography
                                     key={node.noteId}
@@ -155,14 +156,14 @@ export const ChatNoteHeader = ({
                 {chat && chat.chatType === 1 && (
                     <Box sx={{ mt: "2px", mr: "5px" }}>
                         <AvatarWithStatus
+                            avatarUser={teamMemberProfiles[chat.dmPartnerUser.userId]}
                             chat={chat}
                             isYou={false}
                             myself={myself}
+                            setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
                             setOpeningService={setOpeningService}
                             socket={socket}
-                            avatarUser={teamMemberProfiles[chat.dmPartnerUser.userId]}
-                            setCurrentMainChat={CM.setCurrentMainChat}
                         />
                     </Box>
                 )}
@@ -173,11 +174,11 @@ export const ChatNoteHeader = ({
                             gmChat={chat}
                             isYou={false}
                             myself={myself}
+                            setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
                             setOpeningService={setOpeningService}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
-                            setCurrentMainChat={CM.setCurrentMainChat}
                         />
                     </Box>
                 )}
@@ -187,11 +188,11 @@ export const ChatNoteHeader = ({
                             funcSetAllChats={CM.funcSetAllChats}
                             myself={myself}
                             pmChat={chat}
+                            setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
                             setOpeningService={setOpeningService}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
-                            setCurrentMainChat={CM.setCurrentMainChat}
                         />
                     </Box>
                 )}
@@ -215,7 +216,7 @@ export const ChatNoteHeader = ({
                 )}
 
                 {isInChatPage && (
-                    <Tooltip size="sm" title="Open in Notes">
+                    <Tooltip size="sm" title="Open in Notes" variant="outlined">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -231,7 +232,7 @@ export const ChatNoteHeader = ({
                 )}
 
                 {isInChatPage === false && (
-                    <Tooltip size="sm" title="Open Related Chat">
+                    <Tooltip size="sm" title="Open Related Chat" variant="outlined">
                         <IconButton
                             color="neutral"
                             size="sm"
@@ -257,7 +258,7 @@ export const ChatNoteHeader = ({
 
                 {/* More Options Dropdown */}
                 <Dropdown>
-                    <Tooltip size="sm" title="More Options" placement="left">
+                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
                         <MenuButton
                             slots={{ root: IconButton }}
                             sx={{ mb: "5px" }}
@@ -287,7 +288,7 @@ export const ChatNoteHeader = ({
                 </Dropdown>
 
                 {isInChatPage === true && (
-                    <Tooltip size="sm" title="Close Notes">
+                    <Tooltip size="sm" title="Close Notes" variant="outlined">
                         <IconButton
                             color="neutral"
                             size="sm"

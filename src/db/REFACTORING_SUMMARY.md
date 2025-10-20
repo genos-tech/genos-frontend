@@ -7,6 +7,7 @@ The database module has been completely refactored from a monolithic structure t
 ## What Was Refactored
 
 ### Original Structure (Before)
+
 ```
 src/db/
 ├── conf.ts          # All constants and configuration
@@ -16,6 +17,7 @@ src/db/
 ```
 
 ### New Structure (After)
+
 ```
 src/db/
 ├── config/
@@ -50,31 +52,37 @@ src/db/
 ## Key Improvements
 
 ### 1. Type Safety
+
 - **Before**: Extensive use of `any` types
 - **After**: Full TypeScript interfaces for all data structures
 - **Benefit**: Compile-time error detection, better IDE support
 
 ### 2. Separation of Concerns
+
 - **Before**: Mixed responsibilities in single files
 - **After**: Clear separation between data access, business logic, and utilities
 - **Benefit**: Easier maintenance, testing, and debugging
 
 ### 3. Repository Pattern
+
 - **Before**: Direct IndexedDB operations scattered throughout
 - **After**: Repository pattern with base class and specific implementations
 - **Benefit**: Consistent data access, easier testing, better error handling
 
 ### 4. Service Layer
+
 - **Before**: Business logic mixed with data access
 - **After**: Dedicated service classes for business logic
 - **Benefit**: Reusable business logic, easier testing, better organization
 
 ### 5. Modular Structure
+
 - **Before**: Large monolithic files
 - **After**: Small, focused modules with single responsibility
 - **Benefit**: Easier to understand, maintain, and extend
 
 ### 6. Error Handling
+
 - **Before**: Inconsistent error handling
 - **After**: Consistent error handling with proper types
 - **Benefit**: Better user experience, easier debugging
@@ -82,14 +90,17 @@ src/db/
 ## Files Created
 
 ### Configuration
+
 - `config/constants.ts` - Database constants and store names
 - `config/schema.ts` - Schema configuration and initialization
 - `config/index.ts` - Configuration exports
 
 ### Types
+
 - `types/index.ts` - TypeScript interfaces and types
 
 ### Repositories
+
 - `repositories/base.ts` - Base repository with common operations
 - `repositories/chat.ts` - Chat-related repositories
 - `repositories/user.ts` - User repository
@@ -98,6 +109,7 @@ src/db/
 - `repositories/index.ts` - Repository exports
 
 ### Services
+
 - `services/chat.service.ts` - Chat business logic
 - `services/user.service.ts` - User business logic
 - `services/task.service.ts` - Task business logic
@@ -105,18 +117,21 @@ src/db/
 - `services/index.ts` - Service exports
 
 ### Utilities
+
 - `utils/database.ts` - Database utility functions
 - `utils/validation.ts` - Data validation utilities
 - `utils/helpers.ts` - General helper functions
 - `utils/index.ts` - Utility exports
 
 ### Documentation
+
 - `MIGRATION_GUIDE.md` - Detailed migration instructions
 - `REFACTORING_SUMMARY.md` - This summary
 
 ## Backward Compatibility
 
 All original files have been updated to maintain backward compatibility:
+
 - `conf.ts` - Re-exports from new constants
 - `schema.ts` - Re-exports from new schema
 - `crud.ts` - Re-exports from new services with legacy function mappings
@@ -132,6 +147,7 @@ All original files have been updated to maintain backward compatibility:
 ## Benefits Achieved
 
 ### For Developers
+
 - **Type Safety**: Catch errors at compile time
 - **Better IDE Support**: Autocomplete, refactoring, navigation
 - **Easier Testing**: Mock repositories and services
@@ -139,12 +155,14 @@ All original files have been updated to maintain backward compatibility:
 - **Easier Maintenance**: Modular structure
 
 ### For the Application
+
 - **Better Performance**: Optimized database operations
 - **Error Resilience**: Consistent error handling
 - **Scalability**: Easy to add new features
 - **Maintainability**: Clear separation of concerns
 
 ### For the Codebase
+
 - **Consistency**: Standardized patterns
 - **Reusability**: Shared utilities and base classes
 - **Documentation**: Self-documenting code
@@ -153,8 +171,10 @@ All original files have been updated to maintain backward compatibility:
 ## Usage Examples
 
 ### Before (Old Way)
+
 ```typescript
 import { openDB } from "idb";
+
 import { DB_NAME, DB_VERSION, STORES } from "./db/conf";
 
 const db = await openDB(DB_NAME, DB_VERSION);
@@ -162,6 +182,7 @@ const messages = await db.getAll(STORES.DM_MESSAGES);
 ```
 
 ### After (New Way)
+
 ```typescript
 import { ChatService } from "./db";
 

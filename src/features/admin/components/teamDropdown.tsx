@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import { Avatar, Box, Dropdown, IconButton, Menu, MenuItem, Tooltip } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { CreateDMResponse, Team, UserProps } from "../../../types/admin";
@@ -171,7 +171,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <Tooltip size="sm" placement="right-start" title="Switch Team">
+                <Tooltip placement="right-start" size="sm" title="Switch Team" variant="outlined">
                     <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
                         <Avatar
                             src={`${media_url}/${currentTeam.teamImgPath}`}

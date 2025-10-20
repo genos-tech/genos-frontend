@@ -1,7 +1,6 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -14,6 +13,7 @@ import { useCreateBlockNote } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
@@ -129,8 +129,10 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                             <Tooltip
                                 component="div"
                                 placement="top"
+                                size="sm"
                                 sx={{ zIndex: 10010 }}
                                 title="Download"
+                                variant="outlined"
                             >
                                 <IconButton
                                     color="neutral"

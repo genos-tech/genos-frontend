@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { Box, Divider, GlobalStyles, List, Sheet } from "@mui/joy";
 import { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -191,9 +191,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     /> */}
 
                     <TaskTableListItem
+                        isTaskHomeVisible={isTaskHomeVisible}
                         setIsDashboardVisible={setIsDashboardVisible}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        isTaskHomeVisible={isTaskHomeVisible}
                     />
 
                     <RecentsListItem

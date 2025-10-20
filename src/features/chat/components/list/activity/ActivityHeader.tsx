@@ -1,6 +1,6 @@
-import React from "react";
 import CircleIcon from "@mui/icons-material/Circle";
 import { Box, Stack, Typography } from "@mui/joy";
+import React from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../../../types/admin";
@@ -41,15 +41,15 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
             <Stack direction="row" spacing={1}>
                 <ActivityAvatar
                     activity={activity}
-                    myself={myself}
-                    teamMemberProfiles={teamMemberProfiles}
-                    socket={socket}
                     allChats={allChats}
+                    funcSetAllChats={funcSetAllChats}
+                    isYou={isYou}
+                    myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
-                    funcSetAllChats={funcSetAllChats}
-                    isYou={isYou}
+                    socket={socket}
+                    teamMemberProfiles={teamMemberProfiles}
                 />
 
                 {activity.chatType !== 3 && activity.chatType !== 4 && (

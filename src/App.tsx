@@ -1,3 +1,5 @@
+import "./App.css";
+
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
 
@@ -9,8 +11,6 @@ import { useServiceInitialization } from "./hooks/common/useServiceInitializatio
 import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useWebSocket } from "./hooks/common/useWebSocket";
-
-import "./App.css";
 
 export const App = () => {
     // Initialize app with authentication and basic setup
@@ -64,17 +64,17 @@ export const App = () => {
             <CssVarsProvider disableTransitionOnChange>
                 <CssBaseline />
                 <AppContent
-                    openingService={UIM.openingService}
+                    CM={CM}
+                    IM={IM}
                     myself={myself}
+                    NM={NM}
+                    openingService={UIM.openingService}
+                    PM={PM}
                     setMyself={setMyself}
                     setOpeningService={UIM.setOpeningService}
                     socketInstance={socketInstance}
                     TEM={TEM}
-                    PM={PM}
                     TM={TM}
-                    NM={NM}
-                    CM={CM}
-                    IM={IM}
                     UIM={UIM}
                 />
             </CssVarsProvider>

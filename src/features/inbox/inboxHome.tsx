@@ -1,13 +1,12 @@
 import { Box, Stack } from "@mui/joy";
 
+import { Sidebar } from "../../components/layout/sidebar";
 import { InboxHeader } from "./components/InboxHeader";
 import { InboxSection } from "./components/InboxSection";
 import { InboxSectionHeader } from "./components/InboxSectionHeader";
 import { useInboxItems } from "./hooks/useInboxItems";
 import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
-
-import { Sidebar } from "../../components/layout/sidebar";
 
 export const InboxHome = (props: InboxHomeProps) => {
     const {
@@ -61,25 +60,25 @@ export const InboxHome = (props: InboxHomeProps) => {
                     <Stack direction="row" sx={{ height: "93dvh" }}>
                         <InboxSection
                             ref={activityVirtuosoRef}
+                            itemKeyPrefix="inbox-general-items-bubble"
                             items={activityInboxItems}
                             myself={myself}
-                            setMyself={setMyself}
                             setCurrentChat={setCurrentMainChat}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
-                            itemKeyPrefix="inbox-general-items-bubble"
                         />
                         <InboxSection
                             ref={requestVirtuosoRef}
+                            itemKeyPrefix="inbox-request-bubble"
                             items={requestInboxItems}
                             myself={myself}
-                            setMyself={setMyself}
                             setCurrentChat={setCurrentMainChat}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
-                            itemKeyPrefix="inbox-request-bubble"
                         />
                     </Stack>
                 </Box>

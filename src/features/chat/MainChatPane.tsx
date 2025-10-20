@@ -1,8 +1,11 @@
-import { useEffect } from "react";
 import { Box, Sheet, useColorScheme } from "@mui/joy";
+import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { UserProps } from "../../types/admin";
+import { ChatProps, FlaggedMessageProps, ThreadProps, ToDoFactProps } from "../../types/chat";
+import { ProjectProps, TaskProps } from "../../types/tasks";
 import { MainChatPaneHeader } from "./components/headers/MainChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -15,10 +18,6 @@ import {
     calculateVirtuosoSubHight,
 } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
-
-import { UserProps } from "../../types/admin";
-import { ChatProps, FlaggedMessageProps, ThreadProps, ToDoFactProps } from "../../types/chat";
-import { ProjectProps, TaskProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
@@ -248,58 +247,56 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     ) && (
                         <>
                             <MessageListRenderer
-                                virtuosoRef={
-                                    scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
-                                }
-                                messages={messageManagement.messages}
                                 chat={chat}
-                                myself={myself}
-                                teamMemberProfiles={teamMemberProfiles}
-                                socket={socket}
                                 currentChatId={currentMainChatId}
-                                visibleRange={scrollManagement.visibleRange}
-                                setVisibleRange={scrollManagement.setVisibleRange}
-                                isScrolling={scrollManagement.isScrolling}
-                                setIsScrolling={scrollManagement.setIsScrolling}
-                                indexMap={messageManagement.indexMap}
-                                moveToSpecificIndex={currentMainChat.moveToSpecificIndex}
-                                notMove={currentMainChat.notMove}
-                                setErrorMessage={messageManagement.setErrorMessage}
-                                setErrorOpen={messageManagement.setErrorOpen}
+                                currentThreadChat={currentThreadChat}
                                 flaggedMessages={flaggedMessages}
-                                setFlaggedMessages={setFlaggedMessages}
+                                height={virtuosoHeight}
+                                indexMap={messageManagement.indexMap}
                                 isCreatingTask={isCreatingTask}
-                                setIsCreatingTask={setIsCreatingTask}
+                                isScrolling={scrollManagement.isScrolling}
+                                isThread={false}
+                                isThreadVisible={isThreadVisible}
+                                messages={messageManagement.messages}
+                                moveToSpecificIndex={currentMainChat.moveToSpecificIndex}
+                                myself={myself}
+                                notMove={currentMainChat.notMove}
+                                setCurrentMainChat={setCurrentMainChat}
                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 setCurrentProject={setCurrentProject}
-                                setCurrentMainChat={setCurrentMainChat}
                                 setCurrentThreadChat={setCurrentThreadChat}
+                                setEditTargetMessage={messageManagement.setEditTargetMessage}
+                                setErrorMessage={messageManagement.setErrorMessage}
+                                setErrorOpen={messageManagement.setErrorOpen}
+                                setFlaggedMessages={setFlaggedMessages}
+                                setIsCreatingTask={setIsCreatingTask}
+                                setIsInEdit={messageManagement.setIsInEdit}
                                 setIsMainChatVisible={setIsMainChatVisible}
+                                setIsScrolling={scrollManagement.setIsScrolling}
+                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 setIsThreadVisible={setIsThreadVisible}
                                 setMyself={setMyself}
                                 setOpeningService={setOpeningService}
-                                setEditTargetMessage={messageManagement.setEditTargetMessage}
-                                setIsInEdit={messageManagement.setIsInEdit}
-                                currentThreadChat={currentThreadChat}
-                                isThreadVisible={isThreadVisible}
-                                isThread={false}
-                                height={virtuosoHeight}
+                                setVisibleRange={scrollManagement.setVisibleRange}
+                                socket={socket}
+                                teamMemberProfiles={teamMemberProfiles}
+                                visibleRange={scrollManagement.visibleRange}
+                                virtuosoRef={
+                                    scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
+                                }
                             />
 
                             {currentMainChat.chatType !== 3 && currentMainChat.chatType !== 4 && (
                                 <ChatEditorSection
-                                    isInEdit={messageManagement.isInEdit}
-                                    editTargetMessage={messageManagement.editTargetMessage}
                                     chat={chat}
+                                    editTargetMessage={messageManagement.editTargetMessage}
+                                    funcSetAllChats={funcSetAllChats}
+                                    isInEdit={messageManagement.isInEdit}
+                                    isSubChatVisible={isSubChatVisible}
+                                    isThread={false}
                                     myself={myself}
                                     numEditorLines={messageManagement.numEditorLines}
-                                    setCurrentChat={
-                                        setCurrentMainChat as (
-                                            chat: ChatProps | ThreadProps
-                                        ) => void
-                                    }
                                     setIsInEdit={messageManagement.setIsInEdit}
                                     setMyself={setMyself}
                                     setNumEditorLines={messageManagement.setNumEditorLines}
@@ -307,9 +304,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                     socket={socket}
                                     teamMemberProfiles={teamMemberProfiles}
                                     teamMembers={teamMembers}
-                                    funcSetAllChats={funcSetAllChats}
-                                    isSubChatVisible={isSubChatVisible}
-                                    isThread={false}
+                                    setCurrentChat={
+                                        setCurrentMainChat as (
+                                            chat: ChatProps | ThreadProps
+                                        ) => void
+                                    }
                                 />
                             )}
                         </>

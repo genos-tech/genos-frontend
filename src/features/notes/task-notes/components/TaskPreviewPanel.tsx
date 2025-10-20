@@ -73,7 +73,6 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         moveToSpecificChat={CM.moveToSpecificChat}
                         myself={myself}
                         openingService={openingService}
-                        setOpeningService={setOpeningService}
                         setCurrentMainChat={CM.setCurrentMainChat}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={NM.setCurrentTaskNote}
@@ -82,6 +81,7 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
+                        setOpeningService={setOpeningService}
                         setTeamMembers={TEM.setTeamMembers}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}

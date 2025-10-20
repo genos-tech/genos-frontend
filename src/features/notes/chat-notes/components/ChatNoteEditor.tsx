@@ -97,8 +97,8 @@ export const ChatNoteEditor = ({
                     <Button
                         color="neutral"
                         size="sm"
-                        variant="outlined"
                         startDecorator={<CheckIcon sx={{ fontSize: "15px" }} />}
+                        variant="outlined"
                     >
                         Saved
                     </Button>
@@ -107,17 +107,17 @@ export const ChatNoteEditor = ({
 
             <BnChatNoteEditor
                 body={body}
+                currentChatNote={currentChatNote}
                 myself={myself}
                 setBody={onBodyChange}
-                setMyself={setMyself}
-                setNoteBodySaved={setNoteBodySaved}
-                socket={socket}
-                teamMembers={teamMembers}
-                currentChatNote={currentChatNote}
                 setCurrentChat={setCurrentChat}
-                setOpeningService={setOpeningService}
-                teamMemberProfiles={teamMemberProfiles}
+                setMyself={setMyself}
                 setNoteBodyEdited={setNoteBodyEdited}
+                setNoteBodySaved={setNoteBodySaved}
+                setOpeningService={setOpeningService}
+                socket={socket}
+                teamMemberProfiles={teamMemberProfiles}
+                teamMembers={teamMembers}
             />
         </>
     );

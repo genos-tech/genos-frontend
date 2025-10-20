@@ -26,7 +26,12 @@ export const ChatNoteTabList = ({
             }}
         >
             {tabItems.map((tab, index) => (
-                <Tooltip size="sm" title={tab.title} key={`tab-tooltip-${index}`}>
+                <Tooltip
+                    key={`tab-tooltip-${index}`}
+                    size="sm"
+                    title={tab.title}
+                    variant="outlined"
+                >
                     <Tab
                         key={`tab-${index}`}
                         variant="soft"

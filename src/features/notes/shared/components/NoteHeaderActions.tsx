@@ -66,7 +66,7 @@ export const NoteHeaderActions = ({
     return (
         <Stack direction={"row"}>
             {noteType === 1 && (
-                <Tooltip size="sm" title="Create a New Note">
+                <Tooltip size="sm" title="Create a New Note" variant="outlined">
                     <IconButton
                         color="neutral"
                         size="sm"
@@ -89,18 +89,18 @@ export const NoteHeaderActions = ({
                 <>
                     <Box sx={{ mt: "2px" }}>
                         <ProjectAvatar
+                            funcSetAllChats={funcSetAllChats}
                             myself={myself}
                             pmChat={pmChat}
-                            setMyself={setMyself}
-                            socket={socket}
-                            funcSetAllChats={funcSetAllChats}
                             setCurrentMainChat={setCurrentMainChat}
+                            setMyself={setMyself}
                             setOpeningService={setOpeningService}
+                            socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                         />
                     </Box>
 
-                    <Tooltip size="sm" title="Open Task on Click">
+                    <Tooltip size="sm" title="Open Task on Click" variant="outlined">
                         <Chip
                             key={`task-note-task-id${currentTask.id}`}
                             color="neutral"
@@ -119,7 +119,7 @@ export const NoteHeaderActions = ({
                         </Chip>
                     </Tooltip>
 
-                    <Tooltip size="sm" title={currentTask.title}>
+                    <Tooltip size="sm" title={currentTask.title} variant="outlined">
                         <Chip
                             key={`task-title-${currentTask.id}`}
                             color="primary"
@@ -162,7 +162,7 @@ export const NoteHeaderActions = ({
             )}
 
             <Dropdown>
-                <Tooltip size="sm" title="More Options" placement="left">
+                <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
                     <MenuButton
                         slots={{ root: IconButton }}
                         sx={{ mb: "5px" }}
@@ -222,7 +222,7 @@ export const NoteHeaderActions = ({
             </Dropdown>
 
             {isInTaskPage && (
-                <Tooltip size="sm" title="Close">
+                <Tooltip size="sm" title="Close" variant="outlined">
                     <IconButton
                         color="neutral"
                         size="sm"
