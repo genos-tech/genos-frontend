@@ -1,6 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -41,8 +41,6 @@ type TaskPreviewProps = {
     setIsMainChatVisible?: (value: boolean) => void;
     setIsThreadVisible?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
-    isTaskUpdated?: boolean;
-    setIsTaskUpdated?: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsTaskHomeVisible?: (value: boolean) => void;
@@ -85,8 +83,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setIsMainChatVisible,
         setIsThreadVisible,
         setOpenCreateProject,
-        isTaskUpdated,
-        setIsTaskUpdated,
         setOpeningService,
         setCurrentMainChat,
         setIsTaskHomeVisible,
@@ -282,9 +278,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     }, [uploadedFiles]);
 
     useEffect(() => {
-        if (setIsTaskUpdated && isTaskUpdated === false) {
+        if (TM.isTaskUpdated === false) {
             TM.setCurrentPreviewTask(tmpCurrentTaskContent);
-            setIsTaskUpdated(true);
+            TM.setIsTaskUpdated(true);
             setAssignee(tmpCurrentTaskContent?.assignee || myself);
             setReporter(tmpCurrentTaskContent?.reporter || myself);
         }

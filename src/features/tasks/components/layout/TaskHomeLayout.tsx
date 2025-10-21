@@ -169,6 +169,7 @@ export const TaskHomeLayout = ({
                         currentProject={PM.currentProject}
                         displayTaskType={displayTaskType}
                         myself={myself}
+                        isTaskUpdated={TM.isTaskUpdated}
                         setTeamMembers={TEM.setTeamMembers}
                         teamMemberProfiles={TEM.teamMemberProfiles}
                         teamMembers={TEM.teamMembers}

@@ -1,3 +1,5 @@
+import * as React from "react";
+import { useEffect } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Stack, Tooltip, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
@@ -5,8 +7,6 @@ import Fade from "@mui/material/Fade";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { alpha } from "@mui/system";
-import * as React from "react";
-import { useEffect } from "react";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -18,13 +18,14 @@ import {
 } from "../../types/TaskTableTypes";
 
 type TaskFilterMenuProps = {
+    isTaskUpdated?: boolean;
     TM: TaskManagementState;
     predefinedTagsFilters: FilterProps[];
     setCurrentDisplayingTasks: (tasks: TaskTableProps[]) => void;
 };
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
-    const { TM, predefinedTagsFilters, setCurrentDisplayingTasks } = props;
+    const { isTaskUpdated, TM, predefinedTagsFilters, setCurrentDisplayingTasks } = props;
     const { mode } = useColorScheme();
 
     // Status filter
@@ -277,6 +278,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     useEffect(() => {
         applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
     }, [TM.allTasks]);
+
+    useEffect(() => {
+        console.log("isTaskUpdated:", isTaskUpdated);
+        if (isTaskUpdated) {
+            applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
+        }
+    }, [isTaskUpdated]);
 
     return (
         <Stack direction="row" gap={1} m={1}>

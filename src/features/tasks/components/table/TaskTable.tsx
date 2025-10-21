@@ -1,8 +1,8 @@
+import { useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
-import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -22,6 +22,7 @@ type ProjectTaskTableProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     currentProject: ProjectProps | null;
+    isTaskUpdated?: boolean;
     displayTaskType: TaskType;
     TM: TaskManagementState;
 };
@@ -33,6 +34,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         teamMemberProfiles,
         myself,
         currentProject,
+        isTaskUpdated,
         displayTaskType,
         TM,
     } = props;
@@ -107,6 +109,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         <ThemeProvider theme={theme}>
             <div style={{ height: "100%", overflow: "hidden", borderRadius: "5px" }}>
                 <TaskFilterMenu
+                    isTaskUpdated={isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasks}
                     TM={TM}
