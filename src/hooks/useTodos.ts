@@ -5,7 +5,11 @@ import { UserProps } from "../types/admin";
 import { ToDoFactProps } from "../types/chat";
 import { extractYYYYMMDD } from "../utils/dateUtils";
 
-export const useTodos = (myself: UserProps, accessToken: string) => {
+export const useTodos = (
+    myself: UserProps,
+    accessToken: string | null,
+    isToDoVisible: boolean
+) => {
     const [todos, setTodos] = useState<ToDoFactProps[]>([]);
     const [isExistingTodaysTodo, setIsExistingTodaysTodo] = useState(false);
     const [incompleteTodoCount, setIncompleteTodoCount] = useState<number>(0);
@@ -22,7 +26,7 @@ export const useTodos = (myself: UserProps, accessToken: string) => {
                 }
             }
         });
-    }, [myself, accessToken]);
+    }, [myself, accessToken, isToDoVisible]);
 
     useEffect(() => {
         setIncompleteTodoCount(todos.filter((todo) => !todo.isCompleted).length);

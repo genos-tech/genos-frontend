@@ -25,6 +25,8 @@ type ToDoPaneProps = {
     setIsExistingTodaysTodo: (value: boolean) => void;
     isSubChatVisible: boolean;
     currentWindowHeight: number;
+    showOnlyInCompleteTodos: boolean;
+    setShowOnlyInCompleteTodos: (value: boolean) => void;
 };
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
@@ -41,10 +43,11 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         setIsExistingTodaysTodo,
         isSubChatVisible,
         currentWindowHeight,
+        showOnlyInCompleteTodos,
+        setShowOnlyInCompleteTodos,
     } = props;
     const { accessToken } = useAuth();
     const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
-    const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState(true);
 
     const handleCreateNewTodo = async () => {
         const todoContent = await createNewTodo(

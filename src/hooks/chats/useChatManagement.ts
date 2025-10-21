@@ -65,6 +65,8 @@ export interface ChatManagementState {
         threadId: number
     ) => Promise<ThreadProps | null>;
     defineNewChat: (chat: AllChatProps, messages: any) => ChatProps;
+    showOnlyInCompleteTodos: boolean;
+    setShowOnlyInCompleteTodos: (value: boolean) => void;
 }
 
 export const useChatManagement = (
@@ -81,6 +83,11 @@ export const useChatManagement = (
     // Chat type state
     const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
         Number(localStorage.getItem("currentChatPaneType") || "1")
+    );
+
+    // To-Do visibility state: 0: show only incomplete todos, 1: show all todos
+    const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState<boolean>(
+        Number(localStorage.getItem("showOnlyInCompleteTodos") || "0") === 0 ? true : false
     );
 
     // Current chats
@@ -357,5 +364,9 @@ export const useChatManagement = (
         moveToSpecificChat,
         moveToSpecificThreadChat,
         defineNewChat,
+
+        // To-Do visibility
+        showOnlyInCompleteTodos,
+        setShowOnlyInCompleteTodos,
     };
 };

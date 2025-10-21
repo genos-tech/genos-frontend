@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
 import FlagIcon from "@mui/icons-material/Flag";
@@ -21,7 +22,6 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../../types/admin";
@@ -573,57 +573,63 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
                     </Stack>
 
-                    <Switch
-                        checked={showOnlyUnreadItems}
-                        size="sm"
-                        variant="soft"
-                        slotProps={{
-                            track: {
-                                children: (
-                                    <Typography
-                                        component="span"
-                                        level="inherit"
-                                        sx={{
-                                            ml: showOnlyUnreadItems ? "6px" : "22px",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        Unread
-                                    </Typography>
-                                ),
-                            },
-                        }}
-                        sx={{
-                            "--Switch-thumbSize": "15px",
-                            "--Switch-trackWidth": "70px",
-                            "--Switch-trackHeight": "23px",
-                            marginLeft: "20px",
-                        }}
-                        onChange={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
-                    />
+                    <Stack direction="row" sx={{ px: "10px", width: "120px" }}>
+                        <Switch
+                            checked={showOnlyUnreadItems}
+                            size="sm"
+                            variant="soft"
+                            slotProps={{
+                                track: {
+                                    children: (
+                                        <Typography
+                                            component="span"
+                                            level="inherit"
+                                            sx={{
+                                                ml: showOnlyUnreadItems ? "6px" : "22px",
+                                                fontWeight: "bold",
+                                            }}
+                                        >
+                                            Unread
+                                        </Typography>
+                                    ),
+                                },
+                            }}
+                            sx={{
+                                "--Switch-thumbSize": "15px",
+                                "--Switch-trackWidth": "70px",
+                                "--Switch-trackHeight": "23px",
+                            }}
+                            onChange={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
+                        />
 
-                    <Dropdown>
-                        <Tooltip placement="top" size="sm" title="More Options" variant="outlined">
-                            <MenuButton
-                                slots={{ root: IconButton }}
-                                slotProps={{
-                                    root: { color: "neutral" },
-                                }}
+                        <Dropdown>
+                            <Tooltip
+                                placement="top"
+                                size="sm"
+                                title="More Options"
+                                variant="outlined"
                             >
-                                <MoreVert />
-                            </MenuButton>
-                        </Tooltip>
-                        <Menu size="sm">
-                            <MenuItem
-                                onClick={() => {
-                                    setOpenCreateGM(true);
-                                }}
-                            >
-                                <AddIcon />
-                                Group Messages
-                            </MenuItem>
-                        </Menu>
-                    </Dropdown>
+                                <MenuButton
+                                    slots={{ root: IconButton }}
+                                    slotProps={{
+                                        root: { color: "neutral" },
+                                    }}
+                                >
+                                    <MoreVert />
+                                </MenuButton>
+                            </Tooltip>
+                            <Menu size="sm">
+                                <MenuItem
+                                    onClick={() => {
+                                        setOpenCreateGM(true);
+                                    }}
+                                >
+                                    <AddIcon />
+                                    Group Messages
+                                </MenuItem>
+                            </Menu>
+                        </Dropdown>
+                    </Stack>
                 </Stack>
 
                 {/* For Direct Messages */}

@@ -1,11 +1,8 @@
-import { Box, Sheet } from "@mui/joy";
 import { useEffect } from "react";
+import { Box, Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../types/admin";
-import { ChatProps, FlaggedMessageProps, ThreadProps, ToDoFactProps } from "../../types/chat";
-import { ProjectProps, TaskProps } from "../../types/tasks";
 import { SubChatPaneHeader } from "./components/headers/SubChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -15,6 +12,10 @@ import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
+
+import { UserProps } from "../../types/admin";
+import { ChatProps, FlaggedMessageProps, ThreadProps, ToDoFactProps } from "../../types/chat";
+import { ProjectProps, TaskProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
@@ -62,6 +63,8 @@ type MessagesPaneProps = {
     incompleteTodoCount: number;
     flaggedMessages: FlaggedMessageProps[];
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    showOnlyInCompleteTodos: boolean;
+    setShowOnlyInCompleteTodos: (value: boolean) => void;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
@@ -102,6 +105,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         incompleteTodoCount,
         flaggedMessages,
         setFlaggedMessages,
+        showOnlyInCompleteTodos,
+        setShowOnlyInCompleteTodos,
     } = props;
 
     if (!currentSubChat) {
@@ -212,6 +217,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                             teamMemberProfiles={teamMemberProfiles}
                             teamMembers={teamMembers}
                             todos={todos}
+                            showOnlyInCompleteTodos={showOnlyInCompleteTodos}
+                            setShowOnlyInCompleteTodos={setShowOnlyInCompleteTodos}
                         />
                     )}
 

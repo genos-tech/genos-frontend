@@ -99,6 +99,8 @@ export const SubChatPanel = ({
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     teamMembers={TEM.teamMembers}
                     todos={todos}
+                    showOnlyInCompleteTodos={CM.showOnlyInCompleteTodos}
+                    setShowOnlyInCompleteTodos={CM.setShowOnlyInCompleteTodos}
                 />
             </Box>
         </Panel>

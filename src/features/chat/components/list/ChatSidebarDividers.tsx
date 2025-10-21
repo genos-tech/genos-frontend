@@ -133,6 +133,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 justifyContent: "center",
                 alignItems: "center",
                 my: "3px",
+                mr: "120px",
             }}
         >
             <Stack direction={"row"} flexWrap="wrap" spacing={0.5}>
