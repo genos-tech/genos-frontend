@@ -72,8 +72,9 @@ export const NoteHeaderActions = ({
                         size="sm"
                         variant="plain"
                         sx={{
-                            mt: "3px",
-                            mx: "5px",
+                            pt: "1px",
+                            px: "5px",
+                            mt: "5px",
                             height: "30px",
                             borderRadius: "5px",
                         }}
@@ -86,19 +87,17 @@ export const NoteHeaderActions = ({
             )}
 
             {noteType === 2 && !isInTaskPage && currentTask && currentTask.id && pmChat && (
-                <>
-                    <Box sx={{ mt: "2px" }}>
-                        <ProjectAvatar
-                            funcSetAllChats={funcSetAllChats}
-                            myself={myself}
-                            pmChat={pmChat}
-                            setCurrentMainChat={setCurrentMainChat}
-                            setMyself={setMyself}
-                            setOpeningService={setOpeningService}
-                            socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
-                        />
-                    </Box>
+                <Stack direction={"row"} sx={{ mt: "5px" }}>
+                    <ProjectAvatar
+                        funcSetAllChats={funcSetAllChats}
+                        myself={myself}
+                        pmChat={pmChat}
+                        setCurrentMainChat={setCurrentMainChat}
+                        setMyself={setMyself}
+                        setOpeningService={setOpeningService}
+                        socket={socket}
+                        teamMemberProfiles={teamMemberProfiles}
+                    />
 
                     <Tooltip size="sm" title="Open Task on Click" variant="outlined">
                         <Chip
@@ -158,14 +157,14 @@ export const NoteHeaderActions = ({
                     >
                         {currentTask.status.status}
                     </Chip>
-                </>
+                </Stack>
             )}
 
             <Dropdown>
                 <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
                     <MenuButton
                         slots={{ root: IconButton }}
-                        sx={{ mb: "5px" }}
+                        sx={{ mt: "5px" }}
                         slotProps={{
                             root: { color: "neutral" },
                         }}

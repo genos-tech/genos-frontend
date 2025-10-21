@@ -280,7 +280,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     }, [TM.allTasks]);
 
     useEffect(() => {
-        console.log("isTaskUpdated:", isTaskUpdated);
         if (isTaskUpdated) {
             applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
         }

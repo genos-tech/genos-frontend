@@ -61,7 +61,6 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         minWidth: 0,
                         height: "100dvh",
                         gap: 1,
-                        ml: "1px",
                         boxShadow: "0 0 0 1px grey",
                         borderColor: mode === "dark" ? "black" : "white",
                         borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
