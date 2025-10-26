@@ -11,17 +11,11 @@ import { Toggler } from "../common";
 type TagsListItemProps = {
     projectId: number;
     currentProject?: ProjectProps | null;
-    setSelectedTagForFiltering: (value: string) => void;
-    setFilterBy: (value: number) => void;
-    setCurrentFilterName: (value: string) => void;
 };
 export const TagsListItem = (props: TagsListItemProps) => {
     const {
         projectId,
         currentProject,
-        setSelectedTagForFiltering,
-        setFilterBy,
-        setCurrentFilterName,
     } = props;
     const { mode } = useColorScheme();
 
@@ -80,9 +74,6 @@ export const TagsListItem = (props: TagsListItemProps) => {
                                             pl: "20px",
                                         }}
                                         onClick={() => {
-                                            setSelectedTagForFiltering(`/${tagName}/`);
-                                            setFilterBy(2);
-                                            setCurrentFilterName(tagName);
                                         }}
                                     >
                                         <Chip

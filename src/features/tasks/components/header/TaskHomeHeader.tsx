@@ -41,7 +41,7 @@ interface TaskHomeHeaderProps {
     openSearch: boolean;
     setOpenSearch: (open: boolean) => void;
     onSearchChange: (value: any) => void;
-    onCreateTask: () => void;
+    handleCreateTask: () => void;
     onCreateProject: () => void;
     onCreateTag: () => void;
     onDeleteProject: () => void;
@@ -64,7 +64,7 @@ export const TaskHomeHeader = ({
     openSearch,
     setOpenSearch,
     onSearchChange,
-    onCreateTask,
+    handleCreateTask,
     onCreateProject,
     onCreateTag,
     onDeleteProject,
@@ -251,7 +251,7 @@ export const TaskHomeHeader = ({
                             fontSize: "15px",
                             paddingRight: "10px",
                         }}
-                        onClick={onCreateTask}
+                        onClick={handleCreateTask}
                     >
                         <AddIcon />
                         Task

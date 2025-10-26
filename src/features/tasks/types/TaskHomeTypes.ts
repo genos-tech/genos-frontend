@@ -39,10 +39,8 @@ export interface TaskHomeProps {
 export interface TaskHomeState {
     isTaskHomeVisible: boolean;
     isDashboardVisible: boolean;
-    currentFilterName: string;
     filterBy: number;
     selectedTagForFiltering?: string;
-    displayTaskType: TaskType;
     openJoinProject: {
         flag: boolean;
         projectId: number;
@@ -60,10 +58,6 @@ export interface TaskHomeState {
 export interface TaskHomeActions {
     setIsTaskHomeVisible: (visible: boolean) => void;
     setIsDashboardVisible: (visible: boolean) => void;
-    setCurrentFilterName: (name: string) => void;
-    setFilterBy: (filter: number) => void;
-    setSelectedTagForFiltering: (tag: string) => void;
-    setDisplayTaskType: (type: TaskType) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -88,14 +82,12 @@ export interface TaskHomeHeaderProps {
     teamMemberProfiles: any[];
     funcSetAllChats: () => Promise<void>;
     currentProject: any;
-    displayTaskType: TaskType;
-    setDisplayTaskType: (type: TaskType) => void;
     teamTaskSearchOptions: any[];
     loading: boolean;
     openSearch: boolean;
     setOpenSearch: (open: boolean) => void;
     onSearchChange: (value: any) => void;
-    onCreateTask: () => void;
+    handleCreateTask: () => void;
     onCreateProject: () => void;
     onCreateTag: () => void;
     onDeleteProject: () => void;
@@ -108,10 +100,8 @@ export interface TaskHomeLayoutProps {
     // Layout state
     isTaskHomeVisible: boolean;
     isDashboardVisible: boolean;
-    currentFilterName: string;
     filterBy: number;
     selectedTagForFiltering?: string;
-    displayTaskType: TaskType;
 
     // Management states
     TEM: TeamManagementState;
@@ -141,9 +131,6 @@ export interface TaskHomeLayoutProps {
     socket: Socket | null;
 
     // Setters
-    setCurrentFilterName: (name: string) => void;
-    setFilterBy: (filter: number) => void;
-    setSelectedTagForFiltering: (tag: string) => void;
     setIsTaskHomeVisible: (visible: boolean) => void;
     setIsDashboardVisible: (visible: boolean) => void;
 }

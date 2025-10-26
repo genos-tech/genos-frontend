@@ -2,21 +2,21 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import { ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+
 type TaskTableListItemProps = {
-    isTaskHomeVisible: boolean;
-    setIsDashboardVisible: (value: boolean) => void;
-    setIsTaskHomeVisible: (value: boolean) => void;
+    TM: TaskManagementState;
 };
 export const TaskTableListItem = (props: TaskTableListItemProps) => {
-    const { isTaskHomeVisible, setIsDashboardVisible, setIsTaskHomeVisible } = props;
+    const { TM } = props;
     return (
         <ListItem>
             <ListItemButton
                 color="primary"
-                variant={isTaskHomeVisible === true ? "soft" : "plain"}
+                variant={TM.isTaskHomeVisible === true ? "soft" : "plain"}
                 onClick={() => {
-                    setIsDashboardVisible(false);
-                    setIsTaskHomeVisible(true);
+                    TM.setIsDashboardVisible(false);
+                    TM.setIsTaskHomeVisible(true);
                 }}
             >
                 <TableChartIcon />

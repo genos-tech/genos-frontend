@@ -19,6 +19,10 @@ export interface TaskManagementState {
     // Task preview state
     isTaskPreviewVisible: boolean;
     setIsTaskPreviewVisible: (visible: boolean) => void;
+    isTaskHomeVisible: boolean;
+    setIsTaskHomeVisible: (visible: boolean) => void;
+    isDashboardVisible: boolean;
+    setIsDashboardVisible: (visible: boolean) => void;
 
     // Task creation state
     isCreatingTask: {
@@ -83,6 +87,7 @@ export interface TaskManagementState {
     loadUpdatedTask: (projectId: number) => Promise<void>;
     initializeTaskStates: () => void;
     getTaskMeta: () => Promise<void>;
+    handleCreateTask: () => void;
     fetchProjectTasks: (projectId: number) => Promise<void>;
 }
 
@@ -90,8 +95,10 @@ export const useTaskManagement = (
     myself: UserProps,
     accessToken: string | null
 ): TaskManagementState => {
-    // Task preview state
+    // Task visible states
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
+    const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
+    const [isDashboardVisible, setIsDashboardVisible] = useState(false);
 
     // Task creation state
     const [isCreatingTask, setIsCreatingTask] = useState<{
@@ -231,13 +238,16 @@ export const useTaskManagement = (
         }
     };
 
-    const getExpiredTasks = async (ongoingTasks: TaskTableProps[]) => {
-        return ongoingTasks.filter((task) => {
-            if (task.daysLeft && task.daysLeft < 0 && task.parentTaskId === null) {
-                return true;
-            }
-            return false;
+    const handleCreateTask = () => {
+        setIsCreatingTask({
+            flag: true,
+            parentTaskId: null,
+            rootTaskId: null,
         });
+
+        if (isTaskPreviewVisible === true) {
+            setIsTaskHomeVisible(false);
+        }
     };
 
     const fetchProjectTasks = async (projectId: number) => {
@@ -303,6 +313,10 @@ export const useTaskManagement = (
         // Task preview state
         isTaskPreviewVisible,
         setIsTaskPreviewVisible,
+        isTaskHomeVisible,
+        setIsTaskHomeVisible,
+        isDashboardVisible,
+        setIsDashboardVisible,
 
         // Task creation state
         isCreatingTask,
@@ -359,6 +373,7 @@ export const useTaskManagement = (
         loadUpdatedTask,
         initializeTaskStates,
         getTaskMeta,
+        handleCreateTask,
         fetchProjectTasks,
     };
 };

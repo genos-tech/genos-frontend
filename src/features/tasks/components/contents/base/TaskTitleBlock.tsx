@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -21,7 +22,6 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
-import { useRef, useState } from "react";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
@@ -291,6 +291,22 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         >
                             <NoteAltIcon />
                             Open Note
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                TM.handleCreateTask();
+                            }}
+                        >
+                            <AddIcon />
+                            New Task
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                setOpenCreateTag(true);
+                            }}
+                        >
+                            <AddIcon />
+                            New Sub Task
                         </MenuItem>
                         <MenuItem
                             onClick={() => {

@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import { Box, Divider, GlobalStyles, List, Sheet } from "@mui/joy";
 import { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import { useEffect, useState } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -16,8 +16,6 @@ import { TaskTableListItem } from "./TaskTableListItem";
 
 type TaskSidebarProps = {
     myself: UserProps;
-    setIsDashboardVisible: (value: boolean) => void;
-    isTaskHomeVisible: boolean;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -25,27 +23,12 @@ type TaskSidebarProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    setIsTaskHomeVisible: (value: boolean) => void;
-    setFilterBy: (value: number) => void;
-    setSelectedTagForFiltering: (value: string) => void;
-    setCurrentFilterName: (value: string) => void;
     PM: ProjectManagementState;
     TM: TaskManagementState;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
-    const {
-        myself,
-        setIsDashboardVisible,
-        isTaskHomeVisible,
-        setOpenJoinProject,
-        setIsTaskHomeVisible,
-        setFilterBy,
-        setSelectedTagForFiltering,
-        setCurrentFilterName,
-        PM,
-        TM,
-    } = props;
+    const { myself, setOpenJoinProject, PM, TM } = props;
     const { accessToken } = useAuth();
 
     // =======================================================================
@@ -190,27 +173,20 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         setIsDashboardVisible={setIsDashboardVisible}
                     /> */}
 
-                    <TaskTableListItem
-                        isTaskHomeVisible={isTaskHomeVisible}
-                        setIsDashboardVisible={setIsDashboardVisible}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                    />
+                    <TaskTableListItem TM={TM} />
 
                     <RecentsListItem
                         recentTasks={recentTasks}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
-                        setIsDashboardVisible={setIsDashboardVisible}
+                        setIsDashboardVisible={TM.setIsDashboardVisible}
                         setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                     />
 
                     <ProjectsListItem
                         PM={PM}
-                        setCurrentFilterName={setCurrentFilterName}
-                        setFilterBy={setFilterBy}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                        setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
                         setOpenJoinProject={setOpenJoinProject}
-                        setSelectedTagForFiltering={setSelectedTagForFiltering}
                         TM={TM}
                     />
                 </List>

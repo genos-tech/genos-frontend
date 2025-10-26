@@ -101,7 +101,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         <Chip
                             key={thread.taskId}
                             color="neutral"
-                            size="lg"
+                            size="sm"
                             variant="soft"
                             sx={{
                                 borderRadius: "5px",
@@ -113,7 +113,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         {TM.currentPreviewTask && (
                             <>
                                 <Chip
-                                    size="lg"
+                                    size="sm"
                                     variant="soft"
                                     sx={{
                                         backgroundColor: TM.currentPreviewTask.status.color

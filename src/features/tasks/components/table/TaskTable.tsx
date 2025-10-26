@@ -23,7 +23,6 @@ type ProjectTaskTableProps = {
     myself: UserProps;
     currentProject: ProjectProps | null;
     isTaskUpdated?: boolean;
-    displayTaskType: TaskType;
     TM: TaskManagementState;
 };
 
@@ -35,7 +34,6 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         myself,
         currentProject,
         isTaskUpdated,
-        displayTaskType,
         TM,
     } = props;
     const { mode } = useColorScheme();
@@ -103,7 +101,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     // Reset filter
     useEffect(() => {
         apiRef.current.setFilterModel({ items: [] });
-    }, [displayTaskType, currentProject]);
+    }, [ currentProject]);
 
     return (
         <ThemeProvider theme={theme}>

@@ -1,15 +1,16 @@
+import { useState } from "react";
 import { Box, CssBaseline } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { useState } from "react";
 
-import { Sidebar } from "../../components/layout/sidebar";
-import { useAuth } from "../../context/AuthContext";
-import { TaskType } from "../../types/tasks";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskSearch } from "./hooks/useTaskSearch";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 import { taskTypes } from "./types/TaskTableTypes";
+
+import { Sidebar } from "../../components/layout/sidebar";
+import { useAuth } from "../../context/AuthContext";
+import { TaskType } from "../../types/tasks";
 
 export const TaskHome = (props: TaskHomeProps) => {
     const {
@@ -35,12 +36,6 @@ export const TaskHome = (props: TaskHomeProps) => {
     const { accessToken } = useAuth();
 
     // Task Related State
-    const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
-    const [isDashboardVisible, setIsDashboardVisible] = useState(false);
-    const [currentFilterName, setCurrentFilterName] = useState<string>("");
-    const [filterBy, setFilterBy] = useState<number>(1); // 1: status, 2: tag
-    const [selectedTagForFiltering, setSelectedTagForFiltering] = useState<string>();
-    const [displayTaskType, setDisplayTaskType] = useState<TaskType>(taskTypes.all);
     const [openJoinProject, setOpenJoinProject] = useState({
         flag: false,
         projectId: -1,
@@ -58,7 +53,6 @@ export const TaskHome = (props: TaskHomeProps) => {
     const searchHook = useTaskSearch({
         myself,
         currentProject: PM.currentProject,
-        displayTaskType,
         accessToken: accessToken || "",
     });
 
@@ -68,18 +62,6 @@ export const TaskHome = (props: TaskHomeProps) => {
             searchHook.handleSearchClose();
             TM.setCurrentPreviewTaskId(value.taskId);
             TM.setIsTaskPreviewVisible(true);
-        }
-    };
-
-    const handleCreateTask = () => {
-        TM.setIsCreatingTask({
-            flag: true,
-            parentTaskId: null,
-            rootTaskId: null,
-        });
-
-        if (TM.isTaskPreviewVisible === true) {
-            setIsTaskHomeVisible(false);
         }
     };
 
@@ -102,7 +84,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     };
 
     const handleCloseTaskHome = () => {
-        setIsTaskHomeVisible(false);
+        TM.setIsTaskHomeVisible(false);
     };
 
     return (
@@ -125,10 +107,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
                 <TaskHomeLayout
                     allChats={allChats}
-                    displayTaskType={displayTaskType}
                     funcSetAllChats={funcSetAllChats}
-                    isDashboardVisible={isDashboardVisible}
-                    isTaskHomeVisible={isTaskHomeVisible}
                     loading={searchHook.loading}
                     moveToSpecificChat={moveToSpecificChat}
                     myself={myself}
@@ -136,14 +115,9 @@ export const TaskHome = (props: TaskHomeProps) => {
                     openingService={openingService}
                     openSearch={searchHook.openSearch}
                     PM={PM}
-                    setCurrentFilterName={setCurrentFilterName}
                     setCurrentMainChat={setCurrentMainChat}
-                    setFilterBy={setFilterBy}
-                    setIsDashboardVisible={setIsDashboardVisible}
-                    setIsTaskHomeVisible={setIsTaskHomeVisible}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
-                    setSelectedTagForFiltering={setSelectedTagForFiltering}
                     socket={socket}
                     teamTaskSearchOptions={searchHook.teamTaskSearchOptions}
                     TEM={TEM}
@@ -154,7 +128,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                     onCloseTaskHome={handleCloseTaskHome}
                     onCreateProject={handleCreateProject}
                     onCreateTag={handleCreateTag}
-                    onCreateTask={handleCreateTask}
                     onDeleteProject={handleDeleteProject}
                     onSearchChange={handleSearchChange}
                 />

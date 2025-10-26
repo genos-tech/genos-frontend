@@ -1,7 +1,7 @@
-import { ListDivider, ListItem, Stack } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import * as React from "react";
 import { memo } from "react";
+import { ListDivider, ListItem, Stack } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { useChatListItem } from "../../hooks/useChatListItem";
@@ -86,13 +86,14 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     selected={selected}
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                     variant="soft"
-                    onClick={() =>
+                    onClick={() => {
                         onClickHandler(
                             setCurrentMainChat,
                             setIsMainChatVisible,
                             setIsThreadVisible
-                        )
-                    }
+                        );
+                        setIsToDoVisible(false);
+                    }}
                 >
                     <Stack direction="column">
                         <Stack

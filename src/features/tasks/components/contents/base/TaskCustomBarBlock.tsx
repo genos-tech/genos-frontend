@@ -1,7 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { IconButton, Stack } from "@mui/joy";
+import { IconButton, Stack, Tooltip } from "@mui/joy";
 
 import { TaskProps } from "../../../../../types/tasks";
 
@@ -112,40 +112,42 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
 
             {/* Sub Task IconButton aligned to the right */}
             {currentTaskContent.status.status !== "Deleted" && (
-                <IconButton
-                    component="p"
-                    size="sm"
-                    variant="plain"
-                    sx={{
-                        fontSize: "14px",
-                        paddingX: "7px",
-                        marginLeft: "auto",
-                    }}
-                    onClick={() => {
-                        if (
-                            currentTaskContent.id !== undefined &&
-                            currentTaskContent.rootTaskId != null
-                        ) {
-                            if (setIsCreatingTask) {
-                                setIsCreatingTask({
-                                    flag: true,
-                                    parentTaskId: currentTaskContent.id,
-                                    rootTaskId: currentTaskContent.rootTaskId,
-                                });
-                            }
+                <Tooltip size="sm" title="Create a Sub Task" variant="outlined">
+                    <IconButton
+                        component="p"
+                        size="sm"
+                        variant="plain"
+                        sx={{
+                            fontSize: "14px",
+                            paddingX: "7px",
+                            marginLeft: "auto",
+                        }}
+                        onClick={() => {
+                            if (
+                                currentTaskContent.id !== undefined &&
+                                currentTaskContent.rootTaskId != null
+                            ) {
+                                if (setIsCreatingTask) {
+                                    setIsCreatingTask({
+                                        flag: true,
+                                        parentTaskId: currentTaskContent.id,
+                                        rootTaskId: currentTaskContent.rootTaskId,
+                                    });
+                                }
 
-                            // Close task-home when creating a sub task.
-                            if (setIsTaskHomeVisible) {
-                                setIsTaskHomeVisible(false);
+                                // Close task-home when creating a sub task.
+                                if (setIsTaskHomeVisible) {
+                                    setIsTaskHomeVisible(false);
+                                }
+                            } else {
+                                console.error("Task ID nod defined error.");
                             }
-                        } else {
-                            console.error("Task ID nod defined error.");
-                        }
-                    }}
-                >
-                    <AddIcon />
-                    Sub Task
-                </IconButton>
+                        }}
+                    >
+                        <AddIcon />
+                        Sub Task
+                    </IconButton>
+                </Tooltip>
             )}
         </Stack>
     );

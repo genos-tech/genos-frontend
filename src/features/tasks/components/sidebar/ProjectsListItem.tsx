@@ -23,21 +23,10 @@ type ProjectsListItemProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    setSelectedTagForFiltering: (value: string) => void;
-    setFilterBy: (value: number) => void;
-    setCurrentFilterName: (value: string) => void;
     TM: TaskManagementState;
 };
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
-    const {
-        PM,
-        setIsTaskHomeVisible,
-        setOpenJoinProject,
-        setSelectedTagForFiltering,
-        setFilterBy,
-        setCurrentFilterName,
-        TM,
-    } = props;
+    const { PM, setIsTaskHomeVisible, setOpenJoinProject, TM } = props;
 
     return (
         <ListItem nested>
@@ -175,11 +164,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                             <TagsListItem
                                                 currentProject={PM.currentProject}
                                                 projectId={projectId}
-                                                setCurrentFilterName={setCurrentFilterName}
-                                                setFilterBy={setFilterBy}
-                                                setSelectedTagForFiltering={
-                                                    setSelectedTagForFiltering
-                                                }
                                             />
                                         </List>
                                     </Toggler>

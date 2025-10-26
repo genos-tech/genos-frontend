@@ -87,7 +87,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
             ref={boxRef}
             sx={{
                 py: 0.5,
-                px: 15,
+                px: "7%",
                 height: "100%",
             }}
         >
