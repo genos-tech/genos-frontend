@@ -24,8 +24,8 @@ import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 type TaskMainBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     teamMembers: UserProps[];
     teamProjects: ProjectProps[];
     projectTags: TagListProps[];
@@ -54,8 +54,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
         teamMemberProfiles,
         socket,
-        taskContents,
-        setTaskContents,
+        taskContent,
+        setTaskContent,
         teamMembers,
         teamProjects,
         projectTags,
@@ -86,11 +86,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const [parentTask, setParentTask] = useState<TaskProps>();
     useEffect(() => {
         (async () => {
-            if (taskContents.project && taskContents.parentTaskId != null) {
+            if (taskContent.project && taskContent.parentTaskId != null) {
                 const parentTask: TaskProps[] = await loadSpecificTask(
                     myself,
-                    taskContents.project.projectId,
-                    taskContents.parentTaskId,
+                    taskContent.project.projectId,
+                    taskContent.parentTaskId,
                     accessToken
                 );
                 if (parentTask.length == 1) {
@@ -102,7 +102,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 setParentTask(undefined);
             }
         })();
-    }, [taskContents]);
+    }, [taskContent]);
 
     return (
         <Box
@@ -127,7 +127,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             socket={socket}
                         />
                         <ACTeamUsers
-                            initialUser={taskContents.assignee}
+                            initialUser={taskContent.assignee}
                             isAssignee={true}
                             isOpenTeamMembersList={isOpenTeamMembersList}
                             myself={myself}
@@ -135,11 +135,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
                             setOpeningService={setOpeningService}
-                            setTaskContents={setTaskContents}
+                            setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             setUser={setAssignee}
                             socket={socket}
-                            taskContents={taskContents}
+                            taskContent={taskContent}
                             teamMemberProfiles={teamMemberProfiles}
                             teamMembers={teamMembers}
                         />
@@ -156,7 +156,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             socket={socket}
                         />
                         <ACTeamUsers
-                            initialUser={taskContents.reporter}
+                            initialUser={taskContent.reporter}
                             isAssignee={false}
                             isOpenTeamMembersList={isOpenTeamMembersList}
                             myself={myself}
@@ -164,11 +164,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
                             setOpeningService={setOpeningService}
-                            setTaskContents={setTaskContents}
+                            setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             setUser={setReporter}
                             socket={socket}
-                            taskContents={taskContents}
+                            taskContent={taskContent}
                             teamMemberProfiles={teamMemberProfiles}
                             teamMembers={teamMembers}
                         />
@@ -181,9 +181,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     isOpenProjectList={isOpenProjectList}
                                     setCurrentProject={setCurrentProject}
                                     setIsOpenProjectList={setIsOpenProjectList}
-                                    setTaskContents={setTaskContents}
+                                    setTaskContent={setTaskContent}
                                     setTaskUpdated={setTaskUpdated}
-                                    taskContents={taskContents}
+                                    taskContent={taskContent}
                                     teamProjects={teamProjects}
                                 />
                             </ListItem>
@@ -195,9 +195,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     isOpenTagList={isOpenTagList}
                                     projectTags={projectTags}
                                     setIsOpenTagList={setIsOpenTagList}
-                                    setTaskContents={setTaskContents}
+                                    setTaskContent={setTaskContent}
                                     setTaskUpdated={setTaskUpdated}
-                                    taskContents={taskContents}
+                                    taskContent={taskContent}
                                 />
                                 <IconButton
                                     color="neutral"
@@ -217,9 +217,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography sx={{ minWidth: "80px" }}>Priority</Typography>
                                 <ACTaskPriority
-                                    setTaskContents={setTaskContents}
+                                    setTaskContent={setTaskContent}
                                     setTaskUpdated={setTaskUpdated}
-                                    taskContents={taskContents}
+                                    taskContent={taskContent}
                                 />
                             </ListItem>
                         </Grid>
@@ -227,9 +227,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
                                 <Typography sx={{ minWidth: "100px" }}>Effort Level</Typography>
                                 <ACTaskEffortLevel
-                                    setTaskContents={setTaskContents}
+                                    setTaskContent={setTaskContent}
                                     setTaskUpdated={setTaskUpdated}
-                                    taskContents={taskContents}
+                                    taskContent={taskContent}
                                 />
                             </ListItem>
                         </Grid>
@@ -238,36 +238,36 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <ListItem sx={{ width: "49%" }}>
                             <Typography sx={{ minWidth: "80px" }}>Status</Typography>
                             <ACTaskStatus
-                                setTaskContents={setTaskContents}
+                                setTaskContent={setTaskContent}
                                 setTaskStatusUpdated={setTaskStatusUpdated}
                                 setTaskUpdated={setTaskUpdated}
                                 socket={socket}
-                                taskContents={taskContents}
+                                taskContent={taskContent}
                             />
                         </ListItem>
                     )}
                     <ListItem>
                         <Typography sx={{ minWidth: "80px" }}>Due Date</Typography>
                         <TaskDueDateInput
-                            setTaskContents={setTaskContents}
+                            setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
-                            taskContents={taskContents}
+                            taskContent={taskContent}
                         />
                     </ListItem>
                     <ListItem>
                         <GitHubURLManager
-                            githubLink={taskContents.githubLink}
-                            setTaskContents={setTaskContents}
+                            githubLink={taskContent.githubLink}
+                            setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
-                            taskContents={taskContents}
+                            taskContent={taskContent}
                         />
                     </ListItem>
                     <ListItem>
                         <GeneralURLManager
-                            generalLink={taskContents.generalLink}
-                            setTaskContents={setTaskContents}
+                            generalLink={taskContent.generalLink}
+                            setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
-                            taskContents={taskContents}
+                            taskContent={taskContent}
                         />
                     </ListItem>
                     {parentTask !== undefined ? (

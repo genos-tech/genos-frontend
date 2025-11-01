@@ -8,18 +8,18 @@ import { TaskProps } from "../../../../types/tasks";
 import { effortLevels } from "../../utils/taskMeta";
 
 type ACTaskEffortLevelProps = {
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
-    const { taskContents, setTaskContents, setTaskUpdated } = props;
+    const { taskContent, setTaskContent, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
 
     return (
         <Autocomplete
-            key={`ac-project-effort-level-${taskContents.id}`}
+            key={`ac-project-effort-level-${taskContent.id}`}
             getOptionLabel={(option) => option.level || ""}
             isOptionEqualToValue={(option, value) => option.level === value.level}
             openOnFocus={true}
@@ -71,10 +71,10 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                 })
             }
             value={
-                taskContents &&
-                taskContents.effortLevel.level !== null &&
-                taskContents.effortLevel.level !== ""
-                    ? [taskContents.effortLevel]
+                taskContent &&
+                taskContent.effortLevel.level !== null &&
+                taskContent.effortLevel.level !== ""
+                    ? [taskContent.effortLevel]
                     : []
             }
             multiple
@@ -82,8 +82,8 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                 if (value !== null) {
                     if (value.length > 0) {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 effortLevel: value.slice(-1)[0],
                             });
                             if (setTaskUpdated) {
@@ -92,8 +92,8 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                         })();
                     } else {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 effortLevel: {
                                     code: 0,
                                     level: null,

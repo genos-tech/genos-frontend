@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -185,7 +185,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const { accessToken } = useAuth();
 
     // Init task contents
-    const [taskContents, setTaskContents] = useState<TaskProps>();
+    const [taskContent, setTaskContent] = useState<TaskProps>();
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>(taskContentTemplate);
     const [assignee, setAssignee] = useState<UserProps>(myself);
@@ -203,7 +203,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     useEffect(() => {
         if (TM.initialEmptyTaskId) {
-            setTaskContents({
+            setTaskContent({
                 id: TM.initialEmptyTaskId,
                 project: PM.currentProject,
                 title: "",
@@ -234,9 +234,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     // Update task title when it changes
     useEffect(() => {
-        if (taskContents && taskTitle !== "") {
-            setTaskContents({
-                ...taskContents,
+        if (taskContent && taskTitle !== "") {
+            setTaskContent({
+                ...taskContent,
                 title: taskTitle,
             });
         }
@@ -244,9 +244,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     // Update task body when it changes
     useEffect(() => {
-        if (taskContents && body.length > 0) {
-            setTaskContents({
-                ...taskContents,
+        if (taskContent && body.length > 0) {
+            setTaskContent({
+                ...taskContent,
                 body: body,
             });
         }
@@ -309,7 +309,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     return (
         <>
-            {taskContents && taskContents.id && (
+            {taskContent && taskContent.id && (
                 <Sheet
                     className="custom-scrollbar"
                     variant="outlined"
@@ -330,13 +330,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={() => {}}
                         setIsMainChatVisible={setIsMainChatVisible}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setOpenCreateTag={TM.setOpenCreateTag}
                         setOpeningService={setOpeningService}
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
-                        taskContents={taskContents}
+                        taskContent={taskContent}
                         taskNotes={[]}
                         taskTitle={taskTitle}
                         titleError={titleError}
@@ -366,9 +365,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setOpenCreateTag={TM.setOpenCreateTag}
                         setOpeningService={setOpeningService}
                         setReporter={setReporter}
-                        setTaskContents={setTaskContents}
+                        setTaskContent={setTaskContent}
                         socket={socket}
-                        taskContents={taskContents}
+                        taskContent={taskContent}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
                         teamProjects={PM.teamProjects}
@@ -384,7 +383,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setMyself={setMyself}
                         setOpeningService={setOpeningService}
                         socket={socket}
-                        taskId={taskContents.id}
+                        taskId={taskContent.id}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
                     />
@@ -392,8 +391,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     <Divider sx={{ mt: 2 }} />
 
                     <TaskCreateAttachmentBlock
-                        setTaskContents={setTaskContents}
-                        taskContents={taskContents}
+                        setTaskContent={setTaskContent}
+                        taskContent={taskContent}
                     />
 
                     <Divider sx={{ m: 2 }} />
@@ -413,7 +412,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setTitleError={setTitleError}
                         setTitleErrorOpen={setTitleErrorOpen}
                         socket={socket}
-                        taskContents={taskContents}
+                        taskContent={taskContent}
                         taskTitle={taskTitle}
                     />
                 </Sheet>

@@ -8,8 +8,8 @@ import { TagListProps, TaskProps } from "../../../../types/tasks";
 
 type ACProjectTagsProps = {
     projectTags: TagListProps[];
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     isOpenTagList: boolean;
     setIsOpenTagList: (value: boolean) => void;
     setTaskUpdated?: (value: boolean) => void;
@@ -17,8 +17,8 @@ type ACProjectTagsProps = {
 export const ACProjectTags = (props: ACProjectTagsProps) => {
     const {
         projectTags,
-        taskContents,
-        setTaskContents,
+        taskContent,
+        setTaskContent,
         isOpenTagList,
         setIsOpenTagList,
         setTaskUpdated,
@@ -28,7 +28,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
 
     return (
         <Autocomplete
-            key={`ac-project-tags-${taskContents.id}`}
+            key={`ac-project-tags-${taskContent.id}`}
             getOptionLabel={(option) => option.tagName}
             isOptionEqualToValue={(option, value) => option.tagName === value.tagName}
             limitTags={3}
@@ -36,7 +36,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
             placeholder="Tags"
             size="sm"
             sx={{ width: "100%" }}
-            value={taskContents ? taskContents.tags : []}
+            value={taskContent ? taskContent.tags : []}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={`ac-project-tags-name-${option.tagName}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
@@ -81,8 +81,8 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
             multiple
             onChange={(event, value) => {
                 if (value !== null) {
-                    setTaskContents({
-                        ...taskContents,
+                    setTaskContent({
+                        ...taskContent,
                         tags: value,
                     });
                     if (setTaskUpdated) {

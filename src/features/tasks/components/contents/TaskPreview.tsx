@@ -410,13 +410,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         myself={myself}
                         openingService={openingService}
                         setCurrentProject={setCurrentProject}
-                        setCurrentTaskContent={setTmpCurrentTaskContent}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setCurrentTaskNote={setCurrentTaskNote}
                         setIsMainChatVisible={setIsMainChatVisible}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
-                        setIsThreadVisible={setIsThreadVisible}
                         setOpenCreateProject={setOpenCreateProject}
                         setOpenCreateTag={TM.setOpenCreateTag}
                         setOpeningService={setOpeningService}
@@ -424,7 +422,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskTitle={setTaskTitle}
                         setTaskUpdated={setTaskUpdated}
-                        taskContents={tmpCurrentTaskContent}
+                        taskContent={tmpCurrentTaskContent}
                         taskNotes={taskNotes}
                         taskTitle={taskTitle}
                         TM={TM}
@@ -452,11 +450,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setOpenCreateTag={TM.setOpenCreateTag}
                         setOpeningService={setOpeningService}
                         setReporter={setReporter}
-                        setTaskContents={setTmpCurrentTaskContent}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskUpdated={setTaskUpdated}
                         socket={socket}
-                        taskContents={tmpCurrentTaskContent}
+                        taskContent={tmpCurrentTaskContent}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
                         teamProjects={teamProjects}
@@ -465,8 +463,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCustomBarBlock
-                        currentTaskContent={tmpCurrentTaskContent}
-                        setCurrentTaskContent={setTmpCurrentTaskContent}
+                        taskContent={tmpCurrentTaskContent}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setIsCreatingTask={TM.setIsCreatingTask}
                         setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setTaskStatusUpdated={setTaskStatusUpdated}
@@ -526,14 +524,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTabIndex={setTabIndex}
                         setTaskCommentLines={setTaskCommentLines}
                         setTaskComments={setTaskComments}
-                        setTaskContents={setTmpCurrentTaskContent}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setTaskUpdated={setTaskUpdated}
                         setUploadedFiles={setUploadedFiles}
                         socket={socket}
                         tabIndex={tabIndex}
                         taskCommentLines={taskCommentLines}
                         taskComments={taskComments}
-                        taskContents={tmpCurrentTaskContent}
+                        taskContent={tmpCurrentTaskContent}
                         taskNotes={taskNotes}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}

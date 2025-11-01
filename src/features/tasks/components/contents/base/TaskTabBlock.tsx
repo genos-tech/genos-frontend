@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -23,7 +24,6 @@ import {
     Typography,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
-import React, { useEffect, useRef, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -67,8 +67,8 @@ type TaskTabBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
     setCurrentChat: (chat: ChatProps) => void;
     setOpeningService: (value: number) => void;
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     currentPreviewTaskId: number;
     uploadedFiles: any[];
     setUploadedFiles: (value: any[]) => void;
@@ -114,8 +114,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setUploadedFiles,
         currentPreviewTaskId,
         setTaskUpdated,
-        taskContents,
-        setTaskContents,
+        taskContent,
+        setTaskContent,
         setIsAttachmentDeleted,
         setDeletedAttachmentId,
         taskComments,
@@ -293,8 +293,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
 
     useEffect(() => {
         if (isUploadingFilesUpdated === true) {
-            setTaskContents({
-                ...taskContents,
+            setTaskContent({
+                ...taskContent,
                 attachments: uploadingFiles,
             });
             setIsUploadingFilesUpdated(false);
@@ -487,10 +487,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     socket={socket}
                                                     teamMemberProfiles={teamMemberProfiles}
                                                     currentProjectId={
-                                                        taskContents.project?.projectId
+                                                        taskContent.project?.projectId
                                                     }
                                                     currentProjectName={
-                                                        taskContents.project?.projectName
+                                                        taskContent.project?.projectName
                                                     }
                                                 />
                                             );
@@ -588,7 +588,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 color="primary"
                                                 variant="soft"
                                                 sx={{
-                                                    justifyContent: "flex-start",
+                                                    justifyContent: "center",
                                                     alignItems: "center",
                                                     height: "30px",
                                                     borderRadius: "5px",
@@ -597,15 +597,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     if (
                                                         setIsTaskHomeVisible &&
                                                         setIsTaskNoteVisible &&
-                                                        taskContents.project
+                                                        taskContent.project
                                                     ) {
                                                         setIsTaskHomeVisible(false);
                                                         setIsTaskNoteVisible(true);
                                                         handleCreateNewTaskNote(
                                                             null,
-                                                            taskContents.project.projectId,
+                                                            taskContent.project.projectId,
                                                             currentPreviewTaskId,
-                                                            taskContents.title
+                                                            taskContent.title
                                                         );
                                                     } else {
                                                         console.error(
@@ -677,7 +677,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 background: "transparent",
                                             }}
                                             onClick={() => {
-                                                handleDeleteTextFile(taskContents.id, file);
+                                                handleDeleteTextFile(taskContent.id, file);
                                             }}
                                         >
                                             <CloseIcon />
@@ -748,7 +748,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 background: "transparent",
                                             }}
                                             onClick={() => {
-                                                handleDeleteImage(taskContents.id, image);
+                                                handleDeleteImage(taskContent.id, image);
                                             }}
                                         >
                                             <CloseIcon />

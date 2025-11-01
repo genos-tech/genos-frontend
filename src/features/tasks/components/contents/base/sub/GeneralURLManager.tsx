@@ -8,12 +8,12 @@ import { getPageTitle } from "../../../../utils/getPageTitle";
 
 type GeneralURLManagerProps = {
     generalLink: { url: string; title: string };
-    taskContents?: TaskProps;
-    setTaskContents?: (value: TaskProps) => void;
+    taskContent?: TaskProps;
+    setTaskContent?: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const GeneralURLManager = (props: GeneralURLManagerProps) => {
-    const { generalLink, taskContents, setTaskContents, setTaskUpdated } = props;
+    const { generalLink, taskContent, setTaskContent, setTaskUpdated } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [url, setUrl] = useState("");
     const [title, setTitle] = useState("");
@@ -27,7 +27,7 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
         }
     };
     const handleSave = async () => {
-        if (taskContents && setTaskContents) {
+        if (taskContent && setTaskContent) {
             if (isValidUrl(url)) {
                 let pageTitle: string;
                 if (title === "") {
@@ -41,8 +41,8 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
 
                 setTitle(pageTitle);
                 setError("");
-                setTaskContents({
-                    ...taskContents,
+                setTaskContent({
+                    ...taskContent,
                     generalLink: { url: url, title: pageTitle },
                 });
                 setIsEditing(false);
@@ -70,7 +70,7 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
             setUrl("");
             setTitle("");
         }
-    }, [taskContents]);
+    }, [taskContent]);
 
     return (
         <div>
@@ -92,7 +92,7 @@ export const GeneralURLManager = (props: GeneralURLManagerProps) => {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                     />
-                    {taskContents && (title !== "" || isEditing === true) && (
+                    {taskContent && (title !== "" || isEditing === true) && (
                         <>
                             <Box>
                                 <Typography>Title:</Typography>

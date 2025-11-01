@@ -8,18 +8,18 @@ import { TaskProps } from "../../../../types/tasks";
 import { priorities } from "../../utils/taskMeta";
 
 type ACTaskPriorityProps = {
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const ACTaskPriority = (props: ACTaskPriorityProps) => {
-    const { taskContents, setTaskContents, setTaskUpdated } = props;
+    const { taskContent, setTaskContent, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
 
     return (
         <Autocomplete
-            key={taskContents.id}
+            key={taskContent.id}
             getOptionLabel={(option) => option.priority || ""}
             isOptionEqualToValue={(option, value) => option.priority === value.priority}
             openOnFocus={true}
@@ -71,10 +71,10 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                 })
             }
             value={
-                taskContents &&
-                taskContents.priority.priority !== null &&
-                taskContents.priority.priority !== ""
-                    ? [taskContents.priority]
+                taskContent &&
+                taskContent.priority.priority !== null &&
+                taskContent.priority.priority !== ""
+                    ? [taskContent.priority]
                     : []
             }
             multiple
@@ -82,8 +82,8 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                 if (value !== null) {
                     if (value.length > 0) {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 priority: value.slice(-1)[0],
                             });
                             if (setTaskUpdated) {
@@ -92,8 +92,8 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                         })();
                     } else {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 priority: {
                                     code: 0,
                                     priority: null,

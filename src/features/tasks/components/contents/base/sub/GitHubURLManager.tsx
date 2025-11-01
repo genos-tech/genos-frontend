@@ -8,12 +8,12 @@ import { getPageTitle } from "../../../../utils/getPageTitle";
 
 type GitHubURLManagerProps = {
     githubLink: { url: string; title: string };
-    taskContents?: TaskProps;
-    setTaskContents?: (value: TaskProps) => void;
+    taskContent?: TaskProps;
+    setTaskContent?: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const GitHubURLManager = (props: GitHubURLManagerProps) => {
-    const { githubLink, taskContents, setTaskContents, setTaskUpdated } = props;
+    const { githubLink, taskContent, setTaskContent, setTaskUpdated } = props;
     const [isEditing, setIsEditing] = useState(false);
     const [prUrl, setPRUrl] = useState("");
     const [prTitle, setPRTitle] = useState("");
@@ -23,7 +23,7 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
         return /^https:\/\/github\.com\/.+/.test(url);
     };
     const handlePRSave = async () => {
-        if (taskContents && setTaskContents) {
+        if (taskContent && setTaskContent) {
             if (isValidGitHubPR(prUrl)) {
                 let pageTitle: string;
                 if (prTitle === "") {
@@ -37,8 +37,8 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
 
                 setPRTitle(pageTitle);
                 setPRError("");
-                setTaskContents({
-                    ...taskContents,
+                setTaskContent({
+                    ...taskContent,
                     githubLink: { url: prUrl, title: pageTitle },
                 });
                 setIsEditing(false);
@@ -66,7 +66,7 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
             setPRUrl("");
             setPRTitle("");
         }
-    }, [taskContents]);
+    }, [taskContent]);
 
     return (
         <div>
@@ -88,7 +88,7 @@ export const GitHubURLManager = (props: GitHubURLManagerProps) => {
                         value={prUrl}
                         onChange={(e) => setPRUrl(e.target.value)}
                     />
-                    {taskContents && (prTitle !== "" || isEditing === true) && (
+                    {taskContent && (prTitle !== "" || isEditing === true) && (
                         <>
                             <Box>
                                 <Typography>Title:</Typography>

@@ -10,26 +10,26 @@ import { statuses } from "../../utils/taskMeta";
 
 type ACTaskStatusProps = {
     socket: Socket | null;
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
 };
 export const ACTaskStatus = (props: ACTaskStatusProps) => {
-    const { socket, taskContents, setTaskContents, setTaskUpdated, setTaskStatusUpdated } = props;
+    const { socket, taskContent, setTaskContent, setTaskUpdated, setTaskStatusUpdated } = props;
 
     const { mode } = useColorScheme();
 
     return (
         <Autocomplete
-            key={taskContents.id}
+            key={taskContent.id}
             getOptionLabel={(option) => option.status || ""}
             isOptionEqualToValue={(option, value) => option.status === value.status}
             options={statuses}
             placeholder="Status"
             size="sm"
             sx={{ width: "100%" }}
-            value={taskContents ? [taskContents.status] : []}
+            value={taskContent ? [taskContent.status] : []}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.status}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
@@ -77,8 +77,8 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
             onChange={(event, value) => {
                 if (value !== null && value.length > 0) {
                     (async () => {
-                        setTaskContents({
-                            ...taskContents,
+                        setTaskContent({
+                            ...taskContent,
                             status: value.slice(-1)[0],
                         });
                         if (setTaskStatusUpdated) {

@@ -12,8 +12,8 @@ type ACTeamUsersProps = {
     setMyself: (value: UserProps) => void;
     initialUser: UserProps;
     teamMembers: UserProps[];
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setUser: (value: UserProps) => void;
     isOpenTeamMembersList: boolean;
     setIsOpenTeamMembersList: (value: boolean) => void;
@@ -30,8 +30,8 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         setMyself,
         initialUser,
         teamMembers,
-        taskContents,
-        setTaskContents,
+        taskContent,
+        setTaskContent,
         setUser,
         isOpenTeamMembersList,
         setIsOpenTeamMembersList,
@@ -45,7 +45,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
 
     return (
         <Autocomplete
-            key={taskContents.id}
+            key={taskContent.id}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
             options={teamMembers}
             size="sm"
@@ -88,16 +88,16 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             onChange={(event, value) => {
                 if (value !== null) {
                     if (isAssignee) {
-                        setTaskContents({
-                            ...taskContents,
+                        setTaskContent({
+                            ...taskContent,
                             assignee: value,
                         });
                         if (setTaskUpdated) {
                             setTaskUpdated(true);
                         }
                     } else {
-                        setTaskContents({
-                            ...taskContents,
+                        setTaskContent({
+                            ...taskContent,
                             reporter: value,
                         });
                         if (setTaskUpdated) {

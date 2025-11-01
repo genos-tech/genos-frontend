@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MoreVert from "@mui/icons-material/MoreVert";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import {
     Box,
@@ -33,7 +34,7 @@ import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 
 type TaskTitleBlockProps = {
     myself: UserProps;
-    taskContents: TaskProps;
+    taskContent: TaskProps;
     taskTitle: string;
     setTaskTitle: (value: string) => void;
     setTaskClosed?: (value: boolean) => void;
@@ -45,9 +46,7 @@ type TaskTitleBlockProps = {
     setTaskUpdated?: (value: boolean) => void;
     isPreviewMode: boolean;
     setIsMainChatVisible?: (value: boolean) => void;
-    setIsThreadVisible?: (value: boolean) => void;
-    setIsTaskHomeVisible?: (value: boolean) => void;
-    setCurrentTaskContent?: (value: TaskProps) => void;
+    setTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
     isTaskNoteVisible?: boolean;
     setIsTaskVisibleInNote?: (value: boolean) => void;
@@ -78,7 +77,7 @@ type TaskTitleBlockProps = {
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
         myself,
-        taskContents,
+        taskContent,
         taskTitle,
         setTaskTitle,
         setOpenCreateProject,
@@ -89,9 +88,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setTitleErrorOpen,
         isPreviewMode,
         setIsMainChatVisible,
-        setIsThreadVisible,
-        setIsTaskHomeVisible,
-        setCurrentTaskContent,
+        setTaskContent,
         setTaskStatusUpdated,
         isTaskNoteVisible,
         setIsTaskVisibleInNote,
@@ -134,7 +131,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     {isPreviewMode && (
                         <>
                             <Chip
-                                key={`task-title-block-${taskContents.id}`}
+                                key={`task-title-block-${taskContent.id}`}
                                 color="neutral"
                                 size="lg"
                                 variant="soft"
@@ -143,25 +140,25 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     fontWeight: "bold",
                                 }}
                             >
-                                ID: {taskContents.id || "N/A"}
+                                ID: {taskContent.id || "N/A"}
                             </Chip>
                             <Chip
-                                key={`task-title-block-status-${taskContents.status.status}`}
+                                key={`task-title-block-status-${taskContent.status.status}`}
                                 size="lg"
                                 variant="soft"
                                 sx={{
-                                    backgroundColor: taskContents.status.color
+                                    backgroundColor: taskContent.status.color
                                         ? alpha(
-                                              taskContents.status.color,
+                                              taskContent.status.color,
                                               mode === "dark" ? 0.5 : 0.75
                                           )
                                         : "transparent",
-                                    color: taskContents.status.textColor,
+                                    color: taskContent.status.textColor,
                                     fontWeight: "bold",
                                     borderRadius: "5px",
                                 }}
                             >
-                                {taskContents.status.status || "Open"}
+                                {taskContent.status.status || "Open"}
                             </Chip>
                         </>
                     )}
@@ -200,7 +197,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </FormControl>
                 </Box>
 
-                {openingService === 2 && taskContents.threadId !== null && (
+                {openingService === 2 && taskContent.threadId !== null && (
                     <Tooltip size="sm" title="Check Thread" variant="outlined">
                         <IconButton
                             color="neutral"
@@ -208,15 +205,15 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             variant="plain"
                             onClick={() => {
                                 if (
-                                    taskContents.chatType &&
-                                    taskContents.chatId &&
-                                    taskContents.threadId &&
-                                    taskContents.threadId !== null
+                                    taskContent.chatType &&
+                                    taskContent.chatId &&
+                                    taskContent.threadId &&
+                                    taskContent.threadId !== null
                                 ) {
                                     moveToSpecificChat(
-                                        taskContents.chatType,
-                                        taskContents.chatId,
-                                        taskContents.threadId,
+                                        taskContent.chatType,
+                                        taskContent.chatId,
+                                        taskContent.threadId,
                                         false, // openTaskNoteInChat
                                         true, // openThreadTaskPreview
                                         setOpeningService,
@@ -241,24 +238,54 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </MenuButton>
                     <Menu size="sm">
                         <MenuItem
-                            key="open-note"
+                            onClick={() => {
+                                TM.handleCreateTask();
+                            }}
+                        >
+                            <AssignmentRoundedIcon />
+                            New Task
+                        </MenuItem>
+
+                        <MenuItem
                             onClick={() => {
                                 if (
-                                    setIsTaskHomeVisible &&
-                                    setIsTaskNoteVisible &&
-                                    taskContents.project
+                                    taskContent.id !== undefined &&
+                                    taskContent.rootTaskId != null
                                 ) {
-                                    setIsTaskHomeVisible(false);
+                                    if (TM.setIsCreatingTask) {
+                                        TM.setIsCreatingTask({
+                                            flag: true,
+                                            parentTaskId: taskContent.id,
+                                            rootTaskId: taskContent.rootTaskId,
+                                        });
+                                    }
+
+                                    // Close task-home when creating a sub task.
+                                    TM.setIsTaskHomeVisible(false);
+                                } else {
+                                    console.error("Task ID nod defined error.");
+                                }
+                            }}
+                        >
+                            <AssignmentRoundedIcon />
+                            New Sub Task
+                        </MenuItem>
+
+                        <MenuItem
+                            key="open-note"
+                            onClick={() => {
+                                if (setIsTaskNoteVisible && taskContent.project) {
+                                    TM.setIsTaskHomeVisible(false);
                                     setIsTaskNoteVisible(true);
                                     if (taskNotes.length > 0) {
                                         setCurrentTaskNote(taskNotes[0]);
                                     } else {
-                                        if (taskContents.project && taskContents.id) {
+                                        if (taskContent.project && taskContent.id) {
                                             handleCreateNewTaskNote(
                                                 null,
-                                                taskContents.project.projectId,
-                                                taskContents.id,
-                                                taskContents.title
+                                                taskContent.project.projectId,
+                                                taskContent.id,
+                                                taskContent.title
                                             );
                                         }
                                     }
@@ -272,30 +299,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             <NoteAltIcon />
                             Open Note
                         </MenuItem>
-                        <MenuItem
-                            onClick={() => {
-                                TM.handleCreateTask();
-                            }}
-                        >
-                            <AddIcon />
-                            New Task
-                        </MenuItem>
+
                         <MenuItem
                             onClick={() => {
                                 setOpenCreateTag(true);
                             }}
                         >
-                            <AddIcon />
-                            New Sub Task
-                        </MenuItem>
-                        <MenuItem
-                            onClick={() => {
-                                setOpenCreateTag(true);
-                            }}
-                        >
-                            <AddIcon />
+                            <LocalOfferIcon />
                             New Tag
                         </MenuItem>
+
                         <MenuItem
                             onClick={() => {
                                 setOpenCreateProject(true);
@@ -304,17 +317,18 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             <AddIcon />
                             New Project
                         </MenuItem>
-                        {taskContents.status.status !== "Closed" && (
+
+                        {taskContent.status.status !== "Closed" && (
                             <MenuItem
                                 sx={{
                                     color: "red",
-                                    fontWeight: "bold",
+                                    fontSize: "14px",
                                 }}
                                 onClick={() => {
                                     setOpenDeleteTask(true);
                                 }}
                             >
-                                <DeleteIcon sx={{ color: "red" }} />
+                                <DeleteIcon sx={{ color: "red", fontWeight: "bold" }} />
                                 Delete Task
                             </MenuItem>
                         )}
@@ -342,7 +356,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 setIsMainChatVisible(true);
                             }
 
-                            // setIsThreadVisible(); // Not update, keep as it is !!!
                             if (TM.setIsTaskPreviewVisible) {
                                 if (isPreviewMode === true) {
                                     TM.setIsTaskPreviewVisible(false);
@@ -353,9 +366,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     TM.isCreatingTask.flag === false &&
                                     isTaskNoteVisible === false
                                 ) {
-                                    if (setIsTaskHomeVisible) {
-                                        setIsTaskHomeVisible(true);
-                                    }
+                                    TM.setIsTaskHomeVisible(true);
                                 }
                             }
 
@@ -366,9 +377,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             });
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (TM.isTaskPreviewVisible === false) {
-                                if (setIsTaskHomeVisible) {
-                                    setIsTaskHomeVisible(true);
-                                }
+                                TM.setIsTaskHomeVisible(true);
                             }
 
                             // Close the task preview when the task is visible in the task note.
@@ -376,10 +385,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 setIsTaskVisibleInNote(false);
                             }
 
-                            if (TM.isCreatingTask.flag === true && taskContents.id !== undefined) {
+                            if (TM.isCreatingTask.flag === true && taskContent.id !== undefined) {
                                 deleteEmptyTask({
                                     myself: myself,
-                                    taskId: taskContents.id,
+                                    taskId: taskContent.id,
                                     accessToken: accessToken,
                                     setInitialEmptyTaskId: TM.setInitialEmptyTaskId,
                                 });
@@ -391,9 +400,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 </Tooltip>
 
                 <ModalDeleteTask
-                    currentTaskContent={taskContents}
+                    currentTaskContent={taskContent}
                     openDeleteTask={openDeleteTask}
-                    setCurrentTaskContent={setCurrentTaskContent}
+                    setCurrentTaskContent={setTaskContent}
                     setOpenDeleteTask={setOpenDeleteTask}
                     setTaskStatusUpdated={setTaskStatusUpdated}
                     setTaskUpdated={setTaskUpdated}

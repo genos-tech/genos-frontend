@@ -27,11 +27,11 @@ const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
 };
 
 type TaskCreateAttachmentBlockProps = {
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
 };
 export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps) => {
-    const { taskContents, setTaskContents } = props;
+    const { taskContent, setTaskContent } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
     const [textFiles, setTextFiles] = useState<FileProps[]>([]);
@@ -151,8 +151,8 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
 
     useEffect(() => {
         if (isUploadingFilesUpdated === true) {
-            setTaskContents({
-                ...taskContents,
+            setTaskContent({
+                ...taskContent,
                 attachments: uploadingFiles,
             });
             setIsUploadingFilesUpdated(false);

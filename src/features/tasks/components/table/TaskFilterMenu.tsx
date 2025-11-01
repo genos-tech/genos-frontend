@@ -6,6 +6,8 @@ import Button from "@mui/material/Button";
 import Fade from "@mui/material/Fade";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import { styled } from "@mui/material/styles";
+import { tooltipClasses, TooltipProps } from "@mui/material/Tooltip";
 import { alpha } from "@mui/system";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -291,6 +293,18 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 <Tooltip
                     placement="top"
                     title={selectedStatus.map((status) => status.label).join(", ")}
+                    slotProps={{
+                        popper: {
+                            sx: {
+                                [`& .${tooltipClasses.tooltip}`]: {
+                                    backgroundColor: mode === "dark" ? "#121212" : "#ffffff",
+                                    color: mode === "dark" ? "lightgrey" : "#2B2B2B",
+                                    boxShadow: 1,
+                                    fontSize: 12,
+                                },
+                            },
+                        },
+                    }}
                 >
                     <Button
                         aria-controls={openStatusFilter ? "fade-menu" : undefined}
@@ -299,7 +313,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         id="fade-button"
                         variant={"contained"}
                         sx={{
-                            color: selectedStatus[0].label === "All" ? "black" : "white",
+                            color:
+                                selectedStatus[0].label === "All"
+                                    ? mode === "dark"
+                                        ? "white"
+                                        : "black"
+                                    : "white",
                             backgroundColor:
                                 mode === "dark"
                                     ? alpha(selectedStatus[0].darkModeColor, 0.5)
@@ -312,9 +331,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             "&:hover": {
                                 backgroundColor:
                                     mode === "dark"
-                                        ? alpha(selectedStatus[0].darkModeColor, 0.5)
-                                        : alpha(selectedStatus[0].lightModeColor, 0.8),
-                                color: selectedStatus[0].label === "All" ? "black" : "white",
+                                        ? alpha(selectedStatus[0].darkModeColor, 0.6)
+                                        : alpha(selectedStatus[0].lightModeColor, 0.9),
+                                color:
+                                    selectedStatus[0].label === "All"
+                                        ? mode === "dark"
+                                            ? "white"
+                                            : "black"
+                                        : "white",
                             },
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -394,6 +418,19 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         <Tooltip
                             placement="top"
                             title={selectedTags.map((tag) => tag.label).join(", ")}
+                            slotProps={{
+                                popper: {
+                                    sx: {
+                                        [`& .${tooltipClasses.tooltip}`]: {
+                                            backgroundColor:
+                                                mode === "dark" ? "#121212" : "#ffffff",
+                                            color: mode === "dark" ? "lightgrey" : "#2B2B2B",
+                                            boxShadow: 1,
+                                            fontSize: 12,
+                                        },
+                                    },
+                                },
+                            }}
                         >
                             <Button
                                 aria-controls={openTagsFilter ? "fade-menu" : undefined}
@@ -403,7 +440,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 variant={"contained"}
                                 sx={{
                                     color: selectedTags.some((tag) => tag.label === "All")
-                                        ? "black"
+                                        ? mode === "dark"
+                                            ? "white"
+                                            : "black"
                                         : "white",
                                     backgroundColor:
                                         mode === "dark"
@@ -417,10 +456,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     "&:hover": {
                                         backgroundColor:
                                             mode === "dark"
-                                                ? alpha(selectedTags[0].darkModeColor, 0.5)
-                                                : alpha(selectedTags[0].lightModeColor, 0.8),
+                                                ? alpha(selectedTags[0].darkModeColor, 0.6)
+                                                : alpha(selectedTags[0].lightModeColor, 0.9),
                                         color: selectedTags.some((tag) => tag.label === "All")
-                                            ? "black"
+                                            ? mode === "dark"
+                                                ? "white"
+                                                : "black"
                                             : "white",
                                     },
                                     overflow: "hidden",
@@ -501,6 +542,18 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 <Tooltip
                     placement="top"
                     title={selectedPriorities.map((priority) => priority.label).join(", ")}
+                    slotProps={{
+                        popper: {
+                            sx: {
+                                [`& .${tooltipClasses.tooltip}`]: {
+                                    backgroundColor: mode === "dark" ? "#121212" : "#ffffff",
+                                    color: mode === "dark" ? "lightgrey" : "#2B2B2B",
+                                    boxShadow: 1,
+                                    fontSize: 12,
+                                },
+                            },
+                        },
+                    }}
                 >
                     <Button
                         aria-controls={openPriorityFilter ? "fade-menu" : undefined}
@@ -510,7 +563,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         variant={"contained"}
                         sx={{
                             color: selectedPriorities.some((priority) => priority.label === "All")
-                                ? "black"
+                                ? mode === "dark"
+                                    ? "white"
+                                    : "black"
                                 : "white",
                             backgroundColor:
                                 mode === "dark"
@@ -524,12 +579,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             "&:hover": {
                                 backgroundColor:
                                     mode === "dark"
-                                        ? alpha(selectedPriorities[0].darkModeColor, 0.5)
-                                        : alpha(selectedPriorities[0].lightModeColor, 0.8),
+                                        ? alpha(selectedPriorities[0].darkModeColor, 0.6)
+                                        : alpha(selectedPriorities[0].lightModeColor, 0.9),
                                 color: selectedPriorities.some(
                                     (priority) => priority.label === "All"
                                 )
-                                    ? "black"
+                                    ? mode === "dark"
+                                        ? "white"
+                                        : "black"
                                     : "white",
                             },
                             overflow: "hidden",
@@ -608,6 +665,18 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 <Tooltip
                     placement="top"
                     title={selectedEffortLevels.map((effortLevel) => effortLevel.label).join(", ")}
+                    slotProps={{
+                        popper: {
+                            sx: {
+                                [`& .${tooltipClasses.tooltip}`]: {
+                                    backgroundColor: mode === "dark" ? "#121212" : "#ffffff",
+                                    color: mode === "dark" ? "lightgrey" : "#2B2B2B",
+                                    boxShadow: 1,
+                                    fontSize: 12,
+                                },
+                            },
+                        },
+                    }}
                 >
                     <Button
                         aria-controls={openEffortLevelFilter ? "fade-menu" : undefined}
@@ -619,7 +688,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             color: selectedEffortLevels.some(
                                 (effortLevel) => effortLevel.label === "All"
                             )
-                                ? "black"
+                                ? mode === "dark"
+                                    ? "white"
+                                    : "black"
                                 : "white",
                             backgroundColor:
                                 mode === "dark"
@@ -633,12 +704,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             "&:hover": {
                                 backgroundColor:
                                     mode === "dark"
-                                        ? alpha(selectedEffortLevels[0].darkModeColor, 0.5)
-                                        : alpha(selectedEffortLevels[0].lightModeColor, 0.8),
+                                        ? alpha(selectedEffortLevels[0].darkModeColor, 0.6)
+                                        : alpha(selectedEffortLevels[0].lightModeColor, 0.9),
                                 color: selectedEffortLevels.some(
                                     (effortLevel) => effortLevel.label === "All"
                                 )
-                                    ? "black"
+                                    ? mode === "dark"
+                                        ? "white"
+                                        : "black"
                                     : "white",
                             },
                             overflow: "hidden",

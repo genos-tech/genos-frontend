@@ -4,8 +4,8 @@ import { ProjectProps, TaskProps } from "../../../../types/tasks";
 
 type ACTeamProjectsProps = {
     teamProjects: ProjectProps[];
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     isOpenProjectList: boolean;
     setIsOpenProjectList: (value: boolean) => void;
     setCurrentProject: (value: ProjectProps) => void;
@@ -14,8 +14,8 @@ type ACTeamProjectsProps = {
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
         teamProjects,
-        taskContents,
-        setTaskContents,
+        taskContent,
+        setTaskContent,
         isOpenProjectList,
         setIsOpenProjectList,
         setCurrentProject,
@@ -24,18 +24,18 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
 
     return (
         <Autocomplete
-            key={taskContents.id}
+            key={taskContent.id}
             getOptionLabel={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
             options={teamProjects}
             size="sm"
             sx={{ width: "100%" }}
-            value={taskContents.project?.projectId ? taskContents.project : undefined}
+            value={taskContent.project?.projectId ? taskContent.project : undefined}
             onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {
                 if (value !== null) {
-                    setTaskContents({
-                        ...taskContents,
+                    setTaskContent({
+                        ...taskContent,
                         project: {
                             projectId: value.projectId,
                             projectName: value.projectName,

@@ -6,8 +6,8 @@ import { IconButton, Stack, Tooltip } from "@mui/joy";
 import { TaskProps } from "../../../../../types/tasks";
 
 type TaskCustomBarBlockProps = {
-    currentTaskContent: TaskProps;
-    setCurrentTaskContent: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated: (value: boolean) => void;
     setTaskStatusUpdated: (value: boolean) => void;
     setIsCreatingTask?: (value: any) => void;
@@ -16,8 +16,8 @@ type TaskCustomBarBlockProps = {
 };
 export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
     const {
-        currentTaskContent,
-        setCurrentTaskContent,
+        taskContent,
+        setTaskContent,
         setTaskUpdated,
         setTaskStatusUpdated,
         setIsCreatingTask,
@@ -28,8 +28,7 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
     return (
         <Stack direction="row" sx={{ width: "100%", alignItems: "center", gap: 1 }}>
             {/* Next Status IconButton */}
-            {currentTaskContent.status.status === "Open" ||
-            currentTaskContent.status.status === "Pending" ? (
+            {taskContent.status.status === "Open" || taskContent.status.status === "Pending" ? (
                 <IconButton
                     color="warning"
                     component="p"
@@ -41,8 +40,8 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                     }}
                     onClick={() => {
                         (async () => {
-                            setCurrentTaskContent({
-                                ...currentTaskContent,
+                            setTaskContent({
+                                ...taskContent,
                                 status: {
                                     code: 0,
                                     status: "WIP",
@@ -61,7 +60,7 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             ) : (
                 <div></div>
             )}
-            {currentTaskContent.status.status === "WIP" ? (
+            {taskContent.status.status === "WIP" ? (
                 <IconButton
                     color="success"
                     component="p"
@@ -73,8 +72,8 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                     }}
                     onClick={() => {
                         (async () => {
-                            setCurrentTaskContent({
-                                ...currentTaskContent,
+                            setTaskContent({
+                                ...taskContent,
                                 status: {
                                     code: 0,
                                     status: "Closed",
@@ -111,7 +110,7 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             )}
 
             {/* Sub Task IconButton aligned to the right */}
-            {currentTaskContent.status.status !== "Deleted" && (
+            {taskContent.status.status !== "Deleted" && (
                 <Tooltip size="sm" title="Create a Sub Task" variant="outlined">
                     <IconButton
                         component="p"
@@ -123,15 +122,12 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                             marginLeft: "auto",
                         }}
                         onClick={() => {
-                            if (
-                                currentTaskContent.id !== undefined &&
-                                currentTaskContent.rootTaskId != null
-                            ) {
+                            if (taskContent.id !== undefined && taskContent.rootTaskId != null) {
                                 if (setIsCreatingTask) {
                                     setIsCreatingTask({
                                         flag: true,
-                                        parentTaskId: currentTaskContent.id,
-                                        rootTaskId: currentTaskContent.rootTaskId,
+                                        parentTaskId: taskContent.id,
+                                        rootTaskId: taskContent.rootTaskId,
                                     });
                                 }
 

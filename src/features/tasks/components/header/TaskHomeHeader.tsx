@@ -2,26 +2,19 @@ import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import MoreVert from "@mui/icons-material/MoreVert";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
-    Autocomplete,
-    AutocompleteOption,
     Box,
-    Chip,
-    CircularProgress,
     Dropdown,
     IconButton,
-    ListItemContent,
     Menu,
     MenuButton,
     MenuItem,
     Tooltip,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
@@ -200,7 +193,7 @@ export const TaskHomeHeader = ({
                     </MenuButton>
                     <Menu size="sm">
                         <MenuItem onClick={onCreateTag}>
-                            <AddIcon />
+                            <LocalOfferIcon />
                             New Tag
                         </MenuItem>
                         <MenuItem onClick={onCreateProject}>

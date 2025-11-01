@@ -14,7 +14,7 @@ type TaskCreateFooterProps = {
     currentMainChat?: ChatProps;
     currentThreadChat?: ThreadProps;
     isThreadVisible?: boolean;
-    taskContents: TaskProps;
+    taskContent: TaskProps;
     taskTitle: string;
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
@@ -37,7 +37,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         currentMainChat,
         currentThreadChat,
         isThreadVisible,
-        taskContents,
+        taskContent,
         taskTitle,
         setIsSubmitted,
         setTitleError,
@@ -53,7 +53,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         await uploadNewTask({
             socket: socket,
             myself: myself,
-            taskContents: taskContents,
+            taskContent: taskContent,
             currentMainChat: currentMainChat,
             currentThreadChat: currentThreadChat,
             isThreadVisible: isThreadVisible || false,
@@ -63,9 +63,9 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
             setCurrentPreviewTaskId: setCurrentPreviewTaskId,
         });
 
-        if (taskContents.project && taskContents.project.projectId) {
-            localStorage.setItem("lastProjectId", String(taskContents.project.projectId));
-            setCurrentProject(taskContents.project);
+        if (taskContent.project && taskContent.project.projectId) {
+            localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
+            setCurrentProject(taskContent.project);
         } else {
             console.error("Failed to set the current project");
         }
@@ -93,10 +93,10 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         });
                     }
 
-                    if (taskContents.id !== undefined) {
+                    if (taskContent.id !== undefined) {
                         deleteEmptyTask({
                             myself: myself,
-                            taskId: taskContents.id,
+                            taskId: taskContent.id,
                             accessToken: accessToken,
                             setInitialEmptyTaskId: setInitialEmptyTaskId,
                         });
@@ -108,7 +108,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
             <Button
                 color="primary"
                 component="button"
-                disabled={taskTitle === "" || taskContents.project?.projectId === null}
+                disabled={taskTitle === "" || taskContent.project?.projectId === null}
                 type="submit"
                 variant="solid"
                 onClick={() => {
