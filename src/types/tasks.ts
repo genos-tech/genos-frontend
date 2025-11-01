@@ -98,14 +98,12 @@ export type TaskProps = {
     effortLevel: TaskEffortLevelProps;
     tags: TagListProps[];
     concatTags?: string;
-    githubLink: {
+    links: {
+        id: string;
         url: string;
         title: string;
-    };
-    generalLink: {
-        url: string;
-        title: string;
-    };
+        isGitHub: boolean;
+    }[];
     attachments: AttachmentFileProps[];
     parentTaskId: number | null;
     rootTaskId: number | null;

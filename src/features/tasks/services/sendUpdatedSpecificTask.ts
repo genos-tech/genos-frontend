@@ -44,13 +44,7 @@ export const sendUpdatedSpecificTask = async (
                 status: updatedTask.status.status !== null ? updatedTask.status.status : null,
                 content: updatedTask.body.length !== 0 ? updatedTask.body : null,
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
-                github_url: updatedTask.githubLink.url !== "" ? updatedTask.githubLink.url : null,
-                github_url_title:
-                    updatedTask.githubLink.title !== "" ? updatedTask.githubLink.title : null,
-                general_url:
-                    updatedTask.generalLink.url !== "" ? updatedTask.generalLink.url : null,
-                general_url_title:
-                    updatedTask.generalLink.title !== "" ? updatedTask.generalLink.title : null,
+                links: updatedTask.links,
                 tags: updatedTask.tags,
             });
 

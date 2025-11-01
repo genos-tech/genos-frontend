@@ -52,27 +52,19 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
         const initialLinks: LinkItem[] = [];
 
         // Load existing GitHub link
-        if (taskContent?.githubLink?.url) {
-            initialLinks.push({
-                id: "github-1",
-                url: taskContent.githubLink.url,
-                title: taskContent.githubLink.title,
-                isGitHub: true,
-            });
-        }
-
-        // Load existing general link
-        if (taskContent?.generalLink?.url) {
-            initialLinks.push({
-                id: "general-1",
-                url: taskContent.generalLink.url,
-                title: taskContent.generalLink.title,
-                isGitHub: false,
-            });
+        if (taskContent?.links) {
+            initialLinks.push(
+                ...taskContent.links.map((link) => ({
+                    id: `link-${link.id}`,
+                    url: link.url,
+                    title: link.title,
+                    isGitHub: isGitHubURL(link.url),
+                }))
+            );
         }
 
         setLinks(initialLinks);
-    }, [taskContent?.githubLink?.url, taskContent?.generalLink?.url]);
+    }, [taskContent?.links]);
 
     // Handle adding a new link
     const handleAddLink = async () => {
@@ -146,18 +138,9 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     // Update task content with new links
     const updateTaskContent = (updatedLinks: LinkItem[]) => {
         if (taskContent && setTaskContent) {
-            // Find first GitHub link and first non-GitHub link for backward compatibility
-            const githubLink = updatedLinks.find((link) => link.isGitHub);
-            const generalLink = updatedLinks.find((link) => !link.isGitHub);
-
             setTaskContent({
                 ...taskContent,
-                githubLink: githubLink
-                    ? { url: githubLink.url, title: githubLink.title }
-                    : { url: "", title: "" },
-                generalLink: generalLink
-                    ? { url: generalLink.url, title: generalLink.title }
-                    : { url: "", title: "" },
+                links: updatedLinks,
             });
 
             if (setTaskUpdated) {

@@ -73,16 +73,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     status: taskContent.status.status !== "" ? taskContent.status.status : null,
                     content: taskContent.body.length !== 0 ? taskContent.body : [],
                     due_date: taskContent.dueDate !== "" ? taskContent.dueDate : null,
-                    github_url:
-                        taskContent.githubLink.url !== "" ? taskContent.githubLink.url : null,
-                    github_url_title:
-                        taskContent.githubLink.title !== "" ? taskContent.githubLink.title : null,
-                    general_url:
-                        taskContent.generalLink.url !== "" ? taskContent.generalLink.url : null,
-                    general_url_title:
-                        taskContent.generalLink.title !== ""
-                            ? taskContent.generalLink.title
-                            : null,
+                    links: taskContent.links,
                     tags: taskContent.tags,
                     chat_type: taskContent.chatType,
                     chat_id: currentMainChat?.chatId || null,
