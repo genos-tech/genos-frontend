@@ -45,14 +45,14 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
     return (
         <Autocomplete
             key={`ac-project-tags-${currentPreviewTaskId}`}
-            aria-label="Search"
+            aria-label="Search Tasks"
             getOptionLabel={(option) => option.title}
             groupBy={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
             loading={loading}
             open={openSearch}
             options={teamTaskSearchOptions}
-            placeholder={"Search"}
+            placeholder={"Search Tasks"}
             size="sm"
             startDecorator={<SearchRoundedIcon />}
             sx={{ width: "100%" }}

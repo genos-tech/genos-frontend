@@ -1,6 +1,5 @@
 import CancelIcon from "@mui/icons-material/Cancel";
 import ChecklistIcon from "@mui/icons-material/Checklist";
-import MoreVert from "@mui/icons-material/MoreVert";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
@@ -166,10 +165,6 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             )}
                         </>
                     ) : null}
-
-                    <IconButton color="neutral" component="a" size="sm" variant="plain">
-                        <MoreVert />
-                    </IconButton>
 
                     <Tooltip size="sm" title="Close" variant="outlined">
                         <IconButton

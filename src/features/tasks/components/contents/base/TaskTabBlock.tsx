@@ -457,7 +457,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         textAlign: "center",
                                     }}
                                 >
-                                    <Typography level="title-md">No comments yet</Typography>
+                                    <Typography level="body-sm">No comments yet</Typography>
                                 </Box>
                             )}
 

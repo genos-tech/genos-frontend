@@ -258,6 +258,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 </Stack>
             )}
 
+            {childTasks.length === 0 && (
+                <Typography level="body-sm" sx={{ mb: 2, textAlign: "center" }}>
+                    No sub tasks yet
+                </Typography>
+            )}
+
             <Divider sx={{ mt: 1, mb: 2 }} />
         </>
     );
