@@ -167,11 +167,9 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         </>
                     ) : null}
 
-                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
-                        <IconButton color="neutral" component="a" size="sm" variant="plain">
-                            <MoreVert />
-                        </IconButton>
-                    </Tooltip>
+                    <IconButton color="neutral" component="a" size="sm" variant="plain">
+                        <MoreVert />
+                    </IconButton>
 
                     <Tooltip size="sm" title="Close" variant="outlined">
                         <IconButton

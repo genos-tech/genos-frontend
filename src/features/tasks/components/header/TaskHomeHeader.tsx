@@ -190,16 +190,14 @@ export const TaskHomeHeader = ({
                     </IconButton>
                 </Tooltip>
                 <Dropdown>
-                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
-                        <MenuButton
-                            slots={{ root: IconButton }}
-                            slotProps={{
-                                root: { color: "neutral" },
-                            }}
-                        >
-                            <MoreVert />
-                        </MenuButton>
-                    </Tooltip>
+                    <MenuButton
+                        slots={{ root: IconButton }}
+                        slotProps={{
+                            root: { color: "neutral" },
+                        }}
+                    >
+                        <MoreVert />
+                    </MenuButton>
                     <Menu size="sm">
                         <MenuItem onClick={onCreateTag}>
                             <AddIcon />

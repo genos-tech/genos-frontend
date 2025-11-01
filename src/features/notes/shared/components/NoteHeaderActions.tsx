@@ -161,17 +161,15 @@ export const NoteHeaderActions = ({
             )}
 
             <Dropdown>
-                <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
-                    <MenuButton
-                        slots={{ root: IconButton }}
-                        sx={{ mt: "5px" }}
-                        slotProps={{
-                            root: { color: "neutral" },
-                        }}
-                    >
-                        <MoreVert />
-                    </MenuButton>
-                </Tooltip>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    sx={{ mt: "5px" }}
+                    slotProps={{
+                        root: { color: "neutral" },
+                    }}
+                >
+                    <MoreVert />
+                </MenuButton>
                 <Menu size="sm">
                     {noteType === 2 && currentTask && currentTask.id && (
                         <MenuItem onClick={onOpenTask}>

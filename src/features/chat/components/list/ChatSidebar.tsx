@@ -603,21 +603,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         />
 
                         <Dropdown>
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                title="More Options"
-                                variant="outlined"
+                            <MenuButton
+                                slots={{ root: IconButton }}
+                                slotProps={{
+                                    root: { color: "neutral" },
+                                }}
                             >
-                                <MenuButton
-                                    slots={{ root: IconButton }}
-                                    slotProps={{
-                                        root: { color: "neutral" },
-                                    }}
-                                >
-                                    <MoreVert />
-                                </MenuButton>
-                            </Tooltip>
+                                <MoreVert />
+                            </MenuButton>
                             <Menu size="sm">
                                 <MenuItem
                                     onClick={() => {

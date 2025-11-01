@@ -256,19 +256,16 @@ export const ChatNoteHeader = ({
                     </Tooltip>
                 )}
 
-                {/* More Options Dropdown */}
                 <Dropdown>
-                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
-                        <MenuButton
-                            slots={{ root: IconButton }}
-                            sx={{ mb: "5px" }}
-                            slotProps={{
-                                root: { color: "neutral" },
-                            }}
-                        >
-                            <MoreVert />
-                        </MenuButton>
-                    </Tooltip>
+                    <MenuButton
+                        slots={{ root: IconButton }}
+                        sx={{ mb: "5px" }}
+                        slotProps={{
+                            root: { color: "neutral" },
+                        }}
+                    >
+                        <MoreVert />
+                    </MenuButton>
                     <Menu size="sm">
                         <MenuItem onClick={onCreateChildNote}>
                             <AddIcon />

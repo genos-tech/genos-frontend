@@ -200,24 +200,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </FormControl>
                 </Box>
 
-                {/* If the task is visible in the task note, do not show the expand button. */}
-                {isPreviewMode === true && setIsTaskVisibleInNote === undefined && (
-                    <Tooltip size="sm" title="Expand" variant="outlined">
-                        <IconButton
-                            color="neutral"
-                            size="sm"
-                            variant="plain"
-                            onClick={() => {
-                                setIsTaskHomeVisible && setIsTaskHomeVisible(false);
-                                setIsMainChatVisible && setIsMainChatVisible(false);
-                                setIsThreadVisible && setIsThreadVisible(false);
-                            }}
-                        >
-                            <OpenInNewIcon />
-                        </IconButton>
-                    </Tooltip>
-                )}
-
                 {openingService === 2 && taskContents.threadId !== null && (
                     <Tooltip size="sm" title="Check Thread" variant="outlined">
                         <IconButton
@@ -250,15 +232,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 )}
 
                 <Dropdown>
-                    <Tooltip placement="left" size="sm" title="More Options" variant="outlined">
-                        <MenuButton
-                            size="sm"
-                            slotProps={{ root: { color: "neutral" } }}
-                            slots={{ root: IconButton }}
-                        >
-                            <MoreVert />
-                        </MenuButton>
-                    </Tooltip>
+                    <MenuButton
+                        size="sm"
+                        slotProps={{ root: { color: "neutral" } }}
+                        slots={{ root: IconButton }}
+                    >
+                        <MoreVert />
+                    </MenuButton>
                     <Menu size="sm">
                         <MenuItem
                             key="open-note"
