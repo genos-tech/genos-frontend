@@ -274,12 +274,13 @@ export const ChatNoteHeader = ({
                         <MenuItem
                             sx={{
                                 color: "red",
-                                fontWeight: "bold",
                             }}
                             onClick={onDeleteNote}
                         >
                             <DeleteIcon sx={{ color: "red" }} />
-                            Delete Note
+                            <Typography color="danger" level="title-sm">
+                                Delete Note
+                            </Typography>
                         </MenuItem>
                     </Menu>
                 </Dropdown>

@@ -79,7 +79,6 @@ type TaskTabBlockProps = {
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
-    setIsTaskHomeVisible?: (value: boolean) => void;
     setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
@@ -122,7 +121,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         isCommentUpdated,
         setIsInEdit,
         setEditTargetComment,
-        setIsTaskHomeVisible,
         setIsTaskNoteVisible,
         handleCreateNewTaskNote,
         taskNotes,
@@ -548,16 +546,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     <ListItemButton
                                                         variant="soft"
                                                         sx={{
-                                                            justifyContent: "flex-start",
                                                             alignItems: "center",
                                                             borderRadius: "5px",
                                                         }}
                                                         onClick={() => {
-                                                            if (
-                                                                setIsTaskHomeVisible &&
-                                                                setIsTaskNoteVisible
-                                                            ) {
-                                                                setIsTaskHomeVisible(false);
+                                                            if (setIsTaskNoteVisible) {
+                                                                TM.setIsTaskHomeVisible(false);
                                                                 setIsTaskNoteVisible(true);
                                                                 setCurrentTaskNote(taskNote);
                                                             }
@@ -595,11 +589,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 }}
                                                 onClick={() => {
                                                     if (
-                                                        setIsTaskHomeVisible &&
                                                         setIsTaskNoteVisible &&
                                                         taskContent.project
                                                     ) {
-                                                        setIsTaskHomeVisible(false);
+                                                        TM.setIsTaskHomeVisible(false);
                                                         setIsTaskNoteVisible(true);
                                                         handleCreateNewTaskNote(
                                                             null,

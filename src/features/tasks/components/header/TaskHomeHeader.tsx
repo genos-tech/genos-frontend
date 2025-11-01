@@ -203,12 +203,13 @@ export const TaskHomeHeader = ({
                         <MenuItem
                             sx={{
                                 color: "red",
-                                fontWeight: "bold",
                             }}
                             onClick={onDeleteProject}
                         >
                             <DeleteIcon sx={{ color: "red" }} />
-                            Delete Project
+                            <Typography color="danger" level="title-sm">
+                                Delete Project
+                            </Typography>
                         </MenuItem>
                     </Menu>
                 </Dropdown>

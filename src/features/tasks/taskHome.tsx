@@ -6,11 +6,9 @@ import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskSearch } from "./hooks/useTaskSearch";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
-import { taskTypes } from "./types/TaskTableTypes";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { TaskType } from "../../types/tasks";
 
 export const TaskHome = (props: TaskHomeProps) => {
     const {

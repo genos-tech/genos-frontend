@@ -10,7 +10,6 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
-import { TaskType } from "../../../../types/tasks";
 import { TaskNoteMain } from "../../../notes/task-notes/components/TaskNoteMain";
 import { CreateTaskForm } from "../contents/CreateTaskForm";
 import { TaskPreview } from "../contents/TaskPreview";

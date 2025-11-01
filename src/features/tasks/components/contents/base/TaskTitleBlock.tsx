@@ -20,6 +20,7 @@ import {
     Snackbar,
     Stack,
     Tooltip,
+    Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
@@ -328,8 +329,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     setOpenDeleteTask(true);
                                 }}
                             >
-                                <DeleteIcon sx={{ color: "red", fontWeight: "bold" }} />
-                                Delete Task
+                                <DeleteIcon sx={{ color: "red" }} />
+                                <Typography color="danger" level="title-sm">
+                                    Delete Task
+                                </Typography>
                             </MenuItem>
                         )}
                     </Menu>

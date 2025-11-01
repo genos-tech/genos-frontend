@@ -7,7 +7,7 @@ import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 import { useAuth } from "../../../../context/AuthContext";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ProjectProps, TagListProps, TaskTableProps, TaskType } from "../../../../types/tasks";
+import { ProjectProps, TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../chat/services/popTeamMembers";
 import { loadProjectTags } from "../../services/loadProjectTags";
 import { FilterProps } from "../../types/TaskTableTypes";
@@ -101,7 +101,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     // Reset filter
     useEffect(() => {
         apiRef.current.setFilterModel({ items: [] });
-    }, [ currentProject]);
+    }, [currentProject]);
 
     return (
         <ThemeProvider theme={theme}>

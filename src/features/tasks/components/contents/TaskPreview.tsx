@@ -39,11 +39,9 @@ type TaskPreviewProps = {
     setMyself: (value: UserProps) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setIsMainChatVisible?: (value: boolean) => void;
-    setIsThreadVisible?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
     setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setIsTaskHomeVisible?: (value: boolean) => void;
     setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
@@ -81,11 +79,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setMyself,
         setCurrentProject,
         setIsMainChatVisible,
-        setIsThreadVisible,
         setOpenCreateProject,
         setOpeningService,
         setCurrentMainChat,
-        setIsTaskHomeVisible,
         setIsTaskNoteVisible,
         handleCreateNewTaskNote,
         setCurrentTaskNote,
@@ -465,8 +461,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     <TaskCustomBarBlock
                         taskContent={tmpCurrentTaskContent}
                         setTaskContent={setTmpCurrentTaskContent}
-                        setIsCreatingTask={TM.setIsCreatingTask}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskUpdated={setTaskUpdated}
                         taskBodySaved={taskBodySaved}
@@ -501,6 +495,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setOpeningService={setOpeningService}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
+                        setIsCreatingTask={TM.setIsCreatingTask}
+                        setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
                     />
 
                     <TaskTabBlock
@@ -517,7 +513,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setEditTargetComment={setEditTargetComment}
                         setIsAttachmentDeleted={setIsAttachmentDeleted}
                         setIsInEdit={setIsInEdit}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpeningService={setOpeningService}
