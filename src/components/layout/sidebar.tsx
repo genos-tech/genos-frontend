@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -13,10 +14,11 @@ import {
     List,
     ListItem,
     Sheet,
+    Stack,
     Tooltip,
+    Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -192,13 +194,8 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <Tooltip
-                            placement="right-start"
-                            size="sm"
-                            title="Inbox"
-                            variant="outlined"
-                        >
-                            <ListItemButton onClick={handleMoveToInbox}>
+                        <ListItemButton onClick={handleMoveToInbox}>
+                            <Stack direction="column" alignItems="center">
                                 <Box
                                     sx={{
                                         display: "flex",
@@ -208,7 +205,10 @@ export const Sidebar = (props: SidebarProps) => {
                                 >
                                     {unReadInboxItemCount > 0 && (
                                         <Badge
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                            anchorOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right",
+                                            }}
                                             badgeContent={unReadInboxItemCount}
                                             color="primary"
                                             size="sm"
@@ -228,21 +228,20 @@ export const Sidebar = (props: SidebarProps) => {
                                         />
                                     )}
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Inbox</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <Tooltip
-                            placement="right-start"
-                            size="sm"
-                            title="Chats"
-                            variant="outlined"
-                        >
-                            <ListItemButton onClick={handleMoveToChat}>
+                        <ListItemButton onClick={handleMoveToChat}>
+                            <Stack direction="column" alignItems="center">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     {unReadChatAndActivityCounts > 0 && (
                                         <Badge
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                            anchorOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right",
+                                            }}
                                             badgeContent={unReadChatAndActivityCounts}
                                             color="primary"
                                             size="sm"
@@ -262,42 +261,35 @@ export const Sidebar = (props: SidebarProps) => {
                                         />
                                     )}
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Chats</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <Tooltip
-                            placement="right-start"
-                            size="sm"
-                            title="Tasks"
-                            variant="outlined"
-                        >
-                            <ListItemButton onClick={handleMoveToTasks}>
+                        <ListItemButton onClick={handleMoveToTasks}>
+                            <Stack direction="column" alignItems="center">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <AssignmentRoundedIcon
                                         color={openingService === 2 ? "primary" : "disabled"}
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Tasks</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <Tooltip
-                            placement="right-start"
-                            size="sm"
-                            title="Notes"
-                            variant="outlined"
-                        >
-                            <ListItemButton onClick={handleMoveToNote}>
+                        <ListItemButton onClick={handleMoveToNote}>
+                            <Stack direction="column" alignItems="center">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <NoteAltIcon
                                         color={openingService === 3 ? "primary" : "disabled"}
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Notes</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                 </List>
                 <List
