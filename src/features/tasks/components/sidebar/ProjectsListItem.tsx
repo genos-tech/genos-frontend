@@ -11,7 +11,6 @@ import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 import { OngoingsListItem } from "./projects_subs/OngoingsListItem";
-import { TagsListItem } from "./projects_subs/TagsListItem";
 
 type ProjectsListItemProps = {
     PM: ProjectManagementState;
@@ -160,10 +159,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 setCurrentProject={PM.setCurrentProject}
                                                 setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                 TM={TM}
-                                            />
-                                            <TagsListItem
-                                                currentProject={PM.currentProject}
-                                                projectId={projectId}
                                             />
                                         </List>
                                     </Toggler>
