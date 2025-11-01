@@ -108,28 +108,21 @@ export const TaskHome = (props: TaskHomeProps) => {
                 <TaskHomeLayout
                     allChats={allChats}
                     funcSetAllChats={funcSetAllChats}
-                    loading={searchHook.loading}
                     moveToSpecificChat={moveToSpecificChat}
                     myself={myself}
                     NM={NM}
                     openingService={openingService}
-                    openSearch={searchHook.openSearch}
                     PM={PM}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
                     setOpeningService={setOpeningService}
                     socket={socket}
-                    teamTaskSearchOptions={searchHook.teamTaskSearchOptions}
                     TEM={TEM}
                     TM={TM}
-                    setOpenSearch={(open) =>
-                        open ? searchHook.handleSearchOpen() : searchHook.handleSearchClose()
-                    }
                     onCloseTaskHome={handleCloseTaskHome}
                     onCreateProject={handleCreateProject}
                     onCreateTag={handleCreateTag}
                     onDeleteProject={handleDeleteProject}
-                    onSearchChange={handleSearchChange}
                 />
 
                 <TaskHomeModals

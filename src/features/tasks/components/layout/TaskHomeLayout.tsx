@@ -47,11 +47,6 @@ interface TaskHomeLayoutProps {
     socket: Socket | null;
 
     // Header props
-    teamTaskSearchOptions: any[];
-    loading: boolean;
-    openSearch: boolean;
-    setOpenSearch: (open: boolean) => void;
-    onSearchChange: (value: any) => void;
     onCreateProject: () => void;
     onCreateTag: () => void;
     onDeleteProject: () => void;
@@ -72,11 +67,6 @@ export const TaskHomeLayout = ({
     funcSetAllChats,
     moveToSpecificChat,
     socket,
-    teamTaskSearchOptions,
-    loading,
-    openSearch,
-    setOpenSearch,
-    onSearchChange,
     onCreateProject,
     onCreateTag,
     onDeleteProject,
@@ -125,23 +115,16 @@ export const TaskHomeLayout = ({
                         allChats={allChats}
                         currentProject={PM.currentProject}
                         funcSetAllChats={funcSetAllChats}
-                        isCreatingTask={TM.isCreatingTask.flag}
-                        isTaskPreviewVisible={TM.isTaskPreviewVisible}
-                        loading={loading}
                         myself={myself}
-                        openSearch={openSearch}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
                         setOpeningService={setOpeningService}
-                        setOpenSearch={setOpenSearch}
                         teamMemberProfiles={TEM.teamMemberProfiles}
-                        teamTaskSearchOptions={teamTaskSearchOptions}
                         onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
                         onCreateTag={onCreateTag}
-                        handleCreateTask={TM.handleCreateTask}
                         onDeleteProject={onDeleteProject}
-                        onSearchChange={onSearchChange}
+                        TM={TM}
                     />
                     <ProjectTaskTable
                         currentProject={PM.currentProject}

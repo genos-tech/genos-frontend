@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,9 +24,13 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { useAuth } from "../../../../context/AuthContext";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { loadTeamTaskList } from "../../services/loadTaskSearchList";
+import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
 
 interface TaskHomeHeaderProps {
     myself: UserProps;
@@ -36,18 +41,11 @@ interface TaskHomeHeaderProps {
     teamMemberProfiles: Record<string, UserProps>;
     funcSetAllChats: () => Promise<void>;
     currentProject: any;
-    teamTaskSearchOptions: SearchTeamTasksResponse[];
-    loading: boolean;
-    openSearch: boolean;
-    setOpenSearch: (open: boolean) => void;
-    onSearchChange: (value: any) => void;
-    handleCreateTask: () => void;
     onCreateProject: () => void;
     onCreateTag: () => void;
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
-    isTaskPreviewVisible: boolean;
-    isCreatingTask: boolean;
+    TM: TaskManagementState;
 }
 
 export const TaskHomeHeader = ({
@@ -59,20 +57,47 @@ export const TaskHomeHeader = ({
     teamMemberProfiles,
     funcSetAllChats,
     currentProject,
-    teamTaskSearchOptions,
-    loading,
-    openSearch,
-    setOpenSearch,
-    onSearchChange,
-    handleCreateTask,
     onCreateProject,
     onCreateTag,
     onDeleteProject,
     onCloseTaskHome,
-    isTaskPreviewVisible,
-    isCreatingTask,
+    TM,
 }: TaskHomeHeaderProps) => {
-    const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
+
+    // =======================================================================
+    const [openSearch, setOpenSearch] = useState(false);
+    const [teamTaskSearchOptions, setTeamTaskSearchOptions] = useState<SearchTeamTasksResponse[]>(
+        []
+    );
+    const loading = openSearch && teamTaskSearchOptions.length === 0;
+    useEffect(() => {
+        let active = true;
+
+        if (!loading) {
+            return undefined;
+        }
+
+        (async () => {
+            const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
+                myself,
+                -1,
+                "open,wip,pending",
+                -1,
+                accessToken,
+                true
+            );
+
+            if (active) {
+                setTeamTaskSearchOptions([...loadedTeamTasks]);
+            }
+        })();
+
+        return () => {
+            active = false;
+        };
+    }, [loading]);
+    // =======================================================================
 
     const pmChat = allChats.find(
         (chat) => chat.chatType === 3 && currentProject && chat.chatId === currentProject.projectId
@@ -136,108 +161,15 @@ export const TaskHomeHeader = ({
             </Typography>
 
             <Box sx={{ width: "40%" }}>
-                <Autocomplete
-                    key={`ac-project-tags-${currentProject?.projectId}`}
-                    aria-label="Search"
-                    getOptionLabel={(option) => option.title}
-                    groupBy={(option) => option.status.status || "N/A"}
-                    isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
+                <TaskSidebarSearchBox
+                    currentPreviewTaskId={TM.currentPreviewTaskId}
                     loading={loading}
-                    open={openSearch}
-                    options={teamTaskSearchOptions}
-                    placeholder={"Search"}
-                    size="sm"
-                    startDecorator={<SearchRoundedIcon />}
-                    sx={{ width: "100%" }}
-                    variant="soft"
-                    endDecorator={
-                        loading ? (
-                            <CircularProgress
-                                size="sm"
-                                sx={{
-                                    bgcolor: "background.surface",
-                                }}
-                            />
-                        ) : null
-                    }
-                    renderOption={(props, option) => (
-                        <AutocompleteOption
-                            {...props}
-                            key={`ac-taskhome-search-task-${option.taskId}`}
-                        >
-                            <ListItemContent
-                                sx={{
-                                    fontSize: "sm",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    width: "100%",
-                                }}
-                            >
-                                <Chip
-                                    key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
-                                    color="neutral"
-                                    size="sm"
-                                    variant="outlined"
-                                >
-                                    ID:{option.taskId}
-                                </Chip>
-                                <Chip
-                                    key={`ac-taskhome-search-task-chip-${option.taskId}`}
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        backgroundColor: alpha(
-                                            option.status.color || "#0044c2",
-                                            mode === "dark" ? 0.5 : 0.75
-                                        ),
-                                        color: option.status.textColor,
-                                        fontWeight: "bold",
-                                        borderRadius: "5px",
-                                        m: "3px",
-                                    }}
-                                >
-                                    {option.status.status}
-                                </Chip>
-                                {option.title}
-                            </ListItemContent>
-                        </AutocompleteOption>
-                    )}
-                    renderTags={(tags, getTagProps) =>
-                        tags.map((item, index) => {
-                            const { key, ...tagProps } = getTagProps({ index });
-                            return (
-                                <Chip
-                                    key={`ac-taskhome-search-task-chip-${key}`}
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        backgroundColor: alpha(
-                                            item.status.color || "#0044c2",
-                                            mode === "dark" ? 0.5 : 0.75
-                                        ),
-                                        color: item.status.textColor,
-                                        fontWeight: "bold",
-                                        borderRadius: "5px",
-                                    }}
-                                >
-                                    {item.status.status}
-                                </Chip>
-                            );
-                        })
-                    }
-                    slotProps={{
-                        listbox: {
-                            sx: {
-                                zIndex: 10020,
-                            },
-                        },
-                    }}
-                    onChange={(event, value) => onSearchChange(value)}
-                    onClose={() => setOpenSearch(false)}
-                    onOpen={() => {
-                        setOpenSearch(true);
-                    }}
+                    openSearch={openSearch}
+                    setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
+                    setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
+                    setOpenSearch={setOpenSearch}
+                    setTeamTaskSearchOptions={setTeamTaskSearchOptions}
+                    teamTaskSearchOptions={teamTaskSearchOptions}
                 />
             </Box>
 
@@ -251,7 +183,7 @@ export const TaskHomeHeader = ({
                             fontSize: "15px",
                             paddingRight: "10px",
                         }}
-                        onClick={handleCreateTask}
+                        onClick={TM.handleCreateTask}
                     >
                         <AddIcon />
                         Task
@@ -289,7 +221,7 @@ export const TaskHomeHeader = ({
                         </MenuItem>
                     </Menu>
                 </Dropdown>
-                {(isTaskPreviewVisible === true || isCreatingTask === true) && (
+                {(TM.isTaskPreviewVisible === true || TM.isCreatingTask.flag === true) && (
                     <Tooltip size="sm" title="Close" variant="outlined">
                         <IconButton
                             color="neutral"

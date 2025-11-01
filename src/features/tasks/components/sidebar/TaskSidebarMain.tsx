@@ -63,7 +63,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             active = false;
         };
     }, [loading]);
-
     // =======================================================================
 
     const updateProjectTags = async () => {
