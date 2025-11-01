@@ -155,9 +155,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                         <List>
                                             <OngoingsListItem
                                                 currentProjectId={projectId}
-                                                projectTags={projectTags}
-                                                setCurrentProject={PM.setCurrentProject}
-                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
                                                 TM={TM}
                                             />
                                         </List>
