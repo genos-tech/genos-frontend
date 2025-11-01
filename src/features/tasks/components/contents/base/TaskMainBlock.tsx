@@ -17,8 +17,7 @@ import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
 import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
 import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
-import { GeneralURLManager } from "./sub/GeneralURLManager";
-import { GitHubURLManager } from "./sub/GitHubURLManager";
+import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 
 type TaskMainBlockProps = {
@@ -255,16 +254,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         />
                     </ListItem>
                     <ListItem>
-                        <GitHubURLManager
-                            githubLink={taskContent.githubLink}
-                            setTaskContent={setTaskContent}
-                            setTaskUpdated={setTaskUpdated}
-                            taskContent={taskContent}
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <GeneralURLManager
-                            generalLink={taskContent.generalLink}
+                    <Typography sx={{ minWidth: "80px" }}>Links</Typography>
+                        <DynamicURLManager
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             taskContent={taskContent}
