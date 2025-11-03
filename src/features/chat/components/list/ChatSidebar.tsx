@@ -412,60 +412,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             </Tooltip>
                         )}
 
-                        {/* For Pinned */}
-                        {unReadChatCounts && (unReadChatCounts[4] || 0) > 0 && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Pinned Chats"
-                                variant="outlined"
-                            >
-                                <Badge
-                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={unReadChatCounts[4]}
-                                    color="primary"
-                                    size="sm"
-                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                                >
-                                    <IconButton
-                                        component="p"
-                                        size="sm"
-                                        variant={currentChatPaneType === 4 ? "solid" : "plain"}
-                                        onClick={() => {
-                                            setCurrentChatPaneType(4);
-                                            localStorage.setItem("currentChatPaneType", "4");
-                                            onChatIconClickedHandler(4);
-                                        }}
-                                    >
-                                        <PushPinIcon />
-                                    </IconButton>
-                                </Badge>
-                            </Tooltip>
-                        )}
-                        {!(unReadChatCounts && (unReadChatCounts[4] || 0) > 0) && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Pinned Chats"
-                                variant="outlined"
-                            >
-                                <IconButton
-                                    component="p"
-                                    size="sm"
-                                    variant={currentChatPaneType === 4 ? "solid" : "plain"}
-                                    onClick={() => {
-                                        setCurrentChatPaneType(4);
-                                        localStorage.setItem("currentChatPaneType", "4");
-                                        onChatIconClickedHandler(4);
-                                    }}
-                                >
-                                    <PushPinIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
-
                         {/* For Flagged */}
                         {flaggedMessages.length > 0 && (
                             <Tooltip
@@ -739,50 +685,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 myself,
                                 setMyself,
                                 allChats: allChats.filter((chat) => chat.chatType === 3),
-                                activityMessages: [],
-                                setActivityMessages,
-                                flaggedMessages,
-                                setFlaggedMessages,
-                            }}
-                            state={{
-                                currentMainChat,
-                                currentSubChat,
-                                isTaskPreviewVisible,
-                                isSubChatVisible,
-                                isCreatingTask,
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
-                        />
-                    </Box>
-                )}
-
-                {/* For Pinned Chats */}
-                {currentChatPaneType === 4 && (
-                    <Box>
-                        <ChatList
-                            chatType={4}
-                            currentActivityMessageType={-1}
-                            socket={socket}
-                            actions={{
-                                setCurrentMainChat,
-                                setCurrentSubChat,
-                                setCurrentThreadChat,
-                                setIsMainChatVisible,
-                                setIsThreadVisible,
-                                setIsTaskPreviewVisible,
-                                setIsSubChatVisible,
-                                setOpeningService,
-                                setCurrentPreviewTaskId,
-                                setCurrentProject,
-                                setIsToDoVisible,
-                                funcSetAllChats,
-                            }}
-                            data={{
-                                teamMemberProfiles,
-                                myself,
-                                setMyself,
-                                allChats: allChats.filter((chat) => chat.isPinned),
                                 activityMessages: [],
                                 setActivityMessages,
                                 flaggedMessages,

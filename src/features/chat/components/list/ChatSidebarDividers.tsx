@@ -140,7 +140,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    sx={{ fontSize: "13px", my: "1px" }}
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
                     variant={currentActivityMessageType === 0 ? "soft" : "outlined"}
                     onClick={() => {
                         setCurrentActivityMessageType(0);
@@ -151,7 +151,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    sx={{ fontSize: "13px", my: "1px" }}
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
                     variant={currentActivityMessageType === 3 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 3) {
@@ -166,7 +166,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    sx={{ fontSize: "13px", my: "1px" }}
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
                     variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 1) {
@@ -181,7 +181,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    sx={{ fontSize: "13px", my: "1px" }}
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
                     variant={currentActivityMessageType === 4 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 4) {
@@ -196,7 +196,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                 <Button
                     component="p"
                     size="sm"
-                    sx={{ fontSize: "13px", my: "1px" }}
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
                     variant={currentActivityMessageType === 2 ? "soft" : "outlined"}
                     onClick={() => {
                         if (currentActivityMessageType !== 2) {

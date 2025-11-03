@@ -116,7 +116,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Stack direction="row" sx={{ alignItems: "center" }}>
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                     <IconButton
                         color="neutral"
                         component="a"

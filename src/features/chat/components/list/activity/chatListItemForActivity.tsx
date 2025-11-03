@@ -154,11 +154,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             } else if (shouldUseSubChat) {
                 setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
             }
-            if (chatType !== 3 && isThread === false) {
-                setIsMainChatVisible(true);
-            } else {
-                setIsMainChatVisible(false);
-            }
+            setIsMainChatVisible(true);
             if (isCreatingTask.flag === true || isTaskPreviewVisible) {
                 setIsThreadVisible(false);
             }
@@ -275,6 +271,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     const onClickHandler = async () => {
+        console.log("onClickHandler", activity);
         setSelectedActivityId(activity.activityId);
 
         if (activity.isThread === false) {

@@ -262,11 +262,9 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
 
     const handleTaskClick = useCallback(
         (node: TaskMetaTreeNode, open: boolean, setOpen: (value: boolean) => void) => {
-            // Only open the task if it's not already open.
-            if (open === false) {
+            if (node.children.length > 0) {
                 setOpen(!open);
             }
-
             TM.setIsTaskPreviewVisible(true);
             TM.setCurrentPreviewTaskId(node.taskId);
         },

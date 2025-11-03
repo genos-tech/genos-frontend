@@ -114,7 +114,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         >
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                 <List aria-labelledby="decorated-list-demo">
-                    <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
+                    <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
                             avatarUser={teamMemberProfiles[assignee.userId]}
@@ -143,7 +143,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             teamMembers={teamMembers}
                         />
                     </ListItem>
-                    <ListItem sx={{ display: "flex", alignItems: "center", width: "65%" }}>
+                    <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
                             avatarUser={teamMemberProfiles[reporter.userId]}

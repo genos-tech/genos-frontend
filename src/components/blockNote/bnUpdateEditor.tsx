@@ -261,23 +261,6 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         }
                     }}
                 >
-                    <Tooltip size="sm" title="Edit in Modal (TBD)" variant="outlined">
-                        <IconButton
-                            color="neutral"
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                position: "absolute",
-                                top: "5%",
-                                right: "1%",
-                                zIndex: 1,
-                                p: 0.7,
-                            }}
-                        >
-                            <OpenInNewIcon />
-                        </IconButton>
-                    </Tooltip>
-
                     <IconButton
                         color="success"
                         disabled={editorDocLength < 2}
