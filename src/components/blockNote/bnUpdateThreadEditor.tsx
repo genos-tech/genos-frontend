@@ -34,6 +34,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -54,7 +55,7 @@ type BnUpdateThreadEditorProps = {
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
 };
@@ -70,7 +71,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         isInEdit,
         setIsInEdit,
         setCurrentChat,
-        setOpeningService,
+        UIM,
         numEditorLines,
         setNumEditorLines,
     } = props;
@@ -94,7 +95,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

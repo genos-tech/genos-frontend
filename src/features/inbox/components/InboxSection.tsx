@@ -12,7 +12,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionProps>(
             myself,
             setMyself,
             setCurrentChat,
-            setOpeningService,
+            UIM,
             socket,
             teamMemberProfiles,
             itemKeyPrefix,
@@ -48,7 +48,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionProps>(
                                     myself={myself}
                                     setCurrentChat={setCurrentChat}
                                     setMyself={setMyself}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     socket={socket}
                                     teamMemberProfiles={teamMemberProfiles}
                                 />

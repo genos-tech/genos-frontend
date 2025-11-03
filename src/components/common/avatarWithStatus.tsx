@@ -3,6 +3,7 @@ import { Avatar, Box, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps, ThreadProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
@@ -19,9 +20,9 @@ type AvatarWithStatusProps = {
     isForBubble?: boolean;
     chat?: AllChatProps;
     thread?: ThreadProps;
-    setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     showNameAndEmail?: boolean;
+    UIM: UIStateManagementState;
 };
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     const {
@@ -34,9 +35,9 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         isForBubble,
         chat,
         thread,
-        setOpeningService,
         setCurrentMainChat,
         showNameAndEmail,
+        UIM,
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const _avatarSize = avatarSize || 32;
@@ -131,7 +132,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 openUserProfile={openUserProfile}
                 setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
                 user={avatarUser}

@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
@@ -14,8 +15,7 @@ export interface TaskHomeProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     unReadInboxItemCount: number;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;

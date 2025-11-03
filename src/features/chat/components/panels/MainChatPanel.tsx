@@ -4,6 +4,7 @@ import { Panel } from "react-resizable-panels";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ToDoFactProps } from "../../../../types/chat";
@@ -28,7 +29,7 @@ interface MainChatPanelProps {
     setIsExistingTodaysTodo: (value: boolean) => void;
     socket: any;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 }
 
 export const MainChatPanel = ({
@@ -50,7 +51,7 @@ export const MainChatPanel = ({
     setIsExistingTodaysTodo,
     socket,
     setMyself,
-    setOpeningService,
+    UIM,
 }: MainChatPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -115,7 +116,7 @@ export const MainChatPanel = ({
                     setIsThreadVisible={CM.setIsThreadVisible}
                     setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setTodos={setTodos}
                     socket={socket}
                     subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}

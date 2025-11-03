@@ -5,6 +5,7 @@ import { Box, Button, FormControl, Input } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnMyNoteEditor } from "../../../../components/blockNote/bnMyNoteEditor";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { MyNoteProps } from "../../../../types/notes";
@@ -20,7 +21,7 @@ interface NoteEditorProps {
     onBodyChange: (newBody: PartialBlock[]) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     socket: Socket | null;
     teamMemberProfiles: Record<string, UserProps>;
     teamMembers: UserProps[];
@@ -38,7 +39,7 @@ export const NoteEditor = ({
     onBodyChange,
     setCurrentChat,
     setMyself,
-    setOpeningService,
+    UIM,
     socket,
     teamMemberProfiles,
     teamMembers,
@@ -111,7 +112,7 @@ export const NoteEditor = ({
                 setMyself={setMyself}
                 setNoteBodyEdited={() => {}} // This will be handled by the hook
                 setNoteBodySaved={() => {}} // This will be handled by the hook
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 socket={socket}
                 teamMemberProfiles={teamMemberProfiles}
                 teamMembers={teamMembers}

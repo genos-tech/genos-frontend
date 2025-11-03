@@ -3,6 +3,7 @@ import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 import { TaskProps } from "../../../../../types/tasks";
@@ -17,7 +18,7 @@ type TaskCreateBodyBlockProps = {
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
 };
 export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
     const {
@@ -30,7 +31,7 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
         body,
         setBody,
         setCurrentChat,
-        setOpeningService,
+        UIM,
     } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
@@ -42,7 +43,7 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
                         setBody={setBody}
                         setCurrentChat={setCurrentChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         taskId={taskId}
                         teamMemberProfiles={teamMemberProfiles}

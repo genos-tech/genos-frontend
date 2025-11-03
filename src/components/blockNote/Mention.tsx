@@ -4,6 +4,7 @@ import { Avatar, Box, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
@@ -16,7 +17,7 @@ export const CreateMentionSpec = (
     socket: Socket | null,
     myself: UserProps,
     setMyself: (value: UserProps) => void,
-    setOpeningService: (service: number) => void,
+    UIM: UIStateManagementState,
     setCurrentMainChat: (chat: ChatProps) => void
 ) =>
     createReactInlineContentSpec(
@@ -78,7 +79,7 @@ export const CreateMentionSpec = (
                             openUserProfile={openUserProfile}
                             setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             setOpenUserProfile={setOpenUserProfile}
                             socket={socket}
                             user={teamMemberProfiles[userId]}

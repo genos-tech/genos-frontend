@@ -28,7 +28,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         isCreatingTask,
         isSubChatVisible,
         setIsSubChatVisible,
-        setOpeningService,
+        UIM,
         chatType,
         funcSetAllChats,
         isPinnedChat,
@@ -112,7 +112,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                         myself={myself}
                                         setCurrentMainChat={setCurrentMainChat}
                                         setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
+                                        UIM={UIM}
                                         socket={socket}
                                         teamMemberProfiles={teamMemberProfiles}
                                     />

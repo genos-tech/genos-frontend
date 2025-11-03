@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 import { ProjectProps, TagListProps, TaskProps } from "../../../../../types/tasks";
@@ -44,7 +45,7 @@ type TaskMainBlockProps = {
     setCurrentProject: (value: ProjectProps) => void;
     isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
@@ -74,7 +75,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setCurrentProject,
         isPreviewMode,
         setTaskUpdated,
-        setOpeningService,
+        UIM,
         setCurrentMainChat,
         setCurrentPreviewTaskId,
         setTaskStatusUpdated,
@@ -122,7 +123,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                         />
                         <ACTeamUsers
@@ -133,7 +134,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setCurrentMainChat={setCurrentMainChat}
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             setUser={setAssignee}
@@ -151,7 +152,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                         />
                         <ACTeamUsers
@@ -162,7 +163,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setCurrentMainChat={setCurrentMainChat}
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             setUser={setReporter}
@@ -278,7 +279,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     myself={myself}
                                     setCurrentMainChat={setCurrentMainChat}
                                     setMyself={setMyself}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     socket={socket}
                                 />
                                 <IconButton

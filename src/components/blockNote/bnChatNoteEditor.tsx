@@ -2,6 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
+import { useEffect, useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -34,7 +35,6 @@ import {
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
-    GridSuggestionMenuController,
     RemoveBlockItem,
     SideMenu,
     SideMenuController,
@@ -46,11 +46,11 @@ import {
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useState } from "react";
 import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { ChatNoteProps } from "../../types/notes";
@@ -75,7 +75,7 @@ type BnChatNoteEditorProps = {
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
 };
 export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     const {
@@ -90,7 +90,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         setNoteBodyEdited,
         setNoteBodySaved,
         setCurrentChat,
-        setOpeningService,
+        UIM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -123,7 +123,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

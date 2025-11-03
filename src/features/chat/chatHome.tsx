@@ -20,6 +20,7 @@ import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
@@ -35,8 +36,7 @@ type ChatHomeProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     CM: ChatManagementState;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     unReadInboxItemCount: number;
     NM: NoteManagementState;
     PM: ProjectManagementState;
@@ -44,19 +44,7 @@ type ChatHomeProps = {
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        openingService,
-        setOpeningService,
-        unReadInboxItemCount,
-        CM,
-        NM,
-        PM,
-        TM,
-    } = props;
+    const { TEM, socket, myself, setMyself, UIM, unReadInboxItemCount, CM, NM, PM, TM } = props;
 
     // Common
     const { mode } = useColorScheme();
@@ -120,10 +108,9 @@ export const ChatHome = (props: ChatHomeProps) => {
             CM={CM}
             myself={myself}
             NM={NM}
-            openingService={openingService}
             PM={PM}
             setMyself={setMyself}
-            setOpeningService={setOpeningService}
+            UIM={UIM}
             socket={socket}
             TEM={TEM}
             TM={TM}
@@ -132,11 +119,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                 <Sidebar
                     currentTeam={TEM.currentTeam}
                     myself={myself}
-                    openingService={openingService}
+                    UIM={UIM}
                     setCurrentMainChat={CM.setCurrentMainChat}
                     setCurrentTeam={TEM.setCurrentTeam}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
                     socket={socket}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
@@ -195,7 +181,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setIsThreadVisible={CM.setIsThreadVisible}
                                     setIsToDoVisible={setIsToDoVisible}
                                     setMyself={setMyself}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     socket={socket}
                                     teamMemberProfiles={TEM.teamMemberProfiles}
                                     unReadActivityMessageCounts={CM.unReadActivityMessageCounts}
@@ -228,7 +214,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 PM={PM}
                                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                                 setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
+                                                UIM={UIM}
                                                 setSubChatPanelSize={setSubChatPanelSize}
                                                 setTodos={setTodos}
                                                 socket={socket}
@@ -259,7 +245,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         setIsToDoVisible={setIsToDoVisible}
                                         setMainChatPanelSize={setMainChatPanelSize}
                                         setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
+                                        UIM={UIM}
                                         setTodos={setTodos}
                                         socket={socket}
                                         TEM={TEM}
@@ -282,7 +268,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 myself={myself}
                                 NM={NM}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
+                                UIM={UIM}
                                 socket={socket}
                                 TEM={TEM}
                                 TM={TM}
@@ -297,10 +283,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                             <CreateTaskPanel
                                 CM={CM}
                                 myself={myself}
-                                openingService={openingService}
+                                UIM={UIM}
                                 PM={PM}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
                                 socket={socket}
                                 TEM={TEM}
                                 TM={TM}
@@ -316,10 +301,9 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 CM={CM}
                                 myself={myself}
                                 NM={NM}
-                                openingService={openingService}
                                 PM={PM}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
+                                UIM={UIM}
                                 socket={socket}
                                 TEM={TEM}
                                 TM={TM}
@@ -337,7 +321,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 NM={NM}
                                 PM={PM}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
+                                UIM={UIM}
                                 socket={socket}
                                 TEM={TEM}
                                 TM={TM}

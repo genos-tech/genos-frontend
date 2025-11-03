@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -14,8 +15,7 @@ import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 type TaskPreviewPanelProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;
     PM: ProjectManagementState;
@@ -25,8 +25,7 @@ type TaskPreviewPanelProps = {
 };
 
 export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
-    const { myself, setMyself, openingService, setOpeningService, socket, TEM, PM, NM, CM, TM } =
-        props;
+    const { myself, setMyself, UIM, socket, TEM, PM, NM, CM, TM } = props;
     const { mode } = useColorScheme();
 
     if (!NM.currentTaskNoteChain || !NM.isTaskVisibleInNote || !TM.currentPreviewTask) {
@@ -71,7 +70,7 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         isTaskNoteVisible={NM.isTaskNoteVisible}
                         moveToSpecificChat={CM.moveToSpecificChat}
                         myself={myself}
-                        openingService={openingService}
+                        UIM={UIM}
                         setCurrentMainChat={CM.setCurrentMainChat}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={NM.setCurrentTaskNote}
@@ -80,7 +79,6 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
-                        setOpeningService={setOpeningService}
                         setTeamMembers={TEM.setTeamMembers}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}

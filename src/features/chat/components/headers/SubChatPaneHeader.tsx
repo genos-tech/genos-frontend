@@ -6,6 +6,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { HeaderUserName } from "./HeaderUserName";
@@ -28,7 +29,7 @@ type SubChatPaneHeaderProps = {
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     funcSetAllChats: () => Promise<void>;
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
@@ -50,7 +51,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         setIsThreadVisible,
         setIsTaskPreviewVisible,
         setIsCreatingTask,
-        setOpeningService,
+        UIM,
         funcSetAllChats,
         isToDoVisible,
         setIsToDoVisible,
@@ -87,7 +88,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                 />

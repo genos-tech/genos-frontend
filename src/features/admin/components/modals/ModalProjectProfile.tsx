@@ -21,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
@@ -42,7 +43,7 @@ type ModalProjectProfileProps = {
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
     setCurrentMainChat: (value: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
 };
 export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const {
@@ -57,7 +58,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         setAvatarUserId,
         setOpenUserProfile,
         setCurrentMainChat,
-        setOpeningService,
+        UIM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -303,9 +304,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                     setCurrentMainChat={
                                                                         setCurrentMainChat
                                                                     }
-                                                                    setOpeningService={
-                                                                        setOpeningService
-                                                                    }
+                                                                    UIM={UIM}
                                                                 />
                                                             </ListItemButton>
                                                         )

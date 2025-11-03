@@ -1,10 +1,11 @@
-import { Avatar } from "@mui/joy";
 import React from "react";
+import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 
@@ -15,7 +16,7 @@ interface ChatListItemAvatarProps {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     socket: Socket | null;
     teamMemberProfiles: Record<string, UserProps>;
     funcSetAllChats: () => Promise<void>;
@@ -28,7 +29,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     myself,
     setMyself,
     setCurrentMainChat,
-    setOpeningService,
+    UIM,
     socket,
     teamMemberProfiles,
     funcSetAllChats,
@@ -43,7 +44,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
                 myself={myself}
                 setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 socket={socket}
             />
         );
@@ -64,7 +65,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
                 myself={myself}
                 setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 socket={socket}
                 teamMemberProfiles={teamMemberProfiles}
             />
@@ -80,7 +81,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
                 pmChat={chat}
                 setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 socket={socket}
                 teamMemberProfiles={teamMemberProfiles}
             />

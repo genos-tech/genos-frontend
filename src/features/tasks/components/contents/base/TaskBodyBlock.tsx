@@ -3,6 +3,7 @@ import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 
@@ -18,7 +19,7 @@ type TaskBodyBlockProps = {
     setTaskBodyEdited: (value: boolean) => void;
     setTaskBodySaved: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
 };
 export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
     const {
@@ -33,7 +34,7 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
         setTaskBodyEdited,
         setTaskBodySaved,
         setCurrentChat,
-        setOpeningService,
+        UIM,
     } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
@@ -44,7 +45,7 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
                     setBody={setBody}
                     setCurrentChat={setCurrentChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setTaskBodyEdited={setTaskBodyEdited}
                     setTaskBodySaved={setTaskBodySaved}
                     socket={socket}

@@ -17,6 +17,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 import { ProjectProps, TaskProps } from "../../../../../types/tasks";
@@ -31,7 +32,6 @@ type TaskSubTasksBlockProps = {
     currentTaskContent: TaskProps;
     setCurrentProject: (value: ProjectProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
-    setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsCreatingTask: (value: {
         flag: boolean;
@@ -39,6 +39,7 @@ type TaskSubTasksBlockProps = {
         rootTaskId: number | null;
     }) => void;
     setIsTaskHomeVisible: (value: boolean) => void;
+    UIM: UIStateManagementState;
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const {
@@ -50,7 +51,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         currentTaskContent,
         setCurrentProject,
         setCurrentPreviewTaskId,
-        setOpeningService,
+        UIM,
         setCurrentMainChat,
         setIsCreatingTask,
         setIsTaskHomeVisible,
@@ -147,7 +148,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                 myself={myself}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
+                                                UIM={UIM}
                                                 socket={socket}
                                                 isYou={
                                                     myself.userId === assignee.userId

@@ -1,6 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
+import { useEffect, useRef, useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -31,13 +32,13 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SendIcon from "@mui/icons-material/Send";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -58,7 +59,7 @@ type BnChatEditorProps = {
     setCurrentChat: (chat: ChatProps) => void;
     isSubChatVisible: boolean;
     funcSetAllChats: () => Promise<void>;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
 };
@@ -73,7 +74,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         setCurrentChat,
         isSubChatVisible,
         funcSetAllChats,
-        setOpeningService,
+        UIM,
         numEditorLines,
         setNumEditorLines,
     } = props;
@@ -97,7 +98,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

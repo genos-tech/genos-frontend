@@ -1,6 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
+import { useEffect, useRef, useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -30,10 +31,10 @@ import {
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps } from "../../types/chat";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -55,7 +56,7 @@ type BnUpdateEditorProps = {
     setIsInEdit: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     isSubChatVisible: boolean;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
 };
@@ -72,7 +73,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         setIsInEdit,
         setCurrentChat,
         isSubChatVisible,
-        setOpeningService,
+        UIM,
         numEditorLines,
         setNumEditorLines,
     } = props;
@@ -96,7 +97,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

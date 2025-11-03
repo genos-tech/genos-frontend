@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -16,11 +17,11 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, GMProfileProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -41,7 +42,7 @@ type ModalGMProfileProps = {
     funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     setCurrentMainChat: (value: ChatProps) => void;
 };
 export const ModalGMProfile = (props: ModalGMProfileProps) => {
@@ -56,7 +57,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
-        setOpeningService,
+        UIM,
         setCurrentMainChat,
     } = props;
 
@@ -288,9 +289,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 setCurrentMainChat={
                                                                     setCurrentMainChat
                                                                 }
-                                                                setOpeningService={
-                                                                    setOpeningService
-                                                                }
+                                                                UIM={UIM}
                                                             />
                                                         </ListItemButton>
                                                     ))}

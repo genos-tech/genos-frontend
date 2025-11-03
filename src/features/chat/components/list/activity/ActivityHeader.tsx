@@ -1,8 +1,9 @@
+import React from "react";
 import CircleIcon from "@mui/icons-material/Circle";
 import { Box, Stack, Typography } from "@mui/joy";
-import React from "react";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../../utils/dateUtils";
@@ -17,7 +18,7 @@ interface ActivityHeaderProps {
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: any) => void;
     setMyself: (value: UserProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     funcSetAllChats: () => Promise<void>;
     isYou: boolean;
     chatTypeLookup: { [key: number]: string };
@@ -31,7 +32,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
     allChats,
     setCurrentMainChat,
     setMyself,
-    setOpeningService,
+    UIM,
     funcSetAllChats,
     isYou,
     chatTypeLookup,
@@ -47,7 +48,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                 />

@@ -8,6 +8,7 @@ import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPrev
 import { AvatarWithStatus } from "../../../../../../components/common/avatarWithStatus";
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
+import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { ChatProps } from "../../../../../../types/chat";
 import { ReactionProps } from "../../../../../../types/common";
@@ -29,7 +30,7 @@ type TaskCommentBubbleProps = {
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
 };
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const {
@@ -43,7 +44,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         setIsInEdit,
         setEditTargetComment,
         setCurrentChat,
-        setOpeningService,
+        UIM,
     } = props;
     const { mode } = useColorScheme();
 
@@ -202,7 +203,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 myself={myself}
                                 setCurrentMainChat={setCurrentChat}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
+                                UIM={UIM}
                                 socket={socket}
                             />
                             <Typography level="title-md">{comment.senderName}</Typography>
@@ -264,7 +265,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             myself={myself}
                             setCurrentChat={setCurrentChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                         />

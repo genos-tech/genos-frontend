@@ -1,11 +1,8 @@
-import { Sheet } from "@mui/joy";
 import { useEffect } from "react";
+import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
-import { UserProps } from "../../types/admin";
-import { ChatProps, FlaggedMessageProps, ThreadProps } from "../../types/chat";
 import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -15,6 +12,11 @@ import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
+
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../types/admin";
+import { ChatProps, FlaggedMessageProps, ThreadProps } from "../../types/chat";
 
 type MessagesPaneProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -29,7 +31,7 @@ type MessagesPaneProps = {
     setIsThreadVisible: (value: boolean) => void;
     currentThreadChatId: number;
     setIsMainChatVisible: (value: boolean) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentMainChat: (chat: ChatProps) => void;
     isChatNoteVisibleInChat: boolean;
     setIsChatNoteVisibleInChat: (value: boolean) => void;
@@ -58,7 +60,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         setIsThreadVisible,
         currentThreadChatId,
         setIsMainChatVisible,
-        setOpeningService,
+        UIM,
         setCurrentMainChat,
         isChatNoteVisibleInChat,
         setIsChatNoteVisibleInChat,
@@ -182,7 +184,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     setIsTaskPreviewVisible={() => {}}
                     setIsThreadVisible={setIsThreadVisible}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setVisibleRange={scrollManagement.setVisibleRange}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
@@ -202,7 +204,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     setIsInEdit={messageManagement.setIsInEdit}
                     setMyself={setMyself}
                     setNumEditorLines={messageManagement.setNumEditorLines}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setTargetMessageIndex={() => {}}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}

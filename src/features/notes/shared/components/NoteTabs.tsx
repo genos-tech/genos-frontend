@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { PartialBlock } from "@blocknote/core";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -15,9 +16,9 @@ import {
     Tabs,
     Tooltip,
 } from "@mui/joy";
-import { useRef } from "react";
 
 import { BnTaskNoteEditor } from "../../../../components/blockNote/bnTaskNoteEditor";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskNoteProps } from "../../../../types/notes";
 
 interface NoteTabsProps {
@@ -34,7 +35,7 @@ interface NoteTabsProps {
     setMyself: (me: any) => void;
     setNoteBodyEdited: (edited: boolean) => void;
     setNoteBodySaved: (saved: boolean) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     socket: any;
     teamMemberProfiles: Record<string, any>;
     teamMembers: any[];
@@ -58,7 +59,7 @@ export const NoteTabs = ({
     setMyself,
     setNoteBodyEdited,
     setNoteBodySaved,
-    setOpeningService,
+    UIM,
     socket,
     teamMemberProfiles,
     teamMembers,
@@ -220,7 +221,7 @@ export const NoteTabs = ({
                             setMyself={setMyself}
                             setNoteBodyEdited={setNoteBodyEdited}
                             setNoteBodySaved={setNoteBodySaved}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                             teamMembers={teamMembers}

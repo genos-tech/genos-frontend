@@ -24,6 +24,7 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
@@ -38,7 +39,7 @@ type BnTodoPreviewProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
     customClassName?: string;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     setBodyEdited: (value: boolean) => void;
 };
 export const BnTodoPreview = (props: BnTodoPreviewProps) => {
@@ -52,7 +53,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         setBody,
         customClassName,
         setCurrentChat,
-        setOpeningService,
+        UIM,
         setBodyEdited,
     } = props;
     const { mode } = useColorScheme();
@@ -77,7 +78,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

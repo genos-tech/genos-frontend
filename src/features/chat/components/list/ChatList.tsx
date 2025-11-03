@@ -1,8 +1,9 @@
-import { List, Stack } from "@mui/joy";
 import { useEffect, useRef, useState } from "react";
+import { List, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     ActivityMessageProps,
@@ -69,7 +70,6 @@ interface ChatListActions {
     setIsThreadVisible: (value: boolean) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
     setIsSubChatVisible: (value: boolean) => void;
-    setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setIsToDoVisible: (value: boolean) => void;
@@ -103,6 +103,7 @@ type ChatListProps = {
     state: ChatListState;
     actions: ChatListActions;
     data: ChatListData;
+    UIM: UIStateManagementState;
 };
 
 // Custom hook for managing filtered chats
@@ -167,6 +168,7 @@ const ChatListRenderer = ({
     actions,
     data,
     socket,
+    UIM,
 }: {
     tmpAllChats: AllChatProps[];
     allChats: AllChatProps[];
@@ -175,6 +177,7 @@ const ChatListRenderer = ({
     actions: ChatListActions;
     data: ChatListData;
     socket: Socket | null;
+    UIM: UIStateManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -210,7 +213,7 @@ const ChatListRenderer = ({
                             setIsThreadVisible={actions.setIsThreadVisible}
                             setIsToDoVisible={actions.setIsToDoVisible}
                             setMyself={data.setMyself}
-                            setOpeningService={actions.setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={data.teamMemberProfiles}
                         />
@@ -232,6 +235,7 @@ const ActivityListRenderer = ({
     socket,
     selectedActivityId,
     setSelectedActivityId,
+    UIM,
 }: {
     tmpActivityMessages: ActivityMessageProps[];
     activityMessages: ActivityMessageProps[];
@@ -242,6 +246,7 @@ const ActivityListRenderer = ({
     socket: Socket | null;
     selectedActivityId: string;
     setSelectedActivityId: (id: string) => void;
+    UIM: UIStateManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -278,7 +283,7 @@ const ActivityListRenderer = ({
                             setIsTaskPreviewVisible={actions.setIsTaskPreviewVisible}
                             setIsThreadVisible={actions.setIsThreadVisible}
                             setMyself={data.setMyself}
-                            setOpeningService={actions.setOpeningService}
+                            UIM={UIM}
                             setSelectedActivityId={setSelectedActivityId}
                             socket={socket}
                             teamMemberProfiles={data.teamMemberProfiles}
@@ -301,6 +306,7 @@ const FlaggedListRenderer = ({
     socket,
     selectedFlaggedMessageId,
     setSelectedFlaggedMessageId,
+    UIM,
 }: {
     tmpFlaggedMessages: FlaggedMessageProps[];
     flaggedMessages: FlaggedMessageProps[];
@@ -311,6 +317,7 @@ const FlaggedListRenderer = ({
     socket: Socket | null;
     selectedFlaggedMessageId: string;
     setSelectedFlaggedMessageId: (id: string) => void;
+    UIM: UIStateManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -347,7 +354,7 @@ const FlaggedListRenderer = ({
                             setIsTaskPreviewVisible={actions.setIsTaskPreviewVisible}
                             setIsThreadVisible={actions.setIsThreadVisible}
                             setMyself={data.setMyself}
-                            setOpeningService={actions.setOpeningService}
+                            UIM={UIM}
                             setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                             socket={socket}
                             teamMemberProfiles={data.teamMemberProfiles}
@@ -360,7 +367,7 @@ const FlaggedListRenderer = ({
 );
 
 export const ChatList = (props: ChatListProps) => {
-    const { socket, chatType, currentActivityMessageType, state, actions, data } = props;
+    const { socket, chatType, currentActivityMessageType, state, actions, data, UIM } = props;
 
     // Refs for different chat types
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
@@ -435,6 +442,7 @@ export const ChatList = (props: ChatListProps) => {
                     state={state}
                     tmpAllChats={tmpAllChats}
                     virtuosoRef={virtuosoRef}
+                    UIM={UIM}
                 />
             );
         }
@@ -454,6 +462,7 @@ export const ChatList = (props: ChatListProps) => {
                     state={state}
                     tmpActivityMessages={tmpActivityMessages}
                     virtuosoRef={virtuosoActivityRef}
+                    UIM={UIM}
                 />
             );
         }
@@ -473,6 +482,7 @@ export const ChatList = (props: ChatListProps) => {
                     state={state}
                     tmpFlaggedMessages={tmpFlaggedMessages}
                     virtuosoRef={virtuosoFlaggedRef}
+                    UIM={UIM}
                 />
             );
         }

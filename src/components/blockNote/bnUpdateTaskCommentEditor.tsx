@@ -30,6 +30,7 @@ import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
@@ -57,7 +58,7 @@ type BnUpdateTaskCommentEditorProps = {
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
 };
@@ -82,9 +83,9 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         isInEdit,
         setIsInEdit,
         setCurrentChat,
-        setOpeningService,
         taskCommentLines,
         setTaskCommentLines,
+        UIM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -105,7 +106,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

@@ -1,3 +1,5 @@
+import * as React from "react";
+import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagIcon from "@mui/icons-material/Flag";
@@ -14,8 +16,6 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import * as React from "react";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -23,6 +23,7 @@ import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { FlaggedService } from "../../../../db/services/flagged.service";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
@@ -91,7 +92,7 @@ type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     funcSetAllChats: () => Promise<void>;
 } & ChatNavigationProps &
     TaskCreationProps &
@@ -166,7 +167,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         isTaskPreviewVisible,
         isCreatingTask,
         isSubChatVisible,
-        setOpeningService,
+        UIM,
         setCurrentProject,
         setCurrentPreviewTaskId,
         funcSetAllChats,
@@ -431,7 +432,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                 />
             );
@@ -454,7 +455,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                 />
@@ -481,7 +482,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     pmChat={chat}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                 />

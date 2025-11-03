@@ -14,6 +14,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
 import { loadSearchList } from "../../services/loadChatSearchList";
@@ -31,8 +32,8 @@ type ChatSearchProps = {
     setCurrentChatPaneType: (value: number) => void;
     teamMemberProfiles: Record<string, UserProps>;
     setMyself: (value: UserProps) => void;
-    setOpeningService: (value: number) => void;
     funcSetAllChats: () => Promise<void>;
+    UIM: UIStateManagementState;
 };
 
 export const ChatSearch = (props: ChatSearchProps) => {
@@ -48,7 +49,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
         setCurrentChatPaneType,
         teamMemberProfiles,
         setMyself,
-        setOpeningService,
+        UIM,
         funcSetAllChats,
     } = props;
     const { accessToken } = useAuth();
@@ -178,7 +179,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             myself={myself}
                                             setCurrentMainChat={setCurrentMainChat}
                                             setMyself={setMyself}
-                                            setOpeningService={setOpeningService}
+                                            UIM={UIM}
                                             socket={socket}
                                             avatarUser={
                                                 teamMemberProfiles[option.dmPartnerUser.userId]
@@ -193,7 +194,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             myself={myself}
                                             setCurrentMainChat={setCurrentMainChat}
                                             setMyself={setMyself}
-                                            setOpeningService={setOpeningService}
+                                            UIM={UIM}
                                             socket={socket}
                                             teamMemberProfiles={teamMemberProfiles}
                                         />

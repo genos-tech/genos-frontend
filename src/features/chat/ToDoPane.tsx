@@ -8,6 +8,7 @@ import { createNewTodo } from "./services/createNewTodo";
 import { defaultTodoContent } from "./utils/defaults";
 
 import { useAuth } from "../../context/AuthContext";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ToDoFactProps } from "../../types/chat";
 
@@ -17,7 +18,7 @@ type ToDoPaneProps = {
     teamMembers: UserProps[];
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     setCurrentChat: (chat: ChatProps) => void;
     todos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
@@ -35,7 +36,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         teamMembers,
         setMyself,
         socket,
-        setOpeningService,
+        UIM,
         setCurrentChat,
         todos,
         setTodos,
@@ -144,7 +145,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     myself={myself}
                                     setCurrentChat={setCurrentChat}
                                     setMyself={setMyself}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     setTodos={setTodos}
                                     socket={socket}
                                     teamMemberProfiles={teamMemberProfiles}

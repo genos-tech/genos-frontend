@@ -2,6 +2,7 @@ import { Box, Chip, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     ChatProps,
@@ -55,7 +56,7 @@ interface MessageListRendererProps {
     setIsMainChatVisible: (visible: boolean) => void;
     setIsThreadVisible: (visible: boolean) => void;
     setMyself: (user: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setEditTargetMessage: (message: MessageProps | ThreadMessageProps) => void;
     setIsInEdit: (edit: boolean) => void;
     currentThreadChat?: ThreadProps;
@@ -94,7 +95,7 @@ export const MessageListRenderer = ({
     setIsMainChatVisible,
     setIsThreadVisible,
     setMyself,
-    setOpeningService,
+    UIM,
     setEditTargetMessage,
     setIsInEdit,
     currentThreadChat,
@@ -253,7 +254,7 @@ export const MessageListRenderer = ({
                                         setFlaggedMessages={setFlaggedMessages}
                                         setIsInEdit={setIsInEdit}
                                         setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
+                                        UIM={UIM}
                                         setTargetMessageIndex={() => {}}
                                         socket={socket}
                                         teamMemberProfiles={teamMemberProfiles}
@@ -284,7 +285,7 @@ export const MessageListRenderer = ({
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                         setIsThreadVisible={setIsThreadVisible}
                                         setMyself={setMyself}
-                                        setOpeningService={setOpeningService}
+                                        UIM={UIM}
                                         socket={socket}
                                         teamMemberProfiles={teamMemberProfiles}
                                         variant={isYou ? "sent" : "received"}

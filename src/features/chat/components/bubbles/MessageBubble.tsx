@@ -7,6 +7,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     ChatProps,
@@ -55,7 +56,7 @@ type MessageBubbleProps = {
     }) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
@@ -85,7 +86,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         isCreatingTask,
         setIsCreatingTask,
         setCurrentThreadChat,
-        setOpeningService,
+        UIM,
         setCurrentMainChat,
         setCurrentPreviewTaskId,
         setCurrentProject,
@@ -615,7 +616,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 myself={myself}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
+                                                UIM={UIM}
                                                 socket={socket}
                                                 avatarUser={
                                                     isSent
@@ -749,7 +750,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     myself={myself}
                                     setCurrentChat={setCurrentMainChat}
                                     setMyself={setMyself}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     socket={socket}
                                     teamMemberProfiles={teamMemberProfiles}
                                 />

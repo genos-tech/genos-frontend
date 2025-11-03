@@ -64,15 +64,13 @@ export const App = () => {
             <CssVarsProvider disableTransitionOnChange>
                 <CssBaseline />
                 <AppContent
+                    myself={myself}
+                    setMyself={setMyself}
+                    socketInstance={socketInstance}
                     CM={CM}
                     IM={IM}
-                    myself={myself}
                     NM={NM}
-                    openingService={UIM.openingService}
                     PM={PM}
-                    setMyself={setMyself}
-                    setOpeningService={UIM.setOpeningService}
-                    socketInstance={socketInstance}
                     TEM={TEM}
                     TM={TM}
                     UIM={UIM}

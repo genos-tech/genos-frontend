@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -29,8 +30,7 @@ interface TaskHomeLayoutProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
-    openingService: number;
+    UIM: UIStateManagementState;
     allChats: AllChatProps[];
     funcSetAllChats: () => Promise<void>;
     moveToSpecificChat: (
@@ -60,8 +60,7 @@ export const TaskHomeLayout = ({
     myself,
     setMyself,
     setCurrentMainChat,
-    setOpeningService,
-    openingService,
+    UIM,
     allChats,
     funcSetAllChats,
     moveToSpecificChat,
@@ -117,7 +116,7 @@ export const TaskHomeLayout = ({
                         myself={myself}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         teamMemberProfiles={TEM.teamMemberProfiles}
                         onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
@@ -162,18 +161,17 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <CreateTaskForm
+                        UIM={UIM}
                         chatType={-1}
                         currentMainChat={undefined}
                         currentThreadChat={undefined}
                         moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
-                        openingService={openingService}
                         parentTaskId={TM.isCreatingTask.parentTaskId}
                         PM={PM}
                         rootTaskId={TM.isCreatingTask.rootTaskId}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
                         setTeamMembers={TEM.setTeamMembers}
                         socket={socket}
                         teamMemberProfiles={TEM.teamMemberProfiles}
@@ -211,14 +209,13 @@ export const TaskHomeLayout = ({
                         isTaskNoteVisible={NM.isTaskNoteVisible}
                         moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
-                        openingService={openingService}
+                        UIM={UIM}
                         setCurrentMainChat={setCurrentMainChat}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={NM.setCurrentTaskNote}
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
-                        setOpeningService={setOpeningService}
                         setTeamMembers={TEM.setTeamMembers}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
@@ -272,7 +269,7 @@ export const TaskHomeLayout = ({
                         setCurrentChat={setCurrentMainChat}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={TEM.teamMemberProfiles}
                         teamMembers={TEM.teamMembers}

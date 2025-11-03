@@ -7,6 +7,7 @@ import { Sidebar } from "../../components/layout/sidebar";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
@@ -21,8 +22,7 @@ type NoteHomeProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     unReadInboxItemCount: number;
     PM: ProjectManagementState;
     NM: NoteManagementState;
@@ -30,19 +30,7 @@ type NoteHomeProps = {
     TM: TaskManagementState;
 };
 export const NoteHome = (props: NoteHomeProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        openingService,
-        setOpeningService,
-        unReadInboxItemCount,
-        NM,
-        CM,
-        PM,
-        TM,
-    } = props;
+    const { TEM, socket, myself, setMyself, UIM, unReadInboxItemCount, NM, CM, PM, TM } = props;
 
     const { mode } = useColorScheme();
 
@@ -63,10 +51,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                             myself={myself}
                             NM={NM}
                             noteType={NM.currentNoteType}
-                            openingService={openingService}
+                            UIM={UIM}
                             PM={PM}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
                             socket={socket}
                             TEM={TEM}
                             TM={TM}
@@ -90,10 +77,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                         myself={myself}
                         NM={NM}
                         noteType={NM.currentNoteType}
-                        openingService={openingService}
+                        UIM={UIM}
                         PM={PM}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
                         socket={socket}
                         TEM={TEM}
                         TM={TM}
@@ -110,11 +96,10 @@ export const NoteHome = (props: NoteHomeProps) => {
                 <Sidebar
                     currentTeam={TEM.currentTeam}
                     myself={myself}
-                    openingService={openingService}
+                    UIM={UIM}
                     setCurrentMainChat={CM.setCurrentMainChat}
                     setCurrentTeam={TEM.setCurrentTeam}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
                     socket={socket}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
@@ -144,10 +129,9 @@ export const NoteHome = (props: NoteHomeProps) => {
                         CM={CM}
                         myself={myself}
                         NM={NM}
-                        openingService={openingService}
+                        UIM={UIM}
                         PM={PM}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
                         socket={socket}
                         TEM={TEM}
                         TM={TM}

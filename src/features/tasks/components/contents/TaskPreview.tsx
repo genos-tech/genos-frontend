@@ -4,6 +4,7 @@ import { Divider, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
@@ -40,7 +41,6 @@ type TaskPreviewProps = {
     setCurrentProject: (value: ProjectProps) => void;
     setIsMainChatVisible?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
-    setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
@@ -65,7 +65,7 @@ type TaskPreviewProps = {
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: any) => void
     ) => void;
-    openingService: number;
+    UIM: UIStateManagementState;
     TM: TaskManagementState;
 };
 
@@ -80,7 +80,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setCurrentProject,
         setIsMainChatVisible,
         setOpenCreateProject,
-        setOpeningService,
         setCurrentMainChat,
         setIsTaskNoteVisible,
         handleCreateNewTaskNote,
@@ -91,8 +90,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         taskNoteMeta,
         setIsTaskVisibleInNote,
         moveToSpecificChat,
-        openingService,
         TM,
+        UIM,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -404,7 +403,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         isTaskNoteVisible={isTaskNoteVisible}
                         moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
-                        openingService={openingService}
+                        UIM={UIM}
                         setCurrentProject={setCurrentProject}
                         setTaskContent={setTmpCurrentTaskContent}
                         setCurrentTaskNote={setCurrentTaskNote}
@@ -413,7 +412,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                         setOpenCreateProject={setOpenCreateProject}
                         setOpenCreateTag={TM.setOpenCreateTag}
-                        setOpeningService={setOpeningService}
                         setTaskClosed={setTaskClosed}
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskTitle={setTaskTitle}
@@ -444,7 +442,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         setMyself={setMyself}
                         setOpenCreateTag={TM.setOpenCreateTag}
-                        setOpeningService={setOpeningService}
                         setReporter={setReporter}
                         setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
@@ -454,6 +451,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
                         teamProjects={teamProjects}
+                        UIM={UIM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
@@ -473,7 +471,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setBody={setBody}
                         setCurrentChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         setTaskBodyEdited={setTaskBodyEdited}
                         setTaskBodySaved={setTaskBodySaved}
                         socket={socket}
@@ -492,9 +490,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={setCurrentProject}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
+                        UIM={UIM}
                         setIsCreatingTask={TM.setIsCreatingTask}
                         setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
                     />
@@ -515,7 +513,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsInEdit={setIsInEdit}
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         setTabIndex={setTabIndex}
                         setTaskCommentLines={setTaskCommentLines}
                         setTaskComments={setTaskComments}

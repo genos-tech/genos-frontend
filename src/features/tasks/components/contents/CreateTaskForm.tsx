@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, ThreadProps } from "../../../../types/chat";
@@ -137,7 +138,7 @@ type CreateTaskProps = {
     setIsMainChatVisible?: (value: boolean) => void;
     isThreadVisible?: boolean;
     setIsTaskPreviewVisible?: (value: boolean) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentMainChat: (chat: ChatProps) => void;
     parentTaskId: number | null;
     rootTaskId: number | null;
@@ -153,7 +154,6 @@ type CreateTaskProps = {
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: any) => void
     ) => void;
-    openingService: number;
     PM: ProjectManagementState;
     TM: TaskManagementState;
 };
@@ -174,11 +174,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         setIsTaskPreviewVisible,
         setIsTaskHomeVisible,
         setCurrentMainChat,
-        setOpeningService,
+        UIM,
         parentTaskId,
         rootTaskId,
         moveToSpecificChat,
-        openingService,
         PM,
         TM,
     } = props;
@@ -325,13 +324,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         isPreviewMode={false}
                         moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
-                        openingService={openingService}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={() => {}}
                         setIsMainChatVisible={setIsMainChatVisible}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setOpenCreateTag={TM.setOpenCreateTag}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
                         taskContent={taskContent}
@@ -362,7 +360,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         setMyself={setMyself}
                         setOpenCreateTag={TM.setOpenCreateTag}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         setReporter={setReporter}
                         setTaskContent={setTaskContent}
                         socket={socket}
@@ -380,7 +378,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setBody={setBody}
                         setCurrentChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         taskId={taskContent.id}
                         teamMemberProfiles={teamMemberProfiles}

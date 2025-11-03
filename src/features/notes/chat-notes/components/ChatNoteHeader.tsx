@@ -23,6 +23,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
@@ -36,7 +37,7 @@ interface ChatNoteHeaderProps {
     isInChatPage: boolean;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentPreviewTaskId: (id: number) => void;
     setCurrentProject: (project: any) => void;
     socket: Socket | null;
@@ -59,7 +60,7 @@ export const ChatNoteHeader = ({
     isInChatPage,
     myself,
     setMyself,
-    setOpeningService,
+    UIM,
     setCurrentPreviewTaskId,
     setCurrentProject,
     socket,
@@ -162,7 +163,7 @@ export const ChatNoteHeader = ({
                             myself={myself}
                             setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                         />
                     </Box>
@@ -176,7 +177,7 @@ export const ChatNoteHeader = ({
                             myself={myself}
                             setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                         />
@@ -190,7 +191,7 @@ export const ChatNoteHeader = ({
                             pmChat={chat}
                             setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                         />
@@ -223,7 +224,7 @@ export const ChatNoteHeader = ({
                             sx={{ mb: "5px" }}
                             variant="plain"
                             onClick={() => {
-                                setOpeningService(3);
+                                UIM.setOpeningService(3);
                             }}
                         >
                             <OpenInNewIcon />
@@ -245,7 +246,7 @@ export const ChatNoteHeader = ({
                                     currentChatNote?.threadId || 0,
                                     true, // openTaskNoteInChat
                                     false, // openThreadTaskPreview
-                                    setOpeningService,
+                                    UIM.setOpeningService,
                                     setCurrentPreviewTaskId,
                                     setCurrentProject
                                 );

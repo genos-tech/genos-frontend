@@ -9,6 +9,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 
 interface ChatNotePanelProps {
     CM: ChatManagementState;
@@ -19,7 +20,7 @@ interface ChatNotePanelProps {
     myself: UserProps;
     socket: any;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 }
 
 export const ChatNotePanel = ({
@@ -31,7 +32,7 @@ export const ChatNotePanel = ({
     myself,
     socket,
     setMyself,
-    setOpeningService,
+    UIM,
 }: ChatNotePanelProps) => {
     const { mode } = useColorScheme();
 
@@ -65,7 +66,7 @@ export const ChatNotePanel = ({
                     setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                     setCurrentProject={PM.setCurrentProject}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     teamMembers={TEM.teamMembers}

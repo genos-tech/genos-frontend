@@ -6,6 +6,7 @@ import { BnUpdateTaskCommentEditor } from "../../../../../../components/blockNot
 import { UserProps } from "../../../../../../types/admin";
 import { ChatProps } from "../../../../../../types/chat";
 import { TaskCommentProps, TaskProps } from "../../../../../../types/tasks";
+import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 
 type TaskCommentEditorBlockProps = {
     teamMemberProfiles: Record<string, UserProps>;
@@ -19,12 +20,12 @@ type TaskCommentEditorBlockProps = {
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
     editTargetComment?: TaskCommentProps;
+    UIM: UIStateManagementState;
 };
 
 export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
@@ -40,7 +41,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
         isCommentUpdated,
         setIsCommentUpdated,
         setCurrentChat,
-        setOpeningService,
+        UIM,
         taskCommentLines,
         setTaskCommentLines,
         isInEdit,
@@ -62,7 +63,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     setIsCommentUpdated={setIsCommentUpdated}
                     setIsInEdit={setIsInEdit}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setTaskCommentLines={setTaskCommentLines}
                     setTaskComments={setTaskComments}
                     socket={socket}
@@ -81,7 +82,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     setCurrentChat={setCurrentChat}
                     setIsCommentUpdated={setIsCommentUpdated}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setTaskCommentLines={setTaskCommentLines}
                     setTaskComments={setTaskComments}
                     socket={socket}

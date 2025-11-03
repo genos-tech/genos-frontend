@@ -5,6 +5,7 @@ import { Panel } from "react-resizable-panels";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { CreateTaskForm } from "../../../tasks/components/contents/CreateTaskForm";
@@ -15,10 +16,9 @@ interface CreateTaskPanelProps {
     PM: ProjectManagementState;
     TEM: TeamManagementState;
     myself: UserProps;
-    openingService: number;
     socket: any;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 }
 
 export const CreateTaskPanel = ({
@@ -27,10 +27,9 @@ export const CreateTaskPanel = ({
     PM,
     TEM,
     myself,
-    openingService,
     socket,
     setMyself,
-    setOpeningService,
+    UIM,
 }: CreateTaskPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -63,14 +62,13 @@ export const CreateTaskPanel = ({
                     isThreadVisible={CM.isThreadVisible}
                     moveToSpecificChat={CM.moveToSpecificChat}
                     myself={myself}
-                    openingService={openingService}
                     parentTaskId={null}
                     PM={PM}
                     rootTaskId={null}
                     setCurrentMainChat={CM.setCurrentMainChat}
                     setIsMainChatVisible={CM.setIsMainChatVisible}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setTeamMembers={TEM.setTeamMembers}
                     socket={socket}
                     teamMemberProfiles={TEM.teamMemberProfiles}

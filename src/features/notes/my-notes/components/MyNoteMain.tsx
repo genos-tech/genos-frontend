@@ -15,6 +15,7 @@ import { NoteEditor } from "../../shared/components/NoteEditor";
 import { NoteHeaderActions } from "../../shared/components/NoteHeaderActions";
 import { NoteTabList } from "../../shared/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 
 /**
  * Props for the MyNoteMain component
@@ -31,7 +32,7 @@ interface MyNoteMainProps {
     /** Function to update current user */
     setMyself: (me: UserProps) => void;
     /** Function to set the opening service */
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     /** Function to set the current chat */
     setCurrentChat: (chat: ChatProps) => void;
     /** Note management state and actions */
@@ -45,7 +46,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         teamMembers,
         myself,
         setMyself,
-        setOpeningService,
+        UIM,
         setCurrentChat,
         NM,
     } = props;
@@ -155,7 +156,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             pmChat={undefined}
                                             setCurrentMainChat={() => {}}
                                             setMyself={setMyself}
-                                            setOpeningService={setOpeningService}
+                                            UIM={UIM}
                                             socket={socket}
                                             teamMemberProfiles={teamMemberProfiles}
                                             onCloseNotes={() => {}}
@@ -198,7 +199,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         noteBodySaved={noteEditor.noteBodySaved}
                                                         setCurrentChat={setCurrentChat}
                                                         setMyself={setMyself}
-                                                        setOpeningService={setOpeningService}
+                                                        UIM={UIM}
                                                         socket={socket}
                                                         teamMemberProfiles={teamMemberProfiles}
                                                         teamMembers={teamMembers}

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
@@ -16,11 +17,11 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -42,7 +43,7 @@ type UserProfileProps = {
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
 };
 export const UserProfile = (props: UserProfileProps) => {
     const {
@@ -54,7 +55,7 @@ export const UserProfile = (props: UserProfileProps) => {
         openUserProfile,
         setOpenUserProfile,
         setCurrentMainChat,
-        setOpeningService,
+        UIM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -390,7 +391,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 profileUser,
                                                 setCurrentMainChat
                                             );
-                                            setOpeningService(1);
+                                            UIM.setOpeningService(1);
                                             setOpenUserProfile(false);
                                         }
                                     })();

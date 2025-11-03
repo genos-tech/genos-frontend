@@ -26,6 +26,7 @@ import { PulseDot } from "../../components/utils/PulseDot";
 import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
@@ -40,11 +41,10 @@ type SidebarProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     unReadInboxItemCount: number;
     unReadChatAndActivityCounts: number;
+    UIM: UIStateManagementState;
 };
 export const Sidebar = (props: SidebarProps) => {
     const {
@@ -54,11 +54,10 @@ export const Sidebar = (props: SidebarProps) => {
         socket,
         myself,
         setMyself,
-        openingService,
-        setOpeningService,
         setCurrentMainChat,
         unReadInboxItemCount,
         unReadChatAndActivityCounts,
+        UIM,
     } = props;
     const { setAccessToken } = useAuth();
     const navigate = useNavigate();
@@ -109,19 +108,19 @@ export const Sidebar = (props: SidebarProps) => {
     };
 
     const handleMoveToInbox = (): void => {
-        setOpeningService(0);
+        UIM.setOpeningService(0);
     };
 
     const handleMoveToChat = (): void => {
-        setOpeningService(1);
+        UIM.setOpeningService(1);
     };
 
     const handleMoveToTasks = (): void => {
-        setOpeningService(2);
+        UIM.setOpeningService(2);
     };
 
     const handleMoveToNote = (): void => {
-        setOpeningService(3);
+        UIM.setOpeningService(3);
     };
 
     return (
@@ -216,14 +215,18 @@ export const Sidebar = (props: SidebarProps) => {
                                             <AllInboxIcon
                                                 sx={{ fontSize: 24 }}
                                                 color={
-                                                    openingService === 0 ? "primary" : "disabled"
+                                                    UIM.openingService === 0
+                                                        ? "primary"
+                                                        : "disabled"
                                                 }
                                             />
                                         </Badge>
                                     )}
                                     {unReadInboxItemCount < 1 && (
                                         <AllInboxIcon
-                                            color={openingService === 0 ? "primary" : "disabled"}
+                                            color={
+                                                UIM.openingService === 0 ? "primary" : "disabled"
+                                            }
                                             sx={{ fontSize: 24 }}
                                         />
                                     )}
@@ -249,14 +252,18 @@ export const Sidebar = (props: SidebarProps) => {
                                             <QuestionAnswerRoundedIcon
                                                 sx={{ fontSize: 24 }}
                                                 color={
-                                                    openingService === 1 ? "primary" : "disabled"
+                                                    UIM.openingService === 1
+                                                        ? "primary"
+                                                        : "disabled"
                                                 }
                                             />
                                         </Badge>
                                     )}
                                     {unReadChatAndActivityCounts < 1 && (
                                         <QuestionAnswerRoundedIcon
-                                            color={openingService === 1 ? "primary" : "disabled"}
+                                            color={
+                                                UIM.openingService === 1 ? "primary" : "disabled"
+                                            }
                                             sx={{ fontSize: 24 }}
                                         />
                                     )}
@@ -270,7 +277,7 @@ export const Sidebar = (props: SidebarProps) => {
                             <Stack direction="column" alignItems="center">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <AssignmentRoundedIcon
-                                        color={openingService === 2 ? "primary" : "disabled"}
+                                        color={UIM.openingService === 2 ? "primary" : "disabled"}
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
@@ -283,7 +290,7 @@ export const Sidebar = (props: SidebarProps) => {
                             <Stack direction="column" alignItems="center">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <NoteAltIcon
-                                        color={openingService === 3 ? "primary" : "disabled"}
+                                        color={UIM.openingService === 3 ? "primary" : "disabled"}
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
@@ -349,10 +356,10 @@ export const Sidebar = (props: SidebarProps) => {
                 openUserProfile={openUserProfile}
                 setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
                 user={teamMemberProfiles[myself.userId]}
+                UIM={UIM}
             />
         </Sheet>
     );

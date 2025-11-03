@@ -1,9 +1,10 @@
+import { useCallback, useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Box, IconButton, Stack } from "@mui/joy";
-import { useCallback, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -23,7 +24,7 @@ type TaskNoteMainProps = {
     teamMembers: UserProps[];
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentChat: (chat: ChatProps) => void;
     isInTaskPage: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
@@ -41,7 +42,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         teamMembers,
         myself,
         setMyself,
-        setOpeningService,
+        UIM,
         setCurrentChat,
         isInTaskPage,
         setIsTaskHomeVisible,
@@ -266,7 +267,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             pmChat={pmChat}
                             setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                             onCloseNotes={handleCloseNotes}
@@ -302,7 +303,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         setMyself={setMyself}
                         setNoteBodyEdited={setNoteBodyEdited}
                         setNoteBodySaved={setNoteBodySaved}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         tabItems={NM.tabItems}
                         teamMemberProfiles={teamMemberProfiles}

@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { ModalProjectProfile } from "../../features/admin/components/modals/ModalProjectProfile";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps } from "../../types/chat";
 
@@ -19,7 +20,7 @@ type ProjectAvatarProps = {
     pmChat: AllChatProps;
     funcSetAllChats: () => Promise<void>;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 };
 export const ProjectAvatar = (props: ProjectAvatarProps) => {
     const {
@@ -31,7 +32,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
         pmChat,
         funcSetAllChats,
         setCurrentMainChat,
-        setOpeningService,
+        UIM,
     } = props;
     const [openModalProjectProfile, setOpenModalProjectProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
@@ -62,7 +63,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                 setAvatarUserId={setAvatarUserId}
                 setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 setOpenModalProjectProfile={setOpenModalProjectProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
@@ -76,7 +77,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                     openUserProfile={openUserProfile}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
                     user={teamMemberProfiles[avatarUserId]}

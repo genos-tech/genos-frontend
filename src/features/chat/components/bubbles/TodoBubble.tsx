@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, ToDoFactProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -23,7 +24,7 @@ type TodoBubbleProps = {
     socket: Socket | null;
     todos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     setCurrentChat: (chat: ChatProps) => void;
 };
 export const TodoBubble = (props: TodoBubbleProps) => {
@@ -38,7 +39,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
         teamMembers,
         setMyself,
         socket,
-        setOpeningService,
+        UIM,
         setCurrentChat,
     } = props;
     const { mode } = useColorScheme();
@@ -154,7 +155,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                         setBodyEdited={setBodyEdited}
                         setCurrentChat={setCurrentChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}

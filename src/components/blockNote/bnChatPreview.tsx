@@ -1,6 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
+import { useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -13,9 +14,9 @@ import { useCreateBlockNote } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -31,7 +32,7 @@ type BnChatPreviewProps = {
     isSent: boolean;
     customClassName?: string;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
 };
 export const BnChatPreview = (props: BnChatPreviewProps) => {
     const {
@@ -43,7 +44,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         isSent,
         customClassName,
         setCurrentChat,
-        setOpeningService,
+        UIM,
     } = props;
     const { mode } = useColorScheme();
     const _bnBoxClassName: string = isSent
@@ -67,7 +68,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

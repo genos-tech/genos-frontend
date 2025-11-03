@@ -7,6 +7,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     ChatProps,
@@ -35,7 +36,7 @@ type threadMessageBubbleProps = {
     isScrolling: boolean;
     isFocused: boolean;
     isSimpleBubble: boolean;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentMainChat: (chat: ChatProps) => void;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: ThreadMessageProps) => void;
@@ -58,7 +59,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         isScrolling,
         isFocused,
         isSimpleBubble,
-        setOpeningService,
+        UIM,
         setCurrentMainChat,
         setIsInEdit,
         setEditTargetMessage,
@@ -401,7 +402,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                 myself={myself}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setMyself={setMyself}
-                                                setOpeningService={setOpeningService}
+                                                UIM={UIM}
                                                 socket={socket}
                                                 thread={thread}
                                                 avatarUser={
@@ -514,7 +515,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     myself={myself}
                                     setCurrentChat={setCurrentMainChat}
                                     setMyself={setMyself}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     socket={socket}
                                     teamMemberProfiles={teamMemberProfiles}
                                 />

@@ -3,6 +3,7 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
@@ -22,7 +23,7 @@ type ACTeamUsersProps = {
     teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 };
 export const ACTeamUsers = (props: ACTeamUsersProps) => {
     const {
@@ -40,7 +41,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         teamMemberProfiles,
         socket,
         setCurrentMainChat,
-        setOpeningService,
+        UIM,
     } = props;
 
     return (
@@ -71,7 +72,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                                     myself={myself}
                                     setCurrentMainChat={setCurrentMainChat}
                                     setMyself={setMyself}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     socket={socket}
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>

@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { ModalGMProfile } from "../../features/chat/components/modals/ModalGMProfile";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps } from "../../types/chat";
 
@@ -20,7 +21,7 @@ type GMAvatarProps = {
     gmChat: AllChatProps;
     funcSetAllChats: () => Promise<void>;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 };
 export const GMAvatar = (props: GMAvatarProps) => {
     const {
@@ -33,7 +34,7 @@ export const GMAvatar = (props: GMAvatarProps) => {
         gmChat,
         funcSetAllChats,
         setCurrentMainChat,
-        setOpeningService,
+        UIM,
     } = props;
     const [openModalGMProfile, setOpenModalGMProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
@@ -65,7 +66,7 @@ export const GMAvatar = (props: GMAvatarProps) => {
                 setAvatarUserId={setAvatarUserId}
                 setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 setOpenModalGMProfile={setOpenModalGMProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
@@ -79,7 +80,7 @@ export const GMAvatar = (props: GMAvatarProps) => {
                     openUserProfile={openUserProfile}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
                     user={teamMemberProfiles[avatarUserId]}

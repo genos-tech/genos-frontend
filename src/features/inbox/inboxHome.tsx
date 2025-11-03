@@ -1,12 +1,13 @@
 import { Box, Stack } from "@mui/joy";
 
-import { Sidebar } from "../../components/layout/sidebar";
 import { InboxHeader } from "./components/InboxHeader";
 import { InboxSection } from "./components/InboxSection";
 import { InboxSectionHeader } from "./components/InboxSectionHeader";
 import { useInboxItems } from "./hooks/useInboxItems";
 import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
+
+import { Sidebar } from "../../components/layout/sidebar";
 
 export const InboxHome = (props: InboxHomeProps) => {
     const {
@@ -16,12 +17,11 @@ export const InboxHome = (props: InboxHomeProps) => {
         myself,
         socket,
         setMyself,
-        openingService,
-        setOpeningService,
         setCurrentMainChat,
         inboxItems,
         unReadInboxItemCount,
         unReadChatAndActivityCounts,
+        UIM,
     } = props;
 
     const { activityInboxItems, requestInboxItems } = useInboxItems(inboxItems);
@@ -33,11 +33,10 @@ export const InboxHome = (props: InboxHomeProps) => {
             <Sidebar
                 currentTeam={currentTeam}
                 myself={myself}
-                openingService={openingService}
+                UIM={UIM}
                 setCurrentMainChat={setCurrentMainChat}
                 setCurrentTeam={setCurrentTeam}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
                 socket={socket}
                 teamMemberProfiles={teamMemberProfiles}
                 unReadChatAndActivityCounts={unReadChatAndActivityCounts}
@@ -65,9 +64,9 @@ export const InboxHome = (props: InboxHomeProps) => {
                             myself={myself}
                             setCurrentChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
+                            UIM={UIM}
                         />
                         <InboxSection
                             ref={requestVirtuosoRef}
@@ -76,7 +75,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             myself={myself}
                             setCurrentChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                         />

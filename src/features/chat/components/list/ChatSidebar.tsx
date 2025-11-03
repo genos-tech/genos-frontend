@@ -24,6 +24,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     ActivityMessageProps,
@@ -71,7 +72,6 @@ type ChatSidebarProps = {
     };
     isSubChatVisible: boolean;
     setIsSubChatVisible: (value: boolean) => void;
-    setOpeningService: (value: number) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     unReadChatCounts?: Record<string, number>;
@@ -81,6 +81,7 @@ type ChatSidebarProps = {
     setIsToDoVisible: (value: boolean) => void;
     flaggedMessages: FlaggedMessageProps[];
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    UIM: UIStateManagementState;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -108,7 +109,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         isCreatingTask,
         isSubChatVisible,
         setIsSubChatVisible,
-        setOpeningService,
         setCurrentPreviewTaskId,
         setCurrentProject,
         unReadChatCounts,
@@ -118,6 +118,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         setIsToDoVisible,
         flaggedMessages,
         setFlaggedMessages,
+        UIM,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -233,7 +234,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     setCurrentChatPaneType={setCurrentChatPaneType}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     setOpenJoinGM={setOpenJoinGM}
                     setOpenSearchBox={setOpenSearchBox}
                     socket={socket}
@@ -578,6 +579,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={1}
                             currentActivityMessageType={-1}
                             socket={socket}
+                            UIM={UIM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -586,7 +588,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setIsThreadVisible,
                                 setIsTaskPreviewVisible,
                                 setIsSubChatVisible,
-                                setOpeningService,
                                 setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
@@ -622,6 +623,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={2}
                             currentActivityMessageType={-1}
                             socket={socket}
+                            UIM={UIM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -630,7 +632,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setIsThreadVisible,
                                 setIsTaskPreviewVisible,
                                 setIsSubChatVisible,
-                                setOpeningService,
                                 setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
@@ -666,6 +667,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={3}
                             currentActivityMessageType={-1}
                             socket={socket}
+                            UIM={UIM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -674,7 +676,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setIsThreadVisible,
                                 setIsTaskPreviewVisible,
                                 setIsSubChatVisible,
-                                setOpeningService,
                                 setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
@@ -714,6 +715,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={5}
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
+                            UIM={UIM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -722,7 +724,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setIsThreadVisible,
                                 setIsTaskPreviewVisible,
                                 setIsSubChatVisible,
-                                setOpeningService,
                                 setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
@@ -758,6 +759,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             chatType={6}
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
+                            UIM={UIM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -766,7 +768,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setIsThreadVisible,
                                 setIsTaskPreviewVisible,
                                 setIsSubChatVisible,
-                                setOpeningService,
                                 setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,

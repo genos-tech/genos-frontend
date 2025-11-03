@@ -17,8 +17,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         myself,
         setMyself,
         setCurrentMainChat,
-        openingService,
-        setOpeningService,
+        UIM,
         unReadInboxItemCount,
         unReadChatAndActivityCounts,
         allChats,
@@ -92,11 +91,10 @@ export const TaskHome = (props: TaskHomeProps) => {
                 <Sidebar
                     currentTeam={TEM.currentTeam}
                     myself={myself}
-                    openingService={openingService}
+                    UIM={UIM}
                     setCurrentMainChat={setCurrentMainChat}
                     setCurrentTeam={TEM.setCurrentTeam}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
                     socket={socket}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     unReadChatAndActivityCounts={unReadChatAndActivityCounts}
@@ -104,16 +102,15 @@ export const TaskHome = (props: TaskHomeProps) => {
                 />
 
                 <TaskHomeLayout
+                    UIM={UIM}
                     allChats={allChats}
                     funcSetAllChats={funcSetAllChats}
                     moveToSpecificChat={moveToSpecificChat}
                     myself={myself}
                     NM={NM}
-                    openingService={openingService}
                     PM={PM}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
                     socket={socket}
                     TEM={TEM}
                     TM={TM}

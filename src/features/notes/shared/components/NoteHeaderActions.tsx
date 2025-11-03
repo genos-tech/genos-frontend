@@ -20,6 +20,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
@@ -34,7 +35,7 @@ interface NoteHeaderActionsProps {
     socket: any;
     funcSetAllChats: () => Promise<void>;
     setCurrentMainChat: (chat: any) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     teamMemberProfiles: Record<string, UserProps>;
     onCreateNewNote: () => void;
     onCreateChildNote: () => void;
@@ -53,7 +54,7 @@ export const NoteHeaderActions = ({
     socket,
     funcSetAllChats,
     setCurrentMainChat,
-    setOpeningService,
+    UIM,
     teamMemberProfiles,
     onCreateNewNote,
     onCreateChildNote,
@@ -94,7 +95,7 @@ export const NoteHeaderActions = ({
                         pmChat={pmChat}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
                     />

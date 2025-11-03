@@ -16,6 +16,7 @@ import {
 } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
 
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, FlaggedMessageProps, ThreadProps, ToDoFactProps } from "../../types/chat";
 import { ProjectProps, TaskProps } from "../../types/tasks";
@@ -54,7 +55,6 @@ type MessagesPaneProps = {
     setIsSubChatVisible: (value: boolean) => void;
     currentMainChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    setOpeningService: (value: number) => void;
     funcSetAllChats: () => Promise<void>;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
@@ -69,6 +69,7 @@ type MessagesPaneProps = {
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
     showOnlyInCompleteTodos: boolean;
     setShowOnlyInCompleteTodos: (value: boolean) => void;
+    UIM: UIStateManagementState;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -97,7 +98,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         setIsSubChatVisible,
         currentMainChatId,
         setCurrentPreviewTask,
-        setOpeningService,
         funcSetAllChats,
         setCurrentPreviewTaskId,
         setCurrentProject,
@@ -112,6 +112,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         setFlaggedMessages,
         showOnlyInCompleteTodos,
         setShowOnlyInCompleteTodos,
+        UIM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -218,7 +219,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         setIsThreadVisible={setIsThreadVisible}
                         setIsToDoVisible={setIsToDoVisible}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         subChat={subChat}
                         teamMemberProfiles={teamMemberProfiles}
@@ -236,7 +237,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 setCurrentChat={setCurrentMainChat}
                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
+                                UIM={UIM}
                                 setTodos={setTodos}
                                 socket={socket}
                                 teamMemberProfiles={teamMemberProfiles}
@@ -284,7 +285,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 setIsThreadVisible={setIsThreadVisible}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
+                                UIM={UIM}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
                                 teamMemberProfiles={teamMemberProfiles}
@@ -307,7 +308,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                     setIsInEdit={messageManagement.setIsInEdit}
                                     setMyself={setMyself}
                                     setNumEditorLines={messageManagement.setNumEditorLines}
-                                    setOpeningService={setOpeningService}
+                                    UIM={UIM}
                                     socket={socket}
                                     teamMemberProfiles={teamMemberProfiles}
                                     teamMembers={teamMembers}

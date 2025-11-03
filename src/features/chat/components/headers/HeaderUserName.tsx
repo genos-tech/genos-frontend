@@ -6,6 +6,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { PulseDot } from "../../../../components/utils/PulseDot";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
@@ -14,7 +15,7 @@ type HeaderUserNameProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentMainChat: (chat: ChatProps) => void;
     chat?: ChatProps;
     isYou: boolean;
@@ -26,7 +27,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
         socket,
         myself,
         setMyself,
-        setOpeningService,
+        UIM,
         setCurrentMainChat,
         chat,
         isYou,
@@ -62,7 +63,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         myself={myself}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                     />
                 ) : chat && chat.chatType === 2 ? (
@@ -74,7 +75,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         myself={myself}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
                     />
@@ -86,7 +87,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         pmChat={chat}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
                     />

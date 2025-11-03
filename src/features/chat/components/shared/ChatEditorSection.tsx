@@ -5,6 +5,7 @@ import { BnChatEditor } from "../../../../components/blockNote/bnChatEditor";
 import { BnThreadEditor } from "../../../../components/blockNote/bnThreadEditor";
 import { BnUpdateEditor } from "../../../../components/blockNote/bnUpdateEditor";
 import { BnUpdateThreadEditor } from "../../../../components/blockNote/bnUpdateThreadEditor";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 
@@ -18,7 +19,7 @@ interface ChatEditorSectionProps {
     setIsInEdit: (edit: boolean) => void;
     setMyself: (user: UserProps) => void;
     setNumEditorLines: (lines: number) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     socket: Socket | null;
     teamMemberProfiles: Record<string, UserProps>;
     teamMembers: UserProps[];
@@ -40,7 +41,7 @@ export const ChatEditorSection = ({
     setIsInEdit,
     setMyself,
     setNumEditorLines,
-    setOpeningService,
+    UIM,
     socket,
     teamMemberProfiles,
     teamMembers,
@@ -64,7 +65,7 @@ export const ChatEditorSection = ({
                         setIsInEdit={setIsInEdit}
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
@@ -79,7 +80,7 @@ export const ChatEditorSection = ({
                         setCurrentThreadChat={setCurrentThreadChat!}
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={teamMemberProfiles}
                         teamMembers={teamMembers}
@@ -104,7 +105,7 @@ export const ChatEditorSection = ({
                     setIsInEdit={setIsInEdit}
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                     teamMembers={teamMembers}
@@ -120,7 +121,7 @@ export const ChatEditorSection = ({
                     setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                     teamMembers={teamMembers}

@@ -37,6 +37,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -56,7 +57,7 @@ type BnThreadEditorProps = {
     thread: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
 };
@@ -70,7 +71,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         thread,
         setCurrentThreadChat,
         setCurrentChat,
-        setOpeningService,
+        UIM,
         numEditorLines,
         setNumEditorLines,
     } = props;
@@ -94,7 +95,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

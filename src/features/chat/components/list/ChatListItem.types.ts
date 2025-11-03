@@ -1,6 +1,7 @@
 import { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 
@@ -35,7 +36,7 @@ export interface ChatListItemProps extends ListItemButtonProps {
 
     // Services
     socket: Socket | null;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     funcSetAllChats: () => Promise<void>;
 
     // Chat specific

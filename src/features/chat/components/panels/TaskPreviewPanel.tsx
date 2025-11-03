@@ -5,6 +5,7 @@ import { Panel } from "react-resizable-panels";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -17,10 +18,9 @@ interface TaskPreviewPanelProps {
     TEM: TeamManagementState;
     NM: NoteManagementState;
     myself: UserProps;
-    openingService: number;
     socket: any;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 }
 
 export const TaskPreviewPanel = ({
@@ -30,10 +30,9 @@ export const TaskPreviewPanel = ({
     TEM,
     NM,
     myself,
-    openingService,
     socket,
     setMyself,
-    setOpeningService,
+    UIM,
 }: TaskPreviewPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -64,7 +63,7 @@ export const TaskPreviewPanel = ({
                     isTaskNoteVisible={NM.isTaskNoteVisible}
                     moveToSpecificChat={CM.moveToSpecificChat}
                     myself={myself}
-                    openingService={openingService}
+                    UIM={UIM}
                     setCurrentMainChat={CM.setCurrentMainChat}
                     setCurrentProject={PM.setCurrentProject}
                     setCurrentTaskNote={NM.setCurrentTaskNote}
@@ -72,7 +71,6 @@ export const TaskPreviewPanel = ({
                     setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                     setMyself={setMyself}
                     setOpenCreateProject={PM.setOpenCreateProject}
-                    setOpeningService={setOpeningService}
                     setTeamMembers={TEM.setTeamMembers}
                     setTeamProjects={PM.setTeamProjects}
                     socket={socket}

@@ -28,6 +28,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
@@ -66,7 +67,6 @@ type TaskTabBlockProps = {
     setMyself: (value: UserProps) => void;
     teamMemberProfiles: Record<string, UserProps>;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
     currentPreviewTaskId: number;
@@ -99,6 +99,7 @@ type TaskTabBlockProps = {
     tabIndex: number;
     setTabIndex: (value: number) => void;
     TM: TaskManagementState;
+    UIM: UIStateManagementState;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -108,7 +109,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setMyself,
         teamMemberProfiles,
         setCurrentChat,
-        setOpeningService,
+        UIM,
         uploadedFiles,
         setUploadedFiles,
         currentPreviewTaskId,
@@ -481,7 +482,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     setEditTargetComment={setEditTargetComment}
                                                     setIsInEdit={setIsInEdit}
                                                     setMyself={setMyself}
-                                                    setOpeningService={setOpeningService}
+                                                    UIM={UIM}
                                                     socket={socket}
                                                     teamMemberProfiles={teamMemberProfiles}
                                                     currentProjectId={
@@ -511,7 +512,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 setIsCommentUpdated={TM.setIsTaskCommentUpdated}
                                 setIsInEdit={setIsInEdit}
                                 setMyself={setMyself}
-                                setOpeningService={setOpeningService}
+                                UIM={UIM}
                                 setTaskCommentLines={setTaskCommentLines}
                                 setTaskComments={setTaskComments}
                                 socket={socket}

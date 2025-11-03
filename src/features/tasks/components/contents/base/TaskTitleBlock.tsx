@@ -26,6 +26,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
@@ -61,8 +62,7 @@ type TaskTitleBlockProps = {
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: any) => void
     ) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     setCurrentProject: (project: any) => void;
     TM: TaskManagementState;
     setIsTaskNoteVisible?: (value: boolean) => void;
@@ -95,8 +95,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setIsTaskVisibleInNote,
         setTaskClosed,
         moveToSpecificChat,
-        openingService,
-        setOpeningService,
+        UIM,
         setCurrentProject,
         TM,
         setIsTaskNoteVisible,
@@ -198,7 +197,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </FormControl>
                 </Box>
 
-                {openingService === 2 && taskContent.threadId !== null && (
+                {UIM.openingService === 2 && taskContent.threadId !== null && (
                     <Tooltip size="sm" title="Check Thread" variant="outlined">
                         <IconButton
                             color="neutral"
@@ -217,7 +216,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         taskContent.threadId,
                                         false, // openTaskNoteInChat
                                         true, // openThreadTaskPreview
-                                        setOpeningService,
+                                        UIM.setOpeningService,
                                         TM.setCurrentPreviewTaskId,
                                         setCurrentProject
                                     );

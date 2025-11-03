@@ -4,6 +4,7 @@ import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import {
     ActivityMessageProps,
@@ -49,7 +50,7 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
         rootTaskId: number | null;
     };
     isSubChatVisible: boolean;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     funcSetAllChats: () => Promise<void>;
@@ -77,7 +78,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         isTaskPreviewVisible,
         isCreatingTask,
         isSubChatVisible,
-        setOpeningService,
+        UIM,
         setCurrentProject,
         setCurrentPreviewTaskId,
         funcSetAllChats,
@@ -322,7 +323,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            setOpeningService={setOpeningService}
+                            UIM={UIM}
                             socket={socket}
                             teamMemberProfiles={teamMemberProfiles}
                         />

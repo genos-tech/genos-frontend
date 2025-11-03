@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -16,8 +17,7 @@ type NoteContentRendererProps = {
     noteType: number;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;
     PM: ProjectManagementState;
@@ -27,19 +27,7 @@ type NoteContentRendererProps = {
 };
 
 export const NoteContentRenderer = (props: NoteContentRendererProps) => {
-    const {
-        noteType,
-        myself,
-        setMyself,
-        openingService,
-        setOpeningService,
-        socket,
-        TEM,
-        PM,
-        NM,
-        CM,
-        TM,
-    } = props;
+    const { noteType, myself, setMyself, UIM, socket, TEM, PM, NM, CM, TM } = props;
 
     const renderPlaceholder = (message: string) => (
         <Box
@@ -78,7 +66,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 NM={NM}
                 setCurrentChat={CM.setCurrentMainChat}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 socket={socket}
                 teamMemberProfiles={TEM.teamMemberProfiles}
                 teamMembers={TEM.teamMembers}
@@ -99,7 +87,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                     setCurrentChat={CM.setCurrentMainChat}
                     setCurrentMainChat={CM.setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={TEM.teamMemberProfiles}
                     teamMembers={TEM.teamMembers}
@@ -112,7 +100,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                         isTaskNoteVisible={NM.isTaskNoteVisible}
                         moveToSpecificChat={CM.moveToSpecificChat}
                         myself={myself}
-                        openingService={openingService}
+                        UIM={UIM}
                         setCurrentMainChat={CM.setCurrentMainChat}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={NM.setCurrentTaskNote}
@@ -120,7 +108,6 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
-                        setOpeningService={setOpeningService}
                         setTeamMembers={TEM.setTeamMembers}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
@@ -146,7 +133,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                 setCurrentProject={PM.setCurrentProject}
                 setMyself={setMyself}
-                setOpeningService={setOpeningService}
+                UIM={UIM}
                 socket={socket}
                 teamMemberProfiles={TEM.teamMemberProfiles}
                 teamMembers={TEM.teamMembers}

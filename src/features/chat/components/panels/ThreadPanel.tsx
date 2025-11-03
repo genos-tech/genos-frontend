@@ -4,6 +4,7 @@ import { Panel } from "react-resizable-panels";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -19,7 +20,7 @@ interface ThreadPanelProps {
     currentWindowHeight: number;
     socket: any;
     setMyself: (me: UserProps) => void;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
 }
 
 export const ThreadPanel = ({
@@ -32,7 +33,7 @@ export const ThreadPanel = ({
     currentWindowHeight,
     socket,
     setMyself,
-    setOpeningService,
+    UIM,
 }: ThreadPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -62,7 +63,7 @@ export const ThreadPanel = ({
                         setIsMainChatVisible={CM.setIsMainChatVisible}
                         setIsThreadVisible={CM.setIsThreadVisible}
                         setMyself={setMyself}
-                        setOpeningService={setOpeningService}
+                        UIM={UIM}
                         socket={socket}
                         teamMemberProfiles={TEM.teamMemberProfiles}
                         teamMembers={TEM.teamMembers}

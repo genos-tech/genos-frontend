@@ -8,6 +8,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../../components/common/ProjectAvatar";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
 
@@ -19,7 +20,7 @@ interface ActivityAvatarProps {
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: any) => void;
     setMyself: (value: UserProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     funcSetAllChats: () => Promise<void>;
     isYou: boolean;
 }
@@ -32,7 +33,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
     allChats,
     setCurrentMainChat,
     setMyself,
-    setOpeningService,
+    UIM,
     funcSetAllChats,
     isYou,
 }) => {
@@ -52,7 +53,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                 />
             );
@@ -72,7 +73,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                 />
@@ -96,7 +97,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                     pmChat={chat}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                 />
@@ -120,7 +121,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                     pmChat={chat}
                     setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
+                    UIM={UIM}
                     socket={socket}
                     teamMemberProfiles={teamMemberProfiles}
                 />

@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
@@ -12,8 +13,7 @@ interface ChatContextType {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     CM: ChatManagementState;
     PM: ProjectManagementState;
     TEM: TeamManagementState;
@@ -36,8 +36,7 @@ interface ChatProviderProps {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     CM: ChatManagementState;
     PM: ProjectManagementState;
     TEM: TeamManagementState;
@@ -50,8 +49,7 @@ export const ChatProvider = ({
     socket,
     myself,
     setMyself,
-    openingService,
-    setOpeningService,
+    UIM,
     CM,
     PM,
     TEM,
@@ -64,8 +62,7 @@ export const ChatProvider = ({
                 socket,
                 myself,
                 setMyself,
-                openingService,
-                setOpeningService,
+                UIM,
                 CM,
                 PM,
                 TEM,

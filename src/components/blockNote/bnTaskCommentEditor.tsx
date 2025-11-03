@@ -32,6 +32,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
@@ -53,7 +54,7 @@ type BnTaskCommentEditorProps = {
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    UIM: UIStateManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
 };
@@ -72,7 +73,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         isCommentUpdated,
         setIsCommentUpdated,
         setCurrentChat,
-        setOpeningService,
+        UIM,
         taskCommentLines,
         setTaskCommentLines,
     } = props;
@@ -95,7 +96,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
+                UIM,
                 setCurrentChat
             ),
         },

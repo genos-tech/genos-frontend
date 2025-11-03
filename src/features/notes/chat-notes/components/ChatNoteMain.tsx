@@ -1,9 +1,10 @@
-import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useChatNoteEditor } from "../../../../hooks/notes/useChatNoteEditor";
 import { useChatNoteTabs } from "../../../../hooks/notes/useChatNoteTabs";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -30,7 +31,7 @@ interface ChatNoteMainProps {
     /** Function to update current user */
     setMyself: (me: UserProps) => void;
     /** Function to set the opening service */
-    setOpeningService: (service: number) => void;
+    UIM: UIStateManagementState;
     /** Whether the component is in chat page mode */
     isInChatPage: boolean;
     /** Function to set the current preview task ID */
@@ -50,7 +51,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         teamMembers,
         myself,
         setMyself,
-        setOpeningService,
+        UIM,
         isInChatPage,
         setCurrentPreviewTaskId,
         setCurrentProject,
@@ -180,7 +181,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 setCurrentProject={setCurrentProject}
                                                 setMyself={setMyself}
                                                 setOpenDeleteNote={setOpenDeleteNote}
-                                                setOpeningService={setOpeningService}
+                                                UIM={UIM}
                                                 setOpenSearchBox={setOpenSearchBox}
                                                 socket={socket}
                                                 teamMemberProfiles={teamMemberProfiles}
@@ -218,7 +219,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             myself={myself}
                                                             setCurrentChat={CM.setCurrentMainChat}
                                                             setMyself={setMyself}
-                                                            setOpeningService={setOpeningService}
+                                                            UIM={UIM}
                                                             socket={socket}
                                                             teamMemberProfiles={teamMemberProfiles}
                                                             teamMembers={teamMembers}
