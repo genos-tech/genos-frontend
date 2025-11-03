@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -223,6 +223,58 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
+
+    // Dynamic positioning for emoji picker
+    const bubbleRef = useRef<HTMLDivElement>(null);
+    const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(40);
+    const [pickerRightPosition, setPickerRightPosition] = useState<number | string>(
+        isSent ? 0 : "auto"
+    );
+    const [pickerLeftPosition, setPickerLeftPosition] = useState<number | string>(
+        isSent ? "auto" : 0
+    );
+    const [emojiPickerPositionCalculated, setEmojiPickerPositionCalculated] =
+        useState<boolean>(false);
+
+    useEffect(() => {
+        if (showEmojiPicker && bubbleRef.current) {
+            const rect = bubbleRef.current.getBoundingClientRect();
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const pickerHeight = 435; // Approximate height of emoji picker
+            const pickerWidth = 352; // Approximate width of emoji picker
+
+            // Calculate vertical position
+            // If there's enough space above, show picker above the bubble
+            // Otherwise show below
+            if (rect.top > pickerHeight + 20) {
+                // Show above the bubble
+                setPickerBottomPosition(40);
+            } else if (viewportHeight - rect.bottom > pickerHeight + 20) {
+                // Show below the bubble
+                setPickerBottomPosition(-pickerHeight - 20);
+            } else {
+                // Default to above with scroll adjustment
+                setPickerBottomPosition(40);
+            }
+
+            // Calculate horizontal position based on sent/received
+            if (isSent) {
+                // For sent messages (right side), align to right edge
+                setPickerRightPosition(0);
+                setPickerLeftPosition("auto");
+            } else {
+                // For received messages (left side), align to left edge
+                setPickerLeftPosition(0);
+                setPickerRightPosition("auto");
+            }
+            setEmojiPickerPositionCalculated(true);
+        }
+        if (showEmojiPicker === false) {
+            setEmojiPickerPositionCalculated(false);
+        }
+    }, [showEmojiPicker, isSent]);
+
     useEffect(() => {
         if (message.reactions) {
             setReactions(message.reactions);
@@ -419,14 +471,17 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     isSent={isSent}
                 />
             ) : (
-                <Box sx={{ position: "relative" }}>
-                    <EmojiPicker
-                        pickerBottomPosition={10}
-                        pickerRightPosition={isSent ? 0 : -40}
-                        setSelectedEmoji={setSelectedEmoji}
-                        setShowEmojiPicker={setShowEmojiPicker}
-                        showEmojiPicker={showEmojiPicker}
-                    />
+                <Box ref={bubbleRef} sx={{ position: "relative" }}>
+                    {emojiPickerPositionCalculated === true && (
+                        <EmojiPicker
+                            pickerBottomPosition={pickerBottomPosition}
+                            pickerRightPosition={pickerRightPosition}
+                            pickerLeftPosition={pickerLeftPosition}
+                            setSelectedEmoji={setSelectedEmoji}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            showEmojiPicker={showEmojiPicker}
+                        />
+                    )}
                     <Sheet
                         color={"neutral"}
                         variant={"soft"}

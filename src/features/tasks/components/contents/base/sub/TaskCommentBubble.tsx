@@ -1,7 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPreview";
@@ -123,25 +123,64 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     }, [selectedEmoji]);
 
     const boxRef = useRef<HTMLDivElement>(null);
-    const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(0);
-    const [pickerRightPosition, setPickerRightPosition] = useState<number>(0);
+    const [pickerTopPosition, setPickerTopPosition] = useState<number | string>("auto");
+    const [pickerBottomPosition, setPickerBottomPosition] = useState<number | string>("auto");
+    const [pickerRightPosition, setPickerRightPosition] = useState<number | string>("auto");
+    const [pickerLeftPosition, setPickerLeftPosition] = useState<number | string>("auto");
+    const [emojiPickerPositionCalculated, setEmojiPickerPositionCalculated] =
+        useState<boolean>(false);
+
     useEffect(() => {
-        if (boxRef.current) {
+        if (showEmojiPicker && boxRef.current) {
             const rect = boxRef.current.getBoundingClientRect();
-            setPickerBottomPosition(rect.bottom - 1350);
-            setPickerRightPosition(rect.left - 800);
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+            const pickerHeight = 435; // Approximate height of emoji picker
+            const pickerWidth = 352; // Approximate width of emoji picker
+
+            // Calculate vertical position using fixed positioning
+            // If there's enough space below, show picker below the comment
+            // Otherwise show above
+            if (viewportHeight - rect.bottom > pickerHeight + 20) {
+                // Show below the comment
+                setPickerTopPosition(rect.bottom + 10);
+                setPickerBottomPosition("auto");
+            } else if (rect.top > pickerHeight + 20) {
+                // Show above the comment
+                setPickerTopPosition(rect.top - pickerHeight - 10);
+                setPickerBottomPosition("auto");
+            } else {
+                // Not enough space either way, position at top of viewport with some margin
+                setPickerTopPosition(20);
+                setPickerBottomPosition("auto");
+            }
+
+            // Horizontal positioning - align to left edge of comment with some margin
+            const leftPos = Math.max(20, Math.min(rect.left, viewportWidth - pickerWidth - 20));
+            setPickerLeftPosition(leftPos);
+            setPickerRightPosition("auto");
+            setEmojiPickerPositionCalculated(true);
+        }
+
+        if (showEmojiPicker === false) {
+            setEmojiPickerPositionCalculated(false);
         }
     }, [showEmojiPicker]);
 
     return (
         <Box ref={boxRef} sx={{ py: 0.5 }}>
-            <EmojiPicker
-                pickerBottomPosition={pickerBottomPosition}
-                pickerRightPosition={pickerRightPosition}
-                setSelectedEmoji={setSelectedEmoji}
-                setShowEmojiPicker={setShowEmojiPicker}
-                showEmojiPicker={showEmojiPicker}
-            />
+            {emojiPickerPositionCalculated === true && (
+                <EmojiPicker
+                    pickerTopPosition={pickerTopPosition}
+                    pickerBottomPosition={pickerBottomPosition}
+                    pickerRightPosition={pickerRightPosition}
+                    pickerLeftPosition={pickerLeftPosition}
+                    useFixedPosition={true}
+                    setSelectedEmoji={setSelectedEmoji}
+                    setShowEmojiPicker={setShowEmojiPicker}
+                    showEmojiPicker={showEmojiPicker}
+                />
+            )}
 
             {comment.commentBody[0].content.length > 0 && (
                 <Box
