@@ -6,6 +6,7 @@ import { BnUpdateTaskCommentEditor } from "../../../../../../components/blockNot
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../../../../../types/tasks";
 
@@ -17,8 +18,6 @@ type TaskCommentEditorBlockProps = {
     task: TaskProps;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
-    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     CM: ChatManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
@@ -26,6 +25,7 @@ type TaskCommentEditorBlockProps = {
     setIsInEdit: (value: boolean) => void;
     editTargetComment?: TaskCommentProps;
     UIM: UIStateManagementState;
+    TM: TaskManagementState;
 };
 
 export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
@@ -37,8 +37,6 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
         task,
         taskComments,
         setTaskComments,
-        isCommentUpdated,
-        setIsCommentUpdated,
         UIM,
         taskCommentLines,
         setTaskCommentLines,
@@ -46,6 +44,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
         setIsInEdit,
         editTargetComment,
         CM,
+        TM,
     } = props;
 
     return (
@@ -53,13 +52,11 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
             {isInEdit === true && editTargetComment && (
                 <BnUpdateTaskCommentEditor
                     CM={CM}
-                    isCommentUpdated={isCommentUpdated}
                     isInEdit={isInEdit}
                     isPrivate={task.project?.isPrivate}
                     myself={myself}
                     projectId={task.project?.projectId}
                     projectName={task.project?.projectName}
-                    setIsCommentUpdated={setIsCommentUpdated}
                     setIsInEdit={setIsInEdit}
                     setMyself={setMyself}
                     setTaskCommentLines={setTaskCommentLines}
@@ -71,14 +68,13 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     taskId={task.id}
                     TEM={TEM}
                     UIM={UIM}
+                    TM={TM}
                 />
             )}
             {isInEdit === false && (
                 <BnTaskCommentEditor
                     CM={CM}
-                    isCommentUpdated={isCommentUpdated}
                     myself={myself}
-                    setIsCommentUpdated={setIsCommentUpdated}
                     setMyself={setMyself}
                     setTaskCommentLines={setTaskCommentLines}
                     setTaskComments={setTaskComments}
@@ -88,6 +84,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     taskComments={taskComments}
                     TEM={TEM}
                     UIM={UIM}
+                    TM={TM}
                 />
             )}
         </Box>

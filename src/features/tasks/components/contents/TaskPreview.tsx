@@ -1,6 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -392,7 +392,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                         setOpenCreateProject={setOpenCreateProject}
-                        setOpenCreateTag={TM.setOpenCreateTag}
                         setTaskClosed={setTaskClosed}
                         setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
@@ -418,13 +417,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         projectTags={projectTags}
                         reporter={reporter}
                         setAssignee={setAssignee}
-                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={setCurrentProject}
                         setIsOpenProjectList={setIsOpenProjectList}
                         setIsOpenTagList={setIsOpenTagList}
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         setMyself={setMyself}
-                        setOpenCreateTag={TM.setOpenCreateTag}
                         setReporter={setReporter}
                         setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
@@ -433,6 +430,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         taskContent={tmpCurrentTaskContent}
                         teamProjects={teamProjects}
                         TEM={TEM}
+                        TM={TM}
                         UIM={UIM}
                     />
 
@@ -465,13 +463,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
                     <TaskSubTasksBlock
                         CM={CM}
-                        currentPreviewTaskId={TM.currentPreviewTaskId}
+                        TM={TM}
                         currentTaskContent={tmpCurrentTaskContent}
                         myself={myself}
-                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
-                        setCurrentProject={setCurrentProject}
-                        setIsCreatingTask={TM.setIsCreatingTask}
-                        setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
                         setMyself={setMyself}
                         socket={socket}
                         TEM={TEM}
@@ -480,10 +474,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
                     <TaskTabBlock
                         CM={CM}
-                        currentPreviewTaskId={TM.currentPreviewTaskId}
                         editTargetComment={editTargetComment}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
-                        isCommentUpdated={TM.isTaskCommentUpdated}
                         isInEdit={isInEdit}
                         myself={myself}
                         setCurrentTaskNote={setCurrentTaskNote}

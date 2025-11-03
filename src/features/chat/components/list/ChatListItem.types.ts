@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 
@@ -18,12 +19,7 @@ export interface ChatListItemProps extends ListItemButtonProps {
     CM: ChatManagementState;
 
     // UI state
-    isTaskPreviewVisible: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
+    TM: TaskManagementState;
 
     // Services
     socket: Socket | null;

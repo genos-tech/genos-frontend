@@ -42,7 +42,6 @@ type TaskTitleBlockProps = {
     setTaskTitle: (value: string) => void;
     setTaskClosed?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
-    setOpenCreateTag: (value: boolean) => void;
     titleError?: string;
     titleErrorOpen?: boolean;
     setTitleErrorOpen?: (value: boolean) => void;
@@ -73,7 +72,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         taskTitle,
         setTaskTitle,
         setOpenCreateProject,
-        setOpenCreateTag,
         setTaskUpdated,
         titleError,
         titleErrorOpen,
@@ -292,7 +290,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                         <MenuItem
                             onClick={() => {
-                                setOpenCreateTag(true);
+                                TM.setOpenCreateTag(true);
                             }}
                         >
                             <LocalOfferIcon />

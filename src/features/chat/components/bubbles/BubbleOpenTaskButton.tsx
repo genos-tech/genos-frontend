@@ -2,38 +2,19 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, IconButton, Tooltip } from "@mui/joy";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { MessageProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
 
 type BubbleReplyButtonTypes = {
     message: MessageProps;
     taskId: number | null;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
-    const {
-        message,
-        taskId,
-        setIsTaskPreviewVisible,
-        isCreatingTask,
-        setIsCreatingTask,
-        setCurrentPreviewTaskId,
-        setCurrentProject,
-        CM,
-    } = props;
+    const { message, taskId, setCurrentProject, CM, TM } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
             <Tooltip size="sm" title="Open Task" variant="outlined">
@@ -48,9 +29,9 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                         if (taskId !== null) {
                             CM.setIsMainChatVisible(true);
                             CM.setIsThreadVisible(false);
-                            setIsTaskPreviewVisible(true);
-                            setIsCreatingTask({ ...isCreatingTask, flag: false });
-                            setCurrentPreviewTaskId(taskId);
+                            TM.setIsTaskPreviewVisible(true);
+                            TM.setIsCreatingTask({ ...TM.isCreatingTask, flag: false });
+                            TM.setCurrentPreviewTaskId(taskId);
 
                             if (message.project && message.project.projectId) {
                                 setCurrentProject(message.project);

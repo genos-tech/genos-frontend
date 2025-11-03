@@ -1,8 +1,8 @@
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
@@ -10,6 +10,7 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ProjectProps, TagListProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
@@ -41,14 +42,13 @@ type TaskMainBlockProps = {
     setIsOpenProjectList: (value: boolean) => void;
     isOpenTagList: boolean;
     setIsOpenTagList: (value: boolean) => void;
-    setOpenCreateTag: (value: boolean) => void;
     setCurrentProject: (value: ProjectProps) => void;
     isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
     UIM: UIStateManagementState;
     CM: ChatManagementState;
-    setCurrentPreviewTaskId: (value: number) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
+    TM: TaskManagementState;
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
@@ -70,13 +70,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setIsOpenProjectList,
         isOpenTagList,
         setIsOpenTagList,
-        setOpenCreateTag,
         setCurrentProject,
         isPreviewMode,
         setTaskUpdated,
         UIM,
         CM,
-        setCurrentPreviewTaskId,
+        TM,
         setTaskStatusUpdated,
     } = props;
     const { accessToken } = useAuth();
@@ -194,7 +193,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         size="sm"
                                         variant="soft"
                                         onClick={() => {
-                                            setOpenCreateTag(true);
+                                            TM.setOpenCreateTag(true);
                                         }}
                                     >
                                         <AddIcon />
@@ -292,7 +291,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                                 projectTags: parentTask.tags,
                                                 systemUserId: parentTask.project.systemUserId,
                                             });
-                                            setCurrentPreviewTaskId(parentTask.id);
+                                            TM.setCurrentPreviewTaskId(parentTask.id);
                                         } else {
                                             console.error("Failed to set the current project");
                                         }

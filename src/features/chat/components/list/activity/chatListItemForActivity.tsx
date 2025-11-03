@@ -1,12 +1,13 @@
+import * as React from "react";
 import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import * as React from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import {
     ActivityMessageProps,
@@ -30,23 +31,16 @@ import { ActivityHeader } from "./ActivityHeader";
 type ChatListItemForActivityProps = ListItemButtonProps & {
     activity: ActivityMessageProps;
     activityMessages: ActivityMessageProps[];
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    isTaskPreviewVisible: boolean;
     myself: UserProps;
     selectedActivityId: string;
-    setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
     setSelectedActivityId: (value: string) => void;
     socket: Socket | null;
     TEM: TeamManagementState;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
@@ -59,13 +53,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         activityMessages,
         myself,
         setMyself,
-        setIsTaskPreviewVisible,
-        isTaskPreviewVisible,
-        isCreatingTask,
         UIM,
         setCurrentProject,
-        setCurrentPreviewTaskId,
         CM,
+        TM,
     } = props;
     const { accessToken } = useAuth();
     const { groupedReactions, updateActivityReadStatus } = useActivityStatus({
@@ -140,7 +131,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 CM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
             }
             CM.setIsMainChatVisible(true);
-            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+            if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
                 CM.setIsThreadVisible(false);
             }
         };
@@ -174,12 +165,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         projectName: activity.projectName || "",
                         projectTags: [],
                     });
-                    setCurrentPreviewTaskId(activity.taskId);
                     CM.setIsThreadVisible(false);
-                    setIsTaskPreviewVisible(true);
+                    TM.setIsTaskPreviewVisible(true);
                 }
                 CM.setIsMainChatVisible(true);
-                if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
                     CM.setIsThreadVisible(false);
                 }
             } catch (error) {
@@ -238,7 +228,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 if (newThread) {
                     CM.setCurrentThreadChat(newThread);
                     if (newThread.taskExist === true && threadMessages[0].taskId) {
-                        setCurrentPreviewTaskId(threadMessages[0].taskId);
+                        TM.setCurrentPreviewTaskId(threadMessages[0].taskId);
                     }
                 }
 

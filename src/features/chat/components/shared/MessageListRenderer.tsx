@@ -13,31 +13,23 @@ import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
 interface MessageListRendererProps {
     chat: ChatProps | ThreadProps;
     currentChatId: number;
     height: number;
     indexMap?: { [k: string]: any };
-    isCreatingTask: { flag: boolean; parentTaskId: number | null; rootTaskId: number | null };
     isScrolling: boolean;
     isThread: boolean;
     messages: MessageProps[] | ThreadMessageProps[];
     myself: UserProps;
-    setCurrentPreviewTask: (task: TaskProps | undefined) => void;
-    setCurrentPreviewTaskId: (taskId: number) => void;
     setCurrentProject: (project: ProjectProps) => void;
     setEditTargetMessage: (message: MessageProps | ThreadMessageProps) => void;
     setErrorMessage: (error: string) => void;
     setErrorOpen: (open: boolean) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
     setIsInEdit: (value: boolean) => void;
     setIsScrolling: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
     setVisibleRange: (range: { startIndex: number; endIndex: number }) => void;
@@ -46,6 +38,7 @@ interface MessageListRendererProps {
     visibleRange: { startIndex: number; endIndex: number };
     virtuosoRef: React.RefObject<VirtuosoHandle>;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 }
 
 export const MessageListRenderer = ({
@@ -53,21 +46,16 @@ export const MessageListRenderer = ({
     currentChatId,
     height,
     indexMap,
-    isCreatingTask,
     isScrolling,
     isThread,
     messages,
     myself,
-    setCurrentPreviewTask,
-    setCurrentPreviewTaskId,
     setCurrentProject,
     setEditTargetMessage,
     setErrorMessage,
     setErrorOpen,
-    setIsCreatingTask,
     setIsInEdit,
     setIsScrolling,
-    setIsTaskPreviewVisible,
     setMyself,
     UIM,
     setVisibleRange,
@@ -76,6 +64,7 @@ export const MessageListRenderer = ({
     visibleRange,
     virtuosoRef,
     CM,
+    TM,
 }: MessageListRendererProps) => {
     useScrollToBottomOnChatChange(
         virtuosoRef,
@@ -237,24 +226,20 @@ export const MessageListRenderer = ({
                                     <MessageBubble
                                         chat={chat as ChatProps}
                                         CM={CM}
-                                        isCreatingTask={isCreatingTask}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
                                         isSimpleBubble={isSimpleBubble}
                                         message={message as MessageProps}
                                         myself={myself}
-                                        setCurrentPreviewTask={setCurrentPreviewTask}
-                                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setCurrentProject={setCurrentProject}
                                         setEditTargetMessage={setEditTargetMessage}
-                                        setIsCreatingTask={setIsCreatingTask}
                                         setIsInEdit={setIsInEdit}
-                                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                         setMyself={setMyself}
                                         socket={socket}
                                         TEM={TEM}
                                         UIM={UIM}
                                         variant={isYou ? "sent" : "received"}
+                                        TM={TM}
                                     />
                                 )}
                             </Stack>

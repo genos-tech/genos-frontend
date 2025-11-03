@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AddIcon from "@mui/icons-material/Add";
 import FlagIcon from "@mui/icons-material/Flag";
@@ -20,12 +21,12 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
@@ -40,39 +41,29 @@ import { ActivityDivider } from "./ChatSidebarDividers";
 
 type ChatSidebarProps = {
     incompleteTodoCount: number;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    isTaskPreviewVisible: boolean;
     myself: UserProps;
-    setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     setIsToDoVisible: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
     const {
         incompleteTodoCount,
-        isCreatingTask,
-        isTaskPreviewVisible,
         myself,
-        setCurrentPreviewTaskId,
         setCurrentProject,
-        setIsTaskPreviewVisible,
         setIsToDoVisible,
         setMyself,
         UIM,
         socket,
         TEM,
         CM,
+        TM,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -155,7 +146,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         // Switch Thread to Main
                         if (CM.isThreadVisible) {
                             CM.setIsMainChatVisible(true);
-                            if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                            if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
                                 CM.setIsThreadVisible(false);
                             }
                         }
@@ -532,9 +523,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             TEM={TEM}
                             UIM={UIM}
+                            TM={TM}
                             actions={{
-                                setIsTaskPreviewVisible,
-                                setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
                             }}
@@ -543,8 +533,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setMyself,
                             }}
                             state={{
-                                isCreatingTask,
-                                isTaskPreviewVisible,
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}
@@ -562,9 +550,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             TEM={TEM}
                             UIM={UIM}
+                            TM={TM}
                             actions={{
-                                setIsTaskPreviewVisible,
-                                setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
                             }}
@@ -573,8 +560,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setMyself,
                             }}
                             state={{
-                                isCreatingTask,
-                                isTaskPreviewVisible,
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}
@@ -592,9 +577,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             TEM={TEM}
                             UIM={UIM}
+                            TM={TM}
                             actions={{
-                                setIsTaskPreviewVisible,
-                                setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
                             }}
@@ -603,8 +587,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setMyself,
                             }}
                             state={{
-                                isCreatingTask,
-                                isTaskPreviewVisible,
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}
@@ -626,9 +608,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             TEM={TEM}
                             UIM={UIM}
+                            TM={TM}
                             actions={{
-                                setIsTaskPreviewVisible,
-                                setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
                             }}
@@ -637,8 +618,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setMyself,
                             }}
                             state={{
-                                isCreatingTask,
-                                isTaskPreviewVisible,
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}
@@ -656,9 +635,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             socket={socket}
                             TEM={TEM}
                             UIM={UIM}
+                            TM={TM}
                             actions={{
-                                setIsTaskPreviewVisible,
-                                setCurrentPreviewTaskId,
                                 setCurrentProject,
                                 setIsToDoVisible,
                             }}
@@ -667,8 +645,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 setMyself,
                             }}
                             state={{
-                                isCreatingTask,
-                                isTaskPreviewVisible,
                                 showOnlyUnreadItems,
                                 incompleteTodoCount,
                             }}

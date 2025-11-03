@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -133,16 +133,13 @@ type CreateTaskProps = {
     setMyself: (value: UserProps) => void;
     chatType: number;
     UIM: UIStateManagementState;
-    parentTaskId: number | null;
-    rootTaskId: number | null;
     PM: ProjectManagementState;
     TM: TaskManagementState;
     CM: ChatManagementState;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
-    const { TEM, socket, myself, setMyself, chatType, CM, UIM, parentTaskId, rootTaskId, PM, TM } =
-        props;
+    const { TEM, socket, myself, setMyself, chatType, CM, UIM, PM, TM } = props;
     const { accessToken } = useAuth();
 
     // Init task contents
@@ -186,8 +183,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 tags: [],
                 links: [],
                 attachments: [],
-                parentTaskId: parentTaskId,
-                rootTaskId: rootTaskId,
+                parentTaskId: TM.isCreatingTask.parentTaskId,
+                rootTaskId: TM.isCreatingTask.rootTaskId,
             });
         }
     }, [TM.initialEmptyTaskId]);
@@ -289,7 +286,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={() => {}}
                         setOpenCreateProject={PM.setOpenCreateProject}
-                        setOpenCreateTag={TM.setOpenCreateTag}
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
                         taskContent={taskContent}
@@ -314,19 +310,18 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         projectTags={projectTags}
                         reporter={reporter}
                         setAssignee={setAssignee}
-                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
                         setIsOpenProjectList={setIsOpenProjectList}
                         setIsOpenTagList={setIsOpenTagList}
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         setMyself={setMyself}
-                        setOpenCreateTag={TM.setOpenCreateTag}
                         setReporter={setReporter}
                         setTaskContent={setTaskContent}
                         socket={socket}
                         taskContent={taskContent}
                         teamProjects={PM.teamProjects}
                         TEM={TEM}
+                        TM={TM}
                         UIM={UIM}
                     />
 
@@ -356,11 +351,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     <TaskCreateFooter
                         accessToken={accessToken}
                         CM={CM}
+                        TM={TM}
                         myself={myself}
-                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
-                        setInitialEmptyTaskId={TM.setInitialEmptyTaskId}
-                        setIsCreatingTask={TM.setIsCreatingTask}
                         setIsSubmitted={setIsSubmitted}
                         setTitleError={setTitleError}
                         setTitleErrorOpen={setTitleErrorOpen}

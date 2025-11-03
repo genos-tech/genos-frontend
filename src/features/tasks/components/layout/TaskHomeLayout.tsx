@@ -109,7 +109,6 @@ export const TaskHomeLayout = ({
                     />
                     <ProjectTaskTable
                         currentProject={PM.currentProject}
-                        isTaskUpdated={TM.isTaskUpdated}
                         myself={myself}
                         setTeamMembers={TEM.setTeamMembers}
                         teamMemberProfiles={TEM.teamMemberProfiles}
@@ -147,9 +146,7 @@ export const TaskHomeLayout = ({
                         chatType={-1}
                         CM={CM}
                         myself={myself}
-                        parentTaskId={TM.isCreatingTask.parentTaskId}
                         PM={PM}
-                        rootTaskId={TM.isCreatingTask.rootTaskId}
                         setMyself={setMyself}
                         socket={socket}
                         TEM={TEM}

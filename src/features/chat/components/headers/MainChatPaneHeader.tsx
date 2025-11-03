@@ -9,6 +9,7 @@ import { Socket } from "socket.io-client";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { HeaderUserName } from "./HeaderUserName";
@@ -18,18 +19,13 @@ type MainChatPaneHeaderProps = {
     incompleteTodoCount: number;
     isToDoVisible: boolean;
     myself: UserProps;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     setIsToDoVisible: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
@@ -38,14 +34,13 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         incompleteTodoCount,
         isToDoVisible,
         myself,
-        setIsCreatingTask,
-        setIsTaskPreviewVisible,
         setIsToDoVisible,
         setMyself,
         UIM,
         socket,
         TEM,
         CM,
+        TM,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
@@ -100,8 +95,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             onClick={() => {
                                 CM.setIsMainChatVisible(true);
                                 CM.setIsThreadVisible(false);
-                                setIsTaskPreviewVisible(false);
-                                setIsCreatingTask({
+                                TM.setIsTaskPreviewVisible(false);
+                                TM.setIsCreatingTask({
                                     flag: true,
                                     parentTaskId: null,
                                     rootTaskId: null,

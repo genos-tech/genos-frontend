@@ -5,24 +5,17 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { ProjectProps, SearchTeamTasksResponse } from "../../../../types/tasks";
 import { Toggler } from "./common";
 
 type RecentsListItemProps = {
     recentTasks: SearchTeamTasksResponse[];
-    setIsDashboardVisible: (value: boolean) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
+    TM: TaskManagementState;
 };
 export const RecentsListItem = (props: RecentsListItemProps) => {
-    const {
-        recentTasks,
-        setIsDashboardVisible,
-        setCurrentProject,
-        setCurrentPreviewTaskId,
-        setIsTaskPreviewVisible,
-    } = props;
+    const { recentTasks, setCurrentProject, TM } = props;
     const { mode } = useColorScheme();
 
     return (
@@ -34,7 +27,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                         color="primary"
                         onClick={() => {
                             setOpen(!open);
-                            setIsDashboardVisible(false);
+                            TM.setIsDashboardVisible(false);
                         }}
                     >
                         <AccessTimeIcon />
@@ -82,8 +75,8 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                     projectTags: [],
                                                     systemUserId: systemUserId,
                                                 });
-                                                setCurrentPreviewTaskId(taskId);
-                                                setIsTaskPreviewVisible(true);
+                                                TM.setCurrentPreviewTaskId(taskId);
+                                                TM.setIsTaskPreviewVisible(true);
                                             } else {
                                                 console.error("Failed to set the current project");
                                             }

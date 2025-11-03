@@ -1,14 +1,8 @@
-import { Box, Sheet, useColorScheme } from "@mui/joy";
 import { useEffect } from "react";
+import { Box, Sheet, useColorScheme } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { ChatManagementState } from "../../hooks/chats/useChatManagement";
-import { TeamManagementState } from "../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
-import { ProjectProps, TaskProps } from "../../types/tasks";
 import { MainChatPaneHeader } from "./components/headers/MainChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -21,6 +15,14 @@ import {
     calculateVirtuosoSubHight,
 } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
+
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../types/admin";
+import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
+import { ProjectProps, TaskProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
@@ -31,20 +33,7 @@ type MessagesPaneProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     CM: ChatManagementState;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
     currentMainChatId: number;
-    setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
@@ -54,6 +43,7 @@ type MessagesPaneProps = {
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;
     UIM: UIStateManagementState;
+    TM: TaskManagementState;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -61,17 +51,12 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         currentMainChatId,
         currentWindowHeight,
         incompleteTodoCount,
-        isCreatingTask,
         isExistingTodaysTodo,
         isToDoVisible,
         myself,
         paneSizePCT,
-        setCurrentPreviewTask,
-        setCurrentPreviewTaskId,
         setCurrentProject,
-        setIsCreatingTask,
         setIsExistingTodaysTodo,
-        setIsTaskPreviewVisible,
         setIsToDoVisible,
         setMyself,
         UIM,
@@ -80,6 +65,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         TEM,
         todos,
         CM,
+        TM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -181,13 +167,12 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                             incompleteTodoCount={incompleteTodoCount}
                             isToDoVisible={isToDoVisible}
                             myself={myself}
-                            setIsCreatingTask={setIsCreatingTask}
-                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                             setIsToDoVisible={setIsToDoVisible}
                             setMyself={setMyself}
                             socket={socket}
                             TEM={TEM}
                             UIM={UIM}
+                            TM={TM}
                         />
                     )}
 
@@ -222,21 +207,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 currentChatId={currentMainChatId}
                                 height={virtuosoHeight}
                                 indexMap={messageManagement.indexMap}
-                                isCreatingTask={isCreatingTask}
                                 isScrolling={scrollManagement.isScrolling}
                                 isThread={false}
                                 messages={messageManagement.messages}
                                 myself={myself}
-                                setCurrentPreviewTask={setCurrentPreviewTask}
-                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setErrorMessage={messageManagement.setErrorMessage}
                                 setErrorOpen={messageManagement.setErrorOpen}
-                                setIsCreatingTask={setIsCreatingTask}
                                 setIsInEdit={messageManagement.setIsInEdit}
                                 setIsScrolling={scrollManagement.setIsScrolling}
-                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 setMyself={setMyself}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
@@ -246,6 +226,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
+                                TM={TM}
                             />
 
                             {CM.currentMainChat?.chatType !== 3 &&

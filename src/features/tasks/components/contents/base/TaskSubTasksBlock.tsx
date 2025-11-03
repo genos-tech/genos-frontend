@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
@@ -12,7 +13,6 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
@@ -20,6 +20,7 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
@@ -29,34 +30,13 @@ type TaskSubTasksBlockProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    currentPreviewTaskId: number;
     currentTaskContent: TaskProps;
-    setCurrentProject: (value: ProjectProps) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
     CM: ChatManagementState;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsTaskHomeVisible: (value: boolean) => void;
     UIM: UIStateManagementState;
+    TM: TaskManagementState;
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        currentPreviewTaskId,
-        currentTaskContent,
-        setCurrentProject,
-        setCurrentPreviewTaskId,
-        UIM,
-        CM,
-        setIsCreatingTask,
-        setIsTaskHomeVisible,
-    } = props;
+    const { TEM, socket, myself, setMyself, currentTaskContent, UIM, CM, TM } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
@@ -64,7 +44,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     useEffect(() => {
         (async () => {
             // Get the child tasks if exist
-            if (currentTaskContent.project && currentPreviewTaskId === currentTaskContent.id) {
+            if (currentTaskContent.project && TM.currentPreviewTaskId === currentTaskContent.id) {
                 const childTasks: TaskProps[] = await loadSpecificChildTasks(
                     myself,
                     currentTaskContent.project.projectId,
@@ -100,14 +80,14 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                             currentTaskContent.id !== undefined &&
                             currentTaskContent.rootTaskId != null
                         ) {
-                            setIsCreatingTask({
+                            TM.setIsCreatingTask({
                                 flag: true,
                                 parentTaskId: currentTaskContent.id,
                                 rootTaskId: currentTaskContent.rootTaskId,
                             });
 
                             // Close task-home when creating a sub task.
-                            setIsTaskHomeVisible(false);
+                            TM.setIsTaskHomeVisible(false);
                         } else {
                             console.error("Task ID nod defined error.");
                         }
@@ -171,7 +151,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         //     projectTags: project.projectTags || [],
                                                         //     systemUserId: project.systemUserId,
                                                         // });
-                                                        setCurrentPreviewTaskId(id);
+                                                        TM.setCurrentPreviewTaskId(id);
                                                     } else {
                                                         console.error(
                                                             "Failed to set the current project"

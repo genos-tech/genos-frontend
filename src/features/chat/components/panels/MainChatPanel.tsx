@@ -90,17 +90,12 @@ export const MainChatPanel = ({
                     currentMainChatId={currentMainChatId}
                     currentWindowHeight={currentWindowHeight}
                     incompleteTodoCount={incompleteTodoCount}
-                    isCreatingTask={TM.isCreatingTask}
                     isExistingTodaysTodo={isExistingTodaysTodo}
                     isToDoVisible={isToDoVisible}
                     myself={myself}
                     paneSizePCT={mainChatPanelSize}
-                    setCurrentPreviewTask={TM.setCurrentPreviewTask}
-                    setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                     setCurrentProject={PM.setCurrentProject}
-                    setIsCreatingTask={TM.setIsCreatingTask}
                     setIsExistingTodaysTodo={setIsExistingTodaysTodo}
-                    setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                     setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
                     setTodos={setTodos}
@@ -108,6 +103,7 @@ export const MainChatPanel = ({
                     TEM={TEM}
                     todos={todos}
                     UIM={UIM}
+                    TM={TM}
                 />
             )}
         </Panel>

@@ -1,14 +1,8 @@
-import { Sheet } from "@mui/joy";
 import { useEffect } from "react";
+import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { ChatManagementState } from "../../hooks/chats/useChatManagement";
-import { TeamManagementState } from "../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
-import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps } from "../../types/chat";
 import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -18,6 +12,13 @@ import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
+
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../types/admin";
+import { ChatProps, ThreadProps } from "../../types/chat";
 
 type MessagesPaneProps = {
     TEM: TeamManagementState;
@@ -140,21 +141,16 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     currentChatId={currentThreadChatId}
                     height={virtuosoHeight}
                     indexMap={messageManagement.indexMap}
-                    isCreatingTask={{ flag: false, parentTaskId: null, rootTaskId: null }}
                     isScrolling={scrollManagement.isScrolling}
                     isThread={true}
                     messages={messageManagement.messages}
                     myself={myself}
-                    setCurrentPreviewTask={() => {}}
-                    setCurrentPreviewTaskId={() => {}}
                     setCurrentProject={() => {}}
                     setEditTargetMessage={messageManagement.setEditTargetMessage}
                     setErrorMessage={messageManagement.setErrorMessage}
                     setErrorOpen={messageManagement.setErrorOpen}
-                    setIsCreatingTask={() => {}}
                     setIsInEdit={messageManagement.setIsInEdit}
                     setIsScrolling={scrollManagement.setIsScrolling}
-                    setIsTaskPreviewVisible={() => {}}
                     setMyself={setMyself}
                     setVisibleRange={scrollManagement.setVisibleRange}
                     socket={socket}
@@ -162,6 +158,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     UIM={UIM}
                     virtuosoRef={scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>}
                     visibleRange={scrollManagement.visibleRange}
+                    TM={TM}
                 />
 
                 <ChatEditorSection

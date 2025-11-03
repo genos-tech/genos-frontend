@@ -1,7 +1,7 @@
-import { ListDivider, ListItem, Stack } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import * as React from "react";
 import { memo } from "react";
+import { ListDivider, ListItem, Stack } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { useChatListItem } from "../../hooks/useChatListItem";
@@ -15,16 +15,15 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
         chat,
         incompleteTodoCount,
-        isCreatingTask,
         isPinnedChat,
         myself,
-        isTaskPreviewVisible,
         setIsToDoVisible,
         setMyself,
         UIM,
         socket,
         TEM,
         CM,
+        TM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -41,8 +40,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         chat,
         myself,
         CM,
-        isTaskPreviewVisible,
-        isCreatingTask,
+        TM,
         isPinnedChat,
         accessToken: accessToken || "",
     });

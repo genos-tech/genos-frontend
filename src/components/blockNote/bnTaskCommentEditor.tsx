@@ -34,6 +34,7 @@ import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/u
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -50,12 +51,11 @@ type BnTaskCommentEditorProps = {
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
-    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     UIM: UIStateManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
@@ -68,12 +68,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setTaskUpdated,
         taskComments,
         setTaskComments,
-        isCommentUpdated,
-        setIsCommentUpdated,
         UIM,
         taskCommentLines,
         setTaskCommentLines,
         CM,
+        TM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -175,7 +174,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (isCommentUpdated && isCommentUpdated.isUpdate === true && task.id) {
+        if (TM.isTaskCommentUpdated && TM.isTaskCommentUpdated.isUpdate === true && task.id) {
             setTaskComments([
                 ...taskComments,
                 {
@@ -190,9 +189,9 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 },
             ]);
             editor.replaceBlocks(editor.document, []);
-            setIsCommentUpdated({ isUpdate: false, scrollToBottom: false });
+            TM.setIsTaskCommentUpdated({ isUpdate: false, scrollToBottom: false });
         }
-    }, [isCommentUpdated, taskComments]);
+    }, [TM.isTaskCommentUpdated, taskComments]);
 
     useEffect(() => {
         editor.replaceBlocks(editor.document, []);
@@ -212,7 +211,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         is_private: task.project?.isPrivate || false,
                     },
                     (ack: any) => {
-                        setIsCommentUpdated({ isUpdate: true, scrollToBottom: true });
+                        TM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
                     }
                 );
 

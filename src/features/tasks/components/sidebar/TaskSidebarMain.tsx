@@ -137,14 +137,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             />
 
             <TaskSidebarSearchBox
-                currentPreviewTaskId={TM.currentPreviewTaskId}
                 loading={loading}
                 openSearch={openSearch}
-                setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
-                setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                 setOpenSearch={setOpenSearch}
                 setTeamTaskSearchOptions={setTeamTaskSearchOptions}
                 teamTaskSearchOptions={teamTaskSearchOptions}
+                TM={TM}
             />
 
             <Box
@@ -176,10 +174,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
                     <RecentsListItem
                         recentTasks={recentTasks}
-                        setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
-                        setIsDashboardVisible={TM.setIsDashboardVisible}
-                        setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
+                        TM={TM}
                     />
 
                     <ProjectsListItem

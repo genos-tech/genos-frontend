@@ -9,42 +9,39 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 
 type TaskSidebarSearchBoxProps = {
-    currentPreviewTaskId: number;
     openSearch: boolean;
     setOpenSearch: (value: boolean) => void;
     teamTaskSearchOptions: SearchTeamTasksResponse[];
     setTeamTaskSearchOptions: (value: SearchTeamTasksResponse[]) => void;
     loading: boolean;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
+    TM: TaskManagementState;
 };
 export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
     const {
-        currentPreviewTaskId,
         openSearch,
         setOpenSearch,
         teamTaskSearchOptions,
         setTeamTaskSearchOptions,
         loading,
-        setCurrentPreviewTaskId,
-        setIsTaskPreviewVisible,
+        TM,
     } = props;
     const { mode } = useColorScheme();
 
     function onChangeHandler(value: any) {
         if (value !== null) {
             setOpenSearch(false);
-            setCurrentPreviewTaskId(value.taskId);
-            setIsTaskPreviewVisible(true);
+            TM.setCurrentPreviewTaskId(value.taskId);
+            TM.setIsTaskPreviewVisible(true);
         }
     }
 
     return (
         <Autocomplete
-            key={`ac-project-tags-${currentPreviewTaskId}`}
+            key={`ac-project-tags-${TM.currentPreviewTaskId}`}
             aria-label="Search Tasks"
             getOptionLabel={(option) => option.title}
             groupBy={(option) => option.projectName}

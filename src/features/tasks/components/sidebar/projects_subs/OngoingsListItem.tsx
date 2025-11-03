@@ -1,3 +1,4 @@
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import ForwardIcon from "@mui/icons-material/Forward";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -5,7 +6,6 @@ import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { TaskMetaTreeNode } from "../../../../../types/tasks";
@@ -148,14 +148,14 @@ const TaskTreeNode = memo(
     ({
         node,
         rootTaskId,
-        currentPreviewTaskId,
+        TM,
         mode,
         onTaskClick,
         onCreateSubTask,
     }: {
         node: TaskMetaTreeNode;
         rootTaskId: number;
-        currentPreviewTaskId: number | null;
+        TM: TaskManagementState;
         mode: "light" | "dark" | undefined;
         onTaskClick: (
             node: TaskMetaTreeNode,
@@ -164,7 +164,7 @@ const TaskTreeNode = memo(
         ) => void;
         onCreateSubTask: (taskId: number, rootTaskId: number) => void;
     }) => {
-        const isSelected = currentPreviewTaskId === node.taskId;
+        const isSelected = TM.currentPreviewTaskId === node.taskId;
         const hasChildren = node.children.length > 0;
         const actualMode = mode || "light";
 
@@ -190,7 +190,7 @@ const TaskTreeNode = memo(
                                 {node.children.map((child) => (
                                     <TaskTreeNode
                                         key={child.taskId}
-                                        currentPreviewTaskId={currentPreviewTaskId}
+                                        TM={TM}
                                         mode={mode}
                                         node={child}
                                         rootTaskId={rootTaskId}
@@ -315,7 +315,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                     filteredTaskTree.map((root) => (
                         <TaskTreeNode
                             key={root.taskId}
-                            currentPreviewTaskId={TM.currentPreviewTaskId}
+                            TM={TM}
                             mode={mode}
                             node={root}
                             rootTaskId={root.taskId}

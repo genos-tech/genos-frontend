@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
@@ -12,12 +13,7 @@ interface UseChatListItemProps {
     chat: AllChatProps;
     myself: UserProps;
     CM: ChatManagementState;
-    isTaskPreviewVisible: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
+    TM: TaskManagementState;
     isPinnedChat: boolean;
     accessToken: string;
 }
@@ -26,8 +22,7 @@ export const useChatListItem = ({
     chat,
     myself,
     CM,
-    isTaskPreviewVisible,
-    isCreatingTask,
+    TM,
     isPinnedChat,
     accessToken,
 }: UseChatListItemProps) => {
@@ -76,7 +71,7 @@ export const useChatListItem = ({
 
                     CM.setIsMainChatVisible(true);
 
-                    if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                    if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
                         CM.setIsThreadVisible(false);
                     }
                 })
@@ -100,7 +95,7 @@ export const useChatListItem = ({
                 .then((messages) => {
                     CM.setCurrentSubChat(defineNewChat(messages));
                     CM.setIsMainChatVisible(true);
-                    if (isCreatingTask.flag === true || isTaskPreviewVisible) {
+                    if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
                         CM.setIsThreadVisible(false);
                     }
                 })

@@ -121,11 +121,11 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 isInChatPage={false}
                 myself={myself}
                 NM={NM}
-                setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                 setCurrentProject={PM.setCurrentProject}
                 setMyself={setMyself}
                 socket={socket}
                 TEM={TEM}
+                TM={TM}
                 UIM={UIM}
             />
         );

@@ -1,8 +1,19 @@
+import { useEffect, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
+
+import { ChatProvider } from "./context/ChatContext";
+import { ChatSidebar } from "./components/list/ChatSidebar";
+import { ChatNotePanel } from "./components/panels/ChatNotePanel";
+import { CreateTaskPanel } from "./components/panels/CreateTaskPanel";
+import { MainChatPanel } from "./components/panels/MainChatPanel";
+import { SelectChatPanel } from "./components/panels/SelectChatPanel";
+import { SubChatPanel } from "./components/panels/SubChatPanel";
+import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
+import { ThreadPanel } from "./components/panels/ThreadPanel";
+import { ResizeHandle } from "./components/shared/ResizeHandle";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
@@ -19,16 +30,6 @@ import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserProps } from "../../types/admin";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
-import { ChatSidebar } from "./components/list/ChatSidebar";
-import { ChatNotePanel } from "./components/panels/ChatNotePanel";
-import { CreateTaskPanel } from "./components/panels/CreateTaskPanel";
-import { MainChatPanel } from "./components/panels/MainChatPanel";
-import { SelectChatPanel } from "./components/panels/SelectChatPanel";
-import { SubChatPanel } from "./components/panels/SubChatPanel";
-import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
-import { ThreadPanel } from "./components/panels/ThreadPanel";
-import { ResizeHandle } from "./components/shared/ResizeHandle";
-import { ChatProvider } from "./context/ChatContext";
 
 type ChatHomeProps = {
     TEM: TeamManagementState;
@@ -153,17 +154,14 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 <ChatSidebar
                                     CM={CM}
                                     incompleteTodoCount={incompleteTodoCount}
-                                    isCreatingTask={TM.isCreatingTask}
-                                    isTaskPreviewVisible={TM.isTaskPreviewVisible}
                                     myself={myself}
-                                    setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                                     setCurrentProject={PM.setCurrentProject}
-                                    setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                                     setIsToDoVisible={setIsToDoVisible}
                                     setMyself={setMyself}
                                     socket={socket}
                                     TEM={TEM}
                                     UIM={UIM}
+                                    TM={TM}
                                 />
                             </Sheet>
                         </Box>

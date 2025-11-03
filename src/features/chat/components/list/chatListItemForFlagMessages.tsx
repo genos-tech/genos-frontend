@@ -1,3 +1,5 @@
+import * as React from "react";
+import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagIcon from "@mui/icons-material/Flag";
@@ -14,8 +16,6 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
-import * as React from "react";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -26,6 +26,7 @@ import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
@@ -57,16 +58,6 @@ const CHAT_TYPE_LABELS = {
     [CHAT_TYPES.PM]: "PM",
 } as const;
 
-interface TaskCreationProps {
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setCurrentPreviewTaskId: (value: number) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-}
-
 type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     flaggedMessage: FlaggedMessageProps;
     CM: ChatManagementState;
@@ -77,9 +68,9 @@ type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     UIM: UIStateManagementState;
     selectedFlaggedMessageId: string;
     setSelectedFlaggedMessageId: (value: string) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isTaskPreviewVisible: boolean;
-} & TaskCreationProps;
+    setCurrentProject: (value: ProjectProps) => void;
+    TM: TaskManagementState;
+};
 
 // Helper functions
 const createChatFromMessages = (
@@ -131,19 +122,16 @@ const shouldHideThread = (isCreatingTask: boolean, isTaskPreviewVisible: boolean
 export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesProps) => {
     const {
         flaggedMessage,
-        isCreatingTask,
-        isTaskPreviewVisible,
         myself,
         selectedFlaggedMessageId,
-        setCurrentPreviewTaskId,
         setCurrentProject,
-        setIsTaskPreviewVisible,
         setMyself,
         UIM,
         setSelectedFlaggedMessageId,
         socket,
         TEM,
         CM,
+        TM,
     } = props;
     const { accessToken } = useAuth();
 
@@ -216,7 +204,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
             CM.setIsMainChatVisible(true);
 
-            if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
+            if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
                 CM.setIsThreadVisible(false);
             }
         } catch (error) {
@@ -258,7 +246,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
             CM.setIsMainChatVisible(true);
 
-            if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
+            if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
                 CM.setIsThreadVisible(false);
             }
         } catch (error) {
@@ -282,14 +270,14 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
                 if (flaggedMessage.project?.projectId) {
                     setCurrentProject(flaggedMessage.project);
-                    setCurrentPreviewTaskId(flaggedMessage.taskId);
+                    TM.setCurrentPreviewTaskId(flaggedMessage.taskId);
                     CM.setIsThreadVisible(false);
-                    setIsTaskPreviewVisible(true);
+                    TM.setIsTaskPreviewVisible(true);
                 }
 
                 CM.setIsMainChatVisible(true);
 
-                if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
+                if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
                     CM.setIsThreadVisible(false);
                 }
             } catch (error) {
@@ -317,7 +305,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 }
 
                 if (newThread.taskExist && threadMessages[0].taskId) {
-                    setCurrentPreviewTaskId(threadMessages[0].taskId);
+                    TM.setCurrentPreviewTaskId(threadMessages[0].taskId);
                 }
 
                 await handleThreadNavigation();
@@ -378,7 +366,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
             CM.setIsMainChatVisible(true);
 
-            if (shouldHideThread(isCreatingTask.flag, isTaskPreviewVisible)) {
+            if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
                 CM.setIsThreadVisible(false);
             }
         } catch (error) {

@@ -2,6 +2,7 @@ import { Button, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
@@ -14,18 +15,11 @@ type TaskCreateFooterProps = {
     CM: ChatManagementState;
     taskContent: TaskProps;
     taskTitle: string;
+    TM: TaskManagementState;
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
-    setIsTaskPreviewVisible?: (value: boolean) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    setInitialEmptyTaskId: (value: number | undefined) => void;
 };
 export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     const {
@@ -35,14 +29,11 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         CM,
         taskContent,
         taskTitle,
+        TM,
         setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
-        setIsTaskPreviewVisible,
-        setIsCreatingTask,
-        setCurrentPreviewTaskId,
         setCurrentProject,
-        setInitialEmptyTaskId,
     } = props;
 
     const DoUploadNewTask = async () => {
@@ -54,7 +45,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
             accessToken: accessToken || "",
             setTitleError: setTitleError,
             setTitleErrorOpen: setTitleErrorOpen,
-            setCurrentPreviewTaskId: setCurrentPreviewTaskId,
+            setCurrentPreviewTaskId: TM.setCurrentPreviewTaskId,
         });
 
         if (taskContent.project && taskContent.project.projectId) {
@@ -64,9 +55,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
             console.error("Failed to set the current project");
         }
 
-        if (setIsTaskPreviewVisible) {
-            setIsTaskPreviewVisible(true);
-        }
+        TM.setIsTaskPreviewVisible(true);
 
         setIsSubmitted(true);
     };
@@ -79,11 +68,11 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 size="sm"
                 variant="outlined"
                 onClick={() => {
-                    if (setIsCreatingTask) {
-                        setIsCreatingTask({
+                    if (TM.setIsCreatingTask) {
+                        TM.setIsCreatingTask({
                             flag: false,
                             parentTaskId: null,
-                            rootTaskId: null,
+                            rootTaskId: TM.currentPreviewTask?.rootTaskId || null,
                         });
                     }
 
@@ -92,7 +81,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                             myself: myself,
                             taskId: taskContent.id,
                             accessToken: accessToken,
-                            setInitialEmptyTaskId: setInitialEmptyTaskId,
+                            setInitialEmptyTaskId: TM.setInitialEmptyTaskId,
                         });
                     }
                 }}

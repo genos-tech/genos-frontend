@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -14,7 +15,6 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
-import { useEffect, useState } from "react";
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
@@ -152,14 +152,12 @@ export const TaskHomeHeader = ({
 
             <Box sx={{ width: "40%" }}>
                 <TaskSidebarSearchBox
-                    currentPreviewTaskId={TM.currentPreviewTaskId}
                     loading={loading}
                     openSearch={openSearch}
-                    setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
-                    setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
                     setOpenSearch={setOpenSearch}
                     setTeamTaskSearchOptions={setTeamTaskSearchOptions}
                     teamTaskSearchOptions={teamTaskSearchOptions}
+                    TM={TM}
                 />
             </Box>
 

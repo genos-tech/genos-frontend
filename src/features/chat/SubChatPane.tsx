@@ -1,14 +1,8 @@
-import { Box, Sheet } from "@mui/joy";
 import { useEffect } from "react";
+import { Box, Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
-import { ChatManagementState } from "../../hooks/chats/useChatManagement";
-import { TeamManagementState } from "../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
-import { ProjectProps, TaskProps } from "../../types/tasks";
 import { SubChatPaneHeader } from "./components/headers/SubChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -18,6 +12,14 @@ import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
+
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../types/admin";
+import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
+import { ProjectProps, TaskProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
@@ -27,20 +29,7 @@ type MessagesPaneProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
     currentSubChatId: number;
-    setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
@@ -51,6 +40,7 @@ type MessagesPaneProps = {
     incompleteTodoCount: number;
     UIM: UIStateManagementState;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
@@ -59,17 +49,12 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         currentSubChatId,
         currentWindowHeight,
         incompleteTodoCount,
-        isCreatingTask,
         isExistingTodaysTodo,
         isToDoVisible,
         myself,
         paneSizePCT,
-        setCurrentPreviewTask,
-        setCurrentPreviewTaskId,
         setCurrentProject,
-        setIsCreatingTask,
         setIsExistingTodaysTodo,
-        setIsTaskPreviewVisible,
         setIsToDoVisible,
         setMyself,
         UIM,
@@ -77,6 +62,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         socket,
         TEM,
         todos,
+        TM,
     } = props;
 
     if (!CM.currentSubChat) {
@@ -156,13 +142,12 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     incompleteTodoCount={incompleteTodoCount}
                     isToDoVisible={isToDoVisible}
                     myself={myself}
-                    setIsCreatingTask={setIsCreatingTask}
-                    setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                     setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
                     socket={socket}
                     TEM={TEM}
                     UIM={UIM}
+                    TM={TM}
                 />
 
                 {/* To-Do Pane for only myself */}
@@ -198,21 +183,16 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 currentChatId={currentSubChatId}
                                 height={virtuosoHeight}
                                 indexMap={messageManagement.indexMap}
-                                isCreatingTask={isCreatingTask}
                                 isScrolling={scrollManagement.isScrolling}
                                 isThread={false}
                                 messages={messageManagement.messages}
                                 myself={myself}
-                                setCurrentPreviewTask={setCurrentPreviewTask}
-                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setErrorMessage={messageManagement.setErrorMessage}
                                 setErrorOpen={messageManagement.setErrorOpen}
-                                setIsCreatingTask={setIsCreatingTask}
                                 setIsInEdit={messageManagement.setIsInEdit}
                                 setIsScrolling={scrollManagement.setIsScrolling}
-                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                 setMyself={setMyself}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
@@ -222,6 +202,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
+                                TM={TM}
                             />
                             <ChatEditorSection
                                 chat={CM.currentSubChat as ChatProps | ThreadProps}

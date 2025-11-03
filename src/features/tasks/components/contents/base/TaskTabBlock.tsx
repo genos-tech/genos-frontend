@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -23,7 +24,6 @@ import {
     Typography,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
-import React, { useEffect, useRef, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -68,14 +68,12 @@ type TaskTabBlockProps = {
     setMyself: (value: UserProps) => void;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
-    currentPreviewTaskId: number;
     uploadedFiles: any[];
     setUploadedFiles: (value: any[]) => void;
     setTaskUpdated: (value: boolean) => void;
     setIsAttachmentDeleted: (value: boolean) => void;
     setDeletedAttachmentId: (value: number) => void;
     taskComments: TaskCommentProps[];
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
     setIsTaskNoteVisible?: (value: boolean) => void;
@@ -110,14 +108,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         UIM,
         uploadedFiles,
         setUploadedFiles,
-        currentPreviewTaskId,
         setTaskUpdated,
         taskContent,
         setTaskContent,
         setIsAttachmentDeleted,
         setDeletedAttachmentId,
         taskComments,
-        isCommentUpdated,
         setIsInEdit,
         setEditTargetComment,
         setIsTaskNoteVisible,
@@ -285,7 +281,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setImages([]);
         setTextFiles([]);
         setTabIndex(0);
-    }, [currentPreviewTaskId]);
+    }, [TM.currentPreviewTaskId]);
 
     useEffect(() => {
         if (isUploadingFilesUpdated === true) {
@@ -358,7 +354,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     useScrollToBottomOnNewTaskComment(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         taskComments,
-        isCommentUpdated.scrollToBottom
+        TM.isTaskCommentUpdated.scrollToBottom
     );
 
     // State for modal
@@ -503,10 +499,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             <TaskCommentEditorBlock
                                 CM={CM}
                                 editTargetComment={editTargetComment}
-                                isCommentUpdated={TM.isTaskCommentUpdated}
                                 isInEdit={isInEdit}
                                 myself={myself}
-                                setIsCommentUpdated={TM.setIsTaskCommentUpdated}
                                 setIsInEdit={setIsInEdit}
                                 setMyself={setMyself}
                                 setTaskCommentLines={setTaskCommentLines}
@@ -517,6 +511,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 taskComments={taskComments}
                                 TEM={TEM}
                                 UIM={UIM}
+                                TM={TM}
                             />
                         </>
                     </TabPanel>
@@ -594,7 +589,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                         handleCreateNewTaskNote(
                                                             null,
                                                             taskContent.project.projectId,
-                                                            currentPreviewTaskId,
+                                                            TM.currentPreviewTaskId,
                                                             taskContent.title
                                                         );
                                                     } else {

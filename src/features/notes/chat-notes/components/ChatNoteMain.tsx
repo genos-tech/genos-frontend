@@ -1,5 +1,5 @@
-import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -9,6 +9,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { useChatNoteEditor } from "../../../../hooks/notes/useChatNoteEditor";
 import { useChatNoteTabs } from "../../../../hooks/notes/useChatNoteTabs";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
@@ -34,7 +35,7 @@ interface ChatNoteMainProps {
     /** Whether the component is in chat page mode */
     isInChatPage: boolean;
     /** Function to set the current preview task ID */
-    setCurrentPreviewTaskId: (id: number) => void;
+    TM: TaskManagementState;
     /** Function to set the current project */
     setCurrentProject: (project: any) => void;
     /** Note management state and actions */
@@ -44,18 +45,8 @@ interface ChatNoteMainProps {
 }
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        UIM,
-        isInChatPage,
-        setCurrentPreviewTaskId,
-        setCurrentProject,
-        NM,
-        CM,
-    } = props;
+    const { TEM, socket, myself, setMyself, UIM, isInChatPage, TM, setCurrentProject, NM, CM } =
+        props;
 
     const { accessToken } = useAuth();
 
@@ -175,7 +166,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 NM={NM}
                                                 openDeleteNote={openDeleteNote}
                                                 openSearchBox={openSearchBox}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                                                TM={TM}
                                                 setCurrentProject={setCurrentProject}
                                                 setMyself={setMyself}
                                                 setOpenDeleteNote={setOpenDeleteNote}

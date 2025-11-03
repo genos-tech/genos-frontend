@@ -22,20 +22,11 @@ type ProjectTaskTableProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     currentProject: ProjectProps | null;
-    isTaskUpdated?: boolean;
     TM: TaskManagementState;
 };
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
-    const {
-        teamMembers,
-        setTeamMembers,
-        teamMemberProfiles,
-        myself,
-        currentProject,
-        isTaskUpdated,
-        TM,
-    } = props;
+    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, currentProject, TM } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const className = `task-datagrid-${mode}`;
@@ -107,7 +98,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         <ThemeProvider theme={theme}>
             <div style={{ height: "100%", overflow: "hidden", borderRadius: "5px" }}>
                 <TaskFilterMenu
-                    isTaskUpdated={isTaskUpdated}
+                    isTaskUpdated={TM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasks}
                     TM={TM}

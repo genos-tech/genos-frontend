@@ -26,6 +26,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
@@ -39,7 +40,7 @@ interface ChatNoteHeaderProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
-    setCurrentPreviewTaskId: (id: number) => void;
+    TM: TaskManagementState;
     setCurrentProject: (project: any) => void;
     socket: Socket | null;
     TEM: TeamManagementState;
@@ -62,7 +63,7 @@ export const ChatNoteHeader = ({
     myself,
     setMyself,
     UIM,
-    setCurrentPreviewTaskId,
+    TM,
     setCurrentProject,
     socket,
     TEM,
@@ -246,7 +247,7 @@ export const ChatNoteHeader = ({
                                     true, // openTaskNoteInChat
                                     false, // openThreadTaskPreview
                                     UIM.setOpeningService,
-                                    setCurrentPreviewTaskId,
+                                    TM.setCurrentPreviewTaskId,
                                     setCurrentProject
                                 );
                             }}

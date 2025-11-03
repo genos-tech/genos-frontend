@@ -1,5 +1,5 @@
-import { Box, Sheet, Stack } from "@mui/joy";
 import { useEffect, useRef, useState } from "react";
+import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
@@ -10,6 +10,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import {
     ChatProps,
@@ -43,48 +44,32 @@ type MessageBubbleProps = {
     isFocused: boolean;
     isSimpleBubble: boolean;
     socket: Socket | null;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     UIM: UIStateManagementState;
-    setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: MessageProps) => void;
     CM: ChatManagementState;
+    TM: TaskManagementState;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
     const {
         chat,
-        isCreatingTask,
         isFocused,
         isScrolling,
         isSimpleBubble,
         message,
         myself,
-        setCurrentPreviewTask,
-        setCurrentPreviewTaskId,
         setCurrentProject,
         setEditTargetMessage,
-        setIsCreatingTask,
         setIsInEdit,
-        setIsTaskPreviewVisible,
         setMyself,
         UIM,
         socket,
         TEM,
         variant,
         CM,
+        TM,
     } = props;
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
@@ -101,7 +86,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 accessToken
             );
             if (loadedTask.length > 0) {
-                setCurrentPreviewTask(loadedTask[0]);
+                TM.setCurrentPreviewTask(loadedTask[0]);
             }
         })();
     };
@@ -112,13 +97,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         // Show thread pane on the right side.
         CM.setIsMainChatVisible(true);
         CM.setIsThreadVisible(true);
-        setIsTaskPreviewVisible(false);
-        setIsCreatingTask({ ...isCreatingTask, flag: false });
+        TM.setIsTaskPreviewVisible(false);
+        TM.setIsCreatingTask({ ...TM.isCreatingTask, flag: false });
 
         if (message.taskId) {
-            setCurrentPreviewTaskId(message.taskId);
+            TM.setCurrentPreviewTaskId(message.taskId);
         } else {
-            setCurrentPreviewTaskId(-1);
+            TM.setCurrentPreviewTaskId(-1);
         }
 
         if (socket !== null) {
@@ -198,7 +183,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             if (newThread) {
                                 CM.setCurrentThreadChat(newThread);
                                 if (newThread.taskExist === true && threadMessages[0].taskId) {
-                                    setCurrentPreviewTaskId(threadMessages[0].taskId);
+                                    TM.setCurrentPreviewTaskId(threadMessages[0].taskId);
                                 }
                             }
                         }
@@ -567,13 +552,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         message.sender.isSystemUser === true && (
                                             <BubbleOpenTaskButton
                                                 CM={CM}
-                                                isCreatingTask={isCreatingTask}
                                                 message={message}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setCurrentProject={setCurrentProject}
-                                                setIsCreatingTask={setIsCreatingTask}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                                                 taskId={message.taskId}
+                                                TM={TM}
                                             />
                                         )}
 
@@ -691,20 +673,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         message.sender.isSystemUser === true && (
                                                             <BubbleOpenTaskButton
                                                                 CM={CM}
-                                                                isCreatingTask={isCreatingTask}
+                                                                TM={TM}
                                                                 message={message}
                                                                 taskId={message.taskId}
-                                                                setCurrentPreviewTaskId={
-                                                                    setCurrentPreviewTaskId
-                                                                }
                                                                 setCurrentProject={
                                                                     setCurrentProject
-                                                                }
-                                                                setIsCreatingTask={
-                                                                    setIsCreatingTask
-                                                                }
-                                                                setIsTaskPreviewVisible={
-                                                                    setIsTaskPreviewVisible
                                                                 }
                                                             />
                                                         )}
