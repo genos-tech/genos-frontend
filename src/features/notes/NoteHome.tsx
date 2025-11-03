@@ -8,6 +8,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
@@ -23,14 +24,14 @@ type NoteHomeProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
-    unReadInboxItemCount: number;
+    IM: InboxManagementState;
     PM: ProjectManagementState;
     NM: NoteManagementState;
     CM: ChatManagementState;
     TM: TaskManagementState;
 };
 export const NoteHome = (props: NoteHomeProps) => {
-    const { TEM, socket, myself, setMyself, UIM, unReadInboxItemCount, NM, CM, PM, TM } = props;
+    const { TEM, socket, myself, setMyself, UIM, IM, NM, CM, PM, TM } = props;
 
     const { mode } = useColorScheme();
 
@@ -101,7 +102,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     socket={socket}
                     TEM={TEM}
                     unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                    unReadInboxItemCount={unReadInboxItemCount}
+                    IM={IM}
                 />
 
                 <PanelGroup direction="horizontal">

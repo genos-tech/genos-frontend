@@ -18,7 +18,7 @@ export const TaskHome = (props: TaskHomeProps) => {
         setMyself,
         setCurrentMainChat,
         UIM,
-        unReadInboxItemCount,
+        IM,
         unReadChatAndActivityCounts,
         allChats,
         setAllChats,
@@ -96,7 +96,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     socket={socket}
                     TEM={TEM}
                     unReadChatAndActivityCounts={unReadChatAndActivityCounts}
-                    unReadInboxItemCount={unReadInboxItemCount}
+                    IM={IM}
                 />
 
                 <TaskHomeLayout

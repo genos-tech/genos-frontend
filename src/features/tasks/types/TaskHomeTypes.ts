@@ -3,11 +3,11 @@ import { Socket } from "socket.io-client";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { InboxManagementState } from "../../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
-import { TaskType } from "../../../types/tasks";
 
 export interface TaskHomeProps {
     TEM: TeamManagementState;
@@ -16,7 +16,7 @@ export interface TaskHomeProps {
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
-    unReadInboxItemCount: number;
+    IM: InboxManagementState;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
     funcSetAllChats: () => Promise<void>;

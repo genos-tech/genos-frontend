@@ -12,17 +12,16 @@ import { Sidebar } from "../../components/layout/sidebar";
 export const InboxHome = (props: InboxHomeProps) => {
     const {
         TEM,
+        IM,
         myself,
         socket,
         setMyself,
         setCurrentMainChat,
-        inboxItems,
-        unReadInboxItemCount,
         unReadChatAndActivityCounts,
         UIM,
     } = props;
 
-    const { activityInboxItems, requestInboxItems } = useInboxItems(inboxItems);
+    const { activityInboxItems, requestInboxItems } = useInboxItems(IM.inboxItems);
     const activityVirtuosoRef = useInboxScroll(activityInboxItems);
     const requestVirtuosoRef = useInboxScroll(requestInboxItems);
 
@@ -36,7 +35,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                 setMyself={setMyself}
                 socket={socket}
                 unReadChatAndActivityCounts={unReadChatAndActivityCounts}
-                unReadInboxItemCount={unReadInboxItemCount}
+                IM={IM}
             />
             <Stack sx={{ width: "100%" }}>
                 <InboxHeader />
@@ -47,7 +46,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                         <InboxSectionHeader
                             title="Requests"
                             unreadCount={
-                                unReadInboxItemCount > 0 ? unReadInboxItemCount : undefined
+                                IM.unReadInboxItemCount > 0 ? IM.unReadInboxItemCount : undefined
                             }
                         />
                     </Stack>

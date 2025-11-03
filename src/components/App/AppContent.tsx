@@ -32,13 +32,12 @@ export const AppContent = ({
         return (
             <InboxHome
                 TEM={TEM}
-                inboxItems={IM.inboxItems}
+                IM={IM}
                 myself={myself}
                 setCurrentMainChat={CM.setCurrentMainChat}
                 setMyself={setMyself}
                 socket={socketInstance}
                 unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                unReadInboxItemCount={IM.unReadInboxItemCount}
                 UIM={UIM}
             />
         );
@@ -55,7 +54,7 @@ export const AppContent = ({
                 socket={socketInstance}
                 TEM={TEM}
                 TM={TM}
-                unReadInboxItemCount={IM.unReadInboxItemCount}
+                IM={IM}
                 UIM={UIM}
             />
         );
@@ -77,7 +76,7 @@ export const AppContent = ({
                 TEM={TEM}
                 TM={TM}
                 unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                unReadInboxItemCount={IM.unReadInboxItemCount}
+                IM={IM}
                 UIM={UIM}
             />
         );
@@ -94,7 +93,7 @@ export const AppContent = ({
                 socket={socketInstance}
                 TEM={TEM}
                 TM={TM}
-                unReadInboxItemCount={IM.unReadInboxItemCount}
+                IM={IM}
                 UIM={UIM}
             />
         );

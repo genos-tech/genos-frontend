@@ -2,18 +2,18 @@ import { Socket } from "socket.io-client";
 
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { InboxManagementState } from "../../../hooks/inbox/useInboxManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 
 export type InboxHomeProps = {
     TEM: TeamManagementState;
+    IM: InboxManagementState;
     myself: UserProps;
     socket: Socket | null;
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    inboxItems: InboxItemProps[];
-    unReadInboxItemCount: number;
     unReadChatAndActivityCounts: number;
     UIM: UIStateManagementState;
 };

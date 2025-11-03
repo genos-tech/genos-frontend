@@ -21,6 +21,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
@@ -37,14 +38,14 @@ type ChatHomeProps = {
     setMyself: (me: UserProps) => void;
     CM: ChatManagementState;
     UIM: UIStateManagementState;
-    unReadInboxItemCount: number;
+    IM: InboxManagementState;
     NM: NoteManagementState;
     PM: ProjectManagementState;
     TM: TaskManagementState;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
-    const { TEM, socket, myself, setMyself, UIM, unReadInboxItemCount, CM, NM, PM, TM } = props;
+    const { TEM, socket, myself, setMyself, UIM, IM, CM, NM, PM, TM } = props;
 
     // Common
     const { mode } = useColorScheme();
@@ -124,7 +125,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     setMyself={setMyself}
                     socket={socket}
                     unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                    unReadInboxItemCount={unReadInboxItemCount}
+                    IM={IM}
                 />
 
                 <PanelGroup autoSaveId="conditional" direction="horizontal">

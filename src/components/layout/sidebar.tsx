@@ -28,6 +28,7 @@ import { UserProfile } from "../../features/admin/components/modals/ModalUserPro
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
@@ -41,7 +42,7 @@ type SidebarProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    unReadInboxItemCount: number;
+    IM: InboxManagementState;
     unReadChatAndActivityCounts: number;
     UIM: UIStateManagementState;
 };
@@ -52,7 +53,7 @@ export const Sidebar = (props: SidebarProps) => {
         myself,
         setMyself,
         setCurrentMainChat,
-        unReadInboxItemCount,
+        IM,
         unReadChatAndActivityCounts,
         UIM,
     } = props;
@@ -194,13 +195,13 @@ export const Sidebar = (props: SidebarProps) => {
                                         p: "5px",
                                     }}
                                 >
-                                    {unReadInboxItemCount > 0 && (
+                                    {IM.unReadInboxItemCount > 0 && (
                                         <Badge
                                             anchorOrigin={{
                                                 vertical: "top",
                                                 horizontal: "right",
                                             }}
-                                            badgeContent={unReadInboxItemCount}
+                                            badgeContent={IM.unReadInboxItemCount}
                                             color="primary"
                                             size="sm"
                                         >
@@ -214,7 +215,7 @@ export const Sidebar = (props: SidebarProps) => {
                                             />
                                         </Badge>
                                     )}
-                                    {unReadInboxItemCount < 1 && (
+                                    {IM.unReadInboxItemCount < 1 && (
                                         <AllInboxIcon
                                             color={
                                                 UIM.openingService === 0 ? "primary" : "disabled"
