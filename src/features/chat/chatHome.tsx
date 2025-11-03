@@ -262,6 +262,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 TEM={TEM}
                                 TM={TM}
                                 UIM={UIM}
+                                NM={NM}
                             />
                         </>
                     )}

@@ -1,5 +1,5 @@
-import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -132,10 +132,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             mb: "5px",
                                         }}
                                     >
-                                        <MyNoteHeader
-                                            currentMyNoteChain={NM.currentMyNoteChain || null}
-                                            onLoadNote={NM.loadNote}
-                                        />
+                                        <MyNoteHeader NM={NM} />
 
                                         <NoteHeaderActions
                                             CM={CM}
@@ -163,12 +160,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             handleTabChange(Number(val));
                                         }}
                                     >
-                                        <NoteTabList
-                                            selectedTabIndex={NM.selectedTabIndex}
-                                            tabItems={NM.tabItems}
-                                            onCloseTab={handleCloseTab}
-                                            onTabChange={handleTabChange}
-                                        />
+                                        <NoteTabList NM={NM} onCloseTab={handleCloseTab} />
 
                                         {NM.tabItems.map((tabNote, index) => (
                                             <TabPanel
@@ -184,7 +176,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     <NoteEditor
                                                         body={noteEditor.body}
                                                         CM={CM}
-                                                        currentMyNote={NM.currentMyNote}
+                                                        NM={NM}
                                                         myself={myself}
                                                         noteBodySaved={noteEditor.noteBodySaved}
                                                         setMyself={setMyself}

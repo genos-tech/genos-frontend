@@ -51,7 +51,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                             CM={CM}
                             myself={myself}
                             NM={NM}
-                            noteType={NM.currentNoteType}
                             PM={PM}
                             setMyself={setMyself}
                             socket={socket}
@@ -77,7 +76,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                         CM={CM}
                         myself={myself}
                         NM={NM}
-                        noteType={NM.currentNoteType}
                         PM={PM}
                         setMyself={setMyself}
                         socket={socket}

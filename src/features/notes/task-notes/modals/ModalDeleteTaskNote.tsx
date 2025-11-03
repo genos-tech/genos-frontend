@@ -3,30 +3,24 @@ import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { NoteService } from "../../../../db/services/note.service";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
-import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
 import { deleteTaskNote } from "../services/deleteTaskNote";
 
 type Props = {
     myself: UserProps;
     openDeleteNote: boolean;
     setOpenDeleteNote: (value: boolean) => void;
-    taskNoteMeta: TaskNoteMetaProps[];
-    setTaskNoteMeta: (value: TaskNoteMetaProps[]) => void;
-    currentTaskNote: TaskNoteProps;
+    NM: NoteManagementState;
     handleCloseTab: (tabIndex: number, closingNoteId: number) => void;
-    currentTabIndex: number;
 };
 
 export const ModalDeleteTaskNote: React.FC<Props> = ({
     myself,
     openDeleteNote,
     setOpenDeleteNote,
-    taskNoteMeta,
-    setTaskNoteMeta,
-    currentTaskNote,
+    NM,
     handleCloseTab,
-    currentTabIndex,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -34,8 +28,8 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
 
     const handleDeleteNote = async () => {
         let childExist: boolean;
-        const childNotes = taskNoteMeta.filter(
-            (note) => note.parentNoteId === currentTaskNote.noteId
+        const childNotes = NM.taskNoteMeta.filter(
+            (note) => note.parentNoteId === NM.currentTaskNote?.noteId
         );
 
         if (childNotes.length === 0) {
@@ -46,12 +40,16 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
 
         if (childExist === false) {
             // Delete from backend
-            await deleteTaskNote(myself, currentTaskNote.noteId, accessToken);
+            await deleteTaskNote(myself, NM.currentTaskNote?.noteId as number, accessToken);
             // Delete from indexedDB
-            await noteService.deleteTaskNote(currentTaskNote.noteId);
+            await noteService.deleteTaskNote(NM.currentTaskNote?.noteId as number);
             // Delete the deleted noteId from the meta object
-            setTaskNoteMeta(taskNoteMeta.filter((note) => note.noteId !== currentTaskNote.noteId));
-            handleCloseTab(currentTabIndex, currentTaskNote.noteId);
+            NM.setTaskNoteMeta(
+                NM.taskNoteMeta.filter(
+                    (note) => note.noteId !== (NM.currentTaskNote?.noteId as number)
+                )
+            );
+            handleCloseTab(NM.selectedTabIndex, NM.currentTaskNote?.noteId as number);
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {
@@ -73,7 +71,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                     <Typography level="h4">
                         Are you sure to delete{" "}
                         <Typography color="danger" level="h3">
-                            {currentTaskNote.title}
+                            {NM.currentTaskNote?.title}
                         </Typography>{" "}
                         ?
                     </Typography>

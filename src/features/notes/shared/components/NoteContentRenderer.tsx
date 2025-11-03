@@ -14,7 +14,6 @@ import { MyNoteMain } from "../../my-notes/components/MyNoteMain";
 import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
 
 type NoteContentRendererProps = {
-    noteType: number;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
@@ -27,7 +26,7 @@ type NoteContentRendererProps = {
 };
 
 export const NoteContentRenderer = (props: NoteContentRendererProps) => {
-    const { noteType, myself, setMyself, UIM, socket, TEM, PM, NM, CM, TM } = props;
+    const { myself, setMyself, UIM, socket, TEM, PM, NM, CM, TM } = props;
 
     const renderPlaceholder = (message: string) => (
         <Box
@@ -54,12 +53,12 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     );
 
     // Note Home placeholder
-    if (noteType === 0) {
+    if (NM.currentNoteType === 0) {
         return renderPlaceholder("(TBD) Note Home");
     }
 
     // My Note
-    if (noteType === 1 && NM.currentMyNoteChain) {
+    if (NM.currentNoteType === 1 && NM.currentMyNoteChain) {
         return (
             <MyNoteMain
                 CM={CM}
@@ -74,7 +73,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     }
 
     // Task Note
-    if (noteType === 2 && NM.currentTaskNoteChain) {
+    if (NM.currentNoteType === 2 && NM.currentTaskNoteChain) {
         return (
             <>
                 <TaskNoteMain
@@ -92,17 +91,13 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
                     <TaskPreview
                         CM={CM}
-                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
-                        isTaskNoteVisible={NM.isTaskNoteVisible}
+                        NM={NM}
                         myself={myself}
                         setCurrentProject={PM.setCurrentProject}
-                        setCurrentTaskNote={NM.setCurrentTaskNote}
-                        setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
-                        taskNoteMeta={NM.taskNoteMeta}
                         teamProjects={PM.teamProjects}
                         TEM={TEM}
                         TM={TM}
@@ -114,7 +109,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     }
 
     // Chat Note
-    if (noteType === 3 && NM.currentChatNoteChain) {
+    if (NM.currentNoteType === 3 && NM.currentChatNoteChain) {
         return (
             <ChatNoteMain
                 CM={CM}
@@ -132,7 +127,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     }
 
     // Shared Note placeholder
-    if (noteType === 4) {
+    if (NM.currentNoteType === 4) {
         return renderPlaceholder("(TBD) Shared Notes");
     }
 

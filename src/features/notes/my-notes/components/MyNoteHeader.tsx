@@ -1,12 +1,13 @@
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import { Breadcrumbs, IconButton, Tooltip, Typography } from "@mui/joy";
 
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+
 interface MyNoteHeaderProps {
-    currentMyNoteChain: any[] | null;
-    onLoadNote: (noteType: number, noteId: number, tabIndex: number) => void;
+    NM: NoteManagementState;
 }
 
-export const MyNoteHeader = ({ currentMyNoteChain, onLoadNote }: MyNoteHeaderProps) => {
+export const MyNoteHeader = ({ NM }: MyNoteHeaderProps) => {
     return (
         <Breadcrumbs aria-label="breadcrumbs" separator="›">
             <IconButton
@@ -21,8 +22,8 @@ export const MyNoteHeader = ({ currentMyNoteChain, onLoadNote }: MyNoteHeaderPro
                 My Notes
             </IconButton>
 
-            {currentMyNoteChain &&
-                currentMyNoteChain.map((node, index) => (
+            {NM.currentMyNoteChain &&
+                NM.currentMyNoteChain.map((node, index) => (
                     <Tooltip
                         key={`my-note-tooltip-${index}`}
                         size="sm"
@@ -43,7 +44,7 @@ export const MyNoteHeader = ({ currentMyNoteChain, onLoadNote }: MyNoteHeaderPro
                                 fontWeight: "bold",
                             }}
                             onClick={() => {
-                                onLoadNote(1, node.noteId, -1);
+                                NM.loadNote(1, node.noteId, -1);
                             }}
                         >
                             {node.title.length > 14 ? `${node.title.slice(0, 14)}...` : node.title}

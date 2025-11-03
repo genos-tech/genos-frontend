@@ -4,27 +4,25 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { loadTaskNotes } from "../../services/loadTaskNotes";
 
 type ACTaskNotesProps = {
     myself: UserProps;
-    projectId: number;
-    taskId: number;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    NM: NoteManagementState;
 };
 export const ACTaskNotes = (props: ACTaskNotesProps) => {
-    const { myself, projectId, taskId, openSearchBox, setOpenSearchBox, setCurrentTaskNote } =
-        props;
+    const { myself, openSearchBox, setOpenSearchBox, NM } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<TaskNoteProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: TaskNoteProps) => {
-        setCurrentTaskNote(value);
+        NM.setCurrentTaskNote(value);
     };
 
     useEffect(() => {
@@ -37,8 +35,8 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
         (async () => {
             const loadedUsers: TaskNoteProps[] = await loadTaskNotes(
                 myself,
-                projectId,
-                taskId,
+                NM.currentTaskNote?.projectId as number,
+                NM.currentTaskNote?.taskId as number,
                 accessToken
             );
 

@@ -8,13 +8,14 @@ import { BnMyNoteEditor } from "../../../../components/blockNote/bnMyNoteEditor"
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
 
 interface NoteEditorProps {
-    currentMyNote: MyNoteProps;
-    body: PartialBlock[] | undefined;
+    NM: NoteManagementState;
     currentMyNoteTitle: string;
+    body: PartialBlock[] | undefined;
     titleInputRef: React.RefObject<HTMLInputElement | null>;
     noteBodySaved: boolean;
     onTitleChange: (value: string) => void;
@@ -29,9 +30,9 @@ interface NoteEditorProps {
 }
 
 export const NoteEditor = ({
-    currentMyNote,
-    body,
     currentMyNoteTitle,
+    NM,
+    body,
     titleInputRef,
     noteBodySaved,
     onTitleChange,
@@ -105,7 +106,7 @@ export const NoteEditor = ({
             <BnMyNoteEditor
                 body={body || []}
                 CM={CM}
-                currentMyNote={currentMyNote}
+                currentMyNote={NM.currentMyNote as MyNoteProps}
                 myself={myself}
                 setBody={onBodyChange}
                 setMyself={setMyself}

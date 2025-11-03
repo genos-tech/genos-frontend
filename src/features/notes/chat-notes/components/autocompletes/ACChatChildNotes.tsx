@@ -4,25 +4,25 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import CircularProgress from "@mui/joy/CircularProgress";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatNoteProps } from "../../../../../types/notes";
 import { loadChatSubNotes } from "../../../chat-notes/services/loadChatSubNotes";
 
 type ACChatChildNotesProps = {
     myself: UserProps;
-    noteId: number;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
-    setCurrentChatNote: (value: ChatNoteProps) => void;
+    NM: NoteManagementState;
 };
 export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
-    const { myself, noteId, openSearchBox, setOpenSearchBox, setCurrentChatNote } = props;
+    const { myself, openSearchBox, setOpenSearchBox, NM } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<ChatNoteProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: ChatNoteProps) => {
-        setCurrentChatNote(value);
+        NM.setCurrentChatNote(value);
     };
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
         (async () => {
             const loadedUsers: ChatNoteProps[] = await loadChatSubNotes(
                 myself,
-                noteId,
+                NM.currentChatNote?.noteId as number,
                 accessToken
             );
 

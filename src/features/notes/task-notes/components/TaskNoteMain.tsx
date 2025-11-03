@@ -1,6 +1,6 @@
+import { useCallback, useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Box, IconButton, Stack } from "@mui/joy";
-import { useCallback, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -226,20 +226,13 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                 <ACTaskNotes
                                     myself={myself}
                                     openSearchBox={openSearchBox}
-                                    projectId={NM.currentTaskNote.projectId}
-                                    setCurrentTaskNote={NM.setCurrentTaskNote}
                                     setOpenSearchBox={setOpenSearchBox}
-                                    taskId={NM.currentTaskNote.taskId}
+                                    NM={NM}
                                 />
                             </Box>
                         )}
 
-                        {isInTaskPage === false && (
-                            <TaskNoteHeader
-                                currentTaskNoteChain={NM.currentTaskNoteChain || null}
-                                onLoadNote={NM.loadNote}
-                            />
-                        )}
+                        {isInTaskPage === false && <TaskNoteHeader NM={NM} />}
 
                         <NoteHeaderActions
                             CM={CM}
@@ -261,14 +254,11 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                         {NM.currentTaskNote && (
                             <ModalDeleteTaskNote
-                                currentTabIndex={NM.selectedTabIndex}
-                                currentTaskNote={NM.currentTaskNote}
                                 handleCloseTab={handleCloseTab}
                                 myself={myself}
                                 openDeleteNote={openDeleteNote}
                                 setOpenDeleteNote={setOpenDeleteNote}
-                                setTaskNoteMeta={NM.setTaskNoteMeta}
-                                taskNoteMeta={NM.taskNoteMeta}
+                                NM={NM}
                             />
                         )}
                     </Stack>
@@ -276,22 +266,19 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                     <NoteTabs
                         body={body}
                         CM={CM}
-                        currentTaskNote={NM.currentTaskNote}
+                        NM={NM}
                         currentTaskNoteTitle={currentTaskNoteTitle}
                         myself={myself}
                         noteBodySaved={noteBodySaved}
-                        selectedTabIndex={NM.selectedTabIndex}
                         setBody={setBody}
                         setMyself={setMyself}
                         setNoteBodyEdited={setNoteBodyEdited}
                         setNoteBodySaved={setNoteBodySaved}
                         socket={socket}
-                        tabItems={NM.tabItems}
                         TEM={TEM}
                         tsBody={tsBody}
                         UIM={UIM}
                         onCloseTab={handleCloseTab}
-                        onLoadNote={NM.loadNote}
                         onTitleBlur={handleTitleBlur}
                         onTitleChange={handleTitleChange}
                     />

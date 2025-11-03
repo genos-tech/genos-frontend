@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { PartialBlock } from "@blocknote/core";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -14,19 +15,15 @@ import {
     Tabs,
     Tooltip,
 } from "@mui/joy";
-import { useRef } from "react";
 
 import { BnTaskNoteEditor } from "../../../../components/blockNote/bnTaskNoteEditor";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { TaskNoteProps } from "../../../../types/notes";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 
 interface NoteTabsProps {
-    tabItems: TaskNoteProps[];
-    selectedTabIndex: number;
-    currentTaskNote: TaskNoteProps | null;
-    currentTaskNoteTitle: string;
+    NM: NoteManagementState;
     body: PartialBlock[] | undefined;
     noteBodySaved: boolean;
     tsBody: string;
@@ -39,17 +36,14 @@ interface NoteTabsProps {
     UIM: UIStateManagementState;
     socket: any;
     TEM: TeamManagementState;
-    onLoadNote: (noteType: number, noteId: number, tabIndex: number) => void;
     onCloseTab: (tabIndex: number, closingNoteId: number) => void;
     onTitleChange: (title: string) => void;
     onTitleBlur: () => void;
+    currentTaskNoteTitle: string;
 }
 
 export const NoteTabs = ({
-    tabItems,
-    selectedTabIndex,
-    currentTaskNote,
-    currentTaskNoteTitle,
+    NM,
     body,
     noteBodySaved,
     tsBody,
@@ -62,21 +56,21 @@ export const NoteTabs = ({
     UIM,
     socket,
     TEM,
-    onLoadNote,
     onCloseTab,
     onTitleChange,
     onTitleBlur,
+    currentTaskNoteTitle,
 }: NoteTabsProps) => {
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     return (
         <Tabs
             sx={{ width: "100%" }}
-            value={selectedTabIndex}
+            value={NM.selectedTabIndex}
             onChange={(_, val) => {
-                onLoadNote(
-                    tabItems[Number(val)].noteType,
-                    tabItems[Number(val)].noteId,
+                NM.loadNote(
+                    NM.tabItems[Number(val)].noteType,
+                    NM.tabItems[Number(val)].noteId,
                     Number(val)
                 );
             }}
@@ -89,7 +83,7 @@ export const NoteTabs = ({
                     "&::-webkit-scrollbar": { display: "none" },
                 }}
             >
-                {tabItems.map((tab, index) => (
+                {NM.tabItems.map((tab, index) => (
                     <Tooltip
                         key={`tab-tooltip-${index}`}
                         size="sm"
@@ -119,7 +113,7 @@ export const NoteTabs = ({
                                     ? `${tab.title.slice(0, 14)}...`
                                     : tab.title}
 
-                                {tabItems.length > 1 && (
+                                {NM.tabItems.length > 1 && (
                                     <IconButton
                                         color="neutral"
                                         component="span"
@@ -140,7 +134,7 @@ export const NoteTabs = ({
                 ))}
             </TabList>
 
-            {tabItems.map((tabNote, index) => (
+            {NM.tabItems.map((tabNote, index) => (
                 <TabPanel
                     key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                     value={index}
@@ -210,11 +204,11 @@ export const NoteTabs = ({
                             </Button>
                         </Box>
                     )}
-                    {currentTaskNote && (
+                    {NM.currentTaskNote && (
                         <BnTaskNoteEditor
                             body={body || []}
                             CM={CM}
-                            currentTaskNote={currentTaskNote}
+                            currentTaskNote={NM.currentTaskNote}
                             myself={myself}
                             setBody={setBody}
                             setMyself={setMyself}

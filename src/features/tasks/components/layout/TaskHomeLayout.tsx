@@ -152,6 +152,7 @@ export const TaskHomeLayout = ({
                         TEM={TEM}
                         TM={TM}
                         UIM={UIM}
+                        NM={NM}
                     />
                 </Box>
             </Panel>
@@ -181,17 +182,13 @@ export const TaskHomeLayout = ({
                 >
                     <TaskPreview
                         CM={CM}
-                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
-                        isTaskNoteVisible={NM.isTaskNoteVisible}
+                        NM={NM}
                         myself={myself}
                         setCurrentProject={PM.setCurrentProject}
-                        setCurrentTaskNote={NM.setCurrentTaskNote}
-                        setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
-                        taskNoteMeta={NM.taskNoteMeta}
                         teamProjects={PM.teamProjects}
                         TEM={TEM}
                         TM={TM}

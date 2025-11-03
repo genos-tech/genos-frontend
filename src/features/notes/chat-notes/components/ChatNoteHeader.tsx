@@ -33,8 +33,6 @@ import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 interface ChatNoteHeaderProps {
-    currentChatNote: ChatNoteProps | null;
-    currentChatNoteChain: any[] | undefined;
     chat: any;
     isInChatPage: boolean;
     myself: UserProps;
@@ -56,8 +54,6 @@ interface ChatNoteHeaderProps {
 }
 
 export const ChatNoteHeader = ({
-    currentChatNote,
-    currentChatNoteChain,
     chat,
     isInChatPage,
     myself,
@@ -89,7 +85,7 @@ export const ChatNoteHeader = ({
                 mb: "5px",
             }}
         >
-            {isInChatPage === true && currentChatNote && (
+            {isInChatPage === true && NM.currentChatNote && (
                 <Box
                     sx={{
                         ml: "5px",
@@ -99,10 +95,9 @@ export const ChatNoteHeader = ({
                 >
                     <ACChatChildNotes
                         myself={myself}
-                        noteId={currentChatNote.noteId}
                         openSearchBox={openSearchBox}
-                        setCurrentChatNote={NM.setCurrentChatNote}
                         setOpenSearchBox={setOpenSearchBox}
+                        NM={NM}
                     />
                 </Box>
             )}
@@ -120,8 +115,8 @@ export const ChatNoteHeader = ({
                         <QuestionAnswerRoundedIcon sx={{ fontSize: "20px" }} />
                         Chat Notes
                     </IconButton>
-                    {currentChatNoteChain &&
-                        currentChatNoteChain.map((node, index) => (
+                    {NM.currentChatNoteChain &&
+                        NM.currentChatNoteChain.map((node, index) => (
                             <Tooltip
                                 key={`chat-note-tooltip-${index}`}
                                 size="sm"
@@ -199,7 +194,7 @@ export const ChatNoteHeader = ({
                 )}
 
                 {/* Action Buttons */}
-                {isInChatPage && currentChatNote && (
+                {isInChatPage && NM.currentChatNote && (
                     <IconButton
                         color="neutral"
                         component="button"
@@ -241,9 +236,9 @@ export const ChatNoteHeader = ({
                             variant="plain"
                             onClick={() => {
                                 CM.moveToSpecificChat(
-                                    currentChatNote?.chatType || 0,
-                                    currentChatNote?.chatId || 0,
-                                    currentChatNote?.threadId || 0,
+                                    NM.currentChatNote?.chatType || 0,
+                                    NM.currentChatNote?.chatId || 0,
+                                    NM.currentChatNote?.threadId || 0,
                                     true, // openTaskNoteInChat
                                     false, // openThreadTaskPreview
                                     UIM.setOpeningService,
@@ -308,16 +303,13 @@ export const ChatNoteHeader = ({
                 )}
 
                 {/* Delete Modal */}
-                {currentChatNote && (
+                {NM.currentChatNote && (
                     <ModalDeleteChatNote
-                        chatNoteMeta={NM.chatNoteMeta}
-                        currentChatNote={currentChatNote}
-                        currentTabIndex={NM.selectedTabIndex}
                         handleCloseTab={handleCloseTab}
                         myself={myself}
                         openDeleteNote={openDeleteNote}
-                        setChatNoteMeta={NM.setChatNoteMeta}
                         setOpenDeleteNote={setOpenDeleteNote}
+                        NM={NM}
                     />
                 )}
             </Stack>

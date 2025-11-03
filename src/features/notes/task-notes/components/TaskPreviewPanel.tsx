@@ -67,18 +67,13 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                 >
                     <TaskPreview
                         CM={CM}
-                        handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
-                        isTaskNoteVisible={NM.isTaskNoteVisible}
+                        NM={NM}
                         myself={myself}
                         setCurrentProject={PM.setCurrentProject}
-                        setCurrentTaskNote={NM.setCurrentTaskNote}
-                        setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
-                        setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
-                        taskNoteMeta={NM.taskNoteMeta}
                         teamProjects={PM.teamProjects}
                         TEM={TEM}
                         TM={TM}

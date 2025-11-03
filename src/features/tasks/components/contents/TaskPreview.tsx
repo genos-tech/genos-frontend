@@ -7,6 +7,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
@@ -38,23 +39,13 @@ type TaskPreviewProps = {
     setMyself: (value: UserProps) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setOpenCreateProject: (value: boolean) => void;
-    setIsTaskNoteVisible?: (value: boolean) => void;
-    handleCreateNewTaskNote: (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => Promise<void>;
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
-    isTaskNoteVisible: boolean;
     teamProjects: ProjectProps[];
     setTeamProjects: (value: ProjectProps[]) => void;
-    taskNoteMeta: TaskNoteMetaProps[];
-    setIsTaskVisibleInNote?: (value: boolean) => void;
     UIM: UIStateManagementState;
     TM: TaskManagementState;
     TEM: TeamManagementState;
     CM: ChatManagementState;
+    NM: NoteManagementState;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -64,14 +55,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setMyself,
         setCurrentProject,
         setOpenCreateProject,
-        setIsTaskNoteVisible,
-        handleCreateNewTaskNote,
-        setCurrentTaskNote,
-        isTaskNoteVisible,
+        NM,
         teamProjects,
         setTeamProjects,
-        taskNoteMeta,
-        setIsTaskVisibleInNote,
         TM,
         UIM,
         TEM,
@@ -312,7 +298,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskNotes([]);
             }
         })();
-    }, [currentTaskId, taskNoteMeta]);
+    }, [currentTaskId, NM.taskNoteMeta]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -383,14 +369,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 >
                     <TaskTitleBlock
                         CM={CM}
-                        handleCreateNewTaskNote={handleCreateNewTaskNote}
                         isPreviewMode={true}
-                        isTaskNoteVisible={isTaskNoteVisible}
                         myself={myself}
                         setCurrentProject={setCurrentProject}
-                        setCurrentTaskNote={setCurrentTaskNote}
-                        setIsTaskNoteVisible={setIsTaskNoteVisible}
-                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                         setOpenCreateProject={setOpenCreateProject}
                         setTaskClosed={setTaskClosed}
                         setTaskContent={setTmpCurrentTaskContent}
@@ -398,10 +379,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskTitle={setTaskTitle}
                         setTaskUpdated={setTaskUpdated}
                         taskContent={tmpCurrentTaskContent}
-                        taskNotes={taskNotes}
                         taskTitle={taskTitle}
                         TM={TM}
                         UIM={UIM}
+                        NM={NM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
@@ -475,15 +456,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     <TaskTabBlock
                         CM={CM}
                         editTargetComment={editTargetComment}
-                        handleCreateNewTaskNote={handleCreateNewTaskNote}
                         isInEdit={isInEdit}
                         myself={myself}
-                        setCurrentTaskNote={setCurrentTaskNote}
                         setDeletedAttachmentId={setDeletedAttachmentId}
                         setEditTargetComment={setEditTargetComment}
                         setIsAttachmentDeleted={setIsAttachmentDeleted}
                         setIsInEdit={setIsInEdit}
-                        setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setTabIndex={setTabIndex}
                         setTaskCommentLines={setTaskCommentLines}
@@ -502,6 +480,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         tmpCurrentTaskContent={tmpCurrentTaskContent}
                         UIM={UIM}
                         uploadedFiles={uploadedFiles}
+                        NM={NM}
                     />
                 </Sheet>
             )}

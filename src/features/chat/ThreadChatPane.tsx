@@ -16,6 +16,7 @@ import { handleFileDrop } from "./services/handleFileDrop";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
@@ -28,14 +29,9 @@ type MessagesPaneProps = {
     socket: Socket | null;
     currentThreadChatId: number;
     UIM: UIStateManagementState;
-    handleCreateNewChatNoteIfNotExist: (
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => Promise<void>;
     TM: TaskManagementState;
     CM: ChatManagementState;
+    NM: NoteManagementState;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -47,9 +43,9 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         socket,
         currentThreadChatId,
         UIM,
-        handleCreateNewChatNoteIfNotExist,
         TM,
         CM,
+        NM,
     } = props;
 
     // Use shared hooks
@@ -128,12 +124,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     setErrorOpen={messageManagement.setErrorOpen}
                 />
 
-                <ThreadChatPaneHeader
-                    CM={CM}
-                    handleCreateNewChatNoteIfNotExist={handleCreateNewChatNoteIfNotExist}
-                    myself={myself}
-                    TM={TM}
-                />
+                <ThreadChatPaneHeader CM={CM} NM={NM} myself={myself} TM={TM} />
 
                 <MessageListRenderer
                     chat={CM.currentThreadChat as ThreadProps}

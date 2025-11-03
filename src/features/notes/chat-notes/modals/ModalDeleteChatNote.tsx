@@ -3,6 +3,7 @@ import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { NoteService } from "../../../../db/services/note.service";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteMetaProps, ChatNoteProps } from "../../../../types/notes";
 import { deleteChatNote } from "../services/deleteChatNote";
@@ -11,22 +12,16 @@ type Props = {
     myself: UserProps;
     openDeleteNote: boolean;
     setOpenDeleteNote: (value: boolean) => void;
-    chatNoteMeta: ChatNoteMetaProps[];
-    setChatNoteMeta: (value: ChatNoteMetaProps[]) => void;
-    currentChatNote: ChatNoteProps;
     handleCloseTab: (tabIndex: number, closingNoteId: number) => void;
-    currentTabIndex: number;
+    NM: NoteManagementState;
 };
 
 export const ModalDeleteChatNote: React.FC<Props> = ({
     myself,
     openDeleteNote,
     setOpenDeleteNote,
-    chatNoteMeta,
-    setChatNoteMeta,
-    currentChatNote,
     handleCloseTab,
-    currentTabIndex,
+    NM,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -34,8 +29,8 @@ export const ModalDeleteChatNote: React.FC<Props> = ({
 
     const handleDeleteNote = async () => {
         let childExist: boolean;
-        const childNotes = chatNoteMeta.filter(
-            (note) => note.parentNoteId === currentChatNote.noteId
+        const childNotes = NM.chatNoteMeta.filter(
+            (note) => note.parentNoteId === NM.currentChatNote?.noteId
         );
 
         if (childNotes.length === 0) {
@@ -44,14 +39,16 @@ export const ModalDeleteChatNote: React.FC<Props> = ({
             childExist = true;
         }
 
-        if (childExist === false) {
+        if (childExist === false && NM.currentChatNote?.noteId) {
             // Delete from backend
-            await deleteChatNote(myself, currentChatNote.noteId, accessToken);
+            await deleteChatNote(myself, NM.currentChatNote?.noteId, accessToken);
             // Delete from indexedDB
-            await noteService.deleteChatNote(currentChatNote.noteId);
+            await noteService.deleteChatNote(NM.currentChatNote?.noteId);
             // Delete the deleted noteId from the meta object
-            setChatNoteMeta(chatNoteMeta.filter((note) => note.noteId !== currentChatNote.noteId));
-            handleCloseTab(currentTabIndex, currentChatNote.noteId);
+            NM.setChatNoteMeta(
+                NM.chatNoteMeta.filter((note) => note.noteId !== NM.currentChatNote?.noteId)
+            );
+            handleCloseTab(NM.selectedTabIndex, NM.currentChatNote?.noteId);
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {
@@ -73,7 +70,7 @@ export const ModalDeleteChatNote: React.FC<Props> = ({
                     <Typography level="h4">
                         Are you sure to delete{" "}
                         <Typography color="danger" level="h3">
-                            {currentChatNote.title}
+                            {NM.currentChatNote?.title}
                         </Typography>{" "}
                         ?
                     </Typography>

@@ -158,8 +158,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             <ChatNoteHeader
                                                 chat={chat}
                                                 CM={CM}
-                                                currentChatNote={NM.currentChatNote}
-                                                currentChatNoteChain={NM.currentChatNoteChain}
                                                 handleCloseTab={handleCloseTab}
                                                 isInChatPage={isInChatPage}
                                                 myself={myself}

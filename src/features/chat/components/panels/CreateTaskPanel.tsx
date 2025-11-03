@@ -6,6 +6,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { CreateTaskForm } from "../../../tasks/components/contents/CreateTaskForm";
@@ -19,6 +20,7 @@ interface CreateTaskPanelProps {
     socket: any;
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
+    NM: NoteManagementState;
 }
 
 export const CreateTaskPanel = ({
@@ -30,6 +32,7 @@ export const CreateTaskPanel = ({
     socket,
     setMyself,
     UIM,
+    NM,
 }: CreateTaskPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -65,6 +68,7 @@ export const CreateTaskPanel = ({
                     TEM={TEM}
                     TM={TM}
                     UIM={UIM}
+                    NM={NM}
                 />
             </Box>
         </Panel>

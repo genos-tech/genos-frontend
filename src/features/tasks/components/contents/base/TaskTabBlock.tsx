@@ -31,6 +31,7 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
@@ -76,15 +77,7 @@ type TaskTabBlockProps = {
     taskComments: TaskCommentProps[];
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
-    setIsTaskNoteVisible?: (value: boolean) => void;
-    handleCreateNewTaskNote: (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => Promise<void>;
     taskNotes: TaskNoteProps[];
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
     editTargetComment: TaskCommentProps | undefined;
     isInEdit: boolean;
     setTaskCommentLines: (value: number) => void;
@@ -97,6 +90,7 @@ type TaskTabBlockProps = {
     TM: TaskManagementState;
     UIM: UIStateManagementState;
     CM: ChatManagementState;
+    NM: NoteManagementState;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -116,10 +110,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         taskComments,
         setIsInEdit,
         setEditTargetComment,
-        setIsTaskNoteVisible,
-        handleCreateNewTaskNote,
         taskNotes,
-        setCurrentTaskNote,
         editTargetComment,
         isInEdit,
         setTaskCommentLines,
@@ -130,6 +121,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setTabIndex,
         TM,
         TEM,
+        NM,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -542,10 +534,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                             borderRadius: "5px",
                                                         }}
                                                         onClick={() => {
-                                                            if (setIsTaskNoteVisible) {
+                                                            if (NM.setIsTaskNoteVisible) {
                                                                 TM.setIsTaskHomeVisible(false);
-                                                                setIsTaskNoteVisible(true);
-                                                                setCurrentTaskNote(taskNote);
+                                                                NM.setIsTaskNoteVisible(true);
+                                                                NM.setCurrentTaskNote(taskNote);
                                                             }
                                                         }}
                                                     >
@@ -581,12 +573,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 }}
                                                 onClick={() => {
                                                     if (
-                                                        setIsTaskNoteVisible &&
+                                                        NM.setIsTaskNoteVisible &&
                                                         taskContent.project
                                                     ) {
                                                         TM.setIsTaskHomeVisible(false);
-                                                        setIsTaskNoteVisible(true);
-                                                        handleCreateNewTaskNote(
+                                                        NM.setIsTaskNoteVisible(true);
+                                                        NM.handleCreateNewTaskNote(
                                                             null,
                                                             taskContent.project.projectId,
                                                             TM.currentPreviewTaskId,

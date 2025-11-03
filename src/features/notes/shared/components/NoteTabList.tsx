@@ -1,19 +1,14 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { Box, IconButton, Tab, TabList, Tooltip } from "@mui/joy";
 
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+
 interface NoteTabListProps {
-    tabItems: any[];
-    selectedTabIndex: number;
-    onTabChange: (newValue: number) => void;
+    NM: NoteManagementState;
     onCloseTab: (tabIndex: number, closingNoteId: number) => void;
 }
 
-export const NoteTabList = ({
-    tabItems,
-    selectedTabIndex,
-    onTabChange,
-    onCloseTab,
-}: NoteTabListProps) => {
+export const NoteTabList = ({ NM, onCloseTab }: NoteTabListProps) => {
     return (
         <TabList
             sx={{
@@ -23,7 +18,7 @@ export const NoteTabList = ({
                 "&::-webkit-scrollbar": { display: "none" },
             }}
         >
-            {tabItems.map((tab, index) => (
+            {NM.tabItems.map((tab, index) => (
                 <Tooltip
                     key={`tab-tooltip-${index}`}
                     size="sm"
@@ -51,7 +46,7 @@ export const NoteTabList = ({
                         >
                             {tab.title.length > 14 ? `${tab.title.slice(0, 14)}...` : tab.title}
 
-                            {tabItems.length > 1 && (
+                            {NM.tabItems.length > 1 && (
                                 <IconButton
                                     color="neutral"
                                     component="span"

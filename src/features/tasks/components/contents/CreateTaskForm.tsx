@@ -8,6 +8,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
@@ -136,10 +137,11 @@ type CreateTaskProps = {
     PM: ProjectManagementState;
     TM: TaskManagementState;
     CM: ChatManagementState;
+    NM: NoteManagementState;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
-    const { TEM, socket, myself, setMyself, chatType, CM, UIM, PM, TM } = props;
+    const { TEM, socket, myself, setMyself, chatType, CM, UIM, PM, TM, NM } = props;
     const { accessToken } = useAuth();
 
     // Init task contents
@@ -280,17 +282,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 >
                     <TaskTitleBlock
                         CM={CM}
-                        handleCreateNewTaskNote={async () => {}}
                         isPreviewMode={false}
                         myself={myself}
                         setCurrentProject={PM.setCurrentProject}
-                        setCurrentTaskNote={() => {}}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
                         taskContent={taskContent}
-                        taskNotes={[]}
                         taskTitle={taskTitle}
+                        NM={NM}
                         titleError={titleError}
                         titleErrorOpen={titleErrorOpen}
                         TM={TM}

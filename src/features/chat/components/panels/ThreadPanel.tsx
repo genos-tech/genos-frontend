@@ -52,13 +52,13 @@ export const ThreadPanel = ({
                         CM={CM}
                         currentThreadChatId={currentThreadChatId}
                         currentWindowHeight={currentWindowHeight}
-                        handleCreateNewChatNoteIfNotExist={NM.handleCreateNewChatNoteIfNotExist}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
                         TEM={TEM}
                         TM={TM}
                         UIM={UIM}
+                        NM={NM}
                     />
                 )}
             </Box>

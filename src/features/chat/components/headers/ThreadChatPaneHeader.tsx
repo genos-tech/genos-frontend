@@ -8,6 +8,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
@@ -15,17 +16,12 @@ import { ThreadProps } from "../../../../types/chat";
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
     CM: ChatManagementState;
-    handleCreateNewChatNoteIfNotExist: (
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => Promise<void>;
+    NM: NoteManagementState;
     TM: TaskManagementState;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
-    const { myself, CM, handleCreateNewChatNoteIfNotExist, TM } = props;
+    const { myself, CM, NM, TM } = props;
     const { mode } = useColorScheme();
 
     const isYou: boolean = myself.userId === CM.currentThreadChat?.dmPartnerUser.userId;
@@ -182,7 +178,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         size="sm"
                         variant="plain"
                         onClick={() => {
-                            handleCreateNewChatNoteIfNotExist(
+                            NM.handleCreateNewChatNoteIfNotExist(
                                 CM.currentThreadChat?.chatType as number,
                                 CM.currentThreadChat?.chatId as number,
                                 true,

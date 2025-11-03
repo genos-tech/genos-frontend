@@ -28,6 +28,7 @@ import { alpha } from "@mui/system";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
@@ -49,21 +50,11 @@ type TaskTitleBlockProps = {
     isPreviewMode: boolean;
     setTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
-    isTaskNoteVisible?: boolean;
-    setIsTaskVisibleInNote?: (value: boolean) => void;
     CM: ChatManagementState;
     UIM: UIStateManagementState;
     setCurrentProject: (project: any) => void;
     TM: TaskManagementState;
-    setIsTaskNoteVisible?: (value: boolean) => void;
-    taskNotes: TaskNoteProps[];
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
-    handleCreateNewTaskNote: (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => Promise<void>;
+    NM: NoteManagementState;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -79,17 +70,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         isPreviewMode,
         setTaskContent,
         setTaskStatusUpdated,
-        isTaskNoteVisible,
-        setIsTaskVisibleInNote,
         setTaskClosed,
         CM,
         UIM,
         setCurrentProject,
         TM,
-        setIsTaskNoteVisible,
-        taskNotes,
-        setCurrentTaskNote,
-        handleCreateNewTaskNote,
+        NM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -262,14 +248,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         <MenuItem
                             key="open-note"
                             onClick={() => {
-                                if (setIsTaskNoteVisible && taskContent.project) {
+                                if (NM.setIsTaskNoteVisible && taskContent.project) {
                                     TM.setIsTaskHomeVisible(false);
-                                    setIsTaskNoteVisible(true);
-                                    if (taskNotes.length > 0) {
-                                        setCurrentTaskNote(taskNotes[0]);
+                                    NM.setIsTaskNoteVisible(true);
+                                    if (NM.taskNoteMeta.length > 0) {
+                                        NM.setCurrentTaskNote(NM.taskNoteMeta[0] as TaskNoteProps);
                                     } else {
                                         if (taskContent.project && taskContent.id) {
-                                            handleCreateNewTaskNote(
+                                            NM.handleCreateNewTaskNote(
                                                 null,
                                                 taskContent.project.projectId,
                                                 taskContent.id,
@@ -352,7 +338,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 // Open task-home when both task-preview and task-create-form are closed.
                                 if (
                                     TM.isCreatingTask.flag === false &&
-                                    isTaskNoteVisible === false
+                                    NM.isTaskNoteVisible === false
                                 ) {
                                     TM.setIsTaskHomeVisible(true);
                                 }
@@ -369,8 +355,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             }
 
                             // Close the task preview when the task is visible in the task note.
-                            if (setIsTaskVisibleInNote) {
-                                setIsTaskVisibleInNote(false);
+                            if (NM.setIsTaskVisibleInNote) {
+                                NM.setIsTaskVisibleInNote(false);
                             }
 
                             if (TM.isCreatingTask.flag === true && taskContent.id !== undefined) {
