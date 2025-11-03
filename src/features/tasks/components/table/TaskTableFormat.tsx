@@ -11,15 +11,15 @@ import dayjs from "dayjs";
 
 import { PulseDot } from "../../../../components/utils/PulseDot";
 import { UserProps } from "../../../../types/admin";
+import { effortLevels, priorities } from "../../utils/taskMeta";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
-const hmlOptions = [
-    { label: "Low", value: "Low", color: "#0044c2", textColor: "white" },
-    { label: "Medium", value: "Medium", color: "#1dc200", textColor: "white" },
-    { label: "High", value: "High", color: "#ff2323", textColor: "white" },
-];
-const getHMLOption = (value: string) => hmlOptions.find((option) => option.value === value);
+const getPriorityOption = (value: string) =>
+    priorities.find((option) => option.priority === value);
+
+const getEffortLevelOption = (value: string) =>
+    effortLevels.find((option) => option.level === value);
 
 const statusOptions = [
     {
@@ -284,12 +284,12 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             align: "center",
             headerAlign: "center",
             renderCell: (params: GridRenderCellParams) => {
-                const option = getHMLOption(params.value);
+                const option = getPriorityOption(params.value);
                 const color = option?.color;
                 const textColor = option?.textColor;
                 return option ? (
                     <Chip
-                        label={option.label}
+                        label={option.priority}
                         size="small"
                         variant="outlined"
                         sx={{
@@ -326,10 +326,10 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                         });
                     }}
                 >
-                    {hmlOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
+                    {priorities.map((option) => (
+                        <MenuItem key={option.priority || ""} value={option.priority || ""}>
                             <Chip
-                                label={option.label}
+                                label={option.priority}
                                 size="small"
                                 variant="outlined"
                                 sx={{
@@ -353,18 +353,18 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             align: "center",
             headerAlign: "center",
             renderCell: (params: GridRenderCellParams) => {
-                const option = getHMLOption(params.value);
+                const option = getEffortLevelOption(params.value);
                 const color = option?.color;
                 const textColor = option?.textColor;
                 return option ? (
                     <Chip
-                        label={option.label}
+                        label={option.level}
                         size="small"
                         variant="outlined"
                         sx={{
                             backgroundColor: alpha(
                                 color || "#ff2323",
-                                mode === "dark" ? 0.5 : 0.75
+                                mode === "dark" ? 0.5 : 1
                             ),
                             color: textColor,
                             fontWeight: "bold",
@@ -395,10 +395,10 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                         });
                     }}
                 >
-                    {hmlOptions.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
+                    {effortLevels.map((option) => (
+                        <MenuItem key={option.level || ""} value={option.level || ""}>
                             <Chip
-                                label={option.label}
+                                label={option.level}
                                 size="small"
                                 variant="outlined"
                                 sx={{

@@ -36,7 +36,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                             variant="soft"
                             sx={{
                                 backgroundColor: option.color
-                                    ? alpha(option.color, mode === "dark" ? 0.5 : 0.75)
+                                    ? alpha(option.color, mode === "dark" ? 0.5 : 1)
                                     : "transparent",
                                 color: option.textColor,
                                 fontWeight: "bold",
@@ -58,7 +58,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                             variant="soft"
                             sx={{
                                 backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 1)
                                     : "transparent",
                                 color: item.textColor,
                                 fontWeight: "bold",

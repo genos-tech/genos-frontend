@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
+import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
@@ -189,7 +189,19 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         </Grid>
                         <Grid key={2} xs={6}>
                             <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "40px" }}>Tags</Typography>
+                                <Typography sx={{ width: "30px" }}>Tags</Typography>
+                                <Tooltip size="sm" title="Create a New Tag" variant="outlined">
+                                    <IconButton
+                                        color="neutral"
+                                        size="sm"
+                                        variant="soft"
+                                        onClick={() => {
+                                            setOpenCreateTag(true);
+                                        }}
+                                    >
+                                        <AddIcon />
+                                    </IconButton>
+                                </Tooltip>
                                 <ACProjectTags
                                     isOpenTagList={isOpenTagList}
                                     projectTags={projectTags}
@@ -198,16 +210,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     setTaskUpdated={setTaskUpdated}
                                     taskContent={taskContent}
                                 />
-                                <IconButton
-                                    color="neutral"
-                                    size="sm"
-                                    variant="plain"
-                                    onClick={() => {
-                                        setOpenCreateTag(true);
-                                    }}
-                                >
-                                    <AddIcon />
-                                </IconButton>
                             </ListItem>
                         </Grid>
                     </Grid>
@@ -254,7 +256,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         />
                     </ListItem>
                     <ListItem>
-                    <Typography sx={{ minWidth: "80px" }}>Links</Typography>
+                        <Typography sx={{ minWidth: "80px" }}>Links</Typography>
                         <DynamicURLManager
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}

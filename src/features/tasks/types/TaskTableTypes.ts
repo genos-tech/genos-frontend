@@ -85,28 +85,44 @@ export const predefinedPriorityFilters: FilterProps[] = [
         darkModeColor: "#ffffff",
     },
     {
+        label: "Minimal",
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "Minimal" }],
+        },
+        lightModeColor: "#9CA3AF",
+        darkModeColor: "#9CA3AF",
+    },
+    {
         label: "Low",
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Low" }],
         },
-        lightModeColor: "#0044c2",
-        darkModeColor: "#0044c2",
+        lightModeColor: "#34D399",
+        darkModeColor: "#34D399",
     },
     {
-        label: "Medium",
+        label: "Normal",
         filterModel: {
-            items: [{ field: "priority", operator: "equals", value: "Medium" }],
+            items: [{ field: "priority", operator: "equals", value: "Normal" }],
         },
-        lightModeColor: "#1dc200",
-        darkModeColor: "#1dc200",
+        lightModeColor: "#3B82F6",
+        darkModeColor: "#3B82F6",
     },
     {
         label: "High",
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "High" }],
         },
-        lightModeColor: "#ff2323",
-        darkModeColor: "#ff2323",
+        lightModeColor: "#F59E0B",
+        darkModeColor: "#F59E0B",
+    },
+    {
+        label: "Critical",
+        filterModel: {
+            items: [{ field: "priority", operator: "equals", value: "Critical" }],
+        },
+        lightModeColor: "#EF4444",
+        darkModeColor: "#EF4444",
     },
 ];
 
@@ -120,27 +136,43 @@ export const predefinedEffortLevelFilters: FilterProps[] = [
         darkModeColor: "#ffffff",
     },
     {
+        label: "Minimal",
+        filterModel: {
+            items: [{ field: "effortLevel", operator: "equals", value: "Minimal" }],
+        },
+        lightModeColor: "#9CA3AF",
+        darkModeColor: "#0044c2",
+    },
+    {
         label: "Low",
         filterModel: {
             items: [{ field: "effortLevel", operator: "equals", value: "Low" }],
         },
-        lightModeColor: "#0044c2",
-        darkModeColor: "#0044c2",
+        lightModeColor: "#34D399",
+        darkModeColor: "#34D399",
     },
     {
-        label: "Medium",
+        label: "Moderate",
         filterModel: {
-            items: [{ field: "effortLevel", operator: "equals", value: "Medium" }],
+            items: [{ field: "effortLevel", operator: "equals", value: "Moderate" }],
         },
-        lightModeColor: "#1dc200",
-        darkModeColor: "#1dc200",
+        lightModeColor: "#3B82F6",
+        darkModeColor: "#3B82F6",
     },
     {
         label: "High",
         filterModel: {
             items: [{ field: "effortLevel", operator: "equals", value: "High" }],
         },
-        lightModeColor: "#ff2323",
-        darkModeColor: "#ff2323",
+        lightModeColor: "#F59E0B",
+        darkModeColor: "#F59E0B",
+    },
+    {
+        label: "Extensive",
+        filterModel: {
+            items: [{ field: "effortLevel", operator: "equals", value: "Extensive" }],
+        },
+        lightModeColor: "#EF4444",
+        darkModeColor: "#EF4444",
     },
 ];

@@ -9,13 +9,17 @@ export const statuses: TaskStatusProps[] = [
 ];
 
 export const priorities: TaskPriorityProps[] = [
-    { code: 0, priority: "Low", color: "#0044c2", textColor: "white" },
-    { code: 0, priority: "Medium", color: "#1dc200", textColor: "white" },
-    { code: 0, priority: "High", color: "#ff2323", textColor: "white" },
+    { code: 0, priority: "Minimal", color: "#9CA3AF", textColor: "white" },
+    { code: 0, priority: "Low", color: "#34D399", textColor: "white" },
+    { code: 0, priority: "Normal", color: "#3B82F6", textColor: "white" },
+    { code: 0, priority: "High", color: "#F59E0B", textColor: "white" },
+    { code: 0, priority: "Critical", color: "#EF4444", textColor: "white" },
 ];
 
 export const effortLevels: TaskEffortLevelProps[] = [
-    { code: 0, level: "Low", color: "#0044c2", textColor: "white" },
-    { code: 0, level: "Medium", color: "#1dc200", textColor: "white" },
-    { code: 0, level: "High", color: "#ff2323", textColor: "white" },
+    { code: 0, level: "Minimal", color: "#9CA3AF", textColor: "white" },
+    { code: 0, level: "Low", color: "#34D399", textColor: "white" },
+    { code: 0, level: "Moderate", color: "#3B82F6", textColor: "white" },
+    { code: 0, level: "High", color: "#F59E0B", textColor: "white" },
+    { code: 0, level: "Extensive", color: "#EF4444", textColor: "white" },
 ];
